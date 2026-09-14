@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+    "/event-operations/events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the authorized canonical lifecycle projection for an event
+         * @description Returns only capabilities currently held by the authenticated party and transitions whose policy, authority, and implementation-effect gate all permit execution. A disabled feature, an unknown event, and an event the caller cannot read all produce 404 so object identifiers do not disclose event existence.
+         */
+        get: operations["getEventOperationSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply an idempotent, version-guarded canonical lifecycle transition
+         * @description Uses optimistic concurrency and database row locking; it never silently applies last-write-wins. Reusing a command UUID with the same canonical request returns the stored result, while reuse with different content is rejected. Only early planning and independent-approval transitions are implementation-enabled in this phase. Publishing and every transition with ticket, booking, contract, notification, or financial effects remain closed until those effects are transactional or outboxed and verified.
+         */
+        post: operations["applyEventOperationTransition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social/followers": {
         parameters: {
             query?: never;
@@ -51,7 +91,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List social events using canonical catalog identifiers */
+        /**
+         * List social events using canonical catalog identifiers
+         * @description Returns events whose canonical metadata does not mark them private and whose workflow state has the persisted `public-listable` capability, plus non-public events owned by the authenticated Party. Strict administrators retain internal visibility.
+         */
         get: operations["listSocialEvents"];
         put?: never;
         /** Create a social event using a canonical event type identifier */
@@ -160,7 +203,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Toggle a persisted reaction type on an event moment */
+        /**
+         * Set a persisted reaction type on an event moment
+         * @description Uses the authenticated Party and returns the resulting moment state. Supplying emrrActive makes retries idempotent; omitting it preserves legacy toggle behavior. Reaction rows retain count-compatible cardinality, but only the caller's own row includes Party identity and activity time.
+         */
         post: operations["reactToSocialEventMoment"];
         delete?: never;
         options?: never;
@@ -444,7 +490,8 @@ export interface paths {
         };
         /** Get locale preferences */
         get: operations["getLocalePreferences"];
-        put?: never;
+        /** Update locale preferences */
+        put: operations["updateLocalePreferences"];
         post?: never;
         delete?: never;
         options?: never;
@@ -460,10 +507,89 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update locale preferences */
-        put: operations["updateLocalePreferences"];
+        put?: never;
         /** Record an audited currency conversion */
         post: operations["recordCurrencyConversion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get account-bound onboarding progress
+         * @description Returns durable onboarding eligibility, intent, and completion for the authenticated party. Accounts without an authoritative signup marker are never classified as new.
+         */
+        get: operations["getOnboardingProgress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/onboarding/intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Persist onboarding intent
+         * @description Stores personalization intent for the authenticated party. It never grants a role, module, or permission.
+         */
+        put: operations["updateOnboardingIntent"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/onboarding/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete eligible onboarding idempotently
+         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. A supplied first value is a validated observation only; the server selects the earliest Party-bound supported evidence created during the signup eligibility window, using the same stable tie order as reconciliation. The idempotent handshake may safely be retried after that window, and verified action evidence takes precedence over an exit request. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event saves use a validated favorite audit. Repeated calls, missing or out-of-window server evidence, and late explicit exits without valid evidence return newlyCompleted=false.
+         */
+        post: operations["completeOnboarding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/onboarding/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reconcile onboarding from authoritative evidence
+         * @description Completes an incomplete signup onboarding record by inferring the earliest Party-bound first useful action created during the signup eligibility window. This supports recovery on another device without accepting a client-supplied action, role, module, or permission. Exact-timestamp ties use the stable order artist_followed, access_requested, event_saved, then moment_reaction. The mutation is idempotent; completed accounts, accounts without a signup marker, and accounts without in-window evidence return newlyCompleted=false.
+         */
+        post: operations["reconcileOnboarding"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4253,7 +4379,7 @@ export interface paths {
         put?: never;
         /**
          * Create an honest unpaid tentative booking
-         * @description Compatibility path used when no approved payable-booking policy is active. It never reports payment or confirmation.
+         * @description Compatibility path used when no approved payable-booking policy is active. The Idempotency-Key durably returns the original booking for an identical replay and rejects changed payloads. It never reports payment or confirmation.
          */
         post: operations["createPublicTentativeBooking"];
         delete?: never;
@@ -5433,6 +5559,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/access-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the authenticated party's feature access requests
+         * @description Returns only requests submitted by the authenticated Party, newest first. Expired pending requests are transitioned before the list is returned.
+         */
+        get: operations["listMyFeatureAccessRequests"];
+        put?: never;
+        /**
+         * Submit a governed feature access request
+         * @description Creates a pending request for the authenticated Party. This does not assign a role, permission, or effective access.
+         */
+        post: operations["createFeatureAccessRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access-requests/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the reviewer's visible feature access requests
+         * @description Requires a compatible reviewer role and returns only requests the authenticated reviewer is authorized to decide.
+         */
+        get: operations["listFeatureAccessRequestsForReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access-requests/{requestId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Approve or reject a pending feature access request
+         * @description Requires a reviewer authorized for the requested feature action. Approval records a governance decision but does not itself assign a role, permission, or effective access.
+         */
+        patch: operations["decideFeatureAccessRequest"];
+        trace?: never;
+    };
+    "/access-requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Cancel the authenticated party's pending feature access request
+         * @description A request owned by another Party is not disclosed and returns the same response as a missing request.
+         */
+        patch: operations["cancelFeatureAccessRequest"];
+        trace?: never;
+    };
     "/merch/artists/{artistPartyId}/stores": {
         parameters: {
             query?: never;
@@ -6566,6 +6776,43 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        EventLifecycleState: "draft" | "planning" | "pending_approval" | "approved" | "published" | "staffing" | "ready" | "in_progress" | "completed" | "settlement_pending" | "settled" | "archived" | "reprogrammed" | "cancelled";
+        EventOperationSnapshot: {
+            /** Format: int64 */
+            eventId: number;
+            canonicalState: components["schemas"]["EventLifecycleState"];
+            /** Format: int64 */
+            version: number;
+            /** @description Existing social-event state retained as migration evidence. */
+            legacyStateCode?: string;
+            capabilities: string[];
+            availableTransitions: components["schemas"]["EventLifecycleState"][];
+        };
+        EventTransitionCommand: {
+            /** Format: int64 */
+            expectedVersion: number;
+            targetState: components["schemas"]["EventLifecycleState"];
+            /** @description Omit when unnecessary; explicit null is rejected. */
+            reason?: string;
+            correlationId: string;
+        };
+        EventTransitionOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            canonicalState: components["schemas"]["EventLifecycleState"];
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            authorityCode: "owner" | "event_approver" | "finance_approver" | "records_manager";
+            replayed: boolean;
+        };
+        EventOperationError: {
+            /** @enum {string} */
+            code: "feature_disabled" | "not_found" | "forbidden" | "invalid_request" | "reason_required" | "idempotency_conflict" | "version_conflict" | "transition_invalid" | "transition_effects_not_ready" | "separation_of_duties" | "event_operations_unavailable" | "invalid_database_response";
+        };
         MerchReputationSummary: {
             /** @enum {string} */
             subjectKind: "store" | "product";
@@ -8744,6 +8991,8 @@ export interface components {
              * @description Canonical UUID of an active published item in the `reaction-types` catalog.
              */
             emrrReactionTypeId: string;
+            /** @description Desired selected state for the authenticated Party. Repeating the same value is idempotent. Omit only for legacy toggle behavior. */
+            emrrActive?: boolean;
         };
         ContentReactionRequest: {
             /**
@@ -8794,9 +9043,13 @@ export interface components {
             readonly emrReactionNameEs: string;
             readonly emrReactionNameEn: string;
             readonly emrReactionEmoji: string;
-            emrPartyId: string;
-            /** Format: date-time */
-            emrCreatedAt?: string | null;
+            /** @description Authenticated Party identifier when this is the caller's own reaction; null for every other count row. */
+            readonly emrPartyId?: string | null;
+            /**
+             * Format: date-time
+             * @description Caller reaction time when this is the caller's own reaction; null for every other count row.
+             */
+            readonly emrCreatedAt?: string | null;
         };
         EventMomentComment: {
             emcId?: string | null;
@@ -9100,6 +9353,7 @@ export interface components {
             termsAccepted?: boolean;
             /** @description Version of the account terms accepted during Google signup. */
             termsVersion?: string;
+            onboardingIntent?: components["schemas"]["OnboardingIntent"];
         };
         SignupRequest: {
             /** @example Diego */
@@ -9133,17 +9387,59 @@ export interface components {
              * Format: int64
              * @description Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
              */
-            claimArtistId?: number | null;
+            claimArtistId?: number;
+            onboardingIntent?: components["schemas"]["OnboardingIntent"];
         };
         LoginResponse: {
             /** @description Bearer token for authenticated requests when a client is not using cookies. */
-            token?: string;
+            token: string;
             /** Format: int64 */
-            partyId?: number;
-            roles?: components["schemas"]["Role"][];
-            modules?: string[];
+            partyId: number;
+            roles: components["schemas"]["Role"][];
+            modules: string[];
             /** @description Present on Google authentication to distinguish a newly created account from an existing login. */
             accountCreated?: boolean;
+        };
+        /**
+         * @description Product-personalization intent only. It never assigns a security role or permission.
+         * @enum {string}
+         */
+        OnboardingIntent: "events" | "follow_artists" | "artist_profile" | "internships" | "learning" | "professional_tools";
+        OnboardingIntentUpdate: {
+            onboardingIntent: components["schemas"]["OnboardingIntent"];
+        };
+        OnboardingCompletionRequest: {
+            /**
+             * @description Optional observation of a successful first useful action. The server requires Party-bound evidence during the signup eligibility window and persists the earliest supported evidence across all categories, independent of this hint. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event_saved uses a validated event-favorite audit. Omit when the user explicitly exits optional onboarding; existing verified evidence still takes precedence.
+             * @enum {string}
+             */
+            firstValue?: "artist_followed" | "access_requested" | "event_saved" | "moment_reaction";
+        };
+        OnboardingProgress: {
+            /** @description True only for an authoritative signup within the eligibility window that has not completed onboarding. */
+            eligible: boolean;
+            /** Format: date-time */
+            signupCompletedAt: string | null;
+            onboardingIntent: components["schemas"]["OnboardingIntent"] | null;
+            /**
+             * Format: date-time
+             * @description Server time when the completion handshake was accepted.
+             */
+            completedAt: string | null;
+            /** @enum {string|null} */
+            firstValue: "artist_followed" | "access_requested" | "event_saved" | "moment_reaction" | null;
+            /**
+             * Format: date-time
+             * @description Server evidence time for first useful actions accepted by the current contract; it can precede completedAt when a handshake is retried. Legacy completed rows may retain the earlier handshake-time meaning.
+             */
+            firstValueCompletedAt: string | null;
+            /** Format: date-time */
+            updatedAt: string | null;
+        };
+        OnboardingCompletionResult: {
+            progress: components["schemas"]["OnboardingProgress"];
+            /** @description True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence. */
+            newlyCompleted: boolean;
         };
         SessionResponse: {
             username: string;
@@ -9224,7 +9520,7 @@ export interface components {
          * @description Assigned platform role.
          * @enum {string}
          */
-        Role: "Admin" | "Manager" | "Studio Manager" | "Intern" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Live Sessions Producer" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan" | "Maintenance";
+        Role: "Admin" | "Manager" | "Studio Manager" | "Intern" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Live Sessions Producer" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Agency" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan" | "Maintenance";
         UserRoleSummary: {
             /** Format: int64 */
             id: number;
@@ -11769,11 +12065,6 @@ export interface components {
             facets: components["schemas"]["DirectoryFacets"];
             nextCursor?: string | null;
         };
-        ApiError: {
-            error: string;
-            code?: string;
-            correlationId?: string;
-        };
         DirectorySuggestion: {
             label: string;
             canonicalQuery: string;
@@ -11896,6 +12187,11 @@ export interface components {
                 reviewCount?: number;
             };
             canonicalUrl: string;
+        };
+        ApiError: {
+            error: string;
+            code?: string;
+            correlationId?: string;
         };
         /** @enum {string} */
         DirectoryInteractionType: "booking" | "service_order" | "marketplace_order" | "event_collaboration" | "confirmed_collaboration";
@@ -12306,12 +12602,20 @@ export interface components {
             authorProfile: components["schemas"]["DirectoryProfileReference"];
             subjectProfile: components["schemas"]["DirectoryProfileReference"];
         };
+        DirectoryFavoriteResult: {
+            type: components["schemas"]["DirectoryEntityType"];
+            id: string;
+            slug: string;
+            title: string;
+            city?: string | null;
+        };
         DirectoryFavorite: {
             targetKind: components["schemas"]["DirectoryEntityType"];
+            /** @description Canonical identifier for this favorite kind. */
             targetId: string;
             /** Format: date-time */
             createdAt: string;
-            result?: components["schemas"]["DirectorySearchItem"];
+            result: components["schemas"]["DirectoryFavoriteResult"] | null;
         };
         SavedSearchCreate: {
             name: string;
@@ -12505,8 +12809,8 @@ export interface components {
         };
     };
     responses: {
-        /** @description Invalid input */
-        BadRequest: {
+        /** @description Not found or not publicly eligible */
+        NotFound: {
             headers: {
                 [name: string]: unknown;
             };
@@ -12514,8 +12818,8 @@ export interface components {
                 "application/json": components["schemas"]["ApiError"];
             };
         };
-        /** @description Not found or not publicly eligible */
-        NotFound: {
+        /** @description Invalid input */
+        BadRequest: {
             headers: {
                 [name: string]: unknown;
             };
@@ -12574,6 +12878,7 @@ export interface components {
         ProfileId: string;
         ClassifiedId: string;
         TargetKind: components["schemas"]["DirectoryEntityType"];
+        /** @description Event and venue IDs are canonical positive integers; profile and classified IDs are UUIDs. DELETE also accepts an exact invalid legacy value so an owner can remove historical data. */
         TargetId: string;
         "parameters-TargetKind": components["schemas"]["ExperienceReviewTargetKind"];
         "parameters-TargetId": string;
@@ -12584,6 +12889,134 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getEventOperationSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized event lifecycle projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationSnapshot"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled, event absent, or event not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Event operations persistence is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
+    applyEventOperationTransition: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Caller-generated UUID identifying this exact event transition command. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventTransitionCommand"];
+            };
+        };
+        responses: {
+            /** @description Accepted transition or exact replay of its stored result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventTransitionOutcome"];
+                };
+            };
+            /** @description Invalid command or a required rollback reason is absent */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated caller lacks the current contextual authority */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Feature disabled or event absent */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Version or command-key conflict, invalid lifecycle edge, missing implementation effects, or separation-of-duties violation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Event operations persistence is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
     listSocialFollowers: {
         parameters: {
             query?: never;
@@ -13029,7 +13462,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Moment with canonical reaction references */
+            /** @description Moment with canonical reaction references, anonymous counts, and only the caller's own reaction identity */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -13037,6 +13470,27 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EventMoment"];
                 };
+            };
+            /** @description Event or moment identifier is malformed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or moment was not found or the moment does not belong to the event */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Reaction type UUID is unknown, inactive, deprecated, or unpublished */
             422: {
@@ -13595,6 +14049,136 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getOnboardingProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current onboarding progress */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingProgress"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateOnboardingIntent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingIntentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated onboarding progress */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingProgress"];
+                };
+            };
+            /** @description Unsupported onboarding intent */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    completeOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingCompletionRequest"];
+            };
+        };
+        responses: {
+            /** @description Completion result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingCompletionResult"];
+                };
+            };
+            /** @description Unsupported first useful action */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reconcileOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reconciliation result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingCompletionResult"];
+                };
             };
             /** @description Authentication required */
             401: {
@@ -21052,7 +21636,10 @@ export interface operations {
     createPublicTentativeBooking: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -21062,7 +21649,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Tentative booking created */
+            /** @description Tentative booking created or replayed from the same request */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -21071,7 +21658,14 @@ export interface operations {
                     "application/json": components["schemas"]["Booking"];
                 };
             };
-            /** @description Resource was reserved by another request */
+            /** @description Missing or invalid idempotency key or booking input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency-key payload conflict or resource was reserved by another request */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -21577,7 +22171,13 @@ export interface operations {
                     "application/json": components["schemas"]["DirectorySearchResponse"];
                 };
             };
-            400: components["responses"]["BadRequest"];
+            /** @description Unsupported target kind filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     suggestDirectoryQuery: {
@@ -22183,7 +22783,7 @@ export interface operations {
     listDirectoryFavorites: {
         parameters: {
             query?: {
-                /** @description Restrict the Party-scoped result to one supported favorite kind. Mobile saved-event synchronization uses `event`. */
+                /** @description Restrict the authenticated Party's favorites to one supported kind. Saved-event synchronization uses `event`. */
                 targetKind?: components["schemas"]["DirectoryEntityType"];
             };
             header?: never;
@@ -22192,7 +22792,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Current authenticated Party's favorites */
+            /** @description Current authenticated Party favorites */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -22201,13 +22801,7 @@ export interface operations {
                     "application/json": components["schemas"]["DirectoryFavorite"][];
                 };
             };
-            /** @description Unsupported target kind */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            400: components["responses"]["BadRequest"];
         };
     };
     saveDirectoryFavorite: {
@@ -22216,27 +22810,28 @@ export interface operations {
             header?: never;
             path: {
                 targetKind: components["parameters"]["TargetKind"];
+                /** @description Event and venue IDs are canonical positive integers; profile and classified IDs are UUIDs. DELETE also accepts an exact invalid legacy value so an owner can remove historical data. */
                 targetId: components["parameters"]["TargetId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Favorite desired state is saved idempotently; event targets must exist in the public event projection */
+            /** @description Desired saved state confirmed idempotently after validating the canonical public target; event targets must still be upcoming */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Invalid target kind or identifier */
+            /** @description Unsupported kind or malformed target identifier */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Event target does not exist or is not publicly visible */
+            /** @description Target not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -22251,14 +22846,22 @@ export interface operations {
             header?: never;
             path: {
                 targetKind: components["parameters"]["TargetKind"];
+                /** @description Event and venue IDs are canonical positive integers; profile and classified IDs are UUIDs. DELETE also accepts an exact invalid legacy value so an owner can remove historical data. */
                 targetId: components["parameters"]["TargetId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Favorite removed */
+            /** @description Desired removed state confirmed idempotently; canonical and valid legacy identifier variants are removed together */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported kind or empty/oversized target identifier */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23536,6 +24139,237 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyFeatureAccessRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Requests submitted by the authenticated Party */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureAccessRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Access request submitted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                };
+            };
+            /** @description Unknown, unavailable, unsupported, non-requestable, or malformed feature request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The Party already has access or an active duplicate request exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listFeatureAccessRequestsForReview: {
+        parameters: {
+            query?: {
+                /** @description Request lifecycle state to review. Defaults to pending. */
+                status?: components["schemas"]["FeatureAccessRequestStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Requests visible within the reviewer's governed scope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"][];
+                };
+            };
+            /** @description Unsupported status filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Compatible reviewer role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureAccessRequestDecision"];
+            };
+        };
+        responses: {
+            /** @description Updated access request and transition history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                };
+            };
+            /** @description Unsupported decision or malformed reviewer notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reviewer is unauthorized or attempted to decide their own request */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request or governed feature not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request is no longer pending */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    cancelFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureAccessRequestCancel"];
+            };
+        };
+        responses: {
+            /** @description Cancelled access request and transition history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                };
+            };
+            /** @description Malformed cancellation note */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found or owned by another Party */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Only pending access requests can be cancelled */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

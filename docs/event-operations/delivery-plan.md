@@ -28,8 +28,11 @@ unresolved ownership/resource links instead of guessing. Compatibility routes re
 mobile, generated clients, workers, and external consumers are verified. Production flags stay off
 until a separately authorized release review.
 
-Current branch status: phase 1 and phase 2 are complete within their documented evidence/bounds.
-Phase 3 has an additive, database-tested foundation and closes the existing authenticated event
-invitation authorization flaw. It is not a complete phase-3 API cutover: legacy lifecycle handlers,
-secure external invitation acceptance, contextual grant evaluation, generated clients, and web/mobile
-surfaces remain behind the planned integration work.
+Current branch-chain status: phase 1 and phase 2 are complete within their documented evidence/bounds.
+Phase 3 has an additive, database-tested foundation, closes the existing authenticated event-
+invitation authorization flaw, and now includes an authenticated, typed, disabled-by-default
+lifecycle API plus OpenAPI/generated web client contracts. Contextual grants are re-evaluated inside
+the mutation transaction and only five early no-external-effect transitions are implementation-
+enabled. It is not a complete phase-3 cutover: legacy lifecycle handlers remain, mobile generation is
+unavailable, external invitation conversion is incomplete, and transitions requiring public,
+booking, ticket, contract, notification, or financial effects deliberately fail closed.
