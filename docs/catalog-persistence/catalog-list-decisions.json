@@ -854,13 +854,13 @@
       "reviewed": true
     },
     {
-      "id": "fe6139331f8b26266011",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "id": "9fcc44f505e9402bf4f8",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+      "priority": "P1-cross-platform",
+      "risk": "A web/server payment-method mismatch could display an unavailable rail, omit a valid rail, or attempt an operation outside the verified account capability.",
+      "justification": "This TypeScript union is a consumer of the canonical server method vocabulary and database capability evidence; it adds the newly implemented method codes but cannot grant availability.",
       "reviewed": true
     },
     {
@@ -11141,6 +11141,86 @@
       "priority": "P0-security",
       "risk": "A provider-dependent state without an immutable provider resource would make status queries and financial reconciliation unsafe or impossible.",
       "justification": "This subset is a relational invariant on the canonical provider-operation state machine: every provider-dependent state must bind an external resource identifier.",
+      "reviewed": true
+    },
+    {
+      "id": "cbfb2e7629209b469aeb",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+      "priority": "P1-cross-platform",
+      "risk": "A stale public label could disconnect the server-offered method from its client executor or permit an unsafe implicit provider substitution.",
+      "justification": "The labels are exact client consumers of server routing output; availability remains owned by the provider account, method, flow, operation, and environment capability rows.",
+      "reviewed": true
+    },
+    {
+      "id": "97f5e84df29e38480f3f",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-versioned-adapter-dispatch",
+      "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+      "priority": "P0-security",
+      "risk": "An incorrect label-to-provider-method binding could execute a different rail than the server offered and undermine duplicate-charge and consent controls.",
+      "justification": "This closed dispatch maps server-authorized composite labels to the two implemented hosted adapters; unknown labels fail closed and the database registry remains authoritative for visibility.",
+      "reviewed": true
+    },
+    {
+      "id": "dae3b89dd11670870aa4",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+      "priority": "P3-consumer",
+      "risk": "A stale test fixture could stop verifying exact provider-method dispatch and allow client/server contract drift.",
+      "justification": "The mocked list is test-only evidence for the canonical hosted-method mapping and must change with, but never become authority over, the production server and adapter contract.",
+      "reviewed": true
+    },
+    {
+      "id": "006b2819a8ceb01ee81b",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_provider_operation",
+      "priority": "P0-security",
+      "risk": "Omitting an unresolved state from polling could strand reconciliation, while polling a terminal state could repeat callbacks or obscure the authoritative outcome.",
+      "justification": "The poll set is an exhaustive client behavior mirror of the canonical provider-operation state machine; the persisted operation remains authoritative and unknown states fail closed.",
+      "reviewed": true
+    },
+    {
+      "id": "cbba9527ca54805b8695",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_provider_operation",
+      "priority": "P0-security",
+      "risk": "Incorrect state presentation could claim false success, release fallback after ambiguity, or misdirect a customer during required provider action.",
+      "justification": "This switch supplies localized presentation for canonical durable states only; server state and outcome certainty control success and fallback, and unsupported states use conservative pending copy.",
+      "reviewed": true
+    },
+    {
+      "id": "595e298f6bc885b7af9b",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_provider_operation",
+      "priority": "P0-security",
+      "risk": "Stopping return-page reconciliation too early could encourage duplicate payment, while an incorrect terminal assumption could display unverified success.",
+      "justification": "The return-page poll set mirrors the canonical unresolved provider-operation states and reads only server-authoritative status; it cannot transition or fulfill an order.",
+      "reviewed": true
+    },
+    {
+      "id": "54897f48b8b6bba443e2",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-versioned-recovery-validator",
+      "specializedModel": "commerce_provider_operation, commerce_provider_method_capability",
+      "priority": "P0-security",
+      "risk": "Accepting an unsupported provider from mutable browser storage could restore or replay a payment through an unintended adapter.",
+      "justification": "Tab storage is untrusted input, so recovery version 1 accepts only the two hosted adapters implemented by this client; the server separately revalidates account and capability authority.",
+      "reviewed": true
+    },
+    {
+      "id": "1e7d1d67096faa181b55",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-versioned-recovery-validator",
+      "specializedModel": "commerce_provider_operation, commerce_provider_method_capability",
+      "priority": "P0-security",
+      "risk": "Accepting an unsupported method from mutable browser storage could replay a different provider operation or defeat exact-method consent and fallback locking.",
+      "justification": "The recovery schema is versioned and validates only adapter-backed hosted methods before any replay; runtime availability still requires exact server and database capability evidence.",
       "reviewed": true
     }
   ]

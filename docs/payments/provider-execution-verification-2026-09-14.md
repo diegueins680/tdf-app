@@ -157,6 +157,19 @@ was being applied read an inconsistent JSX snapshot and was discarded; the
 stable changed-file and canonical full lint commands then passed. None of these
 runs contacted a provider.
 
+The first hosted catalog-authority run for #334, [run
+34875189992](https://github.com/diegueins680/tdf-app/actions/runs/34875189992),
+failed with nine unreviewed fingerprints and one stale fingerprint after the
+client payment-method and recovery-state lists changed. The repair records
+provider/method vocabularies as consumers of `commerce_provider_method` and its
+capability registry, and records polling, presentation, dispatch, and browser
+recovery validators as P0 consumers of the provider-operation safety state
+machine. It does not blanket-exempt the values or make the browser authoritative.
+`npm run test:catalog-list-audit && npm run audit:catalog-lists` then passed
+locally across 1,411 tracked source files and 1,122 candidates with zero
+unreviewed or stale decisions. The hosted rerun is recorded only after GitHub
+reports its outcome.
+
 Run from the parent repository unless noted:
 
 ```text
