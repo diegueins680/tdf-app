@@ -148,6 +148,7 @@ import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
+import qualified TDF.Server.PaymentAvailability as PaymentAvailabilityServer
 import qualified TDF.Server.ProviderExecution as ProviderExecutionServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import qualified TDF.Server.Merch as MerchServer
@@ -2127,6 +2128,28 @@ main = hspec $ do
               [ CheckoutStore.ProviderDatafast
               , CheckoutStore.ProviderPlaceToPay
               ]
+
+        it "uses exact public labels for each executable provider-method pair" $ do
+            let label provider method = PaymentAvailabilityServer.publicPaymentRouteLabel
+                  ProviderCapabilities.PaymentRoute
+                    { ProviderCapabilities.routeProvider = provider
+                    , ProviderCapabilities.routeMethod = method
+                    , ProviderCapabilities.routeCapabilities =
+                        [ProviderCapabilities.CapabilityOneTime]
+                    , ProviderCapabilities.routePriority = 10
+                    }
+            label CheckoutStore.ProviderDatafast ProviderCapabilities.MethodCard
+              `shouldBe` Just "datafast"
+            label CheckoutStore.ProviderPlaceToPay ProviderCapabilities.MethodCard
+              `shouldBe` Just "placetopay_card"
+            label CheckoutStore.ProviderPlaceToPay ProviderCapabilities.MethodBankRedirect
+              `shouldBe` Just "placetopay_bank_redirect"
+            label CheckoutStore.ProviderPlaceToPay ProviderCapabilities.MethodDeunaQr
+              `shouldBe` Just "placetopay_deuna_qr"
+            label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodPayPhoneWallet
+              `shouldBe` Just "payphone_wallet"
+            label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodCard
+              `shouldBe` Nothing
 
         it "does not route a documented capability until every runtime gate is true" $ do
             let disabled = (active CheckoutStore.ProviderPlaceToPay)

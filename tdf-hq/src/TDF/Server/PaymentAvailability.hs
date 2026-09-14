@@ -8,6 +8,7 @@ module TDF.Server.PaymentAvailability
   ( ProductFlow(..)
   , availableImplementedPaymentMethods
   , loadRuntimeReadyRoutes
+  , publicPaymentRouteLabel
   ) where
 
 import           Control.Monad (filterM)
@@ -32,10 +33,10 @@ import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 
 type AppM = ReaderT Env Handler
 
--- | Return only the labels supported by the existing public product handlers.
--- PlaceToPay and PayPhone remain absent from legacy product-specific method
--- labels until the shared web/mobile return experience consumes the payment-
--- session API; an executable backend alone must not expose a broken UI choice.
+-- | Return only labels backed by an enabled database route, complete runtime
+-- configuration, and a public checkout executor. Hosted PlaceToPay and
+-- PayPhone labels are intentionally provider-specific so clients cannot
+-- silently substitute a different rail after an ambiguous attempt.
 availableImplementedPaymentMethods
   :: Checkout.CheckoutEnvironment
   -> ProductFlow
@@ -45,12 +46,15 @@ availableImplementedPaymentMethods
   -> AppM [Text]
 availableImplementedPaymentMethods environment flow amountMinor currency allowManual = do
   routes <- concat <$> mapM (loadRuntimeReadyRoutes . requestFor)
-    ([MethodCard, MethodPayPalWallet] <> [MethodManualBankTransfer | allowManual])
-  pure . nub $
-    [ label
-    | label <- ["datafast", "paypal", "bank_transfer"]
-    , any ((== Just label) . routeLabel) routes
-    ]
+    ( [ MethodCard
+      , MethodPayPalWallet
+      , MethodBankRedirect
+      , MethodDeunaQr
+      , MethodPayPhoneWallet
+      ]
+      <> [MethodManualBankTransfer | allowManual]
+    )
+  pure . nub $ [label | route <- routes, Just label <- [publicPaymentRouteLabel route]]
   where
     requestFor method = PaymentRouteRequest
       { prEnvironment = environment
@@ -112,10 +116,15 @@ runtimeReady environment route = case routeProvider route of
   Checkout.ProviderPos -> pure False
   Checkout.ProviderCardano -> pure False
 
-routeLabel :: PaymentRoute -> Maybe Text
-routeLabel route = case (routeProvider route, routeMethod route) of
+publicPaymentRouteLabel :: PaymentRoute -> Maybe Text
+publicPaymentRouteLabel route = case (routeProvider route, routeMethod route) of
   (Checkout.ProviderDatafast, MethodCard) -> Just "datafast"
   (Checkout.ProviderPayPal, MethodPayPalWallet) -> Just "paypal"
+  (Checkout.ProviderPlaceToPay, MethodCard) -> Just "placetopay_card"
+  (Checkout.ProviderPlaceToPay, MethodBankRedirect) ->
+    Just "placetopay_bank_redirect"
+  (Checkout.ProviderPlaceToPay, MethodDeunaQr) -> Just "placetopay_deuna_qr"
+  (Checkout.ProviderPayPhone, MethodPayPhoneWallet) -> Just "payphone_wallet"
   (Checkout.ProviderBankTransfer, MethodManualBankTransfer) ->
     Just "bank_transfer"
   _ -> Nothing
