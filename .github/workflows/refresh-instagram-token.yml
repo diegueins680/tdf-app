@@ -19,6 +19,8 @@ on:
 jobs:
   refresh-token:
     runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -48,12 +50,14 @@ jobs:
           fi
 
       - name: Notify on Failure
-        if: failure()
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
             {
               "text": "⚠️ Instagram token refresh failed! Manual intervention required."
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Report unavailable failure notification
+        if: failure() && env.SLACK_WEBHOOK_URL == ''
+        run: echo "::warning::SLACK_WEBHOOK_URL is not configured; workflow failure was not sent to Slack."

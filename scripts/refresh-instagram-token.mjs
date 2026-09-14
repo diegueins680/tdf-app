@@ -88,7 +88,9 @@ function isTransientApiFailure(response, data, err) {
     return true;
   }
 
-  return data?.error?.is_transient === true || [1, 2, 4, 17, 341].includes(data?.error?.code);
+  return data?.error?.is_transient === true
+    || [1, 2, 4, 17, 341].includes(data?.error?.code)
+    || /system error|temporar|try again|service unavailable/i.test(err?.message || '');
 }
 
 async function makeRequest(url, {
@@ -111,7 +113,13 @@ async function makeRequest(url, {
         return data;
       }
 
-      lastError = new Error(data.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+      const apiCode = data.error?.code;
+      const classification = [
+        Number.isInteger(response.status) ? `HTTP ${response.status}` : null,
+        apiCode == null ? null : `API code ${apiCode}`,
+      ].filter(Boolean).join(', ');
+      const message = data.error?.message || response.statusText || 'Instagram API request failed';
+      lastError = new Error(classification ? `${message} (${classification})` : message);
     } catch (err) {
       lastError = err;
     }

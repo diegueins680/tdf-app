@@ -44,6 +44,28 @@ test('token checks retry transient Meta errors and ultimately fail closed', asyn
   assert.deepEqual(delays, [1000, 2000]);
 });
 
+test('Meta system errors without an API code still receive bounded retries', async () => {
+  let calls = 0;
+  const fetchImpl = async () => {
+    calls += 1;
+    return response({
+      ok: false,
+      status: 400,
+      data: { error: { message: 'Cannot get application info due to a system error.' } },
+    });
+  };
+
+  await assert.rejects(
+    checkTokenStatus('redacted', {
+      fetchImpl,
+      maxAttempts: 2,
+      sleep: async () => {},
+    }),
+    /system error.*HTTP 400/
+  );
+  assert.equal(calls, 2);
+});
+
 test('token checks recover after a bounded transient failure', async () => {
   const responses = [
     response({
@@ -102,4 +124,14 @@ test('token maintenance scripts neither invoke a shell nor log token prefixes', 
     assert.doesNotMatch(source, /execSync\s*\(/);
     assert.doesNotMatch(source, /token (?:prefix|substring)/i);
   }
+});
+
+test('an absent optional Slack webhook cannot mask the original workflow failure', async () => {
+  const workflow = await readFile(
+    new URL('../../.github/workflows/refresh-instagram-token.yml', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(workflow, /if: failure\(\) && env\.SLACK_WEBHOOK_URL != ''/);
+  assert.match(workflow, /if: failure\(\) && env\.SLACK_WEBHOOK_URL == ''/);
 });
