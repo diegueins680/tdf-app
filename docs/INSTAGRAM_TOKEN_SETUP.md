@@ -32,7 +32,7 @@ Add these secrets to your GitHub repository (Settings → Secrets and variables 
 |--------|-------|----------|
 | `INSTAGRAM_ACCESS_TOKEN` | Current token (short or long-lived) | ✅ Yes |
 | `INSTAGRAM_APP_SECRET` | Instagram App Secret from Meta Dashboard | ✅ Yes |
-| `INSTAGRAM_APP_ID` | Instagram App ID (default: 1206294904899273) | ❌ Optional |
+| `INSTAGRAM_APP_ID` | App ID for the Meta app that issued the access token | ✅ Yes |
 | `FLY_APP_NAME` | Fly.io app name (default: tdf-hq) | ❌ Optional |
 | `FLY_API_TOKEN` | Fly.io API token for deployments | ✅ Yes |
 | `SLACK_WEBHOOK_URL` | Slack webhook for failure alerts | ❌ Optional |
@@ -44,6 +44,7 @@ Run the setup command to exchange your short-lived token for a long-lived token:
 ```bash
 # Set environment variables
 export INSTAGRAM_ACCESS_TOKEN="your-short-lived-token"
+export INSTAGRAM_APP_ID="your-app-id"
 export INSTAGRAM_APP_SECRET="your-app-secret"
 
 # Run setup
@@ -128,6 +129,7 @@ Check the GitHub Actions logs for automated runs, or run locally with `--check`.
 - Re-run setup: `node scripts/refresh-instagram-token.mjs --setup`
 
 ### "Error validating application" / API code 190
+- Ensure the repository-level Actions secret `INSTAGRAM_APP_ID` is configured; the workflow intentionally has no hard-coded fallback
 - Verify that `INSTAGRAM_APP_ID` and `INSTAGRAM_APP_SECRET` belong to the same Meta app
 - Verify that `INSTAGRAM_ACCESS_TOKEN` was issued for that app and has not been revoked
 - Replace the affected repository secrets through GitHub's secret settings; never paste their values into logs or issues

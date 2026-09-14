@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
 import {
+  assertCheckConfiguration,
   assertTokenValid,
   checkTokenStatus,
 } from '../refresh-instagram-token.mjs';
@@ -131,6 +132,18 @@ test('an invalid token can never be classified as healthy', async () => {
   assert.throws(() => assertTokenValid(status), /access token is invalid/);
 });
 
+test('token validation requires an explicit matching Meta application ID', () => {
+  assert.throws(
+    () => assertCheckConfiguration({ token: 'token', appSecret: 'secret' }),
+    /INSTAGRAM_APP_ID environment variable is required/
+  );
+  assert.doesNotThrow(() => assertCheckConfiguration({
+    token: 'token',
+    appId: 'app-id',
+    appSecret: 'secret',
+  }));
+});
+
 test('an invalid messaging token fails even when Meta reports no expiration', async () => {
   const result = await checkMessagingToken('redacted', 'Test Token', {
     appId: 'app-id',
@@ -163,4 +176,6 @@ test('an absent optional Slack webhook cannot mask the original workflow failure
 
   assert.match(workflow, /if: failure\(\) && env\.SLACK_WEBHOOK_URL != ''/);
   assert.match(workflow, /if: failure\(\) && env\.SLACK_WEBHOOK_URL == ''/);
+  assert.match(workflow, /INSTAGRAM_APP_ID: \$\{\{ secrets\.INSTAGRAM_APP_ID \}\}/);
+  assert.doesNotMatch(workflow, /INSTAGRAM_APP_ID[^\n]*\|\|/);
 });

@@ -37,7 +37,7 @@ jobs:
         env:
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
-          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID || '1206294904899273' }}
+          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID }}
           FLY_APP_NAME: ${{ secrets.FLY_APP_NAME || 'tdf-hq' }}
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |

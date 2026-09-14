@@ -29,7 +29,7 @@ const FACEBOOK_GRAPH_BASE = 'https://graph.facebook.com/v18.0';
 
 // Read environment variables
 const TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN;
-const APP_ID = process.env.INSTAGRAM_APP_ID || '1206294904899273';
+const APP_ID = process.env.INSTAGRAM_APP_ID;
 const APP_SECRET = process.env.INSTAGRAM_APP_SECRET;
 const FLY_APP = process.env.FLY_APP_NAME || 'tdf-hq';
 
@@ -188,6 +188,18 @@ export function assertTokenValid(status) {
   }
 }
 
+export function assertCheckConfiguration({ token, appId, appSecret }) {
+  if (!token) {
+    throw new Error('INSTAGRAM_ACCESS_TOKEN environment variable is required');
+  }
+  if (!appId) {
+    throw new Error('INSTAGRAM_APP_ID environment variable is required');
+  }
+  if (!appSecret) {
+    throw new Error('INSTAGRAM_APP_SECRET environment variable is required');
+  }
+}
+
 async function exchangeForLongLivedToken(shortLivedToken) {
   log('Exchanging short-lived token for long-lived token...');
   
@@ -266,18 +278,10 @@ async function restartFlyApp() {
 
 async function setup() {
   log('=== Instagram Token Setup ===');
-  
-  if (!TOKEN) {
-    error('INSTAGRAM_ACCESS_TOKEN environment variable is required');
-    process.exit(1);
-  }
-  
-  if (!APP_SECRET) {
-    error('INSTAGRAM_APP_SECRET environment variable is required');
-    process.exit(1);
-  }
-  
+
   try {
+    assertCheckConfiguration({ token: TOKEN, appId: APP_ID, appSecret: APP_SECRET });
+
     // First check if current token is already long-lived
     const status = await checkTokenStatus(TOKEN);
     assertTokenValid(status);
@@ -359,12 +363,9 @@ async function check() {
   const state = await loadTokenState();
   const token = TOKEN || state.token;
   
-  if (!token) {
-    error('No token available. Run with --setup first.');
-    process.exit(1);
-  }
-  
   try {
+    assertCheckConfiguration({ token, appId: APP_ID, appSecret: APP_SECRET });
+
     const status = await checkTokenStatus(token);
     assertTokenValid(status);
     
