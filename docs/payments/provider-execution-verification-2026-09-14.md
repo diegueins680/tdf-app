@@ -97,6 +97,29 @@ The following completion record was captured at `2026-09-14T14:46:43Z` (`2026-09
 
 No sandbox, staging, live, settlement, or production evidence was produced by any command above.
 
+### Provider-account authority CI repair
+
+A follow-up verification was captured at `2026-09-14T15:15:12Z`
+(`2026-09-14T10:15:12-05:00`) for exact code commit
+`cca7280e6984c1c8c623d0630fe1f4e5bf6bc281`. The initial hosted CI run
+correctly rejected seven unreviewed catalog fingerprints and one stale
+migration-manifest fingerprint. The repair removed provider and environment
+string allowlists from `commerce_provider_operation`, made the canonical
+`commerce_provider_account(provider, environment)` registry authoritative by
+foreign key, replaced the stale manifest fingerprint, and reviewed the four
+remaining operation/state/outcome constraints as payment-safety state-machine
+controls.
+
+| Command | Environment/evidence class | Outcome |
+|---|---|---|
+| `npm run test:catalog-list-audit && npm run audit:catalog-lists` | Local deterministic discovery and exhaustive repository audit | Passed: discovery test 1/1; no unreviewed candidates or stale decisions. |
+| `./scripts/test-provider-execution-runtime-migration.sh` | Disposable `postgres:16-alpine` | Passed, including canonical-account FK presence, removal of the two local string allowlists, and rejection of an unregistered provider account. Container removed. |
+| `npm run test:production-release` | Local Node release-contract tests | Passed: 60 tests, 0 failures, including the new production FK assertion. |
+| `TDF_AUTOMIG_TEST_DATABASE_URL=… TDF_AUTOMIG_SERVER_BIN=… TDF_AUTOMIG_SERVER_PORT=… ./scripts/test-automatic-migrations-production-schema.sh` | Isolated `pgvector/pgvector:pg17`, compiled local backend; connection details redacted | Passed: full cut-over, schema verification, second startup, and unchanged schema checksum. Container removed. |
+
+These are still local/database tests. They do not change the provider sandbox,
+staging, live-transaction, settlement, or deployment evidence boundary.
+
 Run from the parent repository unless noted:
 
 ```text
