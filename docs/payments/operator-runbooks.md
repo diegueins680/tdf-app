@@ -12,7 +12,7 @@ These procedures are safe defaults for sandbox and staging. They do not authoriz
 6. Update the provider-account metadata only after contract and credential evidence is reviewed. Production additionally requires the matching `revenue_feature_flag` and a separately authorized change window.
 7. Call `/commerce/payment-capabilities` for each intended flow. An empty `routes` array blocks the checkout UI; it is not a reason to bypass the gate.
 
-Required server-only secret names are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOKEN`, `DATAFAST_BASE_URL`, PayPal client credentials/merchant/webhook identity, `COMMERCE_EVENT_ENCRYPTION_KEY`, `COMMERCE_BANK_TRANSFER_INSTRUCTIONS`, `PLACETOPAY_LOGIN`, `PLACETOPAY_SECRET_KEY`, `PAYPHONE_TOKEN`, and `PAYPHONE_STORE_ID`. Presence alone is not validation. A checkout method requires an enabled account plus exact environment-specific method/capability evidence; a documented capability row is never enough. PlaceToPay and PayPhone remain disabled until the canonical runtime endpoints and credentialed sandbox evidence are complete.
+Required server-only secret names are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOKEN`, `DATAFAST_BASE_URL`, PayPal client credentials/merchant/webhook identity, `COMMERCE_EVENT_ENCRYPTION_KEY`, `COMMERCE_BANK_TRANSFER_INSTRUCTIONS`, `PLACETOPAY_LOGIN`, `PLACETOPAY_SECRET_KEY`, `PLACETOPAY_RETURN_URL`, `PLACETOPAY_NOTIFICATION_URL`, `PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID`, and `PAYPHONE_RESPONSE_URL`. PlaceToPay also needs at least one exact site-method mapping in `PLACETOPAY_CARD_PAYMENT_METHODS`, `PLACETOPAY_BANK_PAYMENT_METHODS`, or `PLACETOPAY_DEUNA_PAYMENT_METHODS`; these are comma-separated provider IDs, not secrets, but still belong in environment configuration. Presence alone is not validation. A checkout method requires an enabled account plus exact environment-specific method/capability evidence; a documented capability row is never enough. PlaceToPay and PayPhone remain absent from customer checkout until credentialed sandbox evidence and the shared web/mobile return-and-restore UX are complete.
 
 ## 2. Sandbox qualification
 
@@ -42,7 +42,7 @@ Screenshots and mocks may support UX review but cannot be recorded as provider s
 5. Acknowledge only according to provider retry semantics. Processing happens from the persistent inbox, not inline assumptions.
 6. Bind amount, currency, order and resource before a financial state change.
 7. Rotate by accepting old/new secrets only for a short documented overlap. Test both, remove old, and record the rotation audit event.
-8. For PayPhone, until a signed scheme is contractually documented, accept notification only as a hint and query the authenticated transaction endpoint before state change.
+8. For PayPhone, until a signed scheme is contractually documented, accept notification only as a hint and query the authenticated transaction endpoint before state change. Register `/NotificacionPago` when the provider portal requires the method name documented in PayPhone's current guide; the canonical notification URL is an equivalent alias.
 9. For PlaceToPay, verify the documented SHA-256 notification but still query the authenticated session endpoint and bind the stored request ID, reference, amount and currency before state change.
 
 ## 4. Deployment and rollback
@@ -58,6 +58,8 @@ Pre-deploy:
 - legal/accounting/PCI and provider evidence gates are signed off for any proposed activation.
 
 Deploy code and schema separately from activation. Smoke-test health and read-only capabilities. If application behavior fails, roll back the image. If the lifecycle schema is unused, the provided rollback may remove it. Once any lifecycle/financial evidence exists, rollback intentionally refuses; roll forward instead.
+
+The provider-execution rollback additionally refuses when a remote-operation row or an untrusted callback exists. It deletes only exact untouched feature-flag seeds, preserving any operator-modified row. A hosted redirect URL is encrypted and must never be copied into logs or incident tickets.
 
 ## 5. Ambiguous transaction incident
 

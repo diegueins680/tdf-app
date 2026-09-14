@@ -102,6 +102,7 @@ import qualified TDF.Server.Catalog as CatalogServer
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
+import qualified TDF.Server.ProviderExecution as ProviderExecutionServer
 import qualified TDF.Catalog.Models as Catalog
 import           TDF.Catalog.Security
   ( applySecurityRoleAssignmentPolicy
@@ -746,6 +747,7 @@ server env =
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
   :<|> PaymentCapabilitiesServer.paymentCapabilitiesServer
+  :<|> ProviderExecutionServer.providerExecutionServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
@@ -10315,6 +10317,7 @@ reviewServiceBookingManualPayment user rawBookingId request = do
                         , Checkout.vpProviderResource = evidenceId
                         , Checkout.vpProviderResourcePath = Nothing
                         , Checkout.vpOrderReference = toPathPiece bookingKey
+                        , Checkout.vpProviderReference = toPathPiece bookingKey
                         , Checkout.vpAmountMinor = sbpcDepositMinor context
                         , Checkout.vpCurrency = sbpcCurrency context
                         , Checkout.vpEvidence = "staff_verified_manual"
@@ -11278,6 +11281,7 @@ confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = d
             , Checkout.vpProviderResource = checkoutId
             , Checkout.vpProviderResourcePath = Just resourcePath
             , Checkout.vpOrderReference = toPathPiece (sbpcBookingKey context)
+            , Checkout.vpProviderReference = toPathPiece (sbpcBookingKey context)
             , Checkout.vpAmountMinor = sbpcDepositMinor context
             , Checkout.vpCurrency = sbpcCurrency context
             , Checkout.vpEvidence = "server_to_server"
@@ -11419,6 +11423,7 @@ capturePublicBookingPaypalOrder
             , Checkout.vpProviderResourcePath = Just
                 ("/v2/checkout/orders/" <> suppliedPaypalOrderId <> "/capture")
             , Checkout.vpOrderReference = toPathPiece (sbpcBookingKey context)
+            , Checkout.vpProviderReference = toPathPiece (sbpcBookingKey context)
             , Checkout.vpAmountMinor = sbpcDepositMinor context
             , Checkout.vpCurrency = sbpcCurrency context
             , Checkout.vpEvidence = "server_to_server"
@@ -17400,6 +17405,7 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
               , Checkout.vpProviderResource = fromMaybe "" (ME.marketplaceOrderDatafastCheckoutId order)
               , Checkout.vpProviderResourcePath = Just resourcePathTxt
               , Checkout.vpOrderReference = toPathPiece orderKey
+              , Checkout.vpProviderReference = toPathPiece orderKey
               , Checkout.vpAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
               , Checkout.vpCurrency = ME.marketplaceOrderCurrency order
               , Checkout.vpEvidence = "server_to_server"
@@ -17654,6 +17660,7 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
               , Checkout.vpProviderResourcePath = Just
                   ("/v2/checkout/orders/" <> paypalOrderId <> "/capture")
               , Checkout.vpOrderReference = toPathPiece orderKey
+              , Checkout.vpProviderReference = toPathPiece orderKey
               , Checkout.vpAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
               , Checkout.vpCurrency = ME.marketplaceOrderCurrency order
               , Checkout.vpEvidence = "server_to_server"
@@ -18567,6 +18574,7 @@ reviewMarketplaceManualPayment user rawOrderId request = do
                         , Checkout.vpProviderResource = evidenceId
                         , Checkout.vpProviderResourcePath = Nothing
                         , Checkout.vpOrderReference = toPathPiece orderKey
+                        , Checkout.vpProviderReference = toPathPiece orderKey
                         , Checkout.vpAmountMinor = mpcxTotalMinor context
                         , Checkout.vpCurrency = mpcxCurrency context
                         , Checkout.vpEvidence = "staff_verified_manual"

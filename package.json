@@ -76,6 +76,7 @@
     "test:artist-merch-runtime": "sh scripts/test-artist-merch-runtime.sh",
     "test:checkout-event-refund-migration": "sh scripts/test-checkout-event-refund-runtime-migration.sh",
     "test:provider-event-operations-migration": "sh scripts/test-provider-event-operations-migration.sh",
+    "test:provider-execution-migration": "sh scripts/test-provider-execution-runtime-migration.sh",
     "test:canonical-payment-lifecycle-migration": "sh scripts/test-canonical-payment-lifecycle-migration.sh",
     "test:contextual-reputation-worker-migration": "sh scripts/test-contextual-reputation-worker-migration.sh",
     "test:merch-reputation-migration": "sh scripts/test-merch-reputation-migration.sh",

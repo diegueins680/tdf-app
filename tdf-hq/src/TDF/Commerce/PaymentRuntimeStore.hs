@@ -10,6 +10,7 @@
 -- records without being presented as canonical online methods.
 module TDF.Commerce.PaymentRuntimeStore
   ( beginPaymentAttempt
+  , beginPaymentAttemptForMethod
   , canonicalPaymentMethodForProvider
   , operationCapabilities
   , productFlowForDomain
@@ -33,13 +34,25 @@ beginPaymentAttempt
 beginPaymentAttempt creation =
   case canonicalPaymentMethodForProvider (Checkout.pacProvider creation) of
     Nothing -> Checkout.beginPaymentAttempt creation
-    Just paymentMethod -> do
-      routeResult <- validateCanonicalRoute creation paymentMethod
-      case routeResult of
-        Left problem -> pure (Left problem)
-        Right () -> beginCanonical paymentMethod
+    Just paymentMethod -> beginPaymentAttemptForMethod paymentMethod creation
+
+-- | Start an attempt when the checkout surface selected an explicit method.
+-- This is mandatory for multi-method providers such as PlaceToPay: inferring a
+-- method from the provider would let a client bypass method-level capability
+-- verification (for example by requesting a bank redirect through a card-only
+-- account).  The existing provider-only entry point remains for legacy,
+-- unambiguous integrations.
+beginPaymentAttemptForMethod
+  :: PaymentMethod
+  -> Checkout.PaymentAttemptCreation
+  -> SqlPersistT IO (Either Text Checkout.PaymentAttemptReference)
+beginPaymentAttemptForMethod paymentMethod creation = do
+  routeResult <- validateCanonicalRoute creation paymentMethod
+  case routeResult of
+    Left problem -> pure (Left problem)
+    Right () -> beginCanonical
   where
-    beginCanonical paymentMethod = do
+    beginCanonical = do
       -- Returning Left alone would commit an orphan intent or attempt under
       -- Persistent's outer transaction, so this bridge owns a save boundary.
       transactionSave

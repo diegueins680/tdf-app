@@ -1079,6 +1079,7 @@ confirmPublicCourseDatafastStatus rawSlug rawRegistrationId mLookupToken rawReso
             , Checkout.vpProviderResource = checkoutId
             , Checkout.vpProviderResourcePath = Just resourcePath
             , Checkout.vpOrderReference = orderReference
+            , Checkout.vpProviderReference = orderReference
             , Checkout.vpAmountMinor = cpcDueNowMinor context
             , Checkout.vpCurrency = cpcCurrency context
             , Checkout.vpEvidence = "server_to_server"
@@ -1220,6 +1221,7 @@ capturePublicCoursePaypalOrder rawSlug rawRegistrationId mLookupToken request = 
             , Checkout.vpProviderResourcePath = Just
                 ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture")
             , Checkout.vpOrderReference = orderReference
+            , Checkout.vpProviderReference = orderReference
             , Checkout.vpAmountMinor = cpcDueNowMinor context
             , Checkout.vpCurrency = cpcCurrency context
             , Checkout.vpEvidence = "server_to_server"

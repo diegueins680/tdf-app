@@ -375,6 +375,7 @@ providerEventToDTO ProviderEvent.ProviderEventRecord{..} = CommerceProviderEvent
   , cpeEnvironment = perEnvironment
   , cpeProviderEventId = perProviderEventId
   , cpeEventType = perEventType
+  , cpeEvidenceType = perEvidenceType
   , cpeProviderResourceId = perProviderResourceId
   , cpeStatus = perStatus
   , cpeAttemptCount = perAttemptCount

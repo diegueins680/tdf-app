@@ -1253,6 +1253,7 @@ confirmPublicEventTicketDatafastStatus rawEventId rawOrderId mLookupToken rawRes
           , Checkout.vpProviderResource = checkoutId
           , Checkout.vpProviderResourcePath = Just resourcePath
           , Checkout.vpOrderReference = ticketReference context
+          , Checkout.vpProviderReference = ticketReference context
           , Checkout.vpAmountMinor = tpcAmountMinor context
           , Checkout.vpCurrency = tpcCurrency context
           , Checkout.vpEvidence = "server_to_server"
@@ -1389,6 +1390,7 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
             , Checkout.vpProviderResourcePath = Just
                 ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture")
             , Checkout.vpOrderReference = ticketReference context
+            , Checkout.vpProviderReference = ticketReference context
             , Checkout.vpAmountMinor = tpcAmountMinor context
             , Checkout.vpCurrency = tpcCurrency context
             , Checkout.vpEvidence = "server_to_server"

@@ -10,7 +10,8 @@ module TDF.Commerce.ProviderAdapter.PayPhone
   ) where
 
 import           Control.Monad (unless, when)
-import           Data.Aeson ((.:), (.=), Value)
+import           Control.Applicative ((<|>))
+import           Data.Aeson ((.:), (.:?), (.=), Value)
 import qualified Data.Aeson as A
 import           Data.Aeson.Types (Parser, parseEither)
 import           Data.Char (isDigit)
@@ -23,7 +24,7 @@ import           Data.Time
 import           TDF.Commerce.CheckoutStore (PaymentProvider(..))
 import           TDF.Commerce.ProviderAdapter
 import           TDF.Commerce.ProviderCapabilities
-  ( ProviderOutcomeCertainty(..) )
+  ( PaymentMethod(..), ProviderOutcomeCertainty(..) )
 
 data PayPhoneConfig = PayPhoneConfig
   { payPhoneToken   :: Text
@@ -46,7 +47,7 @@ payPhoneAdapter config = do
     , adapterBuildRefund = \_ _ -> unsupportedOperation
     , adapterBuildSameDayReverse = buildSameDayReverse config
     , adapterParseResponse = parseResponse
-    , adapterAssessNotification = assessCallback
+    , adapterAssessNotification = assessCallback config
     }
 
 buildCreate
@@ -56,6 +57,8 @@ buildCreate
   -> Either AdapterError AdapterRequest
 buildCreate config _ payment = do
   validateCreate payment
+  unless (cpPaymentMethod payment == MethodPayPhoneWallet)
+    (Left (AdapterError "PayPhone API Sale supports only the PayPhone wallet flow."))
   validateUsdMoney (cpMoney payment)
   phone <- maybe
     (Left (AdapterError "PayPhone buyer phone number is required."))
@@ -185,11 +188,14 @@ parseQuery locator = A.withObject "PayPhone query response" $ \object -> do
   amountMinor <- object .: "amount" :: Parser Int64
   currency <- normalizedCurrency <$> object .: "currency"
   statusCode <- object .: "statusCode" :: Parser Int
+  let transactionIdText = T.pack (show transactionId)
+  unless (transactionIdText == plExternalId locator)
+    (fail "PayPhone transaction ID does not match the stored sale")
   validateBindingParser (plExpected locator) clientReference amountMinor currency
   let (state, certainty) = payPhoneStatus statusCode
   pure AdapterResult
     { adapterResultState = state
-    , adapterResultExternalId = T.pack (show transactionId)
+    , adapterResultExternalId = transactionIdText
     , adapterResultRedirectUrl = Nothing
     , adapterResultAmountMinor = Just amountMinor
     , adapterResultCurrency = Just currency
@@ -213,14 +219,25 @@ parseBooleanMutation state certainty locator = A.withBool "PayPhone mutation res
     , adapterResultCertainty = certainty
     }
 
-assessCallback :: Value -> Either AdapterError NotificationAssessment
-assessCallback = parsePayPhoneValue $ A.withObject "PayPhone callback" $ \object -> do
-  transactionId <- object .: "id" :: Parser Int64
-  clientReference <- object .: "clientTransactionID"
+assessCallback :: PayPhoneConfig -> Value -> Either AdapterError NotificationAssessment
+assessCallback config = parsePayPhoneValue $ A.withObject "PayPhone callback" $ \object -> do
+  transactionId <-
+    (object .: "TransactionId" :: Parser Int64)
+      <|> object .: "id"
+  clientReference <-
+    (object .: "ClientTransactionId" :: Parser Text)
+      <|> object .: "clientTransactionID"
+  statusCode <- object .:? "StatusCode" :: Parser (Maybe Int)
+  callbackStoreId <- object .:? "StoreId" :: Parser (Maybe Text)
+  when (transactionId <= 0) (fail "PayPhone callback transaction ID is invalid")
+  unless (validProviderIdentifier clientReference)
+    (fail "PayPhone callback client transaction ID is invalid")
+  when (maybe False (/= payPhoneStoreId config) callbackStoreId)
+    (fail "PayPhone callback store ID does not match this merchant")
   pure NotificationAssessment
     { notificationExternalId = T.pack (show transactionId)
     , notificationMerchantReference = Just clientReference
-    , notificationProviderStatus = Nothing
+    , notificationProviderStatus = T.pack . show <$> statusCode
     , notificationAuthenticated = False
     , notificationRequiresQuery = True
     }

@@ -1213,6 +1213,7 @@ confirmPublicDomoDatafastStatus rawQuoteId mLookupToken rawResourcePath = do
           , Checkout.vpProviderResource = checkoutId
           , Checkout.vpProviderResourcePath = Just resourcePath
           , Checkout.vpOrderReference = domoReference context
+          , Checkout.vpProviderReference = domoReference context
           , Checkout.vpAmountMinor = dpcAmountMinor context
           , Checkout.vpCurrency = dpcCurrency context
           , Checkout.vpEvidence = "server_to_server"
@@ -1344,6 +1345,7 @@ capturePublicDomoPaypalOrder rawQuoteId mLookupToken request = do
             , Checkout.vpProviderResourcePath = Just
                 ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture")
             , Checkout.vpOrderReference = domoReference context
+            , Checkout.vpProviderReference = domoReference context
             , Checkout.vpAmountMinor = dpcAmountMinor context
             , Checkout.vpCurrency = dpcCurrency context
             , Checkout.vpEvidence = "server_to_server"

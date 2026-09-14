@@ -4266,6 +4266,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/commerce/checkouts/{checkoutId}/payment-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkoutId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or recover a hosted provider payment session
+         * @description Routes only through an exact enabled provider/method/capability combination. A provider contact with an ambiguous outcome is locked for reconciliation and cannot be retried through another provider.
+         */
+        post: operations["createProviderPaymentSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+            };
+            path: {
+                checkoutId: string;
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        /** Read a durable hosted payment-session state */
+        get: operations["getProviderPaymentSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/provider-notifications/placetopay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a signed PlaceToPay session notification
+         * @description Verifies the embedded SHA-256 signature, persists the exact encrypted body, and queues an authenticated session query. The notification alone never marks an order paid.
+         */
+        post: operations["receivePlaceToPayNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/provider-notifications/payphone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive an unsigned PayPhone external notification
+         * @description Persists the exact body as an untrusted query trigger. Payment and fulfillment advance only after the authenticated PayPhone status API matches transaction ID, client reference, amount, and USD currency.
+         */
+        post: operations["receivePayPhoneNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/NotificacionPago": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a PayPhone external notification on its required method name
+         * @description Compatibility alias required by PayPhone's notification contract. It uses the same untrusted-callback persistence and authenticated-query reconciliation as the canonical endpoint.
+         */
+        post: operations["receivePayPhoneNotificationCompatibility"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/commerce/overview": {
         parameters: {
             query?: never;
@@ -4319,7 +4423,7 @@ export interface paths {
         put?: never;
         /**
          * Requeue one dead-letter provider event with immutable operator evidence
-         * @description Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+         * @description Requeueing does not mark an order paid. The bounded worker reprocesses only the original encrypted payload; untrusted callbacks still require an authenticated provider query.
          */
         post: operations["adminReplayCommerceProviderEvent"];
         delete?: never;
@@ -8708,6 +8812,8 @@ export interface components {
             cpeEnvironment: "sandbox" | "production";
             cpeProviderEventId: string;
             cpeEventType: string;
+            /** @enum {string} */
+            cpeEvidenceType: "signature_verified" | "untrusted_callback";
             cpeProviderResourceId: string | null;
             /** @enum {string} */
             cpeStatus: "pending" | "processing" | "processed" | "retry" | "dead_letter" | "ignored";
@@ -8734,6 +8840,40 @@ export interface components {
         };
         CommerceProviderEventReplayCreate: {
             cperReason: string;
+        };
+        PaymentSessionCreate: {
+            /** @enum {string} */
+            provider: "placetopay" | "payphone";
+            /** @enum {string} */
+            paymentMethod: "card" | "bank_redirect" | "deuna_qr" | "payphone_wallet";
+            buyerPhone?: string;
+            buyerCountryCode?: string;
+        };
+        PaymentSession: {
+            /** Format: uuid */
+            checkoutId: string;
+            /** Format: uuid */
+            attemptId: string;
+            /** Format: uuid */
+            operationId: string;
+            /** @enum {string} */
+            provider: "placetopay" | "payphone";
+            /** @enum {string} */
+            state: "prepared" | "in_flight" | "requires_customer_action" | "processing" | "succeeded" | "confirmed_no_charge" | "ambiguous" | "failed";
+            externalId: string | null;
+            /**
+             * Format: uri
+             * @description Hosted provider URL; treat as a bearer capability and do not log it.
+             */
+            redirectUrl: string | null;
+            /** @enum {string} */
+            outcomeCertainty: "not_contacted" | "rejected_before_creation" | "confirmed_no_charge" | "ambiguous" | "succeeded";
+            /** @description True only when the provider is known not to have created a charge. */
+            canRetryOrFallback: boolean;
+        };
+        PayPhoneNotificationAck: {
+            Response: boolean;
+            ErrorCode: string;
         };
         DatafastCheckout: {
             dcOrderId: string;
@@ -21474,6 +21614,242 @@ export interface operations {
             };
             /** @description Provider status could not be read */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createProviderPaymentSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                checkoutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentSessionCreate"];
+            };
+        };
+        responses: {
+            /** @description Durable provider operation; may require customer action or reconciliation */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSession"];
+                };
+            };
+            /** @description Invalid provider */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout is absent */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency conflict or another active canonical payment intent exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider/configuration is unavailable or an ambiguous result requires reconciliation */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getProviderPaymentSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+            };
+            path: {
+                checkoutId: string;
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lookup-token-scoped state without provider payloads or credentials */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSession"];
+                };
+            };
+            /** @description Session absent or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Encrypted operation storage is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receivePlaceToPayNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Verified notification durably accepted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid notification body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Signature verification failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receivePayPhoneNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Notification durably accepted in PayPhone's required acknowledgment format */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayPhoneNotificationAck"];
+                };
+            };
+            /** @description Invalid notification or mismatched store identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event identifier conflicts with different immutable evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receivePayPhoneNotificationCompatibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Notification durably accepted in PayPhone's required acknowledgment format */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayPhoneNotificationAck"];
+                };
+            };
+            /** @description Invalid notification or mismatched store identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event identifier conflicts with different immutable evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider account */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

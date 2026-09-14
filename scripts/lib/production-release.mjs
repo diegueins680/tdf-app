@@ -1656,6 +1656,7 @@ BEGIN
     'commerce_payment_attempt',
     'commerce_provider_binding',
     'commerce_provider_event_inbox',
+    'commerce_provider_operation',
     'commerce_refund',
     'commerce_refund_allocation',
     'commerce_refund_reason_code',
@@ -2124,8 +2125,27 @@ BEGIN
         ('commerce_provider_event_inbox', 'payment_attempt_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'refund_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'provider_resource_id', 'text', 'YES'),
+        ('commerce_provider_event_inbox', 'evidence_type', 'text', 'NO'),
         ('commerce_provider_event_inbox', 'processing_started_at', 'timestamp with time zone', 'YES'),
         ('commerce_provider_event_inbox', 'last_attempt_at', 'timestamp with time zone', 'YES'),
+        ('commerce_provider_operation', 'id', 'uuid', 'NO'),
+        ('commerce_provider_operation', 'payment_attempt_id', 'uuid', 'NO'),
+        ('commerce_provider_operation', 'provider', 'text', 'NO'),
+        ('commerce_provider_operation', 'environment', 'text', 'NO'),
+        ('commerce_provider_operation', 'merchant_account_ref', 'text', 'NO'),
+        ('commerce_provider_operation', 'provider_reference', 'text', 'NO'),
+        ('commerce_provider_operation', 'operation', 'text', 'NO'),
+        ('commerce_provider_operation', 'idempotency_key', 'text', 'NO'),
+        ('commerce_provider_operation', 'request_sha256', 'text', 'NO'),
+        ('commerce_provider_operation', 'status', 'text', 'NO'),
+        ('commerce_provider_operation', 'outcome_certainty', 'text', 'NO'),
+        ('commerce_provider_operation', 'provider_resource_id', 'text', 'YES'),
+        ('commerce_provider_operation', 'redirect_url_ciphertext', 'bytea', 'YES'),
+        ('commerce_provider_operation', 'last_error_code', 'text', 'YES'),
+        ('commerce_provider_operation', 'started_at', 'timestamp with time zone', 'YES'),
+        ('commerce_provider_operation', 'completed_at', 'timestamp with time zone', 'YES'),
+        ('commerce_provider_operation', 'created_at', 'timestamp with time zone', 'NO'),
+        ('commerce_provider_operation', 'updated_at', 'timestamp with time zone', 'NO'),
         ('commerce_refund', 'provider', 'text', 'YES'),
         ('commerce_refund', 'environment', 'text', 'YES'),
         ('commerce_refund', 'merchant_account_ref', 'text', 'YES'),
@@ -2158,6 +2178,7 @@ BEGIN
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_checkout', 'f', 'FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_attempt', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT'),
+        ('commerce_provider_operation', 'commerce_provider_operation_payment_attempt_id_fkey', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
         ('commerce_refund', 'ck_commerce_refund_provider', 'c', 'CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[''datafast''::text, ''paypal''::text, ''placetopay''::text, ''payphone''::text, ''stripe''::text, ''bank_transfer''::text, ''cash''::text, ''pos''::text]))))'),
         ('commerce_refund', 'ck_commerce_refund_environment', 'c', 'CHECK (((environment IS NULL) OR (environment = ANY (ARRAY[''sandbox''::text, ''production''::text]))))'),
         ('commerce_receipt', 'fk_commerce_receipt_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT')
@@ -2173,15 +2194,39 @@ BEGIN
     RAISE EXCEPTION 'Provider event/refund constraints are missing or invalid';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.commerce_provider_event_inbox'::regclass
+      AND conname = 'ck_commerce_provider_event_evidence'
+      AND contype = 'c' AND convalidated
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid = to_regprocedure('public.commerce_protect_provider_event()')
+      AND strpos(pg_get_functiondef(oid), 'evidence_type') > 0
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid = to_regprocedure('public.commerce_guard_provider_operation_immutable()')
+      AND strpos(pg_get_functiondef(oid), 'provider_resource_id') > 0
+  ) THEN
+    RAISE EXCEPTION 'Provider execution evidence guards are missing or invalid';
+  END IF;
+
   IF to_regclass('public.idx_commerce_payment_attempt_intent') IS NULL
      OR to_regclass('public.idx_commerce_provider_event_work') IS NULL
      OR to_regclass('public.idx_commerce_provider_event_resource') IS NULL
+     OR to_regclass('public.idx_commerce_provider_event_untrusted_work') IS NULL
+     OR to_regclass('public.idx_commerce_provider_operation_reconciliation') IS NULL
+     OR to_regclass('public.uq_commerce_provider_operation_create') IS NULL
      OR to_regclass('public.idx_commerce_refund_checkout_status') IS NULL
      OR to_regclass('public.uq_commerce_credit_note_refund') IS NULL THEN
     RAISE EXCEPTION 'Provider event/refund runtime indexes are incomplete';
   END IF;
 
   IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_provider_operation'::regclass
+      AND tgname = 'trg_commerce_provider_operation_immutable' AND tgenabled = 'O'
+  ) OR NOT EXISTS (
     SELECT 1 FROM pg_trigger
     WHERE tgrelid = 'public.commerce_refund'::regclass
       AND tgname = 'trg_commerce_validate_refund_write' AND tgenabled = 'O'
@@ -2194,7 +2239,7 @@ BEGIN
     WHERE tgrelid = 'public.commerce_receipt'::regclass
       AND tgname = 'trg_commerce_validate_credit_note' AND tgenabled = 'O'
   ) THEN
-    RAISE EXCEPTION 'Provider refund invariant triggers are missing or disabled';
+    RAISE EXCEPTION 'Provider execution/refund invariant triggers are missing or disabled';
   END IF;
 
   IF EXISTS (
@@ -2203,7 +2248,9 @@ BEGIN
       ('checkout.paypal.webhooks'),
       ('checkout.paypal.refunds'),
       ('checkout.datafast.webhooks'),
-      ('checkout.datafast.refunds')
+      ('checkout.datafast.refunds'),
+      ('checkout.placetopay.webhooks'),
+      ('checkout.payphone.notifications')
     ) AS expected(flag_key)
     LEFT JOIN revenue_feature_flag AS flag
       ON flag.flag_key = expected.flag_key AND flag.environment = 'production'

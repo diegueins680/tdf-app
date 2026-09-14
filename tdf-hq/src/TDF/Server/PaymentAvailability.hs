@@ -25,15 +25,17 @@ import           System.Environment (lookupEnv)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderCapabilities
 import           TDF.Commerce.ProviderCapabilityStore (loadProviderActivations)
+import           TDF.Commerce.ProviderRuntimeConfig
+  ( runtimeProviderConfigured, runtimeProviderMethodConfigured )
 import           TDF.DB (Env(..))
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 
 type AppM = ReaderT Env Handler
 
 -- | Return only the labels supported by the existing public product handlers.
--- PlaceToPay and PayPhone remain absent until their shared executors and return
--- flows are wired; documenting or enabling an adapter alone must not expose a
--- non-functional checkout choice.
+-- PlaceToPay and PayPhone remain absent from legacy product-specific method
+-- labels until the shared web/mobile return experience consumes the payment-
+-- session API; an executable backend alone must not expose a broken UI choice.
 availableImplementedPaymentMethods
   :: Checkout.CheckoutEnvironment
   -> ProductFlow
@@ -100,11 +102,11 @@ runtimeReady environment route = case routeProvider route of
     liftIO $ (||)
       <$> nonEmptyEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
       <*> nonEmptyEnv "MERCH_BANK_TRANSFER_INSTRUCTIONS"
-  -- These adapters currently have contract tests but no end-to-end shared
-  -- executor and public return flow. Keep them unavailable even if an operator
-  -- accidentally changes account metadata.
-  Checkout.ProviderPlaceToPay -> pure False
-  Checkout.ProviderPayPhone -> pure False
+  Checkout.ProviderPlaceToPay ->
+    liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
+      (routeMethod route))
+  Checkout.ProviderPayPhone ->
+    liftIO (runtimeProviderConfigured environment Checkout.ProviderPayPhone)
   Checkout.ProviderStripe -> pure False
   Checkout.ProviderCash -> pure False
   Checkout.ProviderPos -> pure False
