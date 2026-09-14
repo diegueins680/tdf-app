@@ -247,7 +247,7 @@ export default function HostedProviderCheckout({
       const resumedMethod = HOSTED_PAYMENT_METHODS.find((candidate) =>
         candidate.provider === resume.provider && candidate.paymentMethod === resume.paymentMethod);
       if (!resumedMethod || (!expectedCheckoutId
-        && (!pendingReturnPathPrefix || !resume.returnPath.startsWith(pendingReturnPathPrefix)))) return;
+        && (!pendingReturnPathPrefix || !resume.returnPath.startsWith(pendingReturnPathPrefix)))) return undefined;
       clearProviderPaymentPending(resume.checkoutId);
       setPendingCreation(null);
       setActiveContext(context);
@@ -268,11 +268,11 @@ export default function HostedProviderCheckout({
     if (!pending
         || (!expectedCheckoutId
           && (!pendingReturnPathPrefix
-            || !pending.returnPath.startsWith(pendingReturnPathPrefix)))) return;
+            || !pending.returnPath.startsWith(pendingReturnPathPrefix)))) return undefined;
     const pendingMethod = HOSTED_PAYMENT_METHODS.find((candidate) =>
       candidate.provider === pending.provider
       && candidate.paymentMethod === pending.paymentMethod);
-    if (!pendingMethod) return;
+    if (!pendingMethod) return undefined;
     setPendingCreation(pending);
     setActiveContext({
       checkoutId: pending.checkoutId,
@@ -284,6 +284,7 @@ export default function HostedProviderCheckout({
     if (pending.buyerCountryCode) setBuyerCountryCode(pending.buyerCountryCode);
     setPotentiallyAmbiguous(true);
     setError(publicError(english, true));
+    return undefined;
   }, [checkout?.checkoutId, english, pendingReturnPathPrefix, publishSession]);
 
   useEffect(() => {
