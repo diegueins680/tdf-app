@@ -131,8 +131,33 @@ export async function inspectStaging({ runFly = flyJson, health = readHealth } =
   };
 }
 
+export async function inspectKoyeb({ token, fetcher = fetch } = {}) {
+  if (!token) return { configured: false, accessible: false };
+  try {
+    const response = await fetcher('https://app.koyeb.com/v1/apps?limit=100', {
+      method: 'GET', redirect: 'error', signal: AbortSignal.timeout(20_000),
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return { configured: true, accessible: false, httpStatus: response.status };
+    const value = await response.json();
+    if (!Array.isArray(value.apps)) return { configured: true, accessible: false, reason: 'unexpected_app_listing_schema' };
+    return {
+      configured: true, accessible: true, httpStatus: response.status,
+      listingMayBeTruncated: value.apps.length >= 100,
+      // No production app, service configuration or secret values are returned.
+      stagingApps: value.apps.filter((app) => /^[a-z0-9-]{1,63}$/.test(app.name ?? '')
+        && app.name.includes('tdf') && app.name.includes('staging'))
+        .map((app) => ({ name: app.name,
+          id: /^[a-f0-9-]{36}$/.test(app.id ?? '') ? app.id : 'redacted' })),
+    };
+  } catch {
+    return { configured: true, accessible: false, reason: 'hosting_connection_or_response_failed' };
+  }
+}
+
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const report = await inspectStaging();
+  report.alternativeHosting = await inspectKoyeb({ token: process.env.KOYEB_API_TOKEN });
   await mkdir('artifacts/payment-staging', { recursive: true });
   await writeFile('artifacts/payment-staging/access-report.json', `${JSON.stringify(report, null, 2)}\n`);
   console.log(JSON.stringify(report, null, 2));

@@ -67,6 +67,7 @@ jobs:
       - name: Inspect only existing staging metadata
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
           NO_COLOR: '1'
         run: node scripts/inspect-payment-staging.mjs
       - name: Upload allowlisted staging access report

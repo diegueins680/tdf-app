@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  assertStagingApp, classifyInspectionError, inspectStaging, STAGING_APPS,
+  assertStagingApp, classifyInspectionError, inspectKoyeb, inspectStaging, STAGING_APPS,
   summarizeConfig, summarizeSecrets, summarizeStatus,
 } from '../inspect-payment-staging.mjs';
 
@@ -59,4 +59,23 @@ test('auth failures are actionable without returning credential-bearing diagnost
   assert.equal(classifyInspectionError(new Error('Unexpected staging app identity')),
     'unexpected_app_identity');
   assert.equal(classifyInspectionError(new SyntaxError('PRIVATE-RESPONSE')), 'non_json_cli_response');
+});
+
+test('alternative hosting inspection is GET-only and omits production and secret fields', async () => {
+  let requests = 0;
+  const report = await inspectKoyeb({ token: 'SYNTHETIC-TOKEN', fetcher: async (url, options) => {
+    requests += 1;
+    assert.equal(url, 'https://app.koyeb.com/v1/apps?limit=100');
+    assert.equal(options.method, 'GET');
+    assert.equal(options.redirect, 'error');
+    return { ok: true, status: 200, json: async () => ({ apps: [
+      { name: 'production', id: 'PRIVATE-PRODUCTION-ID' },
+      { name: 'tdf-payments-staging', id: '11111111-1111-4111-8111-111111111111', secret: 'SYNTHETIC-SECRET' },
+    ] }) };
+  } });
+  assert.equal(requests, 1);
+  assert.equal(report.accessible, true);
+  assert.equal(report.stagingApps.length, 1);
+  assert.equal(/SYNTHETIC|PRIVATE-PRODUCTION/.test(JSON.stringify(report)), false);
+  assert.deepEqual(await inspectKoyeb(), { configured: false, accessible: false });
 });
