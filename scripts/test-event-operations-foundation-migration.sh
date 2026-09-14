@@ -85,6 +85,19 @@ if psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_a
   exit 1
 fi
 
+if psql_exec -c "BEGIN; UPDATE event_logistics_activity SET status='in_progress',version=2 WHERE id=101 AND version=1; DELETE FROM event_logistics_dependency WHERE activity_id=101; INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (101,100); COMMIT;" >/dev/null 2>&1; then
+  echo "expected an activity/relation update cycle to roll back atomically" >&2
+  exit 1
+fi
+test "$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=101;")" = "planned:1"
+test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_logistics_dependency WHERE activity_id=101;')" = "0"
+
+if psql_exec -c "BEGIN; INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (105,10,'planned',1); INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (105,102); COMMIT;" >/dev/null 2>&1; then
+  echo "expected a cross-event activity/dependency create to roll back atomically" >&2
+  exit 1
+fi
+test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_logistics_activity WHERE id=105;')" = "0"
+
 docker exec "$test_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d "$test_database" \
   -c "BEGIN; INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (103,104); SELECT pg_sleep(2); COMMIT;" \
   >/dev/null 2>&1 &
@@ -133,4 +146,4 @@ if psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_a
   exit 1
 fi
 
-echo "Event operations foundation migration passed apply, idempotency, lifecycle mapping, ownership issue, timezone, RACI, sequential/concurrent DAG, completion override, invitation token, immutable audit, rollback, and reapply checks."
+echo "Event operations foundation migration passed apply, idempotency, lifecycle mapping, ownership issue, timezone, RACI, sequential/concurrent DAG, atomic activity/relation rollback, completion override, invitation token, immutable audit, rollback, and reapply checks."

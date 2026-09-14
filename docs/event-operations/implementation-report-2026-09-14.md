@@ -12,8 +12,10 @@ collaboration work listed below remain production-disabled or unimplemented.
 Work is isolated at `/Users/diegosaa/GitHub/tdf-app-event-operations`. The first local branch,
 `feat/event-operations-formal-foundation`, is committed at `cde0e806b6a5365e1e9f5b4052b74e38ea1aa232`
 from local `origin/main` commit `17a33eca1`. The dependent API work is on
-`feat/event-operations-api-foundation`. The dirty primary worktree and mobile submodule were not
-modified.
+`feat/event-operations-api-foundation`, committed at
+`b6ba963623861d1e2804b18adb46e6e4f5f5be80`. The next dependent hardening work is on
+`feat/event-logistics-transaction-hardening`. The dirty primary worktree and mobile submodule were
+not modified.
 
 ## Completed artifacts
 
@@ -52,6 +54,10 @@ modified.
   states, explicit domain-error mappings, the matching OpenAPI contract, regenerated web types, and
   a small typed web client. The snapshot exposes only the caller's active capabilities and currently
   executable transitions.
+- Hardened the existing social-event logistics handler rather than introducing another task store.
+  Activity create/update, optimistic version compare-and-swap, assignment replacement, and dependency
+  replacement now execute in one database transaction. A constraint or DAG failure restores the
+  entire prior snapshot instead of exposing a partially updated plan.
 
 ## Verified evidence
 
@@ -68,6 +74,8 @@ modified.
 | linked `tdf-hq-test --match 'event operations executable API contracts'` | PASS; 5 examples, 0 failures, including all 14 states, strict request decoding, and stable non-success error statuses |
 | local `openapi-typescript` 7.10.1 generation | PASS; OpenAPI parsed and web type artifact regenerated |
 | focused TypeScript compile of `eventOperations.ts` and generated types | PASS with strict mode, ES2022, bundler resolution, DOM libraries, React JSX, and Vite client types |
+| `npm run test:event-operations-foundation-migration` after logistics hardening | PASS on ephemeral PostgreSQL 16; additionally proves whole-transaction rollback for a cyclic update and cross-event dependency during create |
+| `stack build tdf-hq:exe:tdf-hq-exe --fast --ghc-options=-fno-code --no-copy-bins` | All 187/187 modules typechecked, including `SocialEventsHandlers` and aggregate server; command intentionally interrupted with exit 130 when Cabal began an identical second pass because `-fno-code` produced no copy artifact. Not claimed as a passing wrapper command. |
 
 Detailed TLC state counts, model bounds, fairness, counterexample corrections, checksums, and exact
 runner command are in `formal/event-operations/README.md`.
@@ -138,7 +146,9 @@ report.
   not a complete guest flow.
 - Evolve logistics APIs/UI to write the new RACI/task policy atomically; add workstreams, subtasks,
   checklists, recurrence, templates, typed production/logistics requirements, approvals, evidence,
-  and all requested views.
+  and all requested views. Existing activity/assignment/dependency writes are now one transaction,
+  but hard delete/history, RACI projection, and external route-verification side effects still need
+  the reviewed canonical command path.
 - Bind party/venue/room/asset/provider identities to the existing canonical resource/exclusion
   calendar; implement buffer/capacity/multi-resource transaction tests and availability UX.
 - Add the event-linked opportunity/proposal/engagement lifecycle, explainable ranking, immutable
@@ -154,8 +164,8 @@ report.
 ## External limitations and prohibited actions
 
 `git remote show origin` could not resolve the GitHub SSH host and `gh auth status` reported invalid
-credentials. The first branch is committed locally and the dependent API branch is local; no remote
-branch, push, PR, CI run, review, or merge is claimed. No screenshots were produced. No production database, deployment,
+credentials. The first two branches are committed locally and the logistics hardening branch is
+local; no remote branch, push, PR, CI run, review, or merge is claimed. No screenshots were produced. No production database, deployment,
 feature flag, credential, payment, refund, or payout was touched. The new migration is not added to
 the production manifest; that is a later reviewed rollout step after API/client compatibility and
 release rehearsal.
