@@ -187,15 +187,15 @@ export default function PublicBookingOrderTrackingPage() {
                     La evidencia bancaria fue rechazada. Regresa al flujo de reserva o contacta a TDF para corregirla; no se confirmó ningún pago.
                   </Alert>
                 )}
-                {!paidStatuses.has(order.paymentStatus) && lookupToken && (
+                {lookupToken && (
                   <HostedProviderCheckout
                     checkout={{
                       checkoutId: order.checkoutId,
                       lookupToken,
                       returnPath: `/reservas/orden/${order.booking.bookingId}`,
                     }}
-                    offeredMethods={order.paymentMethods}
-                    disabled={loading}
+                    offeredMethods={paidStatuses.has(order.paymentStatus) ? [] : order.paymentMethods}
+                    disabled={loading || paidStatuses.has(order.paymentStatus)}
                     onSafetyLockChange={setHostedPaymentLocked}
                     onPaymentConfirmed={refresh}
                   />

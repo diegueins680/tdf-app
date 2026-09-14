@@ -23,6 +23,7 @@ import {
   clearProviderPaymentPending,
   clearProviderPaymentResume,
   loadOrCreatePaymentIdempotencyKey,
+  loadExistingPaymentIdempotencyKey,
   loadProviderPaymentPending,
   loadProviderPaymentResume,
   safePaymentReturnPath,
@@ -63,6 +64,7 @@ const POLLABLE_STATES = new Set<ProviderPaymentSession['state']>([
 ]);
 
 class PaymentStartNotSentError extends Error {}
+class PaymentRecoveryUnavailableError extends Error {}
 
 const methodCopy = (
   label: HostedPaymentMethodLabel,
@@ -184,6 +186,9 @@ export default function HostedProviderCheckout({
   const [error, setError] = useState<string | null>(null);
   const [buyerCountryCode, setBuyerCountryCode] = useState('593');
   const [buyerPhone, setBuyerPhone] = useState(() => digitsOnly(initialBuyerPhone ?? ''));
+  const recoveryScope = checkout?.checkoutId ?? pendingReturnPathPrefix ?? '';
+  const recoveryScopeRef = useRef(recoveryScope);
+  recoveryScopeRef.current = recoveryScope;
 
   useEffect(() => {
     onPaymentConfirmedRef.current = onPaymentConfirmed;
@@ -213,16 +218,24 @@ export default function HostedProviderCheckout({
     context: HostedCheckoutContext,
     attemptId: string,
   ) => {
+    const requestScope = recoveryScopeRef.current;
     const next = await getProviderPaymentSession(
       context.checkoutId,
       attemptId,
       context.lookupToken,
     );
-    publishSession(next);
+    if (recoveryScopeRef.current === requestScope) publishSession(next);
     return next;
   }, [publishSession]);
 
   useEffect(() => {
+    let cancelled = false;
+    setSession(null);
+    setSelected(null);
+    setPendingCreation(null);
+    setPotentiallyAmbiguous(false);
+    setError(null);
+    setBusy(false);
     const expectedCheckoutId = checkout?.checkoutId;
     const resume = loadProviderPaymentResume(expectedCheckoutId);
     if (resume) {
@@ -233,19 +246,22 @@ export default function HostedProviderCheckout({
       };
       const resumedMethod = HOSTED_PAYMENT_METHODS.find((candidate) =>
         candidate.provider === resume.provider && candidate.paymentMethod === resume.paymentMethod);
-      if (!resumedMethod || !methods.some((candidate) => candidate.label === resumedMethod.label)) return;
+      if (!resumedMethod || (!expectedCheckoutId
+        && (!pendingReturnPathPrefix || !resume.returnPath.startsWith(pendingReturnPathPrefix)))) return;
       clearProviderPaymentPending(resume.checkoutId);
       setPendingCreation(null);
       setActiveContext(context);
       setSelected(resumedMethod);
       setBusy(true);
-      refreshSession(context, resume.attemptId)
+      getProviderPaymentSession(context.checkoutId, resume.attemptId, context.lookupToken)
+        .then((next) => { if (!cancelled) publishSession(next); })
         .catch((resumeError: unknown) => {
+          if (cancelled) return;
           setPotentiallyAmbiguous(true);
           setError(publicError(english, isPotentiallyAmbiguous(resumeError)));
         })
-        .finally(() => setBusy(false));
-      return;
+        .finally(() => { if (!cancelled) setBusy(false); });
+      return () => { cancelled = true; };
     }
 
     const pending = loadProviderPaymentPending(expectedCheckoutId);
@@ -256,7 +272,7 @@ export default function HostedProviderCheckout({
     const pendingMethod = HOSTED_PAYMENT_METHODS.find((candidate) =>
       candidate.provider === pending.provider
       && candidate.paymentMethod === pending.paymentMethod);
-    if (!pendingMethod || !methods.some((candidate) => candidate.label === pendingMethod.label)) return;
+    if (!pendingMethod) return;
     setPendingCreation(pending);
     setActiveContext({
       checkoutId: pending.checkoutId,
@@ -268,7 +284,7 @@ export default function HostedProviderCheckout({
     if (pending.buyerCountryCode) setBuyerCountryCode(pending.buyerCountryCode);
     setPotentiallyAmbiguous(true);
     setError(publicError(english, true));
-  }, [checkout?.checkoutId, english, methods, pendingReturnPathPrefix, refreshSession]);
+  }, [checkout?.checkoutId, english, pendingReturnPathPrefix, publishSession]);
 
   useEffect(() => {
     if (!session || !activeContext || !POLLABLE_STATES.has(session.state)) return;
@@ -295,18 +311,22 @@ export default function HostedProviderCheckout({
     return () => onSafetyLockChangeRef.current?.(false);
   }, [safetyLocked]);
 
-  if (methods.length === 0) return null;
+  if (methods.length === 0 && !pendingCreation && !selected && !session) return null;
 
   const navigate = navigateToProvider ?? ((url: string) => window.location.assign(url));
 
   const startPayment = async (method: HostedPaymentMethodDefinition) => {
     if (busy) return;
+    const requestScope = recoveryScopeRef.current;
+    const original = pendingCreation?.provider === method.provider
+      && pendingCreation.paymentMethod === method.paymentMethod ? pendingCreation : null;
+    if (!original && (disabled || !methods.some((candidate) => candidate.label === method.label))) return;
     if (safetyLocked && selected?.label !== method.label) {
       setError(publicError(english, true));
       return;
     }
-    const phone = digitsOnly(buyerPhone);
-    const countryCode = digitsOnly(buyerCountryCode);
+    const phone = original?.buyerPhone ?? digitsOnly(buyerPhone);
+    const countryCode = original?.buyerCountryCode ?? digitsOnly(buyerCountryCode);
     if (method.provider === 'payphone'
         && (phone.length < 6 || phone.length > 15
           || countryCode.length < 1 || countryCode.length > 3)) {
@@ -336,11 +356,15 @@ export default function HostedProviderCheckout({
       }
       attemptedContext = context;
       setActiveContext(context);
-      const idempotencyKey = loadOrCreatePaymentIdempotencyKey(
+      const idempotencyKey = (original
+        ? loadExistingPaymentIdempotencyKey : loadOrCreatePaymentIdempotencyKey)(
         context.checkoutId,
         method.provider,
         method.paymentMethod,
       );
+      if (!idempotencyKey) {
+        throw new PaymentRecoveryUnavailableError();
+      }
       const pending: ProviderPaymentPending = {
         version: 1,
         checkoutId: context.checkoutId,
@@ -355,7 +379,7 @@ export default function HostedProviderCheckout({
         createdAt: Date.now(),
       };
       if (!saveProviderPaymentPending(pending)) {
-        clearPaymentIdempotencyKey(context.checkoutId, method.provider, method.paymentMethod);
+        if (!original) clearPaymentIdempotencyKey(context.checkoutId, method.provider, method.paymentMethod);
         throw new PaymentStartNotSentError('Durable browser recovery is unavailable.');
       }
       setPendingCreation(pending);
@@ -372,6 +396,9 @@ export default function HostedProviderCheckout({
           } : {}),
         },
       );
+      // Leave the original pending marker intact if navigation changed the
+      // checkout while this response was in flight. Never publish it to another order.
+      if (recoveryScopeRef.current !== requestScope) return;
       publishSession(next);
       const resumeSaved = saveProviderPaymentResume({
         version: 1,
@@ -405,9 +432,16 @@ export default function HostedProviderCheckout({
         navigate(redirect);
       }
     } catch (startError) {
-      const ambiguous = isPotentiallyAmbiguous(startError);
+      if (recoveryScopeRef.current !== requestScope) return;
+      // A failed lookup (including 404 after revocation/expiry) is not evidence
+      // that an earlier transmitted request did not create a charge.
+      const ambiguous = Boolean(original) || isPotentiallyAmbiguous(startError);
       setPotentiallyAmbiguous(ambiguous);
-      setError(publicError(english, ambiguous));
+      setError(startError instanceof PaymentRecoveryUnavailableError
+        ? (english
+          ? 'The original payment recovery key is unavailable. Do not pay again; contact support to reconcile this order.'
+          : 'La clave original de recuperación no está disponible. No pagues otra vez; contacta a soporte para conciliar esta orden.')
+        : publicError(english, ambiguous));
       if (!ambiguous && attemptedContext) {
         clearProviderPaymentPending(attemptedContext.checkoutId);
         clearPaymentIdempotencyKey(
@@ -418,7 +452,7 @@ export default function HostedProviderCheckout({
         setPendingCreation(null);
       }
     } finally {
-      setBusy(false);
+      if (recoveryScopeRef.current === requestScope) setBusy(false);
     }
   };
 
@@ -453,6 +487,7 @@ export default function HostedProviderCheckout({
           <TextField
             size="small"
             label={english ? 'Country code' : 'Código país'}
+            disabled={safetyLocked}
             value={buyerCountryCode}
             onChange={(event) => setBuyerCountryCode(digitsOnly(event.target.value).slice(0, 3))}
             inputProps={{ inputMode: 'numeric', maxLength: 3 }}
@@ -461,6 +496,7 @@ export default function HostedProviderCheckout({
           <TextField
             size="small"
             label={english ? 'PayPhone number' : 'Número PayPhone'}
+            disabled={safetyLocked}
             value={buyerPhone}
             onChange={(event) => setBuyerPhone(digitsOnly(event.target.value).slice(0, 15))}
             inputProps={{ inputMode: 'tel', maxLength: 15 }}
@@ -484,6 +520,11 @@ export default function HostedProviderCheckout({
           );
         })}
       </Stack>
+      {pendingCreation && selected && !session && (
+        <Button variant="outlined" disabled={busy} onClick={() => void startPayment(selected)}>
+          {english ? 'Recover original payment' : 'Recuperar pago original'}
+        </Button>
+      )}
       {copy && <Alert severity={copy.severity}>{copy.message}</Alert>}
       {error && <Alert severity="warning">{error}</Alert>}
       {existingRedirect && session?.state === 'requires_customer_action' && (

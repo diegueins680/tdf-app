@@ -798,9 +798,8 @@ function CourseCheckoutCard({
               No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.
             </Alert>
           )}
-          {checkout.checkoutAvailable && !paid && (
-            <Stack spacing={1.5}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <Stack spacing={1.5}>
+            {checkout.checkoutAvailable && !paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 {checkout.paymentMethods.includes('datafast') && (
                   <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
                     Pagar con Datafast
@@ -811,23 +810,22 @@ function CourseCheckoutCard({
                     Pagar con PayPal
                   </Button>
                 )}
-              </Stack>
-              {checkout.checkoutId && checkoutLookupToken && (
+            </Stack>}
+            {checkout.checkoutId && checkoutLookupToken && (
                 <HostedProviderCheckout
                   checkout={{
                     checkoutId: checkout.checkoutId,
                     lookupToken: checkoutLookupToken,
                     returnPath: `/curso/${encodeURIComponent(checkout.courseSlug)}/orden/${checkout.registrationId}`,
                   }}
-                  offeredMethods={checkout.paymentMethods}
-                  disabled={paymentBusy || hostedPaymentDisabled}
+                  offeredMethods={checkout.checkoutAvailable && !paid ? checkout.paymentMethods : []}
+                  disabled={!checkout.checkoutAvailable || paid || paymentBusy || hostedPaymentDisabled}
                   initialBuyerPhone={initialBuyerPhone}
                   onSafetyLockChange={onHostedSafetyLockChange}
                   onPaymentConfirmed={onHostedPaymentConfirmed}
                 />
-              )}
-            </Stack>
-          )}
+            )}
+          </Stack>
           <Typography variant="caption" sx={{ color: 'rgba(226,232,240,0.62)' }}>
             Orden de curso #{checkout.registrationId}. Pago y cumplimiento académico son estados separados.
           </Typography>
