@@ -189,7 +189,13 @@ Initially `git remote show origin` could not resolve the GitHub SSH host and `gh
 reported invalid credentials. During the fourth branch, read-only GitHub access recovered after
 sandbox escalation; both GitHub API and Git SSH confirm `main` remains the audited base. Remote
 publication evidence is recorded separately when verified; local checks are not hosted CI or review.
+The [GitHub checkpoint](github-delivery-2026-09-14.md) records the four verified draft PRs
+336–339, their dependency bases, partial hosted passes and outstanding preview failures.
 No screenshots were produced. No production database, deployment,
 feature flag, credential, payment, refund, or payout was touched. The new migration is not added to
 the production manifest; that is a later reviewed rollout step after API/client compatibility and
 release rehearsal.
+
+The fourth-branch follow-up also reran `npm run verify:formal` (0 critical/errors, 351 warnings)
+and `npm run test:formal` (4/4). These heuristic/executable repository checks are separate from
+the recorded TLC/Alloy verification and do not certify completion of the product scope.

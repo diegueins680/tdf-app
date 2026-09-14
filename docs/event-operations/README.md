@@ -15,6 +15,7 @@
 - [Draft PR 03](pr-03-logistics-transaction-hardening.md)
 - [Draft PR 04](pr-04-task-commit-invariants.md)
 - [Task transaction contract](task-commit-contract.md)
+- [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)
 - [ADR 0116: bounded formal verification](../adr/0116-bounded-formal-verification.md)

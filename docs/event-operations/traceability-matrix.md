@@ -29,3 +29,7 @@ planned rows are target boundaries, not assertions that code already exists.
 The matrix must be extended at each implementation PR with exact migration, module, API route,
 generated-client, UI, and test identifiers. A critical row cannot move to `implemented` until both
 the modeled guard and its database/API concurrency boundary have executable evidence.
+
+Known phase-3 limitation: the current transition function's exact-receipt replay path precedes
+fresh read authorization. Revoked/expired access and offline replay remain an activation blocker,
+not a satisfied part of EO-045/EO-051. See the GitHub delivery checkpoint and PR 337 limitations.

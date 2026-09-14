@@ -56,8 +56,8 @@ foundation table, but the migration does not silently delete or merge conflictin
   scope and a different actor from the review requester.
 - Command identifiers are global within event/operation, so changing actors cannot turn a reused key
   into a second command; conflicting reuse is appended to audit without duplicating the receipt.
-- Structured database errors do not include secrets or request bodies; API domain responses expose
-  only stable codes.
+- API domain responses expose stable codes. Database exception logging still includes exception
+  detail; sensitive-data redaction needs explicit security tests before activation.
 
 ## Verification executed locally
 
@@ -74,13 +74,16 @@ foundation table, but the migration does not silently delete or merge conflictin
   neither error is in this PR's files.
 - Mobile client generation: skipped by the repository's own readiness guard because the submodule or
   install is incomplete.
-- Remote CI: not run; GitHub DNS/auth is unavailable in this environment.
+- Remote CI was unavailable during the initial local implementation. GitHub access later
+  recovered; publication/check status is tracked separately in the delivery report.
 
 ## Rollback and remaining limits
 
 Roll back application consumers first, apply the non-destructive API rollback, and leave immutable
 history available for reconciliation. Do not delete history or enable the flag during rollback.
 
-HTTP integration/authentication tests, stale-session/offline replay, outbox effects, legacy lifecycle
+Exact receipt replay currently precedes fresh authorization in the SQL transition function;
+revoked-scope replay must be corrected and tested before activation. HTTP integration/authentication
+tests, stale-session/offline replay, outbox effects, legacy lifecycle
 cutover, mobile client generation, web workspace UI, and every later domain phase remain. No provider,
-production database, credential, deployment, real-money operation, remote branch, or PR is touched.
+production database, credential, deployment, or real-money operation is touched.
