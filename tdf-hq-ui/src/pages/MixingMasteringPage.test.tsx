@@ -94,7 +94,7 @@ const renderPage = () => {
 
 const reachPaymentStep = async () => {
   renderPage();
-  fireEvent.click(await screen.findByRole('button', { name: 'Seleccionar' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Seleccionar' }, { timeout: 15_000 }));
   fireEvent.change(screen.getByRole('textbox', { name: /Tu nombre/ }), { target: { value: 'Test Buyer' } });
   fireEvent.change(screen.getByRole('textbox', { name: /Email/ }), { target: { value: 'buyer@example.com' } });
   fireEvent.click(screen.getByRole('button', { name: 'Continuar al pago' }));

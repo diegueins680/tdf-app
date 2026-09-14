@@ -351,11 +351,6 @@
       "introducedBy": "a8fa00463d60dbd5df9d02565a9694aaaba4c14e"
     },
     {
-      "id": "2026-09-01_contextual_reputation",
-      "path": "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
-      "introducedBy": "c94a7899329e7c126afd11bccef10b3d9f45bb6c"
-    },
-    {
       "id": "2026-09-02_party_selector_search_indexes",
       "path": "tdf-hq/sql/2026-09-02_party_selector_search_indexes.sql",
       "introducedBy": "88d2d847211c410793712135b7376f3f1924d5dd"
@@ -457,6 +452,31 @@
       "introducedBy": "48992e37f83ac6c6f45d4f1a2a4888c6bf41bd2f"
     },
     {
+      "id": "2026-09-07_catalog_slug_alias_integrity_revalidation",
+      "path": "tdf-hq/sql/2026-09-07_catalog_slug_alias_integrity_revalidation.sql",
+      "introducedBy": "b4e0706cd60693379b6891c6c48b7fec4b4ab185"
+    },
+    {
+      "id": "2026-09-06_user_onboarding_progress",
+      "path": "tdf-hq/sql/2026-09-06_user_onboarding_progress.sql",
+      "introducedBy": "64702d26ac2129f96f40b921f943dea907828419"
+    },
+    {
+      "id": "2026-09-07_user_experiment_assignment",
+      "path": "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
+      "introducedBy": "8c296087431a191234000311862a4287ef819bd7"
+    },
+    {
+      "id": "2026-09-07_directory_event_visibility_and_favorite_evidence",
+      "path": "tdf-hq/sql/2026-09-07_directory_event_visibility_and_favorite_evidence.sql",
+      "introducedBy": "dfea3d01484395c62b080a4adee270308d0ed912"
+    },
+    {
+      "id": "2026-09-07_artist_merch_storefronts",
+      "path": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
+      "introducedBy": "5bca2c33df5cd9367adb91ec84ab2d6bc3772b8f"
+    },
+    {
       "id": "2026-09-08_event_rsvp_identity_privacy_feed",
       "path": "tdf-hq/sql/2026-09-08_event_rsvp_identity_privacy_feed.sql",
       "introducedBy": "520222366178a2725172e3d54ec9928a1596f20d"
@@ -485,6 +505,21 @@
       "id": "2026-09-10_party_selector_rate_limit_scopes",
       "path": "tdf-hq/sql/2026-09-10_party_selector_rate_limit_scopes.sql",
       "introducedBy": "565ed7d0a1c5381719538c6e2bcae83ac30c3a92"
+    },
+    {
+      "id": "2026-09-09_public_booking_tentative_idempotency",
+      "path": "tdf-hq/sql/2026-09-09_public_booking_tentative_idempotency.sql",
+      "introducedBy": "2da5c939baca7cdeec8aba623a83e9b42440f2e3"
+    },
+    {
+      "id": "2026-09-09_canonical_payment_lifecycle",
+      "path": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+      "introducedBy": "b3007f580fc51afb03aa73d339e9945232adcc8e"
+    },
+    {
+      "id": "2026-09-10_payment_attempt_intent_binding",
+      "path": "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
+      "introducedBy": "709036630fcad32102b67a34996c4da73bc4d128"
     }
   ]
 }

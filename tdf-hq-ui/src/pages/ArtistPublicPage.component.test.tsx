@@ -37,6 +37,8 @@ jest.unstable_mockModule('../api/fans', () => ({
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
+  getActiveSession: () => sessionMock,
+  getStoredSessionToken: () => null,
   useSession: () => ({ session: sessionMock }),
 }));
 
@@ -53,6 +55,7 @@ jest.unstable_mockModule('../components/ArtistFansList', () => ({ default: () =>
 jest.unstable_mockModule('../components/LazyPaginatedList', () => ({ default: () => null }));
 jest.unstable_mockModule('react-i18next', () => ({
   useTranslation: () => ({
+    i18n: { language: 'es', resolvedLanguage: 'es' },
     t: (key: string, options?: { artist?: string }) => ({
       'artistFollow.authCta': 'Crear cuenta o ingresar para seguir',
       'artistFollow.resumeAction': 'Seguir ahora',

@@ -17,9 +17,14 @@ import {
   parseArgs,
   prepareCheckpointForAttempt,
   probeImage,
+  jitteredRetryDelayMs,
+  optionalProviderResult,
   reportableLinkUrl,
+  RetriableExternalProviderError,
+  retryAfterDelayMs,
   retryDelayMs,
   retryFetch,
+  RetryFetchExhaustedError,
   runPipeline,
   selectRunBatch,
   transcodeWithinBudget,
@@ -52,6 +57,18 @@ test('calcula backoff exponencial acotado', () => {
   assert.equal(retryDelayMs(0), 500);
   assert.equal(retryDelayMs(3), 4000);
   assert.equal(retryDelayMs(20), 30000);
+});
+
+test('aplica jitter determinista y respeta Retry-After con un límite estricto', () => {
+  assert.equal(jitteredRetryDelayMs(0, { random: () => 0 }), 400);
+  assert.equal(jitteredRetryDelayMs(0, { random: () => 1 }), 600);
+  assert.equal(jitteredRetryDelayMs(20, { random: () => 1 }), 30000);
+  assert.equal(retryAfterDelayMs('12'), 12000);
+  assert.equal(retryAfterDelayMs('120'), 30000);
+  assert.equal(
+    retryAfterDelayMs('Sat, 12 Sep 2026 10:00:12 GMT', Date.parse('Sat, 12 Sep 2026 10:00:00 GMT')),
+    12000,
+  );
 });
 
 test('reinicia el contador de errores al reanudar y conserva el historial', () => {
@@ -122,9 +139,49 @@ test('reintenta límites de proveedor y se recupera sin duplicar la solicitud ex
       : new Response('{"ok":true}', { status: 200 });
   };
   try {
-    const response = await retryFetch('https://provider.test/resource', {}, { attempts: 2, timeoutMs: 1000 });
+    const response = await retryFetch('https://provider.test/resource', {}, {
+      attempts: 2,
+      timeoutMs: 1000,
+      sleep: async () => undefined,
+      random: () => 0.5,
+    });
     assert.equal(response.status, 200);
     assert.equal(calls, 2);
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test('clasifica una caída transitoria de proveedor como evidencia degradada sin ocultar fallos permanentes', async () => {
+  const degraded = await optionalProviderResult('musicbrainz', async () => {
+    throw new RetriableExternalProviderError('musicbrainz', 'artist search', 503);
+  });
+  assert.deepEqual(degraded, {
+    value: null,
+    outage: { provider: 'musicbrainz', failureClass: 'http_503' },
+  });
+
+  await assert.rejects(
+    optionalProviderResult('spotify', async () => {
+      throw new Error('spotify artist search failed (401)');
+    }),
+    /401/,
+  );
+});
+
+test('conserva como error una caída de red después de agotar el reintento acotado', async () => {
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async () => { throw new TypeError('network unavailable'); };
+  try {
+    await assert.rejects(
+      retryFetch('https://provider.test/resource', {}, {
+        attempts: 2,
+        timeoutMs: 1000,
+        sleep: async () => undefined,
+        random: () => 0.5,
+      }),
+      (error) => error instanceof RetryFetchExhaustedError,
+    );
   } finally {
     globalThis.fetch = previousFetch;
   }

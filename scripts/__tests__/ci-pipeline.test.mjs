@@ -24,8 +24,16 @@ test('CI splits component checks and preserves Stack build caches', async () => 
   assert.match(workflow, /concurrency:[\s\S]*?cancel-in-progress: true/);
 });
 
+test('safe-install CI permits missing scripts without masking script failures', async () => {
+  const workflow = await source('.github/workflows/ci-safe-install.yml');
+  assert.match(workflow, /run: npm run -s --if-present build/);
+  assert.match(workflow, /run: npm run -s --if-present test/);
+  assert.doesNotMatch(workflow, /\|\||no (?:build|test) script; skipping/);
+});
+
 test('persona browser journeys are artifacted and gate aggregate quality', async () => {
   const workflow = await source('.github/workflows/ci.yml');
+  const playwrightConfig = await source('playwright.config.mjs');
   assert.match(workflow, /^  persona-web-e2e:/m);
   assert.match(workflow, /npx playwright install --with-deps chromium firefox webkit/);
   assert.match(workflow, /run: npm run test:e2e:web/);
@@ -33,6 +41,8 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
   assert.match(workflow, /retention-days: 14/);
   assert.match(workflow, /quality:[\s\S]*?needs:[\s\S]*?- persona-web-e2e/);
   assert.match(workflow, /PERSONA_WEB_E2E_RESULT: \$\{\{ needs\.persona-web-e2e\.result \}\}/);
+  assert.match(playwrightConfig, /npm run build:e2e --workspace=tdf-hq-ui && npm run preview:e2e --workspace=tdf-hq-ui/);
+  assert.doesNotMatch(playwrightConfig, /npm run dev --workspace=tdf-hq-ui/);
 });
 
 test('backend quality compiles, tests and exports the binary in one Stack pass', async () => {

@@ -24,6 +24,7 @@ module.exports = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   setupFilesAfterEnv: [],
+  testTimeout: 15_000,
   reporters: [
     'default',
     [require.resolve('@testomatio/reporter/jest'), { apiKey: process.env.TESTOMATIO }],

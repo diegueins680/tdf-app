@@ -50,6 +50,7 @@ module TDF.Server.SocialEventsHandlers (
     resolveExistingPartyIdText,
     resolveUniqueRsvpRow,
     validateEventArtistIds,
+    toggleMomentReactionDb,
     normalizeMomentMediaType,
     normalizeMomentCaption,
     normalizeMomentCommentBody,
@@ -272,7 +273,7 @@ import TDF.DTO.SocialEventsDTO (
     WaitlistJoinDTO (..),
  )
 import qualified TDF.Email as Email
-import TDF.Models (EntityField (PartyStripeCustomerId), Party (..), PartyId)
+import TDF.Models (EngagementEvent (..), EntityField (PartyStripeCustomerId), Party (..), PartyId)
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.ModelsExtra as ME
@@ -3845,31 +3846,9 @@ socialEventsServer user =
         reactionTypeId <-
             liftIO (runSqlPool (loadSelectableMomentReactionTypeId emrrReactionTypeId) envPool)
                 >>= either throwError pure
-        existingSameReaction <-
-            liftIO $
-                runSqlPool
-                    ( selectFirst
-                        [ EventMomentReactionMomentId ==. momentKey
-                        , EventMomentReactionReactionTypeId ==. Just reactionTypeId
-                        , EventMomentReactionReactorPartyId ==. currentPartyId
-                        ]
-                        []
-                    )
-                    envPool
         liftIO $
             runSqlPool
-                ( do
-                    deleteWhere [EventMomentReactionMomentId ==. momentKey, EventMomentReactionReactorPartyId ==. currentPartyId]
-                    when (isNothing existingSameReaction) $
-                        insert_
-                            EventMomentReaction
-                                { eventMomentReactionMomentId = momentKey
-                                , eventMomentReactionReactionTypeId = Just reactionTypeId
-                                , eventMomentReactionReaction = Nothing
-                                , eventMomentReactionReactorPartyId = currentPartyId
-                                , eventMomentReactionCreatedAt = now
-                                }
-                )
+                (toggleMomentReactionDb (auPartyId user) currentPartyId momentKey reactionTypeId emrrActive now)
                 envPool
         liftIO $ loadMomentDTO envPool momentKey
 
@@ -7490,6 +7469,57 @@ validateInvitationStatusUpdateInput (Just rawStatus) =
         Just _ ->
             Just <$> validateInvitationStatusInput (Just rawStatus)
 
+toggleMomentReactionDb
+    :: PartyId
+    -> T.Text
+    -> EventMomentId
+    -> UUID.UUID
+    -> Maybe Bool
+    -> UTCTime
+    -> SqlPersistT IO Bool
+toggleMomentReactionDb actorPartyId actorPartyText momentKey reactionTypeId requestedActive now = do
+    existingSameReaction <-
+        selectFirst
+            [ EventMomentReactionMomentId ==. momentKey
+            , EventMomentReactionReactionTypeId ==. Just reactionTypeId
+            , EventMomentReactionReactorPartyId ==. actorPartyText
+            ]
+            []
+    let shouldBeActive = fromMaybe (isNothing existingSameReaction) requestedActive
+    if shouldBeActive
+        then do
+            when (isNothing existingSameReaction) $ do
+                deleteWhere
+                    [ EventMomentReactionMomentId ==. momentKey
+                    , EventMomentReactionReactorPartyId ==. actorPartyText
+                    ]
+                insert_
+                    EventMomentReaction
+                        { eventMomentReactionMomentId = momentKey
+                        , eventMomentReactionReactionTypeId = Just reactionTypeId
+                        , eventMomentReactionReaction = Nothing
+                        , eventMomentReactionReactorPartyId = actorPartyText
+                        , eventMomentReactionCreatedAt = now
+                        }
+                insert_
+                    EngagementEvent
+                        { engagementEventActorPartyId = Just actorPartyId
+                        , engagementEventTargetArtistId = Nothing
+                        , engagementEventEntityType = "event_moment"
+                        , engagementEventEntityId = Just (fromIntegral (fromSqlKey momentKey))
+                        , engagementEventEventType = "reaction_added"
+                        , engagementEventMetadata = Just (UUID.toText reactionTypeId)
+                        , engagementEventCreatedAt = now
+                        }
+            pure True
+        else do
+            deleteWhere
+                [ EventMomentReactionMomentId ==. momentKey
+                , EventMomentReactionReactionTypeId ==. Just reactionTypeId
+                , EventMomentReactionReactorPartyId ==. actorPartyText
+                ]
+            pure False
+
 validateEventArtistIds :: [ArtistDTO] -> Either ServerError [ArtistProfileId]
 validateEventArtistIds artists
     | length artists > maxEventArtistsPerEvent =
@@ -9222,7 +9252,7 @@ momentReactionEntityToDTO reactionTypes (Entity _ reactionRow) = do
             , emrReactionNameEs = Catalog.reactionTypeNameEs reactionType
             , emrReactionNameEn = Catalog.reactionTypeNameEn reactionType
             , emrReactionEmoji = Catalog.reactionTypeEmoji reactionType
-            , emrPartyId = eventMomentReactionReactorPartyId reactionRow
+            , emrPartyId = Just (eventMomentReactionReactorPartyId reactionRow)
             , emrCreatedAt = Just (eventMomentReactionCreatedAt reactionRow)
             }
 
