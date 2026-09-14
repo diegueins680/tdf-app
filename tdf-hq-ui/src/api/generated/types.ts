@@ -21661,7 +21661,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Checkout or lookup token is invalid */
+            /** @description Checkout or lookup token is invalid, or no contacted replay exists and checkout cannot accept payment. This is not no-charge evidence for an earlier transmitted request. */
             404: {
                 headers: {
                     [name: string]: unknown;

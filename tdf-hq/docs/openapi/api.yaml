@@ -5463,7 +5463,10 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PaymentSession' }
         '400': { description: Invalid provider, payment method, headers, or provider-specific input }
-        '404': { description: Checkout or lookup token is invalid, or no contacted replay exists and checkout cannot accept payment. This is not no-charge evidence for an earlier transmitted request. }
+        '404':
+          description: >-
+            Checkout or lookup token is invalid, or no contacted replay exists and checkout
+            cannot accept payment. This is not no-charge evidence for an earlier transmitted request.
         '409': { description: Idempotency conflict or another active canonical payment intent exists }
         '503': { description: Provider/configuration is unavailable or an ambiguous result requires reconciliation }
   /commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}:
