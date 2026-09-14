@@ -135,6 +135,21 @@ Check the GitHub Actions logs for automated runs, or run locally with `--check`.
 - Verify that `INSTAGRAM_APP_ID` and `INSTAGRAM_APP_SECRET` belong to the same Meta app
 - Verify that `INSTAGRAM_ACCESS_TOKEN` was issued for that app and has not been revoked
 - Replace the affected repository secrets through GitHub's secret settings; never paste their values into logs or issues
+
+### "The session has been invalidated"
+
+This response from the Instagram account request means the stored token has been
+invalidated, for example by a password change or a Meta security action. A retry,
+app-ID change, or refresh of that invalidated token cannot restore the session.
+An authorized account owner must reauthorize the Instagram professional account
+through its configured Instagram Login integration and securely replace the
+repository's `INSTAGRAM_ACCESS_TOKEN`. Do not substitute a parent Facebook app's
+credentials for the Instagram integration's credentials.
+
+Run `Refresh Instagram Token` with `action=check` on the correction branch after
+the replacement. Both account access and token-metadata validation must pass.
+Only then follow the normal approved deployment process to update any runtime
+consumer. Rolling back application code does not restore an invalidated token.
 - Run the workflow with `action=check` and confirm the `Check/Refresh Token` step succeeds before authorizing `setup` or `refresh`
 
 ### "Failed to update Fly secret" errors

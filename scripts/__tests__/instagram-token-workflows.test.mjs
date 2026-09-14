@@ -217,8 +217,10 @@ test('an absent optional Slack webhook cannot mask the original workflow failure
     'utf8'
   );
 
-  assert.match(workflow, /if: failure\(\) && env\.SLACK_WEBHOOK_URL != ''/);
-  assert.match(workflow, /if: failure\(\) && env\.SLACK_WEBHOOK_URL == ''/);
+  assert.match(workflow, /if: failure\(\) && steps\.notification-config\.outputs\.enabled == 'true'/);
+  assert.match(workflow, /if: failure\(\) && steps\.notification-config\.outputs\.enabled == 'false'/);
+  assert.match(workflow, /refresh-token:\n    runs-on: ubuntu-latest\n    steps:/);
+  assert.match(workflow, /uses: slackapi\/slack-github-action@v1\.24\.0\n        env:\n          SLACK_WEBHOOK_URL:/);
   assert.match(workflow, /INSTAGRAM_APP_ID: \$\{\{ secrets\.INSTAGRAM_APP_ID \}\}/);
   assert.doesNotMatch(workflow, /INSTAGRAM_APP_ID[^\n]*\|\|/);
 });

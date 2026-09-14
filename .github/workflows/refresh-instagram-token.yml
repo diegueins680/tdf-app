@@ -19,9 +19,18 @@ on:
 jobs:
   refresh-token:
     runs-on: ubuntu-latest
-    env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
+      - name: Check notification configuration
+        id: notification-config
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout
         uses: actions/checkout@v7
 
@@ -50,8 +59,10 @@ jobs:
           fi
 
       - name: Notify on Failure
-        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        if: failure() && steps.notification-config.outputs.enabled == 'true'
         uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
           payload: |
             {
@@ -59,5 +70,5 @@ jobs:
             }
 
       - name: Report unavailable failure notification
-        if: failure() && env.SLACK_WEBHOOK_URL == ''
+        if: failure() && steps.notification-config.outputs.enabled == 'false'
         run: echo "::warning::SLACK_WEBHOOK_URL is not configured; workflow failure was not sent to Slack."

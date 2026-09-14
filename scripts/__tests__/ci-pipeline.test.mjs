@@ -34,6 +34,7 @@ test('safe-install CI permits missing scripts without masking script failures', 
 test('configured Datadog checks fail when tests or results are missing', async () => {
   const workflow = await source('.github/workflows/datadog-synthetics.yml');
   assert.match(workflow, /test_search_query: 'tag:e2e-tests'/);
+  assert.match(workflow, /datadog_site: datadoghq\.com/);
   assert.match(workflow, /fail_on_critical_errors: true/);
   assert.match(workflow, /fail_on_missing_tests: true/);
 });

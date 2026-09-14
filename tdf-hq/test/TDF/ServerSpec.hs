@@ -89,7 +89,7 @@ import qualified TDF.Calendar.Models as Cal
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Catalog.Models as Catalog
 import TDF.DB (Env (..))
-import TDF.DTO.SocialEventsDTO (ArtistDTO (..))
+import TDF.DTO.SocialEventsDTO (ArtistDTO (..), EventMomentReactionDTO (..))
 import TDF.Handlers.InputList
     ( AssetField (..)
     , renderInputListLatex
@@ -505,7 +505,7 @@ import TDF.ServerFanClub
     ( validateFanClubPostMutationTarget
     , validateFanClubPostPathId
     )
-import TDF.Server.SocialEventsHandlers (toggleMomentReactionDb, validateEventArtistIds)
+import TDF.Server.SocialEventsHandlers (redactMomentReactionIdentity, toggleMomentReactionDb, validateEventArtistIds)
 import TDF.ServerExtra
     ( validateFacebookReplyTarget
     , validateInstagramReplyTarget
@@ -5685,6 +5685,24 @@ spec = describe "TDF.Server helpers" $ do
                 Left serverErr ->
                     expectationFailure
                         ("Expected repeated moment-reaction completion to remain idempotent, got: " <> show serverErr)
+
+        it "redacts other parties' moment-reaction identities without changing reaction counts" $ do
+            now <- getCurrentTime
+            let reaction = EventMomentReactionDTO
+                    { emrReactionTypeId = "50800000-0000-4000-8000-000000000001"
+                    , emrReactionCode = "heart"
+                    , emrReactionNameEs = "Corazon"
+                    , emrReactionNameEn = "Heart"
+                    , emrReactionEmoji = "heart"
+                    , emrPartyId = Just "42"
+                    , emrCreatedAt = Just now
+                    }
+                own = redactMomentReactionIdentity "42" reaction
+                other = redactMomentReactionIdentity "43" reaction
+            (emrPartyId own, emrCreatedAt own) `shouldBe` (Just "42", Just now)
+            (emrPartyId other, emrCreatedAt other) `shouldBe` (Nothing, Nothing)
+            emrReactionTypeId other `shouldBe` emrReactionTypeId reaction
+            length (map (redactMomentReactionIdentity "43") [reaction]) `shouldBe` 1
 
         it "records moment-reaction additions atomically and retains evidence after removal" $ do
             states <-
