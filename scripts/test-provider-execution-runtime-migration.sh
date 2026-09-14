@@ -97,6 +97,29 @@ psql_exec -c "
   );
 " >/dev/null
 
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM pg_constraint WHERE conrelid='commerce_provider_operation'::regclass AND conname='fk_commerce_provider_operation_account' AND contype='f' AND convalidated;")" \
+  "1" \
+  "Provider operation uses the canonical provider account registry"
+
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM pg_constraint WHERE conrelid='commerce_provider_operation'::regclass AND conname IN ('commerce_provider_operation_provider_check','commerce_provider_operation_environment_check');")" \
+  "0" \
+  "Provider operation has no provider or environment string allowlist"
+
+if psql_exec -c "
+  INSERT INTO commerce_provider_operation(
+    payment_attempt_id, provider, environment, merchant_account_ref,
+    provider_reference, operation, idempotency_key, request_sha256
+  ) VALUES (
+    '$attempt_id', 'unregistered-provider', 'sandbox', 'merchant-sandbox',
+    'TDF-provider-reference-invalid', 'query', 'operation-key-invalid', repeat('f', 64)
+  );
+" >/dev/null 2>&1; then
+  echo "Provider execution accepted an account absent from the canonical registry" >&2
+  exit 1
+fi
+
 psql_exec -c "
   INSERT INTO commerce_provider_event_inbox(
     id, provider, environment, merchant_account_ref, provider_event_id,

@@ -59,8 +59,8 @@ END $$;
 CREATE TABLE IF NOT EXISTS commerce_provider_operation (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   payment_attempt_id UUID NOT NULL REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT,
-  provider TEXT NOT NULL CHECK (provider IN ('placetopay','payphone')),
-  environment TEXT NOT NULL CHECK (environment IN ('sandbox','production')),
+  provider TEXT NOT NULL,
+  environment TEXT NOT NULL,
   merchant_account_ref TEXT NOT NULL,
   provider_reference TEXT NOT NULL CHECK (
     length(provider_reference) BETWEEN 1 AND 128
@@ -90,6 +90,28 @@ CREATE TABLE IF NOT EXISTS commerce_provider_operation (
   CHECK (status <> 'ambiguous' OR outcome_certainty = 'ambiguous'),
   CHECK (status <> 'succeeded' OR outcome_certainty = 'succeeded')
 );
+
+-- Provider/environment authority belongs to the canonical account registry.
+-- The explicit drops also repair databases that exercised an earlier draft of
+-- this not-yet-released migration before the registry foreign key was added.
+ALTER TABLE commerce_provider_operation
+  DROP CONSTRAINT IF EXISTS commerce_provider_operation_provider_check,
+  DROP CONSTRAINT IF EXISTS commerce_provider_operation_environment_check;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'commerce_provider_operation'::regclass
+      AND conname = 'fk_commerce_provider_operation_account'
+  ) THEN
+    ALTER TABLE commerce_provider_operation
+      ADD CONSTRAINT fk_commerce_provider_operation_account
+      FOREIGN KEY (provider, environment)
+      REFERENCES commerce_provider_account(provider, environment)
+      ON DELETE RESTRICT;
+  END IF;
+END $$;
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_commerce_provider_operation_create
   ON commerce_provider_operation(payment_attempt_id)
