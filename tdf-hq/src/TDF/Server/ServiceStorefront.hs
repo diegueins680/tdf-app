@@ -442,7 +442,9 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
                 (sdfpsPaymentId paymentStatus)
               (checkout, attempt) <- beginCanonicalPaymentAttempt
                 oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
-                Checkout.OperationCapture (sdfEntityId dfEnv) "capture"
+                -- Datafast DB checkout already charges at the hosted widget;
+                -- this GET verifies that original sale, it does not capture.
+                Checkout.OperationCreate (sdfEntityId dfEnv) "create"
               case validation of
                 Left message -> providerVerificationMismatch
                   checkout attempt Checkout.ProviderDatafast (sdfEnvironment dfEnv)
@@ -519,7 +521,7 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
               else do
                 (checkout, attempt) <- beginCanonicalPaymentAttempt
                   oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
-                  Checkout.OperationCapture (sdfEntityId dfEnv) "capture"
+                  Checkout.OperationCreate (sdfEntityId dfEnv) "create"
                 liftIO $ flip runSqlPool envPool $ do
                   Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast
                     ("datafast_" <> resultCode)

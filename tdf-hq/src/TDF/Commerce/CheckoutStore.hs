@@ -17,6 +17,7 @@ module TDF.Commerce.CheckoutStore
   , resolveCheckoutEnvironment
   , checkoutEnvironmentText
   , paymentProviderText
+  , paymentOperationText
   , createCheckout
   , createHoldingCheckout
   , createCheckoutWithLines

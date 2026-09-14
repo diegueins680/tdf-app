@@ -89,7 +89,7 @@ buildCreate config context payment = do
     , arUrl = placeToPayBaseUrl config <> "/api/session"
     , arHeaders = jsonHeaders
     , arBody = Just (A.object ("paymentMethod" .= paymentMethod : fields))
-    , arRetryPolicy = ReuseStableReference
+    , arRetryPolicy = QueryBeforeRetry
     }
   where
     fields =
@@ -161,6 +161,8 @@ paymentObject payment = A.object
   [ "reference" .= cpReference payment
   , "description" .= cpDescription payment
   , "amount" .= A.object amountFields
+  , "allowPartial" .= False
+  , "subscribe" .= False
   ]
   where
     money = cpMoney payment
@@ -223,10 +225,13 @@ parseQuery locator = A.withObject "PlaceToPay query response" $ \object -> do
   (reference, amountMinor, currency) <- parseRequestPayment request
   validateBindingParser (plExpected locator) reference amountMinor currency
   payments <- fromMaybe [] <$> object .:? "payment"
-  approvedPayment <- anyM paymentApproved payments
-  let (resultState, certainty) = placeToPayStatus status approvedPayment
-  when (status == "APPROVED" && not approvedPayment)
-    (fail "PlaceToPay approval has no approved payment transaction")
+  transactionStatuses <- mapM (validateTransaction (plExpected locator)) payments
+  let approvedCount = length (filter (== "APPROVED") transactionStatuses)
+      fullyRejected = all (== "REJECTED") transactionStatuses
+      (resultState, certainty) = placeToPayStatus status approvedCount fullyRejected
+  when (status == "APPROVED" && (approvedCount /= 1
+      || any (\value -> value /= "APPROVED" && value /= "REJECTED") transactionStatuses))
+    (fail "PlaceToPay approval does not identify exactly one complete payment")
   pure AdapterResult
     { adapterResultState = resultState
     , adapterResultExternalId = requestIdText
@@ -240,19 +245,25 @@ parseCancel :: PaymentLocator -> Value -> Parser AdapterResult
 parseCancel locator = A.withObject "PlaceToPay cancel response" $ \object -> do
   status <- parseStatus object
   unless (status == "OK") (fail "PlaceToPay did not confirm session cancellation")
-  pure AdapterResult
-    { adapterResultState = AdapterCancelled
-    , adapterResultExternalId = plExternalId locator
-    , adapterResultRedirectUrl = Nothing
-    , adapterResultAmountMinor = Nothing
-    , adapterResultCurrency = Nothing
-    , adapterResultCertainty = ProviderConfirmedNoCharge
-    }
+  session <- object .: "session"
+  result <- parseQuery locator session
+  unless (adapterResultCertainty result == ProviderConfirmedNoCharge)
+    (fail "PlaceToPay cancellation has no bound no-charge evidence")
+  pure result { adapterResultState = AdapterCancelled }
 
 parseRequestPayment :: Value -> Parser (Text, Int64, Text)
 parseRequestPayment = A.withObject "PlaceToPay request" $ \request -> do
+  sessionType <- request .:? "type" :: Parser (Maybe Text)
+  unless (sessionType == Nothing)
+    (fail "PlaceToPay returned an unsupported session type")
   payment <- request .: "payment"
   A.withObject "PlaceToPay payment" (\paymentObject' -> do
+    partial <- fromMaybe False <$> paymentObject' .:? "allowPartial"
+    subscription <- fromMaybe False <$> paymentObject' .:? "subscribe"
+    recurrence <- paymentObject' .:? "recurring" :: Parser (Maybe Value)
+    dispersion <- fromMaybe [] <$> paymentObject' .:? "dispersion" :: Parser [Value]
+    when (partial || subscription || recurrence /= Nothing || not (null dispersion))
+      (fail "PlaceToPay returned an unsupported payment flow")
     reference <- paymentObject' .: "reference"
     amount <- paymentObject' .: "amount"
     A.withObject "PlaceToPay amount" (\amountObject -> do
@@ -264,12 +275,34 @@ parseRequestPayment = A.withObject "PlaceToPay request" $ \request -> do
         (decimalToMinor total)
       pure (reference, amountMinor, normalizedCurrency currency)) amount) payment
 
-paymentApproved :: Value -> Parser Bool
-paymentApproved = A.withObject "PlaceToPay payment transaction" $ \payment -> do
-  status <- payment .: "status"
-  A.withObject "PlaceToPay transaction status"
-    (\statusObject -> (== ("APPROVED" :: Text)) <$> statusObject .: "status")
-    status
+-- Session request amounts describe what was requested, not what was paid.
+-- Only one complete, unreversed USD sale is supported by this executor.
+validateTransaction :: ExpectedPayment -> Value -> Parser Text
+validateTransaction expected = A.withObject "PlaceToPay payment transaction" $ \payment -> do
+  status <- parseStatus payment
+  refunded <- payment .:? "refunded" :: Parser (Maybe Bool)
+  when (refunded == Just True)
+    (fail "PlaceToPay transaction was refunded and requires reconciliation")
+  when (status == "APPROVED") $ do
+    unless (refunded == Just False)
+      (fail "PlaceToPay approval is missing reversal evidence")
+    internalReference <- payment .: "internalReference" :: Parser Int64
+    when (internalReference <= 0) (fail "PlaceToPay transaction identifier is invalid")
+    reference <- payment .: "reference"
+    amount <- payment .: "amount"
+    A.withObject "PlaceToPay amount conversion" (\conversion -> do
+      original <- conversion .: "from"
+      settled <- conversion .: "to"
+      validateAmount reference original
+      validateAmount reference settled) amount
+  pure status
+  where
+    validateAmount reference = A.withObject "PlaceToPay transaction amount" $ \amount -> do
+      currency <- amount .: "currency"
+      total <- amount .: "total" :: Parser Scientific
+      minor <- maybe (fail "PlaceToPay transaction amount precision is invalid") pure
+        (decimalToMinor total)
+      validateBindingParser expected reference minor currency
 
 parseStatus :: A.Object -> Parser Text
 parseStatus object = do
@@ -278,14 +311,15 @@ parseStatus object = do
 
 placeToPayStatus
   :: Text
+  -> Int
   -> Bool
   -> (AdapterResultState, ProviderOutcomeCertainty)
-placeToPayStatus status approvedPayment
-  | status == "APPROVED" && approvedPayment =
+placeToPayStatus status approvedCount fullyRejected
+  | status == "APPROVED" && approvedCount == 1 =
       (AdapterSucceeded, ProviderSucceeded)
-  | status == "REJECTED" =
+  | status == "REJECTED" && fullyRejected =
       (AdapterDeclined, ProviderConfirmedNoCharge)
-  | status == "EXPIRED" || status == "CANCELLED" =
+  | (status == "EXPIRED" || status == "CANCELLED") && fullyRejected =
       (AdapterCancelled, ProviderConfirmedNoCharge)
   | status == "PENDING" || status == "PARTIAL" =
       (AdapterPending, ProviderAmbiguous)
@@ -393,6 +427,3 @@ parseProviderValue :: (Value -> Parser result) -> Value -> Either AdapterError r
 parseProviderValue parser value = case parseEither parser value of
   Left _ -> Left (AdapterError "PlaceToPay returned an invalid or mismatched response.")
   Right result -> Right result
-
-anyM :: Monad monad => (value -> monad Bool) -> [value] -> monad Bool
-anyM predicate values = or <$> mapM predicate values
