@@ -32,13 +32,22 @@ psql_schema < "$TDF_SOCIAL_SCHEMA_DATA/migrations.sql" > "$TDF_SOCIAL_SCHEMA_DAT
 psql_schema -Atc 'SELECT count(*) AS registered_migrations FROM tdf_schema_migration;'
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
+psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/scripts/social/schema-compatibility.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_pause.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
+psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
 psql_schema <<'SQL'
 DO $$ BEGIN
   ASSERT NOT (SELECT enabled FROM social_v2_runtime);
+  ASSERT (SELECT activated_once FROM social_v2_runtime);
+  ASSERT (SELECT count(*) FROM chat_message WHERE body='Synthetic legacy DM')=1;
+  BEGIN
+    INSERT INTO chat_message(thread_id,sender_party_id,body,created_at)
+      VALUES(900000001,900000001,'Blocked legacy retry',now());
+    RAISE EXCEPTION 'paused legacy DM insert succeeded';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
   ASSERT social_v2_mutate(900000001,900000002,'unblock',3,'paused')->>'error'='disabled';
   ASSERT (SELECT block_a FROM social_v2_pair WHERE party_a=900000001 AND party_b=900000002);
   ASSERT (SELECT personalized=false AND discoverable FROM social_v2_preference WHERE party_id=900000001);

@@ -285,3 +285,11 @@ historical. Full-app runtime and mobile social flows still require qualification
 three specific negative controls, generated observed-outcome tests, actual
 pre-fix HTTP counterexample, lock races and fixture overhead. These extend the
 account-only pilot; they do not qualify legacy endpoints or managed entities.
+
+## Legacy DM write refinement — 2026-09-15
+
+[DM write boundary](dm-write-boundary.md) adds an executable activation/pause/consent
+model and real generated INSERT tests, plus concrete lock races and complete-schema
+compatibility. The model assumes an atomic write boundary; database locks and
+READ COMMITTED enforcement realize that boundary for this path. It does not prove
+all multi-thread lock graphs or repair legacy reads/notification delivery.
