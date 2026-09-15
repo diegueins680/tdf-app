@@ -93,6 +93,43 @@ node scripts/refresh-instagram-token.mjs --refresh
 node scripts/refresh-instagram-token.mjs --setup
 ```
 
+## Messaging token checks (separate workflow)
+
+`Check Messaging Token` manages `INSTAGRAM_MESSAGING_TOKEN` and
+`FACEBOOK_MESSAGING_TOKEN`, not `INSTAGRAM_ACCESS_TOKEN` above. Its manual
+`action=check` is read-only:
+
+```bash
+node scripts/check-messaging-token.mjs --check
+gh workflow run check-messaging-token.yml \
+  --repo diegueins680/tdf-app --ref REVIEWED_REF_WITH_READ_ONLY_CHECK -f action=check
+```
+
+Replace the ref placeholder only with a reviewed revision containing this fix.
+Until it is merged, do not dispatch this workflow on the old `main`: its manual
+`check` action still runs credential maintenance. The CLI flag is also unsafe on
+older revisions that silently ignore arguments.
+
+Both tokens must pass the existing health checks without needing maintenance.
+Missing, invalid, expired, soon-expiring tokens or failed provider checks return
+a nonzero status; read-only mode never exchanges tokens, retrieves replacement
+Page tokens, or calls Fly. In Actions, this step receives only the messaging
+tokens and Meta inspector credentials; Fly credentials and CLI installation are
+limited to maintenance. Failure notifications retain their existing behavior.
+
+The hourly schedule and explicit `action=refresh` retain the existing
+refresh-when-needed behavior, including final verification and failure exits.
+They invoke `node scripts/check-messaging-token.mjs` without arguments, which can
+exchange tokens and update both Fly messaging secrets. Manual `refresh` is not
+an unconditional rotation and requires separate production-maintenance approval.
+Unknown CLI arguments and workflow actions fail instead of falling through to
+maintenance. Do not pass token values as arguments or paste them into logs.
+
+No schema migration or application deployment is needed for this change.
+Reverting it restores the old, potentially mutating manual `check` behavior;
+stop using manual checks on a reverted revision. Reverting code does not undo
+any separately authorized credential update.
+
 ## Token Lifecycle
 
 ```
