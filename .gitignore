@@ -99,3 +99,5 @@ evidence/
 screencast/
 artifacts/releases/
 .instagram-token-state.json
+# Local lifecycle state is authenticated ciphertext, never a tracked credential.
+.instagram-lifecycle-state.enc.json*
