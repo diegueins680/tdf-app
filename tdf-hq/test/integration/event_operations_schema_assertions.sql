@@ -96,3 +96,11 @@ SELECT event_rehearsal.check_that(
   (SELECT snapshot=event_rehearsal.history_rows() FROM event_rehearsal.expected_history)
   AND (SELECT snapshot=event_rehearsal.legacy_rows() FROM event_rehearsal.expected_legacy),
   'task reads preserve legacy and immutable records');
+
+SELECT event_rehearsal.check_that(
+  (SELECT revision=4 FROM event_operation_task_revision WHERE activity_id=900010)
+  AND (SELECT revision=1 FROM event_operation_task_revision WHERE activity_id=900011),
+  'aggregate revisions reflect two RACI inserts and one policy, with failed writes rolled back');
+SELECT event_operation_lock_task_revision(900010,900010,4);
+CREATE TABLE event_rehearsal.expected_task_revisions AS
+  SELECT jsonb_agg(to_jsonb(t) ORDER BY activity_id) AS snapshot FROM event_operation_task_revision t;

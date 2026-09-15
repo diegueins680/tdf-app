@@ -166,3 +166,10 @@ API interception, foreign-origin blocking and the original assertion limits. The
 and formal state machines remain unchanged. See [PR 20 evidence](pr-20-task-browser-startup.md)
 and the [fixture isolation contract](task-browser-isolation-contract.md). This is a browser
 harness correction, not a production startup benchmark or server/database E2E completion.
+
+The twenty-first branch, `feat/event-task-aggregate-revision`, prepares optimistic task/RACI
+commands with task-scoped version metadata and the existing event write fence. A separate
+internal guard compares after waiting; public task reads and clients remain unchanged.
+See [the revision contract](task-revision-contract.md) and [PR 21 evidence](pr-21-task-aggregate-revision.md).
+This database-only foundation does not enable editing, expose versions to scoped readers,
+implement idempotent commands, or replace current authorization and final-state validation.

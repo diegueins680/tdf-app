@@ -16,6 +16,9 @@ on:
       - "scripts/test-event-operations-api-migration.sh"
       - "scripts/test-event-task-commit-migration.sh"
       - "scripts/test-event-task-read-migration.sh"
+      - "scripts/test-event-task-revision-migration.sh"
+      - "scripts/__tests__/event-task-revision-runner.test.mjs"
+      - "tdf-hq/test/integration/event_task_revision_assertions.sql"
       - "tdf-hq/test/integration/event_task_read_assertions.sql"
       - "scripts/test-event-operations-schema-rehearsal.sh"
       - "scripts/__tests__/event-operations-schema-rehearsal.test.mjs"
@@ -70,6 +73,9 @@ on:
       - "scripts/test-event-operations-api-migration.sh"
       - "scripts/test-event-task-commit-migration.sh"
       - "scripts/test-event-task-read-migration.sh"
+      - "scripts/test-event-task-revision-migration.sh"
+      - "scripts/__tests__/event-task-revision-runner.test.mjs"
+      - "tdf-hq/test/integration/event_task_revision_assertions.sql"
       - "tdf-hq/test/integration/event_task_read_assertions.sql"
       - "scripts/test-event-operations-schema-rehearsal.sh"
       - "scripts/__tests__/event-operations-schema-rehearsal.test.mjs"
@@ -184,6 +190,19 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check scoped task projection and concurrent authorization
         run: npm run test:event-task-read-migration
+
+  postgres-task-revision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Check revision runner isolation and mandatory verification
+        run: node --test scripts/__tests__/event-task-revision-runner.test.mjs
+      - name: Check aggregate task revisions and concurrent commands
+        run: sh scripts/test-event-task-revision-migration.sh
 
   postgres-complete-schema:
     runs-on: ubuntu-latest
