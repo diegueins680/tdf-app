@@ -20,16 +20,19 @@
 import { readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
+import { pathToFileURL } from 'url';
 
 const TOKEN_FILE = join(process.cwd(), '.instagram-token-state.json');
 const INSTAGRAM_API_BASE = 'https://graph.instagram.com';
-const FACEBOOK_GRAPH_BASE = 'https://graph.facebook.com/v18.0';
+const FACEBOOK_GRAPH_BASE = 'https://graph.facebook.com/v26.0';
 
 // Read environment variables
 const TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN;
-const APP_ID = process.env.INSTAGRAM_APP_ID || '1206294904899273';
+const APP_ID = process.env.INSTAGRAM_APP_ID;
 const APP_SECRET = process.env.INSTAGRAM_APP_SECRET;
+const DEBUG_APP_ID = process.env.FACEBOOK_APP_ID;
+const DEBUG_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 const FLY_APP = process.env.FLY_APP_NAME || 'tdf-hq';
 
 function log(...args) {
@@ -68,59 +71,170 @@ async function saveTokenState(state) {
   }
 }
 
-async function makeRequest(url) {
-  const response = await fetch(url);
-  const data = await response.json();
-  
-  if (!response.ok || data.error) {
-    throw new Error(data.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+function retryDelayMs(attempt, retryAfter, random = Math.random) {
+  const retryAfterSeconds = Number.parseFloat(retryAfter || '');
+  if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds >= 0) {
+    return Math.min(retryAfterSeconds * 1000, 30_000);
   }
-  
-  return data;
+
+  const exponentialDelay = Math.min(1000 * (2 ** (attempt - 1)), 8_000);
+  return Math.round(exponentialDelay * (0.75 + random() * 0.5));
 }
 
-async function checkTokenStatus(token) {
-  log('Checking token status...');
-  
-  try {
-    // Check token info using Facebook's debug_token endpoint
-    const debugUrl = `${FACEBOOK_GRAPH_BASE}/debug_token?input_token=${token}&access_token=${APP_ID}|${APP_SECRET}`;
-    const debugData = await makeRequest(debugUrl);
-    
-    const tokenInfo = debugData.data;
-    const expiresAt = tokenInfo.expires_at ? new Date(tokenInfo.expires_at * 1000) : null;
-    const isValid = tokenInfo.is_valid;
-    const scopes = tokenInfo.scopes || [];
-    
-    log('Token status:', isValid ? 'VALID' : 'INVALID');
-    log('Scopes:', scopes.join(', '));
-    
-    if (expiresAt) {
-      const now = new Date();
-      const daysUntilExpiry = Math.floor((expiresAt - now) / (1000 * 60 * 60 * 24));
-      log('Expires at:', expiresAt.toISOString());
-      log('Days until expiry:', daysUntilExpiry);
-      
-      return {
-        isValid,
-        expiresAt,
-        daysUntilExpiry,
-        scopes,
-        type: tokenInfo.type || 'unknown',
-      };
-    } else {
-      log('Token does not expire (long-lived)');
-      return {
-        isValid,
-        expiresAt: null,
-        daysUntilExpiry: Infinity,
-        scopes,
-        type: 'long_lived',
-      };
+function isTransientApiFailure(response, data, err) {
+  if (err?.name === 'AbortError' || err?.name === 'TimeoutError' || err instanceof TypeError) {
+    return true;
+  }
+
+  const apiCode = data?.error?.code;
+  if ([102, 190].includes(apiCode) || response?.status === 401 || response?.status === 403) {
+    return false;
+  }
+
+  if (response?.status === 429 || response?.status >= 500) {
+    return true;
+  }
+
+  return data?.error?.is_transient === true
+    || [1, 2, 4, 17, 341].includes(apiCode)
+    || /system error|temporar|try again|service unavailable/i.test(err?.message || '');
+}
+
+async function makeRequest(url, {
+  fetchImpl = globalThis.fetch,
+  maxAttempts = 3,
+  random = Math.random,
+  sleep = delay => new Promise(resolve => setTimeout(resolve, delay)),
+} = {}) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    let response;
+    let data;
+
+    try {
+      response = await fetchImpl(url, { signal: AbortSignal.timeout(15_000) });
+      data = await response.json();
+
+      if (response.ok && !data.error) {
+        return data;
+      }
+
+      const apiCode = data.error?.code;
+      const classification = [
+        Number.isInteger(response.status) ? `HTTP ${response.status}` : null,
+        apiCode == null ? null : `API code ${apiCode}`,
+      ].filter(Boolean).join(', ');
+      const message = data.error?.message || response.statusText || 'Instagram API request failed';
+      lastError = new Error(classification ? `${message} (${classification})` : message);
+    } catch (err) {
+      lastError = err;
     }
-  } catch (err) {
-    error('Failed to check token status:', err.message);
-    return { isValid: false, error: err.message };
+
+    const transient = isTransientApiFailure(response, data, lastError);
+    if (!transient || attempt === maxAttempts) {
+      throw lastError;
+    }
+
+    const delay = retryDelayMs(attempt, response?.headers?.get?.('retry-after'), random);
+    log(`Transient Instagram API failure; retrying in ${delay}ms (${attempt}/${maxAttempts - 1})`);
+    await sleep(delay);
+  }
+
+  throw lastError;
+}
+
+export async function checkInstagramToken(token, requestOptions) {
+  // Validate Instagram Login credentials at their documented resource server
+  // before checking metadata. A Facebook app-auth error otherwise hides an
+  // expired/revoked Instagram token and incorrectly implicates the app secret.
+  const accountUrl = new URL(`${INSTAGRAM_API_BASE}/v26.0/me`);
+  accountUrl.searchParams.set('fields', 'user_id');
+  accountUrl.searchParams.set('access_token', token);
+  const data = await makeRequest(accountUrl.toString(), requestOptions);
+  const account = Array.isArray(data?.data) && data.data.length === 1 ? data.data[0] : data;
+  if (typeof account?.user_id !== 'string' || !/^\d+$/.test(account.user_id)) {
+    throw new Error('Instagram account validation returned no valid user ID');
+  }
+  log('Instagram account access verified; checking token metadata...');
+  return checkTokenStatus(token, requestOptions);
+}
+
+export async function checkTokenStatus(token, {
+  appId = DEBUG_APP_ID,
+  appSecret = DEBUG_APP_SECRET,
+  expectedAppId = APP_ID,
+  ...requestOptions
+} = {}) {
+  log('Checking token status...');
+
+  // The Facebook debugger authenticates the parent Meta application, not the
+  // Instagram Login child credentials used by ig_exchange_token.
+  if (!appId || !appSecret) {
+    throw new Error('FACEBOOK_APP_ID and FACEBOOK_APP_SECRET are required for token metadata validation');
+  }
+  if (!expectedAppId) throw new Error('INSTAGRAM_APP_ID is required to verify token ownership');
+  const debugUrl = new URL(`${FACEBOOK_GRAPH_BASE}/debug_token`);
+  debugUrl.searchParams.set('input_token', token);
+  debugUrl.searchParams.set('access_token', `${appId}|${appSecret}`);
+  const debugData = await makeRequest(debugUrl.toString(), requestOptions);
+
+  const tokenInfo = debugData.data || {};
+  if (tokenInfo.is_valid === true && String(tokenInfo.app_id) !== String(expectedAppId)) {
+    throw new Error('Instagram access token belongs to a different application');
+  }
+  if (tokenInfo.is_valid === true && (!Number.isFinite(tokenInfo.expires_at) || tokenInfo.expires_at < 0)) {
+    throw new Error('Instagram token metadata has no authoritative expiration');
+  }
+  const deadlines = [tokenInfo.expires_at, tokenInfo.data_access_expires_at]
+    .filter(value => Number.isFinite(value) && value > 0);
+  const expiresAt = deadlines.length ? new Date(Math.min(...deadlines) * 1000) : null;
+  const isValid = tokenInfo.is_valid === true && (!expiresAt || expiresAt.getTime() > Date.now());
+  const scopes = tokenInfo.scopes || [];
+
+  log('Token status:', isValid ? 'VALID' : 'INVALID');
+  log('Scopes:', scopes.join(', '));
+
+  if (expiresAt) {
+    const now = new Date();
+    const daysUntilExpiry = Math.floor((expiresAt - now) / (1000 * 60 * 60 * 24));
+    log('Expires at:', expiresAt.toISOString());
+    log('Days until expiry:', daysUntilExpiry);
+
+    return {
+      isValid,
+      expiresAt,
+      daysUntilExpiry,
+      scopes,
+      type: tokenInfo.type || 'unknown',
+    };
+  }
+
+  log('Token does not expire (long-lived)');
+  return {
+    isValid,
+    expiresAt: null,
+    daysUntilExpiry: Infinity,
+    scopes,
+    type: 'long_lived',
+  };
+}
+
+export function assertTokenValid(status) {
+  if (!status?.isValid) {
+    throw new Error('Instagram access token is invalid');
+  }
+}
+
+export function assertCheckConfiguration({ token, appId, appSecret }) {
+  if (!token) {
+    throw new Error('INSTAGRAM_ACCESS_TOKEN environment variable is required');
+  }
+  if (!appId) {
+    throw new Error('INSTAGRAM_APP_ID environment variable is required');
+  }
+  if (!appSecret) {
+    throw new Error('INSTAGRAM_APP_SECRET environment variable is required');
   }
 }
 
@@ -178,48 +292,37 @@ async function refreshLongLivedToken(currentToken) {
 
 async function updateFlySecret(token) {
   log('Updating Fly.io secret...');
-  
+
   try {
-    const cmd = `flyctl secrets set INSTAGRAM_ACCESS_TOKEN="${token}" --app ${FLY_APP}`;
-    execSync(cmd, { stdio: 'inherit' });
+    execFileSync('flyctl', ['secrets', 'set', `INSTAGRAM_ACCESS_TOKEN=${token}`, '--app', FLY_APP], { stdio: 'inherit' });
     log('Fly.io secret updated successfully');
-    return true;
   } catch (err) {
     error('Failed to update Fly.io secret:', err.message);
-    return false;
+    throw err;
   }
 }
 
 async function restartFlyApp() {
   log('Restarting Fly.io app...');
-  
+
   try {
-    const cmd = `flyctl apps restart ${FLY_APP}`;
-    execSync(cmd, { stdio: 'inherit' });
+    execFileSync('flyctl', ['apps', 'restart', FLY_APP], { stdio: 'inherit' });
     log('Fly.io app restarted successfully');
-    return true;
   } catch (err) {
     error('Failed to restart Fly.io app:', err.message);
-    return false;
+    throw err;
   }
 }
 
 async function setup() {
   log('=== Instagram Token Setup ===');
-  
-  if (!TOKEN) {
-    error('INSTAGRAM_ACCESS_TOKEN environment variable is required');
-    process.exit(1);
-  }
-  
-  if (!APP_SECRET) {
-    error('INSTAGRAM_APP_SECRET environment variable is required');
-    process.exit(1);
-  }
-  
+
   try {
+    assertCheckConfiguration({ token: TOKEN, appId: APP_ID, appSecret: APP_SECRET });
+
     // First check if current token is already long-lived
-    const status = await checkTokenStatus(TOKEN);
+    const status = await checkInstagramToken(TOKEN);
+    assertTokenValid(status);
     
     if (status.type === 'long_lived' || status.daysUntilExpiry > 30) {
       log('Token appears to already be long-lived or valid for >30 days');
@@ -247,14 +350,10 @@ async function setup() {
     });
     
     // Update Fly.io secret
-    const updated = await updateFlySecret(result.token);
-    
-    if (updated) {
-      await restartFlyApp();
-    }
+    await updateFlySecret(result.token);
+    await restartFlyApp();
     
     log('Setup complete!');
-    log('New token:', result.token.substring(0, 10) + '...');
     
   } catch (err) {
     error('Setup failed:', err.message);
@@ -285,11 +384,8 @@ async function refresh() {
     });
     
     // Update Fly.io secret
-    const updated = await updateFlySecret(result.token);
-    
-    if (updated) {
-      await restartFlyApp();
-    }
+    await updateFlySecret(result.token);
+    await restartFlyApp();
     
     log('Refresh complete!');
     
@@ -305,13 +401,11 @@ async function check() {
   const state = await loadTokenState();
   const token = TOKEN || state.token;
   
-  if (!token) {
-    error('No token available. Run with --setup first.');
-    process.exit(1);
-  }
-  
   try {
-    const status = await checkTokenStatus(token);
+    assertCheckConfiguration({ token, appId: APP_ID, appSecret: APP_SECRET });
+
+    const status = await checkInstagramToken(token);
+    assertTokenValid(status);
     
     log('\nCurrent state:');
     log('  Token type:', state.tokenType || 'unknown');
@@ -333,24 +427,25 @@ async function check() {
   }
 }
 
-// Main
-const args = process.argv.slice(2);
-const command = args[0] || '--check';
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const args = process.argv.slice(2);
+  const command = args[0] || '--check';
 
-switch (command) {
-  case '--setup':
-    setup();
-    break;
-  case '--refresh':
-    refresh();
-    break;
-  case '--check':
-    check();
-    break;
-  default:
-    console.log('Usage:');
-    console.log('  node refresh-instagram-token.mjs --setup    # Initial setup');
-    console.log('  node refresh-instagram-token.mjs --refresh  # Refresh token now');
-    console.log('  node refresh-instagram-token.mjs --check    # Check token status');
-    process.exit(1);
+  switch (command) {
+    case '--setup':
+      setup();
+      break;
+    case '--refresh':
+      refresh();
+      break;
+    case '--check':
+      check();
+      break;
+    default:
+      console.log('Usage:');
+      console.log('  node refresh-instagram-token.mjs --setup    # Initial setup');
+      console.log('  node refresh-instagram-token.mjs --refresh  # Refresh token now');
+      console.log('  node refresh-instagram-token.mjs --check    # Check token status');
+      process.exit(1);
+  }
 }

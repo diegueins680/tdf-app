@@ -80,6 +80,10 @@ export default defineConfig({
           if (id.includes('react-router')) return 'router';
           if (id.includes('@tanstack')) return 'tanstack';
           if (id.includes('@fullcalendar/')) return 'fullcalendar';
+          // Analytics is initialized after the application has rendered. Keep
+          // its SDK out of the catch-all vendor chunk so it is not preloaded
+          // on public routes before analytics is configured.
+          if (id.includes('/node_modules/posthog-js/')) return 'analytics';
           // Let Rollup place icons with their consumers. A manual shared icon
           // chunk pulls icons used only by lazy routes into the initial graph
           // as soon as an eagerly loaded shell component imports any icon.

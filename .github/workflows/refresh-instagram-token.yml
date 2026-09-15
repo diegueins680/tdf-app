@@ -20,6 +20,17 @@ jobs:
   refresh-token:
     runs-on: ubuntu-latest
     steps:
+      - name: Check notification configuration
+        id: notification-config
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout
         uses: actions/checkout@v7
 
@@ -35,7 +46,9 @@ jobs:
         env:
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
-          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID || '1206294904899273' }}
+          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
+          FACEBOOK_APP_SECRET: ${{ secrets.FACEBOOK_APP_SECRET }}
+          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID }}
           FLY_APP_NAME: ${{ secrets.FLY_APP_NAME || 'tdf-hq' }}
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
@@ -48,12 +61,16 @@ jobs:
           fi
 
       - name: Notify on Failure
-        if: failure()
+        if: failure() && steps.notification-config.outputs.enabled == 'true'
         uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
           payload: |
             {
               "text": "⚠️ Instagram token refresh failed! Manual intervention required."
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Report unavailable failure notification
+        if: failure() && steps.notification-config.outputs.enabled == 'false'
+        run: echo "::warning::SLACK_WEBHOOK_URL is not configured; workflow failure was not sent to Slack."
