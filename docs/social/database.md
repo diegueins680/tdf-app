@@ -83,10 +83,10 @@ ordering ties, edits, late inserts, deletion, membership revocation and exclusio
 A real two-session test holds block's locks while acceptance waits.
 
 Still required before activation: full application-schema migration/rollback;
-authenticated HTTP and end-to-end tests; complete legacy/block/media/notification
+full-app authenticated end-to-end tests (eight isolated real HTTP examples passed); complete legacy/block/media/notification
 coverage; private-follow requests; managed entities; session-token fencing; mobile
 cutover; general abuse reporting; complete long relationship-list pagination;
-account lifecycle integration; benchmark thresholds and post-release instrumentation.
+account lifecycle integration; broader performance qualification and post-release instrumentation.
 SQL fixture success does not satisfy those criteria. New prototype behavior is
 kept behind inactive gates until this work is finished.
 

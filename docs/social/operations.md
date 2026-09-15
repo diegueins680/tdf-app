@@ -1,6 +1,7 @@
 # Rollout and useful-outcome measurement
 
-All new behavior defaults off. No deployment or activation is part of this work.
+All new behavior defaults off. Deployment and activation were excluded from the
+authorized scope; an automatic-provider exception is recorded below.
 Before rollout: verify schema, authorized legacy/client compatibility, both flags,
 rollback with post-migration writes, all denied paths, media access and CI. Rehearse
 on synthetic or approved non-production data only. Never source production envs.

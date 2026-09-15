@@ -13,7 +13,7 @@ rejected. `TDF.Social.Server` derives PartyId from authentication, checks
 `SOCIAL_V2_ENABLED=true`, uses parameterized PostgreSQL calls and maps disabled,
 invalid, conflict and rate-limit outcomes. Database runtime must ALSO be enabled.
 No production migration, process flag, database gate or frontend flag was enabled.
-Seven localhost HTTP integration tests now pass with actual bearer authentication,
+Eight localhost HTTP integration tests now pass with actual bearer authentication,
 Servant handlers and native PostgreSQL 16.10. Full-application qualification is broader.
 
 `VITE_SOCIAL_V2_ENABLED=true` selects the experimental social page with Following
@@ -29,15 +29,16 @@ to a third-party QR endpoint; its query caches are also scoped per account.
 - Four Stack/runghc API parser/serialization tests passed.
 - Fifteen Jest tests passed for API validation, default Following, empty/error
   recovery, opt-out and account cache isolation (three suites including existing API).
-- Full TypeScript/build baseline has unrelated onboarding generated-contract,
-  login/AppShell export and DirectorySearchPage type failures. The social-only
-  suites do not establish a successful application build.
+- Full web TypeScript check, Vite build and bundle budget passed after canonical
+  contract regeneration and the reviewed upstream dependency refresh. Initial JS:
+  357,190 bytes gzip across five preloads. Earlier baseline failures remain recorded
+  separately; the upstream onboarding fixes are not attributed to this social PR.
 - The actual SocialWorkspace component passed a local synthetic-session/API browser
   journey: default Following, keyboard tabs, explicit acceptance, no 390px horizontal
   overflow, no browser errors and zero violations in the selected axe WCAG rules.
   Desktop/mobile screenshots were captured and inspected. This is not full-app E2E.
-- Seven real localhost HTTP examples passed: authentication, process/database gates,
-  identity injection, bilateral consent, blocked reads, cursor validation, membership
+- Eight real localhost HTTP examples passed: authentication, process/database gates,
+  identity injection, caller-owned withdrawal, bilateral consent, blocked reads, cursor validation, membership
   revocation, inactive tokens and organization exclusion. Native PostgreSQL 16.10
   provided a fallback after Docker returned API 500 and its HTTP run stalled.
   GHC object-code compilation avoided the interpreter breakpoint-index limit.
@@ -71,5 +72,5 @@ with an activated block policy. All activation gates in the database document ap
 Native HTTP reproduction: `TDF_SOCIAL_HTTP_NATIVE=1 bash scripts/social/test-http.sh`.
 Set `TDF_SOCIAL_PG_BIN` when PostgreSQL binaries are elsewhere; an optional
 `TDF_SOCIAL_HTTP_BUILD` reuses compiler objects. The private cluster starts on a
-free loopback port and is stopped on exit. Evidence: `evidence/http-runtime-native.txt`.
+free loopback port and is stopped on exit. Evidence: `evidence/http-refreshed-final.txt`.
 The initial Docker-backed run is a failure/limitation, not a passing test result.
