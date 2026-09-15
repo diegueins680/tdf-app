@@ -66,6 +66,7 @@ for migration in \
   2026-09-09_canonical_payment_lifecycle \
   2026-09-10_payment_attempt_intent_binding \
   2026-09-11_payment_intent_runtime_sync \
+  2026-09-11_manual_bank_provider_activation \
   2026-09-11_provider_capability_catalog \
   2026-09-13_provider_execution_runtime \
   2026-09-15_provider_query_recovery; do
