@@ -23,3 +23,15 @@ reports, latency, opt-outs and exposure concentration as guardrails. Those are
 product hypotheses, not research-demonstrated gains for TDF. A post-release study
 must distinguish a social click/lead proxy from a completed booking or paid sale.
 No experiments or new services are provisioned in this task.
+
+### Read-boundary refinement (accessed 2026-09-15)
+
+[PostgreSQL 16 function volatility](https://www.postgresql.org/docs/16/xfunc-volatility.html)
+(versioned official documentation; page update date unavailable) specifies that
+STABLE functions use the calling query's snapshot; VOLATILE functions obtain new
+snapshots for their internal queries. TDF inference: mark read-only social functions
+STABLE so a sequence of policy/response SELECTs shares the model's single read
+boundary. Reject IMMUTABLE for database-backed policy because cached plans could
+retain an obsolete value. Mutations remain VOLATILE. Validation: PostgreSQL fixture
+asserts function classification and exercises revocation between calls; this does
+not prove arbitrary application code follows the same transaction discipline.

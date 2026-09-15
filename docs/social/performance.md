@@ -28,6 +28,35 @@ that a graph database would improve TDF's current workload or operating cost.
 The selected baseline bounds authorization work and preserves exclusions before
 returning candidates/reasons. It samples 200 public opt-in profiles per day and can
 miss relevant candidates outside that sample. It does not optimize popularity.
-Additional acceptance remains blocked: large-post-volume feeds, realistic degree
+Additional acceptance remains blocked: realistic degree
 and permission distributions, many concurrent writers, client HTTP latency,
 full-schema storage/maintenance cost, notification lag, and product-value outcomes.
+
+## Large post history and snapshot refinement — 2026-09-15
+
+Added the same 50,000 synthetic posts to the relationship fixture, with just one
+in 1,000 in a followed club. Reproduce with `TDF_SOCIAL_BENCHMARK=1
+TDF_SOCIAL_FEED_BENCHMARK=1 bash scripts/social/test-postgres.sh` (one shell line).
+The original feed timed out at 30,032ms. Starting from authoritative club membership,
+indexing visible club posts and joining author/artist policy avoids inspecting each
+unrelated post through nested permission functions.
+
+| Final warm workload | Samples | p50 ms | p95 ms | 200ms target |
+|---|---:|---:|---:|---|
+| Sparse Following, 50k additional posts | 20 | 66.616 | 102.321 | satisfied |
+| Empty Following, 50k additional posts | 20 | 133.788 | 185.770 | satisfied |
+| Discover, source degree 10k | 20 | 78.209 | 194.169 | satisfied |
+| Discover, sparse relationships | 20 | 82.146 | 128.345 | satisfied |
+
+The first empty-feed EXPLAIN execution was 241.535ms; warm percentiles do not
+establish a cold-query bound. The large-post fixture is synthetic and represents
+only two clubs; a real high-degree multi-club timeline and mutation p95 remain
+unqualified. No hardware isolation or production speedup ratio is claimed.
+
+`evidence/postgres-large-feed-baseline.txt` records the timeout;
+`evidence/postgres-large-feed-final.txt` records the final migration hashes, all
+correctness checks and these measurements. An intermediate candidate run missed
+the original one-second race-test sleep under contention and stopped before its
+benchmark; it is not evidence about candidate query latency. The fixture now uses
+an explicit row-lock barrier, observes both block and accept waiting, then releases
+the controller so block commits first. No timing assumption chooses the winner.
