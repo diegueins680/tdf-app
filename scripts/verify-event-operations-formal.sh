@@ -105,6 +105,10 @@ for mutation in Scope Event Early; do
 done
 expect_counterexample TaskReadMixed.cfg CoherentTaskProjection task-read-mixed TaskRead.tla
 run_tlc OperationalLiveness.tla OperationalLiveness.cfg operational-liveness
+run_tlc WebOnboardingRecovery.tla WebOnboardingRecovery.cfg web-onboarding
+expect_counterexample WebOnboardingRecoveryStale.cfg CurrentSessionOnly web-onboarding-stale WebOnboardingRecovery.tla
+expect_counterexample WebOnboardingRecoveryReceipt.cfg AuthoritativeOnly web-onboarding-receipt WebOnboardingRecovery.tla
+expect_counterexample WebOnboardingRecoveryOverlap.cfg SingleFlight web-onboarding-overlap WebOnboardingRecovery.tla
 
 scenario_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
   -c 0 -s sat4j -t none -o "${run_root}/alloy-scenario" EventStructure.als 2>&1)"
