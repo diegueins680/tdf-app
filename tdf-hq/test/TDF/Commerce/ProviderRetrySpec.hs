@@ -1234,6 +1234,24 @@ noChargeReplaySpec = describe "history-preserving no-charge reconciliation" $
             pool >>= (`shouldSatisfy` isLeft)
           runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
 
+      it "refuses posted capture evidence even if a corrupt repair cleared intent counters" $ \pool -> do
+        payment <- reconciliationFixture pool provider
+        succeeded <- parsedQuery payment Adapter.AdapterSucceeded
+        runSqlPool (Reconciliation.applyQueryResult payment succeeded "ledger-guard-capture" notificationTime)
+          pool `shouldReturn` Right Reconciliation.ReconciliationProcessed
+        -- Deliberately incoherent local fixture: no guard or ledger row is
+        -- disabled/deleted. Verify the store's defense in depth directly;
+        -- the public reconciler also rejects the successful operation conflict.
+        runSqlPool (do
+          rawExecute "UPDATE commerce_payment_attempt SET status='failed' WHERE id=?::uuid"
+            [paymentAttemptParameter payment]
+          rawExecute "UPDATE commerce_payment_intent SET status='failed',authorized_minor=0,\
+            \ captured_minor=0,refunded_minor=0 WHERE id=?::uuid"
+            [PersistText (Execution.bppPaymentIntentId payment)]) pool
+        snapshot <- runSqlPool (paymentSnapshot payment) pool
+        runSqlPool (Execution.validateNoChargeObservation payment) pool >>= (`shouldSatisfy` isLeft)
+        runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
 -- Reconstruct the old typed result only for historical compatibility fixtures.
 -- This is not presented as a result from the current PayPhone query parser.
 historicalDecline :: Execution.BoundProviderPayment -> IO Adapter.AdapterResult
