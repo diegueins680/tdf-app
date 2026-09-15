@@ -11,11 +11,13 @@
 - [Delivery plan](delivery-plan.md)
 - [Implementation report](implementation-report-2026-09-14.md)
 - [Draft PR 01](pr-01-formal-foundation.md)
+- [Draft PR 02](pr-02-api-foundation.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)
 - [ADR 0116: bounded formal verification](../adr/0116-bounded-formal-verification.md)
 - [ADR 0117: shared resource allocation](../adr/0117-shared-resource-allocation.md)
 
-This phase deliberately stops before feature schema/API/UI changes. The bounded models were completed
-and validated first, as required. Implementation begins from the dependency-ordered foundation in
-the delivery plan and must update traceability with exact code/test evidence.
+The bounded models were completed and validated before implementation, as required. The dependent
+implementation branches advance in the delivery-plan order and update traceability with exact
+code/test evidence. No document in this directory implies production activation or full end-to-end
+completion.

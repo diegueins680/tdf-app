@@ -11,8 +11,20 @@ on:
       - "docs/adr/0117-shared-resource-allocation.md"
       - "scripts/verify-event-operations-formal.sh"
       - "scripts/test-event-operations-foundation-migration.sh"
+      - "scripts/test-event-operations-api-migration.sh"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
+      - "tdf-hq/sql/2026-09-14_event_operations_api.sql"
+      - "tdf-hq/sql/2026-09-14_event_operations_api_rollback.sql"
+      - "tdf-hq/src/TDF/EventOperations/**"
+      - "tdf-hq/test/TDF/EventOperations/**"
+      - "tdf-hq/src/TDF/API.hs"
+      - "tdf-hq/src/TDF/Server.hs"
+      - "tdf-hq/test/Spec.hs"
+      - "tdf-hq/tdf-hq.cabal"
+      - "tdf-hq/docs/openapi/api.yaml"
+      - "tdf-hq-ui/src/api/eventOperations.ts"
+      - "tdf-hq-ui/src/api/generated/types.ts"
       - "tdf-hq/test/integration/event_operations_foundation_fixture.sql"
       - "package.json"
       - ".github/workflows/event-operations-formal.yml"
@@ -26,8 +38,20 @@ on:
       - "docs/adr/0117-shared-resource-allocation.md"
       - "scripts/verify-event-operations-formal.sh"
       - "scripts/test-event-operations-foundation-migration.sh"
+      - "scripts/test-event-operations-api-migration.sh"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
+      - "tdf-hq/sql/2026-09-14_event_operations_api.sql"
+      - "tdf-hq/sql/2026-09-14_event_operations_api_rollback.sql"
+      - "tdf-hq/src/TDF/EventOperations/**"
+      - "tdf-hq/test/TDF/EventOperations/**"
+      - "tdf-hq/src/TDF/API.hs"
+      - "tdf-hq/src/TDF/Server.hs"
+      - "tdf-hq/test/Spec.hs"
+      - "tdf-hq/tdf-hq.cabal"
+      - "tdf-hq/docs/openapi/api.yaml"
+      - "tdf-hq-ui/src/api/eventOperations.ts"
+      - "tdf-hq-ui/src/api/generated/types.ts"
       - "tdf-hq/test/integration/event_operations_foundation_fixture.sql"
       - "package.json"
       - ".github/workflows/event-operations-formal.yml"
@@ -77,3 +101,12 @@ jobs:
 
       - name: Check event operations foundation migration
         run: npm run test:event-operations-foundation-migration
+
+  postgres-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check event operations API migration
+        run: npm run test:event-operations-api-migration
