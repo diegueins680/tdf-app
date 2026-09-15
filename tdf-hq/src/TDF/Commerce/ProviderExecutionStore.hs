@@ -13,6 +13,7 @@ module TDF.Commerce.ProviderExecutionStore
   , ProviderOperationClaim(..)
   , loadAuthorizedCheckout
   , loadReadyMerchantAccount
+  , loadAttemptProviderReference
   , prepareProviderOperation
   , claimProviderOperation
   , recordCreateResult
@@ -216,6 +217,22 @@ prepareProviderOperation preparation@ProviderOperationPreparation{..}
         [Single _] -> loadOperationByPreparation preparation
         [] -> loadOperationByPreparation preparation
         _ -> pure (Left "Provider operation insert was ambiguous")
+
+-- Preserve the provider reference of an existing operation across upgrades.
+-- This is called only after the canonical attempt's immutable fields match.
+loadAttemptProviderReference
+  :: Checkout.PaymentAttemptReference
+  -> SqlPersistT IO (Either Text (Maybe Text))
+loadAttemptProviderReference attempt = do
+  rows <- rawSql
+    "SELECT provider_reference FROM commerce_provider_operation\
+    \ WHERE payment_attempt_id = ?::uuid AND operation = 'create'"
+    [PersistText (Checkout.paymentAttemptReferenceId attempt)]
+    :: SqlPersistT IO [Single Text]
+  pure $ case rows of
+    [] -> Right Nothing
+    [Single reference] -> Right (Just reference)
+    _ -> Left "Provider operation reference lookup was ambiguous"
 
 claimProviderOperation
   :: ProviderOperationReference

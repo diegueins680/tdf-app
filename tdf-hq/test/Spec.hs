@@ -129,6 +129,7 @@ import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.ProviderCapabilities as ProviderCapabilities
 import qualified TDF.Commerce.ProviderExecutionStore as ProviderExecutionStore
+import qualified TDF.Commerce.ProviderRetrySpec as ProviderRetrySpec
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntimeStore
 import qualified TDF.Commerce.ProviderAdapter as ProviderAdapter
 import qualified TDF.Commerce.ProviderAdapter.Http as ProviderAdapterHttp
@@ -2374,6 +2375,14 @@ main = hspec $ do
               money { ProviderAdapter.mbTaxMinor = 314 }
               `shouldSatisfy` isLeft
 
+        it "rejects an Int64 component sum that wraps back to a positive total" $ do
+            ProviderAdapter.validateUsdMoney money
+              { ProviderAdapter.mbTotalMinor = 1
+              , ProviderAdapter.mbWithoutTaxMinor = maxBound
+              , ProviderAdapter.mbTaxableBaseMinor = maxBound
+              , ProviderAdapter.mbTaxMinor = 3
+              } `shouldSatisfy` isLeft
+
         it "builds a fixed-host PlaceToPay session with a stable retry reference" $ do
             let request = fromRight (error "valid PlaceToPay create fixture")
                   (ProviderAdapter.adapterBuildCreate ptp adapterContext createPayment)
@@ -2381,7 +2390,7 @@ main = hspec $ do
             ProviderAdapter.arUrl request
               `shouldBe` "https://checkout-test.placetopay.ec/api/session"
             ProviderAdapter.arRetryPolicy request
-              `shouldBe` ProviderAdapter.ReuseStableReference
+              `shouldBe` ProviderAdapter.QueryBeforeRetry
             maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody request)
               `shouldContain` "\"paymentMethod\":\"visa,master\""
             show summary `shouldNotContain` "test-login"
@@ -2446,6 +2455,13 @@ main = hspec $ do
                       [ A.object
                           [ "status" .= A.object
                               ["status" .= ("APPROVED" :: Text)]
+                          , "internalReference" .= (456 :: Int)
+                          , "reference" .= (reference :: Text)
+                          , "refunded" .= False
+                          , "amount" .= A.object
+                              [ "from" .= A.object ["currency" .= currency, "total" .= amount]
+                              , "to" .= A.object ["currency" .= currency, "total" .= amount]
+                              ]
                           ]
                       ]
                   ]
@@ -2458,6 +2474,73 @@ main = hspec $ do
               `shouldSatisfy` isLeft
             ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterQuery ptpLocator changedReference
               `shouldSatisfy` isLeft
+
+        describe "PlaceToPay provider transaction evidence" $ do
+            let ptpLocator = locator { ProviderAdapter.plExternalId = "9911" }
+                transaction status amount reference currency refunded = A.object
+                  [ "status" .= A.object ["status" .= (status :: Text)]
+                  , "internalReference" .= (456 :: Int)
+                  , "reference" .= (reference :: Text)
+                  , "refunded" .= (refunded :: Bool)
+                  , "amount" .= A.object
+                      [ "from" .= A.object ["currency" .= (currency :: Text), "total" .= (amount :: A.Value)]
+                      , "to" .= A.object ["currency" .= currency, "total" .= amount]
+                      ]
+                  ]
+                good = transaction "APPROVED" (A.Number 125.15) "TDF-payment-001" "USD" False
+                rejected = transaction "REJECTED" (A.Number 125.15) "TDF-payment-001" "USD" False
+                session status payments = A.object
+                  [ "requestId" .= (9911 :: Int)
+                  , "status" .= A.object ["status" .= (status :: Text)]
+                  , "request" .= A.object
+                      [ "payment" .= A.object
+                          [ "reference" .= ("TDF-payment-001" :: Text)
+                          , "amount" .= A.object
+                              ["currency" .= ("USD" :: Text), "total" .= A.Number 125.15]
+                          ]
+                      ]
+                  , "payment" .= (payments :: [A.Value])
+                  ]
+                parse = ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterQuery ptpLocator
+            it "accepts exactly one complete sale after rejected attempts" $ do
+                fmap ProviderAdapter.adapterResultCertainty (parse (session "APPROVED" [rejected, good]))
+                  `shouldBe` Right ProviderCapabilities.ProviderSucceeded
+            it "rejects underpayment, overpayment, foreign currency, wrong reference and refunded sale" $ do
+                forM_
+                  [ transaction "APPROVED" (A.Number 1) "TDF-payment-001" "USD" False
+                  , transaction "APPROVED" (A.Number 126) "TDF-payment-001" "USD" False
+                  , transaction "APPROVED" (A.Number 125.15) "TDF-payment-001" "EUR" False
+                  , transaction "APPROVED" (A.Number 125.15) "another-order" "USD" False
+                  , transaction "APPROVED" (A.Number 125.15) "TDF-payment-001" "USD" True
+                  , transaction "APPROVED" (A.Number 125.151) "TDF-payment-001" "USD" False
+                  , A.object ["status" .= A.object ["status" .= ("APPROVED" :: Text)]]
+                  ] $ \invalid -> parse (session "APPROVED" [invalid]) `shouldSatisfy` isLeft
+            it "rejects duplicate or missing approvals" $ do
+                parse (session "APPROVED" [good, good]) `shouldSatisfy` isLeft
+                parse (session "APPROVED" []) `shouldSatisfy` isLeft
+            it "never permits fallback for contradictory or partial session evidence" $ do
+                forM_ ["REJECTED", "EXPIRED", "CANCELLED", "APPROVED_PARTIAL", "PARTIAL_EXPIRED"] $
+                  \status -> fmap ProviderAdapter.adapterResultCertainty (parse (session status [good]))
+                    `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
+            it "does not mistake a pending confirmation for a confirmed decline" $ do
+                let pending = transaction "PENDING_CONFIRMATION" (A.Number 125.15)
+                      "TDF-payment-001" "USD" False
+                fmap ProviderAdapter.adapterResultCertainty (parse (session "REJECTED" [pending]))
+                  `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
+                parse (session "APPROVED" [good, pending]) `shouldSatisfy` isLeft
+            it "permits fallback only for terminal sessions without any non-rejected transaction" $ do
+                forM_ ["REJECTED", "EXPIRED", "CANCELLED"] $ \status ->
+                  forM_ [[], [rejected]] $ \payments ->
+                    fmap ProviderAdapter.adapterResultCertainty (parse (session status payments))
+                      `shouldBe` Right ProviderCapabilities.ProviderConfirmedNoCharge
+            it "requires cancellation to contain the exact bound session and no-charge evidence" $ do
+                let cancel value = ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterCancel
+                      ptpLocator (A.object ["status" .= A.object ["status" .= ("OK" :: Text)], "session" .= value])
+                fmap ProviderAdapter.adapterResultState (cancel (session "REJECTED" []))
+                  `shouldBe` Right ProviderAdapter.AdapterCancelled
+                cancel (session "APPROVED" [good]) `shouldSatisfy` isLeft
+                cancel (session "REJECTED" [good]) `shouldSatisfy` isLeft
+                cancel A.Null `shouldSatisfy` isLeft
 
         it "verifies PlaceToPay SHA-256 notifications but still requires reconciliation" $ do
             let status = "APPROVED"
@@ -17072,6 +17155,7 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ProviderRetrySpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
     CatalogRecordsSpec.spec

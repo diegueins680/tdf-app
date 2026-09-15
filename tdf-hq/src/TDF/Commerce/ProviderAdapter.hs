@@ -230,7 +230,7 @@ validateUsdMoney money
       Left (AdapterError "Payment amounts cannot be negative.")
   | mbTotalMinor money <= 0 =
       Left (AdapterError "Payment total must be greater than zero.")
-  | mbTotalMinor money /= sum components =
+  | toInteger (mbTotalMinor money) /= sum (map toInteger components) =
       Left (AdapterError "Payment total does not match its amount components.")
   | otherwise = Right ()
   where

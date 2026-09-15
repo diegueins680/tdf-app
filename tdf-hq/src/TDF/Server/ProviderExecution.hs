@@ -103,11 +103,10 @@ createPaymentSession rawCheckoutId rawLookupToken rawIdempotencyKey rawUserAgent
   clientIp <- liftIO (numericHost remoteAddress)
     >>= either (throwError . unavailableText) pure
   nonce <- liftIO (getEntropy 32)
-  let merchantReference = providerReference provider checkoutId
-      correlationId = "provider-create:" <> checkoutId <> ":" <> idempotencyKey
-      payment = CreatePayment
+  let correlationId = "provider-create:" <> checkoutId <> ":" <> idempotencyKey
+      preflightPayment = CreatePayment
         { cpPaymentMethod = paymentMethod
-        , cpReference = merchantReference
+        , cpReference = providerReference provider checkoutId
         , cpDescription = checkoutDescription checkout
         , cpMoney = checkoutMoneyBreakdown checkout
         , cpReturnUrl = rpaReturnUrl runtime
@@ -119,13 +118,9 @@ createPaymentSession rawCheckoutId rawLookupToken rawIdempotencyKey rawUserAgent
         }
       context = AdapterContext now nonce
       adapter = rpaAdapter runtime
-      expected = ExpectedPayment merchantReference
-        (Store.ceTotalMinor checkout) (Store.ceCurrency checkout)
-      locator = PaymentLocator "pending" expected
-  adapterRequest <- either (throwError . badRequest . adapterErrorPublicMessage) pure
-    (adapterBuildCreate adapter context payment)
-  let fingerprint = requestFingerprint checkout provider paymentMethod payment
-      attemptCreation = Checkout.PaymentAttemptCreation
+  _ <- either (throwError . badRequest . adapterErrorPublicMessage) pure
+    (adapterBuildCreate adapter context preflightPayment)
+  let attemptCreation = Checkout.PaymentAttemptCreation
         { Checkout.pacCheckout = Store.ceCheckout checkout
         , Checkout.pacProvider = provider
         , Checkout.pacEnvironment = Store.ceEnvironment checkout
@@ -140,6 +135,17 @@ createPaymentSession rawCheckoutId rawLookupToken rawIdempotencyKey rawUserAgent
   attempt <- liftIO (runSqlPool
       (PaymentRuntime.beginPaymentAttemptForMethod paymentMethod attemptCreation) envPool)
     >>= either (throwError . conflict) pure
+  previousReference <- liftIO (runSqlPool (Store.loadAttemptProviderReference attempt) envPool)
+    >>= either (throwError . conflict) pure
+  let merchantReference = fromMaybe
+        (providerReference provider (Checkout.paymentAttemptReferenceId attempt)) previousReference
+      payment = preflightPayment { cpReference = merchantReference }
+      expected = ExpectedPayment merchantReference
+        (Store.ceTotalMinor checkout) (Store.ceCurrency checkout)
+      locator = PaymentLocator "pending" expected
+      fingerprint = requestFingerprint checkout provider paymentMethod payment
+  adapterRequest <- either (throwError . badRequest . adapterErrorPublicMessage) pure
+    (adapterBuildCreate adapter context payment)
   operation <- liftIO (runSqlPool
       (Store.prepareProviderOperation Store.ProviderOperationPreparation
         { Store.popAttempt = attempt
@@ -369,12 +375,12 @@ checkoutMoneyBreakdown checkout = MoneyBreakdown
     netSubtotal = Store.ceSubtotalMinor checkout - Store.ceDiscountMinor checkout
 
 providerReference :: Checkout.PaymentProvider -> Text -> Text
-providerReference provider checkoutId = case provider of
+providerReference provider attemptId = case provider of
   Checkout.ProviderPlaceToPay -> PlaceToPay.placeToPayReference scopedReference
   Checkout.ProviderPayPhone -> "TDF-" <> T.take 28 (sha256Text scopedReference)
   _ -> "TDF-" <> T.take 28 (sha256Text scopedReference)
   where
-    scopedReference = Checkout.paymentProviderText provider <> ":" <> checkoutId
+    scopedReference = Checkout.paymentProviderText provider <> ":" <> attemptId
 
 requestFingerprint
   :: Store.CheckoutExecution
