@@ -78,7 +78,11 @@ export function classifyChangedFiles(files, options = {}) {
       || changed.some((file) => isPathOrChild(file, 'tdf-hq')
         || file === 'fly.toml'
         || file === '.dockerignore'
-        || file === 'scripts/test-public-booking-http-concurrency.sh'),
+        || file === 'scripts/test-public-booking-http-concurrency.sh'
+        || file === 'scripts/test-event-operations-http.sh'
+        || file === 'scripts/test-event-operations-http-ci.sh'
+        || file === 'scripts/run-event-operations-http-harness.sh'
+        || file === 'scripts/__tests__/event-operations-http-runner.test.mjs'),
     contracts: pipelineChanged || changed.some(affectsContracts),
     migrations: pipelineChanged || changed.some(affectsMigrations),
   };

@@ -32,6 +32,11 @@ on:
       - "tdf-hq/test/integration/event_operations_replay_assertions.sql"
       - "tdf-hq/test/integration/event_operations_snapshot_assertions.sql"
       - "tdf-hq/test/EventOperationsBoundaryMain.hs"
+      - "tdf-hq/test/EventOperationsHttpMain.hs"
+      - "tdf-hq/test/integration/event_operations_http_fixture.sql"
+      - "scripts/test-event-operations-http.sh"
+      - "scripts/test-event-operations-http-ci.sh"
+      - "scripts/run-event-operations-http-harness.sh"
       - "package.json"
       - ".github/workflows/event-operations-formal.yml"
   push:
@@ -65,6 +70,11 @@ on:
       - "tdf-hq/test/integration/event_operations_replay_assertions.sql"
       - "tdf-hq/test/integration/event_operations_snapshot_assertions.sql"
       - "tdf-hq/test/EventOperationsBoundaryMain.hs"
+      - "tdf-hq/test/EventOperationsHttpMain.hs"
+      - "tdf-hq/test/integration/event_operations_http_fixture.sql"
+      - "scripts/test-event-operations-http.sh"
+      - "scripts/test-event-operations-http-ci.sh"
+      - "scripts/run-event-operations-http-harness.sh"
       - "package.json"
       - ".github/workflows/event-operations-formal.yml"
 
@@ -80,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-java@v4
         with:
@@ -109,7 +119,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check event operations foundation migration
         run: npm run test:event-operations-foundation-migration
@@ -118,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check event operations API migration
         run: npm run test:event-operations-api-migration
@@ -127,6 +137,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check task commit constraints and concurrent writers
         run: npm run test:event-task-commit-migration

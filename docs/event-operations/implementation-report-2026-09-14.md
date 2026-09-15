@@ -158,6 +158,19 @@ on the contextual authorization, time-window, history and HTTP conflict handling
 
 ### Pending product work
 
+The seventh branch, `test/event-operations-http-boundary`, compiles production authentication and
+event handlers and exercises them through real loopback HTTP and disposable PostgreSQL. Sixteen
+scenarios passed, including active/revoked/inactive credentials and canonical roles, object-ID
+isolation, strict input rejection, immutable historical results with replay metadata, concurrent
+duplicates/version conflicts, event-grant downgrade/expiry, independent approval, disabled effects,
+and sanitized SQL failure/recovery. The three runner-safety tests, 21 pipeline tests and the full
+pinned TLC/Alloy runner passed. `quality:repo` now passes locally after a lockfile-only dependency
+installation and aligning the formal workflow with the repository's existing checkout-major policy.
+The new suite is wired into backend CI; this does not imply hosted execution has passed. The full
+application build/middleware, production schema and remaining product journeys are not certified.
+The in-flight session revocation window and POST existence-error distinction are explicit residual
+risks, not claimed fixes. See [PR 07](pr-07-http-verification.md) and its linked contract.
+
 The sixth dependent branch, `fix/event-snapshot-privacy-boundary`, closes the documented GET and
 database-error logging gaps. `SnapshotRead` passed before implementation (1,133 generated / 296
 distinct states, depth 12), with three expected negative-control violations; the full pinned

@@ -46,6 +46,19 @@ test('OpenAPI changes validate both generated clients', () => {
   });
 });
 
+test('every event operations HTTP runner selects backend validation', () => {
+  for (const file of [
+    'scripts/test-event-operations-http.sh',
+    'scripts/test-event-operations-http-ci.sh',
+    'scripts/run-event-operations-http-harness.sh',
+    'scripts/__tests__/event-operations-http-runner.test.mjs',
+  ]) {
+    assert.deepEqual(classifyChangedFiles([file]), {
+      repo: true, backend: true, ui: false, mobile: false, contracts: false, migrations: false,
+    });
+  }
+});
+
 test('schema model changes run backend and migration checks', () => {
   assert.deepEqual(classifyChangedFiles(['tdf-hq/src/TDF/ModelsExtra.hs']), {
     repo: true,

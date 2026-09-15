@@ -47,3 +47,13 @@ Evidence: `event_operations_snapshot_assertions.sql`, RC/RR/Serializable snapsho
 feature-disable race in `test-event-operations-api-migration.sh`, `DatabaseBoundarySpec` (including
 QuickCheck) and `EventOperationsBoundaryMain` against disposable PostgreSQL. These are database and
 production-adapter tests, not an authenticated HTTP, stale-session or offline-client E2E claim.
+
+The seventh branch adds real loopback HTTP coverage through production `authContext`,
+`eventOperationsServer` and the PostgreSQL functions in `EventOperationsHttpMain`. EO-003/EO-009/
+EO-045/EO-051/EO-055 now have focused authenticated HTTP evidence for credentials/canonical roles,
+object-ID isolation, strict inputs, lifecycle/approval guards, version conflicts, concurrent replay,
+event-grant/token/role changes between requests, and sanitized failure/recovery. The replay contract
+preserves every historical result field while changing only response metadata to `replayed=true`;
+tests also assert the persisted receipt retains `replayed=false`. These tests complement, not replace,
+the deterministic SQL isolation tests. The complete `mkApp` middleware, in-flight token revocation,
+full-schema rehearsal, browser/mobile and actual offline queues remain unverified by this harness.
