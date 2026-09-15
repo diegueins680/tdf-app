@@ -26,3 +26,15 @@ exposure, notification opt-outs, error/p95 latency, recommendation repeat rate,
 exposure share for top 1% vs smaller relevant artists, and cold-start coverage.
 Use existing analytics consent and retention policies; do not add contact imports,
 sensitive-trait inference, hidden transactions or private graph explanations.
+
+## Provider preview behavior observed
+
+Opening #355/#356 automatically triggered the repository's Vercel/Cloudflare
+integrations; these are provider attempts, not deployment commands issued here.
+Their result must be read from actual checks. Subsequent commits use the
+Cloudflare-specific `[CF-Pages-Skip]` prefix and branch-scoped Vercel
+`git.deploymentEnabled` exclusions for `feat/social-*` (root and UI project roots).
+GitHub verification remains enabled. Provider docs accessed 2026-09-14:
+[Cloudflare skip builds](https://developers.cloudflare.com/pages/configuration/git-integration/github-integration/),
+[Vercel Git configuration](https://vercel.com/docs/project-configuration/git-configuration)
+(updated 2026-08-25). Do not use general `[skip ci]` or disable correctness checks.
