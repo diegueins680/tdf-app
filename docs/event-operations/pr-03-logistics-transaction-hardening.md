@@ -39,7 +39,8 @@ is explicitly outside this correction.
   server. Cabal then started the same pass again because it expected artifacts intentionally omitted
   by `-fno-code`; the repetition was interrupted with exit 130. The wrapper is not claimed as PASS.
 - Shell/YAML/JSON/whitespace static checks are recorded in the implementation report after final run.
-- Remote CI was not run because GitHub DNS/auth remains unavailable.
+- Remote CI was unavailable during the original local run. Access later recovered; see the
+  delivery report for publication/check status.
 
 ## Rollback and remaining limits
 

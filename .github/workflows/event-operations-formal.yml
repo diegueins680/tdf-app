@@ -12,6 +12,8 @@ on:
       - "scripts/verify-event-operations-formal.sh"
       - "scripts/test-event-operations-foundation-migration.sh"
       - "scripts/test-event-operations-api-migration.sh"
+      - "scripts/test-event-task-commit-migration.sh"
+      - "tdf-hq/sql/2026-09-14_event_task_commit*.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_api.sql"
@@ -40,6 +42,8 @@ on:
       - "scripts/verify-event-operations-formal.sh"
       - "scripts/test-event-operations-foundation-migration.sh"
       - "scripts/test-event-operations-api-migration.sh"
+      - "scripts/test-event-task-commit-migration.sh"
+      - "tdf-hq/sql/2026-09-14_event_task_commit*.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_api.sql"
@@ -112,3 +116,11 @@ jobs:
 
       - name: Check event operations API migration
         run: npm run test:event-operations-api-migration
+
+  postgres-task-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check task commit constraints and concurrent writers
+        run: npm run test:event-task-commit-migration

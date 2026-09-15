@@ -41,6 +41,8 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 | `ReservationOverride.cfg` | Same race, owner-authorized non-empty override reason | PASS; 7 generated, 5 distinct states, depth 3 |
 | `InvitationSafety.cfg` | 3 actors, 2 command IDs, expiry 2, horizon 3 | PASS; 1,107 generated, 912 distinct states, depth 7 |
 | `TaskRaci.cfg` | 2 tasks, 3 collaborators, one documented override reason | PASS; 5,810 generated, 1,338 distinct states, depth 10 |
+| `TaskCommit.cfg` | 2 competing transactions, 2 Responsible people, 1 task, 1 abstract dependency, 5 operations | PASS; 121 generated, 112 distinct states, depth 5 |
+| `TaskCommitEarlyValidation.cfg` / `TaskCommitWriteSkew.cfg` | Negative controls: disable final validation / serialization respectively | Expected TLC exit 12 and named invariant violations; runner checks both |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
@@ -61,6 +63,8 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
   attenuation during account conversion.
 - `TaskRaci.tla`: dependency DAG, completion guards, audited emergency override, exactly one
   accountable party, non-empty responsible set, and collaborator-removal orphan prevention.
+- `TaskCommit.tla`: separate prepare/commit steps, final transaction-state validation, and write
+  serialization; negative controls detect blocked completion and concurrent responsibility loss.
 - `ContractPayment.tla`: exact-version consent, material amendment reset, milestone gate,
   separation of payout approval, and deduplicated payout effect.
 - `OperationalLiveness.tla`: eventual hold expiry, notification dead-lettering, offline sync/conflict,
@@ -97,3 +101,11 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
    examine the complete reachable graph and liveness has its own fair temporal specification.
 3. TLC rejected invitation transitions that did not explicitly preserve `now`. The missing
    `UNCHANGED now` clauses were added before the passing run.
+4. The first SQL foundation checked completion before the legacy handler replaced dependencies.
+   A PostgreSQL regression reproduced a committed completed task with a pending dependency.
+   `TaskCommitEarlyValidation.cfg` detects that unsafe abstraction; `TaskCommit.cfg` validates the
+   complete proposed state before commit. The corrective migration defers checks until final state.
+5. Independent snapshots can each approve removing a different Responsible party, leaving none.
+   `TaskCommitWriteSkew.cfg` detects that unsafe abstraction. The passing model serializes writers;
+   PostgreSQL tests use a real per-event write fence and deterministic concurrency barriers under
+   READ COMMITTED, REPEATABLE READ and SERIALIZABLE. This does not prove arbitrary SQL isolation.

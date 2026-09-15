@@ -69,6 +69,20 @@ run_tlc ReservationRace.tla ReservationRace.cfg reservation-race
 run_tlc ReservationRace.tla ReservationOverride.cfg reservation-override
 run_tlc InvitationSafety.tla InvitationSafety.cfg invitation
 run_tlc TaskRaci.tla TaskRaci.cfg task-raci
+run_tlc TaskCommit.tla TaskCommit.cfg task-commit
+# Mutation checks must expose the precise regression, not just fail parsing.
+expect_counterexample() {
+  local config="$1" invariant="$2" slug="$3" result=0
+  run_tlc TaskCommit.tla "${config}" "${slug}" > "${run_root}/${slug}.log" 2>&1 || result=$?
+  if [[ "${result}" != 12 ]] || ! grep -q "Invariant ${invariant} is violated" "${run_root}/${slug}.log"; then
+    cat "${run_root}/${slug}.log"
+    echo "Expected counterexample not detected: ${config}" >&2
+    exit 1
+  fi
+  echo "Expected mutation counterexample: ${config}: ${invariant}"
+}
+expect_counterexample TaskCommitEarlyValidation.cfg NoBlockedCompletion early-validation
+expect_counterexample TaskCommitWriteSkew.cfg NoOrphanResponsibilities write-skew
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
 run_tlc OperationalLiveness.tla OperationalLiveness.cfg operational-liveness
 
