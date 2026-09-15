@@ -355,6 +355,7 @@ spec = do
     Nothing -> pure ()
     Just url -> beforeAll (openDatabase url) $ afterAll destroyAllResources $
       describe "provider-retry-runtime PostgreSQL" $ do
+        queryRecoverySpec
         notificationInboxSpec
         notificationIdentityInboxSpec
         reconciliationTransactionSpec
@@ -1130,6 +1131,351 @@ withRecoveryEnvironment action = bracket
 
 -- These tests parse synthetic official-contract-shaped query responses and
 -- exercise the actual PostgreSQL financial path. They are not sandbox tests.
+queryRecoverySpec :: SpecWith ConnectionPool
+queryRecoverySpec = describe "durable missed-callback recovery" $ do
+  it "installs both recovery flags disabled and enforces a shared concurrent query budget" $ \pool -> do
+    flags <- runSqlPool (rawSql
+      "SELECT enabled FROM revenue_feature_flag WHERE flag_key='checkout.provider_query_recovery' ORDER BY environment" [])
+      pool :: IO [Single Bool]
+    flags `shouldBe` [Single False, Single False]
+    resetQueryBudget pool Checkout.ProviderPayPhone
+    grants <- concurrently (replicate 8 (runSqlPool
+      (Execution.reserveProviderQueryBudget Checkout.ProviderPayPhone Checkout.CheckoutSandbox) pool))
+    length (filter id grants) `shouldBe` 1
+    runSqlPool (Execution.reserveProviderQueryBudget Checkout.ProviderPlaceToPay Checkout.CheckoutProduction)
+      pool `shouldReturn` True
+
+  forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
+    describe (T.unpack (Checkout.paymentProviderText provider)) $ do
+      it "recovers a missed callback with one query and no fabricated inbox evidence" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runQueryTick pool (successfulQuery payment) `shouldReturn` 1
+          assertPaymentPosted pool payment
+          queryJobState pool payment `shouldReturn` ("completed",1)
+          rows <- runSqlPool (rawSql
+            "SELECT count(*) FROM commerce_provider_event_inbox WHERE merchant_account_ref=?"
+            [PersistText merchant]) pool :: IO [Single Int64]
+          rows `shouldBe` [Single 0]
+
+      it "honors the process switch, exact sandbox flag and runtime configuration" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          setEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED" "false"
+          runQueryTick pool noQuery `shouldReturn` 0
+          setEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED" "true"
+          setRecoveryFlag pool False
+          runQueryTick pool noQuery `shouldReturn` 0
+          setRecoveryFlag pool True
+          setEnv (if provider == Checkout.ProviderPlaceToPay then "PLACETOPAY_LOGIN" else "PAYPHONE_TOKEN") ""
+          runQueryTick pool noQuery `shouldReturn` 0
+          queryJobState pool payment `shouldReturn` ("pending",0)
+          assertQueryUnpaid pool payment
+
+      it "ignores known resources without qualified account authority" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runSqlPool (rawExecute
+            "UPDATE commerce_provider_account SET enabled=false WHERE provider=? AND environment='sandbox'"
+            [PersistText (Checkout.paymentProviderText provider)]) pool
+          runQueryTick pool noQuery `shouldReturn` 0
+          queryJobState pool payment `shouldReturn` ("pending",0)
+
+      it "does not enqueue or recreate an ambiguous operation without a bound resource" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          _ <- replayFixtureWithMerchant "service_booking" merchant pool provider
+          runQueryTick pool noQuery `shouldReturn` 0
+          rows <- runSqlPool (rawSql
+            "SELECT count(*) FROM commerce_provider_query_job job\
+            \ JOIN commerce_provider_operation operation ON operation.id=job.operation_id\
+            \ WHERE operation.merchant_account_ref=?" [PersistText merchant]) pool :: IO [Single Int64]
+          rows `shouldBe` [Single 0]
+
+      it "serializes replica claims and posts only one payment" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          calls <- newIORef (0 :: Int)
+          claimed <- concurrently (replicate 4 (runQueryTick pool
+            (\request -> atomicModifyIORef' calls (\n -> (n+1,())) >> successfulQuery payment request)))
+          sum claimed `shouldBe` 1
+          readIORef calls `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("completed",1)
+          assertPaymentPosted pool payment
+
+      it "shares the callback query budget without burning job attempts" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          payload <- reconciliationNotification pool payment
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment Adapter.AdapterPending))) getCurrentTime
+            (queryEnv pool) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
+          runQueryTick pool noQuery `shouldReturn` 0
+          queryJobState pool payment `shouldReturn` ("pending",0)
+
+      it "retries transport failures with backoff and never infers no charge" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runQueryTick pool (\_ -> pure (Left (ProviderHttp.AdapterTransportError "SYNTHETIC-PRIVATE")))
+            `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("retry",1)
+          assertQueryUnpaid pool payment
+          rows <- runSqlPool (rawSql
+            "SELECT job.next_attempt_at>clock_timestamp(),job.last_error_code FROM commerce_provider_query_job job\
+            \ JOIN commerce_provider_operation operation ON operation.id=job.operation_id\
+            \ WHERE operation.payment_attempt_id=?::uuid" [paymentAttemptParameter payment]) pool
+            :: IO [(Single Bool,Single Text)]
+          rows `shouldBe` [(Single True,Single "query_unavailable")]
+
+      it "discards an expired response and recovers the original attempt on a fresh lease" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runQueryTick pool (\request -> expireQueryLease pool payment >> successfulQuery payment request)
+            `shouldReturn` 1
+          assertQueryUnpaid pool payment
+          queryJobState pool payment `shouldReturn` ("processing",1)
+          resetQueryBudget pool provider
+          runQueryTick pool (successfulQuery payment) `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("completed",2)
+          assertPaymentPosted pool payment
+
+      it "cannot apply a response after another worker replaces its lease token" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          replacement <- newIORef Nothing
+          runQueryTick pool (\request -> do
+            expireQueryLease pool payment
+            resetQueryBudget pool provider
+            claimed <- runSqlPool (Execution.claimProviderQuery provider Checkout.CheckoutSandbox) pool
+            claimed `shouldSatisfy` maybe False (const True)
+            modifyIORef' replacement (const (Execution.pqcLeaseToken <$> claimed))
+            successfulQuery payment request) `shouldReturn` 1
+          assertQueryUnpaid pool payment
+          queryJobState pool payment `shouldReturn` ("processing",2)
+          expected <- readIORef replacement
+          tokens <- runSqlPool (rawSql
+            "SELECT lease_token::text FROM commerce_provider_query_job job\
+            \ JOIN commerce_provider_operation operation ON operation.id=job.operation_id\
+            \ WHERE operation.payment_attempt_id=?::uuid" [paymentAttemptParameter payment]) pool
+            :: IO [Single (Maybe Text)]
+          tokens `shouldBe` [Single expected]
+
+      it "rechecks the kill switch after the provider responds" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runQueryTick pool (\request -> setRecoveryFlag pool False >> successfulQuery payment request)
+            `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("retry",1)
+          assertQueryUnpaid pool payment
+
+      it "rechecks the process switch after the provider responds" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runQueryTick pool (\request -> do
+            setEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED" "false"
+            successfulQuery payment request) `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("retry",1)
+          assertQueryUnpaid pool payment
+
+      it "rolls back financial effects if the atomic job completion fails" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          let install = runSqlPool (rawExecute
+                "ALTER TABLE commerce_provider_query_job ADD CONSTRAINT synthetic_job_completion_failure\
+                \ CHECK (status <> 'completed') NOT VALID" []) pool
+              remove () = runSqlPool (rawExecute
+                "ALTER TABLE commerce_provider_query_job DROP CONSTRAINT synthetic_job_completion_failure" []) pool
+          failed <- bracket install remove (\_ -> try (runQueryTick pool (successfulQuery payment)))
+            :: IO (Either SqlError Int)
+          failed `shouldSatisfy` isLeft
+          assertQueryUnpaid pool payment
+          queryJobState pool payment `shouldReturn` ("processing",1)
+          expireQueryLease pool payment
+          resetQueryBudget pool provider
+          runQueryTick pool (successfulQuery payment) `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("completed",2)
+          assertPaymentPosted pool payment
+
+      it "does not downgrade a callback success arriving during a pending query" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runQueryTick pool (\_ -> do
+            succeeded <- parsedQuery payment Adapter.AdapterSucceeded
+            runSqlPool (Reconciliation.applyQueryResult payment succeeded
+              "synthetic-concurrent-callback" notificationTime) pool
+              `shouldReturn` Right Reconciliation.ReconciliationProcessed
+            pure (Right (queryValue payment Adapter.AdapterPending))) `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("dead_letter",1)
+          assertPaymentPosted pool payment
+
+      it "dead-letters a crashed final lease without another remote query" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          _ <- runSqlPool (Execution.claimProviderQuery provider Checkout.CheckoutSandbox) pool
+          runSqlPool (rawExecute
+            "UPDATE commerce_provider_query_job SET attempt_count=24,\
+            \ lease_expires_at=clock_timestamp()-INTERVAL '1 second' WHERE operation_id IN\
+            \ (SELECT id FROM commerce_provider_operation WHERE payment_attempt_id=?::uuid)"
+            [paymentAttemptParameter payment]) pool
+          runQueryTick pool noQuery `shouldReturn` 0
+          queryJobState pool payment `shouldReturn` ("dead_letter",24)
+          assertQueryUnpaid pool payment
+
+      it "dead-letters mismatched money and late payment on an expired checkout" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runQueryTick pool (\_ -> pure (Right (queryValue payment { Execution.bppAmountMinor = 1 }
+            Adapter.AdapterSucceeded))) `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("dead_letter",1)
+          assertQueryUnpaid pool payment
+          other <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool other
+          runSqlPool (rawExecute "UPDATE commerce_checkout_session SET status='expired' WHERE id=?::uuid"
+            [PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout other))]) pool
+          resetQueryBudget pool provider
+          runQueryTick pool (successfulQuery other) `shouldReturn` 1
+          queryJobState pool other `shouldReturn` ("dead_letter",1)
+          exceptions <- runSqlPool (rawSql
+            "SELECT count(*) FROM commerce_reconciliation_exception\
+            \ WHERE merchant_account_ref=? AND exception_type='scheduled_query_requires_review'"
+            [PersistText merchant]) pool :: IO [Single Int64]
+          exceptions `shouldBe` [Single 2]
+
+      it "stops at the retry bound without converting pending into no charge" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runSqlPool (rawExecute
+            "UPDATE commerce_provider_query_job SET attempt_count=23 WHERE operation_id IN\
+            \ (SELECT id FROM commerce_provider_operation WHERE payment_attempt_id=?::uuid)"
+            [paymentAttemptParameter payment]) pool
+          runQueryTick pool (\_ -> pure (Right (queryValue payment Adapter.AdapterPending))) `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("dead_letter",24)
+          runQueryTick pool noQuery `shouldReturn` 0
+          assertQueryUnpaid pool payment
+
+      it "preserves terminal jobs and rejects invalid state or live-lease changes" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          let attemptParam = [paymentAttemptParameter payment]
+              mutate suffix = try (runSqlPool (rawExecute
+                ("UPDATE commerce_provider_query_job SET " <> suffix <>
+                  " WHERE operation_id IN (SELECT id FROM commerce_provider_operation WHERE payment_attempt_id=?::uuid)")
+                attemptParam) pool) :: IO (Either SqlError ())
+          mutate "status='completed',completed_at=clock_timestamp()" >>= (`shouldSatisfy` isLeft)
+          _ <- runSqlPool (Execution.claimProviderQuery provider Checkout.CheckoutSandbox) pool
+          mutate "lease_token=gen_random_uuid()" >>= (`shouldSatisfy` isLeft)
+          expireQueryLease pool payment
+          resetQueryBudget pool provider
+          runQueryTick pool (successfulQuery payment) `shouldReturn` 1
+          mutate "last_error_code='rewritten'" >>= (`shouldSatisfy` isLeft)
+          deleted <- try (runSqlPool (rawExecute
+            "DELETE FROM commerce_provider_query_job WHERE operation_id IN\
+            \ (SELECT id FROM commerce_provider_operation WHERE payment_attempt_id=?::uuid)" attemptParam) pool)
+            :: IO (Either SqlError ())
+          deleted `shouldSatisfy` isLeft
+          queryJobState pool payment `shouldReturn` ("completed",2)
+
+withQueryRecovery :: ConnectionPool -> Checkout.PaymentProvider -> (Text -> IO value) -> IO value
+withQueryRecovery pool provider action = withNotificationEnvironment $
+  bracket (lookupEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED")
+    (maybe (unsetEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED")
+      (setEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED")) $ \_ -> do
+    merchant <- ("synthetic-query-" <>) . toText <$> nextRandom
+    let restore () = do
+          setRecoveryFlag pool False
+          runSqlPool (rawExecute
+            "UPDATE commerce_provider_account SET merchant_account_ref='synthetic-provider-retry-merchant',enabled=true\
+            \ WHERE provider=? AND environment='sandbox'" [PersistText (Checkout.paymentProviderText provider)]) pool
+        setup = do
+          setEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED" "true"
+          setEnv (if provider == Checkout.ProviderPlaceToPay then "PAYPHONE_TOKEN" else "PLACETOPAY_LOGIN") ""
+          setRecoveryFlag pool True
+          runSqlPool (rawExecute "UPDATE commerce_provider_account SET merchant_account_ref=?\
+            \ WHERE provider=? AND environment='sandbox'"
+            [PersistText merchant,PersistText (Checkout.paymentProviderText provider)]) pool
+          resetQueryBudget pool provider
+    bracket setup restore (const (action merchant))
+
+setRecoveryFlag :: ConnectionPool -> Bool -> IO ()
+setRecoveryFlag pool enabled = runSqlPool (rawExecute
+  "UPDATE revenue_feature_flag SET enabled=? WHERE flag_key='checkout.provider_query_recovery' AND environment='sandbox'"
+  [PersistBool enabled]) pool
+
+resetQueryBudget :: ConnectionPool -> Checkout.PaymentProvider -> IO ()
+resetQueryBudget pool provider = runSqlPool (rawExecute
+  "UPDATE commerce_provider_query_budget SET next_query_at=clock_timestamp()-INTERVAL '1 second'\
+  \ WHERE provider=? AND environment='sandbox'" [PersistText (Checkout.paymentProviderText provider)]) pool
+
+queryEnv :: ConnectionPool -> Env
+queryEnv pool = Env pool (error "Synthetic query worker must not use AppConfig")
+
+runQueryTick :: ConnectionPool -> (Adapter.AdapterRequest -> IO (Either ProviderHttp.AdapterTransportError A.Value)) -> IO Int
+runQueryTick pool fetch = Reconciliation.providerQueryWorkerTickWith fetch (queryEnv pool)
+
+noQuery :: Adapter.AdapterRequest -> IO (Either ProviderHttp.AdapterTransportError A.Value)
+noQuery _ = fail "No remote query is authorized in this test"
+
+successfulQuery :: Execution.BoundProviderPayment -> Adapter.AdapterRequest
+  -> IO (Either ProviderHttp.AdapterTransportError A.Value)
+successfulQuery payment request = do
+  Adapter.arOperation request `shouldBe` AdapterQuery
+  Adapter.arProvider request `shouldBe` Execution.bppProvider payment
+  pure (Right (queryValue payment Adapter.AdapterSucceeded))
+
+prepareQueryJob :: ConnectionPool -> Execution.BoundProviderPayment -> IO ()
+prepareQueryJob pool payment = do
+  _ <- runSqlPool (Execution.enqueueProviderQueries (Execution.bppProvider payment) Checkout.CheckoutSandbox) pool
+  runSqlPool (rawExecute
+    "UPDATE commerce_provider_query_job SET next_attempt_at=clock_timestamp()-INTERVAL '1 day'\
+    \ WHERE operation_id IN (SELECT id FROM commerce_provider_operation WHERE payment_attempt_id=?::uuid)"
+    [paymentAttemptParameter payment]) pool
+  queryJobState pool payment `shouldReturn` ("pending",0)
+
+queryJobState :: ConnectionPool -> Execution.BoundProviderPayment -> IO (Text,Int)
+queryJobState pool payment = do
+  rows <- runSqlPool (rawSql
+    "SELECT job.status,job.attempt_count FROM commerce_provider_query_job job\
+    \ JOIN commerce_provider_operation operation ON operation.id=job.operation_id\
+    \ WHERE operation.payment_attempt_id=?::uuid" [paymentAttemptParameter payment]) pool
+    :: IO [(Single Text,Single Int)]
+  case rows of [(Single status,Single count)] -> pure (status,count); _ -> fail "Expected one query job"
+
+expireQueryLease :: ConnectionPool -> Execution.BoundProviderPayment -> IO ()
+expireQueryLease pool payment = runSqlPool (rawExecute
+  "UPDATE commerce_provider_query_job SET lease_expires_at=clock_timestamp()-INTERVAL '1 second'\
+  \ WHERE operation_id IN (SELECT id FROM commerce_provider_operation WHERE payment_attempt_id=?::uuid)"
+  [paymentAttemptParameter payment]) pool
+
+assertQueryUnpaid :: ConnectionPool -> Execution.BoundProviderPayment -> Expectation
+assertQueryUnpaid pool payment = do
+  rows <- runSqlPool (rawSql
+    "SELECT checkout.paid_minor,intent.captured_minor,operation.outcome_certainty,\
+    \ (SELECT count(*) FROM commerce_ledger_transaction WHERE source_id=attempt.id::text),\
+    \ (SELECT count(*) FROM commerce_receipt WHERE checkout_id=checkout.id)\
+    \ FROM commerce_payment_attempt attempt\
+    \ JOIN commerce_checkout_session checkout ON checkout.id=attempt.checkout_id\
+    \ JOIN commerce_payment_intent intent ON intent.id=attempt.payment_intent_id\
+    \ JOIN commerce_provider_operation operation ON operation.payment_attempt_id=attempt.id\
+    \ WHERE attempt.id=?::uuid" [paymentAttemptParameter payment]) pool
+    :: IO [(Single Int64,Single Int64,Single Text,Single Int64,Single Int64)]
+  rows `shouldBe` [(Single 0,Single 0,Single "ambiguous",Single 0,Single 0)]
+
 reconciliationTransactionSpec :: SpecWith ConnectionPool
 reconciliationTransactionSpec = describe "authoritative query transaction ownership" $ do
   reconciliationPipelineSpec
@@ -1370,6 +1716,7 @@ reconciliationPipelineSpec = describe "persisted callback to authoritative query
 
 reconciliationNotification :: ConnectionPool -> Execution.BoundProviderPayment -> IO Event.ProviderEventPayload
 reconciliationNotification pool payment = do
+  resetQueryBudget pool (Execution.bppProvider payment)
   creation <- newNotification (Execution.bppProvider payment)
   let resource = read (T.unpack (Execution.bppProviderResourceId payment)) :: Int64
       -- Intentionally report failure in the callback; only the subsequent
@@ -1389,10 +1736,14 @@ reconciliationNotification pool payment = do
     pool >>= requireRight
 
 reconciliationFixture :: ConnectionPool -> Checkout.PaymentProvider -> IO Execution.BoundProviderPayment
-reconciliationFixture pool provider = do
+reconciliationFixture = reconciliationFixtureWithMerchant "synthetic-provider-retry-merchant"
+
+reconciliationFixtureWithMerchant
+  :: Text -> ConnectionPool -> Checkout.PaymentProvider -> IO Execution.BoundProviderPayment
+reconciliationFixtureWithMerchant merchant pool provider = do
   -- Exercise TDF service revenue, not a ticket order without its fee/seat
   -- snapshot. Ticket fulfillment is covered by its separate runtime harness.
-  (creation, operation, _) <- replayFixtureForDomain "service_booking" pool provider
+  (creation, operation, _) <- replayFixtureWithMerchant "service_booking" merchant pool provider
   let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
       attempt = Execution.porAttempt operation
       reference = providerReference provider checkoutId
@@ -1504,9 +1855,13 @@ replayFixture = replayFixtureForDomain "event_ticket_order"
 
 replayFixtureForDomain :: Text -> ConnectionPool -> Checkout.PaymentProvider
   -> IO (Checkout.PaymentAttemptCreation, Execution.ProviderOperationRecord, PaymentSessionCreateDTO)
-replayFixtureForDomain domain pool provider = do
+replayFixtureForDomain domain = replayFixtureWithMerchant domain "synthetic-provider-retry-merchant"
+
+replayFixtureWithMerchant :: Text -> Text -> ConnectionPool -> Checkout.PaymentProvider
+  -> IO (Checkout.PaymentAttemptCreation, Execution.ProviderOperationRecord, PaymentSessionCreateDTO)
+replayFixtureWithMerchant domain merchant pool provider = do
   seed <- newCheckoutForDomain domain pool
-  let creation = seed { Checkout.pacProvider = provider }
+  let creation = seed { Checkout.pacProvider = provider, Checkout.pacMerchantRef = merchant }
       checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
       method = if provider == Checkout.ProviderPayPhone then MethodPayPhoneWallet else MethodCard
       phone = if provider == Checkout.ProviderPayPhone then Just "991234567" else Nothing

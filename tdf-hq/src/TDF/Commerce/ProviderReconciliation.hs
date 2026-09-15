@@ -11,8 +11,13 @@ module TDF.Commerce.ProviderReconciliation
   , processProviderEventIO
   , processProviderEventWith
   , applyQueryResult
+  , startProviderQueryWorker
+  , providerQueryWorkerTickWith
   ) where
 
+import           Control.Concurrent (forkIO, threadDelay)
+import           Control.Exception.Safe (tryAny)
+import           Control.Monad (forever, void, when)
 import qualified Data.Aeson as A
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -20,6 +25,8 @@ import           Data.Time (UTCTime, getCurrentTime)
 import           Database.Persist.Sql
   ( SqlPersistT, rawExecute, runSqlPool )
 import           System.Entropy (getEntropy)
+import           System.Environment (lookupEnv)
+import           System.IO (hPutStrLn, stderr)
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentIntentStore as Intent
@@ -30,7 +37,7 @@ import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.ProviderExecutionStore as Execution
 import           TDF.Commerce.ProviderCapabilities (ProviderOutcomeCertainty(..))
 import           TDF.Commerce.ProviderRuntimeConfig
-  ( RuntimeProviderAdapter(..), loadRuntimeProviderAdapter )
+  ( RuntimeProviderAdapter(..), loadRuntimeProviderAdapter, loadConfiguredCheckoutEnvironment )
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
 import           TDF.DB (Env(..))
 
@@ -100,6 +107,32 @@ queryAndApply
   -> UTCTime
   -> IO ProviderReconciliationResult
 queryAndApply fetch appliedAt Env{envPool} adapter payload payment now = do
+  granted <- runSqlPool (Execution.reserveProviderQueryBudget
+    (Execution.bppProvider payment) (Execution.bppEnvironment payment)) envPool
+  if not granted
+    then pure (retry "Authoritative query budget is temporarily unavailable" (Just payment))
+    else do
+      queried <- queryProviderWith fetch adapter payment now
+      observedAt <- appliedAt
+      case queried of
+        Left QueryBindingMismatch -> do
+          runSqlPool (recordQueryMismatch payment observedAt) envPool
+          pure (deadLetter "Authoritative query did not match its immutable binding" (Just payment))
+        Left QueryUnsupported -> pure (deadLetter "Stored binding cannot form a safe query" (Just payment))
+        Left QueryUnavailable -> pure (retry "Authoritative provider query is temporarily unavailable" (Just payment))
+        Right result -> do
+          applied <- runSqlPool (applyQueryResult payment result
+            (ProviderEvent.providerEventReferenceId (ProviderEvent.pepReference payload)) observedAt) envPool
+          pure $ either (\problem -> retry problem (Just payment))
+            (\disposition -> resultFor disposition (Just payment)) applied
+
+data QueryFailure = QueryUnsupported | QueryUnavailable | QueryBindingMismatch
+
+queryProviderWith
+  :: (AdapterRequest -> IO (Either AdapterTransportError A.Value))
+  -> ProviderAdapter -> Execution.BoundProviderPayment -> UTCTime
+  -> IO (Either QueryFailure AdapterResult)
+queryProviderWith fetch adapter payment now = do
   nonce <- getEntropy 32
   let locator = PaymentLocator
         { plExternalId = Execution.bppProviderResourceId payment
@@ -110,35 +143,111 @@ queryAndApply fetch appliedAt Env{envPool} adapter payload payment now = do
             }
         }
       context = AdapterContext now nonce
-      ids = Just payment
   case adapterBuildQuery adapter context locator of
-    Left _ -> pure (deadLetter "Stored provider binding cannot form a safe query" ids)
+    Left _ -> pure (Left QueryUnsupported)
     Right request -> do
       response <- fetch request
-      -- Record when the authoritative response was observed, not when a
-      -- possibly slow query started or when the callback was first delivered.
-      observedAt <- appliedAt
-      case response of
-        Left AdapterTransportError{} ->
-          pure (retry "Authoritative provider query is temporarily unavailable" ids)
-        Right providerValue ->
-          case adapterParseResponse adapter AdapterQuery locator providerValue of
-            Left _ -> do
-              runSqlPool
-                (recordQueryMismatch payment observedAt)
-                envPool
-              pure (deadLetter
-                "Authoritative provider query did not match the immutable payment binding"
-                ids)
-            Right result -> do
-              applied <- runSqlPool
-                (applyQueryResult payment result
-                  (ProviderEvent.providerEventReferenceId
-                    (ProviderEvent.pepReference payload)) observedAt)
-                envPool
-              pure $ case applied of
-                Left problem -> retry problem ids
-                Right disposition -> resultFor disposition ids
+      pure $ case response of
+        Left AdapterTransportError{} -> Left QueryUnavailable
+        Right value -> either (const (Left QueryBindingMismatch)) Right
+          (adapterParseResponse adapter AdapterQuery locator value)
+
+-- No thread is started by default. The process switch is also reread each
+-- tick; the database gate and account qualification remain independently required.
+startProviderQueryWorker :: Env -> IO ()
+startProviderQueryWorker env = do
+  enabled <- queryWorkerEnabled
+  when enabled $ void $ forkIO $ forever $ do
+    outcome <- tryAny (providerQueryWorkerTickWith
+      (executeAdapterRequest sharedProviderManager) env)
+    case outcome of
+      Left _ -> hPutStrLn stderr
+        "{\"component\":\"provider-query-worker\",\"level\":\"error\",\"message\":\"tick failed; lease recovery required\"}"
+      Right _ -> pure ()
+    threadDelay (5 * 1000000)
+
+queryWorkerEnabled :: IO Bool
+queryWorkerEnabled = (== Just "true") <$> lookupEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED"
+
+-- One job per provider per tick, never a batch of leases aging during HTTP.
+-- Tests inject only transport; runtime, flag, account, binding and lease gates
+-- are the same as production. Return the number of claimed jobs, not payments.
+providerQueryWorkerTickWith
+  :: (AdapterRequest -> IO (Either AdapterTransportError A.Value)) -> Env -> IO Int
+providerQueryWorkerTickWith fetch env@Env{envPool} = do
+  enabled <- queryWorkerEnabled
+  configuredEnvironment <- loadConfiguredCheckoutEnvironment
+  if not enabled then pure 0 else case configuredEnvironment of
+    Left _ -> pure 0
+    Right environment -> do
+      installed <- runSqlPool Execution.providerQueryRecoveryInstalled envPool
+      if not installed then pure 0 else do
+        placeToPay <- tickProvider environment Checkout.ProviderPlaceToPay
+        payPhone <- tickProvider environment Checkout.ProviderPayPhone
+        pure (placeToPay + payPhone)
+  where
+    tickProvider environment provider = do
+      runtime <- loadRuntimeProviderAdapter environment provider
+      case runtime of
+        Left _ -> pure 0
+        Right RuntimeProviderAdapter{rpaAdapter} -> do
+          _ <- runSqlPool (Execution.enqueueProviderQueries provider environment) envPool
+          claimed <- runSqlPool (Execution.claimProviderQuery provider environment) envPool
+          case claimed of
+            Nothing -> pure 0
+            Just claim -> processQueryClaimWith fetch env rpaAdapter claim >> pure 1
+
+processQueryClaimWith
+  :: (AdapterRequest -> IO (Either AdapterTransportError A.Value)) -> Env
+  -> ProviderAdapter -> Execution.ProviderQueryClaim -> IO ()
+processQueryClaimWith fetch Env{envPool} adapter claim = do
+  prepared <- runSqlPool (validateQueryClaim claim True) envPool
+  case prepared of
+    Nothing -> pure ()
+    Just payment -> do
+      now <- getCurrentTime
+      queried <- queryProviderWith fetch adapter payment now
+      observedAt <- getCurrentTime
+      processEnabled <- queryWorkerEnabled
+      runSqlPool (do
+        current <- validateQueryClaim claim False
+        case current of
+          Nothing -> pure ()
+          Just bound
+            | not processEnabled -> finish "retry" "process_switch_disabled"
+            | bound /= payment -> finish "dead_letter" "binding_changed"
+            | otherwise -> case queried of
+                Left QueryUnavailable -> finish "retry" "query_unavailable"
+                Left QueryUnsupported -> finish "dead_letter" "query_unsupported"
+                Left QueryBindingMismatch -> finish "dead_letter" "query_binding_mismatch"
+                Right result -> do
+                  applied <- applyQueryResultCorrelated payment result
+                    ("provider-query-job:" <> Execution.pqcOperationId claim) observedAt
+                  case applied of
+                    Left _ -> finish "dead_letter" "query_application_rejected"
+                    Right ReconciliationProcessed -> finish "completed" "query_applied"
+                    Right ReconciliationRetry -> finish "retry" "provider_nonterminal"
+                    Right ReconciliationDeadLetter -> finish "dead_letter" "provider_requires_review"
+        ) envPool
+  where finish = Execution.finishProviderQuery claim
+
+validateQueryClaim
+  :: Execution.ProviderQueryClaim -> Bool
+  -> SqlPersistT IO (Maybe Execution.BoundProviderPayment)
+validateQueryClaim claim closeTerminal = do
+  live <- Execution.lockLiveProviderQuery claim
+  if not live then pure Nothing else do
+    ready <- Execution.queryRecoveryReady (Execution.pqcProvider claim)
+      (Execution.pqcEnvironment claim) (Execution.pqcMerchantRef claim)
+    terminal <- Execution.providerQueryOperationTerminal claim
+    if not ready then finish "retry" "configuration_revoked"
+    else if closeTerminal && terminal then finish "completed" "operation_already_terminal"
+    else do
+      payment <- Execution.loadQueryClaimPayment claim
+      case payment of
+        Left _ -> finish "dead_letter" "immutable_binding_unavailable"
+        Right bound -> pure (Just bound)
+  where finish status code = Execution.finishProviderQuery claim status code >> pure Nothing
 
 -- | Apply only an authenticated query parsed by the provider adapter against
 -- a database-loaded immutable binding. The caller owns the transaction (and
@@ -151,7 +260,13 @@ applyQueryResult
   -> Text
   -> UTCTime
   -> SqlPersistT IO (Either Text ReconciliationDisposition)
-applyQueryResult payment result eventId now = do
+applyQueryResult payment result eventId =
+  applyQueryResultCorrelated payment result (correlationId eventId)
+
+applyQueryResultCorrelated
+  :: Execution.BoundProviderPayment -> AdapterResult -> Text -> UTCTime
+  -> SqlPersistT IO (Either Text ReconciliationDisposition)
+applyQueryResultCorrelated payment result eventId now = do
   rebound <- Execution.loadBoundProviderPayment
     (Execution.bppProvider payment) (Execution.bppEnvironment payment)
     (Execution.bppMerchantRef payment) (Execution.bppProviderResourceId payment)
@@ -209,7 +324,7 @@ applyQueryResultInTransaction payment result eventId now = do
           , Checkout.vpCurrency = Execution.bppCurrency payment
           , Checkout.vpEvidence = "server_to_server"
           , Checkout.vpOccurredAt = now
-          , Checkout.vpCorrelationId = correlationId eventId
+          , Checkout.vpCorrelationId = eventId
           }
         case verified of
           Left problem -> pure (Left problem)
@@ -248,7 +363,7 @@ confirmNoCharge
 confirmNoCharge payment event failureCode eventId now = do
   transitioned <- Intent.transitionPaymentIntent
     (Intent.PaymentIntentReference (Execution.bppPaymentIntentId payment))
-    event "provider" (correlationId eventId) now
+    event "provider" eventId now
   case transitioned of
     Left problem -> pure (Left problem)
     Right _ -> do
@@ -257,7 +372,7 @@ confirmNoCharge payment event failureCode eventId now = do
         (Execution.bppAttempt payment)
         (Execution.bppProvider payment)
         failureCode
-        (correlationId eventId)
+        eventId
         now
       pure (Right ReconciliationProcessed)
 
@@ -271,7 +386,7 @@ markStillProcessing payment eventId now = do
     (Execution.bppCheckout payment)
     (Execution.bppAttempt payment)
     (Execution.bppProvider payment)
-    (correlationId eventId)
+    eventId
     now
   pure (Right ReconciliationRetry)
 

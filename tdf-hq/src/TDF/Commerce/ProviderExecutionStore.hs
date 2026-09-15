@@ -23,8 +23,19 @@ module TDF.Commerce.ProviderExecutionStore
   , providerCreateRequestFingerprint
   , loadBoundProviderPayment
   , recordReconciledCreateResult
+  , ProviderQueryClaim(..)
+  , providerQueryRecoveryInstalled
+  , reserveProviderQueryBudget
+  , enqueueProviderQueries
+  , claimProviderQuery
+  , loadQueryClaimPayment
+  , lockLiveProviderQuery
+  , queryRecoveryReady
+  , finishProviderQuery
+  , providerQueryOperationTerminal
   ) where
 
+import           Control.Monad (forM_, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Crypto.Hash (Digest, SHA256, hash)
 import qualified Data.ByteArray.Encoding as BAE
@@ -78,6 +89,202 @@ data BoundProviderPayment = BoundProviderPayment
   , bppAmountMinor         :: Int64
   , bppCurrency            :: Text
   } deriving (Eq, Show)
+
+data ProviderQueryClaim = ProviderQueryClaim
+  { pqcOperationId :: Text
+  , pqcLeaseToken :: Text
+  , pqcAttemptCount :: Int
+  , pqcProvider :: Checkout.PaymentProvider
+  , pqcEnvironment :: Checkout.CheckoutEnvironment
+  , pqcMerchantRef :: Text
+  , pqcResourceId :: Text
+  , pqcProviderReference :: Text
+  } deriving (Eq, Show)
+
+providerQueryRecoveryInstalled :: SqlPersistT IO Bool
+providerQueryRecoveryInstalled = do
+  rows <- rawSql
+    "SELECT to_regclass('commerce_provider_query_job') IS NOT NULL\
+    \ AND to_regclass('commerce_provider_query_budget') IS NOT NULL" []
+  pure (rows == [Single True])
+
+-- Reserve before any remote status query. No implicit retry and no caller
+-- clock: all replicas/consumers share the database's clock and atomic UPSERT.
+-- Missing schema is an error, never an unmetered fallback.
+reserveProviderQueryBudget
+  :: Checkout.PaymentProvider -> Checkout.CheckoutEnvironment -> SqlPersistT IO Bool
+reserveProviderQueryBudget provider environment = do
+  rows <- rawSql
+    "INSERT INTO commerce_provider_query_budget(provider,environment,next_query_at)\
+    \ VALUES (?,?,clock_timestamp()+INTERVAL '10 seconds')\
+    \ ON CONFLICT (provider,environment) DO UPDATE\
+    \ SET next_query_at=clock_timestamp()+INTERVAL '10 seconds'\
+    \ WHERE commerce_provider_query_budget.next_query_at <= clock_timestamp()\
+    \ RETURNING provider"
+    (providerEnvironmentParameters provider environment) :: SqlPersistT IO [Single Text]
+  pure (length rows == 1)
+
+-- The recovery flag is exact in BOTH environments (no sandbox bypass).
+-- These locks must be held through the financial application and job outcome.
+queryRecoveryReady
+  :: Checkout.PaymentProvider -> Checkout.CheckoutEnvironment -> Text -> SqlPersistT IO Bool
+queryRecoveryReady provider environment merchantRef = do
+  rows <- rawSql
+    ("SELECT account.merchant_account_ref FROM commerce_provider_account account\
+     \ JOIN revenue_feature_flag flag ON flag.environment=account.environment\
+     \ AND flag.flag_key='checkout.provider_query_recovery'\
+     \ WHERE account.provider=? AND account.environment=? AND account.merchant_account_ref=?\
+     \ AND " <> queryAuthorityPredicate <> " FOR SHARE OF account,flag")
+    (providerEnvironmentParameters provider environment <> [PersistText merchantRef])
+    :: SqlPersistT IO [Single Text]
+  pure (rows == [Single merchantRef])
+
+queryAuthorityPredicate :: Text
+queryAuthorityPredicate =
+  "flag.enabled AND account.enabled AND account.status='ready'\
+  \ AND account.contract_status='approved' AND account.credential_status='validated'\
+  \ AND account.settlement_currency='USD'"
+
+enqueueProviderQueries
+  :: Checkout.PaymentProvider -> Checkout.CheckoutEnvironment -> SqlPersistT IO Int
+enqueueProviderQueries provider environment = do
+  rows <- rawSql
+    ("INSERT INTO commerce_provider_query_job(operation_id)\
+     \ SELECT operation.id FROM commerce_provider_operation operation\
+     \ JOIN commerce_provider_account account ON account.provider=operation.provider\
+     \ AND account.environment=operation.environment\
+     \ AND account.merchant_account_ref=operation.merchant_account_ref\
+     \ JOIN revenue_feature_flag flag ON flag.environment=account.environment\
+     \ AND flag.flag_key='checkout.provider_query_recovery'\
+     \ WHERE operation.provider=? AND operation.environment=? AND operation.operation='create'\
+     \ AND operation.provider_resource_id IS NOT NULL AND operation.outcome_certainty='ambiguous'\
+     \ AND " <> queryAuthorityPredicate <>
+     " AND EXISTS (SELECT 1 FROM commerce_provider_binding binding\
+     \ WHERE binding.payment_attempt_id=operation.payment_attempt_id\
+     \ AND binding.provider=operation.provider AND binding.environment=operation.environment\
+     \ AND binding.merchant_account_ref=operation.merchant_account_ref\
+     \ AND binding.merchant_reference=operation.provider_reference\
+     \ AND binding.provider_resource_id=operation.provider_resource_id)\
+     \ AND NOT EXISTS (SELECT 1 FROM commerce_provider_query_job job WHERE job.operation_id=operation.id)\
+     \ ORDER BY operation.created_at,operation.id LIMIT 100\
+     \ ON CONFLICT DO NOTHING RETURNING operation_id::text")
+    (providerEnvironmentParameters provider environment) :: SqlPersistT IO [Single Text]
+  forM_ rows $ \(Single operationId) -> queryJobAudit operationId "query_job_enqueued" "pending"
+  pure (length rows)
+
+-- Claim one job per transaction, reserving its query budget before incrementing
+-- attempts. Budget contention cannot burn attempts or fan out remote requests.
+claimProviderQuery
+  :: Checkout.PaymentProvider -> Checkout.CheckoutEnvironment
+  -> SqlPersistT IO (Maybe ProviderQueryClaim)
+claimProviderQuery provider environment = do
+  rows <- rawSql
+    ("SELECT job.operation_id::text,job.attempt_count,operation.merchant_account_ref,\
+     \ operation.provider_resource_id,operation.provider_reference\
+     \ FROM commerce_provider_query_job job\
+     \ JOIN commerce_provider_operation operation ON operation.id=job.operation_id\
+     \ JOIN commerce_provider_account account ON account.provider=operation.provider\
+     \ AND account.environment=operation.environment\
+     \ AND account.merchant_account_ref=operation.merchant_account_ref\
+     \ JOIN revenue_feature_flag flag ON flag.environment=account.environment\
+     \ AND flag.flag_key='checkout.provider_query_recovery'\
+     \ WHERE operation.provider=? AND operation.environment=? AND " <> queryAuthorityPredicate <>
+     " AND ((job.status IN ('pending','retry') AND job.next_attempt_at<=clock_timestamp())\
+     \ OR (job.status='processing' AND job.lease_expires_at<=clock_timestamp()))\
+     \ ORDER BY job.next_attempt_at,job.operation_id LIMIT 1 FOR UPDATE OF job SKIP LOCKED")
+    (providerEnvironmentParameters provider environment)
+    :: SqlPersistT IO [(Single Text, Single Int, Single Text, Single Text, Single Text)]
+  case rows of
+    [(Single operationId, Single attempts, Single merchantRef, Single resource, Single reference)] -> do
+      granted <- if attempts >= 24 then pure True else reserveProviderQueryBudget provider environment
+      if not granted then pure Nothing else do
+        lease <- liftIO (toText <$> nextRandom)
+        let nextAttempt = min 24 (attempts + 1)
+            claim = ProviderQueryClaim operationId lease nextAttempt provider environment
+              merchantRef resource reference
+        rawExecute
+          "UPDATE commerce_provider_query_job SET status='processing',attempt_count=?,\
+          \ lease_token=?::uuid,lease_expires_at=clock_timestamp()+INTERVAL '2 minutes',\
+          \ last_attempt_at=clock_timestamp() WHERE operation_id=?::uuid"
+          [PersistInt64 (fromIntegral nextAttempt),PersistText lease,PersistText operationId]
+        queryJobAudit operationId "query_job_claimed" "processing"
+        if attempts >= 24
+          then finishProviderQuery claim "dead_letter" "retry_exhausted" >> pure Nothing
+          else pure (Just claim)
+    _ -> pure Nothing
+
+loadQueryClaimPayment :: ProviderQueryClaim -> SqlPersistT IO (Either Text BoundProviderPayment)
+loadQueryClaimPayment claim = loadBoundProviderPayment
+  (pqcProvider claim) (pqcEnvironment claim) (pqcMerchantRef claim)
+  (pqcResourceId claim) (Just (pqcProviderReference claim))
+
+-- Check the database clock AFTER acquiring the row lock. A timestamp evaluated
+-- before a lock wait cannot authorize a response from an expired lease.
+lockLiveProviderQuery :: ProviderQueryClaim -> SqlPersistT IO Bool
+lockLiveProviderQuery claim = do
+  locked <- rawSql
+    "SELECT operation_id::text FROM commerce_provider_query_job\
+    \ WHERE operation_id=?::uuid AND lease_token=?::uuid AND status='processing' FOR UPDATE"
+    (queryClaimParameters claim) :: SqlPersistT IO [Single Text]
+  if null locked then pure False else do
+    rows <- rawSql
+      "SELECT lease_expires_at>clock_timestamp() FROM commerce_provider_query_job\
+      \ WHERE operation_id=?::uuid AND lease_token=?::uuid AND status='processing'"
+      (queryClaimParameters claim)
+    pure (rows == [Single True])
+
+providerQueryOperationTerminal :: ProviderQueryClaim -> SqlPersistT IO Bool
+providerQueryOperationTerminal claim = do
+  rows <- rawSql
+    "SELECT status IN ('succeeded','confirmed_no_charge') FROM commerce_provider_operation\
+    \ WHERE id=?::uuid FOR UPDATE" [PersistText (pqcOperationId claim)]
+  pure (rows == [Single True])
+
+-- Call only while holding the validated lease row lock. A lease that expires
+-- during this short transaction cannot be stolen until the commit completes.
+finishProviderQuery :: ProviderQueryClaim -> Text -> Text -> SqlPersistT IO ()
+finishProviderQuery claim requestedStatus code = do
+  let status = if requestedStatus == "retry" && pqcAttemptCount claim >= 24
+        then "dead_letter" else requestedStatus
+      delaySeconds = min 3600 (30 * (2 ^ min 7 (max 0 (pqcAttemptCount claim - 1))) :: Int)
+  rows <- rawSql
+    "UPDATE commerce_provider_query_job SET status=?,lease_token=NULL,lease_expires_at=NULL,\
+    \ next_attempt_at=clock_timestamp()+(? * INTERVAL '1 second'),last_error_code=?,\
+    \ completed_at=CASE WHEN ? IN ('completed','dead_letter') THEN clock_timestamp() ELSE NULL END\
+    \ WHERE operation_id=?::uuid AND lease_token=?::uuid AND status='processing'\
+    \ RETURNING operation_id::text"
+    ([PersistText status,PersistInt64 (fromIntegral delaySeconds),PersistText code,PersistText status]
+      <> queryClaimParameters claim) :: SqlPersistT IO [Single Text]
+  when (not (null rows)) $ do
+    queryJobAudit (pqcOperationId claim) "query_job_finished" status
+    when (status == "dead_letter") $ rawExecute
+      "INSERT INTO commerce_reconciliation_exception(provider,environment,merchant_account_ref,\
+      \ exception_type,internal_reference,provider_reference,expected_amount_minor,currency,status,detected_at)\
+      \ SELECT operation.provider,operation.environment,operation.merchant_account_ref,\
+      \ 'scheduled_query_requires_review',attempt.checkout_id::text,operation.provider_resource_id,\
+      \ attempt.amount_minor,attempt.currency,'open',clock_timestamp()\
+      \ FROM commerce_provider_operation operation\
+      \ JOIN commerce_payment_attempt attempt ON attempt.id=operation.payment_attempt_id\
+      \ WHERE operation.id=?::uuid ON CONFLICT DO NOTHING"
+      [PersistText (pqcOperationId claim)]
+
+queryJobAudit :: Text -> Text -> Text -> SqlPersistT IO ()
+queryJobAudit operationId event status = rawExecute
+  "INSERT INTO commerce_checkout_audit_event(checkout_id,event_type,to_status,actor_type,correlation_id,metadata)\
+  \ SELECT attempt.checkout_id,?,?, 'system','provider-query-job:'||job.operation_id::text,\
+  \ jsonb_build_object('attempt_count',job.attempt_count,'lease_token',job.lease_token,\
+  \ 'outcome_code',job.last_error_code) FROM commerce_provider_query_job job\
+  \ JOIN commerce_provider_operation operation ON operation.id=job.operation_id\
+  \ JOIN commerce_payment_attempt attempt ON attempt.id=operation.payment_attempt_id\
+  \ WHERE job.operation_id=?::uuid"
+  [PersistText event,PersistText status,PersistText operationId]
+
+providerEnvironmentParameters :: Checkout.PaymentProvider -> Checkout.CheckoutEnvironment -> [PersistValue]
+providerEnvironmentParameters provider environment =
+  [PersistText (Checkout.paymentProviderText provider),PersistText (Checkout.checkoutEnvironmentText environment)]
+
+queryClaimParameters :: ProviderQueryClaim -> [PersistValue]
+queryClaimParameters claim = [PersistText (pqcOperationId claim),PersistText (pqcLeaseToken claim)]
 
 newtype ProviderOperationReference = ProviderOperationReference
   { providerOperationReferenceId :: Text

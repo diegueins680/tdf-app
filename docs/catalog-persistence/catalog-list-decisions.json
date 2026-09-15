@@ -504,13 +504,13 @@
       "reviewed": true
     },
     {
-      "id": "a0ae9a0d4ec0af31aad8",
+      "id": "9e840d2520d7682d45fb",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger. The additive query-recovery schema follows provider execution and is anchored to its introducing commit; no historical revision is removed or reinterpreted.",
       "reviewed": true
     },
     {
@@ -11221,6 +11221,36 @@
       "priority": "P0-security",
       "risk": "Accepting an unsupported method from mutable browser storage could replay a different provider operation or defeat exact-method consent and fallback locking.",
       "justification": "The recovery schema is versioned and validates only adapter-backed hosted methods before any replay; runtime availability still requires exact server and database capability evidence.",
+      "reviewed": true
+    },
+    {
+      "id": "1a02592c7a5b796e4cb5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "commerce_provider_query_job",
+      "priority": "P0-security",
+      "risk": "Configurable job states could bypass lease fencing, reset attempt limits or permit financial effects after terminal completion.",
+      "justification": "These are fixed internal queue protocol states, not payment methods, business order states or editable customer catalogs. A database transition guard and bounded lease lifecycle enforce the same protocol consumed by the worker; changes require a reviewed migration and concurrency tests.",
+      "reviewed": true
+    },
+    {
+      "id": "9c9fe045694b926bf727",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "commerce_provider_query_job",
+      "priority": "P0-security",
+      "risk": "Incorrect terminal membership could erase completion evidence, requeue an exhausted operation or leave a completed job with a live lease.",
+      "justification": "The terminal subset belongs to the fixed recovery-queue protocol and requires completed_at exactly for completed/dead-lettered jobs. Terminal job rows are immutable; this constraint neither declares a payment paid nor authorizes fallback.",
+      "reviewed": true
+    },
+    {
+      "id": "30c79af4e927f1a899d4",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "internal adapter query error algebra",
+      "priority": "P0-security",
+      "risk": "Conflating transport ambiguity with binding mismatch could authorize unsafe retry or suppress a required operator review.",
+      "justification": "This private Haskell sum type makes query construction, transport failure and binding validation exhaustive without persisting provider payloads. It is not an externally governed status catalog or a customer-editable setting; all failures preserve no-blind-fallback behavior.",
       "reviewed": true
     }
   ]
