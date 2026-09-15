@@ -55,6 +55,68 @@ export const automaticMatchAllowed = (signals, homonymCount = 1) =>
 export const retryDelayMs = (attempt, baseMs = 500) =>
   Math.min(30_000, baseMs * (2 ** Math.max(0, attempt)));
 
+export const jitteredRetryDelayMs = (
+  attempt,
+  { baseMs = 500, maxDelayMs = 30_000, jitterRatio = 0.2, random = Math.random } = {},
+) => {
+  const boundedRandom = Math.min(1, Math.max(0, Number(random())));
+  const multiplier = 1 - jitterRatio + (2 * jitterRatio * boundedRandom);
+  return Math.min(maxDelayMs, Math.max(0, Math.round(retryDelayMs(attempt, baseMs) * multiplier)));
+};
+
+export const retryAfterDelayMs = (rawValue, nowMs = Date.now(), maxDelayMs = 30_000) => {
+  const value = String(rawValue ?? '').trim();
+  if (!value) return null;
+  const seconds = Number(value);
+  const delayMs = Number.isFinite(seconds)
+    ? seconds * 1000
+    : Date.parse(value) - nowMs;
+  if (!Number.isFinite(delayMs) || delayMs < 0) return null;
+  return Math.min(maxDelayMs, Math.round(delayMs));
+};
+
+export class RetryFetchExhaustedError extends Error {
+  constructor(cause) {
+    super('HTTP request exhausted its bounded retry policy', { cause });
+    this.name = 'RetryFetchExhaustedError';
+  }
+}
+
+export class RetriableExternalProviderError extends Error {
+  constructor(provider, operation, status) {
+    super(`${provider} ${operation} remained unavailable after bounded retries (${status})`);
+    this.name = 'RetriableExternalProviderError';
+    this.provider = provider;
+    this.operation = operation;
+    this.status = status;
+  }
+}
+
+const providerResponse = (provider, operation, response) => {
+  if (response.ok) return response;
+  if (response.status === 429 || response.status >= 500) {
+    throw new RetriableExternalProviderError(provider, operation, response.status);
+  }
+  throw new Error(`${provider} ${operation} failed (${response.status})`);
+};
+
+export async function optionalProviderResult(provider, operation) {
+  try {
+    return { value: await operation(), outage: null };
+  } catch (error) {
+    if (!(error instanceof RetriableExternalProviderError)
+      && !(error instanceof RetryFetchExhaustedError)) throw error;
+    const outage = {
+      provider,
+      failureClass: error instanceof RetriableExternalProviderError
+        ? `http_${error.status}`
+        : 'network_retry_exhausted',
+    };
+    log('warn', 'external_provider_temporarily_unavailable', outage);
+    return { value: null, outage };
+  }
+}
+
 export function selectRunBatch(items, batchSize, runDate, rotate = false) {
   if (!rotate || items.length <= batchSize) return items.slice(0, batchSize);
   const dayNumber = Math.floor(Date.parse(`${runDate}T00:00:00Z`) / 86_400_000);
@@ -182,19 +244,29 @@ function help() {
 export async function retryFetch(url, options = {}, policy = {}) {
   const attempts = policy.attempts ?? 4;
   const timeoutMs = policy.timeoutMs ?? 20_000;
+  const sleep = policy.sleep ?? ((delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs)));
+  const delayOptions = {
+    baseMs: policy.baseDelayMs ?? 500,
+    maxDelayMs: policy.maxDelayMs ?? 30_000,
+    jitterRatio: policy.jitterRatio ?? 0.2,
+    random: policy.random ?? Math.random,
+  };
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetch(url, { ...options, signal: controller.signal });
       if (response.ok || (response.status < 500 && response.status !== 429)) return response;
-      const retryAfter = Number(response.headers.get('retry-after'));
       if (attempt === attempts - 1) return response;
-      await new Promise((resolve) => setTimeout(resolve,
-        Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : retryDelayMs(attempt)));
+      const retryAfter = retryAfterDelayMs(
+        response.headers.get('retry-after'),
+        policy.nowMs?.() ?? Date.now(),
+        delayOptions.maxDelayMs,
+      );
+      await sleep(retryAfter ?? jitteredRetryDelayMs(attempt, delayOptions));
     } catch (error) {
-      if (attempt === attempts - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, retryDelayMs(attempt)));
+      if (attempt === attempts - 1) throw new RetryFetchExhaustedError(error);
+      await sleep(jitteredRetryDelayMs(attempt, delayOptions));
     } finally {
       clearTimeout(timeout);
     }
@@ -255,7 +327,12 @@ async function musicBrainzFetch(url, options) {
   const queued = musicBrainzQueue.then(async () => {
     const waitMs = Math.max(0, 1100 - (Date.now() - musicBrainzLastRequestAt));
     if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
-    const response = await retryFetch(url, options);
+    const response = await retryFetch(url, options, {
+      attempts: 6,
+      timeoutMs: 20_000,
+      baseDelayMs: 1_000,
+      maxDelayMs: 30_000,
+    });
     musicBrainzLastRequestAt = Date.now();
     return response;
   });
@@ -328,7 +405,7 @@ async function researchSpotify(name, token) {
   const response = await queuedProviderFetch('spotify', `https://api.spotify.com/v1/search?${new URLSearchParams({ q: `artist:${name}`, type: 'artist', limit: '5' })}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!response.ok) throw new Error(`Spotify artist search failed (${response.status})`);
+  providerResponse('spotify', 'artist search', response);
   const candidates = (await response.json()).artists?.items ?? [];
   const exactMatches = candidates.filter((candidate) => normalizeName(candidate.name) === normalizeName(name));
   return exactMatches.length > 0
@@ -350,7 +427,7 @@ async function researchMusicBrainz(name) {
   const search = await musicBrainzFetch(`https://musicbrainz.org/ws/2/artist?${new URLSearchParams({ query: `artist:"${name.replaceAll('"', '')}"`, fmt: 'json', limit: '5' })}`, {
     headers: { 'User-Agent': userAgent, Accept: 'application/json' },
   });
-  if (!search.ok) throw new Error(`MusicBrainz search failed (${search.status})`);
+  providerResponse('musicbrainz', 'artist search', search);
   const candidates = (await search.json()).artists ?? [];
   const exactMatches = candidates.filter((item) => normalizeName(item.name) === normalizeName(name));
   const candidate = exactMatches[0] ?? null;
@@ -358,6 +435,9 @@ async function researchMusicBrainz(name) {
   const details = await musicBrainzFetch(`https://musicbrainz.org/ws/2/artist/${candidate.id}?inc=url-rels+release-groups+genres&fmt=json`, {
     headers: { 'User-Agent': userAgent, Accept: 'application/json' },
   });
+  if (details.status === 429 || details.status >= 500) {
+    providerResponse('musicbrainz', 'artist details', details);
+  }
   return {
     candidate: details.ok ? await details.json() : candidate,
     exactMatchCount: exactMatches.length,
@@ -370,7 +450,7 @@ async function researchYouTube(name) {
   const response = await queuedProviderFetch('youtube', `https://www.googleapis.com/youtube/v3/search?${new URLSearchParams({
     part: 'snippet', q: name, type: 'channel', maxResults: '5', key: apiKey,
   })}`);
-  if (!response.ok) throw new Error(`YouTube search failed (${response.status})`);
+  providerResponse('youtube', 'channel search', response);
   const candidates = (await response.json()).items ?? [];
   const exactMatches = candidates.filter((item) =>
     normalizeName(item.snippet?.channelTitle) === normalizeName(name));
@@ -391,7 +471,12 @@ async function researchDiscogs(name) {
     type: 'artist',
     per_page: '5',
   })}`, { headers });
-  if (!response.ok) return null;
+  if (!response.ok) {
+    if (response.status === 429 || response.status >= 500) {
+      providerResponse('discogs', 'artist search', response);
+    }
+    return null;
+  }
   const results = (await response.json()).results ?? [];
   const exactMatches = results.filter((item) => normalizeName(item.title) === normalizeName(name));
   const selected = exactMatches[0];
@@ -417,16 +502,17 @@ function relationUrl(musicBrainz, types) {
   return musicBrainz?.relations?.find((relation) => types.includes(relation.type))?.url?.resource ?? null;
 }
 
-function publicProviderSearchSources(name, musicBrainz, discogs) {
+export function publicProviderSearchSources(name, musicBrainz, discogs, providerOutages = []) {
   const encoded = new URLSearchParams({ query: name, type: 'artist', method: 'indexed' });
+  const unavailable = new Set(providerOutages.map(({ provider }) => provider));
   return [
-    ...(musicBrainz ? [] : [{
+    ...(musicBrainz || unavailable.has('musicbrainz') ? [] : [{
       url: `https://musicbrainz.org/search?${encoded}`,
       type: 'musicbrainz_search_no_exact_match',
       fields: ['identityCandidates'],
       attribution: 'MusicBrainz artist search returned no exact normalized-name candidate',
     }]),
-    ...(discogs ? [] : [{
+    ...(discogs || unavailable.has('discogs') ? [] : [{
       url: `https://www.discogs.com/search/?${new URLSearchParams({ q: name, type: 'artist' })}`,
       type: 'discogs_search_no_exact_match',
       fields: ['identityCandidates'],
@@ -827,12 +913,15 @@ async function processMedia(api, profile, imageUrl, sourceAttribution, rightsSta
 async function researchInventoryIdentity(api, inventoryRows, profiles, spotifyToken, options) {
   const primary = inventoryRows[0];
   const artistName = primary.airOriginalName;
-  const [spotifyMatch, musicBrainzMatch, youtubeMatch, discogsMatch] = await Promise.all([
-    researchSpotify(artistName, spotifyToken),
-    researchMusicBrainz(artistName),
-    researchYouTube(artistName),
-    researchDiscogs(artistName),
+  const providerResults = await Promise.all([
+    optionalProviderResult('spotify', () => researchSpotify(artistName, spotifyToken)),
+    optionalProviderResult('musicbrainz', () => researchMusicBrainz(artistName)),
+    optionalProviderResult('youtube', () => researchYouTube(artistName)),
+    optionalProviderResult('discogs', () => researchDiscogs(artistName)),
   ]);
+  const [spotifyMatch, musicBrainzMatch, youtubeMatch, discogsMatch] =
+    providerResults.map(({ value }) => value);
+  const providerOutages = providerResults.flatMap(({ outage }) => outage ? [outage] : []);
   const spotify = spotifyMatch?.candidate ?? null;
   const musicBrainz = musicBrainzMatch?.candidate ?? null;
   const youtube = youtubeMatch?.candidate ?? null;
@@ -842,7 +931,7 @@ async function researchInventoryIdentity(api, inventoryRows, profiles, spotifyTo
   if (musicBrainz) sources.push({ url: `https://musicbrainz.org/artist/${musicBrainz.id}`, type: 'musicbrainz', fields: ['officialName', 'country', 'city', 'genres', 'websiteUrl', 'instagramUrl', 'discography'], attribution: 'MusicBrainz artist record' });
   if (youtube) sources.push({ url: `https://www.youtube.com/channel/${youtube.id.channelId}`, type: 'youtube_channel_candidate', fields: ['youtubeChannelId', 'youtubeUrl', 'featuredVideoUrl'], attribution: 'YouTube channel candidate' });
   if (discogs?.id) sources.push({ url: `https://www.discogs.com/artist/${discogs.id}`, type: 'discogs', fields: ['officialName', 'websiteUrl', 'socialLinks'], attribution: 'Discogs artist record' });
-  sources.push(...publicProviderSearchSources(artistName, musicBrainz, discogs));
+  sources.push(...publicProviderSearchSources(artistName, musicBrainz, discogs, providerOutages));
   const spotifyReleases = await spotifyAlbums(spotify?.id, spotifyToken);
   const mbReleases = musicBrainz?.['release-groups'] ?? [];
   const overlappingReleases = discographyOverlap(spotifyReleases, mbReleases);
@@ -907,6 +996,7 @@ async function researchInventoryIdentity(api, inventoryRows, profiles, spotifyTo
     exactNameTdfProfileIds: exactExistingProfiles.map((profile) => profile.apArtistId),
     possibleAliasTdfProfileIds: possibleExistingProfiles.map((profile) => profile.apArtistId),
     externallyLinkedTdfProfileId: linkedExistingProfile?.apArtistId ?? null,
+    providerOutages,
     discographyOverlap: overlappingReleases,
     retrievedAt: nowIso(),
     jobRunId: options.backendRunId ?? null,
@@ -927,6 +1017,7 @@ async function researchInventoryIdentity(api, inventoryRows, profiles, spotifyTo
     exactNameTdfProfileIds: exactExistingProfiles.map((profile) => profile.apArtistId),
     possibleAliasTdfProfileIds: possibleExistingProfiles.map((profile) => profile.apArtistId),
     externallyLinkedTdfProfileId: linkedExistingProfile?.apArtistId ?? null,
+    providerOutages,
     withheldReason: reliable
       ? (automaticTargetAllowed ? null : 'possible_tdf_alias_requires_external_link_selection')
       : (homonymCount > 1
@@ -962,10 +1053,15 @@ async function researchInventoryIdentity(api, inventoryRows, profiles, spotifyTo
 async function researchArtist(api, profile, enrichment, spotifyToken, options) {
   const sources = [];
   const signals = [];
-  const spotifyMatch = await researchSpotify(profile.apDisplayName, spotifyToken);
-  const musicBrainzMatch = await researchMusicBrainz(profile.apDisplayName);
-  const youtubeMatch = await researchYouTube(profile.apDisplayName);
-  const discogsMatch = await researchDiscogs(profile.apDisplayName);
+  const providerResults = await Promise.all([
+    optionalProviderResult('spotify', () => researchSpotify(profile.apDisplayName, spotifyToken)),
+    optionalProviderResult('musicbrainz', () => researchMusicBrainz(profile.apDisplayName)),
+    optionalProviderResult('youtube', () => researchYouTube(profile.apDisplayName)),
+    optionalProviderResult('discogs', () => researchDiscogs(profile.apDisplayName)),
+  ]);
+  const [spotifyMatch, musicBrainzMatch, youtubeMatch, discogsMatch] =
+    providerResults.map(({ value }) => value);
+  const providerOutages = providerResults.flatMap(({ outage }) => outage ? [outage] : []);
   const spotify = spotifyMatch?.candidate ?? null;
   const musicBrainz = musicBrainzMatch?.candidate ?? null;
   const youtube = youtubeMatch?.candidate ?? null;
@@ -976,7 +1072,7 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
   if (musicBrainz) sources.push({ url: `https://musicbrainz.org/artist/${musicBrainz.id}`, type: 'musicbrainz', fields: ['officialName', 'country', 'city', 'genres', 'websiteUrl', 'instagramUrl', 'discography'], attribution: 'MusicBrainz artist record' });
   if (youtube) sources.push({ url: `https://www.youtube.com/channel/${youtube.id.channelId}`, type: 'youtube_channel_candidate', fields: ['youtubeChannelId', 'youtubeUrl', 'featuredVideoUrl'], attribution: 'YouTube channel candidate' });
   if (discogs?.id) sources.push({ url: `https://www.discogs.com/artist/${discogs.id}`, type: 'discogs', fields: ['officialName', 'websiteUrl', 'socialLinks'], attribution: 'Discogs artist record' });
-  sources.push(...publicProviderSearchSources(profile.apDisplayName, musicBrainz, discogs));
+  sources.push(...publicProviderSearchSources(profile.apDisplayName, musicBrainz, discogs, providerOutages));
   if (profile.apSpotifyArtistId && spotify?.id === profile.apSpotifyArtistId) signals.push('existing_spotify_artist_id');
   if (profile.apYoutubeChannelId && youtube?.id?.channelId === profile.apYoutubeChannelId) signals.push('existing_youtube_channel_id');
   const mbCountry = musicBrainz?.country ?? musicBrainz?.area?.['iso-3166-1-codes']?.[0] ?? null;
@@ -1035,6 +1131,7 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
       youtube: youtubeMatch?.exactMatchCount ?? 0,
       discogs: discogsMatch?.exactMatchCount ?? 0,
     },
+    providerOutages,
   });
   const report = {
     artistId: profile.apArtistId,
@@ -1045,6 +1142,7 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
     reliable,
     suggestions: [],
     media: [],
+    providerOutages,
     withheldReason: reliable ? null : 'fewer_than_two_independent_matching_signals',
   };
   if (options.mode === 'production') {

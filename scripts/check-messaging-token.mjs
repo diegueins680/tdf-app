@@ -13,7 +13,8 @@
  *   FLY_APP_NAME          - Fly.io app name (default: tdf-hq)
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
+import { pathToFileURL } from 'url';
 
 const APP_ID = process.env.FACEBOOK_APP_ID || process.env.META_APP_ID;
 const APP_SECRET = process.env.FACEBOOK_APP_SECRET || process.env.META_APP_SECRET;
@@ -31,13 +32,17 @@ function error(...args) {
   console.error(`[${new Date().toISOString()}] ERROR:`, ...args);
 }
 
-async function graph(path, token) {
+async function graph(path, token, fetchImpl = globalThis.fetch) {
   const url = `${GRAPH_BASE}${path}&access_token=${encodeURIComponent(token)}`;
-  const res = await fetch(url);
+  const res = await fetchImpl(url);
   return res.json();
 }
 
-async function checkToken(token, name) {
+export async function checkToken(token, name, {
+  appId = APP_ID,
+  appSecret = APP_SECRET,
+  fetchImpl = globalThis.fetch,
+} = {}) {
   log(`\n=== Checking ${name} ===`);
 
   if (!token) {
@@ -45,13 +50,17 @@ async function checkToken(token, name) {
     return { ok: false, error: 'missing' };
   }
 
-  if (!APP_ID || !APP_SECRET) {
+  if (!appId || !appSecret) {
     error('FACEBOOK_APP_ID and FACEBOOK_APP_SECRET are required');
     return { ok: false, error: 'missing_credentials' };
   }
 
   try {
-    const debug = await graph(`/debug_token?input_token=${encodeURIComponent(token)}`, `${APP_ID}|${APP_SECRET}`);
+    const debug = await graph(
+      `/debug_token?input_token=${encodeURIComponent(token)}`,
+      `${appId}|${appSecret}`,
+      fetchImpl
+    );
 
     if (debug.error) {
       error(`Token check failed: ${debug.error.message}`);
@@ -63,6 +72,11 @@ async function checkToken(token, name) {
     log(`Type: ${info.type}`);
     log(`Profile: ${info.profile_id || 'N/A'}`);
     log(`Scopes: ${(info.scopes || []).join(', ')}`);
+
+    if (info.is_valid !== true) {
+      error('Token is invalid');
+      return { ok: false, error: 'invalid' };
+    }
 
     if (info.expires_at) {
       const expiresAt = new Date(info.expires_at * 1000);
@@ -159,8 +173,18 @@ async function refreshTokenFlow(currentToken) {
 
     // Step 4: Update Fly secrets
     log('\n=== Updating Fly.io Secrets ===');
-    const cmd = `flyctl secrets set INSTAGRAM_MESSAGING_TOKEN="${pageToken}" FACEBOOK_MESSAGING_TOKEN="${pageToken}" --app ${FLY_APP}`;
-    execSync(cmd, { stdio: 'inherit' });
+    execFileSync(
+      'flyctl',
+      [
+        'secrets',
+        'set',
+        `INSTAGRAM_MESSAGING_TOKEN=${pageToken}`,
+        `FACEBOOK_MESSAGING_TOKEN=${pageToken}`,
+        '--app',
+        FLY_APP,
+      ],
+      { stdio: 'inherit' }
+    );
 
     log('✅ Secrets updated successfully');
     return pageToken;
@@ -190,7 +214,6 @@ async function main() {
     try {
       const newToken = await refreshTokenFlow(IG_TOKEN);
       log('\n✅ Refresh complete!');
-      log(`New token prefix: ${newToken.substring(0, 10)}...`);
 
       // Final verification
       const finalCheck = await checkToken(newToken, 'Refreshed Token');
@@ -207,7 +230,9 @@ async function main() {
   }
 }
 
-main().catch(err => {
-  error(err.message);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch(err => {
+    error(err.message);
+    process.exit(1);
+  });
+}

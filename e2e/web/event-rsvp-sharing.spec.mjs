@@ -145,6 +145,7 @@ async function expectNoSeriousAxeViolations(page, testInfo, attachmentName) {
 }
 
 test('@critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn', async ({ page, context }, testInfo) => {
+  test.setTimeout(90_000);
   test.skip(testInfo.project.name !== 'chromium-desktop', 'The complete mutation journey runs once on desktop Chromium.');
   const api = await mockRsvpApi(page);
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);

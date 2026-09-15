@@ -36,10 +36,6 @@ export function Shell() {
   );
   const sidebarToggleRef = useRef<HTMLButtonElement | null>(null);
   const recordedPathRef = useRef('');
-  const onboardingRecoveryRef = useRef<{
-    partyId: number;
-    promise: Promise<void>;
-  } | null>(null);
   const navigationPreferences = useNavigationPreferences(Boolean(session));
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -141,41 +137,6 @@ export function Shell() {
       });
     }
   }, [legacyEventsTarget, loading, location.pathname, navigationPreferences.visit, session]);
-
-  useEffect(() => {
-    if (loading || !session?.partyId) return;
-    const partyId = session.partyId;
-    const replayPendingOnboarding = (): Promise<void> => {
-      const currentRecovery = onboardingRecoveryRef.current;
-      if (currentRecovery?.partyId === partyId) return currentRecovery.promise;
-
-      const promise = (async () => {
-        const [firstValueRecovery, intentRecovery] = await Promise.all([
-          import('../analytics/onboardingProgress'),
-          import('../session/onboardingIntentRecovery'),
-        ]);
-        await Promise.all([
-          intentRecovery.retryPendingOnboardingIntent(partyId),
-          firstValueRecovery.retryPendingFirstValueCompletion(getAnalyticsClient(), partyId),
-        ]);
-      })()
-        .catch(() => undefined)
-        .finally(() => {
-          if (onboardingRecoveryRef.current?.promise === promise) {
-            onboardingRecoveryRef.current = null;
-          }
-        });
-      onboardingRecoveryRef.current = { partyId, promise };
-      return promise;
-    };
-    const handleOnline = () => {
-      void replayPendingOnboarding();
-    };
-
-    void replayPendingOnboarding();
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-  }, [loading, session?.partyId]);
 
   if (loading) {
     return <RouteLoadingFallback />;

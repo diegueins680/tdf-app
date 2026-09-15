@@ -44,6 +44,6 @@ jobs:
       - name: npm audit
         run: ./node_modules/.bin/audit-ci --config ./audit-ci.jsonc
       - name: Build (if present)
-        run: npm run -s build || echo "no build script; skipping"
+        run: npm run -s --if-present build
       - name: Test (if present)
-        run: npm test -s || echo "no test script; skipping"
+        run: npm run -s --if-present test

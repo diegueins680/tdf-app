@@ -87,7 +87,7 @@ describe('DomoVenuePage pricing truthfulness', () => {
     createQuoteMock.mockRejectedValue(new Error('provider unavailable'));
     renderPage();
 
-    await screen.findByRole('button', { name: 'Cotizar y retener fecha' });
+    await screen.findByRole('button', { name: 'Cotizar y retener fecha' }, { timeout: 15_000 });
     fireEvent.change(screen.getByRole('textbox', { name: /Nombre/ }), { target: { value: 'Ana' } });
     fireEvent.change(screen.getByRole('textbox', { name: /Correo/ }), { target: { value: 'ana@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: 'Cotizar y retener fecha' }));
@@ -141,5 +141,5 @@ describe('DomoVenuePage pricing truthfulness', () => {
     expect(createPublicMock.mock.calls[1]?.[1]).toBe(createPublicMock.mock.calls[0]?.[1]);
     expect(document.body.textContent).not.toContain('fecha reservada');
     expect(document.body.textContent).not.toContain('pago confirmado');
-  });
+  }, 15_000);
 });

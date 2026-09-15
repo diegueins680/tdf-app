@@ -340,8 +340,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     if (typeof window === 'undefined') return true;
     return window.localStorage.getItem('fanhub-onboarding-dismissed') !== '1';
   });
-  const [dismissedOnboardingPartyId, setDismissedOnboardingPartyId] = useState<number | null>(null);
-  const [completionErrorPartyId, setCompletionErrorPartyId] = useState<number | null>(null);
+  const [onboardingCompletionByParty, setOnboardingCompletionByParty] = useState<
+    Partial<Record<number, 'dismissed' | 'failed'>>
+  >({});
+  const onboardingCompletionState = viewerId ? onboardingCompletionByParty[viewerId] : undefined;
   const onboardingProgressQuery = useQuery({
     queryKey: ['fan-onboarding-progress', viewerId],
     queryFn: loadOnboardingProgress,
@@ -355,7 +357,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       && onboardingProgressQuery.isSuccess
       && onboardingProgressQuery.data?.eligible
       && !onboardingProgressQuery.data.completedAt
-      && dismissedOnboardingPartyId !== viewerId,
+      && onboardingCompletionState !== 'dismissed',
     );
 
   const completeVisibleOnboarding = () => {
@@ -365,8 +367,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
     const partyId = viewerId;
     if (!partyId) return;
-    setDismissedOnboardingPartyId(partyId);
-    setCompletionErrorPartyId(null);
+    setOnboardingCompletionByParty((previous) => ({ ...previous, [partyId]: 'dismissed' }));
     void completeOnboardingProgress()
       .then((result) => {
         if (activePartyRef.current !== partyId) return;
@@ -375,9 +376,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         }
       })
       .catch(() => {
-        if (activePartyRef.current !== partyId) return;
-        setDismissedOnboardingPartyId(null);
-        setCompletionErrorPartyId(partyId);
+        // Retain the initiating account's failure even after an account switch.
+        // Per-party state cannot overwrite another account's dismissal or error.
+        setOnboardingCompletionByParty((previous) => ({ ...previous, [partyId]: 'failed' }));
       });
   };
 
@@ -852,7 +853,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             No pudimos cargar tus primeros pasos. No mostraremos información de otra cuenta; revisa tu conexión e inténtalo de nuevo.
           </Alert>
         )}
-        {!isHomeManagerView && completionErrorPartyId === viewerId && (
+        {!isHomeManagerView && onboardingCompletionState === 'failed' && (
           <Alert
             severity="warning"
             action={(

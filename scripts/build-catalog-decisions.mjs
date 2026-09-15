@@ -6,6 +6,7 @@ import process from 'node:process';
 
 const DEFAULT_INPUT = 'docs/catalog-persistence/reports/static-list-inventory.json';
 const DEFAULT_OUTPUT = 'docs/catalog-persistence/catalog-list-decisions.json';
+const REVIEW_METHOD = 'deterministic-policy-v3';
 
 const SECURITY_PATTERN = /(?:action|capabilit|grant|module|permission|role|security)/i;
 const GOVERNED_PATTERN = /(?:countr|currenc|ddex|external|identifier|iso|language|locale|payment|platform|provider|subdivision|tax|territor)/i;
@@ -23,14 +24,23 @@ const INTERNAL_FEEDBACK_REPORT_TYPES = [
 ];
 
 function parseArgs(argv) {
-  const options = { input: DEFAULT_INPUT, output: DEFAULT_OUTPUT };
+  const options = {
+    input: DEFAULT_INPUT,
+    output: DEFAULT_OUTPUT,
+    existing: DEFAULT_OUTPUT,
+    reviewBatch: REVIEW_METHOD,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--input') options.input = argv[++index];
     else if (arg === '--output') options.output = argv[++index];
+    else if (arg === '--existing') options.existing = argv[++index];
+    else if (arg === '--fresh') options.existing = null;
+    else if (arg === '--review-batch') options.reviewBatch = argv[++index];
     else if (arg === '--help') {
       process.stdout.write(
-        'Usage: node scripts/build-catalog-decisions.mjs [--input PATH] [--output PATH]\n',
+        'Usage: node scripts/build-catalog-decisions.mjs [--input PATH] [--output PATH] ' +
+          '[--existing PATH|--fresh] [--review-batch NAME]\n',
       );
       process.exit(0);
     } else {
@@ -81,6 +91,16 @@ function isInternalFeedbackReportType(candidate) {
     );
 }
 
+function isOnboardingProgressValue(candidate) {
+  return candidate.name === 'OnboardingIntent'
+    || candidate.name === 'firstValue'
+    || (candidate.file.endsWith('/onboardingIntent.ts') && candidate.name === 'intent')
+    || (
+      candidate.file.endsWith('/2026-09-06_user_onboarding_progress.sql')
+      && candidate.kind === 'sql-check-values'
+    );
+}
+
 function isMarketplaceRuntimeDiscriminant(candidate) {
   if (candidate.file.endsWith('/TDF/ModelsExtra.hs') && candidate.name === 'AssetStatus') {
     return true;
@@ -114,6 +134,24 @@ function technicalRule(candidate) {
     && candidate.name === 'migrations'
   ) {
     return 'Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.';
+  }
+  if (candidate.file === 'scripts/artist-enrichment.mjs' && candidate.name === 'delayOptions') {
+    return 'Retry timing and jitter fields are bounded transport-policy mechanics; they are neither selectable business data nor an external-provider registry.';
+  }
+  if (candidate.file === 'scripts/build-catalog-decisions.mjs' && candidate.name === 'options') {
+    return 'Decision-builder input, output, preservation, and review-batch fields are CLI execution mechanics; they are not selectable business data.';
+  }
+  if (candidate.name === 'AdapterHttpMethod') {
+    return 'The closed HTTP method type is an exhaustive transport dispatch checked by the compiler, not configurable provider or payment reference data.';
+  }
+  if (/QueryKeys$/i.test(candidate.name)) {
+    return 'React Query key segments are client cache mechanics and do not enumerate business values.';
+  }
+  if (candidate.name === 'SellerTab') {
+    return 'Seller tabs are local view-state and rendering branches; persisted permissions and merch records remain authoritative.';
+  }
+  if (/Payload$/.test(candidate.name) && candidate.kind === 'object-registry') {
+    return 'The object keys are strict typed wire-payload fields, not selectable business values or reference data.';
   }
   if (isMarketplaceRuntimeDiscriminant(candidate)) {
     return 'Marketplace fulfillment, custody, and actor discriminants form a closed state-machine and audit protocol enforced across code, OpenAPI, and database constraints; making them editable would weaken transition correctness.';
@@ -241,6 +279,7 @@ function classificationFor(candidate, technicalJustification) {
   // "permissions" is one user-visible report type, not a grant registry. Keep
   // this taxonomy under the existing persisted feedback-category authority.
   if (isInternalFeedbackReportType(candidate)) return 'dynamic-business-catalog';
+  if (isOnboardingProgressValue(candidate)) return 'dynamic-business-catalog';
   if (isAppearanceEmergencyBootstrap(candidate)) return 'dynamic-business-catalog';
   if (isServiceResourceSelectionModeMirror(candidate)) return 'dynamic-business-catalog';
   if (isSocialEventStateParserMirror(candidate)) return 'dynamic-business-catalog';
@@ -263,6 +302,9 @@ function classificationFor(candidate, technicalJustification) {
 function specializedModel(candidate, classification) {
   const value = context(candidate);
   if (isInternalFeedbackReportType(candidate)) return 'feedback_category';
+  if (isOnboardingProgressValue(candidate)) {
+    return 'onboarding_intent, onboarding_first_value, user_onboarding_progress';
+  }
   if (isAppearanceEmergencyBootstrap(candidate)) {
     return 'appearance_mode_option, catalog_scoped_default';
   }
@@ -410,7 +452,21 @@ function main() {
   const inputPath = resolve(options.input);
   if (!existsSync(inputPath)) throw new Error(`Inventory not found: ${inputPath}`);
   const inventory = JSON.parse(readFileSync(inputPath, 'utf8'));
+  const existingPath = options.existing ? resolve(options.existing) : null;
+  const existingReport = existingPath && existsSync(existingPath)
+    ? JSON.parse(readFileSync(existingPath, 'utf8'))
+    : { decisions: [] };
+  const existingDecisions = new Map(
+    (existingReport.decisions ?? []).map((decision) => [decision.id, decision]),
+  );
+  const preservedDecisionIds = new Set();
   const decisions = inventory.candidates.map((candidate) => {
+    const existingDecision = existingDecisions.get(candidate.id);
+    const producedByPolicy = /^deterministic-policy-v\d+$/.test(existingDecision?.reviewMethod ?? '');
+    if (existingDecision && !producedByPolicy) {
+      preservedDecisionIds.add(candidate.id);
+      return existingDecision;
+    }
     const technicalJustification = technicalRule(candidate);
     const classification = classificationFor(candidate, technicalJustification);
     const disposition = dispositionFor(candidate, classification);
@@ -428,12 +484,31 @@ function main() {
         technicalJustification,
       ),
       reviewed: true,
+      reviewMethod: REVIEW_METHOD,
+      reviewBatch: options.reviewBatch,
+      evidence: {
+        file: candidate.file,
+        line: candidate.line,
+        kind: candidate.kind,
+        name: candidate.name,
+        valueCount: candidate.valueCount,
+        consumerCount: candidate.consumerCount,
+        exactDuplicateIds: candidate.exactDuplicateIds,
+        similarCandidateIds: candidate.similarCandidateIds,
+      },
     };
   });
   const report = {
     schemaVersion: 1,
-    baselineRevision: 'ce0c3bc19e2d9030e871480e9e93790940c9eb12',
-    generatedFrom: DEFAULT_INPUT,
+    baselineRevision: existingReport.baselineRevision ?? 'ce0c3bc19e2d9030e871480e9e93790940c9eb12',
+    generatedFrom: options.input,
+    reconciliation: {
+      preservedDecisions: preservedDecisionIds.size,
+      reviewedByPolicy: decisions.length - preservedDecisionIds.size,
+      removedStaleDecisions: [...existingDecisions.keys()]
+        .filter((id) => !decisions.some((decision) => decision.id === id)).length,
+      reviewBatch: options.reviewBatch,
+    },
     decisions,
   };
   writeFileSync(resolve(options.output), `${JSON.stringify(report, null, 2)}\n`);

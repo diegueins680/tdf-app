@@ -247,7 +247,7 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     view.queryClient.clear();
   });
 
-  it('ignores a late completion failure from the previous Party', async () => {
+  it('restores a previous Party failure on return without leaking it into the active account', async () => {
     let rejectCompletion: ((reason?: unknown) => void) | undefined;
     completeOnboardingProgressMock.mockImplementation(() => new Promise((_resolve, reject) => {
       rejectCompletion = reject;
@@ -274,6 +274,42 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     });
     expect(screen.queryByText('Primeros pasos')).toBeNull();
     expect(screen.queryByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeNull();
+
+    loadOnboardingProgressMock.mockResolvedValue(eligibleProgress);
+    sessionMock = { ...sessionMock, username: 'fan-42', displayName: 'Fan 42', partyId: 42 };
+    view.rerenderPage();
+    expect(await screen.findByText('Primeros pasos')).toBeTruthy();
+    expect(screen.getByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
+    view.queryClient.clear();
+  });
+
+  it('retains each Party failure when two completion requests fail out of order', async () => {
+    const failures = new Map<number, (reason: Error) => void>();
+    completeOnboardingProgressMock.mockImplementation(() => new Promise((_resolve, reject) => {
+      failures.set(sessionMock.partyId, reject);
+    }));
+    const view = renderPage();
+    expect(await screen.findByText('Primeros pasos')).toBeTruthy();
+    closeOnboardingAlert();
+
+    sessionMock = { ...sessionMock, username: 'fan-84', displayName: 'Fan 84', partyId: 84 };
+    view.rerenderPage();
+    expect(await screen.findByText('Primeros pasos')).toBeTruthy();
+    closeOnboardingAlert();
+    await act(async () => {
+      failures.get(84)?.(new Error('current account offline'));
+    });
+    expect(screen.getByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
+    await act(async () => {
+      failures.get(42)?.(new Error('previous account offline'));
+    });
+    expect(screen.getByText('Primeros pasos')).toBeTruthy();
+    expect(screen.getByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
+
+    sessionMock = { ...sessionMock, username: 'fan-42', displayName: 'Fan 42', partyId: 42 };
+    view.rerenderPage();
+    expect(await screen.findByText('Primeros pasos')).toBeTruthy();
+    expect(screen.getByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
     view.queryClient.clear();
   });
 });

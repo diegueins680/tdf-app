@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import AppErrorBoundary from './routes/AppErrorBoundary';
 import RouteLoadingFallback from './routes/RouteLoadingFallback';
 import { useSession } from './session/SessionContext';
+import OnboardingRecovery from './session/OnboardingRecovery';
 import { lazyWithReload } from './utils/lazyWithReload';
 import { shouldRenderRadioWidget } from './utils/radioRouteVisibility';
 
@@ -24,6 +25,7 @@ function RoutedRadioWidget() {
 export default function App() {
   return (
     <AppErrorBoundary>
+      <OnboardingRecovery />
       <Suspense fallback={<RouteLoadingFallback />}>
         <AppRoutes />
       </Suspense>

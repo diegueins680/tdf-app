@@ -68,6 +68,7 @@ jest.unstable_mockModule('./RouteLoadingFallback', () => ({
 }));
 
 const { Shell } = await import('./AppShell');
+const { default: OnboardingRecovery } = await import('../session/OnboardingRecovery');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -79,7 +80,9 @@ const renderShell = async (container: HTMLElement, initialEntry: string) => {
       <MemoryRouter
         initialEntries={[initialEntry]}
       >
+        <OnboardingRecovery />
         <Routes>
+          <Route path="/fans" element={<div>Public fan page</div>} />
           <Route element={<Shell />}>
             <Route
               path="/configuracion/inscripciones-curso"
@@ -130,7 +133,7 @@ describe('Shell', () => {
     session.partyId = 42;
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const { cleanup } = await renderShell(container, '/inicio');
+    const { cleanup } = await renderShell(container, '/fans');
 
     try {
       expect(retryPendingOnboardingIntentMock).toHaveBeenCalledWith(42);
@@ -140,11 +143,11 @@ describe('Shell', () => {
     }
   });
 
-  it('replays pending onboarding state when connectivity returns and removes the listener on unmount', async () => {
+  it('replays pending onboarding on a public route when connectivity returns and cleans up on unmount', async () => {
     session.partyId = 42;
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const { cleanup } = await renderShell(container, '/inicio');
+    const { cleanup } = await renderShell(container, '/fans');
 
     expect(retryPendingOnboardingIntentMock).toHaveBeenCalledTimes(1);
     expect(retryPendingFirstValueCompletionMock).toHaveBeenCalledTimes(1);
