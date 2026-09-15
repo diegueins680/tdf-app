@@ -10,6 +10,10 @@ DO $$ BEGIN
   END IF;
 END $$;
 BEGIN;
+-- Only the ORM-owned party identity required by the real manual-evidence
+-- migration. These are synthetic reviewer identities, not authenticated users.
+CREATE TABLE party (id BIGINT PRIMARY KEY);
+INSERT INTO party(id) VALUES (1),(2);
 CREATE TABLE asset (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL,
   category TEXT NOT NULL, condition TEXT NOT NULL, status TEXT NOT NULL,
