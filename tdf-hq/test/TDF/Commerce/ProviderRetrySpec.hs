@@ -859,7 +859,9 @@ notificationIdentityInboxSpec = describe "PlaceToPay signed identity inbox" $ do
         , Event.pecProviderEventId = "CALLER-" <> T.pack (show n) }
       | (n, raw) <- zip [1 :: Int ..] placeToPayReplayVariants] >>= mapM requireRight
     length (filter Event.pesInserted results) `shouldBe` 1
-    let first = head results
+    first <- case results of
+      result : _ -> pure result
+      [] -> fail "Expected concurrent notification results"
     map Event.pesReference results `shouldSatisfy` all (== Event.pesReference first)
     notificationRowCount pool creation `shouldReturn` 1
     claims <- concurrently (replicate 4 (runSqlPool
@@ -929,7 +931,7 @@ notificationIdentityInboxSpec = describe "PlaceToPay signed identity inbox" $ do
     historical <- insertHistoricalNotification pool creation
     results <- concurrently
       [storeNotification pool creation { Event.pecRawPayload = raw }
-      | raw <- tail placeToPayReplayVariants] >>= mapM requireRight
+      | raw <- drop 1 placeToPayReplayVariants] >>= mapM requireRight
     length (filter Event.pesInserted results) `shouldBe` 1
     notificationRowCount pool creation `shouldReturn` 2
     replay <- storeNotification pool creation >>= requireRight
@@ -972,6 +974,9 @@ placeToPayReplayVariants =
   , uppercasePlaceToPaySignature (placeToPayNotification "")
   , TE.encodeUtf8 (T.replace "1234" "1234.0" (TE.decodeUtf8 (placeToPayNotification "")))
   , TE.encodeUtf8 (T.replace "requestId" "request\\u0049d" (TE.decodeUtf8 (placeToPayNotification "")))
+  , "{\"status\":{\"date\":\"2026-09-14T12:00:00Z\",\"status\":\"APPROV\\u0045D\"},"
+      <> "\"signature\":\"sha256:" <> TE.encodeUtf8 (digestText "1234APPROVED2026-09-14T12:00:00Zsynthetic-secret")
+      <> "\",\"requestId\":1234,\"reference\":\"\"}"
   ]
 
 notificationRowCount :: ConnectionPool -> Event.ProviderEventCreation -> IO Int64
