@@ -162,3 +162,16 @@ without logging message bodies or relationship identities. A high denial rate ca
 mean a stale client needs the consent flow; it is not proof of abuse. Keep existing
 report/review/appeal authorities. Read/filter integration, API error mapping, rollout
 lock-duration measurement and all wider handoff blockers remain required.
+
+## Hosted verification snapshot
+
+[Social CI](https://github.com/diegueins680/tdf-app/actions/runs/35011873153)
+completed successfully at implementation `efc827f7628afe084db173be627d0d7f71d0142a`.
+It ran the DM model and both negative controls, regenerated the observed INSERT
+cases, executed the DM migration/races on PostgreSQL 17, and passed the complete
+schema fixture. Existing relationship/feed/session models and client checks also
+passed. Exact step results: `evidence/dm-ci-efc827f76.json`. [Full CI](https://github.com/diegueins680/tdf-app/actions/runs/35011873154) also
+completed successfully at that SHA, including backend build/tests, the actual
+session HTTP fixture, merch runtime, automatic migrations and booking concurrency.
+Exact metadata: `evidence/dm-full-ci-efc827f76.json`. Later evidence-only commits
+must not be confused with checks of this implementation SHA.

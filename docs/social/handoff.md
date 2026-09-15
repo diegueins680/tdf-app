@@ -218,3 +218,27 @@ checks, old-INSERT counterexample evidence, real race fixtures and complete-sche
 verification. Legacy thread/history reads and friendly HTTP denial mapping remain
 **failed/incomplete** acceptance items; full old/new application privacy coexistence
 and production activation remain blocked. No new message store or consent backfill.
+
+### Published continuation references
+
+- [Session PR #382](https://github.com/diegueins680/tdf-app/pull/382), dependent on #377:
+  implementation `a68f235ca`, completed-build evidence `da541b58a`, catalog-policy
+  classification `80cd4a1a4b928d6cb4252bfabc30a404be7b937b`. The unchanged catalog
+  gate is now green. [Full CI at da541b58a](https://github.com/diegueins680/tdf-app/actions/runs/35000821777)
+  completed successfully, including the actual PostgreSQL 17 session HTTP/model-case
+  step, all backend tests, merch runtime, full-schema migrations and booking races.
+  [Social CI at 80cd4a1a4](https://github.com/diegueins680/tdf-app/actions/runs/35011441891)
+  passed; its [full CI run](https://github.com/diegueins680/tdf-app/actions/runs/35011441934)
+  also completed successfully at that exact head.
+- [DM write PR #386](https://github.com/diegueins680/tdf-app/pull/386), dependent on #382:
+  implementation `efc827f76`. Local model, migration/race, complete-schema and
+  benchmark results are recorded in [DM write boundary](dm-write-boundary.md).
+  [Hosted social CI](https://github.com/diegueins680/tdf-app/actions/runs/35011873153)
+  completed successfully at that implementation SHA, including both new model
+  configurations/negative controls, generated cases, real DM races and complete
+  schema compatibility on PostgreSQL 17. Its [full CI run](https://github.com/diegueins680/tdf-app/actions/runs/35011873154)
+  also completed successfully at that same implementation SHA, including backend
+  runtime/migration/booking checks. Both PRs are drafts and unmerged.
+
+The earlier Vercel/Cloudflare deployment exceptions remain unresolved. No deployment
+command or new production flag activation was issued during this continuation.
