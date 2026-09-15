@@ -32,11 +32,14 @@ bash scripts/verify-event-operations-formal.sh
 The script validates JAR checksums, executes TLC sequentially, requires the Alloy scenario to be
 satisfiable, and requires every Alloy assertion to have no counterexample.
 
-## Bounds and results (2026-09-14)
+## Bounds and results (rechecked 2026-09-15)
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
-| `EventLifecycle.cfg` | 3 actors, 14 states, 2 command IDs | PASS; 3,613 generated/distinct states, depth 3 |
+| `EventLifecycle.cfg` | 4 actors (distinct event/finance approvers), 14 states, 2 command IDs; draft start | PASS; 6,385 generated/distinct states, depth 3 |
+| `EventLifecycleBoundaries.cfg` | Same scope; starts separately at each of the 14 lifecycle states | PASS; 89,390 generated/distinct states, depth 3 |
+| `EventLifecycleUnsafeFinance.cfg` | Mutant allowing the event approver to settle finances | Expected `AcceptedAuditIsAuthorized` violation at settlement, depth 2 |
+| `EventLifecycleUnsafeAudit.cfg` | Mutant rewriting an earlier audit actor without shortening the sequence | Expected `AuditAppendOnly` action-property violation, depth 3 |
 | `ReservationRace.cfg` | 2 overlapping engagements, 1 exclusive resource, unauthorized/no-reason override | PASS; 7 generated, 5 distinct states, depth 3 |
 | `ReservationOverride.cfg` | Same race, owner-authorized non-empty override reason | PASS; 7 generated, 5 distinct states, depth 3 |
 | `InvitationSafety.cfg` | 3 actors, 2 command IDs, expiry 2, horizon 3 | PASS; 1,107 generated, 912 distinct states, depth 7 |
@@ -50,6 +53,12 @@ The counts above came from completed commands. An earlier four-command lifecycle
 stopped after 1,126,075 distinct states because the audit permutations made that scope inefficient;
 it is not reported as a pass. The checked configuration was reduced to two command IDs while keeping
 all lifecycle states, actors, transition targets, guards, and authority rules.
+The original draft-only two-command run could not reach settlement. The additional
+boundary configuration starts at every lifecycle state, so settlement authority is
+exercised without claiming a complete draft-to-archive trace. `RequiredAuthority`
+checks accepted records independently of the mutable admission guard. Append-only
+means every old record remains an unchanged prefix, not merely nondecreasing length.
+The runner requires the exact named failures from both negative controls.
 
 ## Coverage
 

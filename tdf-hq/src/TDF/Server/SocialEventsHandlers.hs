@@ -3714,55 +3714,62 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         (eventKey, invitationKey) <- parseIds eventIdStr invitationIdStr
-        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        mExisting <- liftIO $ runSqlPool (get invitationKey) envPool
-        case mExisting of
-            Nothing -> throwError err404{errBody = "Invitation not found"}
-            Just inv -> do
-                let dto = iudInvitation
-                when (eventInvitationEventId inv /= eventKey) $ throwError err400{errBody = "Invitation does not belong to this event"}
-                mStatusVal <- either throwError pure (validateInvitationStatusUpdateInput (invitationStatus dto))
-                toPartyVal <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
-                either
-                    throwError
-                    pure
-                    ( validateInvitationUpdateAuthorization
-                        (hasStrictAdminAccess user || isEventManager currentPartyId eventRow)
-                        currentPartyId
-                        (eventInvitationToPartyId inv)
-                        (eventInvitationStatus inv)
-                        toPartyVal
-                        mStatusVal
-                        iudMessageUpdate
-                    )
-                let messageVal = applyNullableTextUpdate iudMessageUpdate (eventInvitationMessage inv)
-                    statusUpdates =
-                        maybe [] (\statusVal -> [EventInvitationStatus =. Just statusVal]) mStatusVal
-                    responseStatus = mStatusVal <|> eventInvitationStatus inv
-                liftIO $
-                    runSqlPool
-                        ( update
-                            invitationKey
-                            ( statusUpdates
-                                <> [ EventInvitationMessage =. messageVal
-                                   , EventInvitationToPartyId =. Just toPartyVal
-                                   , EventInvitationUpdatedAt =. now
-                                   ]
-                            )
-                        )
-                        envPool
-                pure
-                    InvitationDTO
-                        { invitationId = Just (renderKeyText invitationKey)
-                        , invitationEventId = Just (T.strip eventIdStr)
-                        , invitationFromPartyId = eventInvitationFromPartyId inv
-                        , invitationToPartyId = toPartyVal
-                        , invitationStatus = responseStatus
-                        , invitationMessage = messageVal
-                        , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
-                        , invitationUpdatedAt = Just now
-                        }
+        let dto = iudInvitation
+        mStatusVal <- either throwError pure (validateInvitationStatusUpdateInput (invitationStatus dto))
+        toPartyVal <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
+        result <- liftIO $ runSqlPool (do
+            -- Lock before reading authority or recipient state. PostgreSQL locks
+            -- event then invitation; SQLite acquires its database write lock
+            -- before either read. Both locks live through the authorized update.
+            backendName <- T.toCaseFold <$> getRDBMS
+            when ("sqlite" `T.isInfixOf` backendName) $
+                rawExecute "UPDATE event_invitation SET id = id WHERE id = ?"
+                    [toPersistValue invitationKey]
+            mEvent <- lockSocialEventForMutation eventKey
+            case mEvent of
+                Nothing -> pure (Left err404{errBody = "Event not found"})
+                Just (Entity _ eventRow) -> do
+                    when ("postgres" `T.isInfixOf` backendName) $ do
+                        _ <- (rawSql "SELECT id FROM event_invitation WHERE id = ? FOR UPDATE"
+                            [toPersistValue invitationKey] :: SqlPersistT IO [Single Int64])
+                        pure ()
+                    mExisting <- get invitationKey
+                    case mExisting of
+                        Nothing -> pure (Left err404{errBody = "Invitation not found"})
+                        Just inv
+                            | eventInvitationEventId inv /= eventKey ->
+                                pure (Left err400{errBody = "Invitation does not belong to this event"})
+                            | otherwise ->
+                                case validateInvitationUpdateAuthorization
+                                    (hasStrictAdminAccess user || isEventManager currentPartyId eventRow)
+                                    currentPartyId
+                                    (eventInvitationToPartyId inv)
+                                    (eventInvitationStatus inv)
+                                    toPartyVal
+                                    mStatusVal
+                                    iudMessageUpdate of
+                                    Left authError -> pure (Left authError)
+                                    Right () -> do
+                                        let messageVal = applyNullableTextUpdate iudMessageUpdate (eventInvitationMessage inv)
+                                            statusUpdates = maybe [] (\statusVal -> [EventInvitationStatus =. Just statusVal]) mStatusVal
+                                        update invitationKey
+                                            (statusUpdates <>
+                                                [ EventInvitationMessage =. messageVal
+                                                , EventInvitationToPartyId =. Just toPartyVal
+                                                , EventInvitationUpdatedAt =. now
+                                                ])
+                                        pure $ Right InvitationDTO
+                                            { invitationId = Just (renderKeyText invitationKey)
+                                            , invitationEventId = Just (T.strip eventIdStr)
+                                            , invitationFromPartyId = eventInvitationFromPartyId inv
+                                            , invitationToPartyId = toPartyVal
+                                            , invitationStatus = mStatusVal <|> eventInvitationStatus inv
+                                            , invitationMessage = messageVal
+                                            , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
+                                            , invitationUpdatedAt = Just now
+                                            }
+            ) envPool
+        either throwError pure result
 
     -- Moments
     listMoments :: T.Text -> AppM [EventMomentDTO]

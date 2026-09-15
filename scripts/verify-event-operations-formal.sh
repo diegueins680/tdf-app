@@ -65,6 +65,20 @@ cd "${MODEL_DIR}"
 
 # Keep TLC sequential: 1.7.2 materializes standard modules through a shared temp location.
 run_tlc EventLifecycle.tla EventLifecycle.cfg event-lifecycle
+run_tlc EventLifecycle.tla EventLifecycleBoundaries.cfg event-lifecycle-boundaries
+
+# Negative controls must fail the named property, not merely fail to execute.
+run_negative_tlc() {
+  local config="$1" slug="$2" expected="$3" status=0
+  run_tlc EventLifecycle.tla "${config}" "${slug}" > "${run_root}/${slug}.log" 2>&1 || status=$?
+  cat "${run_root}/${slug}.log"
+  if [[ "${status}" -eq 0 ]] || ! grep -Fq "${expected}" "${run_root}/${slug}.log"; then
+    echo "Negative control ${slug} did not detect ${expected}." >&2
+    exit 1
+  fi
+}
+run_negative_tlc EventLifecycleUnsafeFinance.cfg unsafe-finance 'Invariant AcceptedAuditIsAuthorized is violated'
+run_negative_tlc EventLifecycleUnsafeAudit.cfg unsafe-audit 'Action property AuditAppendOnly is violated'
 run_tlc ReservationRace.tla ReservationRace.cfg reservation-race
 run_tlc ReservationRace.tla ReservationOverride.cfg reservation-override
 run_tlc InvitationSafety.tla InvitationSafety.cfg invitation

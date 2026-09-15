@@ -2,6 +2,13 @@
 
 module TDF.Social.FollowHandlerSpec (spec) where
 
+import Control.Concurrent (newEmptyMVar, putMVar, takeMVar, threadDelay, tryPutMVar)
+import Control.Concurrent.Async (wait, withAsync)
+import Control.Exception (finally)
+import Control.Monad (void)
+import qualified Data.ByteString.Char8 as BS8
+import Database.Persist.Postgresql (createPostgresqlPool)
+import System.Environment (lookupEnv)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Trans.Reader (ReaderT, runReaderT)
@@ -15,7 +22,7 @@ import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
 import Database.Persist (Entity (..), count, get, insert, insertKey, selectList, toPersistValue, (==.))
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sql (Single (..), rawSql, SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (Handler, NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Servant.Multipart
@@ -46,6 +53,7 @@ import TDF.DTO.SocialEventsDTO
     , EventSourceDTO (..)
     , EventUpdateDTO (..)
     , InvitationDTO (..)
+    , InvitationUpdateDTO (..)
     , NullableFieldUpdate (..)
     , RefundDTO (..)
     , RefundRequestDTO (..)
@@ -1618,6 +1626,85 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected non-organizer invitation creation to fail, got: " <> show value)
 
+    invitationDatabaseUrl <- runIO (lookupEnv "TDF_INVITATION_TEST_DATABASE_URL")
+    case invitationDatabaseUrl of
+        Nothing -> pure ()
+        Just databaseUrl -> it "serializes a stale invitation response behind an organizer transfer in PostgreSQL" $ do
+            pool <- runNoLoggingT $ createPostgresqlPool (BS8.pack databaseUrl) 3
+            now <- getCurrentTime
+            let eventKey = toSqlKey 43 :: SocialEventId
+                env = Env {envPool = pool, envConfig = error "invitation update needs no config"}
+                dto = InvitationUpdateDTO
+                    ((invitationCreatePayload Nothing) {invitationStatus = Just "accepted"}) FieldMissing
+            key <- runSqlPool (do
+                rawExecute "CREATE TABLE social_event (id BIGINT PRIMARY KEY, organizer_party_id TEXT, title TEXT NOT NULL, description TEXT, venue_id BIGINT, event_type_id UUID, workflow_state_id UUID, timezone TEXT, start_time TIMESTAMPTZ NOT NULL, end_time TIMESTAMPTZ, price_cents BIGINT, currency_id UUID, capacity BIGINT, metadata TEXT, created_at TIMESTAMPTZ NOT NULL, updated_at TIMESTAMPTZ NOT NULL)" []
+                -- The ordinary-user visibility guard also consults imported-event references.
+                rawExecute "CREATE TABLE external_event_ref (event_id BIGINT NOT NULL)" []
+                rawExecute "CREATE TABLE event_invitation (id BIGSERIAL PRIMARY KEY, event_id BIGINT NOT NULL, from_party_id TEXT, to_party_id TEXT, status TEXT, message TEXT, created_at TIMESTAMPTZ NOT NULL, updated_at TIMESTAMPTZ NOT NULL)" []
+                insertKey eventKey (seedSocialEvent "1" "Concurrent invitation transfer" now)
+                insert (EventInvitation eventKey (Just "1") (Just "2") (Just "pending") (Just "Join us") now now)) pool
+            locked <- newEmptyMVar
+            release <- newEmptyMVar
+            let transfer = runSqlPool (do
+                    rawExecute "UPDATE event_invitation SET to_party_id = '3' WHERE id = ?" [toPersistValue key]
+                    liftIO (putMVar locked ())
+                    liftIO (takeMVar release)) pool
+                respond = runHandler $ runReaderT
+                    (socialEventInvitationUpdateHandlerFor (socialEventUser 2) "43"
+                        (T.pack (show (fromSqlKey key))) dto) env
+                awaitBlocked :: Int -> IO ()
+                awaitBlocked 0 = expectationFailure "Recipient did not wait on the invitation row lock"
+                awaitBlocked attempts = do
+                    rows <- runSqlPool (rawSql "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%event_invitation%'" [] :: SqlPersistT IO [Single Int64]) pool
+                    case rows of
+                        [Single n] | n > 0 -> pure ()
+                        _ -> threadDelay 10000 >> awaitBlocked (attempts - 1)
+            withAsync transfer $ \organizer ->
+                (do
+                    takeMVar locked
+                    withAsync respond $ \recipient -> do
+                        awaitBlocked 500
+                        putMVar release ()
+                        wait organizer
+                        result <- wait recipient
+                        case result of
+                            Left err -> errHTTPCode err `shouldBe` 403
+                            Right value -> expectationFailure ("Stale recipient regained access: " <> show value)
+                    stored <- runSqlPool (get key) pool
+                    fmap eventInvitationToPartyId stored `shouldBe` Just (Just "3")
+                    fmap eventInvitationStatus stored `shouldBe` Just (Just "pending"))
+                `finally` void (tryPutMVar release ())
+
+    it "revalidates invitation recipients and terminal status at the update boundary" $ do
+        now <- getCurrentTime
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        let eventKey = toSqlKey 43 :: SocialEventId
+            invitation = EventInvitation eventKey (Just "1") (Just "2") (Just "pending") (Just "Join us") now now
+            env = Env {envPool = pool, envConfig = error "invitation update needs no config"}
+            payload recipient status = InvitationUpdateDTO
+                ((invitationCreatePayload Nothing) {invitationToPartyId = recipient, invitationStatus = Just status})
+                FieldMissing
+            invoke :: Int64 -> EventInvitationId -> T.Text -> T.Text -> IO (Either ServerError InvitationDTO)
+            invoke actor key recipient status = runHandler $ runReaderT
+                (socialEventInvitationUpdateHandlerFor (socialEventUser actor) "43"
+                    (T.pack (show (fromSqlKey key))) (payload recipient status)) env
+            assertForbidden result = case result of
+                Left err -> errHTTPCode err `shouldBe` 403
+                Right value -> expectationFailure ("Expected stale response denial, got " <> show value)
+        key <- runSqlPool (do
+            insertKey eventKey (seedSocialEvent "1" "Invitation transfer" now)
+            insert invitation) pool
+        transferred <- invoke 1 key "3" "pending"
+        fmap invitationToPartyId transferred `shouldBe` Right "3"
+        invoke 2 key "2" "accepted" >>= assertForbidden
+        declined <- invoke 3 key "3" "declined"
+        fmap invitationStatus declined `shouldBe` Right (Just "declined")
+        invoke 3 key "3" "accepted" >>= assertForbidden
+        stored <- runSqlPool (get key) pool
+        fmap eventInvitationToPartyId stored `shouldBe` Just (Just "3")
+        fmap eventInvitationStatus stored `shouldBe` Just (Just "declined")
+
     it "attenuates invitation updates for the intended recipient" $ do
         validateInvitationUpdateAuthorization
             False
@@ -2034,6 +2121,15 @@ socialEventInvitationCreateHandlerFor user eventIdText =
             case invitationsServer eventIdText of
                 _listInvitations :<|> createInvitationHandler :<|> _updateInvitation ->
                     createInvitationHandler
+
+socialEventInvitationUpdateHandlerFor
+    :: AuthedUser -> T.Text -> T.Text -> InvitationUpdateDTO -> ReaderT Env Handler InvitationDTO
+socialEventInvitationUpdateHandlerFor user eventIdText =
+    case socialEventsServer user of
+        _events :<|> _cities :<|> _sources :<|> _research :<|> _venues
+            :<|> _artists :<|> _rsvps :<|> invitationsServer :<|> _ ->
+            case invitationsServer eventIdText of
+                _list :<|> _create :<|> updateHandler -> updateHandler
 
 socialEventInvitationListHandlerFor
     :: AuthedUser

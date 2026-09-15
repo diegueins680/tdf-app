@@ -1,7 +1,8 @@
 ---- MODULE EventLifecycle ----
 EXTENDS FiniteSets, Naturals, Sequences, TLC
 
-CONSTANTS Owner, Approver, Outsider, CommandIds
+CONSTANTS Owner, Approver, FinanceApprover, Outsider, CommandIds,
+          UnsafeFinanceApproval, UnsafeAuditRewrite
 
 States == {
   "draft", "planning", "pending_approval", "approved", "published",
@@ -9,7 +10,7 @@ States == {
   "settled", "archived", "reprogrammed", "cancelled"
 }
 
-Actors == {Owner, Approver, Outsider}
+Actors == {Owner, Approver, FinanceApprover, Outsider}
 PublicStates == {"published", "staffing", "ready", "in_progress", "completed"}
 
 Allowed(from, to) ==
@@ -28,11 +29,16 @@ Allowed(from, to) ==
     [] from = "cancelled"          -> to = "archived"
     [] OTHER                        -> FALSE
 
+RequiredAuthority(actor, to) ==
+  CASE to = "approved" -> actor = Approver
+    [] to = "settled" -> actor = FinanceApprover
+    [] OTHER -> actor = Owner
+
 Authorized(actor, from, to) ==
   /\ actor \in Actors
-  /\ IF to = "approved" \/ to = "settled"
-        THEN actor = Approver
-        ELSE actor = Owner
+  /\ IF UnsafeFinanceApproval /\ to = "settled"
+        THEN actor \in {Approver, FinanceApprover}
+        ELSE RequiredAuthority(actor, to)
 
 ExpectedVisibility(state) == state \in PublicStates
 
@@ -40,12 +46,16 @@ VARIABLES state, visible, revision, seenCommands, audit
 
 vars == <<state, visible, revision, seenCommands, audit>>
 
-Init ==
-  /\ state = "draft"
-  /\ visible = FALSE
+InitAt(initialState) ==
+  /\ state = initialState
+  /\ visible = ExpectedVisibility(initialState)
   /\ revision = 0
   /\ seenCommands = {}
   /\ audit = <<>>
+
+Init == InitAt("draft")
+\* Exercise authorization from every lifecycle boundary within two commands.
+AnyStateInit == \E initialState \in States: InitAt(initialState)
 
 Approve(actor, target, command) ==
   /\ actor \in Actors
@@ -72,7 +82,15 @@ Deny(actor, target, command) ==
        [command |-> command, actor |-> actor, from |-> state, to |-> target,
         accepted |-> FALSE])
 
+RewriteAudit ==
+  /\ UnsafeAuditRewrite
+  /\ Len(audit) > 0
+  /\ audit[1].actor # Outsider
+  /\ audit' = [audit EXCEPT ![1].actor = Outsider]
+  /\ UNCHANGED <<state, visible, revision, seenCommands>>
+
 Next ==
+  \/ RewriteAudit
   \/ \E actor \in Actors, target \in States, command \in CommandIds:
        Approve(actor, target, command)
   \/ \E actor \in Actors, target \in States, command \in CommandIds:
@@ -93,7 +111,7 @@ AcceptedAuditIsAuthorized ==
   \A i \in 1..Len(audit):
     audit[i].accepted =>
       Allowed(audit[i].from, audit[i].to)
-      /\ Authorized(audit[i].actor, audit[i].from, audit[i].to)
+      /\ RequiredAuthority(audit[i].actor, audit[i].to)
 
 RejectedAuditDidNotAdvance ==
   revision = Cardinality({i \in 1..Len(audit): audit[i].accepted})
@@ -101,8 +119,12 @@ RejectedAuditDidNotAdvance ==
 OneAuditEntryPerCommand ==
   Cardinality({audit[i].command: i \in 1..Len(audit)}) = Len(audit)
 
-AuditAppendOnly == []([Len(audit') >= Len(audit)]_vars)
+AuditAppendOnly == []([
+  /\ Len(audit') >= Len(audit)
+  /\ \A i \in 1..Len(audit): audit'[i] = audit[i]
+]_vars)
 
 Spec == Init /\ [][Next]_vars
+AllStatesSpec == AnyStateInit /\ [][Next]_vars
 
 ====
