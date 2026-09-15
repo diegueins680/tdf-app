@@ -121,6 +121,111 @@ if psql_exec -c "INSERT INTO event_invitation_security(event_invitation_id,token
   exit 1
 fi
 
+# A completed protected task cannot acquire an incomplete prerequisite later.
+psql_exec -c "
+  BEGIN;
+  INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (110,10,'completed',1);
+  INSERT INTO event_operation_task_policy(activity_id,requires_accountability) VALUES (110,false);
+  COMMIT;
+" >/dev/null
+if psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (110,101);' >/dev/null 2>&1; then
+  echo "expected dependency added after completion to be rejected" >&2
+  exit 1
+fi
+
+# Time passing cannot keep expired accountability valid. Retirement is explicit,
+# attributed and transactional with replacement; expiry never invents an actor.
+psql_exec -c "
+  BEGIN;
+  INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (120,10,'planned',1);
+  INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id,valid_until)
+    VALUES (120,1,'accountable',1,clock_timestamp()+interval '5 seconds'),
+           (120,2,'responsible',1,clock_timestamp()+interval '5 seconds');
+  INSERT INTO event_operation_task_policy(activity_id) VALUES (120);
+  COMMIT;
+" >/dev/null
+psql_exec -qAt -c "SELECT pg_sleep(GREATEST(0,EXTRACT(EPOCH FROM
+  ((SELECT max(valid_until) FROM event_operation_raci_assignment WHERE activity_id=120) - clock_timestamp()))) + 0.1);" >/dev/null
+if psql_exec -c "UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=120;" >/dev/null 2>&1; then
+  echo "expected expired RACI coverage to reject completion" >&2
+  exit 1
+fi
+if psql_exec -c "SELECT event_operation_retire_expired_raci(120,NULL,'missing actor');" >/dev/null 2>&1; then
+  echo "expected unattributed retirement to be rejected" >&2
+  exit 1
+fi
+psql_exec -c "
+  BEGIN;
+  SELECT event_operation_retire_expired_raci(120,1,'Expired assignment replacement');
+  INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id)
+    VALUES (120,1,'accountable',1),(120,2,'responsible',1);
+  UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=120;
+  COMMIT;
+" >/dev/null
+test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_raci_assignment WHERE activity_id=120 AND revoked_by_party_id=1 AND revocation_reason='Expired assignment replacement' AND valid_until <= revoked_at;")" = 2
+test "$(psql_exec -qAt -c "SELECT event_operation_retire_expired_raci(120,1,'Do not revoke current assignments');")" = 0
+
+# Future intent grants no current responsibility and cannot be retired as expired.
+psql_exec -c "
+  BEGIN;
+  INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (125,10,'planned',1);
+  INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id,valid_from)
+    VALUES (125,1,'accountable',1,now()),(125,2,'responsible',1,now()+interval '1 day');
+  COMMIT;
+" >/dev/null
+if psql_exec -c 'INSERT INTO event_operation_task_policy(activity_id) VALUES (125);' >/dev/null 2>&1; then
+  echo 'expected future responsibility to fail current coverage' >&2
+  exit 1
+fi
+test "$(psql_exec -qAt -c "SELECT event_operation_retire_expired_raci(125,1,'Preserve future intent');")" = 0
+test "$(psql_exec -qAt -c "SELECT count(*) FROM pg_proc p, LATERAL aclexplode(p.proacl) acl WHERE p.oid='event_operation_retire_expired_raci(bigint,bigint,text)'::regprocedure AND acl.grantee=0 AND acl.privilege_type='EXECUTE';")" = 0
+
+# Two writers cannot each remove a different last Responsible. A separate
+# advisory gate holds writer one after its UPDATE; observe writer two waiting
+# on the event fence before releasing that gate. Only this private DB is used.
+psql_exec -c "
+  BEGIN;
+  INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (130,10,'planned',1);
+  INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id)
+    VALUES (130,1,'accountable',1),(130,2,'responsible',1),(130,3,'responsible',1);
+  INSERT INTO event_operation_task_policy(activity_id) VALUES (130);
+  COMMIT;
+" >/dev/null
+wait_for_state() {
+  expected_query="$1"
+  poll=0
+  until [ "$(psql_exec -qAt -c "$expected_query")" = 1 ]; do
+    poll=$((poll+1))
+    if [ "$poll" -ge 30 ]; then echo 'expected database synchronization state was not observed' >&2; exit 1; fi
+    sleep 1
+  done
+}
+for isolation in 'READ COMMITTED' 'REPEATABLE READ' 'SERIALIZABLE'; do
+psql_exec -c "UPDATE event_operation_raci_assignment SET revoked_at=NULL,revoked_by_party_id=NULL,revocation_reason=NULL WHERE activity_id=130 AND party_id=2;" >/dev/null
+psql_exec -c "SET application_name='tdf_raci_gate'; SELECT pg_advisory_lock(891231); SELECT pg_sleep(120);" >/dev/null 2>&1 &
+gate_pid=$!
+wait_for_state "SELECT count(*) FROM pg_stat_activity WHERE application_name='tdf_raci_gate' AND wait_event='PgSleep';"
+psql_exec -c "SET application_name='tdf_raci_first'; BEGIN ISOLATION LEVEL $isolation;
+  UPDATE event_operation_raci_assignment SET revoked_at=clock_timestamp(),revoked_by_party_id=1,revocation_reason='First writer' WHERE activity_id=130 AND party_id=2;
+  SELECT pg_advisory_xact_lock(891231); COMMIT;" >/dev/null 2>&1 &
+first_raci_pid=$!
+wait_for_state "SELECT count(*) FROM pg_stat_activity WHERE application_name='tdf_raci_first' AND wait_event_type='Lock';"
+psql_exec -c "SET application_name='tdf_raci_second'; BEGIN ISOLATION LEVEL $isolation;
+  UPDATE event_operation_raci_assignment SET revoked_at=clock_timestamp(),revoked_by_party_id=1,revocation_reason='Second writer' WHERE activity_id=130 AND party_id=3;
+  COMMIT;" >/dev/null 2>&1 &
+second_raci_pid=$!
+wait_for_state "SELECT count(*) FROM pg_stat_activity WHERE application_name='tdf_raci_second' AND wait_event_type='Lock';"
+psql_exec -qAt -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name='tdf_raci_gate';" >/dev/null
+wait "$gate_pid" || true
+wait "$first_raci_pid"
+if wait "$second_raci_pid"; then
+  echo 'expected the second Responsible removal to fail after the first commit' >&2
+  exit 1
+fi
+test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_raci_assignment WHERE activity_id=130 AND raci_role='responsible' AND revoked_at IS NULL;")" = 1
+  echo "Observed concurrent RACI removal passed at $isolation"
+done
+
 apply_sql "$rollback_migration"
 preserved_audit=$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_audit_event;')
 test "$preserved_audit" = "1"
@@ -133,4 +238,4 @@ if psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_a
   exit 1
 fi
 
-echo "Event operations foundation migration passed apply, idempotency, lifecycle mapping, ownership issue, timezone, RACI, sequential/concurrent DAG, completion override, invitation token, immutable audit, rollback, and reapply checks."
+echo "Event operations foundation migration passed apply, idempotency, lifecycle mapping, ownership issue, timezone, RACI, sequential/concurrent DAG, completion override/post-completion dependency, expiry/attributed replacement, observed concurrent RACI removal, invitation token, immutable audit, rollback, and reapply checks."

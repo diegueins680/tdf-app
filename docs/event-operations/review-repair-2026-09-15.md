@@ -40,3 +40,47 @@ These results do not establish an unbounded proof or qualify future APIs.
   visibility guard. Earlier incomplete-fixture and nonthreaded attempts were
   diagnosed and are not counted as successful verification.
 - The unchanged CI policy regression suite passed 12 tests.
+
+
+## Follow-up: archive authority and task commit boundary
+
+`RecordsManager` is now distinct from owner, event approver and finance approver.
+Both archival transitions require that actor, matching the existing SQL policy.
+The owner-archive mutant fails `AcceptedAuditIsAuthorized`; the final five-actor
+runs visited 9,941 draft-start states and 139,174 all-boundary states. All eight
+positive TLC configurations, three specific negative controls and nine Alloy
+commands completed with their expected results.
+
+Foundation SQL now incorporates the event-scoped write fence and deferred task
+checks from PR #339, commit `a6cd9d1892ddafda06eab73a4e71389e802a5f7a`, by
+continuous-improvement-loop[bot]. They also protect foundation-only installations:
+completed tasks cannot acquire blocked dependencies through a later relation write,
+and concurrent RACI writers serialize before checking the remaining assignments.
+The write fence makes stale Repeatable Read/Serializable writers abort instead of
+certifying counts from an old snapshot. Whole-command retry remains a caller duty.
+The originating PR retains its formal models, integration tests and other work;
+no replacement has been merged and that PR is not redundant or closed.
+
+RACI validation uses `[valid_from, valid_until)` at validation time. Expiry does not
+fabricate a revocation actor. An authorized SQL caller may invoke
+`event_operation_retire_expired_raci(activity, actor, reason)` and insert replacement
+assignments in the same transaction. Deferred checks require valid coverage at
+commit; the existing unique indexes remain authoritative. Old intervals, actors
+and reasons remain in the table. The SECURITY INVOKER function has PUBLIC execution
+revoked; a future authenticated API must still verify current event authority.
+This is an internal SQL primitive, not an exposed command or provider activation.
+
+Rollback removes the added enforcement triggers and retirement function while
+preserving fence revisions and RACI history. It does not erase the new metadata or
+promise deletion compatibility with legacy writers; coordinate rollback before any
+activation. The production manifest remains unchanged. PR #339's own migration
+must retain these validity checks when the dependent stack is reconciled, since an
+older CREATE OR REPLACE definition must not overwrite this fix.
+
+The expanded PostgreSQL 16 fixture passed application/reapplication, preserved-history
+rollback, post-completion dependency denial, actual timed expiry, attributed
+replacement, future-dated responsibility denial and PUBLIC permission denial.
+All three observed writer races passed under READ COMMITTED, REPEATABLE READ and
+SERIALIZABLE; the second transaction waited on a real lock before its failure.
+The gate connection is confined to the disposable test container and is terminated
+only to release that fixture's synchronization lock. No application DB is touched.

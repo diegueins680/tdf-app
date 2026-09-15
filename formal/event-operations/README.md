@@ -36,9 +36,10 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
-| `EventLifecycle.cfg` | 4 actors (distinct event/finance approvers), 14 states, 2 command IDs; draft start | PASS; 6,385 generated/distinct states, depth 3 |
-| `EventLifecycleBoundaries.cfg` | Same scope; starts separately at each of the 14 lifecycle states | PASS; 89,390 generated/distinct states, depth 3 |
+| `EventLifecycle.cfg` | 5 actors (distinct event/finance approvers and records manager), 14 states, 2 command IDs; draft start | PASS; 9,941 generated/distinct states, depth 3 |
+| `EventLifecycleBoundaries.cfg` | Same scope; starts separately at each of the 14 lifecycle states | PASS; 139,174 generated/distinct states, depth 3 |
 | `EventLifecycleUnsafeFinance.cfg` | Mutant allowing the event approver to settle finances | Expected `AcceptedAuditIsAuthorized` violation at settlement, depth 2 |
+| `EventLifecycleUnsafeArchive.cfg` | Mutant permitting the owner to archive without records-manager authority | Expected `AcceptedAuditIsAuthorized` violation at archival, depth 2 |
 | `EventLifecycleUnsafeAudit.cfg` | Mutant rewriting an earlier audit actor without shortening the sequence | Expected `AuditAppendOnly` action-property violation, depth 3 |
 | `ReservationRace.cfg` | 2 overlapping engagements, 1 exclusive resource, unauthorized/no-reason override | PASS; 7 generated, 5 distinct states, depth 3 |
 | `ReservationOverride.cfg` | Same race, owner-authorized non-empty override reason | PASS; 7 generated, 5 distinct states, depth 3 |
@@ -58,7 +59,7 @@ boundary configuration starts at every lifecycle state, so settlement authority 
 exercised without claiming a complete draft-to-archive trace. `RequiredAuthority`
 checks accepted records independently of the mutable admission guard. Append-only
 means every old record remains an unchanged prefix, not merely nondecreasing length.
-The runner requires the exact named failures from both negative controls.
+The runner requires the exact named failures from all three negative controls.
 
 ## Coverage
 

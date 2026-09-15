@@ -78,6 +78,7 @@ run_negative_tlc() {
   fi
 }
 run_negative_tlc EventLifecycleUnsafeFinance.cfg unsafe-finance 'Invariant AcceptedAuditIsAuthorized is violated'
+run_negative_tlc EventLifecycleUnsafeArchive.cfg unsafe-archive 'Invariant AcceptedAuditIsAuthorized is violated'
 run_negative_tlc EventLifecycleUnsafeAudit.cfg unsafe-audit 'Action property AuditAppendOnly is violated'
 run_tlc ReservationRace.tla ReservationRace.cfg reservation-race
 run_tlc ReservationRace.tla ReservationOverride.cfg reservation-override

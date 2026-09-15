@@ -1,8 +1,8 @@
 ---- MODULE EventLifecycle ----
 EXTENDS FiniteSets, Naturals, Sequences, TLC
 
-CONSTANTS Owner, Approver, FinanceApprover, Outsider, CommandIds,
-          UnsafeFinanceApproval, UnsafeAuditRewrite
+CONSTANTS Owner, Approver, FinanceApprover, RecordsManager, Outsider, CommandIds,
+          UnsafeFinanceApproval, UnsafeArchiveApproval, UnsafeAuditRewrite
 
 States == {
   "draft", "planning", "pending_approval", "approved", "published",
@@ -10,7 +10,7 @@ States == {
   "settled", "archived", "reprogrammed", "cancelled"
 }
 
-Actors == {Owner, Approver, FinanceApprover, Outsider}
+Actors == {Owner, Approver, FinanceApprover, RecordsManager, Outsider}
 PublicStates == {"published", "staffing", "ready", "in_progress", "completed"}
 
 Allowed(from, to) ==
@@ -32,13 +32,16 @@ Allowed(from, to) ==
 RequiredAuthority(actor, to) ==
   CASE to = "approved" -> actor = Approver
     [] to = "settled" -> actor = FinanceApprover
+    [] to = "archived" -> actor = RecordsManager
     [] OTHER -> actor = Owner
 
 Authorized(actor, from, to) ==
   /\ actor \in Actors
   /\ IF UnsafeFinanceApproval /\ to = "settled"
         THEN actor \in {Approver, FinanceApprover}
-        ELSE RequiredAuthority(actor, to)
+        ELSE IF UnsafeArchiveApproval /\ to = "archived"
+          THEN actor \in {Owner, RecordsManager}
+          ELSE RequiredAuthority(actor, to)
 
 ExpectedVisibility(state) == state \in PublicStates
 
