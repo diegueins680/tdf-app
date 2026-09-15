@@ -88,6 +88,13 @@ if [ "${1:-}" != '--foundation-only' ]; then
   apply "$up"
 fi
 sql -c "BEGIN;
+ INSERT INTO social_event(id) VALUES (20);
+ INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (200,20,'planned',1);
+ DELETE FROM event_logistics_activity WHERE id=200;
+ DELETE FROM social_event WHERE id=20;
+ COMMIT;" >/dev/null
+test "$(sql -qAtc 'SELECT count(*) FROM event_operation_task_write_fence WHERE event_id=20')" = 0
+sql -c "BEGIN;
  INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id)
  VALUES (100,1,'accountable',1),(100,2,'responsible',1);
  INSERT INTO event_operation_task_policy(activity_id) VALUES (100);
@@ -193,6 +200,9 @@ sql -c "BEGIN;
  UPDATE event_logistics_activity SET version=3 WHERE id=100;
  UPDATE event_logistics_activity SET status='planned',version=3 WHERE id=101;
  COMMIT;" >/dev/null
+reject 23514 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (100,104);'
+reject 23514 'UPDATE event_logistics_dependency SET depends_on_activity_id=104 WHERE activity_id=100 AND depends_on_activity_id=101;'
+sql -c 'UPDATE event_logistics_dependency SET depends_on_activity_id=101 WHERE activity_id=100 AND depends_on_activity_id=101;' >/dev/null
 reject 23514 'UPDATE event_logistics_activity SET version=4 WHERE id=100;'
 reject 55000 "UPDATE event_operation_task_override SET reason='changed' WHERE activity_id=100;"
 
