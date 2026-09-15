@@ -173,7 +173,7 @@ or a successful provider sandbox transaction. A secret-name-only GitHub recheck 
 still returned no `FLY_STAGING_*` entries.
 
 An approved final local `node scripts/inspect-payment-staging.mjs` run generated
-[this unchanged sanitized report](evidence/staging-access-2026-09-15T004740Z.json) at
+[this unchanged sanitized report](staging-access-report-2026-09-15T004740Z.json) at
 `2026-09-15T00:47:40.611Z` (exit 1). Both health endpoints again returned HTTP 200/OK, with
 API database OK. All six Fly metadata reads failed with `hosting_authentication_unavailable`;
 no local Koyeb credential was configured. Source was the same inspector code in `79f8366fd`;
