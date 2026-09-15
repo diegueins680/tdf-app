@@ -239,10 +239,10 @@ transitionPaymentIntent intent event actorType correlationId occurredAt
         Right lifecycle -> case transitionPayment lifecycle event of
           Left problem -> pure (Left problem)
           Right next -> do
-            rawExecute
+            updated <- rawSql
               "UPDATE commerce_payment_intent SET status = ?, authorized_minor = ?,\
               \ captured_minor = ?, refunded_minor = ?, updated_at = ?\
-              \ WHERE id = ?::uuid AND status = ?"
+              \ WHERE id = ?::uuid AND status = ? RETURNING id::text"
               [ PersistText (paymentStateText (paymentState next))
               , PersistInt64 (paymentAuthorizedMinor next)
               , PersistInt64 (paymentCapturedMinor next)
@@ -250,11 +250,15 @@ transitionPaymentIntent intent event actorType correlationId occurredAt
               , PersistUTCTime occurredAt
               , PersistText (paymentIntentReferenceId intent)
               , PersistText (paymentStateText (paymentState lifecycle))
-              ]
-            insertHistory intent (Just (paymentState lifecycle))
-              (paymentState next) (paymentEventText event) actorType
-              correlationId occurredAt
-            pure (Right next)
+              ] :: SqlPersistT IO [Single Text]
+            case updated of
+              [_] -> do
+                insertHistory intent (Just (paymentState lifecycle))
+                  (paymentState next) (paymentEventText event) actorType
+                  correlationId occurredAt
+                pure (Right next)
+              [] -> pure (Left "Payment intent changed concurrently")
+              _ -> pure (Left "Payment intent transition was ambiguous")
 
 loadLifecycleForUpdate
   :: PaymentIntentReference

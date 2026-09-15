@@ -172,7 +172,24 @@ describe('LoginPage Google signup consent flow', () => {
       expect(signupDialog?.querySelector(
         'input[aria-label="Acepto los términos y la política de privacidad"]',
       )).not.toBeNull();
+      const existingAccountButton = findButton('Ya tengo una cuenta');
+      expect(existingAccountButton).not.toBeNull();
       expect(googleLoginRequestMock).not.toHaveBeenCalled();
+
+      // Complete the real Dialog exit transition deterministically instead of
+      // racing its timer against waitFor's wall-clock deadline on a busy host.
+      jest.useFakeTimers();
+      try {
+        await act(async () => {
+          existingAccountButton?.click();
+        });
+        await act(async () => {
+          await jest.runOnlyPendingTimersAsync();
+        });
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+      } finally {
+        jest.useRealTimers();
+      }
     } finally {
       await cleanup();
     }

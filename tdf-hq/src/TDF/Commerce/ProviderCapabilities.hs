@@ -18,6 +18,7 @@ module TDF.Commerce.ProviderCapabilities
   , ProviderOutcomeCertainty(..)
   , providerCapabilities
   , routePayments
+  , requireCheckoutCompletion
   , safeToFallback
   , paymentMethodText
   , paymentMethodFromText
@@ -131,6 +132,23 @@ providerCapabilities :: PaymentProvider -> [PaymentCapability]
 providerCapabilities provider =
   maybe [] (nub . concatMap snd . ppMethodCapabilities) (providerProfile provider)
 
+-- Public availability must cover the complete implemented checkout, even when
+-- the caller requests no capabilities. Preserve additional caller restrictions.
+requireCheckoutCompletion :: PaymentRouteRequest -> PaymentRouteRequest
+requireCheckoutCompletion request = request
+  { prRequiredCapabilities = nub
+      (prRequiredCapabilities request <> [CapabilityOneTime] <> completion <> marketplace)
+  }
+  where
+    completion = case prMethod request of
+      MethodPayPalWallet -> [CapabilityCapture]
+      MethodCard -> [CapabilityServerVerification]
+      _ -> []
+    marketplace
+      | prFlow request == FlowMarketplace =
+          [CapabilityConnectedAccounts, CapabilitySplitSettlement, CapabilitySellerPayouts]
+      | otherwise = []
+
 routePayments
   :: [ProviderActivation]
   -> PaymentRouteRequest
@@ -153,6 +171,7 @@ routePayments activations request
             ]
       if activationReady activation
           && paEnvironment activation == prEnvironment request
+          && prMethod request `elem` paVerifiedMethods activation
           && prFlow request `elem` ppFlows profile
           && all (`elem` documentedCapabilities) (prRequiredCapabilities request)
           && all (`elem` verifiedCapabilities) (prRequiredCapabilities request)
@@ -348,7 +367,8 @@ providerProfile provider = case provider of
   ProviderBankTransfer -> Just ProviderProfile
     { ppProvider = provider
     , ppFlows = directFlows
-    , ppMethodCapabilities = [(MethodManualBankTransfer, [])]
+    , ppMethodCapabilities =
+        [(MethodManualBankTransfer, [CapabilityOneTime])]
     }
   ProviderStripe -> Nothing
   ProviderCash -> Nothing

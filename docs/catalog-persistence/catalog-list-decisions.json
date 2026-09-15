@@ -3,10 +3,10 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 947,
+    "preservedDecisions": 950,
     "reviewedByPolicy": 161,
     "removedStaleDecisions": 0,
-    "reviewBatch": "ci-recovery-2026-09-12"
+    "reviewBatch": "deterministic-policy-v3"
   },
   "decisions": [
     {
@@ -68,7 +68,7 @@
       "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "scripts/__tests__/event-preview.test.mjs",
         "line": 6,
@@ -150,7 +150,7 @@
       "justification": "Retry timing and jitter fields are bounded transport-policy mechanics; they are neither selectable business data nor an external-provider registry.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "scripts/artist-enrichment.mjs",
         "line": 248,
@@ -192,14 +192,14 @@
       "justification": "Decision-builder input, output, preservation, and review-batch fields are CLI execution mechanics; they are not selectable business data.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "scripts/build-catalog-decisions.mjs",
         "line": 27,
         "kind": "object-registry",
         "name": "options",
         "valueCount": 4,
-        "consumerCount": 158,
+        "consumerCount": 159,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -575,22 +575,22 @@
       "reviewed": true
     },
     {
-      "id": "cb53e40989f2a862d6b1",
+      "id": "3f29362597ae742d63c2",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger. Reviewed reconciled manifest: preserves all 102 main entries and their order and metadata, adds only the three payment migrations, and passes 65 manifest/CI tests without duplicate identifiers.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewMethod": "source-and-manifest-review",
+      "reviewBatch": "branch-audit-2026-09-15",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 102,
+        "valueCount": 105,
         "consumerCount": 33,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
@@ -906,7 +906,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/api/merchReputation.ts",
         "line": 3,
@@ -932,7 +932,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/api/merchReputation.ts",
         "line": 4,
@@ -966,6 +966,26 @@
       "priority": "P3-retain",
       "risk": "Changing the selector kind union could break API query serialization or client-side validation.",
       "justification": "Selector kinds are a closed transport and implementation union; Party records remain the governed source of selectable business entities.",
+      "reviewed": true
+    },
+    {
+      "id": "fe6139331f8b26266011",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "security_action, security_permission, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "2016307b7a312545db5c",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "security_action, security_permission, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true
     },
     {
@@ -1048,7 +1068,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
         "line": 119,
@@ -1107,7 +1127,7 @@
       "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
         "line": 539,
@@ -1259,7 +1279,7 @@
       "justification": "React Query key segments are client cache mechanics and do not enumerate business values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "line": 32,
@@ -1311,7 +1331,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/components/merch/MerchReviewForm.tsx",
         "line": 14,
@@ -2780,6 +2800,16 @@
       "reviewed": true
     },
     {
+      "id": "88079da339f818b82098",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
       "id": "362db8e04619b3b1f700",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
@@ -3179,7 +3209,7 @@
       "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
         "line": 27,
@@ -3341,7 +3371,7 @@
       "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
         "line": 21,
@@ -3822,7 +3852,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
         "line": 12,
@@ -3848,7 +3878,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/MerchOrderTrackingPage.tsx",
         "line": 55,
@@ -3872,14 +3902,14 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/MerchReputationModerationPage.tsx",
         "line": 137,
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 14,
-        "consumerCount": 142,
+        "consumerCount": 144,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -3894,7 +3924,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/MerchReputationPreferencesPage.tsx",
         "line": 26,
@@ -3922,7 +3952,7 @@
       "justification": "Seller tabs are local view-state and rendering branches; persisted permissions and merch records remain authoritative.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "line": 19,
@@ -3944,7 +3974,7 @@
       "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "line": 21,
@@ -3966,7 +3996,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "line": 140,
@@ -4188,7 +4218,7 @@
       "justification": "The object keys are strict typed wire-payload fields, not selectable business values or reference data.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "line": 803,
@@ -5260,10 +5290,10 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 7314,
+        "line": 7327,
         "kind": "openapi-enum",
         "name": "reportReason",
         "valueCount": 9,
@@ -5287,10 +5317,10 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 7325,
+        "line": 7338,
         "kind": "openapi-enum",
         "name": "moderationReasonCode",
         "valueCount": 10,
@@ -5314,10 +5344,10 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 7451,
+        "line": 7464,
         "kind": "openapi-enum",
         "name": "MerchProductCategory",
         "valueCount": 9,
@@ -5343,14 +5373,14 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 7454,
+        "line": 7467,
         "kind": "openapi-enum",
         "name": "MerchProductStatus",
         "valueCount": 7,
-        "consumerCount": 106,
+        "consumerCount": 107,
         "exactDuplicateIds": [
           "ab22a28a6c1f13d36e93"
         ],
@@ -5370,10 +5400,10 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 7457,
+        "line": 7470,
         "kind": "openapi-enum",
         "name": "MerchFulfillmentStatus",
         "valueCount": 9,
@@ -5396,10 +5426,10 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 7797,
+        "line": 7810,
         "kind": "openapi-enum",
         "name": "MerchIssueStatus",
         "valueCount": 7,
@@ -5424,14 +5454,14 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 7852,
+        "line": 7865,
         "kind": "openapi-enum",
         "name": "MerchRefundStatus",
         "valueCount": 6,
-        "consumerCount": 136,
+        "consumerCount": 138,
         "exactDuplicateIds": [
           "53eb977c438f2629bf40",
           "015ddf4475d1e02f496a"
@@ -5451,14 +5481,14 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 7939,
+        "line": 7952,
         "kind": "openapi-enum",
         "name": "MerchSettlementStatus",
         "valueCount": 6,
-        "consumerCount": 116,
+        "consumerCount": 118,
         "exactDuplicateIds": [
           "4f748f0a512f9deb694a",
           "7d45ba63a043428fa3f0"
@@ -5580,10 +5610,10 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 9686,
+        "line": 9871,
         "kind": "openapi-enum",
         "name": "EventRsvpStatus",
         "valueCount": 3,
@@ -5619,10 +5649,10 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 9984,
+        "line": 10169,
         "kind": "openapi-enum",
         "name": "OnboardingIntent",
         "valueCount": 6,
@@ -5653,14 +5683,14 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 9999,
+        "line": 10184,
         "kind": "openapi-enum",
         "name": "firstValue",
         "valueCount": 4,
-        "consumerCount": 33,
+        "consumerCount": 34,
         "exactDuplicateIds": [
           "69594af6193f077ea0a2"
         ],
@@ -5679,10 +5709,10 @@
       "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
-        "line": 10161,
+        "line": 10346,
         "kind": "openapi-enum",
         "name": "Role",
         "valueCount": 31,
@@ -8494,7 +8524,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-06_user_onboarding_progress.sql",
         "line": 19,
@@ -8528,7 +8558,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-06_user_onboarding_progress.sql",
         "line": 29,
@@ -8554,14 +8584,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 46,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 135,
+        "consumerCount": 137,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "b5cf352ce0b028fa7f58"
@@ -8578,7 +8608,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 47,
@@ -8602,7 +8632,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 85,
@@ -8624,7 +8654,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 92,
@@ -8648,7 +8678,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 139,
@@ -8675,7 +8705,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 163,
@@ -8697,7 +8727,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 204,
@@ -8726,14 +8756,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 205,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 106,
+        "consumerCount": 107,
         "exactDuplicateIds": [
           "df4db7e4f0142896d690"
         ],
@@ -8753,7 +8783,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 206,
@@ -8777,7 +8807,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 207,
@@ -8799,7 +8829,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 250,
@@ -8821,7 +8851,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 278,
@@ -8848,7 +8878,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 285,
@@ -8874,7 +8904,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 286,
@@ -8900,7 +8930,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 301,
@@ -8922,14 +8952,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 375,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 51,
+        "consumerCount": 52,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "7ef1fc8434bd594babcc",
@@ -8947,14 +8977,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 376,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 79,
+        "consumerCount": 81,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -8969,7 +8999,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 377,
@@ -8995,14 +9025,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 378,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 150,
+        "consumerCount": 152,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -9017,14 +9047,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 379,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 24,
+        "consumerCount": 25,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -9039,14 +9069,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 380,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 135,
+        "consumerCount": 137,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "29477a732e910fa947a8",
@@ -9064,7 +9094,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 430,
@@ -9088,7 +9118,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 432,
@@ -9110,7 +9140,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 448,
@@ -9132,14 +9162,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 466,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 55,
+        "consumerCount": 57,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -9154,7 +9184,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 489,
@@ -9176,7 +9206,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 490,
@@ -9198,7 +9228,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 491,
@@ -9226,7 +9256,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 495,
@@ -9252,14 +9282,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 542,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 116,
+        "consumerCount": 118,
         "exactDuplicateIds": [
           "29477a732e910fa947a8",
           "7d45ba63a043428fa3f0"
@@ -9280,14 +9310,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 543,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 107,
+        "consumerCount": 109,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "30a381d06cc0d1594f1c"
@@ -9304,7 +9334,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 606,
@@ -9331,7 +9361,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 621,
@@ -9353,7 +9383,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 623,
@@ -9375,7 +9405,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 643,
@@ -9397,7 +9427,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 644,
@@ -9419,7 +9449,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 645,
@@ -9453,14 +9483,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 647,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 61,
+        "consumerCount": 63,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fcc83a1bc147933d21b3"
@@ -9477,14 +9507,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 664,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 56,
+        "consumerCount": 57,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -9529,7 +9559,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
         "line": 26,
@@ -9551,7 +9581,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_event_rsvp_identity_privacy_feed.sql",
         "line": 33,
@@ -9573,7 +9603,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_event_rsvp_identity_privacy_feed.sql",
         "line": 120,
@@ -9602,7 +9632,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 270,
@@ -9624,7 +9654,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 304,
@@ -9646,7 +9676,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 311,
@@ -9668,7 +9698,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 386,
@@ -9690,14 +9720,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 390,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 92,
+        "consumerCount": 94,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "6cf3c47175b7c9af19d0",
@@ -9715,7 +9745,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 412,
@@ -9745,7 +9775,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 453,
@@ -9773,7 +9803,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 459,
@@ -9795,14 +9825,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 483,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 141,
+        "consumerCount": 143,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "76645902bce3902042f9",
@@ -9820,7 +9850,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 545,
@@ -9847,7 +9877,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 550,
@@ -9869,7 +9899,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 551,
@@ -9896,7 +9926,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 563,
@@ -9922,7 +9952,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 790,
@@ -9944,7 +9974,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 795,
@@ -9966,7 +9996,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 810,
@@ -9988,7 +10018,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 816,
@@ -10010,7 +10040,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 831,
@@ -10032,7 +10062,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 839,
@@ -10054,7 +10084,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1042,
@@ -10076,7 +10106,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1074,
@@ -10102,7 +10132,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1082,
@@ -10128,7 +10158,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1109,
@@ -10150,7 +10180,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1120,
@@ -10172,7 +10202,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1155,
@@ -10194,7 +10224,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1170,
@@ -10216,7 +10246,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1173,
@@ -10243,7 +10273,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1181,
@@ -10265,7 +10295,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1190,
@@ -10287,7 +10317,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1206,
@@ -10309,7 +10339,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1207,
@@ -10336,7 +10366,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1228,
@@ -10358,7 +10388,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1319,
@@ -10380,7 +10410,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1325,
@@ -10402,7 +10432,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1335,
@@ -10424,7 +10454,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1364,
@@ -10446,7 +10476,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 1384,
@@ -10468,14 +10498,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle_rollback.sql",
         "line": 72,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 82,
+        "consumerCount": 87,
         "exactDuplicateIds": [
           "16f710ef8ebe240ee82e"
         ],
@@ -10495,14 +10525,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle_rollback.sql",
         "line": 79,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 82,
+        "consumerCount": 87,
         "exactDuplicateIds": [
           "67ea93ac852e5fd17892"
         ],
@@ -10523,14 +10553,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 12,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 82,
+        "consumerCount": 87,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "f5f8a84bb3e6d74a2289",
@@ -10548,14 +10578,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 22,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 82,
+        "consumerCount": 87,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "a958d32adbe9458a74cc",
@@ -10573,14 +10603,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 31,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 82,
+        "consumerCount": 87,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "a958d32adbe9458a74cc"
@@ -10597,14 +10627,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 32,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 86,
+        "consumerCount": 88,
         "exactDuplicateIds": [
           "7c7e2e150ed59b1e3fc2",
           "d14b4c467d704c72df48"
@@ -10622,14 +10652,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 34,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 76,
+        "consumerCount": 80,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10644,14 +10674,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 35,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 130,
+        "consumerCount": 134,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10666,14 +10696,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 36,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 27,
+        "consumerCount": 36,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10688,14 +10718,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 60,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 2,
+        "consumerCount": 8,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10705,19 +10735,19 @@
       "classification": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
+      "priority": "P1-cross-platform",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 64,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 18,
-        "consumerCount": 9,
+        "consumerCount": 16,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10732,14 +10762,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 70,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 14,
+        "consumerCount": 22,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10754,14 +10784,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 78,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 2,
+        "consumerCount": 6,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10776,14 +10806,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 84,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 13,
-        "consumerCount": 58,
+        "consumerCount": 60,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10798,7 +10828,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 89,
@@ -10820,14 +10850,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 111,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 52,
+        "consumerCount": 54,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10842,14 +10872,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 124,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 55,
+        "consumerCount": 57,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10864,14 +10894,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 145,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 44,
+        "consumerCount": 46,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10886,14 +10916,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 160,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 36,
+        "consumerCount": 38,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10908,14 +10938,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 176,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 74,
+        "consumerCount": 75,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10930,14 +10960,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 191,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 11,
-        "consumerCount": 2,
+        "consumerCount": 4,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10952,14 +10982,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 197,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 7,
+        "consumerCount": 10,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10974,14 +11004,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 207,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 59,
+        "consumerCount": 62,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -10996,14 +11026,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 210,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 74,
+        "consumerCount": 76,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11018,14 +11048,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 245,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 27,
+        "consumerCount": 28,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11040,7 +11070,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 284,
@@ -11062,14 +11092,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 299,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 125,
+        "consumerCount": 127,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11084,14 +11114,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 313,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 121,
+        "consumerCount": 123,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11106,14 +11136,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 344,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 68,
+        "consumerCount": 71,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11128,14 +11158,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 347,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 2,
+        "consumerCount": 3,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11150,7 +11180,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 348,
@@ -11172,7 +11202,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 355,
@@ -11194,14 +11224,14 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 361,
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 63,
+        "consumerCount": 66,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11216,7 +11246,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 365,
@@ -11240,7 +11270,7 @@
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-10_contextual_reputation_pilot_cohort.sql",
         "line": 12,
@@ -11472,7 +11502,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/Commerce/Merch.hs",
         "line": 131,
@@ -11498,7 +11528,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/Commerce/Merch.hs",
         "line": 134,
@@ -11522,7 +11552,7 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/Commerce/Merch.hs",
         "line": 174,
@@ -11551,14 +11581,14 @@
       "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "line": 34,
         "kind": "haskell-sum-type",
         "name": "CaptureMethod",
         "valueCount": 2,
-        "consumerCount": 0,
+        "consumerCount": 1,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11573,7 +11603,7 @@
       "justification": "The closed HTTP method type is an exhaustive transport dispatch checked by the compiler, not configurable provider or payment reference data.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
         "line": 63,
@@ -11665,14 +11695,14 @@
       "justification": "The list is a strict wire-payload field allowlist used to reject unknown JSON keys, not domain reference data.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "line": 552,
         "kind": "haskell-list",
         "name": "eventUpdateAllowedKeys",
         "valueCount": 26,
-        "consumerCount": 17,
+        "consumerCount": 18,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12037,10 +12067,10 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/Server/Merch.hs",
-        "line": 1189,
+        "line": 1186,
         "kind": "haskell-list",
         "name": "issueStatuses",
         "valueCount": 7,
@@ -12065,14 +12095,14 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/Server/Merch.hs",
-        "line": 1229,
+        "line": 1226,
         "kind": "haskell-list",
         "name": "refundStatuses",
         "valueCount": 6,
-        "consumerCount": 135,
+        "consumerCount": 137,
         "exactDuplicateIds": [
           "6e49e1dd9002b9a384f9",
           "53eb977c438f2629bf40"
@@ -12092,14 +12122,14 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/Server/Merch.hs",
-        "line": 1713,
+        "line": 1710,
         "kind": "haskell-list",
         "name": "settlementStatuses",
         "valueCount": 6,
-        "consumerCount": 115,
+        "consumerCount": 117,
         "exactDuplicateIds": [
           "29477a732e910fa947a8",
           "4f748f0a512f9deb694a"
@@ -12331,7 +12361,7 @@
       "justification": "Persisted workflow-state capability rows own assignments. Code recognizes only the two executable behavior boundaries, startup rejects unknown enabled capabilities, and missing rows deny access by default.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq/src/TDF/SocialEventLifecycle.hs",
         "line": 45,
@@ -12613,14 +12643,14 @@
       "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-mobile/src/api/events.ts",
         "line": 432,
         "kind": "object-registry",
         "name": "Events",
         "valueCount": 29,
-        "consumerCount": 151,
+        "consumerCount": 152,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12735,7 +12765,7 @@
       "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "line": 55,
@@ -13237,14 +13267,14 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-mobile/src/lib/onboardingIntent.ts",
         "line": 118,
         "kind": "switch-cases",
         "name": "intent",
         "valueCount": 6,
-        "consumerCount": 243,
+        "consumerCount": 250,
         "exactDuplicateIds": [
           "dc2478eb86deaac6aed4",
           "9ebf2e096eeddbecfa52",

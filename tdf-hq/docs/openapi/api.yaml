@@ -5426,6 +5426,19 @@ paths:
         '404': { description: Order or provider binding not found }
         '501': { description: Provider reconciliation capability is unavailable }
         '502': { description: Provider status could not be read }
+  /admin/commerce/overview:
+    get:
+      tags: [Admin, Commerce operations]
+      summary: Read the redacted canonical payment operations overview
+      description: Strict-admin view of provider activation gates and aggregate financial states. Merchant account references, credentials, secrets, and raw provider payloads are never returned.
+      operationId: adminGetCommercePaymentOverview
+      responses:
+        '200':
+          description: Redacted provider readiness and canonical financial aggregates
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommercePaymentOverview' }
+        '403': { description: Strict Admin role required }
   /admin/commerce/provider-events:
     get:
       tags: [Admin, Commerce operations]
@@ -8899,13 +8912,185 @@ components:
         ssrecCurrency: { type: string, minLength: 3, maxLength: 3 }
         ssrecMatched: { type: boolean }
         ssrecCheckedAt: { type: string, format: date-time }
+    CommerceProviderCapability:
+      type: object
+      additionalProperties: false
+      required: [cpcPaymentMethod, cpcCapability, cpcVerificationStatus, cpcVerifiedAt]
+      properties:
+        cpcPaymentMethod: { type: string }
+        cpcCapability: { type: string }
+        cpcVerificationStatus: { type: string, enum: [documented, contract_required, sandbox_verified, production_verified, disabled] }
+        cpcVerifiedAt: { type: string, format: date-time, nullable: true }
+    CommerceProviderAccount:
+      type: object
+      additionalProperties: false
+      required: [cpaProvider, cpaEnvironment, cpaStatus, cpaContractStatus, cpaCredentialStatus, cpaSettlementCurrency, cpaEnabled, cpaFeatureEnabled, cpaVerifiedAt, cpaDisabledReason, cpaCapabilities]
+      properties:
+        cpaProvider: { type: string, enum: [datafast, paypal, placetopay, payphone, bank_transfer] }
+        cpaEnvironment: { type: string, enum: [sandbox, production] }
+        cpaStatus: { type: string, enum: [disabled, testing, ready, suspended, blocked] }
+        cpaContractStatus: { type: string, enum: [unverified, pending, approved, blocked] }
+        cpaCredentialStatus: { type: string, enum: [absent, configured, validated, invalid] }
+        cpaSettlementCurrency: { type: string, minLength: 3, maxLength: 3 }
+        cpaEnabled: { type: boolean }
+        cpaFeatureEnabled: { type: boolean }
+        cpaVerifiedAt: { type: string, format: date-time, nullable: true }
+        cpaDisabledReason: { type: string, nullable: true }
+        cpaCapabilities:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceProviderCapability' }
+    CommercePaymentIntentSummary:
+      type: object
+      additionalProperties: false
+      required: [cpiStatus, cpiCurrency, cpiCount, cpiAmountMinor, cpiAuthorizedMinor, cpiCapturedMinor, cpiRefundedMinor]
+      properties:
+        cpiStatus: { type: string }
+        cpiCurrency: { type: string, minLength: 3, maxLength: 3 }
+        cpiCount: { type: integer, format: int64, minimum: 0 }
+        cpiAmountMinor: { type: integer, format: int64, minimum: 0 }
+        cpiAuthorizedMinor: { type: integer, format: int64, minimum: 0 }
+        cpiCapturedMinor: { type: integer, format: int64, minimum: 0 }
+        cpiRefundedMinor: { type: integer, format: int64, minimum: 0 }
+    CommerceAmountComponentSummary:
+      type: object
+      additionalProperties: false
+      required: [cacComponentType, cacSource, cacCurrency, cacCount, cacAmountMinor]
+      properties:
+        cacComponentType: { type: string, enum: [subtotal, discount, tax, customer_fee, provider_fee, platform_commission, seller_payable, withholding, refund, chargeback, fx_adjustment] }
+        cacSource: { type: string, enum: [quote, provider_estimate, provider_actual, tax_document, manual_adjustment] }
+        cacCurrency: { type: string, minLength: 3, maxLength: 3 }
+        cacCount: { type: integer, format: int64, minimum: 0 }
+        cacAmountMinor: { type: integer, format: int64 }
+    CommerceCommissionSummary:
+      type: object
+      additionalProperties: false
+      required: [ccmProvider, ccmEnvironment, ccmCurrency, ccmCount, ccmBasisAmountMinor, ccmCommissionMinor, ccmProviderFeeMinor, ccmTaxMinor, ccmSellerNetMinor]
+      properties:
+        ccmProvider: { type: string }
+        ccmEnvironment: { type: string, enum: [sandbox, production] }
+        ccmCurrency: { type: string, minLength: 3, maxLength: 3 }
+        ccmCount: { type: integer, format: int64, minimum: 0 }
+        ccmBasisAmountMinor: { type: integer, format: int64, minimum: 0 }
+        ccmCommissionMinor: { type: integer, format: int64, minimum: 0 }
+        ccmProviderFeeMinor: { type: integer, format: int64, minimum: 0 }
+        ccmTaxMinor: { type: integer, format: int64, minimum: 0 }
+        ccmSellerNetMinor: { type: integer, format: int64, minimum: 0 }
+    CommerceRefundSummary:
+      type: object
+      additionalProperties: false
+      required: [crfProvider, crfEnvironment, crfStatus, crfCurrency, crfCount, crfAmountMinor]
+      properties:
+        crfProvider: { type: string }
+        crfEnvironment: { type: string, enum: [sandbox, production] }
+        crfStatus: { type: string, enum: [requested, approved, processing, succeeded, failed, cancelled] }
+        crfCurrency: { type: string, minLength: 3, maxLength: 3 }
+        crfCount: { type: integer, format: int64, minimum: 0 }
+        crfAmountMinor: { type: integer, format: int64, minimum: 0 }
+    CommerceDisputeSummary:
+      type: object
+      additionalProperties: false
+      required: [cdsProvider, cdsEnvironment, cdsKind, cdsStatus, cdsCurrency, cdsCount, cdsAmountMinor]
+      properties:
+        cdsProvider: { type: string }
+        cdsEnvironment: { type: string, enum: [sandbox, production] }
+        cdsKind: { type: string, enum: [inquiry, dispute, chargeback] }
+        cdsStatus: { type: string }
+        cdsCurrency: { type: string, minLength: 3, maxLength: 3 }
+        cdsCount: { type: integer, format: int64, minimum: 0 }
+        cdsAmountMinor: { type: integer, format: int64, minimum: 0 }
+    CommerceReconciliationSummary:
+      type: object
+      additionalProperties: false
+      required: [crsProvider, crsEnvironment, crsStatus, crsCurrency, crsCount, crsExpectedMinor, crsActualMinor]
+      properties:
+        crsProvider: { type: string }
+        crsEnvironment: { type: string }
+        crsStatus: { type: string, enum: [open, assigned, resolved, ignored] }
+        crsCurrency: { type: string, nullable: true }
+        crsCount: { type: integer, format: int64, minimum: 0 }
+        crsExpectedMinor: { type: integer, format: int64 }
+        crsActualMinor: { type: integer, format: int64 }
+    CommerceSettlementSummary:
+      type: object
+      additionalProperties: false
+      required: [cssProvider, cssEnvironment, cssStatus, cssCurrency, cssCount, cssGrossMinor, cssFeeMinor, cssWithholdingMinor, cssRefundMinor, cssChargebackMinor, cssNetMinor]
+      properties:
+        cssProvider: { type: string }
+        cssEnvironment: { type: string }
+        cssStatus: { type: string }
+        cssCurrency: { type: string }
+        cssCount: { type: integer, format: int64, minimum: 0 }
+        cssGrossMinor: { type: integer, format: int64, minimum: 0 }
+        cssFeeMinor: { type: integer, format: int64, minimum: 0 }
+        cssWithholdingMinor: { type: integer, format: int64, minimum: 0 }
+        cssRefundMinor: { type: integer, format: int64, minimum: 0 }
+        cssChargebackMinor: { type: integer, format: int64, minimum: 0 }
+        cssNetMinor: { type: integer, format: int64 }
+    CommerceSellerBalanceSummary:
+      type: object
+      additionalProperties: false
+      required: [csbProvider, csbEnvironment, csbAvailability, csbCurrency, csbEntryCount, csbNetAmountMinor]
+      properties:
+        csbProvider: { type: string }
+        csbEnvironment: { type: string }
+        csbAvailability: { type: string, enum: [available, pending] }
+        csbCurrency: { type: string }
+        csbEntryCount: { type: integer, format: int64, minimum: 0 }
+        csbNetAmountMinor: { type: integer, format: int64 }
+    CommercePayoutSummary:
+      type: object
+      additionalProperties: false
+      required: [cpsProvider, cpsEnvironment, cpsStatus, cpsCurrency, cpsCount, cpsAmountMinor]
+      properties:
+        cpsProvider: { type: string }
+        cpsEnvironment: { type: string }
+        cpsStatus: { type: string }
+        cpsCurrency: { type: string }
+        cpsCount: { type: integer, format: int64, minimum: 0 }
+        cpsAmountMinor: { type: integer, format: int64, minimum: 0 }
+    CommercePaymentOverview:
+      type: object
+      additionalProperties: false
+      required: [cpoGeneratedAt, cpoProviderAccounts, cpoPaymentIntents, cpoAmountComponents, cpoCommissions, cpoRefunds, cpoDisputes, cpoReconciliationExceptions, cpoSettlements, cpoSellerBalances, cpoPayouts]
+      properties:
+        cpoGeneratedAt: { type: string, format: date-time }
+        cpoProviderAccounts:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceProviderAccount' }
+        cpoPaymentIntents:
+          type: array
+          items: { $ref: '#/components/schemas/CommercePaymentIntentSummary' }
+        cpoAmountComponents:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceAmountComponentSummary' }
+        cpoCommissions:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceCommissionSummary' }
+        cpoRefunds:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceRefundSummary' }
+        cpoDisputes:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceDisputeSummary' }
+        cpoReconciliationExceptions:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceReconciliationSummary' }
+        cpoSettlements:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceSettlementSummary' }
+        cpoSellerBalances:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceSellerBalanceSummary' }
+        cpoPayouts:
+          type: array
+          items: { $ref: '#/components/schemas/CommercePayoutSummary' }
     CommerceProviderEvent:
       type: object
       additionalProperties: false
       required: [cpeId, cpeProvider, cpeEnvironment, cpeProviderEventId, cpeEventType, cpeProviderResourceId, cpeStatus, cpeAttemptCount, cpeCheckoutId, cpePaymentAttemptId, cpeRefundId, cpeReceivedAt, cpeProviderCreatedAt, cpeProcessingStartedAt, cpeLastAttemptAt, cpeNextAttemptAt, cpeProcessedAt, cpeErrorSummary]
       properties:
         cpeId: { type: string, format: uuid }
-        cpeProvider: { type: string, enum: [paypal, datafast, stripe, bank_transfer, cash, pos, cardano] }
+        cpeProvider: { type: string, enum: [paypal, datafast, placetopay, payphone, stripe, bank_transfer, cash, pos, cardano] }
         cpeEnvironment: { type: string, enum: [sandbox, production] }
         cpeProviderEventId: { type: string }
         cpeEventType: { type: string }
