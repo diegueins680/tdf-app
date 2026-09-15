@@ -56,6 +56,7 @@ CREATE OR REPLACE FUNCTION event_operation_validate_task_event(target_event_id B
 RETURNS void LANGUAGE plpgsql AS $$
 DECLARE
   invalid_activity_id BIGINT;
+  checked_at TIMESTAMPTZ := clock_timestamp();
 BEGIN
   SELECT activity.id INTO invalid_activity_id
   FROM event_logistics_activity activity
@@ -64,10 +65,14 @@ BEGIN
     AND (
       (SELECT count(*) FROM event_operation_raci_assignment assignment
        WHERE assignment.activity_id = activity.id AND assignment.revoked_at IS NULL
+         AND assignment.valid_from <= checked_at
+         AND (assignment.valid_until IS NULL OR checked_at < assignment.valid_until)
          AND assignment.raci_role = 'accountable') <> 1
       OR NOT EXISTS (
         SELECT 1 FROM event_operation_raci_assignment assignment
         WHERE assignment.activity_id = activity.id AND assignment.revoked_at IS NULL
+         AND assignment.valid_from <= checked_at
+         AND (assignment.valid_until IS NULL OR checked_at < assignment.valid_until)
           AND assignment.raci_role = 'responsible'
       )
     ) LIMIT 1;

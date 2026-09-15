@@ -144,6 +144,32 @@ for isolation in 'READ COMMITTED' 'REPEATABLE READ' 'SERIALIZABLE'; do
   test "$(sql -qAtc "SELECT count(*) FROM event_operation_raci_assignment WHERE activity_id=$task AND raci_role='responsible' AND revoked_at IS NULL")" = 1
 done
 
+# Applying this successor must not restore expired or future RACI authority.
+sql -c "BEGIN;
+ INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (250,10,'planned',1);
+ INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id,valid_until)
+ VALUES (250,1,'accountable',1,clock_timestamp()+interval '5 seconds'),
+        (250,2,'responsible',1,clock_timestamp()+interval '5 seconds');
+ INSERT INTO event_operation_task_policy(activity_id) VALUES (250);
+ COMMIT;" >/dev/null
+sql -qAtc "SELECT pg_sleep(GREATEST(0,EXTRACT(EPOCH FROM
+ ((SELECT max(valid_until) FROM event_operation_raci_assignment WHERE activity_id=250)-clock_timestamp())))+0.1);" >/dev/null
+reject 23514 "UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=250;"
+sql -c "BEGIN;
+ UPDATE event_operation_raci_assignment SET revoked_at=clock_timestamp(),revoked_by_party_id=1,
+   revocation_reason='Explicit expired replacement' WHERE activity_id=250 AND revoked_at IS NULL;
+ INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id)
+ VALUES (250,1,'accountable',1),(250,2,'responsible',1);
+ UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=250;
+ COMMIT;" >/dev/null
+test "$(sql -qAtc "SELECT count(*) FROM event_operation_raci_assignment WHERE activity_id=250 AND valid_until <= revoked_at AND revoked_by_party_id=1;")" = 2
+reject 23514 "BEGIN;
+ INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (251,10,'planned',1);
+ INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id,valid_from)
+ VALUES (251,1,'accountable',1,now()),(251,2,'responsible',1,now()+interval '1 day');
+ INSERT INTO event_operation_task_policy(activity_id) VALUES (251);
+ COMMIT;"
+
 # Race the status writer against the relation writer, in both orders. The loser must
 # reject, not commit a completed task with a pending prerequisite.
 task=299
