@@ -180,3 +180,12 @@ with existing transactional tracking and reuses the old canonical projector. Old
 UI behavior and production activation remain unchanged. See [the contract](task-revisioned-read-contract.md)
 and [PR 22 evidence](pr-22-task-revisioned-read.md). Authenticated task/RACI command receipts,
 immutable mutation audit, editor conflict handling and mobile adoption remain separate work.
+
+The twenty-third branch, `feat/event-raci-reassignment-command`, adds a private planning-stage
+single-pair RACI reassignment on the canonical task/RACI tables. Current scoped authorization,
+aggregate revision, task-scoped keys in the existing receipt ledger and immutable audit compose
+atomically. [The contract](raci-reassignment-contract.md) precedes feature SQL; see
+[PR 23 evidence](pr-23-raci-reassignment-command.md). The next boundary is an authenticated,
+strictly typed HTTP command with transaction-local session revalidation, followed by explicit
+editor conflicts/consent. No public command, notification, native mobile or production activation
+is included in this database increment.

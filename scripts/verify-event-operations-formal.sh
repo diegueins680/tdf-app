@@ -94,6 +94,13 @@ expect_counterexample TaskRevisionEarly.cfg NoStaleCommit task-revision-early Ta
 run_tlc TaskRevisionRead.tla TaskRevisionRead.cfg task-revision-read
 expect_counterexample TaskRevisionReadMixed.cfg CoherentRevisionRead task-revision-read-mixed TaskRevisionRead.tla
 expect_counterexample TaskRevisionReadEarly.cfg NoExpiredDisclosure task-revision-read-early TaskRevisionRead.tla
+run_tlc RaciReassignment.tla RaciReassignment.cfg raci-reassignment
+expect_counterexample RaciReassignmentEarly.cfg CurrentAuthority raci-reassignment-early RaciReassignment.tla
+expect_counterexample RaciReassignmentVersion.cfg NoStaleReassignment raci-reassignment-version RaciReassignment.tla
+expect_counterexample RaciReassignmentReplay.cfg ExactRetry raci-reassignment-replay RaciReassignment.tla
+expect_counterexample RaciReassignmentScope.cfg TaskKeyIsolation raci-reassignment-scope RaciReassignment.tla
+expect_counterexample RaciReassignmentSplit.cfg NoOrphanResponsibilities raci-reassignment-split RaciReassignment.tla
+expect_counterexample RaciReassignmentAudit.cfg AuditCoupled raci-reassignment-audit RaciReassignment.tla
 run_tlc ReceiptReplay.tla ReceiptReplay.cfg receipt-replay
 expect_counterexample ReceiptReplayBypass.cfg NoUnauthorizedDisclosure replay-bypass ReceiptReplay.tla
 expect_counterexample ReceiptReplayStaleClock.cfg NoUnauthorizedDisclosure replay-clock ReceiptReplay.tla
