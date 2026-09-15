@@ -26,6 +26,7 @@
 - [Session transaction fence contract](session-fence-contract.md)
 - [Draft PR 09](pr-09-session-fence.md)
 - [Draft PR 10: complete-schema rehearsal and baseline blockers](pr-10-schema-rehearsal.md)
+- [Draft PR 11: canonical schema migration dependencies](pr-11-schema-dependencies.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)

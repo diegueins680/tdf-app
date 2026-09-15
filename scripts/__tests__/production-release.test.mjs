@@ -133,6 +133,8 @@ test('production migration manifest uses immutable full commit SHAs', () => {
 
   assert.equal(manifest.schemaVersion, 1);
   assert.ok(Array.isArray(manifest.migrations));
+  assert.equal(new Set(manifest.migrations.map(({ id }) => id)).size,
+    manifest.migrations.length, 'migration IDs must be unique');
   for (const migration of manifest.migrations) {
     assert.equal(normalizeFullSha(migration.introducedBy), migration.introducedBy);
   }
@@ -149,6 +151,35 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   assert.ok(resumeIndex >= 0, 'resume migration must be registered');
   assert.equal(writerResumeIndex, resumeIndex + 1, 'writer resume must follow locale recovery');
   assert.equal(backfillIndex, writerResumeIndex + 1, 'writer resume must run immediately before backfill');
+});
+
+test('event schema prerequisites are registered once in dependency order', () => {
+  const { migrations } = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url), 'utf8',
+  ));
+  const prerequisites = [
+    '2026-09-06_user_onboarding_progress',
+    '2026-09-07_artist_merch_storefronts',
+    '2026-09-09_canonical_payment_lifecycle',
+    '2026-09-10_payment_attempt_intent_binding',
+  ];
+  for (const id of prerequisites) {
+    const entries = migrations.filter((entry) => entry.id === id);
+    assert.equal(entries.length, 1, `${id} must be registered exactly once`);
+    assert.equal(entries[0].path, `tdf-hq/sql/${id}.sql`);
+  }
+  for (const [prerequisite, consumer] of [
+    ['2026-08-13_unified_checkout_core', '2026-09-07_artist_merch_storefronts'],
+    ['2026-08-14_checkout_event_refund_runtime', '2026-09-07_artist_merch_storefronts'],
+    ['2026-08-14_music_directory_core', '2026-09-07_artist_merch_storefronts'],
+    ['2026-09-07_artist_merch_storefronts', '2026-09-08_merch_reputation'],
+    ['2026-08-14_checkout_event_refund_runtime', '2026-09-09_canonical_payment_lifecycle'],
+    ['2026-09-09_canonical_payment_lifecycle', '2026-09-10_payment_attempt_intent_binding'],
+  ]) {
+    const before = migrations.findIndex(({ id }) => id === prerequisite);
+    const after = migrations.findIndex(({ id }) => id === consumer);
+    assert.ok(before >= 0 && after > before, `${prerequisite} must precede ${consumer}`);
+  }
 });
 
 test('suppressed-event privacy migration is anchored to its released squash commit', () => {
