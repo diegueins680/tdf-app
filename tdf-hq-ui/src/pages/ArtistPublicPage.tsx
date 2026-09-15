@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
@@ -22,10 +23,10 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import GroupsIcon from '@mui/icons-material/Groups';
 import LaunchIcon from '@mui/icons-material/Launch';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Fans } from '../api/fans';
 import type { ArtistReleaseDTO } from '../api/types';
-import { useSession } from '../session/SessionContext';
+import { getActiveSession, useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { parseArtistJson, parseArtistTextItems } from '../utils/artistProfileContent';
 import ArtistFansList from '../components/ArtistFansList';
@@ -37,6 +38,43 @@ import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
 
 interface ReleaseCardProps {
   release: ArtistReleaseDTO;
+}
+
+const safeArtistId = (value: number | null): value is number =>
+  value !== null && Number.isSafeInteger(value) && value > 0;
+
+export function isArtistFollowResume(search: string, artistId: number | null): boolean {
+  if (!safeArtistId(artistId)) return false;
+  const params = new URLSearchParams(search);
+  return params.getAll('resume').length === 1 && params.get('resume') === 'follow'
+    && params.getAll('artistId').length === 1 && params.get('artistId') === String(artistId);
+}
+
+export function buildArtistFollowAuthPath(profileLink: string | null, artistId: number | null): string {
+  let redirect = '/fans';
+  if (profileLink && safeArtistId(artistId) && /^\/a\/[^/?#\\]+$/.test(profileLink)) {
+    try {
+      const segment = decodeURIComponent(profileLink.slice(3));
+      const safeSegment = segment !== '.' && segment !== '..' && segment.length > 0
+        && !Array.from(segment).some((char) => '/\\?#%'.includes(char) || char.charCodeAt(0) <= 32 || char.charCodeAt(0) === 127);
+      if (safeSegment && profileLink.length <= 400) {
+        redirect = `${profileLink}?${new URLSearchParams({ resume: 'follow', artistId: String(artistId) }).toString()}`;
+      }
+    } catch {
+      // Malformed route metadata must not become a login return target.
+    }
+  }
+  return `/login?${new URLSearchParams({ signup: '1', intent: 'follow_artists', redirect }).toString()}`;
+}
+
+interface FollowCommand {
+  artistId: number;
+  viewerId: number;
+  segment: string;
+  wasFollowing: boolean;
+  resume: boolean;
+  isCurrent: () => boolean;
+  ownsProfile: () => boolean;
 }
 
 type ArtistPublicPageDisplayContract = Readonly<{
@@ -143,10 +181,19 @@ function ReleaseCard({ release }: ReleaseCardProps) {
 
 export default function ArtistPublicPage() {
   const { slugOrId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const qc = useQueryClient();
-  const { session } = useSession();
+  const { session, loading: sessionLoading } = useSession();
   const viewerId = session?.partyId ?? null;
-  const hasToken = Boolean(session);
+  const hasToken = Boolean(session && safeArtistId(viewerId) && !sessionLoading);
+  const mountedRef = useRef(true);
+  const pendingRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const segment = (slugOrId ?? '').trim();
 
@@ -158,6 +205,20 @@ export default function ArtistPublicPage() {
   });
 
   const artistId = artistQuery.data?.apArtistId ?? null;
+  const viewRef = useRef({ session, artistId, pathname: location.pathname, key: location.key, generation: 0 });
+  const previousView = viewRef.current;
+  const generation = previousView.generation + Number(previousView.session !== session
+    || previousView.artistId !== artistId || previousView.pathname !== location.pathname);
+  // A -> B -> A must not revive a receipt from the first profile/session lifetime.
+  viewRef.current = { session, artistId, pathname: location.pathname, key: location.key, generation };
+  const resumeFollow = hasToken && isArtistFollowResume(location.search, artistId);
+  const clearResume = () => {
+    const params = new URLSearchParams(location.search);
+    params.delete('resume');
+    params.delete('artistId');
+    const search = params.toString();
+    void navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true });
+  };
 
   const releasesQuery = useQuery({
     queryKey: ['public-artist-releases', artistId],
@@ -170,6 +231,7 @@ export default function ArtistPublicPage() {
     queryKey: ['fan-follows', viewerId],
     queryFn: Fans.listFollows,
     enabled: Boolean(viewerId && hasToken),
+    retry: false,
   });
 
   const isFollowing = useMemo(() => {
@@ -178,21 +240,53 @@ export default function ArtistPublicPage() {
   }, [artistId, followsQuery.data]);
 
   const followMutation = useMutation({
-    mutationFn: async () => {
-      if (!artistId) return;
-      if (isFollowing) {
-        await Fans.unfollow(artistId);
+    mutationFn: async (command: FollowCommand) => {
+      if (!command.isCurrent()) throw new Error('Follow context changed');
+      if (command.wasFollowing) {
+        await Fans.unfollow(command.artistId);
       } else {
-        await Fans.follow(artistId);
+        await Fans.follow(command.artistId);
       }
     },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
+    onSuccess: (_result, command) => {
+      if (!command.isCurrent()) return;
+      void qc.invalidateQueries({ queryKey: ['fan-follows', command.viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      void qc.invalidateQueries({ queryKey: ['public-artist', segment] });
-      if (!isFollowing) captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      void qc.invalidateQueries({ queryKey: ['public-artist', command.segment] });
+      if (!command.wasFollowing) {
+        void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
+          .catch(() => undefined);
+      }
+      if (command.resume && !command.wasFollowing) clearResume();
     },
+    onSettled: () => { pendingRef.current = false; },
   });
+
+  const toggleFollow = () => {
+    if (pendingRef.current || !hasToken || !session || getActiveSession() !== session
+      || !safeArtistId(artistId) || !safeArtistId(viewerId)
+      || !followsQuery.isSuccess || followsQuery.isFetching) return;
+    const pathname = location.pathname;
+    const key = location.key;
+    const ownsProfile = () => mountedRef.current && getActiveSession() === session
+      && viewRef.current.session === session && viewRef.current.artistId === artistId
+      && viewRef.current.pathname === pathname && viewRef.current.generation === generation;
+    pendingRef.current = true;
+    followMutation.mutate({
+      artistId, viewerId, segment, wasFollowing: isFollowing, resume: resumeFollow,
+      ownsProfile, isCurrent: () => ownsProfile() && viewRef.current.key === key,
+    });
+  };
+
+  useEffect(() => {
+    if (!resumeFollow || !isFollowing || !followsQuery.isSuccess || followsQuery.isFetching
+      || getActiveSession() !== session || pendingRef.current) return;
+    const params = new URLSearchParams(location.search);
+    params.delete('resume');
+    params.delete('artistId');
+    const search = params.toString();
+    void navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true });
+  }, [followsQuery.isFetching, followsQuery.isSuccess, isFollowing, location.hash, location.pathname, location.search, navigate, resumeFollow, session]);
 
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
@@ -347,11 +441,11 @@ export default function ArtistPublicPage() {
                     variant="contained"
                     color="secondary"
                     component={RouterLink}
-                    to={`/login?${new URLSearchParams({ redirect: profileLink ?? '/fans' }).toString()}`}
+                    to={buildArtistFollowAuthPath(profileLink, artistId)}
                     startIcon={<FavoriteBorderIcon />}
                     sx={{ textTransform: 'none' }}
                   >
-                    Inicia sesión para seguir
+                    {t('artistFollow.authCta')}
                   </Button>
                 ) : (
                   <Button
@@ -360,14 +454,14 @@ export default function ArtistPublicPage() {
                     tabIndex={0}
                     onClick={(event) => {
                       event.currentTarget.focus();
-                      followMutation.mutate();
+                      toggleFollow();
                     }}
                     startIcon={isFollowing ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                    disabled={followMutation.isPending}
-                    aria-label={isFollowing ? `Dejar de seguir a ${artist.apDisplayName}` : `Seguir a ${artist.apDisplayName}`}
+                    disabled={followMutation.isPending || !followsQuery.isSuccess || followsQuery.isFetching}
+                    aria-label={isFollowing ? `Dejar de seguir a ${artist.apDisplayName}` : resumeFollow ? t('artistFollow.resumeAction') : `Seguir a ${artist.apDisplayName}`}
                     sx={{ textTransform: 'none' }}
                   >
-                    {isFollowing ? 'Siguiendo' : 'Seguir'}
+                    {isFollowing ? 'Siguiendo' : resumeFollow ? t('artistFollow.resumeAction') : 'Seguir'}
                   </Button>
                 )}
                 {isSelf && (
@@ -392,6 +486,21 @@ export default function ArtistPublicPage() {
         </section>
         <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
           <Stack spacing={2.5}>
+            {resumeFollow && !isFollowing && (
+              <Alert severity="info">{t('artistFollow.resumeMessage', { artist: artist.apDisplayName })}</Alert>
+            )}
+            {hasToken && followsQuery.isError && (
+              <Alert severity="warning" action={(
+                <Button onClick={() => { void followsQuery.refetch(); }} color="inherit" size="small">
+                  {t('artistFollow.retry')}
+                </Button>
+              )}>
+                {t('artistFollow.stateError')}
+              </Alert>
+            )}
+            {followMutation.isError && followMutation.variables?.isCurrent() && (
+              <Alert severity="error">{t('artistFollow.resumeError', { artist: artist.apDisplayName })}</Alert>
+            )}
             {canClaim && (
               <Alert
                 severity="info"

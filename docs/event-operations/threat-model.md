@@ -82,3 +82,19 @@ distinct errors and premature receipt selection. A disposable SQL regression rep
 leak before implementation. See [PR 08 evidence](pr-08-command-privacy.md) for concrete verification.
 This does not claim constant-time access: lock waits, audit writes, database faults, privileged
 observability and resource exhaustion remain possible side channels requiring additional review.
+
+### Artist follow consent and stale client receipts (PR 16)
+
+The shared public-artist journey now requires a click after authenticated session readiness
+and a successful follow-state lookup; a URL return intent alone cannot dispatch a follow.
+Session/profile generations prevent a late response from consuming another profile's
+intent, including leaving and returning to the same profile. This is a client receipt
+boundary, not server authorization or cancellation of a dispatched request; see the
+[AF-01–05 contract](artist-follow-continuity-contract.md).
+
+An independent source audit found that `TDF/Server.hs:fanFollowArtist` automatically creates
+`PartyFollow` relationships in both directions between fan-club members. The branch is
+unchanged and the synthetic browser tests do not exercise it. Do not infer member-to-member
+consent from the artist-follow click or declare complete privacy compliance. Review the
+intended club policy, explicit consent, discoverability and revocation effects before a
+separate implementation; no data deletion or retroactive consent is authorized here.

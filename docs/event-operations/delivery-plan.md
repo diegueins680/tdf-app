@@ -131,3 +131,10 @@ The whole-web application typecheck now passes. The stable PR-14 backend compile
 also finished successfully. See [PR 15 verification and limitations](pr-15-web-onboarding-integration.md)
 for independent component and whole-repository gate results. Neither result establishes
 event workspace UX, mobile compatibility, full backend tests or end-to-end completion.
+
+The sixteenth branch, `fix/artist-follow-onboarding-continuity`, restores the missing
+explicit-consent artist-return flow against canonical Fans and server onboarding APIs.
+A new bounded consent/context model precedes implementation; URL, rendered interaction
+and synthetic browser tests cover retries and stale callbacks. See [PR 16 evidence and
+limits](pr-16-artist-follow-continuity.md). This shared-domain compatibility repair does
+not complete event talent discovery/hiring, FanHub onboarding, mobile or the product.

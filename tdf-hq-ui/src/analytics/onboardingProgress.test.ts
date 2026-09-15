@@ -20,6 +20,21 @@ const completionResult = (
 });
 
 describe('captureFirstValueOnce', () => {
+  it('does not dispatch or consume completion for a context that is no longer current', async () => {
+    const analytics = { capture: jest.fn() };
+    let current = false;
+    let resolveResult: ((value: OnboardingCompletionResultDTO) => void) | undefined;
+    const complete = jest.fn(() => new Promise<OnboardingCompletionResultDTO>((resolve) => { resolveResult = resolve; }));
+    await expect(captureFirstValueOnce(analytics, 42, 'artist_followed', complete, () => current)).resolves.toBe(false);
+    expect(complete).not.toHaveBeenCalled();
+    current = true;
+    const pending = captureFirstValueOnce(analytics, 42, 'artist_followed', complete, () => current);
+    current = false;
+    resolveResult?.(completionResult('artist_followed', true));
+    await expect(pending).resolves.toBe(false);
+    expect(complete).toHaveBeenCalledTimes(1);
+    expect(analytics.capture).not.toHaveBeenCalled();
+  });
   it('emits first value and completion only after the server claims the first completion', async () => {
     const analytics = { capture: jest.fn() };
     const complete = jest.fn()

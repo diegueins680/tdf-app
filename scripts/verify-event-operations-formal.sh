@@ -109,6 +109,10 @@ run_tlc WebOnboardingRecovery.tla WebOnboardingRecovery.cfg web-onboarding
 expect_counterexample WebOnboardingRecoveryStale.cfg CurrentSessionOnly web-onboarding-stale WebOnboardingRecovery.tla
 expect_counterexample WebOnboardingRecoveryReceipt.cfg AuthoritativeOnly web-onboarding-receipt WebOnboardingRecovery.tla
 expect_counterexample WebOnboardingRecoveryOverlap.cfg SingleFlight web-onboarding-overlap WebOnboardingRecovery.tla
+run_tlc ArtistFollowConsent.tla ArtistFollowConsent.cfg artist-follow
+expect_counterexample ArtistFollowConsentClick.cfg NoUnconfirmedMutation artist-follow-click ArtistFollowConsent.tla
+expect_counterexample ArtistFollowConsentUnknown.cfg NoUnconfirmedMutation artist-follow-unknown ArtistFollowConsent.tla
+expect_counterexample ArtistFollowConsentStale.cfg CurrentTargetReceipt artist-follow-stale ArtistFollowConsent.tla
 
 scenario_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
   -c 0 -s sat4j -t none -o "${run_root}/alloy-scenario" EventStructure.als 2>&1)"
