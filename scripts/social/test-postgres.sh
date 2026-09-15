@@ -112,6 +112,7 @@ psql_test < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
 psql_test < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
 psql_test < "$TDF_SOCIAL_ROOT/scripts/social/read-model-tests.sql"
 psql_test < "$TDF_SOCIAL_ROOT/scripts/social/model-cases.sql"
+psql_test < "$TDF_SOCIAL_ROOT/scripts/social/mutation-tests.sql"
 if [ "${TDF_SOCIAL_BENCHMARK:-0}" = 1 ]; then
   if [ "${TDF_SOCIAL_FEED_BENCHMARK:-0}" = 1 ]; then
     cat "$TDF_SOCIAL_ROOT/scripts/social/benchmark.sql" "$TDF_SOCIAL_ROOT/scripts/social/feed-benchmark.sql" | psql_test
@@ -119,5 +120,6 @@ if [ "${TDF_SOCIAL_BENCHMARK:-0}" = 1 ]; then
     psql_test < "$TDF_SOCIAL_ROOT/scripts/social/benchmark.sql"
   fi
 fi
+psql_test < "$TDF_SOCIAL_ROOT/scripts/social/reconcile.sql"
 echo 'PASS: feed ordering, eligibility, edits, deletion, backdated publish, revocation, discovery opt-out/exclusions'
 echo 'PASS: additive reapply, denied defaults, consent, retry, block race, preferences, closure, pause preserves new writes'

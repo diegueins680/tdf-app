@@ -20,7 +20,7 @@ Access date: 2026-09-14. Source paths below are relative to the repository root 
 | DB tests | PostgreSQL 16.10 CLI installed; default local socket had no server. Docker 29.8.0 available after sandbox permission. Disposable containers only. |
 | Formal | Found local Temurin Java 17.0.12 runtime and tla2tools-1.7.2.jar. TLC requires sandbox permission for its local RMI listener. |
 | Web baseline | Ran existing social API/inbox suites: **3 suites, 44 tests passed**, `evidence/baseline-ui-tests.txt`. |
-| Backend baseline | `stack test --no-terminal` started from committed baseline; see evidence file for actual terminal status. No successful backend result assumed. |
+| Backend baseline | Restored baseline `stack test --fast` failed at optional reactor DTO field; its missing retry helper was repaired separately. Candidate test binary: 2,540 examples passed. Stack copy and complete-schema startup remain separately qualified. |
 | CI | Last five main runs returned by gh were messaging-token jobs on another SHA; these are **not baseline build/test evidence**. #333 is an open CI-repair PR. |
 | Performance | No representative production degree histogram, query latency, storage cost or useful-outcome dataset was accessed. All new fixtures must be labeled synthetic. |
 
@@ -51,3 +51,13 @@ route, worker or field. Before activation, complete the endpoint-by-endpoint
 policy coverage map, legacy/client adaptation, complete-schema rehearsal and media
 privacy qualification. Do not claim that a disabled additive API repairs legacy
 production behavior. Legacy edges remain unchanged and explicitly unverified.
+
+## Capability updates after baseline
+
+Native PostgreSQL 16.10 private-cluster HTTP tests passed after the shared Docker API
+returned 500. Docker fixture tests and synthetic benchmarks had already succeeded;
+the later failure does not invalidate their recorded outputs, and no shared service
+was restarted. The mobile submodule was added as a separate git worktree at the
+recorded gitlink, preserving the original dirty `app/access-requests/review.tsx`.
+Only generated mobile types changed. GitHub branch pushes and draft PR creation
+were exercised; CI results and incomplete coverage are recorded in the handoff.

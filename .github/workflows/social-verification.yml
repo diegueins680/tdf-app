@@ -6,6 +6,10 @@ on:
       - 'scripts/social/**'
       - 'tdf-hq/sql/*social_v2*'
       - 'tdf-hq/src/TDF/Social/**'
+      - 'tdf-hq-ui/src/features/social/**'
+      - 'tdf-hq-ui/src/api/socialV2*'
+      - 'tdf-hq-ui/src/pages/SocialPage.tsx'
+      - 'tdf-hq/docs/openapi/social-v2.yaml'
       - '.github/workflows/social-verification.yml'
   workflow_dispatch:
 permissions:
@@ -41,3 +45,43 @@ jobs:
         with:
           name: social-model-results
           path: /tmp/social-model-results/*.txt
+  social-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NPM_CONFIG_IGNORE_SCRIPTS: true
+      TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Install the lockfile's missing Linux resolver binding
+        # The existing lock includes unrs-resolver 1.11.1 but omits its GNU/x64
+        # optional binding. Do not depend on implicit runtime postinstall.
+        run: npm install --no-save --package-lock=false --ignore-scripts @unrs/resolver-binding-linux-x64-gnu@1.11.1
+      - name: Focused social contract and component tests
+        env:
+          NODE_OPTIONS: --experimental-vm-modules
+        run: node_modules/.bin/jest --config tdf-hq-ui/jest.config.cjs --runInBand tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx tdf-hq-ui/src/api/socialV2.test.ts tdf-hq-ui/src/api/social.test.ts
+      - name: Verify generated additive contract
+        run: |
+          node_modules/.bin/openapi-typescript tdf-hq/docs/openapi/social-v2.yaml --output /tmp/social-v2.ts
+          diff -u tdf-hq-ui/src/api/generated/social-v2.ts /tmp/social-v2.ts
+      - run: node_modules/.bin/playwright install --with-deps chromium
+      - name: Local synthetic component browser journey
+        run: |
+          node scripts/social/preview.mjs > /tmp/social-preview.txt 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid"' EXIT
+          curl --fail --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:5199/social-preview > /dev/null
+          node scripts/social/verify-preview.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: social-client-browser
+          path: |
+            /tmp/social-browser-current/*
+            /tmp/social-preview.txt
