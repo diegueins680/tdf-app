@@ -44,7 +44,8 @@ for source_id, target_id, action in edges:
         changed = members(before, 'blocked') - members(after, 'blocked')
         op = 'unblock'
     elif action == 'Withdraw':
-        changed, op = {'a'}, 'disconnect'
+        changed = members(before, 'consent') - members(after, 'consent')
+        op = 'disconnect'
     else:
         raise AssertionError(f'Unmapped action {action}')
     assert len(changed) == 1

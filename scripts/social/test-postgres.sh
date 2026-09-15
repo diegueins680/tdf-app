@@ -2,6 +2,17 @@
 set -euo pipefail
 TDF_SOCIAL_ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 TDF_SOCIAL_CONTAINER="tdf-social-verification-$$"
+if [ "${TDF_SOCIAL_NATIVE:-0}" = 1 ]; then
+  TDF_SOCIAL_PG_BIN=${TDF_SOCIAL_PG_BIN:-/usr/local/opt/postgresql@16/bin}
+  TDF_SOCIAL_PG_DATA=$(mktemp -d)
+  TDF_SOCIAL_PORT=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')
+  "$TDF_SOCIAL_PG_BIN/initdb" -D "$TDF_SOCIAL_PG_DATA" -U postgres -A trust --no-locale -E UTF8 >/dev/null
+  trap '"$TDF_SOCIAL_PG_BIN/pg_ctl" -D "$TDF_SOCIAL_PG_DATA" -m immediate -w stop >/dev/null 2>&1 || true' EXIT
+  "$TDF_SOCIAL_PG_BIN/pg_ctl" -D "$TDF_SOCIAL_PG_DATA" -l "$TDF_SOCIAL_PG_DATA/server.log" \
+    -o "-h 127.0.0.1 -p $TDF_SOCIAL_PORT -k $TDF_SOCIAL_PG_DATA" -w start >/dev/null
+  "$TDF_SOCIAL_PG_BIN/createdb" -h 127.0.0.1 -p "$TDF_SOCIAL_PORT" -U postgres social_test
+  psql_test() { "$TDF_SOCIAL_PG_BIN/psql" -h 127.0.0.1 -p "$TDF_SOCIAL_PORT" -X -v ON_ERROR_STOP=1 -U postgres -d social_test "$@"; }
+else
 trap 'docker rm -f "$TDF_SOCIAL_CONTAINER" >/dev/null 2>&1 || true' EXIT
  docker run --rm -d --name "$TDF_SOCIAL_CONTAINER" -e POSTGRES_PASSWORD=synthetic-only \
   -e POSTGRES_DB=social_test postgres:16-alpine >/dev/null
@@ -10,6 +21,7 @@ for attempt in $(seq 1 30); do
   sleep 1
 done
 psql_test() { docker exec -i "$TDF_SOCIAL_CONTAINER" psql -X -v ON_ERROR_STOP=1 -U postgres -d social_test "$@"; }
+fi
 psql_test <<'SQL'
 CREATE TABLE party(id bigint PRIMARY KEY, display_name text NOT NULL, is_org boolean NOT NULL DEFAULT false);
 CREATE TABLE user_credential(id bigint PRIMARY KEY,party_id bigint REFERENCES party(id),active boolean NOT NULL DEFAULT true);

@@ -1,0 +1,10 @@
+Model checking completed. No error has been found.
+Model checking completed. No error has been found.
+Model checking completed. No error has been found.
+Error: Invariant AuthoritativeDenial is violated.
+Error: Invariant OwnConsentOnly is violated.
+Error: Invariant RequestAdmission is violated.
+Error: Invariant StablePagination is violated.
+Error: Invariant ReplayEquality is violated.
+Error: Invariant InactiveActorCannotMutate is violated.
+Evidence: /private/tmp/tdf-social-reviewed-full
