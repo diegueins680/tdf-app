@@ -1846,7 +1846,7 @@ closedPaymentFinancialSnapshot :: Execution.BoundProviderPayment -> SqlPersistT 
 closedPaymentFinancialSnapshot payment = rawSql
   "SELECT jsonb_build_object(\
   \ 'checkout',to_jsonb(checkout),'attempt',to_jsonb(attempt),'intent',to_jsonb(intent),\
-  \ 'operation',to_jsonb(operation),\
+  \ 'operation',to_jsonb(operation.*),\
   \ 'ledger',(SELECT jsonb_agg(to_jsonb(txn) ORDER BY txn.id) FROM commerce_ledger_transaction txn\
   \ WHERE source_id=attempt.id::text),\
   \ 'receipts',(SELECT jsonb_agg(to_jsonb(receipt) ORDER BY receipt.id) FROM commerce_receipt receipt\
