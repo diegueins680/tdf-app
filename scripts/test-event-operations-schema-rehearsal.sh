@@ -80,6 +80,14 @@ expected_migrations=$(node -p "require('$repo_root/scripts/production-migrations
 applied_migrations=$(psql_exec -qAtc 'SELECT count(*) FROM public.tdf_schema_migration')
 if [ "$applied_migrations" != "$expected_migrations" ]; then
   echo "Incomplete authoritative ledger: $applied_migrations of $expected_migrations entries; event SQL will not run." >&2
+  psql_exec -qAtc 'SELECT migration_id FROM public.tdf_schema_migration ORDER BY migration_id' |
+    node --input-type=module -e '
+      import { readFileSync } from "node:fs";
+      const expected = JSON.parse(readFileSync(process.argv[1], "utf8")).migrations.map(row => row.id);
+      const actual = new Set(readFileSync(0, "utf8").trim().split("\n"));
+      console.error("Missing ledger IDs:", expected.filter(id => !actual.has(id)).join(", "));
+      console.error("Unexpected ledger IDs:", [...actual].filter(id => !expected.includes(id)).join(", "));
+    ' "$repo_root/scripts/production-migrations.json"
   exit 1
 fi
 if node "$repo_root/scripts/render-production-schema-verification.mjs" | psql_exec >/dev/null; then
@@ -89,6 +97,11 @@ else
   if [ "$diagnostic" = false ]; then exit "$contract_status"; fi
   echo 'DIAGNOSTIC ONLY: full-schema contract FAILED; inspecting event checks separately. Final contract remains mandatory.' >&2
 fi
+
+ledger_snapshot=$(psql_exec -qAtc 'SELECT jsonb_agg(to_jsonb(t) ORDER BY migration_id) FROM public.tdf_schema_migration t')
+echo 'Schema rehearsal: retry authoritative batch without rewriting ledger evidence'
+apply_manifest
+test "$(psql_exec -qAtc 'SELECT jsonb_agg(to_jsonb(t) ORDER BY migration_id) FROM public.tdf_schema_migration t')" = "$ledger_snapshot"
 
 apply_sql tdf-hq/test/integration/event_operations_schema_seed.sql
 apply_event_migrations

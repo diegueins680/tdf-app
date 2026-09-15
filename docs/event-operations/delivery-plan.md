@@ -91,3 +91,11 @@ migration dependency before reaching event SQL; an explicit supplemented diagnos
 the provider/refund schema contract failure. Hosted verification never uses the diagnostic option.
 See [PR 10 evidence and limitations](pr-10-schema-rehearsal.md). This is an additional compatibility
 gate, not a green migration/release claim or completion of phase 3/4.
+
+The eleventh branch, `fix/event-schema-migration-dependencies`, registers four unchanged existing
+migrations required by the authoritative schema contract: storefronts before merch reputation,
+canonical payments before attempt binding, and account onboarding. One identical duplicate
+reputation entry is consolidated; all unique prior registrations and SQL checksums are preserved.
+It extends the strict rehearsal with ledger retry and disabled-provider/
+financial-setting preservation checks. See [PR 11 evidence and release blockers](pr-11-schema-dependencies.md).
+This does not activate event operations or providers, and does not complete the remaining phases.

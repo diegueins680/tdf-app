@@ -1,5 +1,8 @@
 # PR draft: Complete-schema event migration rehearsal
 
+Historical checkpoint for PR 349. The dependent [PR 11 manifest repair](pr-11-schema-dependencies.md)
+records the later strict full-schema pass; the failures below remain evidence of the original baseline.
+
 ## Scope and dependency
 
 Base: `fix/event-session-transaction-fence`, draft PR 348 at
