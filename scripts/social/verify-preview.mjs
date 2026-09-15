@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const output = 'docs/social/evidence/browser';
+const output = process.env.TDF_SOCIAL_BROWSER_RESULTS ?? 'docs/social/evidence/browser';
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 try {

@@ -120,5 +120,6 @@ if [ "${TDF_SOCIAL_BENCHMARK:-0}" = 1 ]; then
     psql_test < "$TDF_SOCIAL_ROOT/scripts/social/benchmark.sql"
   fi
 fi
+psql_test < "$TDF_SOCIAL_ROOT/scripts/social/reconcile.sql"
 echo 'PASS: feed ordering, eligibility, edits, deletion, backdated publish, revocation, discovery opt-out/exclusions'
 echo 'PASS: additive reapply, denied defaults, consent, retry, block race, preferences, closure, pause preserves new writes'

@@ -50,6 +50,7 @@ jobs:
     timeout-minutes: 15
     env:
       NPM_CONFIG_IGNORE_SCRIPTS: true
+      TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -82,5 +83,5 @@ jobs:
         with:
           name: social-client-browser
           path: |
-            docs/social/evidence/browser/*
+            /tmp/social-browser-current/*
             /tmp/social-preview.txt

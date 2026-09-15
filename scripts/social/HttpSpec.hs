@@ -5,7 +5,8 @@
 import Control.Monad.Reader (ReaderT, runReaderT)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
-import Data.Aeson (Value, decode, object, (.=))
+import Data.Aeson (Value(..), decode, object, (.=))
+import qualified Data.Aeson.KeyMap as KM
 import Database.Persist.Sql (rawExecute, runSqlPool)
 import qualified Network.HTTP.Client as HTTP
 import Network.HTTP.Types (statusCode)
@@ -44,6 +45,9 @@ main = do
               [("Authorization","Bearer "<>token) | not (BS.null token)],
             HTTP.requestBody=HTTP.RequestBodyLBS body, HTTP.responseTimeout=HTTP.responseTimeoutMicro 10000000} manager
         status response = statusCode (HTTP.responseStatus response)
+        field key response = case decode (HTTP.responseBody response) of
+          Just (Object fields) -> KM.lookup key fields
+          _ -> Nothing
         command token target body = call token "POST" ("/v2/relationships/"<>target) body
     hspec $ do
       it "requires real bearer authentication even when the process gate is closed" $ do
@@ -63,8 +67,16 @@ main = do
         (decode (HTTP.responseBody response) :: Maybe Value) `shouldBe` Just (object
           ["partyId" .= (1::Int),"revision" .= (2::Int),"following" .= False,"requested" .= True,
            "incoming" .= True,"connected" .= True,"blocked" .= False,"muted" .= False,"dismissed" .= False])
+      it "withdraws only the caller's consent and leaves the other intent intact" $ do
+        removed <- command "synthetic-1" "2" "{\"operation\":\"disconnect\",\"expectedRevision\":2,\"requestKey\":\"withdraw\"}"
+        status removed `shouldBe` 200
+        field "requested" removed `shouldBe` Just (Bool False)
+        field "incoming" removed `shouldBe` Just (Bool True)
+        other <- call "synthetic-2" "GET" "/v2/relationships/1" ""
+        field "requested" other `shouldBe` Just (Bool True)
+        status <$> command "synthetic-1" "2" "{\"operation\":\"request\",\"expectedRevision\":3,\"requestKey\":\"renew-own-intent\"}" >>= (`shouldBe` 200)
       it "denies blocked reads and stale acceptance but preserves the owner's unblock control" $ do
-        status <$> command "synthetic-2" "1" "{\"operation\":\"block\",\"expectedRevision\":2,\"requestKey\":\"block\"}" >>= (`shouldBe` 200)
+        status <$> command "synthetic-2" "1" "{\"operation\":\"block\",\"expectedRevision\":4,\"requestKey\":\"block\"}" >>= (`shouldBe` 200)
         status <$> call "synthetic-1" "GET" "/v2/relationships/2" "" >>= (`shouldBe` 404)
         status <$> command "synthetic-1" "2" "{\"operation\":\"accept\",\"expectedRevision\":1,\"requestKey\":\"late\"}" >>= (`shouldBe` 404)
         status <$> call "synthetic-2" "GET" "/v2/relationships/1" "" >>= (`shouldBe` 200)
