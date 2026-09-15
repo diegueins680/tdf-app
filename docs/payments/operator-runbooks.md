@@ -6,6 +6,10 @@ For per-request intent keys, legacy reference preservation, conflicting provider
 the required old/new writer cutover, follow the [2026-09-14 retry safety supplement](retry-reconciliation-safety-2026-09-14.md).
 For lost create responses after payment/expiry or account suspension, follow the
 [exact-response recovery supplement](terminal-recovery-2026-09-14.md).
+For bounded callback retention and compatibility with historical inbox rows, follow the
+[notification minimization supplement](notification-minimization-2026-09-14.md) and
+[ADR 0116](../adr/0116-minimized-provider-notification-evidence.md). Never export decrypted
+callback bodies into support tickets, logs or test evidence.
 
 ## 1. Configuration and activation
 
