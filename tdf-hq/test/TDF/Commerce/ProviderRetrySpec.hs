@@ -2919,6 +2919,19 @@ completionCapabilityIntegrationSpec = describe "complete checkout capability int
           offered `shouldReturn` False
       offered `shouldReturn` True
 
+  forM_ [(Checkout.ProviderPlaceToPay, MethodBankRedirect),
+         (Checkout.ProviderPlaceToPay, MethodDeunaQr),
+         (Checkout.ProviderPayPhone, MethodPayPhoneWallet)] $ \(provider, method) ->
+    it ("requires verified status lookup for query-backed method " <> show method) $ \pool ->
+      withNotificationEnvironment $ do
+        setEnv "PLACETOPAY_BANK_PAYMENT_METHODS" "synthetic_bank"
+        setEnv "PLACETOPAY_DEUNA_PAYMENT_METHODS" "synthetic_deuna"
+        let offered = elem provider <$> completionRoutes pool (completionRequest method)
+        offered `shouldReturn` True
+        withDocumentedCapability pool provider method "server_verification" $
+          offered `shouldReturn` False
+        offered `shouldReturn` True
+
 completionRequest :: PaymentMethod -> Capabilities.PaymentRouteRequest
 completionRequest method = Capabilities.PaymentRouteRequest
   { Capabilities.prEnvironment = Checkout.CheckoutSandbox
