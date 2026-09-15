@@ -486,21 +486,20 @@ export default function PublicEventTicketsPage() {
                   {!paid && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
                     : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}
-                  {!paid && (
-                    <Stack spacing={1.5}>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Stack spacing={1.5}>
+                    {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                         {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
                         {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
-                      </Stack>
-                      {checkoutLookupToken && (
+                    </Stack>}
+                    {checkoutLookupToken && (
                         <HostedProviderCheckout
                           checkout={{
                             checkoutId: checkout.checkoutId,
                             lookupToken: checkoutLookupToken,
                             returnPath: `/eventos/${checkout.eventId}/orden/${checkout.orderId}`,
                           }}
-                          offeredMethods={checkout.paymentMethods}
-                          disabled={paymentBusy || datafastOpen || paypalOpen}
+                          offeredMethods={paid ? [] : checkout.paymentMethods}
+                          disabled={paid || paymentBusy || datafastOpen || paypalOpen}
                           english={english}
                           initialBuyerPhone={buyerPhone}
                           onSafetyLockChange={setHostedPaymentLocked}
@@ -512,9 +511,8 @@ export default function PublicEventTicketsPage() {
                             ));
                           }}
                         />
-                      )}
-                    </Stack>
-                  )}
+                    )}
+                  </Stack>
                   {paid && checkout.tickets.length > 0 && (
                     <Stack spacing={1}>
                       <Typography variant="h6">{english ? 'Issued tickets' : 'Entradas emitidas'}</Typography>

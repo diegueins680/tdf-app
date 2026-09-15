@@ -307,26 +307,26 @@ export default function DomoQuoteCheckoutPage() {
                 {awaitingPayment && quote.paymentMethods.length === 0 && <Alert severity="info">{english
                   ? 'No real payment provider is enabled. The date remains only temporarily held.'
                   : 'No hay un proveedor real habilitado. La fecha sigue únicamente retenida de forma temporal.'}</Alert>}
-                {awaitingPayment && <Stack spacing={1.5}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <Stack spacing={1.5}>
+                  {awaitingPayment && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                     {quote.paymentMethods.includes('datafast') && <Button variant="contained" disabled={busy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
                     {quote.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={busy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
-                  </Stack>
+                  </Stack>}
                   <HostedProviderCheckout
                     checkout={{
                       checkoutId: quote.checkoutId,
                       lookupToken,
                       returnPath: `/domo-del-pululahua/cotizaciones/${quote.quoteId}`,
                     }}
-                    offeredMethods={quote.paymentMethods}
-                    disabled={busy || datafastOpen || paypalOpen}
+                    offeredMethods={awaitingPayment ? quote.paymentMethods : []}
+                    disabled={!awaitingPayment || busy || datafastOpen || paypalOpen}
                     english={english}
                     onSafetyLockChange={setHostedPaymentLocked}
                     onPaymentConfirmed={async () => {
                       setQuote(await DomoQuotes.getQuote(quote.quoteId, lookupToken));
                     }}
                   />
-                </Stack>}
+                </Stack>
                 <Typography variant="caption" color="text.secondary">{english
                   ? `Quote: ${quote.quoteStatus}. Payment: ${quote.paymentStatus}. Venue fulfillment: ${quote.fulfillmentStatus}. These states are independent.`
                   : `Cotización: ${quote.quoteStatus}. Pago: ${quote.paymentStatus}. Cumplimiento del espacio: ${quote.fulfillmentStatus}. Son estados independientes.`}</Typography>

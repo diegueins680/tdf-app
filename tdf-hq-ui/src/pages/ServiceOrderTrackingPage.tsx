@@ -115,15 +115,15 @@ export default function ServiceOrderTrackingPage() {
               <Typography variant="caption" color="text.secondary">
                 Pago y entrega del servicio son estados independientes. Un pago confirmado no significa que los archivos hayan sido recibidos o entregados.
               </Typography>
-              {order.ssoStatus === 'awaiting_payment' && order.ssoCheckoutId && (
+              {order.ssoCheckoutId && (
                 <HostedProviderCheckout
                   checkout={{
                     checkoutId: order.ssoCheckoutId,
                     lookupToken,
                     returnPath: `/mezcla-mastering/pedido/${encodeURIComponent(order.ssoOrderNumber)}`,
                   }}
-                  offeredMethods={hostedPaymentMethods}
-                  disabled={paymentMethodsQuery.isLoading}
+                  offeredMethods={order.ssoStatus === 'awaiting_payment' ? hostedPaymentMethods : []}
+                  disabled={order.ssoStatus !== 'awaiting_payment' || paymentMethodsQuery.isLoading}
                   initialBuyerPhone={order.ssoBuyerPhone}
                   onSafetyLockChange={setHostedPaymentLocked}
                   onPaymentConfirmed={async () => {

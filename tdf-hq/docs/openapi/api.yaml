@@ -5435,7 +5435,14 @@ paths:
     post:
       tags: [Payments]
       summary: Create or recover a hosted provider payment session
-      description: Routes only through an exact enabled provider/method/capability combination. A provider contact with an ambiguous outcome is locked for reconciliation and cannot be retried through another provider.
+      description: >-
+        New provider contacts require an exact enabled provider/method/capability combination
+        and a payable, unexpired checkout. An exact request replay with the original lookup
+        token and idempotency key recovers a previously contacted operation even after checkout
+        expiry or payment, account suspension, or provider credential unavailability. Recovery
+        validates immutable request fields and still requires the operation encryption key.
+        A merely prepared operation remains subject to all new-contact gates. An ambiguous
+        outcome stays locked for reconciliation and cannot be retried through another provider.
       operationId: createProviderPaymentSession
       security: []
       parameters:
@@ -5456,7 +5463,10 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PaymentSession' }
         '400': { description: Invalid provider, payment method, headers, or provider-specific input }
-        '404': { description: Checkout is absent, expired, or the lookup token is invalid }
+        '404':
+          description: >-
+            Checkout or lookup token is invalid, or no contacted replay exists and checkout
+            cannot accept payment. This is not no-charge evidence for an earlier transmitted request.
         '409': { description: Idempotency conflict or another active canonical payment intent exists }
         '503': { description: Provider/configuration is unavailable or an ambiguous result requires reconciliation }
   /commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}:

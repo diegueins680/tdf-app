@@ -19,14 +19,20 @@ module TDF.Commerce.ProviderExecutionStore
   , recordCreateResult
   , recordAmbiguousOperation
   , loadAuthorizedCreateOperation
+  , loadAuthorizedCreateReplay
+  , providerCreateRequestFingerprint
   , loadBoundProviderPayment
   , recordReconciledCreateResult
   ) where
 
 import           Control.Monad.IO.Class (liftIO)
+import           Crypto.Hash (Digest, SHA256, hash)
+import qualified Data.ByteArray.Encoding as BAE
 import           Data.Int (Int64)
+import           Data.Maybe (fromMaybe)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
@@ -38,7 +44,7 @@ import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderAdapter
   ( AdapterOperation(..), AdapterResult(..), AdapterResultState(..) )
 import           TDF.Commerce.ProviderCapabilities
-  ( ProviderOutcomeCertainty(..) )
+  ( PaymentMethod, paymentMethodText, ProviderOutcomeCertainty(..) )
 
 data CheckoutExecution = CheckoutExecution
   { ceCheckout       :: Checkout.CheckoutReference
@@ -416,6 +422,69 @@ loadAuthorizedCreateOperation checkoutId attemptId lookupTokenHash encryptionKey
           (ProviderOperationReference operationId) encryptionKey
         [] -> pure (Left "Provider operation was not found")
         _ -> pure (Left "Provider operation lookup was ambiguous")
+
+-- | Authenticate and validate an exact request replay without checking whether
+-- a NEW charge may be started. Account suspension and checkout expiry must not
+-- hide an already contacted provider's durable outcome. This function never
+-- claims an operation, mutates payment state, or contacts a provider.
+loadAuthorizedCreateReplay
+  :: Text -> Text -> Checkout.PaymentProvider -> PaymentMethod -> Text
+  -> Maybe Text -> Maybe Text -> Text
+  -> SqlPersistT IO (Either Text (Maybe ProviderOperationRecord))
+loadAuthorizedCreateReplay checkoutId lookupTokenHash provider method idempotencyKey
+    buyerPhone buyerCountryCode encryptionKey = do
+  rows <- rawSql
+    "SELECT operation.id::text, operation.provider_reference, operation.request_sha256,\
+    \ checkout.total_minor, checkout.currency, COALESCE(\
+    \ operation.provider = attempt.provider AND operation.environment = attempt.environment\
+    \ AND operation.merchant_account_ref = attempt.merchant_account_ref\
+    \ AND operation.idempotency_key = attempt.idempotency_key\
+    \ AND attempt.operation = 'create' AND attempt.environment = checkout.environment\
+    \ AND attempt.amount_minor = checkout.total_minor AND attempt.currency = checkout.currency\
+    \ AND intent.checkout_id = checkout.id\
+    \ AND intent.provider = attempt.provider AND intent.amount_minor = attempt.amount_minor\
+    \ AND intent.currency = attempt.currency AND intent.payment_method = ?\
+    \ AND intent.capture_method = 'automatic', FALSE)\
+    \ FROM commerce_provider_operation operation\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = operation.payment_attempt_id\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = attempt.checkout_id\
+    \ LEFT JOIN commerce_payment_intent intent ON intent.id = attempt.payment_intent_id\
+    \ WHERE checkout.id = ?::uuid AND checkout.lookup_token_hash = ?\
+    \ AND operation.provider = ? AND operation.operation = 'create'\
+    \ AND operation.idempotency_key = ?"
+    [ PersistText (paymentMethodText method), PersistText checkoutId
+    , PersistText lookupTokenHash, PersistText (Checkout.paymentProviderText provider)
+    , PersistText idempotencyKey
+    ] :: SqlPersistT IO
+      [(Single Text, Single Text, Single Text, Single Int64, Single Text, Single Bool)]
+  case rows of
+    [] -> pure (Right Nothing)
+    [(Single operationId, Single reference, Single fingerprint, Single amount,
+        Single currency, Single bindingsMatch)]
+      | not bindingsMatch || fingerprint /= providerCreateRequestFingerprint
+          (Checkout.CheckoutReference checkoutId) provider method reference amount currency
+          buyerPhone buyerCountryCode ->
+          pure (Left "Provider operation replay conflicts with immutable fields")
+      | not (validEncryptionKey encryptionKey) ->
+          pure (Left "Provider operation encryption key is invalid")
+      | otherwise -> fmap Just <$> loadOperation
+          (ProviderOperationReference operationId) encryptionKey
+    _ -> pure (Left "Provider operation replay lookup was ambiguous")
+
+-- Keep the original fingerprint byte format for already persisted operations.
+-- Both creation and recovery normalize contact fields identically; neither
+-- credentials, mutable account configuration, IP nor User-Agent are identity.
+providerCreateRequestFingerprint
+  :: Checkout.CheckoutReference -> Checkout.PaymentProvider -> PaymentMethod
+  -> Text -> Int64 -> Text -> Maybe Text -> Maybe Text -> Text
+providerCreateRequestFingerprint checkout provider method reference amount currency phone country =
+  TE.decodeUtf8 (BAE.convertToBase BAE.Base16 (hash (TE.encodeUtf8 identity) :: Digest SHA256))
+  where
+    identity = T.intercalate "|"
+      [ Checkout.checkoutReferenceId checkout, Checkout.paymentProviderText provider
+      , paymentMethodText method, paymentMethodText method, reference, T.pack (show amount)
+      , T.toUpper currency, fromMaybe "" (T.strip <$> phone), fromMaybe "" (T.strip <$> country)
+      ]
 
 loadBoundProviderPayment
   :: Checkout.PaymentProvider

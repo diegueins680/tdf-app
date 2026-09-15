@@ -3,6 +3,7 @@ import {
   clearProviderPaymentPending,
   clearProviderPaymentResume,
   loadOrCreatePaymentIdempotencyKey,
+  loadExistingPaymentIdempotencyKey,
   loadProviderPaymentPending,
   loadProviderPaymentResume,
   paymentAttemptCanBeReleased,
@@ -58,6 +59,13 @@ describe('provider payment redirect recovery', () => {
     const second = loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card');
     expect(second).toBe(first);
     expect(first).toMatch(/^payment-session-/);
+  });
+
+  it('reads recovery keys without creating or repairing missing and malformed keys', () => {
+    expect(loadExistingPaymentIdempotencyKey(checkoutId, 'placetopay', 'card')).toBeNull();
+    expect(window.sessionStorage.length).toBe(0);
+    const key = loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card');
+    expect(loadExistingPaymentIdempotencyKey(checkoutId, 'placetopay', 'card')).toBe(key);
   });
 
   it('retains a pre-response attempt lock with no lookup capability in the URL', () => {

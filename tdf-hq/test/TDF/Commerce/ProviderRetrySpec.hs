@@ -4,32 +4,40 @@
 module TDF.Commerce.ProviderRetrySpec (spec) where
 
 import           Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar)
-import           Control.Exception (throwIO)
+import           Control.Exception (bracket, throwIO)
 import           Control.Monad (forM, forM_, unless)
 import           Control.Monad.Logger (runNoLoggingT)
+import           Control.Monad.Reader (runReaderT)
+import           Crypto.Hash (Digest, SHA256, hash)
+import qualified Data.ByteArray.Encoding as BAE
 import qualified Data.ByteString.Char8 as BS
 import           Data.Either (isLeft, isRight, rights)
 import           Data.Int (Int64)
 import           Data.Pool (destroyAllResources)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import           Data.Time (addUTCTime, getCurrentTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Postgresql (createPostgresqlPool)
 import           Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool)
-import           System.Environment (lookupEnv)
+import           Network.Socket (SockAddr(..))
+import           Servant (ServerError, errHTTPCode, runHandler, (:<|>)(..))
+import           System.Environment (lookupEnv, setEnv, unsetEnv)
 import           Test.Hspec
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import           TDF.API.ProviderExecution (PaymentSessionCreateDTO(..), PaymentSessionDTO(..))
+import           TDF.DB (Env(..))
 import qualified TDF.Commerce.PaymentIntentStore as Intent
 import qualified TDF.Commerce.PaymentRuntimeStore as Runtime
 import           TDF.Commerce.ProviderAdapter (AdapterOperation(..))
 import           TDF.Commerce.ProviderCapabilities (PaymentMethod(..))
 import qualified TDF.Commerce.ProviderExecutionStore as Execution
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
-import           TDF.Server.ProviderExecution (providerReference)
+import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer)
 
 spec :: Spec
 spec = do
@@ -203,6 +211,211 @@ spec = do
           start capture { Checkout.pacIdempotencyKey = "paypal-capture-different-key" }
             >>= (`shouldSatisfy` isLeft)
           assertCounts pool creation 2 1
+
+        describe "exact create response recovery" $ do
+          forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
+            forM_ ["paid", "expired", "cancelled", "refunded", "disputed"] $ \checkoutStatus ->
+              it ("recovers " <> show provider <> " after checkout " <> T.unpack checkoutStatus) $
+                \pool -> withRecoveryEnvironment $ do
+                  (creation, operation, request) <- replayFixture pool provider
+                  closeCheckout pool creation checkoutStatus
+                  setOperationState pool operation "succeeded" "succeeded"
+                  recovered <- replayHandler pool creation request >>= requireRight
+                  pssAttemptId recovered `shouldBe`
+                    Checkout.paymentAttemptReferenceId (Execution.porAttempt operation)
+                  pssState recovered `shouldBe` "succeeded"
+                  pssCanRetryOrFallback recovered `shouldBe` False
+                  assertCounts pool creation 1 1
+
+          it "recovers with suspended accounts and absent provider credentials" $ \pool ->
+            withRecoveryEnvironment $ do
+              (creation, operation, request) <- replayFixture pool Checkout.ProviderPlaceToPay
+              setOperationState pool operation "ambiguous" "ambiguous"
+              let suspend enabled status = runSqlPool (rawExecute
+                    "UPDATE commerce_provider_account SET enabled=?,status=?\
+                    \ WHERE provider='placetopay' AND environment='sandbox'"
+                    [PersistBool enabled, PersistText status]) pool
+              bracket (suspend False "suspended") (const (suspend True "ready")) $ \_ -> do
+                recovered <- replayHandler pool creation request >>= requireRight
+                pssState recovered `shouldBe` "ambiguous"
+                pssCanRetryOrFallback recovered `shouldBe` False
+              assertCounts pool creation 1 1
+
+          it "normalizes the exact contact replay without requiring an unexpired payable state" $ \pool ->
+            withRecoveryEnvironment $ do
+              (creation, operation, request) <- replayFixture pool Checkout.ProviderPayPhone
+              runSqlPool (rawExecute
+                "UPDATE commerce_checkout_session SET status='paid' WHERE id=?::uuid"
+                [PersistText (Checkout.checkoutReferenceId (Checkout.pacCheckout creation))]) pool
+              setOperationState pool operation "succeeded" "succeeded"
+              recovered <- replayHandler pool creation request
+                { pscBuyerPhone = Just " 991234567 ", pscBuyerCountryCode = Just " 593 " }
+                >>= requireRight
+              pssState recovered `shouldBe` "succeeded"
+              assertCounts pool creation 1 1
+
+          it "requires the operation decryption key even when provider secrets are absent" $ \pool ->
+            withRecoveryEnvironment $ do
+              (creation, operation, request) <- replayFixture pool Checkout.ProviderPlaceToPay
+              setOperationState pool operation "processing" "ambiguous"
+              setEnv "COMMERCE_EVENT_ENCRYPTION_KEY" ""
+              replayHandler pool creation request >>= assertHttpError 503
+              assertCounts pool creation 1 1
+
+          it "returns every contacted operation state without claiming it again" $ \pool ->
+            withRecoveryEnvironment $ forM_
+              [("in_flight", "ambiguous"), ("requires_customer_action", "ambiguous")
+              , ("processing", "ambiguous"), ("confirmed_no_charge", "confirmed_no_charge")
+              , ("failed", "rejected_before_creation")] $ \(status, certainty) -> do
+                (creation, operation, request) <- replayFixture pool Checkout.ProviderPlaceToPay
+                closeCheckout pool creation "expired"
+                setOperationState pool operation status certainty
+                recovered <- replayHandler pool creation request >>= requireRight
+                pssState recovered `shouldBe` status
+                if status == "requires_customer_action"
+                  then pssRedirectUrl recovered `shouldBe`
+                    Just "https://checkout-test.placetopay.ec/session/synthetic-recovery"
+                  else pure ()
+                assertCounts pool creation 1 1
+
+          it "rejects changed method, contact, provider, key and lookup authorization" $ \pool ->
+            withRecoveryEnvironment $ do
+              (creation, operation, request) <- replayFixture pool Checkout.ProviderPayPhone
+              closeCheckout pool creation "expired"
+              setOperationState pool operation "processing" "ambiguous"
+              forM_ [request { pscPaymentMethod = "card" }
+                    , request { pscBuyerPhone = Just "991234568" }
+                    , request { pscBuyerCountryCode = Just "1" }
+                    , request { pscBuyerPhone = Nothing }] $ \changed ->
+                replayHandler pool creation changed >>= assertHttpError 409
+              replayHandler pool creation request { pscProvider = "placetopay" }
+                >>= assertHttpError 404
+              replayHandler pool creation { Checkout.pacIdempotencyKey = "changed-recovery-key" }
+                request >>= assertHttpError 404
+              let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+              runSqlPool (rawExecute
+                "UPDATE commerce_checkout_session SET lookup_token_hash=? WHERE id=?::uuid"
+                [PersistText "revoked-synthetic-token", PersistText checkoutId]) pool
+              replayHandler pool creation request >>= assertHttpError 404
+              assertCounts pool creation 1 1
+
+          it "does not reveal another checkout operation using its request key" $ \pool ->
+            withRecoveryEnvironment $ do
+              (creation, operation, request) <- replayFixture pool Checkout.ProviderPlaceToPay
+              setOperationState pool operation "processing" "ambiguous"
+              (other, _, _) <- replayFixture pool Checkout.ProviderPlaceToPay
+              closeCheckout pool other "expired"
+              replayHandler pool other
+                { Checkout.pacIdempotencyKey = Checkout.pacIdempotencyKey creation } request
+                >>= assertHttpError 404
+              assertCounts pool other 1 1
+
+          it "does not contact a merely prepared operation on an expired checkout" $ \pool ->
+            withRecoveryEnvironment $ do
+              (creation, operation, request) <- replayFixture pool Checkout.ProviderPlaceToPay
+              closeCheckout pool creation "expired"
+              replayHandler pool creation request >>= assertHttpError 404
+              let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+              stored <- runSqlPool (Execution.loadAuthorizedCreateOperation checkoutId
+                (Checkout.paymentAttemptReferenceId (Execution.porAttempt operation))
+                (digestText checkoutId) recoveryEncryptionKey) pool >>= requireRight
+              Execution.porStatus stored `shouldBe` "prepared"
+              assertCounts pool creation 1 1
+
+          it "replays concurrently without additional operations or intent mutations" $ \pool ->
+            withRecoveryEnvironment $ do
+              (creation, operation, request) <- replayFixture pool Checkout.ProviderPlaceToPay
+              closeCheckout pool creation "paid"
+              setOperationState pool operation "succeeded" "succeeded"
+              results <- concurrently (replicate 4 (replayHandler pool creation request))
+              results `shouldSatisfy` all isRight
+              length (rights results) `shouldBe` 4
+              map (fmap pssOperationId) results `shouldBe`
+                replicate 4 (Right (Execution.providerOperationReferenceId
+                  (Execution.porReference operation)))
+              assertCounts pool creation 1 1
+
+recoveryEncryptionKey :: Text
+recoveryEncryptionKey = "synthetic-provider-recovery-encryption-key"
+
+-- Clear provider authentication before invoking handlers. Restore caller
+-- configuration without printing it, even when an assertion fails.
+withRecoveryEnvironment :: IO a -> IO a
+withRecoveryEnvironment action = bracket
+  (forM names $ \name -> (,) name <$> lookupEnv name)
+  (mapM_ (\(name, value) -> maybe (unsetEnv name) (setEnv name) value)) $ \_ -> do
+    setEnv "COMMERCE_EVENT_ENCRYPTION_KEY" (T.unpack recoveryEncryptionKey)
+    setEnv "PLACETOPAY_LOGIN" ""
+    setEnv "PAYPHONE_TOKEN" ""
+    action
+  where names = ["COMMERCE_EVENT_ENCRYPTION_KEY", "PLACETOPAY_LOGIN", "PAYPHONE_TOKEN"]
+
+digestText :: Text -> Text
+digestText value = TE.decodeUtf8
+  (BAE.convertToBase BAE.Base16 (hash (TE.encodeUtf8 value) :: Digest SHA256))
+
+replayFixture :: ConnectionPool -> Checkout.PaymentProvider
+  -> IO (Checkout.PaymentAttemptCreation, Execution.ProviderOperationRecord, PaymentSessionCreateDTO)
+replayFixture pool provider = do
+  seed <- newCheckout pool
+  let creation = seed { Checkout.pacProvider = provider }
+      checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+      method = if provider == Checkout.ProviderPayPhone then MethodPayPhoneWallet else MethodCard
+      phone = if provider == Checkout.ProviderPayPhone then Just "991234567" else Nothing
+      country = if provider == Checkout.ProviderPayPhone then Just "593" else Nothing
+      request = PaymentSessionCreateDTO (Checkout.paymentProviderText provider)
+        (if provider == Checkout.ProviderPayPhone then "payphone_wallet" else "card") phone country
+      -- Exercise pre-upgrade checkout-derived references, not only new UUID refs.
+      reference = providerReference provider checkoutId
+  runSqlPool (rawExecute
+    "UPDATE commerce_checkout_session SET lookup_token_hash=? WHERE id=?::uuid"
+    [PersistText (digestText checkoutId), PersistText checkoutId]) pool
+  attempt <- runSqlPool (Runtime.beginPaymentAttemptForMethod method creation) pool >>= requireRight
+  operation <- runSqlPool (Execution.prepareProviderOperation Execution.ProviderOperationPreparation
+    { Execution.popAttempt = attempt, Execution.popProvider = provider
+    , Execution.popEnvironment = Checkout.CheckoutSandbox
+    , Execution.popMerchantRef = Checkout.pacMerchantRef creation
+    , Execution.popProviderReference = reference, Execution.popOperation = AdapterCreate
+    , Execution.popIdempotencyKey = Checkout.pacIdempotencyKey creation
+    -- Reconstruct the OLD persisted byte format independently of the new helper.
+    , Execution.popRequestSha256 = digestText (T.intercalate "|"
+        [checkoutId, Checkout.paymentProviderText provider, pscPaymentMethod request
+        , pscPaymentMethod request, reference, "12515", "USD"
+        , maybe "" id phone, maybe "" id country])
+    , Execution.popOccurredAt = Checkout.pacCreatedAt creation
+    }) pool >>= requireRight
+  pure (creation, operation, request)
+
+closeCheckout :: ConnectionPool -> Checkout.PaymentAttemptCreation -> Text -> IO ()
+closeCheckout pool creation status = runSqlPool (rawExecute
+  "UPDATE commerce_checkout_session SET status=?,expires_at=NOW()-INTERVAL '1 hour'\
+  \ WHERE id=?::uuid"
+  [PersistText status, PersistText (Checkout.checkoutReferenceId (Checkout.pacCheckout creation))]) pool
+
+-- Synthetic stored provider outcomes, not remote sandbox results.
+setOperationState :: ConnectionPool -> Execution.ProviderOperationRecord -> Text -> Text -> IO ()
+setOperationState pool operation status certainty = runSqlPool (rawExecute
+  "UPDATE commerce_provider_operation SET status=?,outcome_certainty=?,started_at=NOW(),\
+  \ provider_resource_id='synthetic-recovery',redirect_url_ciphertext=pgp_sym_encrypt(?,?)\
+  \ WHERE id=?::uuid"
+  [PersistText status, PersistText certainty
+  , PersistText "https://checkout-test.placetopay.ec/session/synthetic-recovery"
+  , PersistText recoveryEncryptionKey
+  , PersistText (Execution.providerOperationReferenceId (Execution.porReference operation))]) pool
+
+replayHandler :: ConnectionPool -> Checkout.PaymentAttemptCreation -> PaymentSessionCreateDTO
+  -> IO (Either ServerError PaymentSessionDTO)
+replayHandler pool creation request = do
+  let create :<|> _ = providerExecutionServer
+      checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+      env = Env pool (error "Recovery must not use AppConfig")
+  runHandler (runReaderT (create checkoutId (Just checkoutId)
+    (Just (Checkout.pacIdempotencyKey creation)) (Just "Synthetic provider recovery test")
+    (SockAddrInet 0 0) request) env)
+
+assertHttpError :: Int -> Either ServerError PaymentSessionDTO -> Expectation
+assertHttpError status = either ((`shouldBe` status) . errHTTPCode)
+  (const (expectationFailure "Expected payment recovery to fail closed"))
 
 openDatabase :: String -> IO ConnectionPool
 openDatabase url = do

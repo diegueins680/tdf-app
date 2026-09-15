@@ -193,18 +193,29 @@ export const paymentIdempotencyStorageKey = (
   method: HostedPaymentMethod,
 ): string => `tdf:provider-payment-idempotency:v1:${checkoutId}:${provider}:${method}`;
 
-export const loadOrCreatePaymentIdempotencyKey = (
+export const loadExistingPaymentIdempotencyKey = (
   checkoutId: string,
   provider: HostedPaymentProvider,
   method: HostedPaymentMethod,
-): string => {
+): string | null => {
   const key = paymentIdempotencyStorageKey(checkoutId, provider, method);
   try {
     const existing = storage()?.getItem(key)?.trim();
     if (existing && /^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$/.test(existing)) return existing;
   } catch {
-    // Fall through to an in-memory-safe key for this invocation.
+    // Recovery must not replace an unavailable original key.
   }
+  return null;
+};
+
+export const loadOrCreatePaymentIdempotencyKey = (
+  checkoutId: string,
+  provider: HostedPaymentProvider,
+  method: HostedPaymentMethod,
+): string => {
+  const existing = loadExistingPaymentIdempotencyKey(checkoutId, provider, method);
+  if (existing) return existing;
+  const key = paymentIdempotencyStorageKey(checkoutId, provider, method);
   const entropy = globalThis.crypto?.randomUUID?.()
     ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const created = `payment-session-${entropy}`;

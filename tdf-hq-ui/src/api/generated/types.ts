@@ -4279,7 +4279,7 @@ export interface paths {
         put?: never;
         /**
          * Create or recover a hosted provider payment session
-         * @description Routes only through an exact enabled provider/method/capability combination. A provider contact with an ambiguous outcome is locked for reconciliation and cannot be retried through another provider.
+         * @description New provider contacts require an exact enabled provider/method/capability combination and a payable, unexpired checkout. An exact request replay with the original lookup token and idempotency key recovers a previously contacted operation even after checkout expiry or payment, account suspension, or provider credential unavailability. Recovery validates immutable request fields and still requires the operation encryption key. A merely prepared operation remains subject to all new-contact gates. An ambiguous outcome stays locked for reconciliation and cannot be retried through another provider.
          */
         post: operations["createProviderPaymentSession"];
         delete?: never;
@@ -21661,7 +21661,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Checkout is absent */
+            /** @description Checkout or lookup token is invalid, or no contacted replay exists and checkout cannot accept payment. This is not no-charge evidence for an earlier transmitted request. */
             404: {
                 headers: {
                     [name: string]: unknown;
