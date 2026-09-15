@@ -142,3 +142,9 @@ writes and old contracts. After activation, keep this minimum enforcement versio
 reverting to a handler that ignores token revocation would restore the demonstrated
 bypass. Pause UI/new work while retaining authority checks and persisted blocks.
 The wider legacy/privacy cutover remains incomplete and activation stays blocked.
+
+Hosted catalog audit initially rejected the new `SessionAccess` sum type as an
+unreviewed candidate. It now has an explicit genuine-technical-constant decision:
+the two constructors select shared/exclusive database locking, not business values
+or grants. The unchanged catalog audit passed locally after classification.
+`evidence/session-catalog-reviewed.txt`; hosted results remain tracked separately.
