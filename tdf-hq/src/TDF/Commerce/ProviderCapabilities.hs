@@ -153,6 +153,7 @@ routePayments activations request
             ]
       if activationReady activation
           && paEnvironment activation == prEnvironment request
+          && prMethod request `elem` paVerifiedMethods activation
           && prFlow request `elem` ppFlows profile
           && all (`elem` documentedCapabilities) (prRequiredCapabilities request)
           && all (`elem` verifiedCapabilities) (prRequiredCapabilities request)
@@ -348,7 +349,8 @@ providerProfile provider = case provider of
   ProviderBankTransfer -> Just ProviderProfile
     { ppProvider = provider
     , ppFlows = directFlows
-    , ppMethodCapabilities = [(MethodManualBankTransfer, [])]
+    , ppMethodCapabilities =
+        [(MethodManualBankTransfer, [CapabilityOneTime])]
     }
   ProviderStripe -> Nothing
   ProviderCash -> Nothing
