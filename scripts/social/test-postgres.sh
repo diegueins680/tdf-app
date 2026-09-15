@@ -68,20 +68,33 @@ DO $$ BEGIN
   ASSERT social_v2_preferences(1,true,true,1)->>'error'='unavailable';
 END $$;
 SQL
-# Accept overlaps block. Both share actor/credential/pair locks. Block wins before
-# the waiting acceptance reaches its validation boundary.
+# Coordinate with a separate row-lock barrier, rather than hoping a short
+# sleep is observed under Docker/CI contention. Only this disposable DB is used.
+psql_test -c "CREATE TABLE social_race_barrier(id integer PRIMARY KEY); INSERT INTO social_race_barrier VALUES(1);" >/dev/null
+wait_for_session() {
+  for attempt in $(seq 1 100); do
+    waiting=$(psql_test -Atc "SELECT count(*) FROM pg_stat_activity WHERE application_name='$1' AND wait_event_type='$2'")
+    if [ "$waiting" = 1 ]; then return; fi
+  done
+  echo "Race barrier not reached: $1 / $2" >&2
+  return 1
+}
+psql_test -c "SET application_name='social-race-gate'; BEGIN; SELECT id FROM social_race_barrier FOR UPDATE; SELECT pg_sleep(300);" >/dev/null 2>&1 &
+gate_pid=$!
+wait_for_session social-race-gate Timeout
 psql_test -c "SELECT social_v2_mutate(3,4,'request',0,'race-request')" >/dev/null
-psql_test -c "BEGIN; SELECT social_v2_mutate(3,4,'block',1,'race-block'); SELECT pg_sleep(1); COMMIT;" > /tmp/tdf-social-race-$$.txt &
+psql_test -c "SET application_name='social-race-block'; BEGIN; SELECT social_v2_mutate(3,4,'block',1,'race-block'); SELECT id FROM social_race_barrier FOR UPDATE; COMMIT;" > /tmp/tdf-social-race-block-$$.txt &
 race_pid=$!
-# Wait until the block transaction is in its deliberate sleep, not a timing guess.
-for attempt in $(seq 1 100); do
-  waiting=$(psql_test -Atc "SELECT count(*) FROM pg_stat_activity WHERE datname='social_test' AND wait_event='PgSleep'")
-  if [ "$waiting" = 1 ]; then break; fi
-done
-[ "$waiting" = 1 ]
-result=$(psql_test -Atc "SELECT social_v2_mutate(4,3,'accept',1,'race-accept')->>'error'")
+wait_for_session social-race-block Lock
+psql_test -Atc "SET application_name='social-race-accept'; SELECT social_v2_mutate(4,3,'accept',1,'race-accept')->>'error';" > /tmp/tdf-social-race-accept-$$.txt &
+accept_pid=$!
+wait_for_session social-race-accept Lock
+# Releasing this controller connection lets block commit before accept resumes.
+psql_test -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name='social-race-gate'" >/dev/null
+wait "$gate_pid" || true # Explicit, expected controller termination only.
 wait "$race_pid"
-[ "$result" = unavailable ]
+wait "$accept_pid"
+[ "$(tail -1 /tmp/tdf-social-race-accept-$$.txt)" = unavailable ]
 psql_test -c "DO \$\$ BEGIN ASSERT NOT EXISTS(SELECT 1 FROM social_v2_pair WHERE party_a=3 AND party_b=4 AND (consent_a OR consent_b)); END \$\$;"
 psql_test < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_pause.sql"
 psql_test <<'SQL'
@@ -100,7 +113,11 @@ psql_test < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
 psql_test < "$TDF_SOCIAL_ROOT/scripts/social/read-model-tests.sql"
 psql_test < "$TDF_SOCIAL_ROOT/scripts/social/model-cases.sql"
 if [ "${TDF_SOCIAL_BENCHMARK:-0}" = 1 ]; then
-  psql_test < "$TDF_SOCIAL_ROOT/scripts/social/benchmark.sql"
+  if [ "${TDF_SOCIAL_FEED_BENCHMARK:-0}" = 1 ]; then
+    cat "$TDF_SOCIAL_ROOT/scripts/social/benchmark.sql" "$TDF_SOCIAL_ROOT/scripts/social/feed-benchmark.sql" | psql_test
+  else
+    psql_test < "$TDF_SOCIAL_ROOT/scripts/social/benchmark.sql"
+  fi
 fi
 echo 'PASS: feed ordering, eligibility, edits, deletion, backdated publish, revocation, discovery opt-out/exclusions'
 echo 'PASS: additive reapply, denied defaults, consent, retry, block race, preferences, closure, pause preserves new writes'

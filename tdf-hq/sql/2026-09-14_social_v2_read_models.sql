@@ -5,6 +5,10 @@ CREATE TABLE IF NOT EXISTS social_v2_publication (
   position bigint NOT NULL UNIQUE,
   published_at timestamptz NOT NULL DEFAULT clock_timestamp()
 );
+CREATE INDEX IF NOT EXISTS social_v2_club_artist ON fan_club(artist_party_id,id);
+CREATE INDEX IF NOT EXISTS social_v2_officer_actor ON fan_club_officer(fan_party_id,club_id);
+CREATE INDEX IF NOT EXISTS social_v2_visible_post_club ON fan_club_post(club_id,id)
+  WHERE parent_id IS NULL AND NOT is_hidden;
 -- Publication position is assigned while holding the runtime row until COMMIT.
 -- It is a derived publication order, NOT the original author-supplied date or a sequence.
 CREATE OR REPLACE FUNCTION social_v2_publish_batch() RETURNS integer LANGUAGE plpgsql AS $$
@@ -25,7 +29,7 @@ BEGIN
 END $$;
 
 CREATE OR REPLACE FUNCTION social_v2_feed(actor bigint, before_position bigint, page_size integer)
-RETURNS jsonb LANGUAGE plpgsql AS $$
+RETURNS jsonb LANGUAGE plpgsql STABLE AS $$
 DECLARE result_value jsonb;
 BEGIN
   IF NOT EXISTS(SELECT 1 FROM social_v2_runtime WHERE enabled) THEN
@@ -35,29 +39,38 @@ BEGIN
     RETURN '{"error":"invalid"}'::jsonb;
   END IF;
   IF NOT social_v2_live(actor) THEN RETURN '{"error":"unavailable"}'::jsonb; END IF;
-  WITH eligible AS (
+  WITH membership AS MATERIALIZED (
+    -- Start from the viewer's authoritative clubs. An empty/sparse membership
+    -- must not inspect the global publication history to discover no matches.
+    SELECT c.id,c.artist_party_id FROM fan_follow f JOIN fan_club c ON c.artist_party_id=f.artist_party_id
+      WHERE f.fan_party_id=actor
+    UNION SELECT c.id,c.artist_party_id FROM fan_club c WHERE c.artist_party_id=actor
+    UNION SELECT c.id,c.artist_party_id FROM fan_club_officer o JOIN fan_club c ON c.id=o.club_id
+      WHERE o.fan_party_id=actor
+  ), clubs AS MATERIALIZED (
+    SELECT c.* FROM membership c JOIN party artist ON artist.id=c.artist_party_id
+      LEFT JOIN social_v2_preference pref ON pref.party_id=artist.id
+      LEFT JOIN social_v2_pair r ON r.party_a=least(actor,artist.id) AND r.party_b=greatest(actor,artist.id)
+    WHERE NOT artist.is_org AND NOT coalesce(pref.closed,false)
+      AND EXISTS(SELECT 1 FROM user_credential u WHERE u.party_id=artist.id AND u.active)
+      AND NOT coalesce(r.block_a OR r.block_b,false)
+      AND NOT coalesce(CASE WHEN actor=r.party_a THEN r.mute_a ELSE r.mute_b END,false)
+  ), eligible AS (
     SELECT s.position,s.published_at,p.id,p.title,p.content,p.created_at,
       p.fan_party_id AS author_id,a.display_name,c.artist_party_id
-    FROM social_v2_publication s JOIN fan_club_post p ON p.id=s.post_id
-      JOIN fan_club c ON c.id=p.club_id JOIN party a ON a.id=p.fan_party_id
+    FROM clubs c JOIN fan_club_post p ON p.club_id=c.id
+      JOIN social_v2_publication s ON s.post_id=p.id JOIN party a ON a.id=p.fan_party_id
+      LEFT JOIN social_v2_preference pref ON pref.party_id=a.id
+      LEFT JOIN social_v2_pair r ON r.party_a=least(actor,a.id) AND r.party_b=greatest(actor,a.id)
     WHERE (before_position IS NULL OR s.position<before_position)
       AND NOT p.is_hidden AND p.parent_id IS NULL
-      AND social_v2_allowed(actor,p.fan_party_id) AND social_v2_allowed(actor,c.artist_party_id)
-      -- Membership is checked in its authoritative source on EVERY page.
-      AND (c.artist_party_id=actor OR EXISTS (SELECT 1 FROM fan_follow f
-             WHERE f.fan_party_id=actor AND f.artist_party_id=c.artist_party_id)
-           OR EXISTS (SELECT 1 FROM fan_club_officer o
-             WHERE o.club_id=c.id AND o.fan_party_id=actor))
-      -- Subscribe to an artist's club or explicitly follow its author.
-      AND (EXISTS (SELECT 1 FROM fan_follow f
-             WHERE f.fan_party_id=actor AND f.artist_party_id=c.artist_party_id)
-           OR EXISTS (SELECT 1 FROM social_v2_pair r
-             WHERE r.party_a=least(actor,p.fan_party_id) AND r.party_b=greatest(actor,p.fan_party_id)
-               AND CASE WHEN actor=r.party_a THEN r.follow_a ELSE r.follow_b END))
-      AND NOT EXISTS (SELECT 1 FROM social_v2_pair r
-        WHERE ((r.party_a=least(actor,p.fan_party_id) AND r.party_b=greatest(actor,p.fan_party_id))
-            OR (r.party_a=least(actor,c.artist_party_id) AND r.party_b=greatest(actor,c.artist_party_id)))
-          AND CASE WHEN actor=r.party_a THEN r.mute_a ELSE r.mute_b END)
+      AND NOT a.is_org AND NOT coalesce(pref.closed,false)
+      AND EXISTS(SELECT 1 FROM user_credential u WHERE u.party_id=a.id AND u.active)
+      AND NOT coalesce(r.block_a OR r.block_b,false)
+      AND NOT coalesce(CASE WHEN actor=r.party_a THEN r.mute_a ELSE r.mute_b END,false)
+      -- Membership above grants access; follows here select subscriptions only.
+      AND (EXISTS(SELECT 1 FROM fan_follow f WHERE f.fan_party_id=actor AND f.artist_party_id=c.artist_party_id)
+        OR coalesce(CASE WHEN actor=r.party_a THEN r.follow_a ELSE r.follow_b END,false))
     ORDER BY s.position DESC LIMIT page_size+1
   ), page AS (SELECT * FROM eligible ORDER BY position DESC LIMIT page_size)
   SELECT jsonb_build_object('items',coalesce((SELECT jsonb_agg(jsonb_build_object(
@@ -70,7 +83,7 @@ BEGIN
 END $$;
 
 CREATE OR REPLACE FUNCTION social_v2_discover(actor bigint, page_size integer) RETURNS jsonb
-LANGUAGE plpgsql AS $$
+LANGUAGE plpgsql STABLE AS $$
 DECLARE use_personalization boolean;
 BEGIN
   IF NOT EXISTS(SELECT 1 FROM social_v2_runtime WHERE enabled) THEN
@@ -116,7 +129,7 @@ REVOKE ALL ON FUNCTION social_v2_publish_batch() FROM PUBLIC;
 REVOKE ALL ON FUNCTION social_v2_feed(bigint,bigint,integer) FROM PUBLIC;
 REVOKE ALL ON FUNCTION social_v2_discover(bigint,integer) FROM PUBLIC;
 
-CREATE OR REPLACE FUNCTION social_v2_me(actor bigint) RETURNS jsonb LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION social_v2_me(actor bigint) RETURNS jsonb LANGUAGE plpgsql STABLE AS $$
 BEGIN
   IF NOT EXISTS(SELECT 1 FROM social_v2_runtime WHERE enabled) THEN
     RETURN '{"error":"disabled"}'::jsonb;
@@ -135,5 +148,28 @@ BEGIN
       ) visible), '[]'::jsonb));
 END $$;
 REVOKE ALL ON FUNCTION social_v2_me(bigint) FROM PUBLIC;
+
+-- A blocked recipient cannot poll the other party's relationship revision.
+-- The blocking party retains its own control so it can unblock deliberately.
+CREATE OR REPLACE FUNCTION social_v2_relationship(actor bigint, target bigint)
+RETURNS jsonb LANGUAGE plpgsql STABLE AS $$
+BEGIN
+  IF NOT EXISTS(SELECT 1 FROM social_v2_runtime WHERE enabled) THEN
+    RETURN '{"error":"disabled"}'::jsonb;
+  END IF;
+  IF actor IS NULL OR target IS NULL OR actor<=0 OR target<=0 OR actor=target THEN
+    RETURN '{"error":"invalid"}'::jsonb;
+  END IF;
+  IF NOT social_v2_live(actor) OR NOT social_v2_live(target) THEN
+    RETURN '{"error":"unavailable"}'::jsonb;
+  END IF;
+  IF NOT social_v2_allowed(actor,target) AND NOT EXISTS (
+    SELECT 1 FROM social_v2_pair p
+    WHERE p.party_a=least(actor,target) AND p.party_b=greatest(actor,target)
+      AND CASE WHEN actor=p.party_a THEN p.block_a ELSE p.block_b END
+  ) THEN RETURN '{"error":"unavailable"}'::jsonb; END IF;
+  RETURN social_v2_state(actor,target);
+END $$;
+REVOKE ALL ON FUNCTION social_v2_relationship(bigint,bigint) FROM PUBLIC;
 
 COMMIT;
