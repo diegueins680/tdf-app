@@ -67,9 +67,27 @@ export function summarizeStatus(app, value) {
   };
 }
 
+export function flyEnvironmentForApp(app, environment = process.env) {
+  assertStagingApp(app);
+  const secretName = app === STAGING_APPS[0] ? 'FLY_STAGING_API_TOKEN' : 'FLY_STAGING_WEB_TOKEN';
+  const scopedEnvironment = { ...environment };
+  // Never fall back to a possibly production-scoped repository token. Keep tokens out
+  // of command arguments and do not give either app's child process the other token.
+  delete scopedEnvironment.FLY_STAGING_API_TOKEN;
+  delete scopedEnvironment.FLY_STAGING_WEB_TOKEN;
+  delete scopedEnvironment.KOYEB_API_TOKEN;
+  scopedEnvironment.FLY_API_TOKEN = environment[secretName] ?? '';
+  return scopedEnvironment;
+}
+
 async function flyJson(args) {
+  const app = args[args.indexOf('--app') + 1];
+  const env = flyEnvironmentForApp(app);
+  if (process.env.GITHUB_ACTIONS === 'true' && !env.FLY_API_TOKEN) {
+    throw new Error('No access token configured for this staging app');
+  }
   const { stdout } = await exec('flyctl', args, {
-    encoding: 'utf8', timeout: 30_000, maxBuffer: 5 * 1024 * 1024,
+    env, encoding: 'utf8', timeout: 30_000, maxBuffer: 5 * 1024 * 1024,
   });
   return JSON.parse(stdout);
 }

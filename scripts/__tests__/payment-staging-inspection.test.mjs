@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  assertStagingApp, classifyInspectionError, inspectKoyeb, inspectStaging, STAGING_APPS,
+  assertStagingApp, classifyInspectionError, flyEnvironmentForApp, inspectKoyeb, inspectStaging, STAGING_APPS,
   summarizeConfig, summarizeSecrets, summarizeStatus,
 } from '../inspect-payment-staging.mjs';
 
@@ -10,6 +10,25 @@ test('staging inspection refuses production and arbitrary targets', () => {
     assert.throws(() => assertStagingApp(app));
   }
   STAGING_APPS.forEach(assertStagingApp);
+});
+
+test('each staging app receives only its dedicated token and never a legacy fallback', () => {
+  const environment = {
+    PATH: '/synthetic/bin', FLY_API_TOKEN: 'SYNTHETIC-LEGACY',
+    FLY_STAGING_API_TOKEN: 'SYNTHETIC-API', FLY_STAGING_WEB_TOKEN: 'SYNTHETIC-WEB',
+    KOYEB_API_TOKEN: 'SYNTHETIC-KOYEB',
+  };
+  assert.deepEqual(flyEnvironmentForApp(STAGING_APPS[0], environment), {
+    PATH: '/synthetic/bin', FLY_API_TOKEN: 'SYNTHETIC-API',
+  });
+  assert.deepEqual(flyEnvironmentForApp(STAGING_APPS[1], environment), {
+    PATH: '/synthetic/bin', FLY_API_TOKEN: 'SYNTHETIC-WEB',
+  });
+  assert.deepEqual(flyEnvironmentForApp(STAGING_APPS[0], { FLY_API_TOKEN: 'SYNTHETIC-LEGACY' }), {
+    FLY_API_TOKEN: '',
+  });
+  assert.throws(() => flyEnvironmentForApp('tdf-hq', environment));
+  assert.equal(environment.FLY_API_TOKEN, 'SYNTHETIC-LEGACY');
 });
 
 test('projections discard credential values, digests, unknown config and machine payloads', () => {
