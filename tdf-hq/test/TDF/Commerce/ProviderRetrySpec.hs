@@ -366,6 +366,7 @@ spec = do
         notificationInboxSpec
         notificationIdentityInboxSpec
         reconciliationTransactionSpec
+        closedCheckoutEvidenceSpec
         captureReplaySpec
         manualCaptureReplaySpec
         it "serializes different keys and permits only one active attempt" $ \pool -> do
@@ -1675,7 +1676,13 @@ queryRecoverySpec = describe "durable missed-callback recovery" $ do
             "SELECT count(*) FROM commerce_reconciliation_exception\
             \ WHERE merchant_account_ref=? AND exception_type='scheduled_query_requires_review'"
             [PersistText merchant]) pool :: IO [Single Int64]
-          exceptions `shouldBe` [Single 2]
+          exceptions `shouldBe` [Single 1]
+          observed <- runSqlPool (rawSql
+            "SELECT actual_amount_minor FROM commerce_reconciliation_exception\
+            \ WHERE internal_reference=? AND exception_type='verified_payment_on_closed_checkout'"
+            [PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout other))]) pool
+            :: IO [Single Int64]
+          observed `shouldBe` [Single (Execution.bppAmountMinor other)]
 
       it "stops at the retry bound without converting pending into no charge" $ \pool ->
         withQueryRecovery pool provider $ \merchant -> do
@@ -1800,6 +1807,198 @@ assertQueryUnpaid pool payment = do
 
 -- Shared CheckoutStore boundary: real PostgreSQL, synthetic verified evidence.
 -- These tests do not exercise provider HTTP or actual refunds/disputes.
+closedCheckoutEvidenceSpec :: SpecWith ConnectionPool
+closedCheckoutEvidenceSpec = describe "closed checkout approval evidence" $
+  forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
+    describe (T.unpack (Checkout.paymentProviderText provider)) $
+      forM_ ["expired", "cancelled"] $ \closedStatus ->
+        describe (T.unpack closedStatus) $ do
+          it "retains exact observed money once without applying a late capture" $ \pool -> do
+            payment <- closedPaymentFixture pool provider closedStatus
+            result <- parsedQuery payment Adapter.AdapterSucceeded
+            financialBefore <- runSqlPool (closedPaymentFinancialSnapshot payment) pool
+            outcomes <- concurrently (replicate 4 (runSqlPool
+              (Reconciliation.applyQueryResult payment result "late-approval" notificationTime) pool))
+            outcomes `shouldBe` replicate 4 (Right Reconciliation.ReconciliationDeadLetter)
+            assertClosedPaymentEvidence pool payment
+            runSqlPool (closedPaymentFinancialSnapshot payment) pool `shouldReturn` financialBefore
+            snapshot <- runSqlPool (paymentSnapshot payment) pool
+            runSqlPool (Reconciliation.applyQueryResult payment result "later-replay"
+              (addUTCTime 3600 notificationTime)) pool
+              `shouldReturn` Right Reconciliation.ReconciliationDeadLetter
+            runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+          it "rolls back review evidence and its audit with the caller savepoint" $ \pool -> do
+            payment <- closedPaymentFixture pool provider closedStatus
+            result <- parsedQuery payment Adapter.AdapterSucceeded
+            snapshotBefore <- runSqlPool (paymentSnapshot payment) pool
+            runSqlPool (do
+              rawExecute "SAVEPOINT caller_owned" []
+              applied <- Reconciliation.applyQueryResult payment result "late-rollback" notificationTime
+              liftIO (applied `shouldBe` Right Reconciliation.ReconciliationDeadLetter)
+              rawExecute "ROLLBACK TO SAVEPOINT caller_owned" []
+              rawExecute "RELEASE SAVEPOINT caller_owned" []) pool
+            runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshotBefore
+
+          it "holds reordered outcomes and never releases review from an exception status edit" $ \pool -> do
+            payment <- closedPaymentFixture pool provider closedStatus
+            succeeded <- parsedQuery payment Adapter.AdapterSucceeded
+            runSqlPool (Reconciliation.applyQueryResult payment succeeded "late-first" notificationTime)
+              pool `shouldReturn` Right Reconciliation.ReconciliationDeadLetter
+            forM_ ["assigned", "resolved", "ignored"] $ \reviewStatus -> do
+              runSqlPool (rawExecute
+                "UPDATE commerce_reconciliation_exception SET status=?,resolution_notes='synthetic review'\
+                \ WHERE internal_reference=? AND exception_type='verified_payment_on_closed_checkout'"
+                [PersistText reviewStatus,
+                  PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout payment))]) pool
+              snapshot <- runSqlPool (paymentSnapshot payment) pool
+              review <- runSqlPool (closedPaymentReviewSnapshot payment) pool
+              forM_ [Adapter.AdapterSucceeded, Adapter.AdapterPending, Adapter.AdapterCancelled,
+                  Adapter.AdapterUnknown] $ \state -> do
+                result <- parsedQuery payment state
+                runSqlPool (Reconciliation.applyQueryResult payment result "reordered-after-review"
+                  (addUTCTime 3600 notificationTime)) pool
+                  `shouldReturn` Right Reconciliation.ReconciliationDeadLetter
+                runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+                runSqlPool (closedPaymentReviewSnapshot payment) pool `shouldReturn` review
+
+          it "does not create or acknowledge review from mismatched typed evidence" $ \pool -> do
+            payment <- closedPaymentFixture pool provider closedStatus
+            result <- parsedQuery payment Adapter.AdapterSucceeded
+            let reject = do
+                  snapshot <- runSqlPool (paymentSnapshot payment) pool
+                  forM_ [result { Adapter.adapterResultAmountMinor = Nothing }
+                    , result { Adapter.adapterResultAmountMinor = Just 1 }
+                    , result { Adapter.adapterResultCurrency = Just "EUR" }
+                    , result { Adapter.adapterResultExternalId = "SYNTHETIC-PRIVATE" }
+                    , result { Adapter.adapterResultCertainty = ProviderAmbiguous }] $ \invalid -> do
+                      outcome <- runSqlPool (Reconciliation.applyQueryResult payment invalid
+                        "invalid-closed-approval" notificationTime) pool
+                      outcome `shouldSatisfy` isLeft
+                      show outcome `shouldNotContain` "SYNTHETIC-PRIVATE"
+                  runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+            reject
+            runSqlPool (Reconciliation.applyQueryResult payment result "valid-closed-approval" notificationTime)
+              pool `shouldReturn` Right Reconciliation.ReconciliationDeadLetter
+            reject
+
+          it "rolls back the exception if its immutable audit cannot be written" $ \pool -> do
+            payment <- closedPaymentFixture pool provider closedStatus
+            result <- parsedQuery payment Adapter.AdapterSucceeded
+            snapshot <- runSqlPool (paymentSnapshot payment) pool
+            let install = runSqlPool (rawExecute
+                  "ALTER TABLE commerce_checkout_audit_event ADD CONSTRAINT synthetic_late_audit_failure\
+                  \ CHECK (event_type<>'verified_payment_on_closed_checkout') NOT VALID" []) pool
+                remove _ = runSqlPool (rawExecute
+                  "ALTER TABLE commerce_checkout_audit_event DROP CONSTRAINT synthetic_late_audit_failure" []) pool
+            failed <- bracket install remove (\_ -> try (runSqlPool
+              (Reconciliation.applyQueryResult payment result "failed-review-audit" notificationTime) pool))
+              :: IO (Either SqlError (Either Text Reconciliation.ReconciliationDisposition))
+            failed `shouldSatisfy` isLeft
+            runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+          it "hides a retained redirect and never advertises no-charge fallback through recovery" $ \pool -> do
+            payment <- closedPaymentFixture pool provider closedStatus
+            let checkoutId = Checkout.checkoutReferenceId (Execution.bppCheckout payment)
+                attemptId = Checkout.paymentAttemptReferenceId (Execution.bppAttempt payment)
+                load token = runSqlPool (Execution.loadAuthorizedCreateOperation checkoutId attemptId
+                  (digestText token) recoveryEncryptionKey) pool
+            runSqlPool (rawExecute
+              "UPDATE commerce_provider_operation SET redirect_url_ciphertext=pgp_sym_encrypt(?,?)\
+              \ WHERE payment_attempt_id=?::uuid"
+              [PersistText "https://checkout-test.placetopay.com/session/synthetic-private",
+                PersistText recoveryEncryptionKey,paymentAttemptParameter payment]) pool
+            original <- load checkoutId >>= requireRight
+            Execution.porRedirectUrl original `shouldSatisfy` (/= Nothing)
+            result <- parsedQuery payment Adapter.AdapterSucceeded
+            runSqlPool (Reconciliation.applyQueryResult payment result "held-recovery" notificationTime)
+              pool `shouldReturn` Right Reconciliation.ReconciliationDeadLetter
+            held <- load checkoutId >>= requireRight
+            Execution.porStatus held `shouldBe` "ambiguous"
+            Execution.porOutcomeCertainty held `shouldBe` ProviderAmbiguous
+            Execution.porRedirectUrl held `shouldBe` Nothing
+            Execution.porReference held `shouldBe` Execution.porReference original
+            Execution.porProviderResourceId held `shouldBe` Execution.porProviderResourceId original
+            load "wrong-synthetic-token" >>= (`shouldSatisfy` isLeft)
+            withRecoveryEnvironment $ do
+              let _ :<|> getSession :<|> _ = providerExecutionServer
+                  request token = runHandler (runReaderT (getSession checkoutId attemptId (Just token))
+                    (queryEnv pool))
+              dto <- request checkoutId >>= requireRight
+              pssState dto `shouldBe` "ambiguous"
+              pssOutcomeCertainty dto `shouldBe` "ambiguous"
+              pssRedirectUrl dto `shouldBe` Nothing
+              pssCanRetryOrFallback dto `shouldBe` False
+              request "wrong-synthetic-token" >>= assertHttpError 404
+
+          it "fails closed if a retained review record has conflicting money" $ \pool -> do
+            payment <- closedPaymentFixture pool provider closedStatus
+            result <- parsedQuery payment Adapter.AdapterSucceeded
+            runSqlPool (Reconciliation.applyQueryResult payment result "first-review" notificationTime)
+              pool `shouldReturn` Right Reconciliation.ReconciliationDeadLetter
+            runSqlPool (rawExecute
+              "UPDATE commerce_reconciliation_exception SET actual_amount_minor=1\
+              \ WHERE internal_reference=? AND exception_type='verified_payment_on_closed_checkout'"
+              [PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout payment))]) pool
+            snapshot <- runSqlPool (paymentSnapshot payment) pool
+            review <- runSqlPool (closedPaymentReviewSnapshot payment) pool
+            runSqlPool (Reconciliation.applyQueryResult payment result "conflicting-review" notificationTime)
+              pool >>= (`shouldSatisfy` isLeft)
+            runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+            runSqlPool (closedPaymentReviewSnapshot payment) pool `shouldReturn` review
+
+closedPaymentFixture
+  :: ConnectionPool -> Checkout.PaymentProvider -> Text -> IO Execution.BoundProviderPayment
+closedPaymentFixture pool provider status = do
+  payment <- reconciliationFixture pool provider
+  runSqlPool (rawExecute "UPDATE commerce_checkout_session SET status=? WHERE id=?::uuid"
+    [PersistText status, PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout payment))]) pool
+  pure payment
+
+closedPaymentFinancialSnapshot :: Execution.BoundProviderPayment -> SqlPersistT IO [Single Text]
+closedPaymentFinancialSnapshot payment = rawSql
+  "SELECT jsonb_build_object(\
+  \ 'checkout',to_jsonb(checkout),'attempt',to_jsonb(attempt),'intent',to_jsonb(intent),\
+  \ 'operation',to_jsonb(operation.*),\
+  \ 'ledger',(SELECT jsonb_agg(to_jsonb(txn) ORDER BY txn.id) FROM commerce_ledger_transaction txn\
+  \ WHERE source_id=attempt.id::text),\
+  \ 'receipts',(SELECT jsonb_agg(to_jsonb(receipt) ORDER BY receipt.id) FROM commerce_receipt receipt\
+  \ WHERE checkout_id=checkout.id),\
+  \ 'history',(SELECT jsonb_agg(to_jsonb(history) ORDER BY history.id) FROM commerce_payment_state_history history\
+  \ WHERE payment_intent_id=intent.id))::text\
+  \ FROM commerce_payment_attempt attempt\
+  \ JOIN commerce_checkout_session checkout ON checkout.id=attempt.checkout_id\
+  \ JOIN commerce_payment_intent intent ON intent.id=attempt.payment_intent_id\
+  \ JOIN commerce_provider_operation operation ON operation.payment_attempt_id=attempt.id\
+  \ WHERE attempt.id=?::uuid"
+  [paymentAttemptParameter payment]
+
+closedPaymentReviewSnapshot :: Execution.BoundProviderPayment -> SqlPersistT IO [Single Text]
+closedPaymentReviewSnapshot payment = rawSql
+  "SELECT to_jsonb(review)::text FROM commerce_reconciliation_exception review\
+  \ WHERE internal_reference=? AND exception_type='verified_payment_on_closed_checkout' ORDER BY id"
+  [PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout payment))]
+
+assertClosedPaymentEvidence :: ConnectionPool -> Execution.BoundProviderPayment -> Expectation
+assertClosedPaymentEvidence pool payment = do
+  rows <- runSqlPool (rawSql
+    "SELECT exception.expected_amount_minor,exception.actual_amount_minor,exception.currency,\
+    \ exception.provider,exception.environment,exception.merchant_account_ref,exception.detected_at,\
+    \ (SELECT count(*) FROM commerce_checkout_audit_event audit\
+    \ WHERE audit.checkout_id=?::uuid AND audit.event_type='verified_payment_on_closed_checkout'\
+    \ AND audit.metadata->>'exception_id'=exception.id::text\
+    \ AND audit.metadata->>'attempt_id'=?)\
+    \ FROM commerce_reconciliation_exception exception WHERE exception.internal_reference=?\
+    \ AND exception.provider_reference=? AND exception.exception_type='verified_payment_on_closed_checkout'"
+    [ PersistText checkoutId, paymentAttemptParameter payment, PersistText checkoutId
+    , PersistText (Execution.bppProviderResourceId payment)]) pool
+    :: IO [(Single Int64, Single Int64, Single Text, Single Text, Single Text,
+      Single Text, Single UTCTime, Single Int64)]
+  rows `shouldBe` [(Single (Execution.bppAmountMinor payment),Single (Execution.bppAmountMinor payment),
+    Single (Execution.bppCurrency payment),Single (Checkout.paymentProviderText (Execution.bppProvider payment)),
+    Single "sandbox",Single (Execution.bppMerchantRef payment),Single notificationTime,Single 1)]
+  where checkoutId = Checkout.checkoutReferenceId (Execution.bppCheckout payment)
+
 captureReplaySpec :: SpecWith ConnectionPool
 captureReplaySpec = describe "verified capture replay integrity" $
   forM_ [Checkout.ProviderDatafast, Checkout.ProviderPayPal,
@@ -2041,7 +2240,7 @@ reconciliationTransactionSpec = describe "authoritative query transaction owners
         failed `shouldSatisfy` isLeft
         runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
 
-      it "preserves the caller savepoint and rolls back only a rejected application" $ \pool -> do
+      it "preserves the caller savepoint around closed-checkout review evidence" $ \pool -> do
         payment <- reconciliationFixture pool provider
         result <- parsedQuery payment Adapter.AdapterSucceeded
         snapshot <- runSqlPool (paymentSnapshot payment) pool
@@ -2049,10 +2248,10 @@ reconciliationTransactionSpec = describe "authoritative query transaction owners
           rawExecute "SAVEPOINT caller_owned" []
           rawExecute "UPDATE commerce_checkout_session SET status='expired' WHERE id=?::uuid"
             [PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout payment))]
-          expired <- paymentSnapshot payment
+          expired <- closedPaymentFinancialSnapshot payment
           applied <- Reconciliation.applyQueryResult payment result "expired-query" notificationTime
-          liftIO (applied `shouldSatisfy` isLeft)
-          paymentSnapshot payment >>= liftIO . (`shouldBe` expired)
+          liftIO (applied `shouldBe` Right Reconciliation.ReconciliationDeadLetter)
+          closedPaymentFinancialSnapshot payment >>= liftIO . (`shouldBe` expired)
           rawExecute "ROLLBACK TO SAVEPOINT caller_owned" []
           rawExecute "RELEASE SAVEPOINT caller_owned" []
           paymentSnapshot payment >>= liftIO . (`shouldBe` snapshot)) pool

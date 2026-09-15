@@ -152,6 +152,34 @@ describe('HostedProviderCheckout', () => {
     expect(createMock).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps a recovered closed-checkout approval on hold without success or a redirect', async () => {
+    seedPending();
+    const confirmed = jest.fn();
+    const navigate = jest.fn();
+    const locks: boolean[] = [];
+    const held = {
+      ...succeeded, state: 'ambiguous', outcomeCertainty: 'ambiguous',
+      redirectUrl: null, canRetryOrFallback: false,
+    };
+    createMock.mockResolvedValue(held);
+    getMock.mockResolvedValue(held);
+    render(<HostedProviderCheckout checkout={context}
+      offeredMethods={['placetopay_card', 'payphone_wallet']}
+      onPaymentConfirmed={confirmed} navigateToProvider={navigate}
+      onSafetyLockChange={(locked) => locks.push(locked)} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Recuperar pago original' }));
+    expect(await screen.findByText(/No reintentes ni uses otro proveedor/)).toBeTruthy();
+    expect(confirmed).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(screen.queryByText('El servidor verificó el pago del proveedor.')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Continuar en la página segura del proveedor' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Elegir otro método de pago' })).toBeNull();
+    expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
+    expect(locks).toContain(true);
+    expect(createMock).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the original PayPhone contact frozen during exact recovery', async () => {
     const key = seedPending(true);
     createMock.mockResolvedValue({ ...succeeded, provider: 'payphone' });

@@ -52,6 +52,11 @@ An original verified capture is not a new payment after a refund or dispute.
 Do not replace a mismatched/voided receipt or reconstruct missing ledger evidence
 to make a replay pass. Drain older binding writers before rollout, since they
 can still regress a successful attempt to processing.
+For matched approvals received after checkout expiry/cancellation, follow
+[ADR 0124](../adr/0124-closed-checkout-approval-evidence.md) and the
+[closed-checkout evidence runbook](closed-checkout-approval-2026-09-15.md).
+These observations do not reopen inventory or post a capture. Keep the order on
+hold; a changed exception status is not permission to release it or charge again.
 
 ## 1. Configuration and activation
 

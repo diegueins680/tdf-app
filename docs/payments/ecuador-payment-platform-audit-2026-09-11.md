@@ -51,6 +51,13 @@ see [ADR 0123](../adr/0123-idempotent-capture-evidence-and-binding.md) and
 receipts and post-capture refund/dispute states are preserved; first late payments
 still require separate reconciliation and fulfillment decisions.
 
+The next 2026-09-15 increment retains exact approved-query evidence for closed
+PlaceToPay/PayPhone checkouts and holds recovery without reopening fulfillment;
+see [ADR 0124](../adr/0124-closed-checkout-approval-evidence.md) and
+[verification/operator procedure](closed-checkout-approval-2026-09-15.md).
+It does not post a capture/suspense ledger or provide automatic refund/release.
+Staging and provider sandbox qualification remain unavailable.
+
 ## 2. Capability and access report
 
 | Capability | Result on 2026-09-11 | Evidence and limitation |
