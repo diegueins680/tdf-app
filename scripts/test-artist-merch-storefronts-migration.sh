@@ -311,8 +311,7 @@ fi
 wait "$first_reservation_pid"
 concurrent_stock=$(psql_exec "$TDF_MERCH_DATABASE" -Atc "SELECT stock_reserved || '|' || stock_sold FROM merch_product_variant WHERE id='96000000-0000-4000-8000-000000000001';")
 test "$concurrent_stock" = "1|4"
-released=$(psql_exec "$TDF_MERCH_DATABASE" -Atc "SELECT merch_release_expired_reservations(now()+interval '1 hour');")
-test "$released" = "1"
+apply_file "$TDF_MERCH_DATABASE" "$TDF_MERCH_ROOT/tdf-hq/test/integration/merch_checkout_expiry_assertions.sql"
 released_stock=$(psql_exec "$TDF_MERCH_DATABASE" -Atc "SELECT stock_reserved || '|' || stock_sold FROM merch_product_variant WHERE id='96000000-0000-4000-8000-000000000001';")
 test "$released_stock" = "0|4"
 if psql_exec "$TDF_MERCH_DATABASE" -c "UPDATE merch_product_variant SET stock_on_hand=3 WHERE id='96000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then

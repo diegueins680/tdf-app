@@ -99,3 +99,9 @@ reputation entry is consolidated; all unique prior registrations and SQL checksu
 It extends the strict rehearsal with ledger retry and disabled-provider/
 financial-setting preservation checks. See [PR 11 evidence and release blockers](pr-11-schema-dependencies.md).
 This does not activate event operations or providers, and does not complete the remaining phases.
+
+The twelfth branch, `test/merch-expiry-checkout-contract`, corrects the stale owning-storefront test
+expectation using the existing checkout-count contract. MX-01–05 add exact-boundary, projection,
+paid-evidence, retry and expired-reservation rejection checks, allowing the unchanged downstream
+refund/settlement/rollback suite to execute. The owning runner is added to migration CI with path
+selection regressions. See [PR 12 evidence and limitations](pr-12-merch-expiry-contract.md).
