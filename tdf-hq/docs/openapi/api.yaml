@@ -9,6 +9,51 @@ servers:
     description: Development server
 
 paths:
+  /event-operations/events/{eventId}/tasks/{activityId}:
+    get:
+      tags: [Event operations]
+      summary: Read the currently authorized task state and RACI projection
+      description: >-
+        Uses canonical logistics activity IDs. Requires current ownership or task.read/task.manage
+        scoped to this event or exact task; event.read, finance, coproduction and assignment alone
+        do not grant access. Session validity is rechecked in the same database transaction.
+        The response excludes notes, titles, dates, contacts, dependencies, documents and history.
+        Activity and policy versions are not an aggregate ETag or offline write token.
+        Numeric identifiers and versions are restricted to exact JavaScript-safe integers.
+        Query parameters cannot select the acting party or authorization time.
+      operationId: getEventOperationTask
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        - name: activityId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+      responses:
+        '200':
+          description: Authorized minimal task projection; not a readiness certificate
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: ['private, no-store'] }
+              description: Do not persist this authorization-sensitive response in HTTP caches.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationTask' }
+        '400': { description: Invalid or unsafe integer path capture }
+        '401': { description: Missing, invalid or no-longer-current session }
+        '404':
+          description: Feature disabled; otherwise absent, foreign-event and unreadable tasks share not_found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
+        '503':
+          description: Persistence or strict projection validation failed; no raw diagnostic is returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
   /event-operations/events/{eventId}:
     get:
       tags: [Event operations]
@@ -7271,6 +7316,50 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    EventTaskStatus:
+      type: string
+      enum: [planned, confirmed, in_progress, completed, cancelled]
+    EventRaciAssignment:
+      type: object
+      additionalProperties: false
+      required: [partyId, role]
+      properties:
+        partyId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        role: { type: string, enum: [responsible, accountable, consulted, informed] }
+    EventTaskPolicy:
+      type: object
+      additionalProperties: false
+      required: [requiresAccountability, dependenciesGateCompletion, version]
+      properties:
+        requiresAccountability: { type: boolean }
+        dependenciesGateCompletion: { type: boolean }
+        version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+    EventOperationTask:
+      type: object
+      additionalProperties: false
+      required: [eventId, activityId, status, version, raci, accountabilityNeedsAttention]
+      properties:
+        eventId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        activityId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        status: { $ref: '#/components/schemas/EventTaskStatus' }
+        version:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9007199254740991
+          description: Activity version only, not an aggregate task/RACI concurrency token.
+        policy: { $ref: '#/components/schemas/EventTaskPolicy' }
+        raci:
+          type: array
+          uniqueItems: true
+          description: Current non-revoked assignments at one server-selected authorization instant.
+          items: { $ref: '#/components/schemas/EventRaciAssignment' }
+        accountabilityNeedsAttention:
+          type: boolean
+          description: >-
+            True exactly when an existing policy requires accountability and the current RACI
+            lacks exactly one Accountable or any Responsible. False with no policy does not
+            certify readiness, membership validity or satisfied dependencies.
     EventLifecycleState:
       type: string
       enum:

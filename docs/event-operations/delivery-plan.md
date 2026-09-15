@@ -113,3 +113,11 @@ and event.read/finance permissions do not disclose task state. New TLC/Alloy che
 SQL, and disposable PostgreSQL tests cover permissions, races and reversible migration on
 reduced and complete schemas. See [PR 13 scope and limitations](pr-13-task-read-projection.md).
 The public task API, typed consumers, aggregate write tokens and workspace views remain next.
+
+The fourteenth branch, `feat/event-task-read-api`, exposes the existing SQL read through the
+production authenticated subrouter, strict nested JSON/identity validation, no-store headers
+and a generated-type/runtime-validated web client. A real HTTP regression fails before the
+route exists, then passes alongside the earlier session/lifecycle tests. No new SQL is added.
+See [PR 14 evidence and blockers](pr-14-task-read-api.md): the full UI typecheck currently fails
+on two unchanged onboarding imports; focused task client verification is not a substitute.
+Mobile, current-head full backend build, workspace views and remaining phases stay incomplete.

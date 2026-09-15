@@ -4,6 +4,7 @@
 module TDF.EventOperations.API (EventOperationsAPI) where
 
 import Data.Int (Int64)
+import Data.Text (Text)
 import Data.UUID (UUID)
 import Servant
 
@@ -15,4 +16,6 @@ type EventOperationsAPI = "event-operations" :> "events" :> Capture "eventId" In
          :> Header' '[Required, Strict] "Idempotency-Key" UUID
          :> ReqBody '[JSON] EventTransitionCommand
          :> Post '[JSON] EventTransitionOutcomeDTO
+  :<|> "tasks" :> Capture "activityId" Int64
+         :> Get '[JSON] (Headers '[Header "Cache-Control" Text] EventOperationTaskDTO)
   )

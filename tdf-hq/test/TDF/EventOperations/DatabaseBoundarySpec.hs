@@ -3,15 +3,17 @@
 module TDF.EventOperations.DatabaseBoundarySpec (spec) where
 
 import Control.Exception (AsyncException(..), throwIO, toException)
-import Data.Aeson (encode, object, (.=))
+import Data.Aeson (Value(..), encode, object, toJSON, (.=))
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
+import Data.Text (Text)
 import qualified Data.Text.Encoding as TE
 import Database.Persist.Sql (Single(..))
 import Database.PostgreSQL.Simple (SqlError(..))
 import Database.PostgreSQL.LibPQ (ExecStatus(FatalError))
 import Test.Hspec
-import Test.QuickCheck (property)
+import Test.QuickCheck (choose, forAll, property)
 
 import TDF.EventOperations.DatabaseBoundary
 import TDF.EventOperations.Types
@@ -64,3 +66,59 @@ spec = describe "event operations database privacy boundary" $ do
       `shouldBe` replicate (length invalid) (Left SnapshotDecodeError)
     decodeSnapshotRows 10 [] `shouldBe` Left SnapshotDecodeError
     decodeSnapshotRows 10 [Single Nothing, Single Nothing] `shouldBe` Left SnapshotDecodeError
+
+  it "round-trips safe generated task versions with an exact target binding" $
+    forAll (choose (1, 9007199254740991)) $ \version ->
+      let task = taskFixture { eotVersion = version }
+      in decodeTaskRows 10 100 [taskRow (toJSON task)] == Right (Just task)
+
+  it "maps only one SQL NULL to task absence and rejects wrong cardinality or targets" $ do
+    decodeTaskRows 10 100 [Single Nothing] `shouldBe` Right Nothing
+    decodeTaskRows 10 100 [] `shouldBe` Left SnapshotDecodeError
+    decodeTaskRows 10 100 [Single Nothing, Single Nothing] `shouldBe` Left SnapshotDecodeError
+    decodeTaskRows 11 100 [taskRow (toJSON taskFixture)] `shouldBe` Left SnapshotDecodeError
+    decodeTaskRows 10 101 [taskRow (toJSON taskFixture)] `shouldBe` Left SnapshotDecodeError
+
+  it "rejects unsafe/nonpositive task, party and policy versions without a payload exception" $ do
+    let invalid = [ taskFixture { eotVersion = n } | n <- [0, -1, 9007199254740992] ]
+          <> [taskFixture { eotEventId = 9007199254740992 }, taskFixture { eotActivityId = 0 }]
+          <> [taskFixture { eotPolicy = Just (EventTaskPolicyDTO True True 0) }]
+          <> [taskFixture { eotRaci = [EventRaciAssignmentDTO 9007199254740992 RaciResponsible] }]
+    map (\task -> decodeTaskRows (eotEventId task) (eotActivityId task) [taskRow (toJSON task)]) invalid
+      `shouldBe` replicate (length invalid) (Left SnapshotDecodeError)
+    show SnapshotDecodeError `shouldBe` "SnapshotDecodeError"
+
+  it "rejects duplicate RACI and inconsistent attention but accepts a real attention state" $ do
+    let duplicate = taskFixture { eotRaci = eotRaci taskFixture <> eotRaci taskFixture }
+        wrongAttention = taskFixture { eotAccountabilityNeedsAttention = True }
+        attention = taskFixture { eotRaci = [], eotAccountabilityNeedsAttention = True }
+    map (decodeTaskRows 10 100 . pure . taskRow . toJSON) [duplicate, wrongAttention]
+      `shouldBe` replicate 2 (Left SnapshotDecodeError)
+    decodeTaskRows 10 100 [taskRow (toJSON attention)] `shouldBe` Right (Just attention)
+    let advisory = taskFixture { eotPolicy = Nothing, eotRaci = [] }
+    decodeTaskRows 10 100 [taskRow (toJSON advisory)] `shouldBe` Right (Just advisory)
+
+  it "rejects unknown, missing and null fields at every task projection level" $ do
+    let base = case toJSON taskFixture of Object fields -> fields; _ -> KM.empty
+        patch key value = Object (KM.insert key value base)
+        invalid =
+          [ Object (KM.delete "raci" base), patch "secret" (String "private")
+          , patch "policy" Null, patch "status" (String "invented"), patch "version" (Number 1.5)
+          , patch "policy" (object ["requiresAccountability" .= True, "version" .= (1 :: Int)])
+          , patch "policy" (object ["requiresAccountability" .= True, "dependenciesGateCompletion" .= True,
+                                    "version" .= (1 :: Int), "private" .= True])
+          , patch "raci" (toJSON [object ["partyId" .= (1 :: Int), "role" .= ("owner" :: String)]])
+          , patch "raci" (toJSON [object ["partyId" .= (1 :: Int), "role" .= ("accountable" :: String),
+                                         "contact" .= ("private" :: String)]])
+          , Null, String "private database diagnostic"
+          ]
+    map (decodeTaskRows 10 100 . pure . taskRow) invalid
+      `shouldBe` replicate (length invalid) (Left SnapshotDecodeError)
+
+taskFixture :: EventOperationTaskDTO
+taskFixture = EventOperationTaskDTO 10 100 TaskPlanned 1
+  (Just (EventTaskPolicyDTO True True 1))
+  [EventRaciAssignmentDTO 1 RaciAccountable, EventRaciAssignmentDTO 2 RaciResponsible] False
+
+taskRow :: Value -> Single (Maybe Text)
+taskRow = Single . Just . TE.decodeUtf8 . BL.toStrict . encode

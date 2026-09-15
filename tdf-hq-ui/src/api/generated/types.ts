@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/event-operations/events/{eventId}/tasks/{activityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the currently authorized task state and RACI projection
+         * @description Uses canonical logistics activity IDs. Requires current ownership or task.read/task.manage scoped to this event or exact task; event.read, finance, coproduction and assignment alone do not grant access. Session validity is rechecked in the same database transaction. The response excludes notes, titles, dates, contacts, dependencies, documents and history. Activity and policy versions are not an aggregate ETag or offline write token. Numeric identifiers and versions are restricted to exact JavaScript-safe integers. Query parameters cannot select the acting party or authorization time.
+         */
+        get: operations["getEventOperationTask"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/event-operations/events/{eventId}": {
         parameters: {
             query?: never;
@@ -6777,6 +6797,37 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {string} */
+        EventTaskStatus: "planned" | "confirmed" | "in_progress" | "completed" | "cancelled";
+        EventRaciAssignment: {
+            /** Format: int64 */
+            partyId: number;
+            /** @enum {string} */
+            role: "responsible" | "accountable" | "consulted" | "informed";
+        };
+        EventTaskPolicy: {
+            requiresAccountability: boolean;
+            dependenciesGateCompletion: boolean;
+            /** Format: int64 */
+            version: number;
+        };
+        EventOperationTask: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            status: components["schemas"]["EventTaskStatus"];
+            /**
+             * Format: int64
+             * @description Activity version only, not an aggregate task/RACI concurrency token.
+             */
+            version: number;
+            policy?: components["schemas"]["EventTaskPolicy"];
+            /** @description Current non-revoked assignments at one server-selected authorization instant. */
+            raci: components["schemas"]["EventRaciAssignment"][];
+            /** @description True exactly when an existing policy requires accountability and the current RACI lacks exactly one Accountable or any Responsible. False with no policy does not certify readiness, membership validity or satisfied dependencies. */
+            accountabilityNeedsAttention: boolean;
+        };
+        /** @enum {string} */
         EventLifecycleState: "draft" | "planning" | "pending_approval" | "approved" | "published" | "staffing" | "ready" | "in_progress" | "completed" | "settlement_pending" | "settled" | "archived" | "reprogrammed" | "cancelled";
         EventOperationSnapshot: {
             /** Format: int64 */
@@ -12889,6 +12940,63 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getEventOperationTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized minimal task projection; not a readiness certificate */
+            200: {
+                headers: {
+                    /** @description Do not persist this authorization-sensitive response in HTTP caches. */
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationTask"];
+                };
+            };
+            /** @description Invalid or unsafe integer path capture */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled; otherwise absent, foreign-event and unreadable tasks share not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Persistence or strict projection validation failed; no raw diagnostic is returned */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
     getEventOperationSnapshot: {
         parameters: {
             query?: never;
