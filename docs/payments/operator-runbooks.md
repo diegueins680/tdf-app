@@ -2,6 +2,35 @@
 
 These procedures are safe defaults for sandbox and staging. They do not authorize production deployment, provider activation, a real charge, a refund or a payout.
 
+Payment HTTP transport uses a shared no-implicit-retry TLS pool, no redirects, a
+15-second total deadline and a one-MiB decompressed response limit. A timeout,
+oversized/invalid response or HTTP error does not prove that no charge occurred.
+Preserve the original attempt and reconcile; never switch providers based only on
+an HTTP 502/503. See [ADR 0117](../adr/0117-shared-bounded-payment-transport.md) and
+[transport verification](http-boundary-2026-09-14.md) for scope and rollout limits.
+
+For per-request intent keys, legacy reference preservation, conflicting provider evidence and
+the required old/new writer cutover, follow the [2026-09-14 retry safety supplement](retry-reconciliation-safety-2026-09-14.md).
+For lost create responses after payment/expiry or account suspension, follow the
+[exact-response recovery supplement](terminal-recovery-2026-09-14.md).
+For bounded callback retention and compatibility with historical inbox rows, follow the
+[notification minimization supplement](notification-minimization-2026-09-14.md) and
+[ADR 0116](../adr/0116-minimized-provider-notification-evidence.md). Never export decrypted
+callback bodies into support tickets, logs or test evidence.
+For PlaceToPay signed identity and the bounded legacy-redelivery compatibility
+rule, follow [ADR 0118](../adr/0118-signed-payment-notification-identity.md) and
+[identity verification](notification-identity-2026-09-14.md). Never treat a newly
+calculated callback ID as proof of a new payment or a verified signature.
+For atomic query application and caller-owned transaction/lock requirements,
+follow [ADR 0119](../adr/0119-atomic-provider-query-application.md) and
+[reconciliation verification](reconciliation-atomicity-2026-09-14.md). The
+independent missed-callback worker is implemented separately, disabled by default;
+follow [ADR 0120](../adr/0120-durable-provider-query-recovery.md) and the
+[query recovery runbook and evidence](query-recovery-2026-09-15.md). Apply its
+budget schema before new callback binaries and drain old unmetered consumers
+before activation. Never manufacture a signed inbox event or infer no charge
+from a missing callback, expired lease or exhausted retry budget.
+
 ## 1. Configuration and activation
 
 1. Identify the exact legal merchant, provider account, environment, USD settlement account and contracted capabilities.
@@ -12,7 +41,9 @@ These procedures are safe defaults for sandbox and staging. They do not authoriz
 6. Update the provider-account metadata only after contract and credential evidence is reviewed. Production additionally requires the matching `revenue_feature_flag` and a separately authorized change window.
 7. Call `/commerce/payment-capabilities` for each intended flow. An empty `routes` array blocks the checkout UI; it is not a reason to bypass the gate.
 
-Required server-only secret names are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOKEN`, `DATAFAST_BASE_URL`, PayPal client credentials/merchant/webhook identity, `COMMERCE_EVENT_ENCRYPTION_KEY`, `COMMERCE_BANK_TRANSFER_INSTRUCTIONS`, `PLACETOPAY_LOGIN`, `PLACETOPAY_SECRET_KEY`, `PAYPHONE_TOKEN`, and `PAYPHONE_STORE_ID`. Presence alone is not validation. A checkout method requires an enabled account plus exact environment-specific method/capability evidence; a documented capability row is never enough. PlaceToPay and PayPhone remain disabled until the canonical runtime endpoints and credentialed sandbox evidence are complete.
+Required server-only secret names are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOKEN`, `DATAFAST_BASE_URL`, PayPal client credentials/merchant/webhook identity, `COMMERCE_EVENT_ENCRYPTION_KEY`, `COMMERCE_BANK_TRANSFER_INSTRUCTIONS`, `PLACETOPAY_LOGIN`, `PLACETOPAY_SECRET_KEY`, `PLACETOPAY_RETURN_URL`, `PLACETOPAY_NOTIFICATION_URL`, `PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID`, and `PAYPHONE_RESPONSE_URL`. PlaceToPay also needs at least one exact site-method mapping in `PLACETOPAY_CARD_PAYMENT_METHODS`, `PLACETOPAY_BANK_PAYMENT_METHODS`, or `PLACETOPAY_DEUNA_PAYMENT_METHODS`; these are comma-separated provider IDs, not secrets, but still belong in environment configuration. Presence alone is not validation. A checkout method requires an enabled account plus exact environment-specific method/capability evidence; a documented capability row is never enough. The shared web/mobile recovery UX is implemented, but PlaceToPay and PayPhone remain absent until credentialed sandbox evidence exists and the exact method rows are explicitly activated.
+
+Configure `PLACETOPAY_RETURN_URL` to the environment's HTTPS `/pagos/retorno` route. Test interruption both before and after the create response: the pre-response marker must permit only the exact same provider/method/idempotency key, and the post-response record must restore the exact checkout and attempt without putting the lookup token in the URL. An ambiguous, status-error, processing, or successful attempt must keep Datafast, PayPal, manual bank, and every other hosted rail disabled until the product order reflects the authoritative result. Configure `PAYPHONE_RESPONSE_URL` on the same environment and verify tab/app switching plus durable polling with controlled test users.
 
 ## 2. Sandbox qualification
 
@@ -38,12 +69,20 @@ Screenshots and mocks may support UX review but cannot be recorded as provider s
 1. Use an HTTPS public staging endpoint. Preserve the exact raw request bytes covered by the provider's signature scheme.
 2. Store the webhook identity/signing material and inbox encryption key in server-only secrets.
 3. Validate algorithm, signature, event ID, timestamp tolerance, environment and merchant before enqueueing.
-4. Encrypt the raw payload, hash it, and insert through the unique provider/environment/merchant/event key.
+4. After authenticating the original body, retain only the validated minimal evidence,
+   encrypt/hash that projection, and insert through the unique
+   provider/environment/merchant/event key. Do not persist arbitrary raw payloads.
 5. Acknowledge only according to provider retry semantics. Processing happens from the persistent inbox, not inline assumptions.
 6. Bind amount, currency, order and resource before a financial state change.
 7. Rotate by accepting old/new secrets only for a short documented overlap. Test both, remove old, and record the rotation audit event.
-8. For PayPhone, until a signed scheme is contractually documented, accept notification only as a hint and query the authenticated transaction endpoint before state change.
+8. For PayPhone, until a signed scheme is contractually documented, accept notification only as a hint and query the authenticated transaction endpoint before state change. Register `/NotificacionPago` when the provider portal requires the method name documented in PayPhone's current guide; the canonical notification URL is an equivalent alias.
 9. For PlaceToPay, verify the documented SHA-256 notification but still query the authenticated session endpoint and bind the stored request ID, reference, amount and currency before state change.
+10. PlaceToPay's current session documentation says callbacks are not retried.
+    Acknowledge only after durable acceptance and reconcile missed notifications.
+    Signed v2 IDs deduplicate new formatting/unsigned-field variants. Exact legacy
+    redelivery retains its original row; reformatted pre-upgrade evidence may
+    create one additional canonical query trigger. Never delete history to hide it.
+    Recurring notifications without `requestId` are not supported by this handler.
 
 ## 4. Deployment and rollback
 
@@ -59,7 +98,18 @@ Pre-deploy:
 
 Deploy code and schema separately from activation. Smoke-test health and read-only capabilities. If application behavior fails, roll back the image. If the lifecycle schema is unused, the provided rollback may remove it. Once any lifecycle/financial evidence exists, rollback intentionally refuses; roll forward instead.
 
+The provider-execution rollback additionally refuses when a remote-operation row or an untrusted callback exists. It deletes only exact untouched feature-flag seeds, preserving any operator-modified row. A hosted redirect URL is encrypted and must never be copied into logs or incident tickets.
+
 ## 5. Ambiguous transaction incident
+
+If the browser lost the create response, use **Recover original payment** with the original
+provider/method/key and checkout lookup token. It can read a contacted operation even if new
+payments are disabled. A 404, missing key or expired browser record is not no-charge evidence.
+Do not ask the customer to clear storage, alter their PayPhone number, mint a new key or use
+another provider. If the attempt ID is known, use the authorized payment-session GET. Otherwise
+reconcile through the original order and its stored provider binding; never collect tokens,
+secret keys or hosted redirect URLs in support tickets. A merely prepared operation still
+requires new-contact gates and must not be manually labeled paid or declined to bypass them.
 
 1. Freeze the checkout and prevent another provider attempt.
 2. Record the timeout/transport class without sensitive payloads.

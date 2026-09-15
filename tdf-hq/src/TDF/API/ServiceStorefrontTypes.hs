@@ -107,6 +107,7 @@ data ServiceStorefrontOrderDTO = ServiceStorefrontOrderDTO
   , ssoCurrency            :: Text
   , ssoStatus              :: Text
   , ssoPaymentProvider     :: Maybe Text
+  , ssoCheckoutId          :: Maybe Text
   , ssoLookupToken         :: Maybe Text
   , ssoPaidAt              :: Maybe UTCTime
   , ssoGenre               :: Maybe Text

@@ -45,7 +45,8 @@ import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.DomoQuotes as Domo
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
-import           TDF.DB (Env(..), sharedTlsManager)
+import           TDF.DB (Env(..))
+import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.Routes.DomoQuotes as Routes
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
@@ -1213,6 +1214,7 @@ confirmPublicDomoDatafastStatus rawQuoteId mLookupToken rawResourcePath = do
           , Checkout.vpProviderResource = checkoutId
           , Checkout.vpProviderResourcePath = Just resourcePath
           , Checkout.vpOrderReference = domoReference context
+          , Checkout.vpProviderReference = domoReference context
           , Checkout.vpAmountMinor = dpcAmountMinor context
           , Checkout.vpCurrency = dpcCurrency context
           , Checkout.vpEvidence = "server_to_server"
@@ -1246,7 +1248,7 @@ createPublicDomoPaypalOrder rawQuoteId mLookupToken = do
   (paypalOrderId, approvalUrl) <- case existing of
     Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager clientId clientSecret baseUrl (domoReference context)
+      sharedProviderManager clientId clientSecret baseUrl (domoReference context)
       (fromIntegral (dpcAmountMinor context)) (dpcCurrency context)
       (dpcCustomerName context) (dpcCustomerEmail context)
       `catchError` failDomoPaymentAttempt context attempt
@@ -1294,7 +1296,7 @@ capturePublicDomoPaypalOrder rawQuoteId mLookupToken request = do
       attempt <- beginDomoPaymentAttempt context Checkout.ProviderPayPal
         Checkout.OperationCapture merchantRef "capture"
       outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedTlsManager clientId clientSecret baseUrl suppliedOrderId
+        sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
         `catchError` failDomoPaymentAttempt context attempt
           Checkout.ProviderPayPal "paypal_capture_request"
       now <- liftIO getCurrentTime
@@ -1344,6 +1346,7 @@ capturePublicDomoPaypalOrder rawQuoteId mLookupToken request = do
             , Checkout.vpProviderResourcePath = Just
                 ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture")
             , Checkout.vpOrderReference = domoReference context
+            , Checkout.vpProviderReference = domoReference context
             , Checkout.vpAmountMinor = dpcAmountMinor context
             , Checkout.vpCurrency = dpcCurrency context
             , Checkout.vpEvidence = "server_to_server"

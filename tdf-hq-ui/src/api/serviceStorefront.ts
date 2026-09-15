@@ -45,6 +45,7 @@ export interface ServiceStorefrontOrderDTO {
   ssoCurrency: string;
   ssoStatus: string;
   ssoPaymentProvider?: string | null;
+  ssoCheckoutId?: string | null;
   /** Returned only once, when a guest order is created. */
   ssoLookupToken?: string | null;
   ssoPaidAt?: string | null;

@@ -48,7 +48,7 @@ import           Data.Time (UTCTime)
 
 import           TDF.Commerce.CheckoutStore (PaymentProvider)
 import           TDF.Commerce.ProviderCapabilities
-  ( ProviderOutcomeCertainty )
+  ( PaymentMethod, ProviderOutcomeCertainty )
 
 data AdapterOperation
   = AdapterCreate
@@ -152,7 +152,8 @@ data MoneyBreakdown = MoneyBreakdown
   } deriving (Eq, Show)
 
 data CreatePayment = CreatePayment
-  { cpReference        :: Text
+  { cpPaymentMethod    :: PaymentMethod
+  , cpReference        :: Text
   , cpDescription      :: Text
   , cpMoney            :: MoneyBreakdown
   , cpReturnUrl        :: Text
@@ -229,7 +230,7 @@ validateUsdMoney money
       Left (AdapterError "Payment amounts cannot be negative.")
   | mbTotalMinor money <= 0 =
       Left (AdapterError "Payment total must be greater than zero.")
-  | mbTotalMinor money /= sum components =
+  | toInteger (mbTotalMinor money) /= sum (map toInteger components) =
       Left (AdapterError "Payment total does not match its amount components.")
   | otherwise = Right ()
   where

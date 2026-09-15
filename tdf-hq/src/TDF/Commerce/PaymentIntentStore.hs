@@ -29,7 +29,7 @@ import           TDF.Commerce.CheckoutStore
 import           TDF.Commerce.ProviderCapabilities
   ( PaymentMethod, paymentMethodText )
 import           TDF.Commerce.StateMachine
-  ( PaymentEvent, PaymentLifecycle(..), PaymentState(..), transitionPayment )
+  ( PaymentEvent(..), PaymentLifecycle(..), PaymentState(..), transitionPayment )
 
 data CaptureMethod = CaptureAutomatic | CaptureManual
   deriving (Eq, Show)
@@ -237,7 +237,9 @@ transitionPaymentIntent intent event actorType correlationId occurredAt
       case current of
         Left problem -> pure (Left problem)
         Right lifecycle -> case transitionPayment lifecycle event of
-          Left problem -> pure (Left problem)
+          Left problem
+            | paymentEventAlreadyApplied lifecycle event -> pure (Right lifecycle)
+            | otherwise -> pure (Left problem)
           Right next -> do
             updated <- rawSql
               "UPDATE commerce_payment_intent SET status = ?, authorized_minor = ?,\
@@ -259,6 +261,14 @@ transitionPaymentIntent intent event actorType correlationId occurredAt
                 pure (Right next)
               [] -> pure (Left "Payment intent changed concurrently")
               _ -> pure (Left "Payment intent transition was ambiguous")
+
+-- Only terminal no-charge observations are replay-idempotent here. Capture,
+-- authorization, refund, and void amounts must never be silently reapplied.
+paymentEventAlreadyApplied :: PaymentLifecycle -> PaymentEvent -> Bool
+paymentEventAlreadyApplied lifecycle event = case (paymentState lifecycle, event) of
+  (PaymentFailed, PaymentFailureConfirmed) -> True
+  (PaymentCancelled, PaymentCancellationRequested) -> True
+  _ -> False
 
 loadLifecycleForUpdate
   :: PaymentIntentReference

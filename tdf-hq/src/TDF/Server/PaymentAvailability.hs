@@ -8,6 +8,7 @@ module TDF.Server.PaymentAvailability
   ( ProductFlow(..)
   , availableImplementedPaymentMethods
   , loadRuntimeReadyRoutes
+  , publicPaymentRouteLabel
   ) where
 
 import           Control.Monad (filterM)
@@ -25,15 +26,17 @@ import           System.Environment (lookupEnv)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderCapabilities
 import           TDF.Commerce.ProviderCapabilityStore (loadProviderActivations)
+import           TDF.Commerce.ProviderRuntimeConfig
+  ( runtimeProviderConfigured, runtimeProviderMethodConfigured )
 import           TDF.DB (Env(..))
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 
 type AppM = ReaderT Env Handler
 
--- | Return only the labels supported by the existing public product handlers.
--- PlaceToPay and PayPhone remain absent until their shared executors and return
--- flows are wired; documenting or enabling an adapter alone must not expose a
--- non-functional checkout choice.
+-- | Return only labels backed by an enabled database route, complete runtime
+-- configuration, and a public checkout executor. Hosted PlaceToPay and
+-- PayPhone labels are intentionally provider-specific so clients cannot
+-- silently substitute a different rail after an ambiguous attempt.
 availableImplementedPaymentMethods
   :: Checkout.CheckoutEnvironment
   -> ProductFlow
@@ -43,12 +46,15 @@ availableImplementedPaymentMethods
   -> AppM [Text]
 availableImplementedPaymentMethods environment flow amountMinor currency allowManual = do
   routes <- concat <$> mapM (loadRuntimeReadyRoutes . requestFor)
-    ([MethodCard, MethodPayPalWallet] <> [MethodManualBankTransfer | allowManual])
-  pure . nub $
-    [ label
-    | label <- ["datafast", "paypal", "bank_transfer"]
-    , any ((== Just label) . routeLabel) routes
-    ]
+    ( [ MethodCard
+      , MethodPayPalWallet
+      , MethodBankRedirect
+      , MethodDeunaQr
+      , MethodPayPhoneWallet
+      ]
+      <> [MethodManualBankTransfer | allowManual]
+    )
+  pure . nub $ [label | route <- routes, Just label <- [publicPaymentRouteLabel route]]
   where
     requestFor method = PaymentRouteRequest
       { prEnvironment = environment
@@ -100,20 +106,25 @@ runtimeReady environment route = case routeProvider route of
     liftIO $ (||)
       <$> nonEmptyEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
       <*> nonEmptyEnv "MERCH_BANK_TRANSFER_INSTRUCTIONS"
-  -- These adapters currently have contract tests but no end-to-end shared
-  -- executor and public return flow. Keep them unavailable even if an operator
-  -- accidentally changes account metadata.
-  Checkout.ProviderPlaceToPay -> pure False
-  Checkout.ProviderPayPhone -> pure False
+  Checkout.ProviderPlaceToPay ->
+    liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
+      (routeMethod route))
+  Checkout.ProviderPayPhone ->
+    liftIO (runtimeProviderConfigured environment Checkout.ProviderPayPhone)
   Checkout.ProviderStripe -> pure False
   Checkout.ProviderCash -> pure False
   Checkout.ProviderPos -> pure False
   Checkout.ProviderCardano -> pure False
 
-routeLabel :: PaymentRoute -> Maybe Text
-routeLabel route = case (routeProvider route, routeMethod route) of
+publicPaymentRouteLabel :: PaymentRoute -> Maybe Text
+publicPaymentRouteLabel route = case (routeProvider route, routeMethod route) of
   (Checkout.ProviderDatafast, MethodCard) -> Just "datafast"
   (Checkout.ProviderPayPal, MethodPayPalWallet) -> Just "paypal"
+  (Checkout.ProviderPlaceToPay, MethodCard) -> Just "placetopay_card"
+  (Checkout.ProviderPlaceToPay, MethodBankRedirect) ->
+    Just "placetopay_bank_redirect"
+  (Checkout.ProviderPlaceToPay, MethodDeunaQr) -> Just "placetopay_deuna_qr"
+  (Checkout.ProviderPayPhone, MethodPayPhoneWallet) -> Just "payphone_wallet"
   (Checkout.ProviderBankTransfer, MethodManualBankTransfer) ->
     Just "bank_transfer"
   _ -> Nothing

@@ -2780,6 +2780,28 @@
       "interfaceExpected": false
     },
     {
+      "id": "technical.provider-payment-return",
+      "parentId": "public.commerce",
+      "webRoute": "/pagos/retorno",
+      "routeType": "technical",
+      "classification": "technical-route",
+      "label": { "es": "Retorno de proveedor de pago", "en": "Payment provider return" },
+      "synonyms": { "es": [], "en": [] },
+      "keywords": ["payment", "provider", "return"],
+      "navigationGroup": null,
+      "icon": "technical",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": { "kind": "technical", "destination": null, "documentedException": "Provider redirects resume the originating checkout in the web application." },
+      "accessRequestEligible": false,
+      "technical": true,
+      "searchable": false,
+      "safeLockedDisclosure": false
+    },
+    {
       "id": "technical.service-payment-return",
       "parentId": "service.mixing-mastering",
       "webRoute": "/mezcla-mastering/pago-datafast",

@@ -23,6 +23,7 @@ import           System.IO (hPutStrLn, stderr)
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
+import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
 import           TDF.DB (Env(..))
 import           TDF.Server.ServiceStorefront
   ( PaypalEventProcessResult(..)
@@ -109,22 +110,73 @@ processReference env@Env{envPool} encryptionKey stats eventRef = do
               eventRef Nothing Nothing Nothing summary now) envPool
           pure claimedStats
             { pewDeadLettered = pewDeadLettered claimedStats + 1 }
-        Right (Right payload) ->
-          case validateStoredPaypalEvent payload of
-            Left summary -> do
-              runSqlPool
-                (ProviderEvent.markProviderEventDeadLetter
-                  eventRef Nothing Nothing Nothing summary now) envPool
-              pure claimedStats
-                { pewDeadLettered = pewDeadLettered claimedStats + 1 }
-            Right (environment, envelope) -> do
-              processed <- tryAny $ processPaypalWebhookEventIO
-                env environment (ProviderEvent.pepMerchantRef payload) envelope now
-              case processed of
-                Left _ -> markRetry envPool eventRef attemptCount
-                  "Provider event processing failed" now claimedStats
-                Right outcome ->
-                  applyOutcome envPool eventRef attemptCount now claimedStats outcome
+        Right (Right payload) -> case ProviderEvent.pepProvider payload of
+          "paypal" -> processPaypalPayload env envPool eventRef attemptCount
+            now claimedStats payload
+          "placetopay" -> processHostedPayload env envPool eventRef attemptCount
+            now claimedStats payload
+          "payphone" -> processHostedPayload env envPool eventRef attemptCount
+            now claimedStats payload
+          _ -> do
+            runSqlPool
+              (ProviderEvent.markProviderEventDeadLetter eventRef Nothing Nothing Nothing
+                "Unsupported provider event" now) envPool
+            pure claimedStats
+              { pewDeadLettered = pewDeadLettered claimedStats + 1 }
+
+processPaypalPayload
+  :: Env
+  -> ConnectionPool
+  -> ProviderEvent.ProviderEventReference
+  -> Int
+  -> UTCTime
+  -> ProviderEventWorkerStats
+  -> ProviderEvent.ProviderEventPayload
+  -> IO ProviderEventWorkerStats
+processPaypalPayload env envPool eventRef attemptCount now stats payload =
+  case validateStoredPaypalEvent payload of
+    Left summary -> do
+      runSqlPool
+        (ProviderEvent.markProviderEventDeadLetter
+          eventRef Nothing Nothing Nothing summary now) envPool
+      pure stats { pewDeadLettered = pewDeadLettered stats + 1 }
+    Right (environment, envelope) -> do
+      processed <- tryAny $ processPaypalWebhookEventIO
+        env environment (ProviderEvent.pepMerchantRef payload) envelope now
+      case processed of
+        Left _ -> markRetry envPool eventRef attemptCount
+          "Provider event processing failed" now stats
+        Right outcome ->
+          applyOutcome envPool eventRef attemptCount now stats outcome
+
+processHostedPayload
+  :: Env
+  -> ConnectionPool
+  -> ProviderEvent.ProviderEventReference
+  -> Int
+  -> UTCTime
+  -> ProviderEventWorkerStats
+  -> ProviderEvent.ProviderEventPayload
+  -> IO ProviderEventWorkerStats
+processHostedPayload env envPool eventRef attemptCount now stats payload = do
+  processed <- tryAny (Reconciliation.processProviderEventIO env payload now)
+  case processed of
+    Left _ -> markRetry envPool eventRef attemptCount
+      "Hosted provider reconciliation failed" now stats
+    Right Reconciliation.ProviderReconciliationResult{..} ->
+      case prrDisposition of
+        Reconciliation.ReconciliationProcessed -> do
+          runSqlPool
+            (ProviderEvent.markProviderEventProcessed eventRef
+              prrCheckoutId prrAttemptId Nothing now) envPool
+          pure stats { pewProcessed = pewProcessed stats + 1 }
+        Reconciliation.ReconciliationRetry ->
+          markRetry envPool eventRef attemptCount prrSummary now stats
+        Reconciliation.ReconciliationDeadLetter -> do
+          runSqlPool
+            (ProviderEvent.markProviderEventDeadLetter eventRef
+              prrCheckoutId prrAttemptId Nothing prrSummary now) envPool
+          pure stats { pewDeadLettered = pewDeadLettered stats + 1 }
 
 applyOutcome
   :: ConnectionPool
@@ -176,6 +228,9 @@ validateStoredPaypalEvent ProviderEvent.ProviderEventPayload{..} = do
   if pepProvider == "paypal"
     then pure ()
     else Left "Unsupported provider event was routed to the PayPal worker"
+  if pepEvidenceType == "signature_verified" && pepSignatureVerified
+    then pure ()
+    else Left "Stored PayPal event lacks verified signature evidence"
   environment <- case pepEnvironment of
     "sandbox" -> Right Checkout.CheckoutSandbox
     "production" -> Right Checkout.CheckoutProduction

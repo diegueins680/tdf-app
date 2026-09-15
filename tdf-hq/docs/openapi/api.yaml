@@ -5426,6 +5426,135 @@ paths:
         '404': { description: Order or provider binding not found }
         '501': { description: Provider reconciliation capability is unavailable }
         '502': { description: Provider status could not be read }
+  /commerce/checkouts/{checkoutId}/payment-sessions:
+    parameters:
+      - name: checkoutId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [Payments]
+      summary: Create or recover a hosted provider payment session
+      description: >-
+        New provider contacts require an exact enabled provider/method/capability combination
+        and a payable, unexpired checkout. An exact request replay with the original lookup
+        token and idempotency key recovers a previously contacted operation even after checkout
+        expiry or payment, account suspension, or provider credential unavailability. Recovery
+        validates immutable request fields and still requires the operation encryption key.
+        A merely prepared operation remains subject to all new-contact gates. An ambiguous
+        outcome stays locked for reconciliation and cannot be retried through another provider.
+      operationId: createProviderPaymentSession
+      security: []
+      parameters:
+        - name: X-Checkout-Lookup-Token
+          in: header
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 512 }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentSessionCreate' }
+      responses:
+        '202':
+          description: Durable provider operation; may require customer action or reconciliation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentSession' }
+        '400': { description: Invalid provider, payment method, headers, or provider-specific input }
+        '404':
+          description: >-
+            Checkout or lookup token is invalid, or no contacted replay exists and checkout
+            cannot accept payment. This is not no-charge evidence for an earlier transmitted request.
+        '409': { description: Idempotency conflict or another active canonical payment intent exists }
+        '503': { description: Provider/configuration is unavailable or an ambiguous result requires reconciliation }
+  /commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}:
+    parameters:
+      - name: checkoutId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: attemptId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: X-Checkout-Lookup-Token
+        in: header
+        required: true
+        schema: { type: string, minLength: 16, maxLength: 512 }
+    get:
+      tags: [Payments]
+      summary: Read a durable hosted payment-session state
+      operationId: getProviderPaymentSession
+      security: []
+      responses:
+        '200':
+          description: Lookup-token-scoped state without provider payloads or credentials
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentSession' }
+        '404': { description: Session absent or lookup token invalid }
+        '503': { description: Encrypted operation storage is unavailable }
+  /commerce/provider-notifications/placetopay:
+    post:
+      tags: [Payments, Webhooks]
+      summary: Receive a signed PlaceToPay session notification
+      description: Verifies the embedded SHA-256 signature, persists the exact encrypted body, and queues an authenticated session query. The notification alone never marks an order paid.
+      operationId: receivePlaceToPayNotification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { description: Verified notification durably accepted }
+        '400': { description: Invalid notification body }
+        '401': { description: Signature verification failed }
+        '503': { description: Provider account, feature flag, or secure storage is unavailable }
+  /commerce/provider-notifications/payphone:
+    post:
+      tags: [Payments, Webhooks]
+      summary: Receive an unsigned PayPhone external notification
+      description: Persists the exact body as an untrusted query trigger. Payment and fulfillment advance only after the authenticated PayPhone status API matches transaction ID, client reference, amount, and USD currency.
+      operationId: receivePayPhoneNotification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Notification durably accepted in PayPhone's required acknowledgment format
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayPhoneNotificationAck' }
+        '400': { description: Invalid notification or mismatched store identifier }
+        '409': { description: Provider event identifier conflicts with different immutable evidence }
+        '503': { description: Provider account, feature flag, or secure storage is unavailable }
+  /NotificacionPago:
+    post:
+      tags: [Payments, Webhooks]
+      summary: Receive a PayPhone external notification on its required method name
+      description: Compatibility alias required by PayPhone's notification contract. It uses the same untrusted-callback persistence and authenticated-query reconciliation as the canonical endpoint.
+      operationId: receivePayPhoneNotificationCompatibility
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Notification durably accepted in PayPhone's required acknowledgment format
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayPhoneNotificationAck' }
+        '400': { description: Invalid notification or mismatched store identifier }
+        '409': { description: Provider event identifier conflicts with different immutable evidence }
+        '503': { description: Provider account, feature flag, or secure storage is unavailable }
   /admin/commerce/overview:
     get:
       tags: [Admin, Commerce operations]
@@ -5479,7 +5608,7 @@ paths:
     post:
       tags: [Admin, Commerce operations]
       summary: Requeue one dead-letter provider event with immutable operator evidence
-      description: Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+      description: Requeueing does not mark an order paid. The bounded worker reprocesses only the original encrypted payload; untrusted callbacks still require an authenticated provider query.
       operationId: adminReplayCommerceProviderEvent
       requestBody:
         required: true
@@ -8096,7 +8225,7 @@ components:
         depositPaidAt: { type: string, format: date-time, nullable: true }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
     PublicDomoPaypalCaptureRequest:
       type: object
       additionalProperties: false
@@ -8214,7 +8343,7 @@ components:
         quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
         tickets:
           type: array
           description: Empty until fulfillment issues tickets after verified payment.
@@ -8322,7 +8451,7 @@ components:
           type: array
           description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
           uniqueItems: true
-          items: { type: string, enum: [datafast, paypal, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
         manualPayment:
           allOf: [{ $ref: '#/components/schemas/PublicBookingManualPayment' }]
           nullable: true
@@ -8815,7 +8944,7 @@ components:
         ssocDeadline: { type: string, format: date, nullable: true }
     ServiceStorefrontOrder:
       type: object
-      required: [ssoId, ssoOrderNumber, ssoBuyerName, ssoBuyerEmail, ssoBuyerPhone, ssoArtistName, ssoPackageId, ssoServiceKind, ssoTier, ssoPriceUsdCents, ssoCurrency, ssoStatus, ssoPaymentProvider, ssoLookupToken, ssoPaidAt, ssoGenre, ssoSongCount, ssoNotes, ssoReferenceTrackUrl, ssoDeadline, ssoDeliverablesUrl, ssoCreatedAt, ssoUpdatedAt]
+      required: [ssoId, ssoOrderNumber, ssoBuyerName, ssoBuyerEmail, ssoBuyerPhone, ssoArtistName, ssoPackageId, ssoServiceKind, ssoTier, ssoPriceUsdCents, ssoCurrency, ssoStatus, ssoPaymentProvider, ssoCheckoutId, ssoLookupToken, ssoPaidAt, ssoGenre, ssoSongCount, ssoNotes, ssoReferenceTrackUrl, ssoDeadline, ssoDeliverablesUrl, ssoCreatedAt, ssoUpdatedAt]
       properties:
         ssoId: { type: string, format: uuid }
         ssoOrderNumber: { type: string }
@@ -8830,6 +8959,7 @@ components:
         ssoCurrency: { type: string, minLength: 3, maxLength: 3 }
         ssoStatus: { type: string }
         ssoPaymentProvider: { type: string, nullable: true }
+        ssoCheckoutId: { type: string, format: uuid, nullable: true, description: Canonical checkout identifier used by the provider-neutral payment session API. }
         ssoLookupToken: { type: string, nullable: true, writeOnly: true }
         ssoPaidAt: { type: string, format: date-time, nullable: true }
         ssoGenre: { type: string, nullable: true }
@@ -9087,13 +9217,14 @@ components:
     CommerceProviderEvent:
       type: object
       additionalProperties: false
-      required: [cpeId, cpeProvider, cpeEnvironment, cpeProviderEventId, cpeEventType, cpeProviderResourceId, cpeStatus, cpeAttemptCount, cpeCheckoutId, cpePaymentAttemptId, cpeRefundId, cpeReceivedAt, cpeProviderCreatedAt, cpeProcessingStartedAt, cpeLastAttemptAt, cpeNextAttemptAt, cpeProcessedAt, cpeErrorSummary]
+      required: [cpeId, cpeProvider, cpeEnvironment, cpeProviderEventId, cpeEventType, cpeEvidenceType, cpeProviderResourceId, cpeStatus, cpeAttemptCount, cpeCheckoutId, cpePaymentAttemptId, cpeRefundId, cpeReceivedAt, cpeProviderCreatedAt, cpeProcessingStartedAt, cpeLastAttemptAt, cpeNextAttemptAt, cpeProcessedAt, cpeErrorSummary]
       properties:
         cpeId: { type: string, format: uuid }
         cpeProvider: { type: string, enum: [paypal, datafast, placetopay, payphone, stripe, bank_transfer, cash, pos, cardano] }
         cpeEnvironment: { type: string, enum: [sandbox, production] }
         cpeProviderEventId: { type: string }
         cpeEventType: { type: string }
+        cpeEvidenceType: { type: string, enum: [signature_verified, untrusted_callback] }
         cpeProviderResourceId: { type: string, nullable: true }
         cpeStatus: { type: string, enum: [pending, processing, processed, retry, dead_letter, ignored] }
         cpeAttemptCount: { type: integer, minimum: 0 }
@@ -9113,6 +9244,36 @@ components:
       required: [cperReason]
       properties:
         cperReason: { type: string, minLength: 8, maxLength: 500 }
+    PaymentSessionCreate:
+      type: object
+      additionalProperties: false
+      required: [provider, paymentMethod]
+      properties:
+        provider: { type: string, enum: [placetopay, payphone] }
+        paymentMethod: { type: string, enum: [card, bank_redirect, deuna_qr, payphone_wallet] }
+        buyerPhone: { type: string, pattern: '^[0-9]{6,15}$' }
+        buyerCountryCode: { type: string, pattern: '^[0-9]{1,3}$' }
+    PaymentSession:
+      type: object
+      additionalProperties: false
+      required: [checkoutId, attemptId, operationId, provider, state, externalId, redirectUrl, outcomeCertainty, canRetryOrFallback]
+      properties:
+        checkoutId: { type: string, format: uuid }
+        attemptId: { type: string, format: uuid }
+        operationId: { type: string, format: uuid }
+        provider: { type: string, enum: [placetopay, payphone] }
+        state: { type: string, enum: [prepared, in_flight, requires_customer_action, processing, succeeded, confirmed_no_charge, ambiguous, failed] }
+        externalId: { type: string, nullable: true }
+        redirectUrl: { type: string, format: uri, nullable: true, description: Hosted provider URL; treat as a bearer capability and do not log it. }
+        outcomeCertainty: { type: string, enum: [not_contacted, rejected_before_creation, confirmed_no_charge, ambiguous, succeeded] }
+        canRetryOrFallback: { type: boolean, description: True only when the provider is known not to have created a charge. }
+    PayPhoneNotificationAck:
+      type: object
+      additionalProperties: false
+      required: [Response, ErrorCode]
+      properties:
+        Response: { type: boolean }
+        ErrorCode: { type: string, pattern: '^[0-9]{3}$' }
     DatafastCheckout:
       type: object
       required: [dcOrderId, dcCheckoutId, dcWidgetUrl, dcAmount, dcCurrency, dcLookupToken]
@@ -12863,7 +13024,7 @@ components:
           nullable: true
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
         checkoutAvailable: { type: boolean }
     CoursePaypalCaptureRequest:
       type: object

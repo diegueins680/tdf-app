@@ -25,6 +25,7 @@ executable tdf-hq-exe
     TDF.API.Feedback
     TDF.API.Payments
     TDF.API.PaymentCapabilities
+    TDF.API.ProviderExecution
     TDF.API.Inventory
     TDF.API.Pipelines
     TDF.API.Proposals
@@ -75,6 +76,9 @@ executable tdf-hq-exe
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
+    TDF.Commerce.ProviderExecutionStore
+    TDF.Commerce.ProviderReconciliation
+    TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
@@ -130,6 +134,7 @@ executable tdf-hq-exe
     TDF.Server.CommerceOperations
     TDF.Server.PaymentCapabilities
     TDF.Server.PaymentAvailability
+    TDF.Server.ProviderExecution
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
@@ -234,6 +239,7 @@ executable tdf-hq-exe
     , directory
     , transformers
     , mtl
+    , network
     , mime-mail
     , unordered-containers
     , uuid-types
@@ -270,6 +276,7 @@ test-suite tdf-hq-test
     TDF.API.Future
     TDF.API.Payments
     TDF.API.PaymentCapabilities
+    TDF.API.ProviderExecution
     TDF.API.Feedback
     TDF.API.Inventory
     TDF.API.Instagram
@@ -324,6 +331,9 @@ test-suite tdf-hq-test
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
+    TDF.Commerce.ProviderExecutionStore
+    TDF.Commerce.ProviderReconciliation
+    TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
@@ -381,6 +391,7 @@ test-suite tdf-hq-test
     TDF.Server.CommerceOperations
     TDF.Server.PaymentCapabilities
     TDF.Server.PaymentAvailability
+    TDF.Server.ProviderExecution
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
@@ -389,6 +400,7 @@ test-suite tdf-hq-test
     TDF.Server.MerchReputation
     TDF.Server.Merch
     TDF.Server.MerchRuntimeSpec
+    TDF.Commerce.ProviderRetrySpec
     TDF.Server.ServiceStorefront
     TDF.ServerAuth
     TDF.ServerAuthSpec
@@ -448,7 +460,7 @@ test-suite tdf-hq-test
     TDF.WhatsApp.HistorySpec
     TDF.WhatsApp.Service
     TDF.WhatsApp.Transport
-  ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
+  ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts
   default-language:  Haskell2010
   build-depends:
       base                 >=4.14 && <5
@@ -486,6 +498,7 @@ test-suite tdf-hq-test
     , directory
     , transformers
     , mtl
+    , network
     , mime-mail
     , tagged
     , unordered-containers

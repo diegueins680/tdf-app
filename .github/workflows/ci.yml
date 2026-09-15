@@ -224,6 +224,14 @@ jobs:
           TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-automatic-migrations-production-schema.sh
 
+      - name: Verify canonical provider retry concurrency and compatibility
+        env:
+          PGPASSWORD: postgres
+          TDF_PROVIDER_RETRY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_provider_retry_test
+        run: |
+          createdb -h postgres -U postgres tdf_provider_retry_test
+          sh scripts/test-provider-retry-runtime.sh
+
       - name: Exercise public booking HTTP idempotency and resource conflicts
         env:
           TDF_PUBLIC_BOOKING_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
@@ -360,6 +368,9 @@ jobs:
 
       - name: Rehearse provider event operations migration
         run: ./scripts/test-provider-event-operations-migration.sh
+
+      - name: Rehearse provider execution and reconciliation migration
+        run: ./scripts/test-provider-execution-runtime-migration.sh
 
       - name: Rehearse contextual reputation staging worker migration
         run: ./scripts/test-contextual-reputation-worker-migration.sh

@@ -17,6 +17,7 @@ module TDF.Commerce.CheckoutStore
   , resolveCheckoutEnvironment
   , checkoutEnvironmentText
   , paymentProviderText
+  , paymentOperationText
   , createCheckout
   , createHoldingCheckout
   , createCheckoutWithLines
@@ -159,6 +160,7 @@ data VerifiedPayment = VerifiedPayment
   , vpProviderResource :: Text
   , vpProviderResourcePath :: Maybe Text
   , vpOrderReference   :: Text
+  , vpProviderReference :: Text
   , vpAmountMinor      :: Int64
   , vpCurrency         :: Text
   , vpEvidence         :: Text
@@ -610,7 +612,7 @@ recordVerifiedPayment payment@VerifiedPayment{..}
         \ AND binding.merchant_account_ref = attempt.merchant_account_ref\
         \ AND binding.resource_type = ? AND binding.provider_resource_id = ?\
         \ AND binding.provider_resource_path IS NOT DISTINCT FROM ?\
-        \ AND binding.merchant_reference = checkout.domain_order_id\
+        \ AND binding.merchant_reference = ?\
         \ AND binding.amount_minor = checkout.total_minor\
         \ AND binding.currency = checkout.currency\
         \ AND checkout.status IN ('awaiting_payment','processing','failed','paid')\
@@ -626,6 +628,7 @@ recordVerifiedPayment payment@VerifiedPayment{..}
         , PersistText vpResourceType
         , PersistText vpProviderResource
         , maybe PersistNull PersistText vpProviderResourcePath
+        , PersistText vpProviderReference
         ] :: SqlPersistT IO [(Single Text, Single Text)])
       case paymentStates of
         [(Single currentStatus, Single attemptStatus)] ->
@@ -662,7 +665,7 @@ recordApprovedManualPayment payment@VerifiedPayment{..}
         \ AND binding.provider_resource_id = evidence.id::text\
         \ AND binding.provider_resource_id = ?\
         \ AND binding.provider_resource_path IS NOT DISTINCT FROM ?\
-        \ AND binding.merchant_reference = checkout.domain_order_id\
+        \ AND binding.merchant_reference = ?\
         \ AND binding.amount_minor = checkout.total_minor\
         \ AND binding.currency = checkout.currency\
         \ AND evidence.status = 'approved'\
@@ -684,6 +687,7 @@ recordApprovedManualPayment payment@VerifiedPayment{..}
         , PersistText vpMerchantRef
         , PersistText vpProviderResource
         , maybe PersistNull PersistText vpProviderResourcePath
+        , PersistText vpProviderReference
         ] :: SqlPersistT IO [(Single Text, Single Text)])
       case paymentStates of
         [(Single currentStatus, Single attemptStatus)] ->

@@ -3,6 +3,9 @@ import { get } from './client';
 export type CanonicalPaymentMethod =
   | 'card'
   | 'paypal_wallet'
+  | 'bank_redirect'
+  | 'deuna_qr'
+  | 'payphone_wallet'
   | 'manual_bank_transfer';
 
 export type CanonicalProductFlow =
@@ -36,6 +39,10 @@ export interface PaymentCapabilityResponseDTO {
 export interface AvailableCheckoutMethods {
   datafast: boolean;
   paypal: boolean;
+  placeToPayCard: boolean;
+  placeToPayBankRedirect: boolean;
+  placeToPayDeunaQr: boolean;
+  payPhoneWallet: boolean;
   bankTransfer: boolean;
 }
 
@@ -77,14 +84,21 @@ const routeRequest = (
 export const loadAvailableCheckoutMethods = async (
   request: AvailabilityRequest,
 ): Promise<AvailableCheckoutMethods> => {
-  const [card, paypal, bank] = await Promise.all([
+  const [card, paypal, bankRedirect, deunaQr, payPhone, bank] = await Promise.all([
     routeRequest(request, 'card'),
     routeRequest(request, 'paypal_wallet'),
+    routeRequest(request, 'bank_redirect'),
+    routeRequest(request, 'deuna_qr'),
+    routeRequest(request, 'payphone_wallet'),
     routeRequest(request, 'manual_bank_transfer'),
   ]);
   return {
     datafast: card.routes.some((route) => route.provider === 'datafast'),
     paypal: paypal.routes.some((route) => route.provider === 'paypal'),
+    placeToPayCard: card.routes.some((route) => route.provider === 'placetopay'),
+    placeToPayBankRedirect: bankRedirect.routes.some((route) => route.provider === 'placetopay'),
+    placeToPayDeunaQr: deunaQr.routes.some((route) => route.provider === 'placetopay'),
+    payPhoneWallet: payPhone.routes.some((route) => route.provider === 'payphone'),
     bankTransfer: bank.routes.some((route) => route.provider === 'bank_transfer'),
   };
 };
