@@ -19,6 +19,9 @@ module TDF.API.CommerceOperations
   , CommercePayoutSummaryDTO(..)
   , CommerceProviderEventDTO(..)
   , CommerceProviderEventReplayCreate(..)
+  , CommerceProviderQueryDTO(..)
+  , CommerceProviderQueryBudgetDTO(..)
+  , CommerceProviderQueriesDTO(..)
   ) where
 
 import           Data.Aeson (FromJSON(..), ToJSON, genericParseJSON)
@@ -230,6 +233,51 @@ instance ToJSON CommerceProviderEventReplayCreate
 instance FromJSON CommerceProviderEventReplayCreate where
   parseJSON = genericParseJSON strictObjectOptions
 
+-- Read-only operational evidence, not authority to retry or mark an order paid.
+-- Provider references, merchant aliases, lease tokens and raw diagnostics are absent.
+data CommerceProviderQueryDTO = CommerceProviderQueryDTO
+  { cpqOperationId       :: Text
+  , cpqCheckoutId        :: Text
+  , cpqPaymentAttemptId  :: Text
+  , cpqProvider          :: Text
+  , cpqStatus            :: Text
+  , cpqAttemptCount      :: Int
+  , cpqOperationStatus   :: Text
+  , cpqOutcomeCertainty  :: Text
+  , cpqCreatedAt         :: UTCTime
+  , cpqLastAttemptAt     :: Maybe UTCTime
+  , cpqNextAttemptAt     :: UTCTime
+  , cpqLeaseExpiresAt    :: Maybe UTCTime
+  , cpqCompletedAt       :: Maybe UTCTime
+  , cpqLastOutcome       :: Maybe Text
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON CommerceProviderQueryDTO
+instance FromJSON CommerceProviderQueryDTO
+
+data CommerceProviderQueryBudgetDTO = CommerceProviderQueryBudgetDTO
+  { cpqbProvider    :: Text
+  , cpqbNextQueryAt :: UTCTime
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON CommerceProviderQueryBudgetDTO
+instance FromJSON CommerceProviderQueryBudgetDTO
+
+data CommerceProviderQueriesDTO = CommerceProviderQueriesDTO
+  { cpqsGeneratedAt         :: UTCTime
+  , cpqsEnvironment         :: Text
+  , cpqsSchemaReady         :: Bool
+  , cpqsRecoveryFlagEnabled :: Bool
+  , cpqsJobs                :: [CommerceProviderQueryDTO]
+  , cpqsBudgets             :: [CommerceProviderQueryBudgetDTO]
+  , cpqsLimit               :: Int
+  , cpqsOffset              :: Int
+  , cpqsHasMore             :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON CommerceProviderQueriesDTO
+instance FromJSON CommerceProviderQueriesDTO
+
 type CommerceOperationsAPI =
        "admin" :> "commerce" :> "overview"
          :> Get '[JSON] CommercePaymentOverviewDTO
@@ -243,3 +291,9 @@ type CommerceOperationsAPI =
          :> "replay"
          :> ReqBody '[JSON] CommerceProviderEventReplayCreate
          :> Post '[JSON] CommerceProviderEventDTO
+  :<|> "admin" :> "commerce" :> "provider-queries"
+         :> QueryParam "environment" Text
+         :> QueryParam "status" Text
+         :> QueryParam "limit" Int
+         :> QueryParam "offset" Int
+         :> Get '[JSON] (Headers '[Header "Cache-Control" Text] CommerceProviderQueriesDTO)

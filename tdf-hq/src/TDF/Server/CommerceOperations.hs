@@ -4,9 +4,12 @@
 module TDF.Server.CommerceOperations
   ( commerceOperationsServer
   , validateProviderEventReplayReason
+  , validateProviderQueryFilters
+  , providerQueryOutcome
   ) where
 
 import           Control.Monad (unless)
+import           Control.Exception.Safe (tryAny)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import           Data.Char (isControl)
@@ -18,12 +21,13 @@ import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, getCurrentTime)
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql
-  ( Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool )
+  ( Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool )
 import           Servant
 
 import           TDF.API.CommerceOperations
 import           TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
+import qualified TDF.Commerce.ProviderExecutionStore as ProviderExecution
 import           TDF.DB (Env(..))
 
 type AppM = ReaderT Env Handler
@@ -35,9 +39,119 @@ commerceOperationsServer user =
        (requireAccess *> paymentOverviewHandler)
   :<|> (\status limit offset -> requireAccess *> listProviderEventsHandler status limit offset)
   :<|> (\eventId request -> requireAccess *> replayProviderEventHandler user eventId request)
+  :<|> (\environment status limit offset -> requireAccess *>
+          (addHeader ("no-store" :: Text) <$>
+            listProviderQueriesHandler environment status limit offset))
   where
     requireAccess = unless (hasStrictAdminAccess user) $
       throwError err403 { errBody = "Strict Admin access required" }
+
+-- The gate above runs before filter validation and before any database access.
+-- Reading this view never reserves a provider budget, claims a lease or sends HTTP.
+listProviderQueriesHandler
+  :: Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
+  -> AppM CommerceProviderQueriesDTO
+listProviderQueriesHandler rawEnvironment rawStatus rawLimit rawOffset = do
+  (environment, status, limit, offset) <- either (throwError . badRequest) pure $
+    validateProviderQueryFilters rawEnvironment rawStatus rawLimit rawOffset
+  Env{envPool = pool} <- ask
+  now <- liftIO getCurrentTime
+  result <- liftIO $ tryAny $ flip runSqlPool pool $ do
+    rawExecute "SET TRANSACTION READ ONLY" []
+    -- Bound the reporting read independently of worker locks and provider calls.
+    rawExecute "SET LOCAL statement_timeout = '3s'" []
+    installed <- ProviderExecution.providerQueryRecoveryInstalled
+    if not installed then pure (False, False, [], []) else do
+      flags <- rawSql
+        "SELECT enabled FROM revenue_feature_flag\
+        \ WHERE flag_key='checkout.provider_query_recovery' AND environment=?"
+        [PersistText environment] :: SqlPersistT IO [Single Bool]
+      budgetRows <- rawSql
+        "SELECT provider,next_query_at FROM commerce_provider_query_budget\
+        \ WHERE environment=? ORDER BY provider LIMIT 100"
+        [PersistText environment] :: SqlPersistT IO [(Single Text,Single UTCTime)]
+      jobs <- loadProviderQueries environment status (limit + 1) offset
+      pure (True, flags == [Single True], jobs,
+        [CommerceProviderQueryBudgetDTO provider next | (Single provider,Single next) <- budgetRows])
+  case result of
+    Left _ -> throwError err503
+      { errBody = "Payment query report is temporarily unavailable"
+      , errHeaders = [("Cache-Control", "no-store")]
+      }
+    Right (installed, flagEnabled, jobs, budgets) -> pure CommerceProviderQueriesDTO
+      { cpqsGeneratedAt = now, cpqsEnvironment = environment
+      , cpqsSchemaReady = installed, cpqsRecoveryFlagEnabled = flagEnabled
+      , cpqsJobs = take limit jobs, cpqsBudgets = budgets
+      , cpqsLimit = limit, cpqsOffset = offset, cpqsHasMore = length jobs > limit
+      }
+
+validateProviderQueryFilters
+  :: Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
+  -> Either Text (Text, Maybe Text, Int, Int)
+validateProviderQueryFilters rawEnvironment rawStatus rawLimit rawOffset = do
+  environment <- case T.toLower . T.strip <$> rawEnvironment of
+    Nothing -> Right "sandbox"
+    Just "sandbox" -> Right "sandbox"
+    Just "production" -> Right "production"
+    _ -> Left "Unsupported payment query environment"
+  status <- case T.toLower . T.strip <$> rawStatus of
+    Nothing -> Right Nothing
+    Just "pending" -> Right (Just "pending")
+    Just "processing" -> Right (Just "processing")
+    Just "retry" -> Right (Just "retry")
+    Just "completed" -> Right (Just "completed")
+    Just "dead_letter" -> Right (Just "dead_letter")
+    _ -> Left "Unsupported payment query status"
+  let limit = maybe 25 id rawLimit
+      offset = maybe 0 id rawOffset
+  if limit < 1 || limit > 100 || offset < 0 || offset > 10000
+    then Left "Payment query limit must be 1-100 and offset 0-10000"
+    else Right (environment, status, limit, offset)
+
+-- Project only known server-authored outcomes. A regex-safe database value can
+-- still contain an accidental credential or other private diagnostic.
+providerQueryOutcome :: Text -> Text
+providerQueryOutcome code = case code of
+  "retry_exhausted" -> "retry_exhausted"
+  "process_switch_disabled" -> "process_switch_disabled"
+  "binding_changed" -> "binding_changed"
+  "query_unavailable" -> "query_unavailable"
+  "query_unsupported" -> "query_unsupported"
+  "query_binding_mismatch" -> "query_binding_mismatch"
+  "query_application_rejected" -> "query_application_rejected"
+  "query_applied" -> "query_applied"
+  "provider_nonterminal" -> "provider_nonterminal"
+  "provider_requires_review" -> "provider_requires_review"
+  "configuration_revoked" -> "configuration_revoked"
+  "operation_already_terminal" -> "operation_already_terminal"
+  "immutable_binding_unavailable" -> "immutable_binding_unavailable"
+  _ -> "unrecognized"
+
+loadProviderQueries :: Text -> Maybe Text -> Int -> Int -> SqlPersistT IO [CommerceProviderQueryDTO]
+loadProviderQueries environment status limit offset = do
+  rows <- rawSql
+    ("SELECT job.operation_id::text,attempt.checkout_id::text,attempt.id::text,\
+     \ operation.provider,job.status,job.attempt_count,operation.status,operation.outcome_certainty,\
+     \ job.created_at,job.last_attempt_at,job.next_attempt_at,job.lease_expires_at,\
+     \ job.completed_at,job.last_error_code\
+     \ FROM commerce_provider_query_job job\
+     \ JOIN commerce_provider_operation operation ON operation.id=job.operation_id\
+     \ JOIN commerce_payment_attempt attempt ON attempt.id=operation.payment_attempt_id\
+     \ WHERE operation.environment=?"
+     <> maybe "" (const " AND job.status=?") status <>
+     " ORDER BY job.created_at DESC,job.operation_id DESC LIMIT ? OFFSET ?")
+    ([PersistText environment] <> maybe [] (pure . PersistText) status <>
+      [PersistInt64 (fromIntegral limit),PersistInt64 (fromIntegral offset)])
+    :: SqlPersistT IO
+      [(Single Text,Single Text,Single Text,Single Text,Single Text,Single Int,
+        Single Text,Single Text,Single UTCTime,Single (Maybe UTCTime),Single UTCTime,
+        Single (Maybe UTCTime),Single (Maybe UTCTime),Single (Maybe Text))]
+  pure [ CommerceProviderQueryDTO operation checkout attempt provider jobStatus attempts
+           operationStatus certainty created lastAttempt next lease completed
+           (providerQueryOutcome <$> outcome)
+       | (Single operation,Single checkout,Single attempt,Single provider,Single jobStatus,
+          Single attempts,Single operationStatus,Single certainty,Single created,
+          Single lastAttempt,Single next,Single lease,Single completed,Single outcome) <- rows ]
 
 paymentOverviewHandler :: AppM CommercePaymentOverviewDTO
 paymentOverviewHandler = do

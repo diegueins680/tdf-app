@@ -5555,6 +5555,49 @@ paths:
         '400': { description: Invalid notification or mismatched store identifier }
         '409': { description: Provider event identifier conflicts with different immutable evidence }
         '503': { description: Provider account, feature flag, or secure storage is unavailable }
+  /admin/commerce/provider-queries:
+    get:
+      tags: [Commerce operations]
+      summary: Inspect redacted provider status-query recovery jobs
+      description: >-
+        Additive read-only contract (2026-09-15). Requires strict Admin access.
+        Defaults to sandbox and returns only one environment. This does not claim
+        jobs, reserve query budgets, contact providers or authorize payment retries.
+        Completed jobs are not proof of paid orders. A disabled database flag is
+        reported explicitly; an enabled flag is not evidence of a running worker,
+        qualified account or valid credentials. Missing recovery schema is reported
+        as cpqsSchemaReady=false, never as a verified empty queue. Reads have a
+        three-second per-statement database timeout. Offset pagination is a live
+        operational view, not an immutable export; refresh after concurrent changes.
+      operationId: adminListCommerceProviderQueries
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: environment
+          schema: { type: string, enum: [sandbox, production], default: sandbox }
+        - in: query
+          name: status
+          schema: { type: string, enum: [pending, processing, retry, completed, dead_letter] }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, maximum: 10000, default: 0 }
+      responses:
+        '200':
+          description: Redacted operational snapshot, with explicit schema availability
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: [no-store] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommerceProviderQueries' }
+        '400': { description: Invalid filter or pagination }
+        '401': { description: Authentication required }
+        '403': { description: Strict Admin access required }
+        '503': { description: Report temporarily unavailable; no database diagnostics exposed }
   /admin/commerce/overview:
     get:
       tags: [Admin, Commerce operations]
@@ -9214,6 +9257,56 @@ components:
         cpoPayouts:
           type: array
           items: { $ref: '#/components/schemas/CommercePayoutSummary' }
+    CommerceProviderQuery:
+      type: object
+      additionalProperties: false
+      required: [cpqOperationId, cpqCheckoutId, cpqPaymentAttemptId, cpqProvider, cpqStatus, cpqAttemptCount, cpqOperationStatus, cpqOutcomeCertainty, cpqCreatedAt, cpqLastAttemptAt, cpqNextAttemptAt, cpqLeaseExpiresAt, cpqCompletedAt, cpqLastOutcome]
+      properties:
+        cpqOperationId: { type: string, format: uuid }
+        cpqCheckoutId: { type: string, format: uuid }
+        cpqPaymentAttemptId: { type: string, format: uuid }
+        cpqProvider: { type: string }
+        cpqStatus: { type: string, enum: [pending, processing, retry, completed, dead_letter] }
+        cpqAttemptCount: { type: integer, minimum: 0, maximum: 24 }
+        cpqOperationStatus: { type: string, description: Original operation state; not a job state }
+        cpqOutcomeCertainty: { type: string, enum: [not_sent, confirmed_no_charge, ambiguous, succeeded] }
+        cpqCreatedAt: { type: string, format: date-time }
+        cpqLastAttemptAt: { type: string, format: date-time, nullable: true }
+        cpqNextAttemptAt: { type: string, format: date-time }
+        cpqLeaseExpiresAt: { type: string, format: date-time, nullable: true }
+        cpqCompletedAt: { type: string, format: date-time, nullable: true }
+        cpqLastOutcome:
+          type: string
+          nullable: true
+          description: Known server-authored diagnostic only; all other stored text becomes unrecognized
+          enum: [retry_exhausted, process_switch_disabled, binding_changed, query_unavailable, query_unsupported, query_binding_mismatch, query_application_rejected, query_applied, provider_nonterminal, provider_requires_review, configuration_revoked, operation_already_terminal, immutable_binding_unavailable, unrecognized]
+    CommerceProviderQueryBudget:
+      type: object
+      additionalProperties: false
+      required: [cpqbProvider, cpqbNextQueryAt]
+      properties:
+        cpqbProvider: { type: string }
+        cpqbNextQueryAt: { type: string, format: date-time, description: Earliest shared query slot, not a promised execution time }
+    CommerceProviderQueries:
+      type: object
+      additionalProperties: false
+      required: [cpqsGeneratedAt, cpqsEnvironment, cpqsSchemaReady, cpqsRecoveryFlagEnabled, cpqsJobs, cpqsBudgets, cpqsLimit, cpqsOffset, cpqsHasMore]
+      properties:
+        cpqsGeneratedAt: { type: string, format: date-time }
+        cpqsEnvironment: { type: string, enum: [sandbox, production] }
+        cpqsSchemaReady: { type: boolean }
+        cpqsRecoveryFlagEnabled: { type: boolean, description: Database flag only; never worker liveness or complete activation authority }
+        cpqsJobs:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/CommerceProviderQuery' }
+        cpqsBudgets:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/CommerceProviderQueryBudget' }
+        cpqsLimit: { type: integer, minimum: 1, maximum: 100 }
+        cpqsOffset: { type: integer, minimum: 0, maximum: 10000 }
+        cpqsHasMore: { type: boolean }
     CommerceProviderEvent:
       type: object
       additionalProperties: false

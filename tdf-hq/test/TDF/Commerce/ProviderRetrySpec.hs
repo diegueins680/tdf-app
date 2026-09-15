@@ -27,17 +27,21 @@ import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Postgresql (createPostgresqlPool)
-import           Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool)
+import           Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey)
 import           Database.PostgreSQL.Simple (SqlError(..))
 import           Network.Socket (SockAddr(..))
 import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
-import           Servant (NoContent, ServerError, errHTTPCode, errBody, runHandler, (:<|>)(..))
+import           Servant (NoContent, ServerError, errHTTPCode, errBody, runHandler, getResponse, getHeaders, (:<|>)(..))
 import           System.Environment (lookupEnv, setEnv, unsetEnv)
 import qualified System.Timeout as Timeout
 import           Test.Hspec
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import           TDF.API.CommerceOperations
+import           TDF.Auth (AuthedUser(..))
+import           TDF.Models (RoleEnum(..))
+import qualified TDF.Server.CommerceOperations as Operations
 import           TDF.API.ProviderExecution (PaymentSessionCreateDTO(..), PaymentSessionDTO(..))
 import           TDF.DB (Env(..))
 import qualified TDF.Commerce.PaymentIntentStore as Intent
@@ -347,6 +351,7 @@ withProviderWire reader action = do
 
 spec :: Spec
 spec = do
+  providerQueryReportValidationSpec
   providerTransportSpec
   notificationMinimizationSpec
   notificationIdentitySpec
@@ -355,6 +360,7 @@ spec = do
     Nothing -> pure ()
     Just url -> beforeAll (openDatabase url) $ afterAll destroyAllResources $
       describe "provider-retry-runtime PostgreSQL" $ do
+        providerQueryReportSpec
         queryRecoverySpec
         noChargeReplaySpec
         notificationInboxSpec
@@ -1132,6 +1138,148 @@ withRecoveryEnvironment action = bracket
 
 -- These tests parse synthetic official-contract-shaped query responses and
 -- exercise the actual PostgreSQL financial path. They are not sandbox tests.
+providerQueryReportValidationSpec :: Spec
+providerQueryReportValidationSpec = describe "provider query report boundary" $ do
+  it "defaults to sandbox and validates bounded filters without echoing invalid input" $ do
+    Operations.validateProviderQueryFilters Nothing Nothing Nothing Nothing
+      `shouldBe` Right ("sandbox",Nothing,25,0)
+    Operations.validateProviderQueryFilters (Just " production ") (Just "RETRY") (Just 100) (Just 10000)
+      `shouldBe` Right ("production",Just "retry",100,10000)
+    forM_ [(Just "synthetic_private",Nothing,Nothing,Nothing),
+      (Nothing,Just "synthetic_private",Nothing,Nothing),
+      (Nothing,Nothing,Just 0,Nothing),(Nothing,Nothing,Just 101,Nothing),
+      (Nothing,Nothing,Nothing,Just (-1)),(Nothing,Nothing,Nothing,Just 10001)] $
+      \(environment,status,limit,offset) -> do
+        let result = Operations.validateProviderQueryFilters environment status limit offset
+        result `shouldSatisfy` isLeft
+        show result `shouldNotContain` "synthetic_private"
+
+  it "projects only recognized server outcomes and never passes arbitrary diagnostics through" $ do
+    Operations.providerQueryOutcome "query_binding_mismatch" `shouldBe` "query_binding_mismatch"
+    Operations.providerQueryOutcome "immutable_binding_unavailable" `shouldBe` "immutable_binding_unavailable"
+    Operations.providerQueryOutcome "synthetic_private_token" `shouldBe` "unrecognized"
+
+  it "rejects invalid admin pagination before acquiring a database connection" $ do
+    result <- queryReport [Admin] (error "Invalid pagination accessed the database")
+      Nothing Nothing (Just 101) Nothing
+    either errHTTPCode (const 200) result `shouldBe` 400
+
+  it "denies non-strict admins before parsing filters or touching the database" $ do
+    forM_ [[Customer],[Fan],[Webmaster],[StudioManager],[Admin,Webmaster],[Admin,Manager]] $ \roles -> do
+      result <- queryReport roles (error "Unauthorized report accessed the database")
+        (Just "invalid") Nothing Nothing Nothing
+      either errHTTPCode (const 200) result `shouldBe` 403
+
+providerQueryReportSpec :: SpecWith ConnectionPool
+providerQueryReportSpec = describe "read-only provider query operations" $ do
+  it "distinguishes installed empty queues from missing recovery schema" $ \pool -> do
+    emptyReport <- queryReport [Admin] pool Nothing Nothing Nothing Nothing >>= requireRight
+    cpqsSchemaReady emptyReport `shouldBe` True
+    cpqsRecoveryFlagEnabled emptyReport `shouldBe` False
+    cpqsEnvironment emptyReport `shouldBe` "sandbox"
+    cpqsJobs emptyReport `shouldBe` []
+    let rename fromName toName = runSqlPool (rawExecute
+          ("ALTER TABLE " <> fromName <> " RENAME TO " <> toName) []) pool
+    bracket (rename "commerce_provider_query_job" "synthetic_hidden_query_job")
+      (const (rename "synthetic_hidden_query_job" "commerce_provider_query_job")) $ \_ -> do
+        report <- queryReport [Admin] pool Nothing Nothing Nothing Nothing >>= requireRight
+        cpqsSchemaReady report `shouldBe` False
+        cpqsJobs report `shouldBe` []
+
+  it "redacts SQL failures instead of returning a misleading empty report" $ \pool -> do
+    let rename fromName toName = runSqlPool (rawExecute
+          ("ALTER TABLE commerce_provider_query_budget RENAME COLUMN " <> fromName <> " TO " <> toName) []) pool
+    bracket (rename "next_query_at" "synthetic_private_column")
+      (const (rename "synthetic_private_column" "next_query_at")) $ \_ -> do
+        report <- queryReport [Admin] pool Nothing Nothing Nothing Nothing
+        either errHTTPCode (const 200) report `shouldBe` 503
+        show report `shouldNotContain` "synthetic_private_column"
+        show report `shouldNotContain` "SELECT"
+
+  it "separates environments, bounds pages, and preserves jobs, budgets and financial history" $ \pool ->
+    withQueryRecovery pool Checkout.ProviderPayPhone $ \merchant -> do
+      payments <- forM [1..3 :: Int] $ \_ -> do
+        payment <- reconciliationFixtureWithMerchant merchant pool Checkout.ProviderPayPhone
+        prepareQueryJob pool payment
+        pure payment
+      beforeSnapshot <- mapM (\payment -> runSqlPool (paymentSnapshot payment) pool) payments
+      first <- queryReport [Admin] pool Nothing (Just "pending") (Just 1) Nothing >>= requireRight
+      second <- queryReport [Admin] pool Nothing (Just "pending") (Just 1) (Just 1) >>= requireRight
+      cpqsHasMore first `shouldBe` True
+      length (cpqsJobs first) `shouldBe` 1
+      map cpqOperationId (cpqsJobs first) `shouldNotBe` map cpqOperationId (cpqsJobs second)
+      cpqsOffset second `shouldBe` 1
+      production <- queryReport [Admin] pool (Just "production") Nothing Nothing Nothing >>= requireRight
+      cpqsEnvironment production `shouldBe` "production"
+      cpqsJobs production `shouldBe` []
+      cpqsBudgets production `shouldBe` []
+      cpqsRecoveryFlagEnabled production `shouldBe` False
+      cpqsRecoveryFlagEnabled first `shouldBe` True
+      forM_ payments $ \payment -> queryJobState pool payment `shouldReturn` ("pending",0)
+      mapM (\payment -> runSqlPool (paymentSnapshot payment) pool) payments `shouldReturn` beforeSnapshot
+      -- Reading a pending queue must not reserve any remote-query budget.
+      runSqlPool (rawSql "SELECT count(*) FROM commerce_provider_query_budget" []) pool
+        `shouldReturn` [Single (0 :: Int64)]
+
+  it "bounds a blocked reporting read and returns a redacted unavailable response" $ \pool -> do
+    locked <- newEmptyMVar
+    release <- newEmptyMVar
+    finished <- newEmptyMVar
+    let hold = runSqlPool (do
+          rawExecute "LOCK TABLE commerce_provider_query_job IN ACCESS EXCLUSIVE MODE" []
+          liftIO (putMVar locked ())
+          liftIO (takeMVar release)) pool
+        cleanupLock _ = do
+          putMVar release ()
+          takeMVar finished >>= either throwIO pure
+    bracket (forkFinally hold (putMVar finished)) cleanupLock $ \_ -> do
+      Timeout.timeout 5000000 (takeMVar locked) `shouldReturn` Just ()
+      result <- Timeout.timeout 8000000 (queryReport [Admin] pool Nothing Nothing Nothing Nothing)
+      fmap (either errHTTPCode (const 200)) result `shouldBe` Just 503
+
+  it "redacts stored diagnostics and never exposes merchant, lease or provider references" $ \pool ->
+    withQueryRecovery pool Checkout.ProviderPlaceToPay $ \merchant -> do
+      payment <- reconciliationFixtureWithMerchant merchant pool Checkout.ProviderPlaceToPay
+      prepareQueryJob pool payment
+      runSqlPool (rawExecute
+        "UPDATE commerce_provider_query_job SET last_error_code='synthetic_private_token'\
+        \ WHERE operation_id IN (SELECT id FROM commerce_provider_operation WHERE payment_attempt_id=?::uuid)"
+        [paymentAttemptParameter payment]) pool
+      report <- queryReport [Admin,Fan,Customer] pool Nothing Nothing Nothing Nothing >>= requireRight
+      let jobs = filter ((== Checkout.paymentAttemptReferenceId (Execution.bppAttempt payment))
+            . cpqPaymentAttemptId) (cpqsJobs report)
+          encoded = BL.toStrict (A.encode report)
+      map cpqLastOutcome jobs `shouldBe` [Just "unrecognized"]
+      forM_ ["synthetic_private_token",TE.encodeUtf8 merchant,"lease_token",
+        "merchant_account_ref","provider_reference","provider_resource_id","redirect"] $ \forbidden ->
+        encoded `shouldNotSatisfy` BS.isInfixOf forbidden
+
+  it "shows completed checks independently from confirmed no-charge payment outcomes" $ \pool ->
+    withQueryRecovery pool Checkout.ProviderPayPhone $ \merchant -> do
+      payment <- reconciliationFixtureWithMerchant merchant pool Checkout.ProviderPayPhone
+      prepareQueryJob pool payment
+      runQueryTick pool (\_ -> pure (Right (queryValue payment Adapter.AdapterCancelled))) `shouldReturn` 1
+      report <- queryReport [Admin] pool Nothing (Just "completed") Nothing Nothing >>= requireRight
+      let jobs = filter ((== Checkout.paymentAttemptReferenceId (Execution.bppAttempt payment))
+            . cpqPaymentAttemptId) (cpqsJobs report)
+      map cpqStatus jobs `shouldBe` ["completed"]
+      map cpqOperationStatus jobs `shouldBe` ["confirmed_no_charge"]
+      map cpqOutcomeCertainty jobs `shouldBe` ["confirmed_no_charge"]
+      noChargeStates pool payment `shouldReturn` ("cancelled","cancelled","provider_cancelled")
+
+queryReport
+  :: [RoleEnum] -> ConnectionPool -> Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
+  -> IO (Either ServerError CommerceProviderQueriesDTO)
+queryReport roles pool environment status limit offset = do
+  let user = AuthedUser (toSqlKey 1) roles mempty
+      _ :<|> _ :<|> _ :<|> listQueries = Operations.commerceOperationsServer user
+  result <- runHandler (runReaderT (listQueries environment status limit offset) (queryEnv pool))
+  case result of
+    Left problem -> pure (Left problem)
+    Right headers -> do
+      getHeaders headers `shouldContain` [("Cache-Control", "no-store")]
+      pure (Right (getResponse headers))
+
 noChargeReplaySpec :: SpecWith ConnectionPool
 noChargeReplaySpec = describe "history-preserving no-charge reconciliation" $
   forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
