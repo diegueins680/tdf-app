@@ -2278,6 +2278,76 @@ main = hspec $ do
               CheckoutStore.OperationCapture
               `shouldBe` [ProviderCapabilities.CapabilityCapture]
 
+        it "routes Datafast confirmation only with verified one-time and server capabilities" $ do
+            let request = cardRequest
+                  { ProviderCapabilities.prFlow = ProviderCapabilities.FlowProfessionalService
+                  , ProviderCapabilities.prRequiredCapabilities =
+                      PaymentRuntimeStore.providerOperationCapabilities
+                        CheckoutStore.ProviderDatafast
+                        ProviderCapabilities.FlowProfessionalService
+                        CheckoutStore.OperationCapture
+                  }
+                verified = active CheckoutStore.ProviderDatafast
+                without capability = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= capability) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+                routes activation = map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [activation] request)
+            routes verified `shouldBe` [CheckoutStore.ProviderDatafast]
+            routes (without ProviderCapabilities.CapabilityServerVerification) `shouldBe` []
+            routes (without ProviderCapabilities.CapabilityOneTime) `shouldBe` []
+            routes verified { ProviderCapabilities.paContractApproved = False } `shouldBe` []
+            ProviderCapabilities.routePayments [verified]
+              request { ProviderCapabilities.prEnvironment = CheckoutStore.CheckoutProduction }
+              `shouldBe` []
+            PaymentRuntimeStore.providerOperationCapabilities
+              CheckoutStore.ProviderPayPal ProviderCapabilities.FlowBooking
+              CheckoutStore.OperationCapture `shouldBe` [ProviderCapabilities.CapabilityCapture]
+
+        it "hides PayPal until capture is verified even when public callers omit capabilities" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prRequiredCapabilities = []
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                createOnly = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= ProviderCapabilities.CapabilityCapture) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            ProviderCapabilities.routePayments [createOnly] request `shouldBe` []
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [verified] request)
+              `shouldBe` [CheckoutStore.ProviderPayPal]
+
+        it "preserves caller and marketplace restrictions when qualifying complete checkout" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowMarketplace
+                  , ProviderCapabilities.prRequiredCapabilities =
+                      [ProviderCapabilities.CapabilityPartialRefund]
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                missing capability = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= capability) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [verified] request)
+              `shouldBe` [CheckoutStore.ProviderPayPal]
+            forM_
+              [ ProviderCapabilities.CapabilityPartialRefund
+              , ProviderCapabilities.CapabilityOneTime
+              , ProviderCapabilities.CapabilityCapture
+              , ProviderCapabilities.CapabilityConnectedAccounts
+              , ProviderCapabilities.CapabilitySplitSettlement
+              , ProviderCapabilities.CapabilitySellerPayouts
+              ] $ \capability ->
+                ProviderCapabilities.routePayments [missing capability] request `shouldBe` []
+
         it "derives routing policy from the immutable checkout domain" $ do
             PaymentRuntimeStore.productFlowForDomain "event_ticket_order"
               `shouldBe` Just ProviderCapabilities.FlowEventTicket
