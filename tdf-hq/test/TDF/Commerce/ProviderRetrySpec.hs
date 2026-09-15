@@ -60,7 +60,7 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
       request <- ProviderHttp.parseProviderRequest provider (origin <> "/api/test") >>= requireRight
       HC.redirectCount request `shouldBe` 0
       HC.responseTimeout request `shouldBe` HC.responseTimeoutMicro 15000000
-      HC.cookieJar request `shouldBe` Nothing
+      HC.cookieJar request `shouldSatisfy` maybe True (const False)
 
   it "rejects spoofed hosts, URL credentials, explicit ports and unsafe URLs" $ do
     forM_ ["http://api-m.sandbox.paypal.com/v2/orders"
@@ -113,12 +113,12 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
       ["value" A..= ("125.15" :: Text), "currency_code" A..= ("USD" :: Text)]])
 
   it "stops reading at the first oversized chunk" $ do
-    reads <- newIORef (0 :: Int)
+    readCount <- newIORef (0 :: Int)
     reader <- chunkReader [BS.replicate (1024 * 1024) ' ', "x", "must-not-be-read"]
-    result <- ProviderHttp.readProviderResponse 200 (modifyIORef' reads (+1) >> reader)
+    result <- ProviderHttp.readProviderResponse 200 (modifyIORef' readCount (+1) >> reader)
       :: IO (Either ProviderHttp.AdapterTransportError A.Value)
     result `shouldSatisfy` isLeft
-    readIORef reads `shouldReturn` 2
+    readIORef readCount `shouldReturn` 2
 
   it "does not consume redirect, rejection or server-error response bodies" $ do
     forM_ [301, 302, 307, 308, 400, 401, 409, 422, 429, 500, 503] $ \code -> do
@@ -218,7 +218,8 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
       request <- paypalTransportRequest
       result <- ProviderHttp.executeProviderRequest manager Checkout.ProviderPayPal request
         :: IO (Either ProviderHttp.AdapterTransportError A.Value)
-      result `shouldSatisfy` isLeft
+      result `shouldBe` Left (ProviderHttp.AdapterTransportError
+        "Payment provider is temporarily unavailable; reconcile before retrying.")
       show result `shouldNotContain` "synthetic-private"
 
   it "routes legacy PayPal order creation through the executor with stable request IDs" $ do
