@@ -159,3 +159,10 @@ model precedes implementation; the existing exact-task API remains the only data
 Context-generation fencing, explicit bearer binding, strict route/DTO validation and abort
 cleanup protect rendered receipts. This is not a task editor, rich plan, readiness gate or
 mobile implementation; see [the scoped read contract](task-view-contract.md).
+
+The twentieth branch, `test/event-task-browser-startup`, investigates PR 19's local browser
+timeouts. It removes local Vite module traffic from the test-runner callback, while retaining
+API interception, foreign-origin blocking and the original assertion limits. The application
+and formal state machines remain unchanged. See [PR 20 evidence](pr-20-task-browser-startup.md)
+and the [fixture isolation contract](task-browser-isolation-contract.md). This is a browser
+harness correction, not a production startup benchmark or server/database E2E completion.
