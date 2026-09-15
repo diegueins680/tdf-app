@@ -131,3 +131,40 @@ npm run quality:repo
 Local CLI commands remain `--check`, `--setup`, and `--refresh`. Supply configuration through a secure environment, never argument values. `INSTAGRAM_LIFECYCLE_STATE_FILE` selects input ciphertext; `INSTAGRAM_LIFECYCLE_OUTPUT_FILE` selects the output ciphertext for setup/refresh. With no override, both use the ignored local default. The CLI's interface is preserved, but legacy raw-token adoption and implicit Fly updates are intentionally rejected/removed.
 
 Tests cover provider response validation, OAuth ownership/account binding, tampering/context mismatch, expiry/data-deadline enforcement, retries/redaction, read-only checks, refresh age, atomic persistence and newest-checkpoint failure handling. They retain the independent Facebook messaging invalid-token regression. No test uses real credentials.
+
+## Messaging token checks (separate workflow)
+
+`Check Messaging Token` manages `INSTAGRAM_MESSAGING_TOKEN` and
+`FACEBOOK_MESSAGING_TOKEN`, not the Instagram Login lifecycle checkpoint above. Its manual
+`action=check` is read-only:
+
+```bash
+node scripts/check-messaging-token.mjs --check
+gh workflow run check-messaging-token.yml \
+  --repo diegueins680/tdf-app --ref REVIEWED_REF_WITH_READ_ONLY_CHECK -f action=check
+```
+
+Replace the ref placeholder only with a reviewed revision containing this fix.
+This read-only change was merged into main as `6f67081a73e66e422f331cb31c455a78977a400e`.
+Do not use older revisions: their manual `check` action runs credential
+maintenance and their CLI silently ignores the flag.
+
+Both tokens must pass the existing health checks without needing maintenance.
+Missing, invalid, expired, soon-expiring tokens or failed provider checks return
+a nonzero status; read-only mode never exchanges tokens, retrieves replacement
+Page tokens, or calls Fly. In Actions, this step receives only the messaging
+tokens and Meta inspector credentials; Fly credentials and CLI installation are
+limited to maintenance. Failure notifications retain their existing behavior.
+
+The hourly schedule and explicit `action=refresh` retain the existing
+refresh-when-needed behavior, including final verification and failure exits.
+They invoke `node scripts/check-messaging-token.mjs` without arguments, which can
+exchange tokens and update both Fly messaging secrets. Manual `refresh` is not
+an unconditional rotation and requires separate production-maintenance approval.
+Unknown CLI arguments and workflow actions fail instead of falling through to
+maintenance. Do not pass token values as arguments or paste them into logs.
+
+No schema migration or application deployment is needed for this change.
+Reverting it restores the old, potentially mutating manual `check` behavior;
+stop using manual checks on a reverted revision. Reverting code does not undo
+any separately authorized credential update.
