@@ -95,4 +95,34 @@ describe('ProviderPaymentReturnPage', () => {
       paymentIdempotencyStorageKey(checkoutId, 'placetopay', 'card'),
     )).toBeNull();
   });
+
+  it('presents a verified PayPhone cancellation neutrally and releases only its recovery key', async () => {
+    saveProviderPaymentResume({
+      version: 1,
+      checkoutId,
+      attemptId,
+      provider: 'payphone',
+      paymentMethod: 'payphone_wallet',
+      lookupToken: 'secure-checkout-lookup-token',
+      returnPath: '/orden',
+      createdAt: Date.now(),
+    });
+    loadOrCreatePaymentIdempotencyKey(checkoutId, 'payphone', 'payphone_wallet');
+    const otherKey = loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card');
+    getMock.mockResolvedValue({ ...session('confirmed_no_charge', true), provider: 'payphone' });
+    renderPage();
+
+    await screen.findByText(/confirmó que no se completó un cobro/);
+    expect(screen.queryByText(/rechazado|cancelaste|rechazo del banco/i)).toBeNull();
+    fireEvent.click(screen.getByRole('link', { name: 'Volver a la orden' }));
+
+    expect(await screen.findByText('Orden')).toBeTruthy();
+    expect(loadProviderPaymentResume(checkoutId)).toBeNull();
+    expect(window.sessionStorage.getItem(
+      paymentIdempotencyStorageKey(checkoutId, 'payphone', 'payphone_wallet'),
+    )).toBeNull();
+    expect(window.sessionStorage.getItem(
+      paymentIdempotencyStorageKey(checkoutId, 'placetopay', 'card'),
+    )).toBe(otherKey);
+  });
 });
