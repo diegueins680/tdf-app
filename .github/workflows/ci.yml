@@ -210,6 +210,12 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Verify event operations HTTP runner safety guards
+        run: node --test scripts/__tests__/event-operations-http-runner.test.mjs
+
+      - name: Verify event operations authenticated HTTP boundary
+        run: sh scripts/test-event-operations-http-ci.sh
+
       - name: Verify authenticated artist merch HTTP runtime
         env:
           PGPASSWORD: postgres

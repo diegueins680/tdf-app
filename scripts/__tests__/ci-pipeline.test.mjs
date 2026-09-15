@@ -10,6 +10,14 @@ async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');
 }
 
+test('backend CI retains event operations HTTP and runner-safety checks', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const backendJob = workflow.split('  backend-quality:')[1].split('\n  quality:')[0];
+  assert.match(backendJob, /run: sh scripts\/test-event-operations-http-ci\.sh/);
+  assert.match(backendJob, /run: node --test scripts\/__tests__\/event-operations-http-runner\.test\.mjs/);
+  assert.doesNotMatch(backendJob, /continue-on-error: true/);
+});
+
 test('CI splits component checks and preserves Stack build caches', async () => {
   const workflow = await source('.github/workflows/ci.yml');
   for (const job of ['repo-quality:', 'ui-quality:', 'mobile-quality:', 'backend-quality:', 'quality:']) {

@@ -62,3 +62,11 @@ Snapshots now share the permission-write fence, use one post-lock instant and su
 database failures discard sensitive payloads without swallowing cancellation. Real database races,
 strict DTO decoding and the production PostgreSQL adapter have focused tests. This remains phase-3
 security hardening, not completion of scope administration, HTTP/offline verification or product UX.
+
+The seventh branch, `test/event-operations-http-boundary`, adds focused real HTTP verification of
+production authentication, the event subrouter and PostgreSQL functions. Sixteen scenarios cover
+credentials/roles, object IDs, strict commands, replay/concurrency, between-request revocation,
+approval, feature gating and failure/recovery. Runner safety and path-selection tests integrate
+the suite into the existing backend CI gate without weakening it. No business schema/API changes
+are introduced. Before activation, close the separately documented in-flight session window and
+review POST event-existence metadata; full `mkApp`, offline, schema rehearsal and UX remain pending.

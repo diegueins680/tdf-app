@@ -51,3 +51,23 @@ contract/tax defects, provider outages, and database-superuser tampering remain 
 guarantees. MFA/step-up authentication, key management, provider certification, legal review,
 database administration controls, disaster recovery exercises, and penetration testing are required
 before production activation.
+
+### Authentication-to-command window (identified during HTTP verification)
+
+`TDF.Auth.authWithToken` calls `loadAuthedUser` in its own pool transaction, then passes an
+`AuthedUser` containing party/roles/modules to the event handler. `TDF.EventOperations.Server`
+subsequently starts another transaction and supplies the party ID, not the session token or a
+session epoch, to its SQL function. Event grants are rechecked/fenced there; token activity is not.
+Thus subsequent-request token-deactivation tests do not establish that a token revoked between
+authentication and command execution will be rejected. This is a code-inspection finding, not a
+completed runtime exploit test or an assertion that all revocation races are fixed. Before
+activation, model and test that interleaving and introduce a reviewed session-bound transaction
+guard without weakening the existing global authentication semantics. Full `mkApp` middleware and
+other domains require their own integration checks as well.
+
+The command function also distinguishes an absent event (`not_found`/404) from an unreadable
+existing event (`forbidden`/403), unlike the GET snapshot's opaque 404. Code inspection therefore
+identifies event-existence metadata as a separate privacy-policy gap for private-event rollout.
+The new HTTP tests enforce the currently documented command contract; they do not establish
+indistinguishability of absent and inaccessible POST targets. Model and review that error-envelope
+policy before enabling private resources rather than assuming object-ID isolation proves it.
