@@ -41,7 +41,19 @@ apply_sql() {
 apply_sql "$fixture_sql"
 
 apply_sql "$up_migration"
+# Rehearse upgrading an already installed restrictive fence FK.
+psql_exec -c 'ALTER TABLE event_operation_task_write_fence DROP CONSTRAINT event_operation_task_write_fence_event_id_fkey; ALTER TABLE event_operation_task_write_fence ADD CONSTRAINT event_operation_task_write_fence_event_id_fkey FOREIGN KEY(event_id) REFERENCES social_event(id) ON DELETE RESTRICT;' >/dev/null
 apply_sql "$up_migration"
+assert_unprotected_event_deletion() {
+  psql_exec -c "BEGIN;
+    INSERT INTO social_event(id) VALUES ($1);
+    INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES ($2,$1,'planned',1);
+    DELETE FROM event_logistics_activity WHERE id=$2;
+    DELETE FROM social_event WHERE id=$1;
+    COMMIT;" >/dev/null
+  test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_task_write_fence WHERE event_id=$1;")" = 0
+}
+assert_unprotected_event_deletion 20 200
 
 state_rows=$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_event_state;')
 test "$state_rows" = "2"
@@ -107,6 +119,18 @@ fi
 
 psql_exec -c "INSERT INTO event_operation_task_override(activity_id,activity_version,override_kind,reason,policy_reference,authorized_by_party_id) VALUES (100,1,'blocked_completion','Emergency venue access','event-ops-emergency-v1',1);" >/dev/null
 psql_exec -c "UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=100;" >/dev/null
+
+# A historical override cannot authorize a newly inserted or retargeted edge.
+for edge_sql in \
+  'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (100,103);' \
+  'UPDATE event_logistics_dependency SET depends_on_activity_id=103 WHERE activity_id=100 AND depends_on_activity_id=101;'; do
+  if psql_exec -c "$edge_sql" >/dev/null 2>&1; then
+    echo 'expected historical override to reject a new incomplete prerequisite' >&2
+    exit 1
+  fi
+done
+psql_exec -c 'UPDATE event_logistics_dependency SET depends_on_activity_id=101 WHERE activity_id=100 AND depends_on_activity_id=101;' >/dev/null
+test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_task_override WHERE activity_id=100;')" = 1
 
 psql_exec -c "INSERT INTO event_operation_audit_event(event_id,actor_party_id,actor_reference,operation_code,resource_kind,resource_id,outcome,reason,correlation_id) VALUES (10,1,'party:1','task.override','task','100','override','Emergency venue access','test:override');" >/dev/null
 if psql_exec -c "UPDATE event_operation_audit_event SET operation_code='tampered';" >/dev/null 2>&1; then
@@ -227,6 +251,7 @@ test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_raci_assignment 
 done
 
 apply_sql "$rollback_migration"
+assert_unprotected_event_deletion 21 210
 preserved_audit=$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_audit_event;')
 test "$preserved_audit" = "1"
 psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (101,100);' >/dev/null

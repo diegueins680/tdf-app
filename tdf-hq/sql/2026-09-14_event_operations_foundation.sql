@@ -633,9 +633,16 @@ LOCK TABLE event_logistics_activity, event_logistics_dependency,
 
 -- A write, not just an advisory lock: stale RR/SERIALIZABLE snapshots must abort.
 CREATE TABLE IF NOT EXISTS event_operation_task_write_fence (
-  event_id BIGINT PRIMARY KEY REFERENCES social_event(id) ON DELETE RESTRICT,
+  event_id BIGINT PRIMARY KEY REFERENCES social_event(id) ON DELETE CASCADE,
   revision BIGINT NOT NULL DEFAULT 1 CHECK (revision > 0)
 );
+-- The fence is synchronization metadata, not retained audit history. Upgrade
+-- earlier opt-in installations too; existing event/task audit restrictions remain.
+ALTER TABLE event_operation_task_write_fence
+  DROP CONSTRAINT IF EXISTS event_operation_task_write_fence_event_id_fkey;
+ALTER TABLE event_operation_task_write_fence
+  ADD CONSTRAINT event_operation_task_write_fence_event_id_fkey
+  FOREIGN KEY (event_id) REFERENCES social_event(id) ON DELETE CASCADE;
 
 CREATE OR REPLACE FUNCTION event_operation_task_write_lock()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -742,6 +749,27 @@ BEGIN
   ELSE
     target_activity_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.activity_id ELSE NEW.activity_id END;
     SELECT event_id INTO target_event_id FROM event_logistics_activity WHERE id = target_activity_id;
+  END IF;
+  -- An old completion exception covers its existing graph, not new blocked
+  -- edges. Check the final state so valid same-transaction prerequisite completion
+  -- still works, and ignore deleted edges or unchanged relation updates.
+  IF TG_TABLE_NAME = 'event_logistics_dependency' AND TG_OP <> 'DELETE' THEN
+    IF TG_OP = 'INSERT' OR NEW.depends_on_activity_id <> OLD.depends_on_activity_id THEN
+      IF EXISTS (
+        SELECT 1 FROM event_logistics_dependency dependency
+        JOIN event_logistics_activity activity ON activity.id = dependency.activity_id
+        JOIN event_operation_task_policy policy ON policy.activity_id = activity.id
+        JOIN event_logistics_activity prerequisite
+          ON prerequisite.id = dependency.depends_on_activity_id
+        WHERE dependency.id = NEW.id AND dependency.activity_id = NEW.activity_id
+          AND dependency.depends_on_activity_id = NEW.depends_on_activity_id
+          AND activity.status = 'completed' AND policy.dependencies_gate_completion
+          AND prerequisite.status <> 'completed'
+      ) THEN
+        RAISE EXCEPTION 'completed task % cannot acquire an incomplete prerequisite', NEW.activity_id
+          USING ERRCODE = '23514';
+      END IF;
+    END IF;
   END IF;
   PERFORM event_operation_validate_task_event(target_event_id);
   RETURN NULL;
