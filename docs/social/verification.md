@@ -13,8 +13,9 @@ impersonation, media/CDN copies and crash recovery of an external delivery are n
 modeled. These require separate refinement evidence before rollout.
 
 `formal/social/Feed.tla`: five monotonically published immutable positions,
-eligibility removal, descending one-item pages. No duplicate and no skipped eligible
-item above the returned cursor. It assumes publication order is assigned in commit
+eligibility removal, descending one-item pages. Start captures a traversal high-water
+mark before the first page. No duplicate or skipped eligible item at or below that
+mark and above the returned cursor; later publications belong to the next traversal. It assumes publication order is assigned in commit
 order; ordinary PostgreSQL sequences alone do **not** establish this assumption.
 If an implementation uses preallocated IDs or editable dates, it does not refine
 this model. Eligibility becoming newly allowed after a cursor passes is outside
@@ -29,13 +30,13 @@ it is not evidence that this precise sequence was executed in production.
 
 | Requirement | Property/action | Required implementation mechanism | Current evidence |
 |---|---|---|---|
-| S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 14,987 distinct states; safety + liveness passed |
+| S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 102,833 distinct states; observable read safety + availability and liveness passed |
 | S-CONSENT | ConsentIntegrity, OwnConsentOnly / Request, Withdraw(a) | own consent only, unique pair, transactional revoke | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-BLOCK | ConsentIntegrity / Block, Unblock | common row locks with accept/send, no resurrection | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-DELETE | ConsentIntegrity / Delete | tombstone/revision, stale commands rejected | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
-| S-RETRY | AtMostOnce, RequestAdmission / Queue(r), Finish(r) | request identity + transaction + terminal dedup | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
+| S-RETRY | AtMostOnce, RequestAdmission, ReplayEquality, BindingImmutable / Queue, Finish, Submit | request identity + immutable recipient/payload equality + transaction + terminal dedup | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-PROGRESS | Progress / Finish(r) | bounded retry or terminal rejection; fairness | TLC Progress passed; worker not qualified |
-| S-FEED | StablePagination / Publish, Page, Hide | immutable commit-ordered cursor and eligibility before LIMIT | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
+| S-FEED | StablePagination, CompleteAtEnd / Start, Publish, Page, Hide | traversal high-water mark + immutable commit-ordered cursor and eligibility before LIMIT | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-CLIENT | account isolation/accessibility | scoped query keys, selectors, recovery states | baseline 44 tests passed |
 
 Baseline tests/builds are evidence of the starting point only. See timestamped logs;
@@ -92,3 +93,33 @@ pre-repair logs above retain their original 5,060-state historical result.
 These bounded model results do not qualify SQL/HTTP/legacy implementations.
 Downstream #356 must regenerate/review its transition-derived SQL assertions against
 this corrected actor-specific withdrawal model before claiming model refinement.
+
+## Second review repair: reads, traversal bounds, and replay parameters
+
+Read now records an observable grant/denial and the authority snapshot used for
+that decision. AuthoritativeDenial independently checks consent, blocks, actor
+liveness, membership and privacy in that snapshot. AuthorizedReadAvailable also
+rejects an implementation that always denies permitted reads. Later revocations
+do not retroactively invalidate a read already authorized at its transaction.
+
+Feed Start captures the publication high-water mark for one traversal, including
+an empty initial traversal. Publications arriving above that mark are deferred
+to a refresh. StablePagination checks all currently eligible positions within the
+mark above the cursor independently of Candidates; CompleteAtEnd checks that an
+exhausted traversal has returned every still-eligible position in its boundary.
+This is a required refinement contract for a future API, not a claim that current
+clients already transport a high-water mark.
+
+RequestReplay separately explores two IDs, two recipients and two payloads.
+Submit binds the full parameter record on first use, acknowledges only an equal
+retry, and rejects conflicting reuse while pending or terminal. BindingImmutable
+checks that accepted identity bindings never change. Finish permits at most one
+effect per ID. This protocol model complements Relationships' authorization and
+revision checks; composition with SQL/HTTP workers still requires refinement tests.
+
+The complete runner passed three positive configurations and five specific
+negative controls. Relationships: 348,055 generated / 102,833 distinct, depth 11.
+RequestReplay: 2,384 generated / 272 distinct, depth 6. Current logs for all models
+and counterexamples are committed under
+`docs/social/model-evidence-second-review-2026-09-15/`. Earlier result sections
+remain historical evidence of their explicitly described model versions.

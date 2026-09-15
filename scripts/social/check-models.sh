@@ -5,24 +5,27 @@ TDF_SOCIAL_JAVA=${TDF_SOCIAL_JAVA:-java}
 TDF_SOCIAL_ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 TDF_SOCIAL_RESULTS=${TDF_SOCIAL_RESULTS:-$(mktemp -d)}
 mkdir -p "$TDF_SOCIAL_RESULTS"
-for model in Relationships Feed; do
+for model in Relationships Feed RequestReplay; do
   "$TDF_SOCIAL_JAVA" -XX:+UseParallelGC -cp "$TLA_JAR" tlc2.TLC \
     -workers 1 -metadir "$TDF_SOCIAL_RESULTS/states-$model" \
     -config "$TDF_SOCIAL_ROOT/formal/social/$model.cfg" \
     "$TDF_SOCIAL_ROOT/formal/social/$model.tla" > "$TDF_SOCIAL_RESULTS/$model.txt" 2>&1
   grep 'Model checking completed. No error has been found.' "$TDF_SOCIAL_RESULTS/$model.txt"
 done
-for negative in StaleCache WithdrawalOwnership RequestIdentity; do
+for negative in StaleCache WithdrawalOwnership RequestIdentity FeedSkipped RequestConflict; do
+  module=Relationships
   case "$negative" in
     StaleCache) expected=AuthoritativeDenial ;;
     WithdrawalOwnership) expected=OwnConsentOnly ;;
     RequestIdentity) expected=RequestAdmission ;;
+    FeedSkipped) expected=StablePagination; module=Feed ;;
+    RequestConflict) expected=ReplayEquality; module=RequestReplay ;;
   esac
   set +e
   "$TDF_SOCIAL_JAVA" -cp "$TLA_JAR" tlc2.TLC -workers 1 \
     -metadir "$TDF_SOCIAL_RESULTS/states-$negative" \
     -config "$TDF_SOCIAL_ROOT/formal/social/$negative.cfg" \
-    "$TDF_SOCIAL_ROOT/formal/social/Relationships.tla" > "$TDF_SOCIAL_RESULTS/$negative.txt" 2>&1
+    "$TDF_SOCIAL_ROOT/formal/social/$module.tla" > "$TDF_SOCIAL_RESULTS/$negative.txt" 2>&1
   result=$?
   set -e
   if [ "$result" -eq 0 ]; then echo "Expected $negative counterexample" >&2; exit 1; fi

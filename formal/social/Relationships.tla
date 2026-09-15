@@ -2,58 +2,60 @@
 EXTENDS Naturals, FiniteSets, TLC
 CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity
 VARIABLES consent, blocked, alive, members, private, version,
-          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe
+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe
 vars == <<consent, blocked, alive, members, private, version,
-          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>
+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
 Available == alive = Actors /\ blocked = {}
 Connected == Available /\ consent = Actors
 Permitted == Available /\ (~private \/ members = Actors)
 Init == /\ consent = {} /\ blocked = {} /\ alive = Actors
         /\ members = Actors /\ private \in BOOLEAN /\ version = 0
         /\ cacheConsent = {} /\ cacheVersion = 0 /\ pending = {}
-        /\ terminal = {} /\ delivered = {} /\ leaked = FALSE
+        /\ terminal = {} /\ delivered = {} /\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]
         /\ queuedVersion = [r \in Requests |-> 0]
         /\ deliveryCount = [r \in Requests |-> 0]
         /\ consentOwnerSafe = TRUE
 Request(a) == /\ Available /\ a \notin consent /\ version < MaxVersion
               /\ consent' = consent \cup {a} /\ version' = version + 1
               /\ UNCHANGED <<blocked, alive, members, private, cacheConsent,
-                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>
+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
 Withdraw(a) == /\ a \in consent /\ version < MaxVersion
                /\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \ {a}
                /\ version' = version + 1
                /\ consentOwnerSafe' =
                     (consentOwnerSafe /\ consent' \ {a} = consent \ {a})
                /\ UNCHANGED <<blocked, alive, members, private, cacheConsent,
-                    cacheVersion, pending, terminal, delivered, leaked,
+                    cacheVersion, pending, terminal, delivered, lastRead,
                     queuedVersion, deliveryCount>>
 Block(a) == /\ a \notin blocked /\ version < MaxVersion
             /\ blocked' = blocked \cup {a} /\ consent' = {}
             /\ version' = version + 1
             /\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,
-                 pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>
+                 pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
 Unblock(a) == /\ a \in blocked /\ version < MaxVersion
               /\ blocked' = blocked \ {a} /\ version' = version + 1
               /\ UNCHANGED <<consent, alive, members, private, cacheConsent,
-                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>
+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
 Revoke(a) == /\ a \in members /\ version < MaxVersion
              /\ members' = members \ {a} /\ version' = version + 1
              /\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,
-                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>
+                  cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
 Delete(a) == /\ a \in alive /\ version < MaxVersion
              /\ alive' = alive \ {a} /\ consent' = {}
              /\ version' = version + 1
              /\ UNCHANGED <<blocked, members, private, cacheConsent,
-                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>
+                  cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
 Privacy == /\ ~private /\ version < MaxVersion
            /\ private' = TRUE /\ version' = version + 1
            /\ UNCHANGED <<consent, blocked, alive, members, cacheConsent,
-                cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>
+                cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
 Refresh == /\ cacheConsent' = consent /\ cacheVersion' = version
            /\ UNCHANGED <<consent, blocked, alive, members, private, version,
-                pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>
-Read == /\ leaked' = (leaked \/
-              (IF UnsafeCache THEN cacheConsent = Actors /\ ~Permitted ELSE FALSE))
+                pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
+Read == /\ lastRead' =
+              [granted |-> IF UnsafeCache THEN cacheConsent = Actors ELSE Connected /\ Permitted,
+               consent |-> consent, blocked |-> blocked, alive |-> alive,
+               members |-> members, private |-> private]
         /\ UNCHANGED <<consent, blocked, alive, members, private, version,
              cacheConsent, cacheVersion, pending, terminal, delivered,
              queuedVersion, deliveryCount, consentOwnerSafe>>
@@ -64,7 +66,7 @@ Queue(r) == /\ Connected /\ Permitted /\ r \notin pending \cup terminal
             /\ pending' = pending \cup {r}
             /\ queuedVersion' = [queuedVersion EXCEPT ![r] = version]
             /\ UNCHANGED <<consent, blocked, alive, members, private, version,
-                 cacheConsent, cacheVersion, terminal, delivered, leaked,
+                 cacheConsent, cacheVersion, terminal, delivered, lastRead,
                  deliveryCount, consentOwnerSafe>>
 Finish(r) == /\ r \in pending /\ pending' = pending \ {r}
              /\ terminal' = terminal \cup {r}
@@ -74,7 +76,7 @@ Finish(r) == /\ r \in pending /\ pending' = pending \ {r}
                          THEN [deliveryCount EXCEPT ![r] = @ + 1]
                          ELSE deliveryCount
              /\ UNCHANGED <<consent, blocked, alive, members, private, version,
-                  cacheConsent, cacheVersion, leaked, queuedVersion, consentOwnerSafe>>
+                  cacheConsent, cacheVersion, lastRead, queuedVersion, consentOwnerSafe>>
 Next == (\E a \in Actors:
           Request(a) \/ Withdraw(a) \/ Block(a) \/ Unblock(a) \/ Revoke(a) \/ Delete(a))
         \/ Privacy \/ Refresh \/ Read
@@ -90,7 +92,11 @@ TypeOK == /\ consent \subseteq Actors /\ blocked \subseteq Actors
           /\ consentOwnerSafe \in BOOLEAN
 ConsentIntegrity == (blocked # {} \/ alive # Actors) => consent = {}
 OwnConsentOnly == consentOwnerSafe
-AuthoritativeDenial == ~leaked
+ReadWasAuthorized == /\ lastRead.consent = Actors
+                     /\ lastRead.blocked = {} /\ lastRead.alive = Actors
+                     /\ (~lastRead.private \/ lastRead.members = Actors)
+AuthoritativeDenial == lastRead.granted => ReadWasAuthorized
+AuthorizedReadAvailable == ReadWasAuthorized => lastRead.granted
 AtMostOnce == \A r \in Requests: deliveryCount[r] <= 1
 RequestAdmission == (Connected /\ Permitted) =>
                       \A r \in Requests:
