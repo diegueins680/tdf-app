@@ -30,12 +30,12 @@ it is not evidence that this precise sequence was executed in production.
 | Requirement | Property/action | Required implementation mechanism | Current evidence |
 |---|---|---|---|
 | S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 5,060 distinct states; safety + liveness passed |
-| S-CONSENT | ConsentIntegrity / Request, Withdraw | own consent only, unique pair, transactional revoke | see SQL fixture; HTTP/legacy refinement still unqualified |
-| S-BLOCK | ConsentIntegrity / Block, Unblock | common row locks with accept/send, no resurrection | see SQL fixture; HTTP/legacy refinement still unqualified |
-| S-DELETE | ConsentIntegrity / Delete | tombstone/revision, stale commands rejected | see SQL fixture; HTTP/legacy refinement still unqualified |
-| S-RETRY | TypeOK / Queue, Finish | request identity + transaction + terminal dedup | see SQL fixture; HTTP/legacy refinement still unqualified |
+| S-CONSENT | ConsentIntegrity / Request, Withdraw | own consent only, unique pair, transactional revoke | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
+| S-BLOCK | ConsentIntegrity / Block, Unblock | common row locks with accept/send, no resurrection | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
+| S-DELETE | ConsentIntegrity / Delete | tombstone/revision, stale commands rejected | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
+| S-RETRY | TypeOK / Queue, Finish | request identity + transaction + terminal dedup | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-PROGRESS | Progress / Finish(v) | bounded retry or terminal rejection; fairness | TLC Progress passed; worker not qualified |
-| S-FEED | StablePagination / Publish, Page, Hide | immutable commit-ordered cursor and eligibility before LIMIT | see SQL fixture; HTTP/legacy refinement still unqualified |
+| S-FEED | StablePagination / Publish, Page, Hide | immutable commit-ordered cursor and eligibility before LIMIT | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-CLIENT | account isolation/accessibility | scoped query keys, selectors, recovery states | baseline 44 tests passed |
 
 Baseline tests/builds are evidence of the starting point only. See timestamped logs;
