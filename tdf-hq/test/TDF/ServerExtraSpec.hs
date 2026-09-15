@@ -6585,6 +6585,7 @@ inventoryUser =
     { auPartyId = toSqlKey 1
     , auRoles = [M.Admin]
     , auModules = modulesForRoles [M.Admin]
+    , auSessionWitness = Nothing
     }
 
 listAssetsHandlerFor

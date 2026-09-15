@@ -34,10 +34,14 @@ Check durable state, receipt and audit counts as well as HTTP status/body. Reque
 equivalent to transaction rollback: modeled domain rejection may intentionally persist an audit and
 receipt. Malformed HTTP input and failed authentication must not execute a command.
 
+The [session fence refinement](session-fence-contract.md) now adds post-authentication barriers to
+real HTTP GET/new/replay requests and rejects revocation before event execution. Direct production
+handler tests cover token mutations; real PostgreSQL blocking PID observations check both lock
+orders, cancellation and RC/RR/Serializable outcomes. These are not timing-only race assumptions.
+
 Limitations: a focused production subrouter is not the entire `mkApp` middleware/router, browser,
-mobile or offline queue. A token revoked after its authentication read is an in-flight-session race,
-not covered by a subsequent-request revocation test. Global token/event authorization fencing remains
-an explicit review item. Test fixtures reproduce the columns used by canonical authentication but
+mobile or offline queue. Global role/catalog revocation and permanent credential-revocation epochs
+remain explicit review items. Test fixtures reproduce the columns used by canonical authentication but
 do not constitute a rehearsal against the full production schema. No production activation follows.
 
 ## Reproducible runners

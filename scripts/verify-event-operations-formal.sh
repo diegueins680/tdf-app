@@ -94,6 +94,10 @@ expect_counterexample SnapshotReadRawLog.cfg LogFieldsAllowlisted snapshot-log S
 run_tlc CommandPrivacy.tla CommandPrivacy.cfg command-privacy
 expect_counterexample CommandPrivacyExistenceLeak.cfg OpaqueTarget command-existence CommandPrivacy.tla
 expect_counterexample CommandPrivacyReceiptLeak.cfg OpaqueTarget command-receipt CommandPrivacy.tla
+run_tlc SessionFence.tla SessionFence.cfg session-fence
+for mutation in Stale Unlocked Party Credential Purpose Witness; do
+  expect_counterexample "SessionFence${mutation}.cfg" CurrentBoundSession "session-${mutation}" SessionFence.tla
+done
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
 run_tlc OperationalLiveness.tla OperationalLiveness.cfg operational-liveness
 

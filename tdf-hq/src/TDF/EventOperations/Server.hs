@@ -23,7 +23,7 @@ import Database.Persist (PersistValue(..))
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
 import Servant
 
-import TDF.Auth (AuthedUser(..))
+import TDF.Auth (AuthedUser(..), withCurrentAuthSession)
 import TDF.DB (Env(..))
 import TDF.EventOperations.API (EventOperationsAPI)
 import TDF.EventOperations.DatabaseBoundary (databaseFailureLog, loadSnapshot, tryDatabaseAction)
@@ -63,13 +63,20 @@ requireEventOperationsEnabled = do
   unless (enabledRows == [Single True]) $
     throwError (eventOperationDomainError "feature_disabled")
 
+-- Authentication and event work use separate pool transactions. Recheck the bound session
+-- and retain its row lock in the SAME transaction as the event snapshot/command/replay.
+runEventOperationsSessionDb :: AuthedUser -> SqlPersistT IO a -> EventOperationsM a
+runEventOperationsSessionDb user action = do
+  result <- runEventOperationsDb (withCurrentAuthSession user action)
+  maybe (throwError err401 { errBody = "Invalid or inactive token" }) pure result
+
 getEventOperationsSnapshot
   :: AuthedUser
   -> Int64
   -> EventOperationsM EventOps.EventOperationSnapshotDTO
 getEventOperationsSnapshot user eventId = do
   requireEventOperationsEnabled
-  snapshot <- runEventOperationsDb (loadSnapshot eventId actorPartyId)
+  snapshot <- runEventOperationsSessionDb user (loadSnapshot eventId actorPartyId)
   maybe (throwError (eventOperationDomainError "not_found")) pure snapshot
   where
     actorPartyId = fromSqlKey (auPartyId user)
@@ -82,7 +89,7 @@ applyEventTransition
   -> EventOperationsM EventOps.EventTransitionOutcomeDTO
 applyEventTransition user eventId commandId command = do
   requireEventOperationsEnabled
-  responseRows <- runEventOperationsDb $ rawSql
+  responseRows <- runEventOperationsSessionDb user $ rawSql
     "SELECT event_operation_apply_transition(?, ?, ?::uuid, ?, ?, ?, ?, ?)::text"
     [ PersistInt64 eventId
     , PersistInt64 actorPartyId

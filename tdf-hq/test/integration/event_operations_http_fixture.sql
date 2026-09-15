@@ -37,6 +37,12 @@ INSERT INTO api_token(token,party_id,label,active) VALUES
  ('http-outsider-test-token',3,NULL,TRUE),('http-inactive-test-token',1,NULL,FALSE),
  ('http-reset-test-token',1,'password-reset:test-only',TRUE),
  ('http-revocable-test-token',1,NULL,TRUE);
+INSERT INTO api_token(token,party_id,label,active) VALUES ('http-flight-test-token',1,NULL,TRUE);
+INSERT INTO social_event(id,organizer_party_id) VALUES (90,'1');
+INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence)
+ VALUES (90,'draft',1,'in-flight session fixture');
+INSERT INTO event_operation_relationship(event_id,party_id,relationship_kind)
+ VALUES (90,1,'primary_owner');
 INSERT INTO social_event(id,organizer_party_id)
  SELECT n,'1' FROM generate_series(60,74) n;
 INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence)

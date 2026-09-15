@@ -49,6 +49,8 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 | `SnapshotReadEarlyAuth.cfg`, `SnapshotReadMixedClock.cfg`, `SnapshotReadRawLog.cfg` | Negative controls: pre-lock authorization, different projection clocks, raw error logging | Expected exit 12 with `NoUnauthorizedSnapshot`, `CoherentProjection`, `LogFieldsAllowlisted` respectively; all detected |
 | `CommandPrivacy.cfg` | Paired absent/existing observations; 1 command, 4 receipt classes, 2 versions, 3 grants with pre-decision changes | PASS; 81 generated, 49 distinct states, depth 4 |
 | `CommandPrivacyExistenceLeak.cfg`, `CommandPrivacyReceiptLeak.cfg` | Negative controls: distinct hidden-event error / receipt response before visibility | Expected exit 12 with `OpaqueTarget`; both detected |
+| `SessionFence.cfg` | 1 authentication/transaction; 32 token records; 2 actors; witness present/absent; read/new/replay | PASS; 12,685 generated, 1,153 distinct states, depth 5 |
+| `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
@@ -84,6 +86,10 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
 - `CommandPrivacy.tla`: paired absent/unreadable status/body equality for fresh commands and all
   receipt classes, while retaining read-only mutation denial. The atomic observation assumes the
   existing current-authorization fence; it does not prove session revocation or constant-time access.
+- `SessionFence.tla`: request-local token/party/credential binding, recheck after token locking and
+  lock retention through the event decision. It models current validity, not permanent revocation
+  epochs: explicit reactivation of the same credential reauthorizes it. Global role/catalog changes
+  and hash collision resistance are outside this bounded token model.
 - `EventStructure.als`: ownership/coproduction, time-bounded grants, visibility, RACI, dependency,
   invitation, contract-version, booking, override, and exact-money relations.
 
@@ -143,3 +149,10 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
    returns the same opaque envelope while retaining internal denial history and visible read-only
    rejection. Timing, generic server Date headers, database faults and privileged audit access are
    excluded; the SQL and wire-level HTTP comparisons test the concrete envelope.
+9. An already-authenticated party-only context still read a snapshot after its token was revoked;
+   the new regression produced 18 passing existing HTTP examples and one failing in-flight example
+   before implementation. `SessionFenceStale` exposes the missing recheck; the other five negative
+   configurations distinguish lock retention, both actor bindings, credential, purpose and witness
+   requirements. The corrected model checks current validity through the decision. Real HTTP
+   barriers and observed database blocking refine its atomic lock abstraction. Same-credential
+   reactivation is explicit reauthorization, not a permanent-revocation guarantee.

@@ -52,18 +52,23 @@ guarantees. MFA/step-up authentication, key management, provider certification, 
 database administration controls, disaster recovery exercises, and penetration testing are required
 before production activation.
 
-### Authentication-to-command window (identified during HTTP verification)
+### Authentication-to-command window (event transaction correction)
 
-`TDF.Auth.authWithToken` calls `loadAuthedUser` in its own pool transaction, then passes an
-`AuthedUser` containing party/roles/modules to the event handler. `TDF.EventOperations.Server`
-subsequently starts another transaction and supplies the party ID, not the session token or a
-session epoch, to its SQL function. Event grants are rechecked/fenced there; token activity is not.
-Thus subsequent-request token-deactivation tests do not establish that a token revoked between
-authentication and command execution will be rejected. This is a code-inspection finding, not a
-completed runtime exploit test or an assertion that all revocation races are fixed. Before
-activation, model and test that interleaving and introduce a reviewed session-bound transaction
-guard without weakening the existing global authentication semantics. Full `mkApp` middleware and
-other domains require their own integration checks as well.
+The original `loadAuthedUser` passed only party/roles/modules across pool transactions. A regression
+then reproduced a snapshot read after token revocation using that already-authenticated context.
+The [session fence contract](session-fence-contract.md) and `SessionFence` model define the repair:
+an opaque request-local token-row/party/credential witness, current-row validation under `FOR SHARE`,
+and lock retention through the actual event read/new command/replay transaction. Both supplied and
+stored actor identities must match the captured party. Token deletion, deactivation, rebinding,
+rotation and reset-purpose conversion fail closed; copied or missing witnesses do not authorize.
+Fingerprint comparison uses `constEq`; Show redacts witness details. Existing event-grant fences
+remain independently necessary. See [PR 09 evidence](pr-09-session-fence.md) for the concrete tests.
+
+This is current-token validity, not permanent revocation epochs. Explicitly reactivating the same
+credential reauthorizes it; permanent invalidation must rotate the credential or leave the old token
+inactive. Other domain transactions and concurrent global role/catalog changes are not fenced merely
+because their `AuthedUser` now carries a witness. Full `mkApp`, global auth-policy/session lifetime,
+token storage hardening and production-schema rehearsal remain required before activation.
 
 ### Command target existence (response-envelope correction)
 

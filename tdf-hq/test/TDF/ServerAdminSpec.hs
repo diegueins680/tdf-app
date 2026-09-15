@@ -1824,6 +1824,7 @@ mkUser roles =
         { auPartyId = toSqlKey 1
         , auRoles = roles
         , auModules = modulesForRoles roles
+        , auSessionWitness = Nothing
         }
 
 expectBadRequestContaining :: Show a => String -> Either ServerError a -> Expectation
