@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
+import { spawnSync } from 'node:child_process';
 
 import {
   assertCheckConfiguration,
@@ -8,7 +9,186 @@ import {
   checkInstagramToken as checkInstagramTokenImpl,
   checkTokenStatus as checkTokenStatusImpl,
 } from '../refresh-instagram-token.mjs';
-import { checkToken as checkMessagingToken } from '../check-messaging-token.mjs';
+import {
+  checkToken as checkMessagingToken,
+  parseReadOnly,
+  runMessagingTokenCli,
+  runMessagingTokenMaintenance,
+} from '../check-messaging-token.mjs';
+
+test('manual messaging validation invokes an explicit read-only command', async () => {
+  const workflow = await readFile(
+    new URL('../../.github/workflows/check-messaging-token.yml', import.meta.url), 'utf8'
+  );
+  assert.match(workflow, /node scripts\/check-messaging-token\.mjs --check/);
+});
+
+test('messaging CLI preserves legacy maintenance and rejects ambiguous arguments', () => {
+  assert.equal(parseReadOnly([]), false);
+  assert.equal(parseReadOnly(['--check']), true);
+  for (const args of [['--chek'], ['--check', '--refresh'], ['--check', '--check']]) {
+    assert.throws(() => parseReadOnly(args), /Usage:/);
+  }
+});
+
+test('read-only messaging checks both tokens but never refreshes unhealthy tokens', async () => {
+  const healthy = { ok: true, expiringSoon: false };
+  for (const unhealthy of [
+    { ok: false, error: 'missing' },
+    { ok: false, error: 'invalid' },
+    { ok: false, error: 'missing_credentials' },
+    { ok: false, error: 'provider_failure' },
+    { ok: false, expired: true },
+    { ok: true, expiringSoon: true },
+  ]) {
+    for (const failedIndex of [0, 1]) {
+      const checked = [];
+      let refreshes = 0;
+      const code = await runMessagingTokenMaintenance({
+        readOnly: true,
+        instagramToken: 'test-instagram',
+        facebookToken: 'test-facebook',
+        check: async token => {
+          checked.push(token);
+          return checked.length - 1 === failedIndex ? unhealthy : healthy;
+        },
+        refresh: async () => { refreshes++; throw new Error('Unexpected credential mutation'); },
+      });
+      assert.equal(code, 1);
+      assert.deepEqual(checked, ['test-instagram', 'test-facebook']);
+      assert.equal(refreshes, 0);
+    }
+  }
+});
+
+test('healthy messaging tokens pass without refresh in either mode', async () => {
+  for (const readOnly of [true, false]) {
+    let checks = 0;
+    let refreshes = 0;
+    assert.equal(await runMessagingTokenMaintenance({
+      readOnly,
+      check: async () => { checks++; return { ok: true, expiringSoon: false }; },
+      refresh: async () => { refreshes++; },
+    }), 0);
+    assert.equal(checks, 2);
+    assert.equal(refreshes, 0);
+  }
+});
+
+test('read-only invariant holds for every two-token validity/expiry combination', async () => {
+  for (let state = 0; state < 16; state++) {
+    const instagram = { ok: Boolean(state & 1), expiringSoon: Boolean(state & 2) };
+    const facebook = { ok: Boolean(state & 4), expiringSoon: Boolean(state & 8) };
+    let checks = 0;
+    let refreshes = 0;
+    const code = await runMessagingTokenMaintenance({
+      readOnly: true,
+      check: async () => ++checks === 1 ? instagram : facebook,
+      refresh: async () => { refreshes++; },
+    });
+    assert.equal(code, instagram.ok && !instagram.expiringSoon && facebook.ok && !facebook.expiringSoon ? 0 : 1);
+    assert.equal(checks, 2);
+    assert.equal(refreshes, 0, `Forbidden refresh in state ${state}`);
+  }
+});
+
+test('legacy messaging maintenance still refreshes when needed and verifies the result', async () => {
+  const checked = [];
+  const refreshed = [];
+  assert.equal(await runMessagingTokenMaintenance({
+    instagramToken: 'test-instagram',
+    facebookToken: 'test-facebook',
+    check: async token => {
+      checked.push(token);
+      return { ok: true, expiringSoon: token === 'test-instagram' };
+    },
+    refresh: async token => { refreshed.push(token); return 'test-replacement'; },
+  }), 0);
+  assert.deepEqual(refreshed, ['test-instagram']);
+  assert.deepEqual(checked, ['test-instagram', 'test-facebook', 'test-replacement']);
+});
+
+test('legacy messaging maintenance retains missing-token and refresh failure exits', async () => {
+  assert.equal(await runMessagingTokenMaintenance({
+    instagramToken: '',
+    check: async () => ({ ok: false }),
+    refresh: async () => assert.fail('Cannot refresh a missing token'),
+  }), 1);
+  for (const failRefresh of [true, false]) {
+    assert.equal(await runMessagingTokenMaintenance({
+      instagramToken: 'test-instagram',
+      check: async () => ({ ok: false }),
+      refresh: async () => {
+        if (failRefresh) throw new Error('Simulated refresh failure');
+        return 'test-replacement';
+      },
+    }), 1);
+  }
+});
+
+test('read-only CLI fails missing credentials without entering maintenance', async () => {
+  // Exercise the actual CLI entry with the real checker and explicitly absent
+  // tokens. No real credentials or external requests are used by this test.
+  let refreshes = 0;
+  assert.equal(await runMessagingTokenCli(['--check'], {
+    readOnly: false, // The CLI flag must override even a conflicting option.
+    instagramToken: '',
+    facebookToken: '',
+    refresh: async () => { refreshes++; },
+  }), 1);
+  assert.equal(refreshes, 0);
+  await assert.rejects(runMessagingTokenCli(['--check', '--refresh'], {
+    check: async () => assert.fail('Invalid CLI arguments must fail before token checks'),
+    refresh: async () => assert.fail('Invalid CLI arguments must fail before refresh'),
+  }), /Usage:/);
+  const script = await readFile(new URL('../check-messaging-token.mjs', import.meta.url), 'utf8');
+  assert.match(script, /runMessagingTokenCli\(process\.argv\.slice\(2\)\)\.then\(code => \{\s*process\.exitCode = code;/);
+});
+
+test('messaging workflow separates read-only credentials from unchanged maintenance', async () => {
+  const workflow = await readFile(
+    new URL('../../.github/workflows/check-messaging-token.yml', import.meta.url), 'utf8'
+  );
+  const step = name => workflow.split(`      - name: ${name}\n`)[1]?.split('\n      - name:')[0];
+  const readOnly = step('Check Messaging Token (read-only)');
+  const maintenance = step('Check/Refresh Messaging Token');
+  assert.match(workflow, /permissions:\n  contents: read/);
+  assert.match(workflow, /cron: '0 \* \* \* \*'/);
+  assert.match(readOnly, /if: github.event_name == 'workflow_dispatch' && inputs.action == 'check'/);
+  assert.match(readOnly, /run: node scripts\/check-messaging-token\.mjs --check/);
+  assert.doesNotMatch(readOnly, /FLY_|flyctl/);
+  assert.match(maintenance, /if: github.event_name == 'schedule' \|\| inputs.action == 'refresh'/);
+  assert.match(maintenance, /FLY_API_TOKEN: \$\{\{ secrets.FLY_API_TOKEN \}\}/);
+  assert.match(maintenance, /run: node scripts\/check-messaging-token\.mjs\s*$/);
+  assert.match(step('Install Fly CLI'), /if: github.event_name == 'schedule' \|\| inputs.action == 'refresh'/);
+  assert.match(step('Validate requested action'), /Unsupported messaging-token action'; exit 1/);
+  // The Fly credential must occur only on the guarded maintenance step.
+  assert.equal(workflow.match(/FLY_API_TOKEN:/g)?.length, 1);
+  assert.doesNotMatch(workflow.split('    steps:')[0], /\benv:/);
+});
+
+test('messaging workflow rejects unsupported actions before any credential step', async () => {
+  const workflow = await readFile(
+    new URL('../../.github/workflows/check-messaging-token.yml', import.meta.url), 'utf8'
+  );
+  const firstStep = workflow.split('      - name: Validate requested action\n')[1].split('\n      - name:')[0];
+  const guard = firstStep.split('        run: |\n')[1];
+  assert.ok(guard);
+  for (const [event, action, status] of [
+    ['schedule', '', 0],
+    ['workflow_dispatch', 'check', 0],
+    ['workflow_dispatch', 'refresh', 0],
+    ['workflow_dispatch', '', 1],
+    ['workflow_dispatch', 'unknown', 1],
+    ['pull_request', 'refresh', 1],
+  ]) {
+    const result = spawnSync('/bin/bash', ['-e', '-c', guard], {
+      env: { WORKFLOW_EVENT: event, REQUESTED_ACTION: action }, encoding: 'utf8', timeout: 10000,
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, status, `${event}:${action}`);
+  }
+});
 
 const inspector = { appId: 'parent-app', appSecret: 'parent-secret', expectedAppId: 'instagram-app' };
 const checkTokenStatus = (token, options) => checkTokenStatusImpl(token, { ...inspector, ...options });
