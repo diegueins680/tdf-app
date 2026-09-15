@@ -30,10 +30,13 @@ atomicity and adds database-backed query contract tests; see [ADR 0119](../adr/0
 and [verification](reconciliation-atomicity-2026-09-14.md). A separate 2026-09-15
 continuation adds disabled, durable missed-callback recovery and shared callback/
 scheduled query budgets; see [ADR 0120](../adr/0120-durable-provider-query-recovery.md)
-and [query recovery evidence](query-recovery-2026-09-15.md). The
-source review also identified PayPhone's inherited canceled-as-declined mapping;
-its history-preserving compatibility fix remains open. No new operational
-provider or staging qualification is claimed by this continuation.
+and [query recovery evidence](query-recovery-2026-09-15.md). A further continuation
+repairs PayPhone's inherited canceled-as-declined mapping and shared no-charge
+replays while preserving historical classifications and newer payment attempts;
+see [ADR 0121](../adr/0121-history-preserving-no-charge-reconciliation.md) and the
+[2026-09-15 verification record](no-charge-replay-2026-09-15.md) for tested scope
+and remaining gates. No new operational provider or staging qualification is
+claimed by these continuations.
 
 ## 2. Capability and access report
 
