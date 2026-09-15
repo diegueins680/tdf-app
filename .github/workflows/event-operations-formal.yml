@@ -13,6 +13,16 @@ on:
       - "scripts/test-event-operations-foundation-migration.sh"
       - "scripts/test-event-operations-api-migration.sh"
       - "scripts/test-event-task-commit-migration.sh"
+      - "scripts/test-event-operations-schema-rehearsal.sh"
+      - "scripts/__tests__/event-operations-schema-rehearsal.test.mjs"
+      - "scripts/__tests__/fixtures/production-schema-20260814.sql"
+      - "scripts/__tests__/fixtures/catalog-production-source-fixture.sql"
+      - "scripts/production-migrations.json"
+      - "scripts/render-production-migration-batch.mjs"
+      - "scripts/render-production-schema-verification.mjs"
+      - "scripts/lib/production-release.mjs"
+      - "tdf-hq/sql/**"
+      - "tdf-hq/test/integration/event_operations_schema_*.sql"
       - "tdf-hq/sql/2026-09-14_event_task_commit*.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
@@ -53,6 +63,16 @@ on:
       - "scripts/test-event-operations-foundation-migration.sh"
       - "scripts/test-event-operations-api-migration.sh"
       - "scripts/test-event-task-commit-migration.sh"
+      - "scripts/test-event-operations-schema-rehearsal.sh"
+      - "scripts/__tests__/event-operations-schema-rehearsal.test.mjs"
+      - "scripts/__tests__/fixtures/production-schema-20260814.sql"
+      - "scripts/__tests__/fixtures/catalog-production-source-fixture.sql"
+      - "scripts/production-migrations.json"
+      - "scripts/render-production-migration-batch.mjs"
+      - "scripts/render-production-schema-verification.mjs"
+      - "scripts/lib/production-release.mjs"
+      - "tdf-hq/sql/**"
+      - "tdf-hq/test/integration/event_operations_schema_*.sql"
       - "tdf-hq/sql/2026-09-14_event_task_commit*.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
       - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
@@ -144,3 +164,16 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check task commit constraints and concurrent writers
         run: npm run test:event-task-commit-migration
+
+  postgres-complete-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Check rehearsal isolation and authoritative default
+        run: npm run test:event-operations-schema-runner
+      - name: Rehearse event migration chain against the complete repository schema
+        run: npm run test:event-operations-schema-rehearsal
