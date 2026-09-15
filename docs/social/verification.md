@@ -55,7 +55,7 @@ cost must be measured/estimated separately; no new-service operating cost assume
 
 Java 17.0.12; tla2tools-1.7.2.jar SHA256
 `fa18543e44ed5974a85bd2c60c0dc16620ae117680ea8e693d2691999ed90b22`.
-Final runs: Relationships 19,377 generated / 14,987 distinct states, depth 12;
+Final runs: Relationships 19,377 generated / 5,060 distinct states, depth 12;
 Feed 2,901 generated / 1,009 distinct states, depth 16. No invariant/liveness error.
 Negative StaleCache: expected AuthoritativeDenial violation, depth 6. Logs under
 `evidence/models/`. Earlier attempts exposed an omitted terminal feed stutter and
@@ -86,6 +86,8 @@ Rechecked with Java 21 and the same pinned TLC jar: Relationships 55,530 generat
 liveness checks passed. Three independently configured negative controls detected
 exactly AuthoritativeDenial, OwnConsentOnly and RequestAdmission respectively.
 The runner rejects unexpected tool errors as evidence of a counterexample.
+Repaired-run logs are committed under `docs/social/model-evidence-2026-09-15/`; the
+pre-repair logs above retain their original 5,060-state historical result.
 
 These bounded model results do not qualify SQL/HTTP/legacy implementations.
 Downstream #356 must regenerate/review its transition-derived SQL assertions against
