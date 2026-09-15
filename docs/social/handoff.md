@@ -208,3 +208,13 @@ dependent on #377, source `a68f235ca8a7d1987fd94defdba078228f77cd1c`. Its full l
 2,542 examples, zero failures and application executable built. Focused fixture
 results and limits are in [session boundary](session-boundary.md). It remains
 unmerged and inactive; hosted checks of this patch are separate from parent CI.
+
+### Legacy DM write continuation
+
+[DM write boundary](dm-write-boundary.md) implements the next compatibility stage:
+existing message INSERT/UPDATE paths enforce canonical policy under ordered locks,
+and pausing cannot erase activation/pair/closure restrictions. It has generated model
+checks, old-INSERT counterexample evidence, real race fixtures and complete-schema
+verification. Legacy thread/history reads and friendly HTTP denial mapping remain
+**failed/incomplete** acceptance items; full old/new application privacy coexistence
+and production activation remain blocked. No new message store or consent backfill.

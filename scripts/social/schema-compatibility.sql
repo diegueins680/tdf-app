@@ -9,6 +9,8 @@ INSERT INTO fan_club_post(id,club_id,fan_party_id,title,content,created_at) VALU
   (900000001,900000001,900000003,'Synthetic first','fixture','2026-01-01'),
   (900000002,900000001,900000003,'Synthetic second','fixture','2026-01-01');
 DO $$ BEGIN ASSERT social_v2_me(900000001)->>'error'='disabled'; END $$;
+INSERT INTO chat_thread(id,dm_party_a,dm_party_b,created_at,updated_at) VALUES(900000001,900000001,900000002,now(),now());
+INSERT INTO chat_message(thread_id,sender_party_id,body,created_at) VALUES(900000001,900000001,'Synthetic legacy DM',now());
 UPDATE social_v2_runtime SET enabled=true;
 SELECT social_v2_publish_batch(); -- Commit before reads, as the HTTP handler does.
 DO $$ BEGIN

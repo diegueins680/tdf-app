@@ -41,3 +41,9 @@ not prove arbitrary application code follows the same transaction discipline.
 | Problem | Primary evidence; publication/update | Selected / rejected alternatives | Expected benefit and validation |
 |---|---|---|---|
 | Token revoked after authentication | [PostgreSQL 16 explicit locks](https://www.postgresql.org/docs/16/explicit-locking.html), versioned official docs, update unavailable | TDF inference: retain internal token ID; account/credential/token row locks and current token checks in the domain transaction. Reject auth-time-only checks or a process cache as current authority. | Observed old-handler 200 after revocation becomes 401; bounded model, 64 generated outcomes, real lock races, paired overhead benchmark. See [session boundary](session-boundary.md) for assumptions and actual results. |
+
+### Legacy messaging compatibility (accessed 2026-09-15)
+
+| Problem | Primary evidence; publication/update | Selected / rejected alternatives | Expected benefit and validation |
+|---|---|---|---|
+| Older DM writers bypass new pair policy; pausing loses enforcement | [PostgreSQL 16 triggers](https://www.postgresql.org/docs/16/trigger-definition.html) and [isolation](https://www.postgresql.org/docs/16/transaction-iso.html), official versioned docs, update unavailable | TDF inference: additive existing-table write trigger, ordered current-authority checks and retained activation memory. Reject flag-off legacy fallback and relying only on a new endpoint. Require READ COMMITTED explicitly. | Real old-INSERT counterexample; 27 checked-model outcomes; block/send races; complete-schema pause preserves messages; fixture INSERT overhead. Legacy readers and HTTP error mapping remain blockers. See [DM write boundary](dm-write-boundary.md). |
