@@ -1,3 +1,6 @@
+be828cdab89101c82c8a7a1308f28d61ba3c3519793dc4f84b53cbb068356033 tdf-hq/sql/2026-09-14_social_v2_foundation.sql
+ea1d941af3fc9fb92f419f52214a632618858c6949e86d1006c4b829944d0b0a tdf-hq/sql/2026-09-14_social_v2_pause.sql
+24245a44cb152c9dd3de43fb56a6d0cb3534d6b748493bf1002a8436e0ef7f2e tdf-hq/sql/2026-09-14_social_v2_read_models.sql
 CREATE TABLE
 CREATE TABLE
 INSERT 0 5
@@ -15,6 +18,7 @@ CREATE FUNCTION
 CREATE FUNCTION
 CREATE FUNCTION
 CREATE FUNCTION
+CREATE FUNCTION
 ALTER FUNCTION
 CREATE FUNCTION
 CREATE FUNCTION
@@ -23,21 +27,22 @@ REVOKE
 REVOKE
 COMMIT
 BEGIN
+CREATE TABLE
 NOTICE:  relation "social_v2_runtime" already exists, skipping
-CREATE TABLE
 INSERT 0 0
-CREATE TABLE
-CREATE TABLE
 NOTICE:  relation "social_v2_preference" already exists, skipping
+CREATE TABLE
+CREATE TABLE
 NOTICE:  relation "social_v2_pair" already exists, skipping
-NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
 CREATE INDEX
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
 NOTICE:  relation "social_v2_command" already exists, skipping
 CREATE TABLE
+CREATE INDEX
 NOTICE:  relation "social_v2_command_rate" already exists, skipping
-CREATE INDEX
-CREATE INDEX
 NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
 CREATE FUNCTION
 CREATE FUNCTION
 CREATE FUNCTION
@@ -58,21 +63,22 @@ UPDATE 1
 COMMIT
 DO
 BEGIN
+CREATE TABLE
 NOTICE:  relation "social_v2_runtime" already exists, skipping
-CREATE TABLE
 INSERT 0 0
-CREATE TABLE
 NOTICE:  relation "social_v2_preference" already exists, skipping
-NOTICE:  relation "social_v2_pair" already exists, skipping
 CREATE TABLE
+CREATE TABLE
+NOTICE:  relation "social_v2_pair" already exists, skipping
 CREATE INDEX
 NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
 CREATE TABLE
 NOTICE:  relation "social_v2_command" already exists, skipping
 NOTICE:  relation "social_v2_command_rate" already exists, skipping
 CREATE INDEX
-NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
 CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE FUNCTION
 CREATE FUNCTION
 CREATE FUNCTION
 CREATE FUNCTION
@@ -104,6 +110,8 @@ CREATE FUNCTION
 CREATE FUNCTION
 REVOKE
 REVOKE
+REVOKE
+CREATE FUNCTION
 REVOKE
 COMMIT
 BEGIN
@@ -116,6 +124,8 @@ CREATE FUNCTION
 CREATE FUNCTION
 REVOKE
 REVOKE
+REVOKE
+CREATE FUNCTION
 REVOKE
 COMMIT
 UPDATE 1
@@ -144,27 +154,34 @@ INSERT 0 1
 (1 row)
 
 DO
+DO
+DO
+                  ?column?
+--------------------------------------------
+ PASS: 29 TLC-generated consent transitions
+(1 row)
+
 Timing is on.
 INSERT 0 110000
-Time: 4571.432 ms (00:04.571)
+Time: 3699.201 ms (00:03.699)
 INSERT 0 110000
-Time: 46909.675 ms (00:46.910)
+Time: 16760.522 ms (00:16.761)
 INSERT 0 10000
-Time: 2756.624 ms (00:02.757)
+Time: 969.562 ms
 INSERT 0 10000
-Time: 5541.675 ms (00:05.542)
+Time: 2217.973 ms (00:02.218)
 INSERT 0 90000
-Time: 58601.682 ms (00:58.602)
+Time: 21313.327 ms (00:21.313)
 ANALYZE
-Time: 3735.800 ms (00:03.736)
+Time: 630.933 ms
 SET
-Time: 1.013 ms
+Time: 0.542 ms
       ?column?      |                                         version
 --------------------+------------------------------------------------------------------------------------------
  PostgreSQL version | PostgreSQL 16.13 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
 (1 row)
 
-Time: 3.380 ms
+Time: 1.681 ms
      ?column?     |   d   | count
 ------------------+-------+--------
  synthetic degree |     1 | 100004
@@ -173,34 +190,53 @@ Time: 3.380 ms
  synthetic degree | 90000 |      1
 (4 rows)
 
-Time: 933.362 ms
+Time: 694.954 ms
       ?column?      | pg_total_relation_size
 --------------------+------------------------
  pair storage bytes |               14827520
 (1 row)
 
-Time: 18.554 ms
-ERROR:  canceling statement due to statement timeout
-CONTEXT:  SQL function "social_v2_allowed" statement 1
-SQL expression "(WITH candidates AS (
-    SELECT a.id,a.display_name,
-      CASE WHEN use_personalization AND EXISTS (
-        SELECT 1 FROM fan_profile_genre_membership f JOIN artist_profile_genre_membership g
-          ON g.genre_id=f.genre_id WHERE f.fan_party_id=actor AND g.artist_party_id=a.id
-      ) THEN 1 ELSE 0 END AS shared_interest
-    FROM social_v2_preference s JOIN party a ON a.id=s.party_id
-    WHERE s.discoverable AND NOT s.closed AND a.id<>actor AND social_v2_allowed(actor,a.id)
-      AND NOT EXISTS (SELECT 1 FROM social_v2_pair r
-        WHERE r.party_a=least(actor,a.id) AND r.party_b=greatest(actor,a.id)
-          AND (r.consent_a AND r.consent_b OR CASE WHEN actor=r.party_a
-            THEN r.mute_a OR r.dismiss_a OR r.follow_a ELSE r.mute_b OR r.dismiss_b OR r.follow_b END))
-  ), ranked AS (
-    SELECT * FROM candidates ORDER BY shared_interest DESC,
-      md5(id::text || current_date::text || CASE WHEN use_personalization THEN actor::text ELSE '' END),id
-    LIMIT page_size
-  ) SELECT jsonb_build_object('personalized',use_personalization,'items',
-    coalesce(jsonb_agg(jsonb_build_object('partyId',id,'displayName',display_name,
-      'reason',CASE WHEN shared_interest=1 THEN 'shared_interests' ELSE 'public_profile' END)), '[]'::jsonb))
-    FROM ranked)"
-PL/pgSQL function social_v2_discover(bigint,integer) line 13 at RETURN
-Time: 5046.535 ms (00:05.047)
+Time: 6.030 ms
+                                      QUERY PLAN
+---------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=57.880..57.881 rows=1 loops=1)
+   Buffers: shared hit=1655
+ Planning Time: 0.037 ms
+ Execution Time: 59.093 ms
+(4 rows)
+
+Time: 63.502 ms
+                                      QUERY PLAN
+---------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=58.159..58.160 rows=1 loops=1)
+   Buffers: shared hit=1501
+ Planning Time: 0.060 ms
+ Execution Time: 58.208 ms
+(4 rows)
+
+Time: 59.023 ms
+                                      QUERY PLAN
+---------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=20.479..20.479 rows=1 loops=1)
+   Buffers: shared hit=395
+ Planning Time: 0.110 ms
+ Execution Time: 20.492 ms
+(4 rows)
+
+Time: 21.349 ms
+SET
+Time: 0.284 ms
+CREATE TABLE
+Time: 10.488 ms
+DO
+Time: 2041.535 ms (00:02.042)
+      kind       | samples | p50_ms | p95_ms | within_200ms
+-----------------+---------+--------+--------+--------------
+ discover hub    |      20 | 40.897 | 59.176 | t
+ discover sparse |      20 | 43.856 | 69.776 | t
+ following empty |      20 | 10.797 | 16.374 | t
+(3 rows)
+
+Time: 5.192 ms
+PASS: feed ordering, eligibility, edits, deletion, backdated publish, revocation, discovery opt-out/exclusions
+PASS: additive reapply, denied defaults, consent, retry, block race, preferences, closure, pause preserves new writes

@@ -39,3 +39,8 @@ DO $$ BEGIN
   ASSERT social_v2_feed(2,NULL,50)->'items'='[]'::jsonb;
   ASSERT social_v2_discover(2,10)->'items'='[]'::jsonb;
 END $$;
+DO $$ BEGIN
+  ASSERT jsonb_typeof(social_v2_me(2)->'relationships')='array';
+  ASSERT social_v2_me(1)->>'error'='unavailable';
+  ASSERT NOT social_v2_pair_json(2,5,(SELECT p FROM social_v2_pair p WHERE party_a=2 AND party_b=5))->>'connected'='true';
+END $$;

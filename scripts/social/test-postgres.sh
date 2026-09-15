@@ -2,6 +2,13 @@
 set -euo pipefail
 TDF_SOCIAL_ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 TDF_SOCIAL_CONTAINER="tdf-social-verification-$$"
+python3 - "$TDF_SOCIAL_ROOT" <<'PYHASH'
+import hashlib,sys
+from pathlib import Path
+root=Path(sys.argv[1])
+for p in sorted((root/'tdf-hq/sql').glob('*social_v2*.sql')):
+    print(hashlib.sha256(p.read_bytes()).hexdigest(),p.relative_to(root))
+PYHASH
 if [ "${TDF_SOCIAL_NATIVE:-0}" = 1 ]; then
   TDF_SOCIAL_PG_BIN=${TDF_SOCIAL_PG_BIN:-/usr/local/opt/postgresql@16/bin}
   TDF_SOCIAL_PG_DATA=$(mktemp -d)
