@@ -2,7 +2,8 @@
 
 module TDF.EventOperations.TypesSpec (spec) where
 
-import Data.Aeson (Value(..), eitherDecode, encode, toJSON)
+import Data.Aeson (Value(..), eitherDecode, encode, toJSON, object, (.=))
+import qualified Data.Aeson.KeyMap as KM
 import Data.Int (Int64)
 import qualified Data.Text as T
 import qualified Data.ByteString.Lazy.Char8 as BL8
@@ -16,6 +17,19 @@ import TDF.EventOperations.Types
 
 spec :: Spec
 spec = describe "event operations executable API contracts" $ do
+  it "accepts only strict RACI command fields and preserves exact request identity" $ do
+    let base = object ["expectedRevision" .= ("4" :: T.Text), "role" .= ("responsible" :: T.Text),
+          "fromPartyId" .= (2 :: Int), "toPartyId" .= (3 :: Int), "reason" .= (" reason " :: T.Text),
+          "correlationId" .= ("correlation" :: T.Text)]
+        patch key value = case base of Object fields -> Object (KM.insert key value fields); _ -> Null
+        decodeCommand value = eitherDecode (encode value) :: Either String EventRaciReassignmentCommand
+        invalid = [patch "actorPartyId" (Number 1), patch "expectedRevision" (Number 4),
+          patch "toPartyId" (Number 2), patch "fromPartyId" (Number 0), patch "toPartyId" (Number 9007199254740992),
+          patch "role" (String "Responsible"), patch "reason" Null, patch "reason" (String "\t"),
+          patch "reason" (String (T.replicate 2001 "x")), patch "correlationId" (String (T.replicate 201 "x"))]
+    fmap toJSON (decodeCommand base) `shouldBe` Right base
+    map decodeCommand invalid `shouldSatisfy` all (either (const True) (const False))
+
   it "round-trips generated positive signed BIGINT revisions as exact decimal strings" $
     forAll (choose (1, maxBound :: Int64)) $ \n ->
       let raw = T.pack (show n)

@@ -95,6 +95,9 @@ run_tlc TaskRevisionRead.tla TaskRevisionRead.cfg task-revision-read
 expect_counterexample TaskRevisionReadMixed.cfg CoherentRevisionRead task-revision-read-mixed TaskRevisionRead.tla
 expect_counterexample TaskRevisionReadEarly.cfg NoExpiredDisclosure task-revision-read-early TaskRevisionRead.tla
 run_tlc RaciReassignment.tla RaciReassignment.cfg raci-reassignment
+run_tlc CommandBoundary.tla CommandBoundary.cfg command-boundary
+expect_counterexample CommandBoundaryEarly.cfg ValidatedCommit command-boundary-early CommandBoundary.tla
+expect_counterexample CommandBoundaryUnbound.cfg ValidatedCommit command-boundary-unbound CommandBoundary.tla
 expect_counterexample RaciReassignmentEarly.cfg CurrentAuthority raci-reassignment-early RaciReassignment.tla
 expect_counterexample RaciReassignmentVersion.cfg NoStaleReassignment raci-reassignment-version RaciReassignment.tla
 expect_counterexample RaciReassignmentReplay.cfg ExactRetry raci-reassignment-replay RaciReassignment.tla

@@ -12,16 +12,21 @@ module TDF.EventOperations.DatabaseBoundary
   , loadTask
   , decodeTaskWithRevisionRows
   , loadTaskWithRevision
+  , decodeRaciReassignmentRows
+  , reassignRaci
   ) where
 
 import Control.Exception
   ( Exception, SomeAsyncException, SomeException, fromException, throwIO, tryJust )
 import Control.Monad.IO.Class (liftIO)
-import Data.Aeson (Value, eitherDecodeStrict', object, (.=))
+import Data.Aeson (Value(..), Result(..), fromJSON, eitherDecodeStrict', object, (.=))
+import qualified Data.Aeson.KeyMap as KM
 import Data.Int (Int64)
 import qualified Data.Set as Set
 import Data.Text (Text)
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import qualified Data.UUID as UUID
 import Database.Persist (PersistValue(..))
 import Database.Persist.Sql (Single(..), SqlPersistT, rawSql)
 import Database.PostgreSQL.Simple (SqlError(..))
@@ -115,3 +120,39 @@ loadTaskWithRevision eventId activityId actorPartyId = do
   rows <- rawSql "SELECT event_operation_read_task_with_revision(?, ?, ?)::text"
     [PersistInt64 eventId, PersistInt64 activityId, PersistInt64 actorPartyId]
   either (liftIO . throwIO) pure (decodeTaskWithRevisionRows eventId activityId rows)
+
+decodeRaciReassignmentRows :: Int64 -> Int64 -> UUID.UUID -> EventRaciReassignmentCommand
+  -> [Single (Maybe Text)]
+  -> Either SnapshotDecodeError (Either Text EventRaciReassignmentOutcomeDTO)
+decodeRaciReassignmentRows eventId activityId commandId command [Single (Just raw)] =
+  case eitherDecodeStrict' (TE.encodeUtf8 raw) of
+    Right value@(Object fields) -> case KM.toList fields of
+      [("error", String code)] | code `elem` allowedErrors -> Right (Left code)
+      _ -> case fromJSON value of
+        Success result | validRaciReassignmentCommand command
+          && all isSafePositiveInteger [eventId, activityId]
+          && eroEventId result == eventId && eroActivityId result == activityId
+          && eroCommandId result == commandId && eroRole result == ercRole command
+          && eroFromPartyId result == ercFromPartyId command
+          && eroToPartyId result == ercToPartyId command
+          && aggregateRevisionInteger (eroAggregateRevision result)
+             == aggregateRevisionInteger (ercExpectedRevision command) + 2 -> Right (Right result)
+        _ -> Left SnapshotDecodeError
+    _ -> Left SnapshotDecodeError
+  where
+    allowedErrors = ["invalid_request", "feature_disabled", "not_found", "forbidden",
+      "version_conflict", "idempotency_conflict", "operation_not_ready", "assignment_not_replaceable",
+      "assignee_unavailable", "assignment_conflict", "accountability_not_ready"]
+decodeRaciReassignmentRows _ _ _ _ _ = Left SnapshotDecodeError
+
+-- Decoding is deliberately inside SqlPersistT, before runSqlPool can commit.
+reassignRaci :: Int64 -> Int64 -> Int64 -> UUID.UUID -> EventRaciReassignmentCommand
+  -> SqlPersistT IO (Either Text EventRaciReassignmentOutcomeDTO)
+reassignRaci eventId activityId actorPartyId commandId command = do
+  rows <- rawSql "SELECT event_operation_reassign_raci(?, ?, ?, ?::uuid, ?::bigint, ?, ?, ?, ?, ?)::text"
+    [PersistInt64 eventId, PersistInt64 activityId, PersistInt64 actorPartyId,
+     PersistText (UUID.toText commandId),
+     PersistText (T.pack (show (aggregateRevisionInteger (ercExpectedRevision command)))),
+     PersistText (raciRoleText (ercRole command)), PersistInt64 (ercFromPartyId command),
+     PersistInt64 (ercToPartyId command), PersistText (ercReason command), PersistText (ercCorrelationId command)]
+  either (liftIO . throwIO) pure (decodeRaciReassignmentRows eventId activityId commandId command rows)

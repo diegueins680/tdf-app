@@ -12,6 +12,74 @@ const task = {
   accountabilityNeedsAttention: false,
 };
 
+describe('EventOperations RACI command contract', () => {
+  const key = '60000000-0000-4000-8000-000000000300';
+  const command = { expectedRevision: '4', role: 'responsible' as const, fromPartyId: 3, toPartyId: 2,
+    reason: 'Motivo sintético', correlationId: 'test-raci' };
+  const outcome = { eventId: 82, activityId: 8200, commandId: key, role: 'responsible',
+    fromPartyId: 3, toPartyId: 2, aggregateRevision: '6', replayed: false };
+  beforeEach(() => { getMock.mockReset(); postMock.mockReset(); });
+
+  it('posts the captured strict request with explicit key, bearer, cancellation and no cache', async () => {
+    const controller = new AbortController();
+    postMock.mockResolvedValue(outcome);
+    await expect(EventOperations.reassignRaci(82, 8200, key, command,
+      { apiToken: 'captured-token', signal: controller.signal })).resolves.toEqual(outcome);
+    expect(postMock).toHaveBeenCalledWith('/event-operations/events/82/tasks/8200/raci/reassign', command,
+      { cache: 'no-store', headers: { 'Idempotency-Key': key, Authorization: 'Bearer captured-token' },
+        signal: controller.signal });
+    expect(getMock).not.toHaveBeenCalled();
+  });
+
+  it('preserves exact BIGINT result and historical replay without a new read', async () => {
+    const result = { ...outcome, aggregateRevision: '9223372036854775807', replayed: true };
+    postMock.mockResolvedValue(result);
+    await expect(EventOperations.reassignRaci(82, 8200, key,
+      { ...command, expectedRevision: '9223372036854775805' })).resolves.toEqual(result);
+    expect(postMock).toHaveBeenCalledTimes(1); expect(getMock).not.toHaveBeenCalled();
+  });
+
+  it('retains response binding when the caller mutates the original request in flight', async () => {
+    let resolve!: (value: unknown) => void;
+    postMock.mockReturnValue(new Promise(done => { resolve = done; }));
+    const mutable = { ...command };
+    const result = EventOperations.reassignRaci(82, 8200, key, mutable);
+    mutable.toPartyId = 9; mutable.expectedRevision = '5';
+    resolve(outcome);
+    await expect(result).resolves.toEqual(outcome);
+    expect(postMock.mock.calls[0]?.[1]).toEqual(command);
+  });
+
+  it.each([{}, { ...command, actorPartyId: 1 }, { ...command, expectedRevision: 4 },
+    { ...command, expectedRevision: '04' }, { ...command, expectedRevision: '9223372036854775808' },
+    { ...command, role: 'Responsible' }, { ...command, toPartyId: 3 }, { ...command, fromPartyId: 0 },
+    { ...command, reason: '\t' }, { ...command, reason: 'x'.repeat(2001) },
+    { ...command, correlationId: null }, { ...command, correlationId: 'x'.repeat(201) }])(
+    'rejects invalid commands before dispatch (%#)', raw => {
+      expect(() => EventOperations.reassignRaci(82, 8200, key, raw as typeof command)).toThrow('solicitud');
+      expect(postMock).not.toHaveBeenCalled();
+    });
+  it.each(['', 'invalid', `${key}\n`])('rejects invalid UUID %s before dispatch', invalidKey => {
+    expect(() => EventOperations.reassignRaci(82, 8200, invalidKey, command)).toThrow('solicitud');
+    expect(postMock).not.toHaveBeenCalled();
+  });
+  it.each([null, {}, { ...outcome, eventId: 83 }, { ...outcome, activityId: 8201 },
+    { ...outcome, commandId: '60000000-0000-4000-8000-000000000301' },
+    { ...outcome, role: 'accountable' }, { ...outcome, fromPartyId: 2 }, { ...outcome, toPartyId: 3 },
+    { ...outcome, aggregateRevision: '7' }, { ...outcome, aggregateRevision: 6 },
+    { ...outcome, replayed: 'true' }, { ...outcome, secret: 'private' }, { error: 'forbidden' }])(
+    'rejects malformed or unbound receipts without retrying (%#)', async raw => {
+      postMock.mockResolvedValue(raw);
+      await expect(EventOperations.reassignRaci(82, 8200, key, command)).rejects.toThrow('respuesta');
+      expect(postMock).toHaveBeenCalledTimes(1);
+    });
+  it('propagates network failure without retry or generated replacement key', async () => {
+    const error = new Error('network failure'); postMock.mockRejectedValue(error);
+    await expect(EventOperations.reassignRaci(82, 8200, key, command)).rejects.toBe(error);
+    expect(postMock).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('EventOperations task read contract', () => {
   beforeEach(() => { getMock.mockReset(); postMock.mockReset(); });
 

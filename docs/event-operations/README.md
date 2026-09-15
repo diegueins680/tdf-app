@@ -50,6 +50,8 @@
 - [Draft PR 22: typed task revision read](pr-22-task-revisioned-read.md)
 - [Scoped RACI reassignment contract](raci-reassignment-contract.md)
 - [Draft PR 23: private atomic RACI reassignment](pr-23-raci-reassignment-command.md)
+- [Authenticated RACI command contract](raci-api-contract.md)
+- [Draft PR 24: authenticated RACI API and typed client](pr-24-raci-reassignment-api.md)
 - [Draft PR 18: verify exact reservation-model regeneration](pr-18-pluscal-integrity.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)

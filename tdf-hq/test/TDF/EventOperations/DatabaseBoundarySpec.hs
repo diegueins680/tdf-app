@@ -3,12 +3,15 @@
 module TDF.EventOperations.DatabaseBoundarySpec (spec) where
 
 import Control.Exception (AsyncException(..), throwIO, toException)
+import Control.Monad (forM_)
 import Data.Aeson (Value(..), encode, object, toJSON, (.=))
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 import Data.Text (Text)
 import qualified Data.Text.Encoding as TE
+import qualified Data.Text as T
+import qualified Data.UUID as UUID
 import Database.Persist.Sql (Single(..))
 import Database.PostgreSQL.Simple (SqlError(..))
 import Database.PostgreSQL.LibPQ (ExecStatus(FatalError))
@@ -20,6 +23,35 @@ import TDF.EventOperations.Types
 
 spec :: Spec
 spec = describe "event operations database privacy boundary" $ do
+  it "validates a RACI receipt against the exact request before transaction completion" $ do
+    let command = raciCommand "4"
+        result = raciResult "6"
+    decodeRaciReassignmentRows 10 100 UUID.nil command [taskRow (toJSON result)]
+      `shouldBe` Right (Right result)
+    forM_ [result { eroEventId = 11 }, result { eroActivityId = 101 },
+           result { eroFromPartyId = 3 }, result { eroToPartyId = 1 },
+           result { eroRole = RaciAccountable }, result { eroCommandId = UUID.fromWords 1 0 0 0 },
+           result { eroAggregateRevision = revision "7" }] $ \wrong ->
+      decodeRaciReassignmentRows 10 100 UUID.nil command [taskRow (toJSON wrong)]
+        `shouldBe` Left SnapshotDecodeError
+
+  it "rejects null, extra, unknown-error and malformed command database receipts" $ do
+    let decodeRows = decodeRaciReassignmentRows 10 100 UUID.nil (raciCommand "4")
+    forM_ [[], [Single Nothing], [taskRow (toJSON (raciResult "6")), Single Nothing]] $ \rows ->
+      decodeRows rows `shouldBe` Left SnapshotDecodeError
+    forM_ [Null, object [], object ["error" .= ("private message" :: Text)],
+           object ["error" .= ("forbidden" :: Text), "private" .= True],
+           object ["aggregateRevision" .= (6 :: Int)]] $ \raw ->
+      decodeRows [taskRow raw] `shouldBe` Left SnapshotDecodeError
+    decodeRows [taskRow (object ["error" .= ("version_conflict" :: Text)])]
+      `shouldBe` Right (Left "version_conflict")
+
+  it "preserves exact generated BIGINT command/result revisions without floating point" $
+    forAll (choose (1, 9223372036854775805 :: Integer)) $ \n ->
+      let result = raciResult (T.pack (show (n+2)))
+      in decodeRaciReassignmentRows 10 100 UUID.nil (raciCommand (T.pack (show n)))
+        [taskRow (toJSON result)] == Right (Right result)
+
   it "decodes a strict revision envelope and preserves exact task target binding" $ do
     let raw = object ["task" .= taskFixture, "aggregateRevision" .= ("9223372036854775807" :: Text)]
         decoded = decodeTaskWithRevisionRows 10 100 [taskRow raw]
@@ -144,3 +176,10 @@ taskFixture = EventOperationTaskDTO 10 100 TaskPlanned 1
 
 taskRow :: Value -> Single (Maybe Text)
 taskRow = Single . Just . TE.decodeUtf8 . BL.toStrict . encode
+
+revision :: Text -> EventTaskAggregateRevision
+revision raw = maybe (error "invalid test revision") id (parseEventTaskAggregateRevision raw)
+raciCommand :: Text -> EventRaciReassignmentCommand
+raciCommand raw = EventRaciReassignmentCommand (revision raw) RaciResponsible 2 3 "test" "test"
+raciResult :: Text -> EventRaciReassignmentOutcomeDTO
+raciResult raw = EventRaciReassignmentOutcomeDTO 10 100 UUID.nil RaciResponsible 2 3 (revision raw) False

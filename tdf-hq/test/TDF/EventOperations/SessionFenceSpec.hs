@@ -107,10 +107,19 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
     snapshot pool user 109 >>= expectRight
     eventCounts pool 109 `shouldReturn` [0,0,0,1]
 
-  forM_ (zip [110..] ["read","new","replay","task","revisioned"]) $ \(eventId, mode) ->
+  forM_ (zip [110..] ["read","new","replay","task","revisioned","raci","raci-replay"]) $ \(eventId, mode) ->
     it ("rejects real HTTP " <> mode <> " when revoked after production authentication") $ do
       (token,user) <- seedSession pool eventId
       if mode == "replay" then transition pool user eventId eventId 1 Planning >>= expectRight else pure ()
+      if mode == "raci-replay" then do
+        execute pool "INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id) VALUES (?,2,'responsible',1)"
+          [PersistInt64 (eventId+10000)]
+        let _ :<|> _ :<|> _ :<|> _ :<|> apply = eventOperationsServer user eventId
+            revision = maybe (error "invalid fixture revision") id (parseEventTaskAggregateRevision "2")
+        runHandler (runReaderT (apply (eventId+10000) (commandKey eventId)
+          (EventRaciReassignmentCommand revision RaciResponsible 2 1 "test" "test"))
+          (Env pool httpTestConfig)) >>= expectRight
+      else pure ()
       before <- eventCounts pool eventId
       taskSnapshot pool user eventId >>= expectRight
       response <- httpAfterAuthentication pool token eventId mode $
@@ -162,7 +171,7 @@ taskSnapshot pool user eventId =
 revisionedTaskSnapshot :: ConnectionPool -> AuthedUser -> Int64
   -> IO (Either ServerError (Headers '[Header "Cache-Control" Text] EventOperationTaskWithRevisionDTO))
 revisionedTaskSnapshot pool user eventId =
-  let _ :<|> _ :<|> _ :<|> getTask = eventOperationsServer user eventId
+  let _ :<|> _ :<|> _ :<|> getTask :<|> _ = eventOperationsServer user eventId
   in runHandler (runReaderT (getTask (eventId + 10000)) (Env pool httpTestConfig))
 
 commandKey :: Int64 -> UUID.UUID
@@ -325,6 +334,7 @@ httpAfterAuthentication pool token eventId mode revoke = do
     let readOnly = mode `elem` ["read", "task", "revisioned"]
         suffix = if mode `elem` ["task", "revisioned"] then "/tasks/" <> show (eventId + 10000)
                     <> (if mode == "revisioned" then "/revisioned" else "")
+                 else if mode `elem` ["raci","raci-replay"] then "/tasks/" <> show (eventId + 10000) <> "/raci/reassign"
                  else if readOnly then "" else "/transitions"
         request = HTTP.defaultRequest
           { HTTP.host = "127.0.0.1", HTTP.port = port, HTTP.secure = False
@@ -332,7 +342,10 @@ httpAfterAuthentication pool token eventId mode revoke = do
           , HTTP.path = BS.pack ("/event-operations/events/" <> show eventId <> suffix)
           , HTTP.requestHeaders = [("Authorization","Bearer " <> TE.encodeUtf8 token),
               ("Content-Type","application/json"),("Idempotency-Key",TE.encodeUtf8 (UUID.toText (commandKey eventId)))]
-          , HTTP.requestBody = HTTP.RequestBodyLBS (if readOnly then BL.empty else encode (command 1 Planning))
+          , HTTP.requestBody = HTTP.RequestBodyLBS (if readOnly then BL.empty
+              else if mode == "raci" then "{\"expectedRevision\":\"1\",\"role\":\"responsible\",\"fromPartyId\":2,\"toPartyId\":1,\"reason\":\"test\",\"correlationId\":\"test\"}"
+              else if mode == "raci-replay" then "{\"expectedRevision\":\"2\",\"role\":\"responsible\",\"fromPartyId\":2,\"toPartyId\":1,\"reason\":\"test\",\"correlationId\":\"test\"}"
+              else encode (command 1 Planning))
           , HTTP.redirectCount = 0, HTTP.responseTimeout = HTTP.responseTimeoutMicro 30000000 }
     withWorker (HTTP.httpLbs request manager) $ \waitResponse _ -> do
       (bounded "production HTTP authentication" (takeMVar authenticatedSignal) >> revoke)

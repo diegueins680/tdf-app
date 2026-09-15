@@ -15,6 +15,11 @@ module TDF.EventOperations.Types
   , EventTaskAggregateRevision
   , parseEventTaskAggregateRevision
   , EventOperationTaskWithRevisionDTO(..)
+  , EventRaciReassignmentCommand(..)
+  , EventRaciReassignmentOutcomeDTO(..)
+  , validRaciReassignmentCommand
+  , aggregateRevisionInteger
+  , raciRoleText
   , isSafePositiveInteger
   , allEventLifecycleStates
   , eventLifecycleStateText
@@ -248,6 +253,47 @@ data EventOperationTaskWithRevisionDTO = EventOperationTaskWithRevisionDTO
 instance ToJSON EventOperationTaskWithRevisionDTO where
   toJSON = genericToJSON (prefixedJsonOptions 3)
 instance FromJSON EventOperationTaskWithRevisionDTO where
+  parseJSON = genericParseJSON (prefixedJsonOptions 3)
+
+aggregateRevisionInteger :: EventTaskAggregateRevision -> Integer
+aggregateRevisionInteger (EventTaskAggregateRevision raw) =
+  T.foldl' (\n c -> n * 10 + toInteger (fromEnum c - fromEnum '0')) 0 raw
+
+data EventRaciReassignmentCommand = EventRaciReassignmentCommand
+  { ercExpectedRevision :: EventTaskAggregateRevision
+  , ercRole :: EventRaciRole
+  , ercFromPartyId :: Int64
+  , ercToPartyId :: Int64
+  , ercReason :: Text
+  , ercCorrelationId :: Text
+  } deriving (Eq, Generic, Show)
+instance ToJSON EventRaciReassignmentCommand where
+  toJSON = genericToJSON (prefixedJsonOptions 3)
+instance FromJSON EventRaciReassignmentCommand where
+  parseJSON raw = do
+    command <- genericParseJSON (prefixedJsonOptions 3) raw
+    if validRaciReassignmentCommand command then pure command else fail "invalid RACI command"
+
+validRaciReassignmentCommand :: EventRaciReassignmentCommand -> Bool
+validRaciReassignmentCommand command =
+  all isSafePositiveInteger [ercFromPartyId command, ercToPartyId command]
+  && ercFromPartyId command /= ercToPartyId command
+  && validText 2000 (ercReason command) && validText 200 (ercCorrelationId command)
+  where validText limit raw = not (T.null (T.strip raw)) && T.length raw <= limit
+
+data EventRaciReassignmentOutcomeDTO = EventRaciReassignmentOutcomeDTO
+  { eroEventId :: Int64
+  , eroActivityId :: Int64
+  , eroCommandId :: UUID
+  , eroRole :: EventRaciRole
+  , eroFromPartyId :: Int64
+  , eroToPartyId :: Int64
+  , eroAggregateRevision :: EventTaskAggregateRevision
+  , eroReplayed :: Bool
+  } deriving (Eq, Generic, Show)
+instance ToJSON EventRaciReassignmentOutcomeDTO where
+  toJSON = genericToJSON (prefixedJsonOptions 3)
+instance FromJSON EventRaciReassignmentOutcomeDTO where
   parseJSON = genericParseJSON (prefixedJsonOptions 3)
 
 -- Existing JSON-number fields keep their original safe-integer restriction.

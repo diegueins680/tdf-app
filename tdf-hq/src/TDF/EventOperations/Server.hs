@@ -8,6 +8,7 @@ module TDF.EventOperations.Server
   ) where
 
 import Control.Monad (unless)
+import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import Crypto.Hash (Digest, SHA256, hash)
@@ -27,7 +28,8 @@ import Servant
 import TDF.Auth (AuthedUser(..), withCurrentAuthSession)
 import TDF.DB (Env(..))
 import TDF.EventOperations.API (EventOperationsAPI)
-import TDF.EventOperations.DatabaseBoundary (databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, tryDatabaseAction)
+import TDF.EventOperations.DatabaseBoundary
+  ( databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, reassignRaci, tryDatabaseAction )
 import qualified TDF.EventOperations.Types as EventOps
 
 type EventOperationsM = ReaderT Env Handler
@@ -38,6 +40,24 @@ eventOperationsServer user eventId =
   :<|> applyEventTransition user eventId
   :<|> getEventTask user eventId
   :<|> getEventTaskWithRevision user eventId
+  :<|> reassignEventTaskRaci user eventId
+
+reassignEventTaskRaci :: AuthedUser -> Int64 -> Int64 -> UUID.UUID
+  -> EventOps.EventRaciReassignmentCommand
+  -> EventOperationsM (Headers '[Header "Cache-Control" Text] EventOps.EventRaciReassignmentOutcomeDTO)
+reassignEventTaskRaci user eventId activityId commandId command =
+  action `catchError` (\failure -> throwError failure
+    { errHeaders = ("Cache-Control", "private, no-store") : errHeaders failure })
+  where
+    action = do
+      unless (all EventOps.isSafePositiveInteger [eventId, activityId]
+        && EventOps.validRaciReassignmentCommand command) $
+        throwError (eventOperationDomainError "invalid_request")
+      requireEventOperationsEnabled
+      result <- runEventOperationsSessionDb user $
+        reassignRaci eventId activityId (fromSqlKey (auPartyId user)) commandId command
+      outcome <- either (throwError . eventOperationDomainError) pure result
+      pure (addHeader ("private, no-store" :: Text) outcome)
 
 getEventTaskWithRevision :: AuthedUser -> Int64 -> Int64
   -> EventOperationsM (Headers '[Header "Cache-Control" Text] EventOps.EventOperationTaskWithRevisionDTO)
@@ -165,5 +185,10 @@ eventOperationDomainError errorCode =
     statusFor "version_conflict" = err409
     statusFor "transition_invalid" = err409
     statusFor "transition_effects_not_ready" = err409
+    statusFor "operation_not_ready" = err409
+    statusFor "assignment_not_replaceable" = err409
+    statusFor "assignee_unavailable" = err409
+    statusFor "assignment_conflict" = err409
+    statusFor "accountability_not_ready" = err409
     statusFor "separation_of_duties" = err409
     statusFor _ = err500

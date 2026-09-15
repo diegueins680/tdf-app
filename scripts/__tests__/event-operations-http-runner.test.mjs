@@ -42,8 +42,16 @@ test('both HTTP runners install task prerequisites before opted-in task fixtures
     const source = readFileSync(path.join(root, 'scripts', script), 'utf8');
     const positions = ['2026-09-14_event_operations_api.sql', '2026-09-14_event_task_commit.sql',
       '2026-09-14_event_task_read.sql', '2026-09-15_event_task_revision.sql',
-      '2026-09-15_event_task_revisioned_read.sql', 'event_operations_http_fixture.sql'].map(file => source.indexOf(file));
+      '2026-09-15_event_task_revisioned_read.sql', '2026-09-15_event_raci_reassignment.sql',
+      'event_operations_http_fixture.sql'].map(file => source.indexOf(file));
     assert.ok(positions.every(position => position >= 0), `${script} must install every prerequisite`);
     assert.deepEqual(positions, [...positions].sort((a, b) => a - b), `${script} prerequisite order`);
   }
+});
+
+test('command formal gate retains pre-commit and exact receipt binding controls', () => {
+  const source = readFileSync(path.join(root, 'scripts/verify-event-operations-formal.sh'), 'utf8');
+  assert.match(source, /run_tlc CommandBoundary.tla CommandBoundary.cfg command-boundary/);
+  assert.match(source, /expect_counterexample CommandBoundaryEarly.cfg ValidatedCommit/);
+  assert.match(source, /expect_counterexample CommandBoundaryUnbound.cfg ValidatedCommit/);
 });

@@ -329,6 +329,7 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
       send "GET" "/70" (auth owner) Nothing >>= expectError 404 "feature_disabled"
       send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectError 404 "feature_disabled"
       send "GET" "/80/tasks/8000/revisioned" (auth owner) Nothing >>= expectError 404 "feature_disabled"
+      send "POST" raciPath (auth owner <> idem 300) (Just raciBody) >>= expectError 404 "feature_disabled"
       post 70 19 owner (body 1 "planning") >>= expectError 404 "feature_disabled"
       countFor "event_operation_audit_event" 70 `shouldReturn` 0
 
@@ -345,7 +346,95 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
       send "GET" "/72" (auth owner) Nothing >>= expectStatus 401
       post 72 20 owner (body 1 "planning") >>= expectStatus 401
       countFor "event_operation_audit_event" 72 `shouldReturn` 0
+  it "rejects invalid RACI transport, stale versions and unprivileged task readers" $ do
+    execute "INSERT INTO social_event(id,organizer_party_id) VALUES (82,'1'); INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence) VALUES (82,'planning',1,'RACI HTTP test'); INSERT INTO event_operation_relationship(event_id,party_id,relationship_kind) VALUES(82,1,'primary_owner'); INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES(8200,82,'planned',1); INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id) VALUES(8200,1,'accountable',1),(8200,3,'responsible',1); INSERT INTO event_operation_task_policy(activity_id) VALUES(8200); INSERT INTO event_operation_grant(event_id,grantee_party_id,scope_code,resource_kind,resource_id,issued_by_party_id) VALUES(82,2,'task.read','task','8200',1)"
+    let patch key value = case raciBody of Object fields -> Object (KM.insert key value fields); _ -> Null
+    forM_ [patch "expectedRevision" (Number 4), patch "expectedRevision" (String "04"),
+           patch "expectedRevision" (String "9223372036854775808"), patch "actorPartyId" (Number 1),
+           patch "toPartyId" (Number 3), patch "reason" (String " "), patch "correlationId" Null] $ \payload ->
+      send "POST" raciPath (auth owner <> idem 300) (Just payload) >>= expectStatus 400
+    send "POST" raciPath (auth owner) (Just raciBody) >>= expectStatus 400
+    send "POST" raciPath (idem 300) (Just raciBody) >>= expectStatus 401
+    send "POST" raciPath (auth collaborator <> idem 300) (Just raciBody) >>= expectError 403 "forbidden"
+    send "POST" raciPath (auth outsider <> idem 300) (Just raciBody) >>= expectError 404 "not_found"
+    send "POST" raciPath (auth owner <> idem 300) (Just (patch "expectedRevision" (String "3")))
+      >>= expectError 409 "version_conflict"
+    scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8200" `shouldReturn` 4
+    countFor "event_operation_command_receipt" 82 `shouldReturn` 0
+
+  it "rolls back real SQL reassignment effects when its returned receipt is malformed or foreign" $ do
+    let signature = "(BIGINT,BIGINT,BIGINT,UUID,BIGINT,TEXT,BIGINT,BIGINT,TEXT,TEXT)"
+        restore = execute ("DROP FUNCTION event_operation_reassign_raci" <> signature
+          <> "; ALTER FUNCTION raci_http_saved" <> signature <> " RENAME TO event_operation_reassign_raci")
+    forM_ ["'{}'::jsonb", "result || '{\"activityId\":999}'::jsonb",
+           "result || '{\"aggregateRevision\":\"7\"}'::jsonb", "'{\"error\":\"private diagnostic\"}'::jsonb"] $ \bad ->
+      bracket_ (execute ("ALTER FUNCTION event_operation_reassign_raci" <> signature <> " RENAME TO raci_http_saved; "
+        <> "CREATE FUNCTION event_operation_reassign_raci(bigint,bigint,bigint,uuid,bigint,text,bigint,bigint,text,text) RETURNS jsonb LANGUAGE plpgsql AS $$ DECLARE result jsonb; BEGIN result := raci_http_saved($1,$2,$3,$4,$5,$6,$7,$8,$9,$10); RETURN " <> bad <> "; END $$")) restore $ do
+        response <- send "POST" raciPath (auth owner <> idem 300) (Just raciBody)
+        expectError 503 "event_operations_unavailable" response
+        lookup "Cache-Control" (HTTP.responseHeaders response) `shouldBe` Just "private, no-store"
+        scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8200" `shouldReturn` 4
+        scalar "SELECT count(*) FROM event_operation_raci_assignment WHERE activity_id=8200 AND revoked_at IS NOT NULL" `shouldReturn` 0
+        countFor "event_operation_audit_event" 82 `shouldReturn` 0
+        countFor "event_operation_command_receipt" 82 `shouldReturn` 0
+
+  it "never reports success when a deferred failure rejects COMMIT after receipt validation" $
+    bracket_ (execute "CREATE FUNCTION raci_http_commit_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'private commit diagnostic' USING ERRCODE='ZX009'; END $$; CREATE CONSTRAINT TRIGGER raci_http_commit_failure AFTER INSERT ON event_operation_audit_event DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION raci_http_commit_failure()")
+      (execute "DROP TRIGGER raci_http_commit_failure ON event_operation_audit_event; DROP FUNCTION raci_http_commit_failure()") $ do
+        send "POST" raciPath (auth owner <> idem 300) (Just raciBody)
+          >>= expectError 503 "event_operations_unavailable"
+        scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8200" `shouldReturn` 4
+        countFor "event_operation_audit_event" 82 `shouldReturn` 0
+        countFor "event_operation_command_receipt" 82 `shouldReturn` 0
+
+  it "commits the authenticated RACI command once and replays its original bound receipt" $ do
+    response <- send "POST" raciPath (auth owner <> idem 300) (Just raciBody)
+    expectStatus 200 response
+    field "aggregateRevision" response `shouldBe` Just (String "6")
+    field "activityId" response `shouldBe` Just (Number 8200)
+    field "fromPartyId" response `shouldBe` Just (Number 3)
+    field "toPartyId" response `shouldBe` Just (Number 2)
+    lookup "Cache-Control" (HTTP.responseHeaders response) `shouldBe` Just "private, no-store"
+    retry <- send "POST" raciPath (auth owner <> idem 300) (Just raciBody)
+    expectReplay response retry
+    send "POST" raciPath (auth owner <> idem 301) (Just raciBody) >>= expectError 409 "version_conflict"
+    countFor "event_operation_audit_event" 82 `shouldReturn` 1
+    countFor "event_operation_command_receipt" 82 `shouldReturn` 1
+    scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8200" `shouldReturn` 6
+
+  it "deduplicates concurrent RACI HTTP retries without changing the aggregate twice" $ do
+    execute "INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES(8201,82,'planned',1); INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id) VALUES(8201,3,'responsible',1); INSERT INTO event_operation_grant(event_id,grantee_party_id,scope_code,resource_kind,resource_id,issued_by_party_id) VALUES(82,2,'task.read','task','8201',1)"
+    let payload = case raciBody of Object fields -> Object (KM.insert "expectedRevision" (String "2") fields); _ -> Null
+        request = send "POST" "/82/tasks/8201/raci/reassign" (auth owner <> idem 302) (Just payload)
+    first <- newEmptyMVar
+    _ <- forkFinally request (putMVar first)
+    second <- request
+    initial <- takeMVar first >>= either throwIO pure
+    mapM_ (expectStatus 200) [initial, second]
+    sort [field "replayed" initial, field "replayed" second] `shouldBe` [Just (Bool False), Just (Bool True)]
+    scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8201" `shouldReturn` 4
+    scalar "SELECT count(*) FROM event_operation_command_receipt WHERE operation_code='event.task.raci.reassign/8201'" `shouldReturn` 1
+
+  it "allows historical replay but blocks new RACI writes outside the supported lifecycle" $
+    bracket_ (execute "UPDATE event_operation_event_state SET canonical_state='ready' WHERE event_id=82")
+      (execute "UPDATE event_operation_event_state SET canonical_state='planning' WHERE event_id=82") $ do
+        send "POST" raciPath (auth owner <> idem 300) (Just raciBody) >>= expectStatus 200
+        response <- send "POST" raciPath (auth owner <> idem 310) (Just raciBody)
+        expectError 409 "operation_not_ready" response
+        lookup "Cache-Control" (HTTP.responseHeaders response) `shouldBe` Just "private, no-store"
+        scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8200" `shouldReturn` 6
+
+  it "fails unavailable when the RACI function is rolled back without falling back to legacy writes" $
+    bracket_ (execute "ALTER FUNCTION event_operation_reassign_raci(BIGINT,BIGINT,BIGINT,UUID,BIGINT,TEXT,BIGINT,BIGINT,TEXT,TEXT) RENAME TO raci_http_saved")
+      (execute "ALTER FUNCTION raci_http_saved(BIGINT,BIGINT,BIGINT,UUID,BIGINT,TEXT,BIGINT,BIGINT,TEXT,TEXT) RENAME TO event_operation_reassign_raci") $ do
+        send "POST" raciPath (auth owner <> idem 300) (Just raciBody)
+          >>= expectError 503 "event_operations_unavailable"
+        send "GET" "/82/tasks/8200/revisioned" (auth owner) Nothing >>= expectStatus 200
   where
+    raciPath = "/82/tasks/8200/raci/reassign"
+    raciBody = object ["expectedRevision" .= ("4" :: Text), "role" .= ("responsible" :: Text),
+      "fromPartyId" .= (3 :: Int), "toPartyId" .= (2 :: Int),
+      "reason" .= ("Synthetic RACI HTTP test" :: Text), "correlationId" .= ("raci-http" :: Text)]
     owner = "http-owner-test-token"
     collaborator = "http-collaborator-test-token"
     outsider = "http-outsider-test-token"

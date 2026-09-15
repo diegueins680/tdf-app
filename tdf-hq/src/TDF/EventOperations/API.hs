@@ -20,4 +20,8 @@ type EventOperationsAPI = "event-operations" :> "events" :> Capture "eventId" In
        :> Get '[JSON] (Headers '[Header "Cache-Control" Text] EventOperationTaskDTO)
   :<|> "tasks" :> Capture "activityId" Int64 :> "revisioned"
        :> Get '[JSON] (Headers '[Header "Cache-Control" Text] EventOperationTaskWithRevisionDTO)
+  :<|> "tasks" :> Capture "activityId" Int64 :> "raci" :> "reassign"
+       :> Header' '[Required, Strict] "Idempotency-Key" UUID
+       :> ReqBody '[JSON] EventRaciReassignmentCommand
+       :> Post '[JSON] (Headers '[Header "Cache-Control" Text] EventRaciReassignmentOutcomeDTO)
   )
