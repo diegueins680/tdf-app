@@ -1,19 +1,23 @@
 import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
+import { localApiFixturePattern } from './helpers/local-api-fixture.mjs';
 
 // Synthetic browser/API fixtures, not real server authorization or database E2E.
 async function fixture(page, baseURL, locale = 'es') {
   const origin = new URL(baseURL).origin;
-  const state = { status: 200, reads: 0, parentReads: [], task: {
+  const state = { status: 200, reads: 0, parentReads: [], blocked: [], task: {
     eventId: 80, activityId: 8000, status: 'planned', version: 1,
     policy: { requiresAccountability: true, dependenciesGateCompletion: true, version: 2 },
     raci: [{ partyId: 11, role: 'accountable' }, { partyId: 12, role: 'responsible' }],
     accountabilityNeedsAttention: false,
   } };
   await page.addInitScript(value => localStorage.setItem('tdf-hq-ui/locale', value), locale);
-  await page.route('**/*', async route => {
+  await page.route(localApiFixturePattern(baseURL), async route => {
     const request = route.request(); const url = new URL(request.url());
-    if (url.origin !== origin) return route.abort('blockedbyclient');
+    if (url.origin !== origin) {
+      state.blocked.push(request.url());
+      return route.abort('blockedbyclient');
+    }
     if (!['fetch', 'xhr'].includes(request.resourceType())) return route.continue();
     if (url.pathname === '/session') return route.fulfill({ json: {
       username: 'synthetic-task-reader', displayName: 'Lector Sintético', partyId: 42,
@@ -85,4 +89,26 @@ test('English task view honestly reports unconfigured responsibility', async ({ 
   await expect(page.getByText('No responsibility policy is recorded.')).toBeVisible();
   await expect(page.getByText('No RACI assignments are recorded.')).toBeVisible();
   expect(state.parentReads).toEqual([]);
+});
+
+test('fixture keeps foreign module-shaped URLs and unknown API commands isolated', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL);
+  // A same-origin empty document tests the real route handler without booting the
+  // application or sending any request through Playwright's API-request bypass.
+  await page.route(`${baseURL}/__fixture_document`, route => route.fulfill({
+    contentType: 'text/html', body: '<!doctype html><title>Fixture isolation</title>',
+  }));
+  await page.goto('/__fixture_document');
+  const failures = [];
+  page.on('requestfailed', request => failures.push(request.url()));
+  const result = await page.evaluate(async origin => {
+    const foreign = 'https://example.invalid/src/main.tsx';
+    const blocked = await fetch(foreign).then(() => false, () => true);
+    const unknown = await fetch(`${origin}/__unknown_api`, { method: 'POST', body: 'synthetic' });
+    return { blocked, status: unknown.status, body: await unknown.json() };
+  }, baseURL);
+  expect(result).toEqual({ blocked: true, status: 404, body: { error: 'No synthetic fixture' } });
+  expect(failures).toContain('https://example.invalid/src/main.tsx');
+  expect(state.blocked).toEqual(['https://example.invalid/src/main.tsx']);
+  expect(state.reads).toBe(0); expect(state.parentReads).toEqual([]);
 });

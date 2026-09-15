@@ -8,6 +8,10 @@ Depends on draft [PR 372](https://github.com/diegueins680/tdf-app/pull/372), bra
 This increment is implemented and unit-tested but **not ready for acceptance**: the final
 local browser run retains three startup timeout failures. Do not merge or activate it.
 
+Historical checkpoint: [PR 20](pr-20-task-browser-startup.md) subsequently verifies a
+test-harness correction with the original assertions. Results below remain the actual
+PR 19 runs; the follow-up does not establish production or full-stack readiness.
+
 [TV-01–06](task-view-contract.md) refine EO-023–028/045/052–055/058 using the existing
 canonical task API. `/social/eventos/80?tarea=8000` opens a task-only subview; the existing
 logistics schedule links to it. The unchanged registered event route dispatches through
