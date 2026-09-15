@@ -27,8 +27,10 @@ The marketplace checkout is deliberately unavailable until a provider verifies c
 
 The 2026-09-14/15 reconciliation continuation repairs caller-owned transaction
 atomicity and adds database-backed query contract tests; see [ADR 0119](../adr/0119-atomic-provider-query-application.md)
-and [verification](reconciliation-atomicity-2026-09-14.md). Independent
-missed-callback recovery and shared query budgets remain unimplemented. The
+and [verification](reconciliation-atomicity-2026-09-14.md). A separate 2026-09-15
+continuation adds disabled, durable missed-callback recovery and shared callback/
+scheduled query budgets; see [ADR 0120](../adr/0120-durable-provider-query-recovery.md)
+and [query recovery evidence](query-recovery-2026-09-15.md). The
 source review also identified PayPhone's inherited canceled-as-declined mapping;
 its history-preserving compatibility fix remains open. No new operational
 provider or staging qualification is claimed by this continuation.
