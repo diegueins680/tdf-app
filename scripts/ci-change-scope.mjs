@@ -27,6 +27,8 @@ function affectsContracts(file) {
 
 function affectsMigrations(file) {
   return isPathOrChild(file, 'tdf-hq/sql')
+    || file === 'scripts/test-artist-merch-storefronts-migration.sh'
+    || file === 'tdf-hq/test/integration/merch_checkout_expiry_assertions.sql'
     || file === 'tdf-hq/production-entrypoint.sh'
     || file === 'tdf-hq/Dockerfile'
     || file === 'tdf-hq/Dockerfile.runtime'

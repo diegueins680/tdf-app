@@ -32,6 +32,15 @@ test('CI splits component checks and preserves Stack build caches', async () => 
   assert.match(workflow, /concurrency:[\s\S]*?cancel-in-progress: true/);
 });
 
+test('migration CI runs the owning merch checkout expiry assertions without waiving failures', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const migrationJob = workflow.split('  migration-tests:')[1].split('\n  production-migrations:')[0];
+  assert.match(migrationJob, /run: \.\/scripts\/test-artist-merch-storefronts-migration\.sh/);
+  assert.doesNotMatch(migrationJob, /continue-on-error: true/);
+  const runner = await source('scripts/test-artist-merch-storefronts-migration.sh');
+  assert.match(runner, /apply_file "\$TDF_MERCH_DATABASE" "\$TDF_MERCH_ROOT\/tdf-hq\/test\/integration\/merch_checkout_expiry_assertions\.sql"/);
+});
+
 test('persona browser journeys are artifacted and gate aggregate quality', async () => {
   const workflow = await source('.github/workflows/ci.yml');
   assert.match(workflow, /^  persona-web-e2e:/m);

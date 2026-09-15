@@ -70,6 +70,15 @@ test('schema model changes run backend and migration checks', () => {
   });
 });
 
+test('merch checkout expiry runner and SQL assertions select migration validation', () => {
+  for (const file of [
+    'scripts/test-artist-merch-storefronts-migration.sh',
+    'tdf-hq/test/integration/merch_checkout_expiry_assertions.sql',
+  ]) {
+    assert.equal(classifyChangedFiles([file]).migrations, true, file);
+  }
+});
+
 test('production migration runner changes run backend and migration checks', () => {
   assert.deepEqual(classifyChangedFiles(['tdf-hq/production-entrypoint.sh']), {
     repo: true,

@@ -373,6 +373,9 @@ jobs:
       - name: Rehearse merch reputation migration with synthetic evidence
         run: ./scripts/test-merch-reputation-migration.sh
 
+      - name: Rehearse merch checkout expiry and storefront migration
+        run: ./scripts/test-artist-merch-storefronts-migration.sh
+
       - name: Rehearse service booking checkout runtime migration
         run: ./scripts/test-service-booking-checkout-runtime-migration.sh
 

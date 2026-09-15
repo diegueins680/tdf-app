@@ -1,5 +1,8 @@
 # PR draft: Restore canonical schema migration dependencies
 
+Historical PR 351 checkpoint. The dependent [PR 12 expiry-contract test correction](pr-12-merch-expiry-contract.md)
+records the later full storefront suite pass; the original failure below remains audit evidence.
+
 ## Scope and dependency
 
 Base: `test/event-operations-schema-rehearsal`, draft PR 349 at
