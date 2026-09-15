@@ -38,13 +38,13 @@ INSERT INTO api_token(token,party_id,label,active) VALUES
  ('http-reset-test-token',1,'password-reset:test-only',TRUE),
  ('http-revocable-test-token',1,NULL,TRUE);
 INSERT INTO social_event(id,organizer_party_id)
- SELECT n,'1' FROM generate_series(60,72) n;
+ SELECT n,'1' FROM generate_series(60,74) n;
 INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence)
- SELECT n,'draft',1,'disposable HTTP fixture' FROM generate_series(60,72) n;
+ SELECT n,'draft',1,'disposable HTTP fixture' FROM generate_series(60,74) n;
 INSERT INTO event_operation_relationship(event_id,party_id,relationship_kind)
- SELECT n,1,'primary_owner' FROM generate_series(60,72) n;
+ SELECT n,1,'primary_owner' FROM generate_series(60,74) n;
 INSERT INTO event_operation_grant(event_id,grantee_party_id,scope_code,issued_by_party_id)
  VALUES (64,2,'event.manage',1),(65,2,'event.manage',1),(66,2,'event.manage',1),
- (67,1,'event.approve',1),(67,2,'event.approve',1);
+ (67,1,'event.approve',1),(67,2,'event.approve',1),(74,2,'event.read',1);
 UPDATE event_operation_feature_flag SET enabled=TRUE,updated_at=clock_timestamp(),
  updated_by_party_id=1,change_reason='disposable HTTP tests' WHERE feature_code='event.operations.api';

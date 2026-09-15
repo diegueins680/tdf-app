@@ -397,6 +397,8 @@ BEGIN
 
   -- Reauthorize before replay OR conflicting-key responses. Historical receipts
   -- confer no permission, and unreadable callers must not learn whether a key exists.
+  -- Use the absent-target envelope for every unreadable path, including retries.
+  -- Preserve private denial diagnostics without exposing event existence to callers.
   -- Wall clock is sampled after the event/authorization fence, never transaction now().
   IF NOT event_operation_actor_can_read(target_event_id, target_actor_party_id, clock_timestamp()) THEN
     IF has_prior_receipt THEN
@@ -408,14 +410,14 @@ BEGIN
         'event.lifecycle.transition', target_command_id, 'event', target_event_id::TEXT,
         'rejected', 'receipt access denied: no current event read authority', effective_correlation
       );
-      RETURN jsonb_build_object('error', 'forbidden');
+      RETURN jsonb_build_object('error', 'not_found');
     END IF;
     PERFORM event_operation_record_transition_rejection(
       target_event_id, target_actor_party_id, target_command_id, request_hash,
       requested_expected_version, NULL, NULL, 'forbidden', 'rejected',
       'actor has no active event relationship or scoped grant', effective_correlation
     );
-    RETURN jsonb_build_object('error', 'forbidden');
+    RETURN jsonb_build_object('error', 'not_found');
   END IF;
 
   IF has_prior_receipt THEN

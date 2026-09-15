@@ -99,6 +99,9 @@ still needs a separately modeled transaction boundary. Scope-administration APIs
 The POST absent/inaccessible status distinction also needs a private-event existence-privacy review;
 GET opacity and denied mutations alone do not establish that stronger property.
 
+Follow-up: [PR 08](pr-08-command-privacy.md) adds the paired formal model and SQL/HTTP regression
+for that response-envelope gap. The results above remain the historical evidence for this PR.
+
 PR 342's exact inspected head passed hosted formal verification and all three event PostgreSQL
 jobs. Hosted repository/catalog/general-migration/preview jobs had failures and backend checking
 was still running at inspection. Those results are not waived or treated as full green CI. This

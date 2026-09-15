@@ -70,3 +70,10 @@ approval, feature gating and failure/recovery. Runner safety and path-selection 
 the suite into the existing backend CI gate without weakening it. No business schema/API changes
 are introduced. Before activation, close the separately documented in-flight session window and
 review POST event-existence metadata; full `mkApp`, offline, schema rehearsal and UX remain pending.
+
+The eighth branch, `fix/event-command-existence-privacy`, closes that POST response-envelope gap.
+`CommandPrivacy` and two negative configurations were checked before changing the unreadable SQL
+paths to the absent-target envelope. SQL regressions reproduce the old leak and now pass, including
+immutable diagnostics and isolation/rollback tests. The HTTP suite now has 18 passing scenarios,
+with exact status/body/non-Date-header comparisons and preserved readable-only mutation denials.
+In-flight token revocation, timing channels and the remaining end-to-end phases are still pending.

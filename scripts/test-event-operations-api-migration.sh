@@ -112,7 +112,7 @@ test_replay_revocation_race() {
   if [ "$replay_isolation" = 'READ COMMITTED' ]; then
     wait "$replay_read"
     test "$(jq -r 'keys|join(",")' "$result_dir/read.log")" = error
-    test "$(jq -r '.error' "$result_dir/read.log")" = forbidden
+    test "$(jq -r '.error' "$result_dir/read.log")" = not_found
     wait "$snapshot_read"
     test "$(tail -n 1 "$result_dir/snapshot.log")" = t
   else
@@ -128,7 +128,7 @@ test_replay_revocation_race() {
     grep -q 40001 "$result_dir/snapshot.log" || { sed -n '1,50p' "$result_dir/snapshot.log" >&2; exit 1; }
   fi
   replay_retry=$(transition_json "$replay_event" 2 "$replay_command" 1 pending_approval NULL replay-race request-race)
-  test "$(json_field "$replay_retry" '.error')" = forbidden
+  test "$(json_field "$replay_retry" '.error')" = not_found
   test "$(psql_exec -qAtc "SELECT version FROM event_operation_event_state WHERE event_id=$replay_event")" = 2
   test "$(psql_exec -qAtc "SELECT count(*) FROM event_operation_transition WHERE event_id=$replay_event")" = 1
   test "$(psql_exec -qAtc "SELECT count(*) FROM event_operation_command_receipt WHERE event_id=$replay_event")" = 1
@@ -192,6 +192,7 @@ psql_exec -c "
 " >/dev/null
 
 owner_can_read=$(psql_exec -qAt -c 'SELECT event_operation_actor_can_read(10,1);')
+apply_sql "$repo_root/tdf-hq/test/integration/event_operations_command_privacy_assertions.sql"
 outsider_can_read=$(psql_exec -qAt -c 'SELECT event_operation_actor_can_read(10,3);')
 test "$owner_can_read" = "t"
 test "$outsider_can_read" = "f"
@@ -213,12 +214,12 @@ test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_audit_event WHER
 reused_key=$(transition_json 10 1 10000000-0000-4000-8000-000000000010 1 pending_approval NULL submit-review changed-request)
 test "$(json_field "$reused_key" '.error')" = "idempotency_conflict"
 reused_key_actor=$(transition_json 10 3 10000000-0000-4000-8000-000000000010 1 pending_approval NULL submit-review request-submit)
-test "$(json_field "$reused_key_actor" '.error')" = "forbidden"
+test "$(json_field "$reused_key_actor" '.error')" = "not_found"
 test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_audit_event WHERE event_id=10 AND command_id='10000000-0000-4000-8000-000000000010' AND outcome='conflict';")" = "1"
 test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_audit_event WHERE event_id=10 AND command_id='10000000-0000-4000-8000-000000000010' AND outcome='rejected';")" = "1"
 
 forbidden=$(transition_json 10 3 10000000-0000-4000-8000-000000000011 2 approved NULL outsider-approval request-outsider)
-test "$(json_field "$forbidden" '.error')" = "forbidden"
+test "$(json_field "$forbidden" '.error')" = "not_found"
 test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_audit_event WHERE event_id=10 AND command_id='10000000-0000-4000-8000-000000000011' AND outcome='rejected';")" = "1"
 
 approved=$(transition_json 10 2 10000000-0000-4000-8000-000000000012 2 approved NULL independent-approval request-approval)
@@ -288,6 +289,9 @@ apply_sql "$api_migration"
 test "$(psql_exec -qAtc 'SELECT authorization_version FROM event_operation_event_state WHERE event_id=20')" = "$replay_epoch"
 test "$(psql_exec -qAtc 'SELECT count(*) FROM event_operation_transition WHERE event_id=20')" = 1
 test "$(psql_exec -qAtc 'SELECT count(*) FROM event_operation_command_receipt WHERE event_id=20')" = 3
+test "$(psql_exec -qAtc 'SELECT count(*) FROM event_operation_command_receipt WHERE event_id IN (80,81,82)')" = 3
+test "$(psql_exec -qAtc 'SELECT count(*) FROM event_operation_transition WHERE event_id IN (80,81,82)')" = 1
+test "$(psql_exec -qAtc 'SELECT count(*) FROM event_operation_audit_event WHERE event_id IN (80,81,82)')" = 9
 test "$(psql_exec -qAt -c "SELECT enabled FROM event_operation_feature_flag WHERE feature_code='event.operations.api';")" = "f"
 test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_feature_flag_history WHERE feature_code='event.operations.api';")" = "5"
 test "$(psql_exec -qAtc 'SELECT event_operation_read_snapshot(10,1) IS NULL')" = t

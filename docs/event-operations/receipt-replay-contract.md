@@ -14,10 +14,14 @@ supported scope-edit operation: use explicit revoke/issue, with separate audited
 | Case | Observable result | Persisted effects |
 |---|---|---|
 | Same actor/event/hash, current read access | Original historical response, `replayed=true` | No new receipt or transition |
-| Revoked, expired or not-yet-valid access | `forbidden`, no state/version/receipt payload | Append denial audit; never overwrite original receipt |
+| Revoked, expired or not-yet-valid access | `not_found`, identical to absent target, no state/version/receipt payload | Append denial audit; never overwrite original receipt |
 | No read access, guessed or different command/hash/actor | Same authorization denial | No disclosure of receipt existence through conflict response |
 | Current read access but mismatched actor/hash | `idempotency_conflict` | Append conflict audit; no new transition |
 | Read-only downgrade, new command | Current write-authority guard rejects | Existing rejection semantics |
+
+The [command privacy refinement](command-privacy-contract.md) replaces the earlier unreadable
+`forbidden` envelope with `not_found`; it does not change internal diagnostics or readable-target
+write denials. This closes status/body event-existence disclosure, not timing side channels.
 
 Authorization is evaluated at the command's decision point, not browser delivery time. Revocation
 cannot retract information already delivered by an earlier authorized read. Time expiration is

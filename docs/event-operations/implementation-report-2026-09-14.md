@@ -2,6 +2,12 @@
 
 ## Outcome
 
+Latest increment: [PR 08 evidence](pr-08-command-privacy.md) records the modeled/tested POST
+existence-privacy correction, with 18 real HTTP scenarios and PostgreSQL concurrency/rollback checks.
+Earlier increments and their results below are historical checkpoints, not a current claim that
+GitHub verification has never run. The [delivery plan](delivery-plan.md) tracks the dependent chain;
+in-flight token revocation and full product delivery remain incomplete.
+
 The dependency-ordered local branch chain completes the evidence/audit and bounded formal-
 specification phases, implements an additive PostgreSQL foundation for the highest-risk invariants,
 closes the existing authenticated event-invitation authorization flaw, and adds the first typed,

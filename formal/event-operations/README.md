@@ -47,6 +47,8 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 | `ReceiptReplayBypass.cfg`, `ReceiptReplayStaleClock.cfg`, `ReceiptReplayStaleSnapshot.cfg` | Negative controls: omit authorization, fresh clock, or scope-write serialization | Expected exit 12 with `NoUnauthorizedDisclosure`; all three detected |
 | `SnapshotRead.cfg` | 1 read, 1 revocable grant, clock 0–3 with expiry 2, 2 representative secrets | PASS; 1,133 generated, 296 distinct states, depth 12 |
 | `SnapshotReadEarlyAuth.cfg`, `SnapshotReadMixedClock.cfg`, `SnapshotReadRawLog.cfg` | Negative controls: pre-lock authorization, different projection clocks, raw error logging | Expected exit 12 with `NoUnauthorizedSnapshot`, `CoherentProjection`, `LogFieldsAllowlisted` respectively; all detected |
+| `CommandPrivacy.cfg` | Paired absent/existing observations; 1 command, 4 receipt classes, 2 versions, 3 grants with pre-decision changes | PASS; 81 generated, 49 distinct states, depth 4 |
+| `CommandPrivacyExistenceLeak.cfg`, `CommandPrivacyReceiptLeak.cfg` | Negative controls: distinct hidden-event error / receipt response before visibility | Expected exit 12 with `OpaqueTarget`; both detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
@@ -79,6 +81,9 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
   feature-disable races, JSON decoding and exception cancellation require executable tests.
 - `OperationalLiveness.tla`: eventual hold expiry, notification dead-lettering, offline sync/conflict,
   work terminal/attention state, and financial reconciliation/failure/alert under weak fairness.
+- `CommandPrivacy.tla`: paired absent/unreadable status/body equality for fresh commands and all
+  receipt classes, while retaining read-only mutation denial. The atomic observation assumes the
+  existing current-authorization fence; it does not prove session revocation or constant-time access.
 - `EventStructure.als`: ownership/coproduction, time-bounded grants, visibility, RACI, dependency,
   invitation, contract-version, booking, override, and exact-money relations.
 
@@ -131,3 +136,10 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
    first and samples one instant. A third negative control detects raw exception-log fields.
    This model verifies field allowlisting, not all application logging or arbitrary secret content;
    Haskell property tests and real database races complement the finite abstraction.
+8. POST distinguished nonexistent targets from unreadable events. A new PostgreSQL regression
+   failed before the SQL correction with `target existence leaked ... {"error":"forbidden"}`.
+   `CommandPrivacyExistenceLeak` reproduces the distinct-error observation, and
+   `CommandPrivacyReceiptLeak` detects premature receipt/conflict selection. The positive model
+   returns the same opaque envelope while retaining internal denial history and visible read-only
+   rejection. Timing, generic server Date headers, database faults and privileged audit access are
+   excluded; the SQL and wire-level HTTP comparisons test the concrete envelope.
