@@ -51,6 +51,7 @@ module TDF.Server.SocialEventsHandlers (
     resolveUniqueRsvpRow,
     validateEventArtistIds,
     toggleMomentReactionDb,
+    redactMomentReactionIdentity,
     normalizeMomentMediaType,
     normalizeMomentCaption,
     normalizeMomentCommentBody,
@@ -273,7 +274,20 @@ import TDF.DTO.SocialEventsDTO (
     WaitlistJoinDTO (..),
  )
 import qualified TDF.Email as Email
-import TDF.Models (EngagementEvent (..), EntityField (PartyStripeCustomerId), Party (..), PartyId)
+import TDF.Models
+    ( EngagementEvent (..)
+    , EntityField
+        ( PartyStripeCustomerId
+        , EngagementEventActorPartyId
+        , EngagementEventEntityType
+        , EngagementEventEntityId
+        , EngagementEventEventType
+        , EngagementEventMetadata
+        , EngagementEventCreatedAt
+        )
+    , Party (..)
+    , PartyId
+    )
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.ModelsExtra as ME
@@ -3733,7 +3747,7 @@ socialEventsServer user =
         Env{..} <- ask
         eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
-        liftIO $ loadEventMoments envPool eventKey
+        liftIO $ loadEventMoments envPool currentPartyId eventKey
 
     createMoment :: T.Text -> EventMomentCreateDTO -> AppM EventMomentDTO
     createMoment eventIdStr EventMomentCreateDTO{..} = do
@@ -3781,7 +3795,7 @@ socialEventsServer user =
                             }
                     )
                     envPool
-        liftIO $ loadMomentDTO envPool momentKey
+        liftIO $ loadMomentDTO envPool currentPartyId momentKey
 
     uploadMomentImage :: T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
     uploadMomentImage rawId rawUploadForm = do
@@ -3850,7 +3864,7 @@ socialEventsServer user =
             runSqlPool
                 (toggleMomentReactionDb (auPartyId user) currentPartyId momentKey reactionTypeId emrrActive now)
                 envPool
-        liftIO $ loadMomentDTO envPool momentKey
+        liftIO $ loadMomentDTO envPool currentPartyId momentKey
 
     commentOnMoment :: T.Text -> T.Text -> EventMomentCommentCreateDTO -> AppM EventMomentCommentDTO
     commentOnMoment eventIdStr momentIdStr EventMomentCommentCreateDTO{..} = do
@@ -7478,6 +7492,15 @@ toggleMomentReactionDb
     -> UTCTime
     -> SqlPersistT IO Bool
 toggleMomentReactionDb actorPartyId actorPartyText momentKey reactionTypeId requestedActive now = do
+    -- Serialize every reaction mutation for this moment, including the absent
+    -- reaction case. Locking reaction rows alone cannot protect a first insert.
+    backendName <- T.toCaseFold <$> getRDBMS
+    if "sqlite" `T.isInfixOf` backendName
+        then rawExecute "UPDATE event_moment SET id = id WHERE id = ?" [toPersistValue momentKey]
+        else do
+            _ <- (rawSql "SELECT id FROM event_moment WHERE id = ? FOR UPDATE"
+                [toPersistValue momentKey] :: SqlPersistT IO [Single Int64])
+            pure ()
     existingSameReaction <-
         selectFirst
             [ EventMomentReactionMomentId ==. momentKey
@@ -7501,6 +7524,18 @@ toggleMomentReactionDb actorPartyId actorPartyText momentKey reactionTypeId requ
                         , eventMomentReactionReactorPartyId = actorPartyText
                         , eventMomentReactionCreatedAt = now
                         }
+            -- Repair pre-evidence reactions on replay, retaining the original
+            -- action time so an old reaction cannot qualify as a new action.
+            let evidenceTime = maybe now (eventMomentReactionCreatedAt . entityVal) existingSameReaction
+            existingEvidence <- selectFirst
+                [ EngagementEventActorPartyId ==. Just actorPartyId
+                , EngagementEventEntityType ==. "event_moment"
+                , EngagementEventEntityId ==. Just (fromIntegral (fromSqlKey momentKey))
+                , EngagementEventEventType ==. "reaction_added"
+                , EngagementEventMetadata ==. Just (UUID.toText reactionTypeId)
+                , EngagementEventCreatedAt ==. evidenceTime
+                ] []
+            when (isNothing existingEvidence) $
                 insert_
                     EngagementEvent
                         { engagementEventActorPartyId = Just actorPartyId
@@ -7509,7 +7544,7 @@ toggleMomentReactionDb actorPartyId actorPartyText momentKey reactionTypeId requ
                         , engagementEventEntityId = Just (fromIntegral (fromSqlKey momentKey))
                         , engagementEventEventType = "reaction_added"
                         , engagementEventMetadata = Just (UUID.toText reactionTypeId)
-                        , engagementEventCreatedAt = now
+                        , engagementEventCreatedAt = evidenceTime
                         }
             pure True
         else do
@@ -9241,11 +9276,16 @@ loadEventWorkflowProjections eventRows = do
                         capabilitiesByState
             ]
 
-momentReactionEntityToDTO :: Map.Map UUID.UUID Catalog.ReactionType -> Entity EventMomentReaction -> Maybe EventMomentReactionDTO
-momentReactionEntityToDTO reactionTypes (Entity _ reactionRow) = do
+redactMomentReactionIdentity :: T.Text -> EventMomentReactionDTO -> EventMomentReactionDTO
+redactMomentReactionIdentity viewerPartyId reaction
+    | emrPartyId reaction == Just viewerPartyId = reaction
+    | otherwise = reaction {emrPartyId = Nothing, emrCreatedAt = Nothing}
+
+momentReactionEntityToDTO :: T.Text -> Map.Map UUID.UUID Catalog.ReactionType -> Entity EventMomentReaction -> Maybe EventMomentReactionDTO
+momentReactionEntityToDTO viewerPartyId reactionTypes (Entity _ reactionRow) = do
     reactionTypeId <- eventMomentReactionReactionTypeId reactionRow
     reactionType <- Map.lookup reactionTypeId reactionTypes
-    pure
+    pure $ redactMomentReactionIdentity viewerPartyId
         EventMomentReactionDTO
             { emrReactionTypeId = UUID.toText reactionTypeId
             , emrReactionCode = Catalog.reactionTypeCode reactionType
@@ -9295,8 +9335,8 @@ momentEntityToDTO momentKey momentRow reactions comments =
         , emComments = comments
         }
 
-loadMomentDTO :: ConnectionPool -> EventMomentId -> IO EventMomentDTO
-loadMomentDTO pool momentKey =
+loadMomentDTO :: ConnectionPool -> T.Text -> EventMomentId -> IO EventMomentDTO
+loadMomentDTO pool viewerPartyId momentKey =
     runSqlPool
         ( do
             mMoment <- get momentKey
@@ -9306,7 +9346,7 @@ loadMomentDTO pool momentKey =
                     reactionRows <- selectList [EventMomentReactionMomentId ==. momentKey] [Asc EventMomentReactionCreatedAt]
                     reactionTypes <- loadMomentReactionTypes reactionRows
                     commentRows <- selectList [EventMomentCommentMomentId ==. momentKey] [Asc EventMomentCommentCreatedAt]
-                    let reactions = mapMaybe (momentReactionEntityToDTO reactionTypes) reactionRows
+                    let reactions = mapMaybe (momentReactionEntityToDTO viewerPartyId reactionTypes) reactionRows
                         comments = map (\(Entity commentKey commentRow) -> momentCommentEntityToDTO commentKey commentRow) commentRows
                     when (length reactions /= length reactionRows) $
                         liftIO (ioError (userError "Moment reaction is missing its canonical reaction type"))
@@ -9314,8 +9354,8 @@ loadMomentDTO pool momentKey =
         )
         pool
 
-loadEventMoments :: ConnectionPool -> SocialEventId -> IO [EventMomentDTO]
-loadEventMoments pool eventKey =
+loadEventMoments :: ConnectionPool -> T.Text -> SocialEventId -> IO [EventMomentDTO]
+loadEventMoments pool viewerPartyId eventKey =
     runSqlPool
         ( do
             momentRows <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt]
@@ -9325,7 +9365,7 @@ loadEventMoments pool eventKey =
             commentRows <- selectList [EventMomentCommentMomentId <-. momentKeys] [Asc EventMomentCommentCreatedAt]
             let reactionsByMoment = Map.fromListWith (<>)
                     [ ( eventMomentReactionMomentId reactionRow
-                      , maybe [] pure (momentReactionEntityToDTO reactionTypes reactionEntity)
+                      , maybe [] pure (momentReactionEntityToDTO viewerPartyId reactionTypes reactionEntity)
                       )
                     | reactionEntity@(Entity _ reactionRow) <- reactionRows
                     ]
