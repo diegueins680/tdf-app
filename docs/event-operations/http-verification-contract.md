@@ -14,6 +14,10 @@ Required observations:
 
 - Missing, unknown, inactive, reset-only, duplicate and conflicting credentials fail authentication.
 - Event IDs do not confer authority. Unknown/unreadable snapshots reveal no event payload.
+- The [command privacy refinement](command-privacy-contract.md) also requires identical POST
+  status, raw body and non-Date headers for absent/unreadable targets, including occupied keys,
+  changed bodies and accepted/rejected receipt replays after revocation. Visible read-only targets
+  retain a 403 mutation denial; private durable diagnostics are not rewritten to hide them internally.
 - Required idempotency headers, strict JSON, versions and transition states are enforced at HTTP.
 - Authorized commands and reads agree on canonical state/version. Exact replays preserve every
   historical result field, with only `replayed=true` in response metadata; the stored receipt stays

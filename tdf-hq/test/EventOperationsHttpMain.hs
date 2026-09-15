@@ -78,8 +78,15 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
   it "does not confer access through a guessed event ID" $ do
     send "GET" "/60" (auth outsider) Nothing >>= expectError 404 "not_found"
     send "GET" "/999999" (auth owner) Nothing >>= expectError 404 "not_found"
-    post 60 2 outsider (body 1 "planning") >>= expectError 403 "forbidden"
+    missing <- post 999999 2 outsider (body 1 "planning")
+    forM_ [body 1 "planning", body 1 "planning", body 99 "approved"] $ \payload -> do
+      hidden <- post 60 2 outsider payload
+      expectOpaque missing hidden
     countFor "event_operation_transition" 60 `shouldReturn` 0
+    countFor "event_operation_command_receipt" 60 `shouldReturn` 1
+    countFor "event_operation_audit_event" 60 `shouldReturn` 3
+    scalar "SELECT count(*) FROM event_operation_command_receipt WHERE event_id=60 AND response->>'error'='forbidden'"
+      `shouldReturn` 1
 
   it "rejects malformed captures, headers and strict JSON before durable command work" $ do
     send "GET" "/not-an-integer" (auth owner) Nothing >>= expectStatus 400
@@ -127,8 +134,9 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
     post 64 6 collaborator (body 1 "planning") >>= expectStatus 200
     execute "UPDATE event_operation_grant SET revoked_at=clock_timestamp(),revoked_by_party_id=1,revocation_reason='HTTP test' WHERE event_id=64"
     send "GET" "/64" (auth collaborator) Nothing >>= expectError 404 "not_found"
-    post 64 6 collaborator (body 1 "planning") >>= expectError 403 "forbidden"
-    post 64 7 collaborator (body 2 "pending_approval") >>= expectError 403 "forbidden"
+    missing <- post 999999 6 collaborator (body 1 "planning")
+    post 64 6 collaborator (body 1 "planning") >>= expectOpaque missing
+    post 64 7 collaborator (body 2 "pending_approval") >>= expectOpaque missing
     countFor "event_operation_transition" 64 `shouldReturn` 1
     scalar "SELECT count(*) FROM event_operation_audit_event WHERE event_id=64 AND outcome='rejected'"
       `shouldReturn` 2
@@ -149,8 +157,34 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
     post 66 10 collaborator (body 1 "planning") >>= expectStatus 200
     execute "UPDATE event_operation_grant SET valid_from=clock_timestamp()-interval '2 days',valid_until=clock_timestamp()-interval '1 day' WHERE event_id=66"
     send "GET" "/66" (auth collaborator) Nothing >>= expectError 404 "not_found"
-    post 66 10 collaborator (body 1 "planning") >>= expectError 403 "forbidden"
+    missing <- post 999999 10 collaborator (body 1 "planning")
+    post 66 10 collaborator (body 1 "planning") >>= expectOpaque missing
     countFor "event_operation_transition" 66 `shouldReturn` 1
+
+  it "hides an occupied private command key for other actors and changed bodies" $ do
+    first <- post 73 21 owner (body 1 "planning")
+    expectStatus 200 first
+    missing <- post 999999 21 outsider (body 1 "planning")
+    post 73 21 outsider (body 1 "planning") >>= expectOpaque missing
+    post 73 21 outsider (body 99 "approved") >>= expectOpaque missing
+    post 73 22 outsider (body 99 "approved") >>= expectOpaque missing
+    replay <- post 73 21 owner (body 1 "planning")
+    expectReplay first replay
+    countFor "event_operation_transition" 73 `shouldReturn` 1
+    countFor "event_operation_command_receipt" 73 `shouldReturn` 2
+    scalar "SELECT count(*) FROM event_operation_audit_event WHERE event_id=73 AND outcome='rejected'"
+      `shouldReturn` 3
+
+  it "hides a rejected receipt after revocation and preserves it after read restoration" $ do
+    post 74 23 collaborator (body 1 "planning") >>= expectError 403 "forbidden"
+    execute "UPDATE event_operation_grant SET revoked_at=clock_timestamp(),revoked_by_party_id=1,revocation_reason='HTTP privacy test' WHERE event_id=74"
+    missing <- post 999999 23 collaborator (body 1 "planning")
+    post 74 23 collaborator (body 1 "planning") >>= expectOpaque missing
+    execute "UPDATE event_operation_grant SET revoked_at=NULL,revoked_by_party_id=NULL,revocation_reason=NULL WHERE event_id=74"
+    post 74 23 collaborator (body 1 "planning") >>= expectError 403 "forbidden"
+    countFor "event_operation_transition" 74 `shouldReturn` 0
+    countFor "event_operation_command_receipt" 74 `shouldReturn` 1
+    countFor "event_operation_audit_event" 74 `shouldReturn` 2
 
   it "requires an independent approver and refuses unimplemented publication effects" $ do
     post 67 11 owner (body 1 "planning") >>= expectStatus 200
@@ -235,6 +269,17 @@ expectError :: Int -> Text -> HttpResponse -> IO ()
 expectError expected code response = do
   expectStatus expected response
   decode (HTTP.responseBody response) `shouldBe` Just (object ["code" .= code])
+
+-- Compare the wire envelope, excluding only Warp's generic clock-based Date header.
+expectOpaque :: HttpResponse -> HttpResponse -> IO ()
+expectOpaque missing hidden = do
+  expectError 404 "not_found" missing
+  expectError 404 "not_found" hidden
+  HTTP.responseStatus hidden `shouldBe` HTTP.responseStatus missing
+  HTTP.responseBody hidden `shouldBe` HTTP.responseBody missing
+  let headers = sort . filter ((/= "Date") . fst) . HTTP.responseHeaders
+  headers hidden `shouldBe` headers missing
+  lookup "Content-Type" (HTTP.responseHeaders hidden) `shouldBe` Just "application/json"
 
 field :: Key -> HttpResponse -> Maybe Value
 field key response = case decode (HTTP.responseBody response) of

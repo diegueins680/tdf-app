@@ -91,6 +91,9 @@ run_tlc SnapshotRead.tla SnapshotRead.cfg snapshot-read
 expect_counterexample SnapshotReadEarlyAuth.cfg NoUnauthorizedSnapshot snapshot-auth SnapshotRead.tla
 expect_counterexample SnapshotReadMixedClock.cfg CoherentProjection snapshot-clock SnapshotRead.tla
 expect_counterexample SnapshotReadRawLog.cfg LogFieldsAllowlisted snapshot-log SnapshotRead.tla
+run_tlc CommandPrivacy.tla CommandPrivacy.cfg command-privacy
+expect_counterexample CommandPrivacyExistenceLeak.cfg OpaqueTarget command-existence CommandPrivacy.tla
+expect_counterexample CommandPrivacyReceiptLeak.cfg OpaqueTarget command-receipt CommandPrivacy.tla
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
 run_tlc OperationalLiveness.tla OperationalLiveness.cfg operational-liveness
 

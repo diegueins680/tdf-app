@@ -35,7 +35,7 @@ export interface paths {
         put?: never;
         /**
          * Apply an idempotent, version-guarded canonical lifecycle transition
-         * @description Uses optimistic concurrency and database row locking; it never silently applies last-write-wins. Reusing a command UUID with the same canonical request returns the stored result, while reuse with different content is rejected. Only early planning and independent-approval transitions are implementation-enabled in this phase. Publishing and every transition with ticket, booking, contract, notification, or financial effects remain closed until those effects are transactional or outboxed and verified.
+         * @description Uses optimistic concurrency and database row locking; it never silently applies last-write-wins. Reusing a command UUID with the same canonical request returns the stored result, while reuse with different content is rejected. Only early planning and independent-approval transitions are implementation-enabled in this phase. Publishing and every transition with ticket, booking, contract, notification, or financial effects remain closed until those effects are transactional or outboxed and verified. Current read authority is required before any receipt or conflict is disclosed. Absent and unreadable events return the identical 404 not_found error, including retries and changed-content keys. A readable event can still return 403 when the caller lacks transition authority.
          */
         post: operations["applyEventOperationTransition"];
         delete?: never;
@@ -12979,7 +12979,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Authenticated caller lacks the current contextual authority */
+            /** @description Event is readable but current transition authority is insufficient, or an authorized historical rejection is replayed */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -12988,7 +12988,7 @@ export interface operations {
                     "application/json": components["schemas"]["EventOperationError"];
                 };
             };
-            /** @description Feature disabled or event absent */
+            /** @description Feature disabled, event absent, or event not visible; absent and unreadable targets share the not_found envelope */
             404: {
                 headers: {
                     [name: string]: unknown;

@@ -55,6 +55,10 @@ paths:
         implementation-enabled in this phase. Publishing and every transition
         with ticket, booking, contract, notification, or financial effects remain
         closed until those effects are transactional or outboxed and verified.
+        Current read authority is required before any receipt or conflict is
+        disclosed. Absent and unreadable events return the identical 404 not_found
+        error, including retries and changed-content keys. A readable event can
+        still return 403 when the caller lacks transition authority.
       operationId: applyEventOperationTransition
       security: [{ bearerAuth: [] }]
       parameters:
@@ -85,12 +89,12 @@ paths:
               schema: { $ref: '#/components/schemas/EventOperationError' }
         '401': { description: Authentication required }
         '403':
-          description: Authenticated caller lacks the current contextual authority
+          description: Event is readable but current transition authority is insufficient, or an authorized historical rejection is replayed
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EventOperationError' }
         '404':
-          description: Feature disabled or event absent
+          description: Feature disabled, event absent, or event not visible; absent and unreadable targets share the not_found envelope
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EventOperationError' }

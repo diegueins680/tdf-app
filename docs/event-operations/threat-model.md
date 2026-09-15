@@ -65,9 +65,15 @@ activation, model and test that interleaving and introduce a reviewed session-bo
 guard without weakening the existing global authentication semantics. Full `mkApp` middleware and
 other domains require their own integration checks as well.
 
-The command function also distinguishes an absent event (`not_found`/404) from an unreadable
-existing event (`forbidden`/403), unlike the GET snapshot's opaque 404. Code inspection therefore
-identifies event-existence metadata as a separate privacy-policy gap for private-event rollout.
-The new HTTP tests enforce the currently documented command contract; they do not establish
-indistinguishability of absent and inaccessible POST targets. Model and review that error-envelope
-policy before enabling private resources rather than assuming object-ID isolation proves it.
+### Command target existence (response-envelope correction)
+
+The earlier command function distinguished an absent event (`not_found`/404) from an unreadable
+existing event (`forbidden`/403), unlike the GET snapshot's opaque 404. The
+[command privacy contract](command-privacy-contract.md) and `CommandPrivacy` paired model refine
+this policy: absent and unreadable commands now return the same exact 404 envelope before exposing
+receipt or key conflicts. Internal denial diagnostics remain private and immutable; readable
+targets still reject insufficient mutation authority with 403. Negative controls exercise both
+distinct errors and premature receipt selection. A disposable SQL regression reproduced the old
+leak before implementation. See [PR 08 evidence](pr-08-command-privacy.md) for concrete verification.
+This does not claim constant-time access: lock waits, audit writes, database faults, privileged
+observability and resource exhaustion remain possible side channels requiring additional review.

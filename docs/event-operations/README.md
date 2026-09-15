@@ -21,6 +21,8 @@
 - [Draft PR 06](pr-06-snapshot-privacy.md)
 - [Authenticated HTTP verification contract](http-verification-contract.md)
 - [Draft PR 07](pr-07-http-verification.md)
+- [Command target privacy contract](command-privacy-contract.md)
+- [Draft PR 08](pr-08-command-privacy.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)
