@@ -66,12 +66,39 @@ for migration in \
   2026-09-10_payment_attempt_intent_binding \
   2026-09-11_payment_intent_runtime_sync \
   2026-09-11_provider_capability_catalog \
-  2026-09-13_provider_execution_runtime; do
+  2026-09-13_provider_execution_runtime \
+  2026-09-15_provider_query_recovery; do
   psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
 done
+
+# Exercise repeat-apply and empty rollback with exact operator-seed retention
+# before test data is inserted. Never roll back a used queue or financial history.
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+  -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-09-15_provider_query_recovery.sql" >/dev/null
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 -c \
+  "UPDATE revenue_feature_flag SET reason='synthetic operator policy' WHERE flag_key='checkout.provider_query_recovery' AND environment='sandbox'" >/dev/null
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+  -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-09-15_provider_query_recovery_rollback.sql" >/dev/null
+preserved=$(psql "$TDF_PROVIDER_RETRY_URL" -X -qAt -v ON_ERROR_STOP=1 -c \
+  "SELECT count(*) FROM revenue_feature_flag WHERE flag_key='checkout.provider_query_recovery' AND environment='sandbox' AND reason='synthetic operator policy' AND enabled=false")
+if [ "$preserved" != "1" ]; then
+  echo "Provider query rollback lost an operator-owned flag" >&2
+  exit 1
+fi
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+  -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-09-15_provider_query_recovery.sql" >/dev/null
 
 cd "$TDF_PROVIDER_RETRY_ROOT/tdf-hq"
 TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
 PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000' \
   stack test --fast --test-arguments='--match=provider-retry-runtime +RTS -N2 -RTS'
+
+# Nonempty rollback must fail and leave all history readable.
+if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+    -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-09-15_provider_query_recovery_rollback.sql" >/dev/null 2>&1; then
+  echo "Provider query recovery rollback unexpectedly removed used history" >&2
+  exit 1
+fi
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+  -c 'SELECT count(*) FROM commerce_provider_query_job' >/dev/null

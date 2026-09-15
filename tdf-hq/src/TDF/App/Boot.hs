@@ -60,6 +60,7 @@ import TDF.Config (
     supportedLocales,
   )
 import TDF.Commerce.ProviderEventWorker (startProviderEventWorker)
+import TDF.Commerce.ProviderReconciliation (startProviderQueryWorker)
 import TDF.Commerce.MerchReservationWorker (startMerchReservationWorker)
 import TDF.Cors (corsPolicy)
 import TDF.CampaignAutomation (startCampaignAutomationJob)
@@ -179,6 +180,7 @@ runBootServer = do
         startCampaignAutomationJob env
         startOperationsWorker env
         startProviderEventWorker env
+        startProviderQueryWorker env
         startMerchReservationWorker env
         startReputationWorker env
 

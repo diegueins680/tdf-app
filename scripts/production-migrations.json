@@ -525,6 +525,11 @@
       "id": "2026-09-13_provider_execution_runtime",
       "path": "tdf-hq/sql/2026-09-13_provider_execution_runtime.sql",
       "introducedBy": "6d81ee1296e4dfc9d5b3207904c4b3fde7f3f5e5"
+    },
+    {
+      "id": "2026-09-15_provider_query_recovery",
+      "path": "tdf-hq/sql/2026-09-15_provider_query_recovery.sql",
+      "introducedBy": "b9875ff176c35f446c64d53dccadfd15b839cda4"
     }
   ]
 }

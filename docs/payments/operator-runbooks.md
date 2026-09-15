@@ -24,8 +24,12 @@ calculated callback ID as proof of a new payment or a verified signature.
 For atomic query application and caller-owned transaction/lock requirements,
 follow [ADR 0119](../adr/0119-atomic-provider-query-application.md) and
 [reconciliation verification](reconciliation-atomicity-2026-09-14.md). The
-independent missed-callback worker is not implemented by that change. Do not
-manufacture a signed inbox event or infer no charge from a missing callback.
+independent missed-callback worker is implemented separately, disabled by default;
+follow [ADR 0120](../adr/0120-durable-provider-query-recovery.md) and the
+[query recovery runbook and evidence](query-recovery-2026-09-15.md). Apply its
+budget schema before new callback binaries and drain old unmetered consumers
+before activation. Never manufacture a signed inbox event or infer no charge
+from a missing callback, expired lease or exhausted retry budget.
 
 ## 1. Configuration and activation
 
