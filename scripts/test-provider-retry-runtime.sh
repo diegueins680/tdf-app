@@ -53,9 +53,14 @@ if [ "$table_count" != "0" ]; then
   exit 1
 fi
 psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto' >/dev/null
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+  -f "$TDF_PROVIDER_RETRY_ROOT/scripts/__tests__/fixtures/provider-retry-ledger-base.sql" >/dev/null
 
 for migration in \
   2026-08-13_unified_checkout_core \
+  2026-08-25_commerce_trigger_row_binding_compatibility \
+  2026-08-15_marketplace_sale_checkout_runtime \
+  2026-08-15_marketplace_rental_checkout_runtime \
   2026-08-14_checkout_event_refund_runtime \
   2026-09-09_canonical_payment_lifecycle \
   2026-09-10_payment_attempt_intent_binding \

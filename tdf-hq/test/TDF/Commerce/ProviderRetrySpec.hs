@@ -1383,12 +1383,16 @@ reconciliationNotification pool payment = do
     { Event.pecMerchantRef = Execution.bppMerchantRef payment
     , Event.pecProviderResource = Just (Execution.bppProviderResourceId payment)
     , Event.pecRawPayload = raw } >>= requireRight
+  claim <- runSqlPool (Event.claimProviderEvent (Event.pesReference stored) notificationTime) pool
+  claim `shouldBe` Event.ProviderEventClaimed 1
   runSqlPool (Event.loadProviderEventPayload (Event.pesReference stored) recoveryEncryptionKey)
     pool >>= requireRight
 
 reconciliationFixture :: ConnectionPool -> Checkout.PaymentProvider -> IO Execution.BoundProviderPayment
 reconciliationFixture pool provider = do
-  (creation, operation, _) <- replayFixture pool provider
+  -- Exercise TDF service revenue, not a ticket order without its fee/seat
+  -- snapshot. Ticket fulfillment is covered by its separate runtime harness.
+  (creation, operation, _) <- replayFixtureForDomain "service_booking" pool provider
   let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
       attempt = Execution.porAttempt operation
       reference = providerReference provider checkoutId
@@ -1496,8 +1500,12 @@ digestText value = TE.decodeUtf8
 
 replayFixture :: ConnectionPool -> Checkout.PaymentProvider
   -> IO (Checkout.PaymentAttemptCreation, Execution.ProviderOperationRecord, PaymentSessionCreateDTO)
-replayFixture pool provider = do
-  seed <- newCheckout pool
+replayFixture = replayFixtureForDomain "event_ticket_order"
+
+replayFixtureForDomain :: Text -> ConnectionPool -> Checkout.PaymentProvider
+  -> IO (Checkout.PaymentAttemptCreation, Execution.ProviderOperationRecord, PaymentSessionCreateDTO)
+replayFixtureForDomain domain pool provider = do
+  seed <- newCheckoutForDomain domain pool
   let creation = seed { Checkout.pacProvider = provider }
       checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
       method = if provider == Checkout.ProviderPayPhone then MethodPayPhoneWallet else MethodCard
@@ -1576,15 +1584,18 @@ openDatabase url = do
   pure pool
 
 newCheckout :: ConnectionPool -> IO Checkout.PaymentAttemptCreation
-newCheckout pool = do
+newCheckout = newCheckoutForDomain "event_ticket_order"
+
+newCheckoutForDomain :: Text -> ConnectionPool -> IO Checkout.PaymentAttemptCreation
+newCheckoutForDomain domain pool = do
   checkoutId <- toText <$> nextRandom
   now <- getCurrentTime
   runSqlPool (rawExecute
     "INSERT INTO commerce_checkout_session(id,domain_type,domain_order_id,status,environment,\
     \ currency,subtotal_minor,total_minor,customer_email,lookup_token_hash,idempotency_key,expires_at)\
-    \ VALUES (?::uuid,'event_ticket_order',?,'awaiting_payment','sandbox','USD',12515,12515,\
+    \ VALUES (?::uuid,?,?,'awaiting_payment','sandbox','USD',12515,12515,\
     \ 'synthetic@example.test',?,?,?)"
-    [PersistText checkoutId, PersistText checkoutId, PersistText checkoutId, PersistText checkoutId,
+    [PersistText checkoutId, PersistText domain, PersistText checkoutId, PersistText checkoutId, PersistText checkoutId,
       PersistUTCTime (addUTCTime 1800 now)]) pool
   pure Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = Checkout.CheckoutReference checkoutId
