@@ -160,6 +160,29 @@ Check the GitHub Actions logs for automated runs, or run locally with `--check`.
 
 ## Troubleshooting
 
+### Instagram Login account access works but metadata inspection returns API code 2
+
+Meta Support confirmed on September 15, 2026 that Facebook's `/debug_token`
+does not reliably support Instagram Login tokens, including tokens generated
+from the App Dashboard. Support stated that switching inspector app credentials
+does not resolve this limitation and that no equivalent documented read-only
+introspection API is available. This explains the observed account-access success
+followed by metadata failure; it is not evidence of a platform-wide outage.
+
+Support recommended the [Developer Portal Access Token Debugger](https://developers.facebook.com/tools/debug/accesstoken/)
+for manual inspection. An authorized operator must use the token only in Meta's
+trusted tool and must not paste it into chat, logs, issues, or screenshots. The
+tool's ability to inspect this repository's current token has not yet been
+verified. Record only non-secret validation results and any supported lifecycle
+requirements before deciding how to replace the unsupported API integration.
+
+Until a supported replacement preserves token validity, app ownership and
+authoritative expiry checks, the automated check remains blocked and fails
+closed. Account access alone is not a substitute for those checks. Do not infer
+an expiry date, rotate app secrets, rerun setup, or update Fly to mask this
+failure. The credential table and debugger implementation above describe the
+current code, not a supported workaround for Instagram Login tokens.
+
 ### "Token expired" errors
 - Run `node scripts/refresh-instagram-token.mjs --refresh`
 - Or trigger the GitHub Actions workflow manually
