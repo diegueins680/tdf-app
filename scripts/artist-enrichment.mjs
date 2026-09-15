@@ -502,16 +502,17 @@ function relationUrl(musicBrainz, types) {
   return musicBrainz?.relations?.find((relation) => types.includes(relation.type))?.url?.resource ?? null;
 }
 
-function publicProviderSearchSources(name, musicBrainz, discogs) {
+export function publicProviderSearchSources(name, musicBrainz, discogs, providerOutages = []) {
   const encoded = new URLSearchParams({ query: name, type: 'artist', method: 'indexed' });
+  const unavailable = new Set(providerOutages.map(({ provider }) => provider));
   return [
-    ...(musicBrainz ? [] : [{
+    ...(musicBrainz || unavailable.has('musicbrainz') ? [] : [{
       url: `https://musicbrainz.org/search?${encoded}`,
       type: 'musicbrainz_search_no_exact_match',
       fields: ['identityCandidates'],
       attribution: 'MusicBrainz artist search returned no exact normalized-name candidate',
     }]),
-    ...(discogs ? [] : [{
+    ...(discogs || unavailable.has('discogs') ? [] : [{
       url: `https://www.discogs.com/search/?${new URLSearchParams({ q: name, type: 'artist' })}`,
       type: 'discogs_search_no_exact_match',
       fields: ['identityCandidates'],
@@ -930,7 +931,7 @@ async function researchInventoryIdentity(api, inventoryRows, profiles, spotifyTo
   if (musicBrainz) sources.push({ url: `https://musicbrainz.org/artist/${musicBrainz.id}`, type: 'musicbrainz', fields: ['officialName', 'country', 'city', 'genres', 'websiteUrl', 'instagramUrl', 'discography'], attribution: 'MusicBrainz artist record' });
   if (youtube) sources.push({ url: `https://www.youtube.com/channel/${youtube.id.channelId}`, type: 'youtube_channel_candidate', fields: ['youtubeChannelId', 'youtubeUrl', 'featuredVideoUrl'], attribution: 'YouTube channel candidate' });
   if (discogs?.id) sources.push({ url: `https://www.discogs.com/artist/${discogs.id}`, type: 'discogs', fields: ['officialName', 'websiteUrl', 'socialLinks'], attribution: 'Discogs artist record' });
-  sources.push(...publicProviderSearchSources(artistName, musicBrainz, discogs));
+  sources.push(...publicProviderSearchSources(artistName, musicBrainz, discogs, providerOutages));
   const spotifyReleases = await spotifyAlbums(spotify?.id, spotifyToken);
   const mbReleases = musicBrainz?.['release-groups'] ?? [];
   const overlappingReleases = discographyOverlap(spotifyReleases, mbReleases);
@@ -1071,7 +1072,7 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
   if (musicBrainz) sources.push({ url: `https://musicbrainz.org/artist/${musicBrainz.id}`, type: 'musicbrainz', fields: ['officialName', 'country', 'city', 'genres', 'websiteUrl', 'instagramUrl', 'discography'], attribution: 'MusicBrainz artist record' });
   if (youtube) sources.push({ url: `https://www.youtube.com/channel/${youtube.id.channelId}`, type: 'youtube_channel_candidate', fields: ['youtubeChannelId', 'youtubeUrl', 'featuredVideoUrl'], attribution: 'YouTube channel candidate' });
   if (discogs?.id) sources.push({ url: `https://www.discogs.com/artist/${discogs.id}`, type: 'discogs', fields: ['officialName', 'websiteUrl', 'socialLinks'], attribution: 'Discogs artist record' });
-  sources.push(...publicProviderSearchSources(profile.apDisplayName, musicBrainz, discogs));
+  sources.push(...publicProviderSearchSources(profile.apDisplayName, musicBrainz, discogs, providerOutages));
   if (profile.apSpotifyArtistId && spotify?.id === profile.apSpotifyArtistId) signals.push('existing_spotify_artist_id');
   if (profile.apYoutubeChannelId && youtube?.id?.channelId === profile.apYoutubeChannelId) signals.push('existing_youtube_channel_id');
   const mbCountry = musicBrainz?.country ?? musicBrainz?.area?.['iso-3166-1-codes']?.[0] ?? null;

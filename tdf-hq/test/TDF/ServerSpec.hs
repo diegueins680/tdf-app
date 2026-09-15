@@ -5704,6 +5704,39 @@ spec = describe "TDF.Server helpers" $ do
             emrReactionTypeId other `shouldBe` emrReactionTypeId reaction
             length (map (redactMomentReactionIdentity "43") [reaction]) `shouldBe` 1
 
+        it "repairs legacy reaction evidence once without changing the original action time" $ do
+            now <- getCurrentTime
+            let originalTime = addUTCTime (-3600) now
+            (reactionTimes, evidenceTimes) <- runNoLoggingT $ do
+                pool <- createSqlitePool ":memory:" 1
+                liftIO $ runSqlPool initializeAuthSchema pool
+                (_otherPartyId, partyId) <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                let momentKey = toSqlKey 42 :: Social.EventMomentId
+                    reactionType = fixtureUuidKey "50800000-0000-4000-8000-000000000001"
+                    actorPartyText = T.pack (show (fromSqlKey partyId))
+                liftIO $ flip runSqlPool pool $ do
+                    rawExecute "INSERT INTO event_moment(id) VALUES (42)" []
+                    insert_ Social.EventMomentReaction
+                        { Social.eventMomentReactionMomentId = momentKey
+                        , Social.eventMomentReactionReactionTypeId = Just reactionType
+                        , Social.eventMomentReactionReaction = Nothing
+                        , Social.eventMomentReactionReactorPartyId = actorPartyText
+                        , Social.eventMomentReactionCreatedAt = originalTime
+                        }
+                liftIO $ flip runSqlPool pool $ do
+                    _ <- toggleMomentReactionDb partyId actorPartyText momentKey reactionType (Just True) now
+                    _ <- toggleMomentReactionDb partyId actorPartyText momentKey reactionType (Just True) (addUTCTime 60 now)
+                    reactions <- selectList [Social.EventMomentReactionMomentId ==. momentKey] []
+                    evidence <- selectList
+                        [ M.EngagementEventActorPartyId ==. Just partyId
+                        , M.EngagementEventEntityType ==. "event_moment"
+                        , M.EngagementEventEventType ==. "reaction_added"
+                        ] []
+                    pure (map (Social.eventMomentReactionCreatedAt . entityVal) reactions,
+                          map (M.engagementEventCreatedAt . entityVal) evidence)
+            reactionTimes `shouldBe` [originalTime]
+            evidenceTimes `shouldBe` [originalTime]
+
         it "records moment-reaction additions atomically and retains evidence after removal" $ do
             states <-
                 runNoLoggingT $ do

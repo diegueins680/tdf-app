@@ -19,6 +19,7 @@ import {
   probeImage,
   jitteredRetryDelayMs,
   optionalProviderResult,
+  publicProviderSearchSources,
   reportableLinkUrl,
   RetriableExternalProviderError,
   retryAfterDelayMs,
@@ -167,6 +168,21 @@ test('clasifica una caída transitoria de proveedor como evidencia degradada sin
     }),
     /401/,
   );
+});
+
+test('no atribuye resultados vacíos a proveedores que no estuvieron disponibles', () => {
+  const types = (outages) => publicProviderSearchSources('Artist', null, null, outages).map(({ type }) => type);
+  assert.deepEqual(types([]), ['musicbrainz_search_no_exact_match', 'discogs_search_no_exact_match']);
+  assert.deepEqual(types([{ provider: 'musicbrainz', failureClass: 'http_503' }]), ['discogs_search_no_exact_match']);
+  assert.deepEqual(types([{ provider: 'discogs', failureClass: 'network' }]), ['musicbrainz_search_no_exact_match']);
+  assert.deepEqual(types([{ provider: 'musicbrainz' }, { provider: 'discogs' }]), []);
+  assert.deepEqual(publicProviderSearchSources('Artist', { id: 'mb' }, { id: 1 }), []);
+});
+
+test('ambas rutas de investigación conservan la clasificación de indisponibilidad', async () => {
+  const source = await readFile(new URL('../artist-enrichment.mjs', import.meta.url), 'utf8');
+  assert.match(source, /publicProviderSearchSources\(artistName, musicBrainz, discogs, providerOutages\)/);
+  assert.match(source, /publicProviderSearchSources\(profile\.apDisplayName, musicBrainz, discogs, providerOutages\)/);
 });
 
 test('conserva como error una caída de red después de agotar el reintento acotado', async () => {

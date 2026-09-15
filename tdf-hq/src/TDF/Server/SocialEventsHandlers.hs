@@ -7511,6 +7511,18 @@ toggleMomentReactionDb actorPartyId actorPartyText momentKey reactionTypeId requ
                         , eventMomentReactionReactorPartyId = actorPartyText
                         , eventMomentReactionCreatedAt = now
                         }
+            -- Repair pre-evidence reactions on replay, retaining the original
+            -- action time so an old reaction cannot qualify as a new action.
+            let evidenceTime = maybe now (eventMomentReactionCreatedAt . entityVal) existingSameReaction
+            existingEvidence <- selectFirst
+                [ EngagementEventActorPartyId ==. Just actorPartyId
+                , EngagementEventEntityType ==. "event_moment"
+                , EngagementEventEntityId ==. Just (fromIntegral (fromSqlKey momentKey))
+                , EngagementEventEventType ==. "reaction_added"
+                , EngagementEventMetadata ==. Just (UUID.toText reactionTypeId)
+                , EngagementEventCreatedAt ==. evidenceTime
+                ] []
+            when (isNothing existingEvidence) $
                 insert_
                     EngagementEvent
                         { engagementEventActorPartyId = Just actorPartyId
@@ -7519,7 +7531,7 @@ toggleMomentReactionDb actorPartyId actorPartyText momentKey reactionTypeId requ
                         , engagementEventEntityId = Just (fromIntegral (fromSqlKey momentKey))
                         , engagementEventEventType = "reaction_added"
                         , engagementEventMetadata = Just (UUID.toText reactionTypeId)
-                        , engagementEventCreatedAt = now
+                        , engagementEventCreatedAt = evidenceTime
                         }
             pure True
         else do
