@@ -13549,6 +13549,16 @@
       "reviewed": true
     },
     {
+      "id": "91bea2ea84087a2dcc7f",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_reconciliation_exception",
+      "priority": "P0-security",
+      "risk": "Independent or editable environment/status filters could mislabel operational evidence or suggest that a review label permits financial actions.",
+      "justification": "Reviewed the six JSX option values against validateReconciliationFilters and the OpenAPI query contract. The two environment values and four review statuses only filter an existing read-only table; they do not define payment states, transition exceptions or authorize hold release. The API revalidates filters and strict-Admin access; echo-mismatch, pagination-reset and neutral-resolved-label tests cover the consumer. ADR 0125 documents these limits.",
+      "reviewed": true
+    },
+    {
       "id": "981b0370b1f911117959",
       "classification": "security-system-registry",
       "disposition": "retain-as-versioned-redaction-projection",
