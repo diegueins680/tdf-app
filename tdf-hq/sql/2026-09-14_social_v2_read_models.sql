@@ -89,24 +89,27 @@ BEGIN
     SELECT party_id FROM social_v2_preference WHERE discoverable AND NOT closed
     ORDER BY md5(party_id::text || current_date::text),party_id LIMIT 200
   ), candidates AS (
-    SELECT a.id,a.display_name,
+    SELECT a.id,a.display_name,r AS pair_state,
       CASE WHEN use_personalization AND EXISTS (
         SELECT 1 FROM fan_profile_genre_membership f JOIN artist_profile_genre_membership g
           ON g.genre_id=f.genre_id WHERE f.fan_party_id=actor AND g.artist_party_id=a.id
       ) THEN 1 ELSE 0 END AS shared_interest
     FROM public_sample s JOIN party a ON a.id=s.party_id
-    WHERE a.id<>actor AND social_v2_allowed(actor,a.id)
-      AND NOT EXISTS (SELECT 1 FROM social_v2_pair r
-        WHERE r.party_a=least(actor,a.id) AND r.party_b=greatest(actor,a.id)
-          AND (r.consent_a AND r.consent_b OR CASE WHEN actor=r.party_a
-            THEN r.mute_a OR r.dismiss_a OR r.follow_a ELSE r.mute_b OR r.dismiss_b OR r.follow_b END))
+      LEFT JOIN social_v2_pair r ON r.party_a=least(actor,a.id) AND r.party_b=greatest(actor,a.id)
+    WHERE a.id<>actor AND NOT a.is_org AND social_v2_live(actor)
+      AND EXISTS (SELECT 1 FROM user_credential u WHERE u.party_id=a.id AND u.active)
+      AND NOT coalesce(r.block_a OR r.block_b,false)
+      AND NOT coalesce(r.consent_a AND r.consent_b,false)
+      AND NOT coalesce(CASE WHEN actor=r.party_a THEN r.mute_a OR r.dismiss_a OR r.follow_a
+        ELSE r.mute_b OR r.dismiss_b OR r.follow_b END,false)
   ), ranked AS (
     SELECT * FROM candidates ORDER BY shared_interest DESC,
       md5(id::text || current_date::text || CASE WHEN use_personalization THEN actor::text ELSE '' END),id
     LIMIT page_size
   ) SELECT jsonb_build_object('personalized',use_personalization,'items',
     coalesce(jsonb_agg(jsonb_build_object('partyId',id,'displayName',display_name,
-      'reason',CASE WHEN shared_interest=1 THEN 'shared_interests' ELSE 'public_profile' END)), '[]'::jsonb))
+      'reason',CASE WHEN shared_interest=1 THEN 'shared_interests' ELSE 'public_profile' END,
+      'relationship',social_v2_pair_json(actor,id,pair_state))), '[]'::jsonb))
     FROM ranked);
 END $$;
 REVOKE ALL ON FUNCTION social_v2_publish_batch() FROM PUBLIC;
@@ -123,8 +126,8 @@ BEGIN
     WHERE party_id=actor),false),'personalized',coalesce((SELECT personalized FROM social_v2_preference
     WHERE party_id=actor),true),'revision',coalesce((SELECT revision FROM social_v2_preference
     WHERE party_id=actor),0),'relationships',coalesce((
-      SELECT jsonb_agg(social_v2_state(actor,id)||jsonb_build_object('displayName',display_name)) FROM (
-        SELECT a.id,a.display_name FROM social_v2_pair p JOIN party a
+      SELECT jsonb_agg(social_v2_pair_json(actor,id,pair_state)||jsonb_build_object('displayName',display_name)) FROM (
+        SELECT a.id,a.display_name,p AS pair_state FROM social_v2_pair p JOIN party a
           ON a.id=CASE WHEN p.party_a=actor THEN p.party_b ELSE p.party_a END
         WHERE (p.party_a=actor OR p.party_b=actor) AND social_v2_live(a.id)
           AND (social_v2_allowed(actor,a.id) OR CASE WHEN actor=p.party_a THEN p.block_a ELSE p.block_b END)

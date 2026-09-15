@@ -19,3 +19,19 @@ SELECT 'pair storage bytes',pg_total_relation_size('social_v2_pair');
 EXPLAIN (ANALYZE,BUFFERS) SELECT social_v2_discover(6,20);
 EXPLAIN (ANALYZE,BUFFERS) SELECT social_v2_discover(100007,20);
 EXPLAIN (ANALYZE,BUFFERS) SELECT social_v2_feed(6,NULL,20);
+SET statement_timeout='60s';
+CREATE TEMP TABLE social_benchmark_samples(kind text,elapsed_ms double precision);
+DO $$ DECLARE started timestamptz; n integer; BEGIN
+  FOR n IN 1..20 LOOP
+    started:=clock_timestamp(); PERFORM social_v2_discover(6,20);
+    INSERT INTO social_benchmark_samples VALUES('discover hub',extract(epoch FROM clock_timestamp()-started)*1000);
+    started:=clock_timestamp(); PERFORM social_v2_discover(100007,20);
+    INSERT INTO social_benchmark_samples VALUES('discover sparse',extract(epoch FROM clock_timestamp()-started)*1000);
+    started:=clock_timestamp(); PERFORM social_v2_feed(6,NULL,20);
+    INSERT INTO social_benchmark_samples VALUES('following empty',extract(epoch FROM clock_timestamp()-started)*1000);
+  END LOOP;
+END $$;
+SELECT kind,count(*) samples,round(percentile_cont(0.5) WITHIN GROUP(ORDER BY elapsed_ms)::numeric,3) p50_ms,
+  round(percentile_cont(0.95) WITHIN GROUP(ORDER BY elapsed_ms)::numeric,3) p95_ms,
+  percentile_cont(0.95) WITHIN GROUP(ORDER BY elapsed_ms)<=200 AS within_200ms
+FROM social_benchmark_samples GROUP BY kind ORDER BY kind;
