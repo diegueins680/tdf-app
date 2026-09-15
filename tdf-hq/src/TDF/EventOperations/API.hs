@@ -17,5 +17,7 @@ type EventOperationsAPI = "event-operations" :> "events" :> Capture "eventId" In
          :> ReqBody '[JSON] EventTransitionCommand
          :> Post '[JSON] EventTransitionOutcomeDTO
   :<|> "tasks" :> Capture "activityId" Int64
-         :> Get '[JSON] (Headers '[Header "Cache-Control" Text] EventOperationTaskDTO)
+       :> Get '[JSON] (Headers '[Header "Cache-Control" Text] EventOperationTaskDTO)
+  :<|> "tasks" :> Capture "activityId" Int64 :> "revisioned"
+       :> Get '[JSON] (Headers '[Header "Cache-Control" Text] EventOperationTaskWithRevisionDTO)
   )

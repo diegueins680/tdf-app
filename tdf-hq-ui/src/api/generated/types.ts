@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/event-operations/events/{eventId}/tasks/{activityId}/revisioned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the canonical task with its coherent aggregate storage revision
+         * @description Opt-in envelope; the existing task representation is unchanged. Requires the same current authenticated session and exact task.read/task.manage scope as the task route. Metadata is share-locked through the canonical projection and authorization is checked after waiting. The decimal-string revision is not an authorization or readiness certificate; RACI time windows can expire without a storage write. Query parameters cannot select an actor.
+         */
+        get: operations["getEventOperationTaskWithRevision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/event-operations/events/{eventId}/tasks/{activityId}": {
         parameters: {
             query?: never;
@@ -6810,6 +6830,12 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        /** @description Canonical ASCII decimal string in 1..9223372036854775807 (signed BIGINT maximum). Runtime decoders enforce the exact upper bound in addition to the pattern. Never convert to a JavaScript number. Not an authorization or readiness certificate. */
+        EventTaskAggregateRevision: string;
+        EventOperationTaskWithRevision: {
+            task: components["schemas"]["EventOperationTask"];
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+        };
         EventOperationTask: {
             /** Format: int64 */
             eventId: number;
@@ -12940,6 +12966,62 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getEventOperationTaskWithRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized task and matching storage revision; not a readiness certificate */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationTaskWithRevision"];
+                };
+            };
+            /** @description Invalid or unsafe integer path capture */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled; otherwise absent, foreign-event and unreadable tasks share not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Persistence or strict envelope validation failed; no raw diagnostic is returned */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
     getEventOperationTask: {
         parameters: {
             query?: never;

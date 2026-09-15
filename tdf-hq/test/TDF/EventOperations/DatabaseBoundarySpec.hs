@@ -20,6 +20,28 @@ import TDF.EventOperations.Types
 
 spec :: Spec
 spec = describe "event operations database privacy boundary" $ do
+  it "decodes a strict revision envelope and preserves exact task target binding" $ do
+    let raw = object ["task" .= taskFixture, "aggregateRevision" .= ("9223372036854775807" :: Text)]
+        decoded = decodeTaskWithRevisionRows 10 100 [taskRow raw]
+    fmap (fmap etrTask) decoded `shouldBe` Right (Just taskFixture)
+    fmap (fmap toJSON) decoded `shouldBe` Right (Just raw)
+    decodeTaskWithRevisionRows 11 100 [taskRow raw] `shouldBe` Left SnapshotDecodeError
+    decodeTaskWithRevisionRows 10 101 [taskRow raw] `shouldBe` Left SnapshotDecodeError
+    decodeTaskWithRevisionRows 10 100 [Single Nothing] `shouldBe` Right Nothing
+    decodeTaskWithRevisionRows 10 100 [] `shouldBe` Left SnapshotDecodeError
+    decodeTaskWithRevisionRows 10 100 [Single Nothing, Single Nothing] `shouldBe` Left SnapshotDecodeError
+
+  it "rejects malformed revision envelopes and applies every nested task constraint" $ do
+    let envelope task revision = object ["task" .= task, "aggregateRevision" .= revision]
+        invalid = [envelope (toJSON taskFixture) v | v <- [Null, Number 1, String "01", String "9223372036854775808"]]
+          <> [envelope (toJSON t) (String "1") | t <-
+               [taskFixture { eotVersion = 0 }, taskFixture { eotRaci = eotRaci taskFixture <> eotRaci taskFixture },
+                taskFixture { eotAccountabilityNeedsAttention = True }]]
+          <> [toJSON taskFixture, Null, object ["task" .= taskFixture],
+              object ["task" .= taskFixture, "aggregateRevision" .= ("1" :: Text), "secret" .= True]]
+    map (decodeTaskWithRevisionRows 10 100 . pure . taskRow) invalid
+      `shouldBe` replicate (length invalid) (Left SnapshotDecodeError)
+
   it "does not log arbitrary database messages, details, hints or unknown SQLSTATE bytes" $
     property $ \payload ->
       let bytes = BS.pack (payload :: String)

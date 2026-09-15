@@ -75,6 +75,57 @@ describe('EventOperations task read contract', () => {
     await expect(EventOperations.task(80, 8000)).rejects.toBe(failure);
   });
 
+  it.each(['1', '9007199254740991', '9007199254740992', '9223372036854775807'])(
+    'keeps revision %s as exact text with a captured bearer and cancellation signal', async aggregateRevision => {
+      const envelope = { task, aggregateRevision };
+      const signal = new AbortController().signal;
+      getMock.mockResolvedValue(envelope);
+      await expect(EventOperations.taskWithRevision(80, 8000, { apiToken: 'captured-test-only', signal }))
+        .resolves.toEqual(envelope);
+      expect(getMock).toHaveBeenCalledWith('/event-operations/events/80/tasks/8000/revisioned', {
+        cache: 'no-store', headers: { Authorization: 'Bearer captured-test-only' }, signal,
+      });
+      expect(postMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([undefined, null, 1, 0, true, '', '0', '01', '-1', '+1', ' 1', '1 ', '1\n', '1\r', '1e2',
+    '1.0', '١', '１', '9223372036854775808', '10000000000000000000'])(
+    'rejects invalid revision token %s without coercion', async aggregateRevision => {
+      getMock.mockResolvedValue({ task, aggregateRevision });
+      await expect(EventOperations.taskWithRevision(80, 8000)).rejects.toThrow('La respuesta de la tarea no es válida.');
+    },
+  );
+
+  it.each(invalid.map((value, index) => [index, value] as const))(
+    'retains all nested task restrictions in revision envelope %s', async (_index, value) => {
+      getMock.mockResolvedValue({ task: value, aggregateRevision: '1' });
+      await expect(EventOperations.taskWithRevision(80, 8000)).rejects.toThrow('La respuesta de la tarea no es válida.');
+    },
+  );
+
+  it('requires the opt-in envelope, never falls back and never widens old task JSON', async () => {
+    const envelope = { task, aggregateRevision: '1' };
+    for (const raw of [task, null, {}, { ...envelope, private: 'secret' }]) {
+      getMock.mockResolvedValue(raw);
+      await expect(EventOperations.taskWithRevision(80, 8000)).rejects.toThrow('La respuesta de la tarea no es válida.');
+    }
+    getMock.mockResolvedValue({ ...task, aggregateRevision: '1' });
+    await expect(EventOperations.task(80, 8000)).rejects.toThrow('La respuesta de la tarea no es válida.');
+    const failure = new Error('not_found');
+    getMock.mockRejectedValue(failure);
+    await expect(EventOperations.taskWithRevision(80, 8000)).rejects.toBe(failure);
+    expect(getMock).toHaveBeenCalledTimes(6);
+  });
+
+  it.each([0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])(
+    'rejects unsafe revisioned-read capture %s before network access', value => {
+      expect(() => EventOperations.taskWithRevision(value, 8000)).toThrow('identificadores');
+      expect(() => EventOperations.taskWithRevision(80, value)).toThrow('identificadores');
+      expect(getMock).not.toHaveBeenCalled();
+    },
+  );
+
   it('preserves the existing snapshot and idempotent transition contracts', async () => {
     getMock.mockResolvedValue({ eventId: 80 });
     postMock.mockResolvedValue({ version: 2 });

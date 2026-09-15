@@ -10,6 +10,8 @@ module TDF.EventOperations.DatabaseBoundary
   , loadSnapshot
   , decodeTaskRows
   , loadTask
+  , decodeTaskWithRevisionRows
+  , loadTaskWithRevision
   ) where
 
 import Control.Exception
@@ -76,23 +78,40 @@ decodeTaskRows
 decodeTaskRows _ _ [Single Nothing] = Right Nothing
 decodeTaskRows eventId activityId [Single (Just raw)] =
   case eitherDecodeStrict' (TE.encodeUtf8 raw) of
-    Right task | valid task -> Right (Just task)
+    Right task | validTask eventId activityId task -> Right (Just task)
     _ -> Left SnapshotDecodeError
-  where
-    valid task =
+decodeTaskRows _ _ _ = Left SnapshotDecodeError
+
+validTask :: Int64 -> Int64 -> EventOperationTaskDTO -> Bool
+validTask eventId activityId task =
       eotEventId task == eventId && eotActivityId task == activityId
       && all isSafePositiveInteger
         ([eotEventId task, eotActivityId task, eotVersion task] <> map eraPartyId (eotRaci task))
       && maybe True (isSafePositiveInteger . etpVersion) (eotPolicy task)
       && Set.size (Set.fromList [(eraPartyId a, eraRole a) | a <- eotRaci task]) == length (eotRaci task)
       && eotAccountabilityNeedsAttention task == needsAttention task
-    needsAttention task = maybe False etpRequiresAccountability (eotPolicy task)
-      && (length (filter ((== RaciAccountable) . eraRole) (eotRaci task)) /= 1
-          || not (any ((== RaciResponsible) . eraRole) (eotRaci task)))
-decodeTaskRows _ _ _ = Left SnapshotDecodeError
+  where
+    needsAttention value = maybe False etpRequiresAccountability (eotPolicy value)
+      && (length (filter ((== RaciAccountable) . eraRole) (eotRaci value)) /= 1
+          || not (any ((== RaciResponsible) . eraRole) (eotRaci value)))
 
 loadTask :: Int64 -> Int64 -> Int64 -> SqlPersistT IO (Maybe EventOperationTaskDTO)
 loadTask eventId activityId actorPartyId = do
   rows <- rawSql "SELECT event_operation_read_task(?, ?, ?)::text"
     [PersistInt64 eventId, PersistInt64 activityId, PersistInt64 actorPartyId]
   either (liftIO . throwIO) pure (decodeTaskRows eventId activityId rows)
+
+decodeTaskWithRevisionRows :: Int64 -> Int64 -> [Single (Maybe Text)]
+  -> Either SnapshotDecodeError (Maybe EventOperationTaskWithRevisionDTO)
+decodeTaskWithRevisionRows _ _ [Single Nothing] = Right Nothing
+decodeTaskWithRevisionRows eventId activityId [Single (Just raw)] =
+  case eitherDecodeStrict' (TE.encodeUtf8 raw) of
+    Right result | validTask eventId activityId (etrTask result) -> Right (Just result)
+    _ -> Left SnapshotDecodeError
+decodeTaskWithRevisionRows _ _ _ = Left SnapshotDecodeError
+
+loadTaskWithRevision :: Int64 -> Int64 -> Int64 -> SqlPersistT IO (Maybe EventOperationTaskWithRevisionDTO)
+loadTaskWithRevision eventId activityId actorPartyId = do
+  rows <- rawSql "SELECT event_operation_read_task_with_revision(?, ?, ?)::text"
+    [PersistInt64 eventId, PersistInt64 activityId, PersistInt64 actorPartyId]
+  either (liftIO . throwIO) pure (decodeTaskWithRevisionRows eventId activityId rows)

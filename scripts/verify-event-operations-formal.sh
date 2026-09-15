@@ -91,6 +91,9 @@ expect_counterexample TaskCommitWriteSkew.cfg NoOrphanResponsibilities write-ske
 run_tlc TaskRevision.tla TaskRevision.cfg task-revision
 expect_counterexample TaskRevisionRaci.cfg NoStaleCommit task-revision-raci TaskRevision.tla
 expect_counterexample TaskRevisionEarly.cfg NoStaleCommit task-revision-early TaskRevision.tla
+run_tlc TaskRevisionRead.tla TaskRevisionRead.cfg task-revision-read
+expect_counterexample TaskRevisionReadMixed.cfg CoherentRevisionRead task-revision-read-mixed TaskRevisionRead.tla
+expect_counterexample TaskRevisionReadEarly.cfg NoExpiredDisclosure task-revision-read-early TaskRevisionRead.tla
 run_tlc ReceiptReplay.tla ReceiptReplay.cfg receipt-replay
 expect_counterexample ReceiptReplayBypass.cfg NoUnauthorizedDisclosure replay-bypass ReceiptReplay.tla
 expect_counterexample ReceiptReplayStaleClock.cfg NoUnauthorizedDisclosure replay-clock ReceiptReplay.tla

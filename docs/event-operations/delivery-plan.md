@@ -173,3 +173,10 @@ internal guard compares after waiting; public task reads and clients remain unch
 See [the revision contract](task-revision-contract.md) and [PR 21 evidence](pr-21-task-aggregate-revision.md).
 This database-only foundation does not enable editing, expose versions to scoped readers,
 implement idempotent commands, or replace current authorization and final-state validation.
+
+The twenty-second branch, `feat/event-task-revisioned-read`, builds on PR 21 with an opt-in
+authenticated read envelope and exact decimal-string revision. It shares metadata locking
+with existing transactional tracking and reuses the old canonical projector. Old task JSON,
+UI behavior and production activation remain unchanged. See [the contract](task-revisioned-read-contract.md)
+and [PR 22 evidence](pr-22-task-revisioned-read.md). Authenticated task/RACI command receipts,
+immutable mutation audit, editor conflict handling and mobile adoption remain separate work.

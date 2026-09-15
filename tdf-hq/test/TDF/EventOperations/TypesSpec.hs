@@ -2,17 +2,38 @@
 
 module TDF.EventOperations.TypesSpec (spec) where
 
-import Data.Aeson (eitherDecode, encode)
+import Data.Aeson (Value(..), eitherDecode, encode, toJSON)
+import Data.Int (Int64)
+import qualified Data.Text as T
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.List (isInfixOf)
 import Servant.Server (errHTTPCode)
 import Test.Hspec
+import Test.QuickCheck (choose, forAll)
 
 import TDF.EventOperations.Server (eventOperationDomainError)
 import TDF.EventOperations.Types
 
 spec :: Spec
 spec = describe "event operations executable API contracts" $ do
+  it "round-trips generated positive signed BIGINT revisions as exact decimal strings" $
+    forAll (choose (1, maxBound :: Int64)) $ \n ->
+      let raw = T.pack (show n)
+      in case parseEventTaskAggregateRevision raw of
+        Nothing -> False
+        Just revision -> toJSON revision == String raw && eitherDecode (encode revision) == Right revision
+
+  it "preserves revision boundaries above JavaScript's numeric precision" $ do
+    let valid = ["1", "9007199254740991", "9007199254740992", "9223372036854775807"]
+    map (fmap toJSON . parseEventTaskAggregateRevision) valid `shouldBe` map (Just . String) valid
+
+  it "rejects noncanonical, numeric, null and overflowing revision tokens" $ do
+    let invalid = ["", "0", "-1", "+1", "01", " 1", "1 ", "1\n", "1\r", "1e2", "1.0", "١", "１",
+                   "9223372036854775808", "10000000000000000000"]
+    map parseEventTaskAggregateRevision invalid `shouldBe` replicate (length invalid) Nothing
+    map (eitherDecode :: BL8.ByteString -> Either String EventTaskAggregateRevision) ["1", "null", "{}", "true"]
+      `shouldSatisfy` all (either (const True) (const False))
+
   it "keeps both exact numeric transport endpoints and rejects their outside neighbors" $
     map isSafePositiveInteger [-1, 0, 1, 9007199254740991, 9007199254740992]
       `shouldBe` [False, False, True, True, False]

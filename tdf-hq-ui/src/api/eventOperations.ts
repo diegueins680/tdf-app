@@ -7,6 +7,7 @@ export type EventOperationSnapshot = components['schemas']['EventOperationSnapsh
 export type EventTransitionCommand = components['schemas']['EventTransitionCommand'];
 export type EventTransitionOutcome = components['schemas']['EventTransitionOutcome'];
 export type EventOperationTask = components['schemas']['EventOperationTask'];
+export type EventOperationTaskWithRevision = components['schemas']['EventOperationTaskWithRevision'];
 
 const safeInteger = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const taskSchema: z.ZodType<EventOperationTask> = z.object({
@@ -34,6 +35,12 @@ const taskSchema: z.ZodType<EventOperationTask> = z.object({
   }
 });
 
+const revisionedTaskSchema: z.ZodType<EventOperationTaskWithRevision> = z.object({
+  task: taskSchema,
+  aggregateRevision: z.string().regex(/^[1-9][0-9]{0,18}(?![\s\S])/)
+    .refine(value => value.length < 19 || value <= '9223372036854775807'),
+}).strict();
+
 const taskPath = (eventId: number, activityId: number) => {
   if (![eventId, activityId].every(value => Number.isSafeInteger(value) && value > 0)) {
     throw new Error('Los identificadores de evento y tarea deben ser enteros positivos seguros.');
@@ -45,6 +52,18 @@ const eventPath = (eventId: number) =>
   `/event-operations/events/${encodeURIComponent(String(eventId))}`;
 
 export const EventOperations = {
+  taskWithRevision: (eventId: number, activityId: number, context?: { apiToken?: string; signal?: AbortSignal }): Promise<EventOperationTaskWithRevision> =>
+    get<unknown>(`${taskPath(eventId, activityId)}/revisioned`, {
+      cache: 'no-store',
+      ...(context?.apiToken ? { headers: { Authorization: `Bearer ${context.apiToken}` } } : {}),
+      ...(context?.signal ? { signal: context.signal } : {}),
+    }).then(raw => {
+      const result = revisionedTaskSchema.safeParse(raw);
+      if (!result.success || result.data.task.eventId !== eventId || result.data.task.activityId !== activityId) {
+        throw new Error('La respuesta de la tarea no es válida. Vuelve a intentarlo.');
+      }
+      return result.data;
+    }),
   task: (eventId: number, activityId: number, context?: { apiToken?: string; signal?: AbortSignal }): Promise<EventOperationTask> =>
     get<unknown>(taskPath(eventId, activityId), {
       cache: 'no-store',

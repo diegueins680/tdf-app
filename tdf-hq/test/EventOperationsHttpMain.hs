@@ -63,6 +63,46 @@ main = do
 
 httpSpec :: ConnectionPool -> HTTP.Manager -> Int -> Spec
 httpSpec pool manager port = describe "event operations authenticated HTTP / PostgreSQL" $ do
+  it "opts into a coherent revision envelope without changing old task JSON or domain records" $ do
+    before <- scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8000"
+    original <- send "GET" "/80/tasks/8000" (auth owner) Nothing
+    response <- send "GET" "/80/tasks/8000/revisioned" (auth owner) Nothing
+    expectStatus 200 response
+    decode (HTTP.responseBody response) `shouldBe` Just (object
+      ["task" .= (decode (HTTP.responseBody original) :: Maybe Value),
+       "aggregateRevision" .= T.pack (show before)])
+    lookup "Cache-Control" (HTTP.responseHeaders response) `shouldBe` Just "private, no-store"
+    send "GET" "/80/tasks/8000/revisioned" (auth collaborator) Nothing >>= expectStatus 200
+    scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8000" `shouldReturn` before
+    countFor "event_operation_audit_event" 80 `shouldReturn` 0
+    countFor "event_operation_command_receipt" 80 `shouldReturn` 0
+
+  it "applies exact scope, capture and credential checks to the opt-in representation" $ do
+    missing <- send "GET" "/80/tasks/999999/revisioned" (auth collaborator) Nothing
+    forM_ ["/80/tasks/8001/revisioned", "/81/tasks/8000/revisioned"] $ \path ->
+      send "GET" path (auth collaborator) Nothing >>= expectOpaque missing
+    send "GET" "/80/tasks/8000/revisioned?actorPartyId=1" (auth outsider) Nothing >>= expectOpaque missing
+    forM_ ["/80/tasks/no-id/revisioned", "/80/tasks/0/revisioned", "/0/tasks/8000/revisioned",
+           "/80/tasks/9007199254740992/revisioned"] $ \path ->
+      send "GET" path (auth owner) Nothing >>= expectStatus 400
+    forM_ [[], auth "unknown", auth "http-inactive-test-token", auth "http-reset-test-token"] $ \headers ->
+      send "GET" "/80/tasks/8000/revisioned" headers Nothing >>= expectStatus 401
+
+  it "transports the maximum BIGINT revision losslessly over real HTTP" $ do
+    before <- scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8000"
+    bracket_ (execute "UPDATE event_operation_task_revision SET revision=9223372036854775807 WHERE activity_id=8000")
+             (execute ("UPDATE event_operation_task_revision SET revision=" <> T.pack (show before) <> " WHERE activity_id=8000")) $ do
+      response <- send "GET" "/80/tasks/8000/revisioned" (auth owner) Nothing
+      expectStatus 200 response
+      field "aggregateRevision" response `shouldBe` Just (String "9223372036854775807")
+
+  it "fails unavailable during reader rollback and restores the opt-in route afterward" $ do
+    bracket_ (execute "ALTER FUNCTION event_operation_read_task_with_revision(BIGINT,BIGINT,BIGINT) RENAME TO revisioned_read_test_saved")
+             (execute "ALTER FUNCTION revisioned_read_test_saved(BIGINT,BIGINT,BIGINT) RENAME TO event_operation_read_task_with_revision") $ do
+      send "GET" "/80/tasks/8000/revisioned" (auth owner) Nothing >>= expectError 503 "event_operations_unavailable"
+      send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectStatus 200
+    send "GET" "/80/tasks/8000/revisioned" (auth owner) Nothing >>= expectStatus 200
+
   it "serves an exact authorized task projection without HTTP caching" $ do
     response <- send "GET" "/80/tasks/8000" (auth owner) Nothing
     expectStatus 200 response
@@ -99,6 +139,7 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
              (execute "UPDATE event_operation_grant SET scope_code='task.read',resource_kind='task',resource_id='8000' WHERE event_id=80") $ do
       send "GET" "/80" (auth collaborator) Nothing >>= expectStatus 200
       send "GET" "/80/tasks/8000" (auth collaborator) Nothing >>= expectError 404 "not_found"
+      send "GET" "/80/tasks/8000/revisioned" (auth collaborator) Nothing >>= expectError 404 "not_found"
 
   it "reauthorizes task reads after expiry and revocation without changing assignments" $ do
     bracket_ (execute "UPDATE event_operation_grant SET valid_from=clock_timestamp()-interval '2 days',valid_until=clock_timestamp()-interval '1 day' WHERE event_id=80")
@@ -120,8 +161,9 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
 
   it "sanitizes invalid task rows and a missing projection function, then recovers" $ do
     bracket_ (execute "UPDATE event_logistics_activity SET status='private-invalid-status' WHERE id=8000")
-             (execute "UPDATE event_logistics_activity SET status='planned' WHERE id=8000") $
+             (execute "UPDATE event_logistics_activity SET status='planned' WHERE id=8000") $ do
       send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectError 503 "event_operations_unavailable"
+      send "GET" "/80/tasks/8000/revisioned" (auth owner) Nothing >>= expectError 503 "event_operations_unavailable"
     bracket_ (execute "ALTER FUNCTION event_operation_read_task(BIGINT,BIGINT,BIGINT) RENAME TO task_read_test_saved")
              (execute "ALTER FUNCTION task_read_test_saved(BIGINT,BIGINT,BIGINT) RENAME TO event_operation_read_task") $
       send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectError 503 "event_operations_unavailable"
@@ -286,6 +328,7 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
     bracket_ (setFlag False) (setFlag True) $ do
       send "GET" "/70" (auth owner) Nothing >>= expectError 404 "feature_disabled"
       send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectError 404 "feature_disabled"
+      send "GET" "/80/tasks/8000/revisioned" (auth owner) Nothing >>= expectError 404 "feature_disabled"
       post 70 19 owner (body 1 "planning") >>= expectError 404 "feature_disabled"
       countFor "event_operation_audit_event" 70 `shouldReturn` 0
 
