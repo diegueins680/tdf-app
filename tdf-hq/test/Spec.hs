@@ -145,6 +145,7 @@ import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.EventOperations.TypesSpec as EventOperationsTypesSpec
+import qualified TDF.EventOperations.DatabaseBoundarySpec as EventOperationsDatabaseBoundarySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
@@ -16907,6 +16908,7 @@ main = hspec $ do
     DirectoryPolicySpec.spec
     EventDiscoverySpec.spec
     EventOperationsTypesSpec.spec
+    EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
     ArtistSpec.spec
     ServerAuthSpec.spec

@@ -1,13 +1,11 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module TDF.EventOperations.Server
   ( eventOperationsServer
   , eventOperationDomainError
   ) where
 
-import Control.Exception (SomeException, displayException, try)
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
@@ -28,6 +26,7 @@ import Servant
 import TDF.Auth (AuthedUser(..))
 import TDF.DB (Env(..))
 import TDF.EventOperations.API (EventOperationsAPI)
+import TDF.EventOperations.DatabaseBoundary (databaseFailureLog, loadSnapshot, tryDatabaseAction)
 import qualified TDF.EventOperations.Types as EventOps
 
 type EventOperationsM = ReaderT Env Handler
@@ -40,14 +39,11 @@ eventOperationsServer user eventId =
 runEventOperationsDb :: SqlPersistT IO a -> EventOperationsM a
 runEventOperationsDb action = do
   Env{envPool} <- ask
-  result <- liftIO (try (runSqlPool action envPool))
+  result <- liftIO (tryDatabaseAction (runSqlPool action envPool))
   case result of
     Right value -> pure value
-    Left (failure :: SomeException) -> do
-      liftIO $ BL8.putStrLn $ encode $ object
-        [ "event" .= ("event_operations_database_error" :: Text)
-        , "detail" .= displayException failure
-        ]
+    Left failure -> do
+      liftIO $ BL8.putStrLn $ encode (databaseFailureLog failure)
       throwError err503
         { errBody = encode (object ["code" .= ("event_operations_unavailable" :: Text)])
         , errHeaders = [("Content-Type", "application/json")]
@@ -73,61 +69,10 @@ getEventOperationsSnapshot
   -> EventOperationsM EventOps.EventOperationSnapshotDTO
 getEventOperationsSnapshot user eventId = do
   requireEventOperationsEnabled
-  snapshot <- runEventOperationsDb (loadSnapshotDb eventId actorPartyId)
+  snapshot <- runEventOperationsDb (loadSnapshot eventId actorPartyId)
   maybe (throwError (eventOperationDomainError "not_found")) pure snapshot
   where
     actorPartyId = fromSqlKey (auPartyId user)
-
-loadSnapshotDb
-  :: Int64
-  -> Int64
-  -> SqlPersistT IO (Maybe EventOps.EventOperationSnapshotDTO)
-loadSnapshotDb eventId actorPartyId = do
-  stateRows <- rawSql
-    "SELECT state.canonical_state, state.version, state.legacy_state_code \
-    \FROM event_operation_event_state state \
-    \JOIN event_operation_feature_flag flag \
-    \  ON flag.feature_code = 'event.operations.api' AND flag.enabled \
-    \WHERE state.event_id = ? \
-    \  AND event_operation_actor_can_read(state.event_id, ?) \
-    \FOR SHARE OF state"
-    [PersistInt64 eventId, PersistInt64 actorPartyId]
-      :: SqlPersistT IO [(Single Text, Single Int64, Single (Maybe Text))]
-  case stateRows of
-    [(Single stateText, Single version, Single legacyStateCode)] -> do
-      capabilityRows <- rawSql
-        "SELECT capability.scope_code \
-        \FROM event_operation_actor_capabilities(?, ?) capability \
-        \ORDER BY capability.scope_code"
-        [PersistInt64 eventId, PersistInt64 actorPartyId]
-          :: SqlPersistT IO [Single Text]
-      transitionRows <- rawSql
-        "SELECT policy.to_state \
-        \FROM event_operation_lifecycle_transition_policy policy \
-        \JOIN event_operation_transition_capability capability \
-        \  ON capability.from_state = policy.from_state \
-        \ AND capability.to_state = policy.to_state \
-        \ AND capability.write_enabled \
-        \WHERE policy.from_state = ? AND policy.active \
-        \  AND event_operation_actor_has_authority(?, ?, policy.required_authority) \
-        \ORDER BY policy.to_state"
-        [PersistText stateText, PersistInt64 eventId, PersistInt64 actorPartyId]
-          :: SqlPersistT IO [Single Text]
-      case
-        ( EventOps.parseEventLifecycleState stateText
-        , traverse (EventOps.parseEventLifecycleState . unSingle) transitionRows
-        ) of
-          (Just canonicalState, Just availableTransitions) ->
-            pure $ Just EventOps.EventOperationSnapshotDTO
-              { EventOps.eosEventId = eventId
-              , EventOps.eosCanonicalState = canonicalState
-              , EventOps.eosVersion = version
-              , EventOps.eosLegacyStateCode = legacyStateCode
-              , EventOps.eosCapabilities = map unSingle capabilityRows
-              , EventOps.eosAvailableTransitions = availableTransitions
-              }
-          _ -> pure Nothing
-    _ -> pure Nothing
 
 applyEventTransition
   :: AuthedUser

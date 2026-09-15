@@ -37,3 +37,13 @@ map to `ReceiptReplay` / `NoUnauthorizedDisclosure` / `ReceiptBindingPreserved`,
 and `test-event-operations-api-migration.sh` (revocation, expiration, downgrade, actor/hash/event
 binding, RC/RR/Serializable scope races, immutable receipt and duplicate-effect checks).
 This is the SQL command boundary, not full HTTP/session/offline synchronization verification.
+
+The sixth branch maps EO-045/EO-051/EO-055 to `SnapshotRead.NoUnauthorizedSnapshot`,
+`CoherentProjection` and `LogFieldsAllowlisted`. `event_operation_read_snapshot` locks the feature
+flag and event state before checking current access, then projects capabilities/transitions at one
+instant. `TDF.EventOperations.DatabaseBoundary.loadSnapshot` decodes that result into the unchanged
+typed API; the server's database boundary emits only allowlisted categories and rethrows cancellation.
+Evidence: `event_operations_snapshot_assertions.sql`, RC/RR/Serializable snapshot races and a
+feature-disable race in `test-event-operations-api-migration.sh`, `DatabaseBoundarySpec` (including
+QuickCheck) and `EventOperationsBoundaryMain` against disposable PostgreSQL. These are database and
+production-adapter tests, not an authenticated HTTP, stale-session or offline-client E2E claim.

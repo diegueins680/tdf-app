@@ -158,6 +158,19 @@ on the contextual authorization, time-window, history and HTTP conflict handling
 
 ### Pending product work
 
+The sixth dependent branch, `fix/event-snapshot-privacy-boundary`, closes the documented GET and
+database-error logging gaps. `SnapshotRead` passed before implementation (1,133 generated / 296
+distinct states, depth 12), with three expected negative-control violations; the full pinned
+TLC/Alloy runner passed. Snapshots use post-lock current authorization and one projection instant,
+filter self-approval, and decode through the real typed PostgreSQL adapter. Logs contain only an
+allowlisted event/category; cancellation is preserved. The final disposable PostgreSQL suite,
+including three isolation-level revocation races, a disable race and rollback/reapply, passed with
+10 Hspec examples and 100 QuickCheck cases. Task-commit regression, repository formal audit (0
+critical/errors, 351 warnings), its four tests, shell/YAML and whitespace checks passed as well.
+The full 209-module Stack build was interrupted with exit 130 and is not a pass; only the focused
+production adapter/DTO/spec compilation and runtime checks are verified. See
+[PR 06](pr-06-snapshot-privacy.md) for exact commands and the remaining HTTP/session/offline limits.
+
 The fifth dependent branch, `fix/event-command-replay-authorization`, closes the SQL receipt replay
 bypass with fresh read/write scope checks and an authorization epoch that serializes scope edits
 with lifecycle commands. The new `ReceiptReplay` finite model and all three negative controls pass

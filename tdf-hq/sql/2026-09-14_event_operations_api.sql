@@ -597,4 +597,65 @@ BEGIN
 END
 $$;
 
+CREATE OR REPLACE FUNCTION event_operation_read_snapshot(
+  target_event_id BIGINT,
+  target_actor_party_id BIGINT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+VOLATILE
+SECURITY INVOKER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  state_record event_operation_event_state%ROWTYPE;
+  checked_at TIMESTAMPTZ;
+  snapshot JSONB;
+BEGIN
+  -- Shared readers coexist. A flag disable must serialize with snapshot decisions.
+  PERFORM 1 FROM event_operation_feature_flag
+    WHERE feature_code = 'event.operations.api' AND enabled FOR SHARE;
+  IF NOT FOUND THEN RETURN NULL; END IF;
+
+  -- Do not evaluate permission in the locking SELECT's pre-wait snapshot.
+  SELECT * INTO state_record FROM event_operation_event_state
+    WHERE event_id = target_event_id FOR SHARE;
+  IF NOT FOUND THEN RETURN NULL; END IF;
+
+  checked_at := clock_timestamp();
+  IF NOT event_operation_actor_can_read(target_event_id, target_actor_party_id, checked_at) THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT jsonb_strip_nulls(jsonb_build_object(
+    'eventId', target_event_id,
+    'canonicalState', state_record.canonical_state,
+    'version', state_record.version,
+    'legacyStateCode', state_record.legacy_state_code,
+    'capabilities', COALESCE((
+      SELECT jsonb_agg(capability.scope_code ORDER BY capability.scope_code)
+      FROM event_operation_actor_capabilities(target_event_id, target_actor_party_id, checked_at) capability
+    ), '[]'::jsonb),
+    'availableTransitions', COALESCE((
+      SELECT jsonb_agg(policy.to_state ORDER BY policy.to_state)
+      FROM event_operation_lifecycle_transition_policy policy
+      JOIN event_operation_transition_capability capability
+        ON capability.from_state = policy.from_state AND capability.to_state = policy.to_state
+        AND capability.write_enabled
+      WHERE policy.from_state = state_record.canonical_state AND policy.active
+        AND event_operation_actor_has_authority(target_event_id, target_actor_party_id,
+                                               policy.required_authority, checked_at)
+        AND (policy.to_state <> 'approved' OR EXISTS (
+          SELECT 1 FROM (
+            SELECT transition.actor_party_id FROM event_operation_transition transition
+            WHERE transition.event_id = target_event_id AND transition.to_state = 'pending_approval'
+            ORDER BY transition.created_at DESC, transition.id DESC LIMIT 1
+          ) requester WHERE requester.actor_party_id <> target_actor_party_id
+        ))
+    ), '[]'::jsonb)
+  )) INTO snapshot;
+  RETURN snapshot;
+END
+$$;
+
 COMMIT;
