@@ -173,7 +173,10 @@ harness exit, including its post-test rollback checks, was observed at 16:41:22.
 2. In an authorized environment, inspect the existing strict-admin reconciliation
    aggregates and query dead letters. They are operational summaries, not booked
    cash/settlements. Individual exception navigation and automated release are
-   still missing. An authorized DB operator can select the exact review below;
+   missing in this increment. The subsequent
+   [read-only evidence view](reconciliation-evidence-2026-09-15.md) adds individual
+   navigation, but still no automated release. An authorized DB operator can
+   select the exact review below;
    this sample was not run against staging or production.
 3. Independently verify the original provider resource in the qualified merchant
    environment. Compare the observed amount/currency and checkout binding with
