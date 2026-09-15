@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 import {
   captureContextualReputationGate,
@@ -145,6 +145,25 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   );
   for (const migration of manifest.migrations) {
     assert.equal(normalizeFullSha(migration.introducedBy), migration.introducedBy);
+    assert.equal(
+      existsSync(new URL(`../../${migration.path}`, import.meta.url)),
+      true,
+      `${migration.path} must exist`,
+    );
+  }
+
+  const migrationIndex = (id) => manifest.migrations.findIndex((migration) => migration.id === id);
+  for (const [prerequisite, dependent] of [
+    ['2026-09-06_user_onboarding_progress', '2026-09-07_user_experiment_assignment'],
+    ['2026-09-07_directory_event_visibility_and_favorite_evidence', '2026-09-08_event_rsvp_identity_privacy_feed'],
+    ['2026-09-07_artist_merch_storefronts', '2026-09-08_merch_reputation'],
+    ['2026-09-09_canonical_payment_lifecycle', '2026-09-10_payment_attempt_intent_binding'],
+  ]) {
+    assert.ok(migrationIndex(prerequisite) >= 0, `${prerequisite} must be registered`);
+    assert.ok(
+      migrationIndex(prerequisite) < migrationIndex(dependent),
+      `${prerequisite} must precede ${dependent}`,
+    );
   }
 
   const resumeIndex = manifest.migrations.findIndex(
