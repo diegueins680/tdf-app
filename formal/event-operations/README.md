@@ -51,6 +51,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `TaskRevisionRead.cfg` | One reader/writer, staged uncommitted write, two revisions, clock 0–3, expiry 2; no fairness | PASS; 400 generated, 192 distinct states, depth 11 |
+| `TaskRevisionReadMixed/Early.cfg` | Omit metadata fence or use pre-wait authority | Expected exit 12 with `CoherentRevisionRead` / `NoExpiredDisclosure`; both detected |
 | `TaskRevision.cfg` | Two captured commands, one independent RACI write, activity 0–2, RACI 0–1, revision 1–4; no fairness | PASS; 110 generated, 93 distinct states, depth 8 |
 | `TaskRevisionRaci/Early.cfg` | Omit RACI revision advancement or compare before the write fence | Expected exit 12 with `NoStaleCommit`; both detected |
 | `TaskView.cfg` | 3 generations, 2 read slots, 2 targets, 2 accounts plus logged out; no network fairness | PASS; 2,617 generated, 898 distinct states, depth 7 |
@@ -92,6 +94,11 @@ it is not reported as a pass. The checked configuration was reduced to two comma
 all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Coverage
+
+- `TaskRevisionRead.tla`: coherent opt-in storage revision and canonical task projection
+  under a shared metadata fence, with authorization checked after waiting. See the
+  [revisioned-read contract](../../docs/event-operations/task-revisioned-read-contract.md)
+  for MVCC refinement assumptions, read-lock costs and exact-string transport limits.
 
 - `TaskView.tla`: current-generation task rendering and validated receipt consumption.
   Session/target/reload changes hide the old receipt; old responses cannot become visible.

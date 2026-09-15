@@ -17,6 +17,9 @@ on:
       - "scripts/test-event-task-commit-migration.sh"
       - "scripts/test-event-task-read-migration.sh"
       - "scripts/test-event-task-revision-migration.sh"
+      - "scripts/test-event-task-revisioned-read-migration.sh"
+      - "scripts/__tests__/event-task-revisioned-read-runner.test.mjs"
+      - "tdf-hq/test/integration/event_task_revisioned_read_*.sql"
       - "scripts/__tests__/event-task-revision-runner.test.mjs"
       - "tdf-hq/test/integration/event_task_revision_assertions.sql"
       - "tdf-hq/test/integration/event_task_read_assertions.sql"
@@ -74,6 +77,9 @@ on:
       - "scripts/test-event-task-commit-migration.sh"
       - "scripts/test-event-task-read-migration.sh"
       - "scripts/test-event-task-revision-migration.sh"
+      - "scripts/test-event-task-revisioned-read-migration.sh"
+      - "scripts/__tests__/event-task-revisioned-read-runner.test.mjs"
+      - "tdf-hq/test/integration/event_task_revisioned_read_*.sql"
       - "scripts/__tests__/event-task-revision-runner.test.mjs"
       - "tdf-hq/test/integration/event_task_revision_assertions.sql"
       - "tdf-hq/test/integration/event_task_read_assertions.sql"
@@ -203,6 +209,19 @@ jobs:
         run: node --test scripts/__tests__/event-task-revision-runner.test.mjs
       - name: Check aggregate task revisions and concurrent commands
         run: sh scripts/test-event-task-revision-migration.sh
+
+  postgres-task-revisioned-read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Check revisioned reader test isolation and prerequisite ordering
+        run: node --test scripts/__tests__/event-task-revisioned-read-runner.test.mjs
+      - name: Check task revision snapshots, expiry and concurrent writers
+        run: sh scripts/test-event-task-revisioned-read-migration.sh
 
   postgres-complete-schema:
     runs-on: ubuntu-latest

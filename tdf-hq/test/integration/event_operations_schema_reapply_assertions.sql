@@ -4,10 +4,13 @@ SELECT event_rehearsal.check_that(
 SELECT event_rehearsal.check_that(
   to_regprocedure('event_operation_read_snapshot(bigint,bigint)') IS NOT NULL
   AND to_regprocedure('event_operation_read_task(bigint,bigint,bigint)') IS NOT NULL
+  AND to_regprocedure('event_operation_read_task_with_revision(bigint,bigint,bigint)') IS NOT NULL
   AND to_regprocedure('event_operation_apply_transition(bigint,bigint,uuid,bigint,text,text,text,text)') IS NOT NULL,
   'roll-forward restores the entry points');
 SELECT event_rehearsal.check_that(event_operation_read_task(900010,900010,900001) IS NULL,
   'restored task read remains disabled');
+SELECT event_rehearsal.check_that(event_operation_read_task_with_revision(900010,900010,900001) IS NULL,
+  'restored revision envelope remains disabled');
 SELECT event_rehearsal.check_that(
   (SELECT snapshot=event_rehearsal.history_rows() FROM event_rehearsal.expected_history),
   'roll-forward preserves exact history');

@@ -53,10 +53,12 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
       accepted <- transition pool user eventId eventId 1 Planning
       expectRight accepted
       taskSnapshot pool user eventId >>= expectRight
+      revisionedTaskSnapshot pool user eventId >>= expectRight
       before <- receipt pool eventId
       execute pool mutation [PersistText token]
       snapshot pool user eventId >>= expect401
       taskSnapshot pool user eventId >>= expect401
+      revisionedTaskSnapshot pool user eventId >>= expect401
       transition pool user eventId eventId 1 Planning >>= expect401
       transition pool user eventId (eventId+1000) 2 PendingApproval >>= expect401
       receipt pool eventId `shouldReturn` before
@@ -70,8 +72,10 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
     (token,user) <- seedSession pool 106
     snapshot pool (user { auSessionWitness = Nothing }) 106 >>= expect401
     taskSnapshot pool (user { auSessionWitness = Nothing }) 106 >>= expect401
+    revisionedTaskSnapshot pool (user { auSessionWitness = Nothing }) 106 >>= expect401
     snapshot pool (user { auPartyId = toSqlKey 3 }) 106 >>= expect401
     taskSnapshot pool (user { auPartyId = toSqlKey 3 }) 106 >>= expect401
+    revisionedTaskSnapshot pool (user { auPartyId = toSqlKey 3 }) 106 >>= expect401
     execute pool "UPDATE api_token SET party_id=3 WHERE token=?" [PersistText token]
     snapshot pool (user { auPartyId = toSqlKey 3 }) 106 >>= expect401
     eventCounts pool 106 `shouldReturn` [0,0,0,1]
@@ -103,7 +107,7 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
     snapshot pool user 109 >>= expectRight
     eventCounts pool 109 `shouldReturn` [0,0,0,1]
 
-  forM_ (zip [110..] ["read","new","replay","task"]) $ \(eventId, mode) ->
+  forM_ (zip [110..] ["read","new","replay","task","revisioned"]) $ \(eventId, mode) ->
     it ("rejects real HTTP " <> mode <> " when revoked after production authentication") $ do
       (token,user) <- seedSession pool eventId
       if mode == "replay" then transition pool user eventId eventId 1 Planning >>= expectRight else pure ()
@@ -152,7 +156,13 @@ transition pool user eventId key version target =
 taskSnapshot :: ConnectionPool -> AuthedUser -> Int64
              -> IO (Either ServerError (Headers '[Header "Cache-Control" Text] EventOperationTaskDTO))
 taskSnapshot pool user eventId =
-  let _ :<|> _ :<|> getTask = eventOperationsServer user eventId
+  let _ :<|> _ :<|> getTask :<|> _ = eventOperationsServer user eventId
+  in runHandler (runReaderT (getTask (eventId + 10000)) (Env pool httpTestConfig))
+
+revisionedTaskSnapshot :: ConnectionPool -> AuthedUser -> Int64
+  -> IO (Either ServerError (Headers '[Header "Cache-Control" Text] EventOperationTaskWithRevisionDTO))
+revisionedTaskSnapshot pool user eventId =
+  let _ :<|> _ :<|> _ :<|> getTask = eventOperationsServer user eventId
   in runHandler (runReaderT (getTask (eventId + 10000)) (Env pool httpTestConfig))
 
 commandKey :: Int64 -> UUID.UUID
@@ -312,8 +322,9 @@ httpAfterAuthentication pool token eventId mode revoke = do
           runReaderT action env) eventOperationsServer
   Warp.testWithApplicationSettings (Warp.setHost "127.0.0.1" Warp.defaultSettings) (pure app) $ \port -> do
     manager <- HTTP.newManager HTTP.defaultManagerSettings
-    let readOnly = mode `elem` ["read", "task"]
-        suffix = if mode == "task" then "/tasks/" <> show (eventId + 10000)
+    let readOnly = mode `elem` ["read", "task", "revisioned"]
+        suffix = if mode `elem` ["task", "revisioned"] then "/tasks/" <> show (eventId + 10000)
+                    <> (if mode == "revisioned" then "/revisioned" else "")
                  else if readOnly then "" else "/transitions"
         request = HTTP.defaultRequest
           { HTTP.host = "127.0.0.1", HTTP.port = port, HTTP.secure = False

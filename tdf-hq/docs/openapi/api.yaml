@@ -9,6 +9,48 @@ servers:
     description: Development server
 
 paths:
+  /event-operations/events/{eventId}/tasks/{activityId}/revisioned:
+    get:
+      tags: [Event operations]
+      summary: Read the canonical task with its coherent aggregate storage revision
+      description: >-
+        Opt-in envelope; the existing task representation is unchanged. Requires the same
+        current authenticated session and exact task.read/task.manage scope as the task route.
+        Metadata is share-locked through the canonical projection and authorization is checked
+        after waiting. The decimal-string revision is not an authorization or readiness certificate;
+        RACI time windows can expire without a storage write. Query parameters cannot select an actor.
+      operationId: getEventOperationTaskWithRevision
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        - name: activityId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+      responses:
+        '200':
+          description: Authorized task and matching storage revision; not a readiness certificate
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: ['private, no-store'] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationTaskWithRevision' }
+        '400': { description: Invalid or unsafe integer path capture }
+        '401': { description: 'Missing, invalid or no-longer-current session' }
+        '404':
+          description: Feature disabled; otherwise absent, foreign-event and unreadable tasks share not_found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
+        '503':
+          description: Persistence or strict envelope validation failed; no raw diagnostic is returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
   /event-operations/events/{eventId}/tasks/{activityId}:
     get:
       tags: [Event operations]
@@ -7334,6 +7376,22 @@ components:
         requiresAccountability: { type: boolean }
         dependenciesGateCompletion: { type: boolean }
         version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+    EventTaskAggregateRevision:
+      type: string
+      minLength: 1
+      maxLength: 19
+      pattern: '^[1-9][0-9]{0,18}(?![\s\S])'
+      description: >-
+        Canonical ASCII decimal string in 1..9223372036854775807 (signed BIGINT maximum).
+        Runtime decoders enforce the exact upper bound in addition to the pattern.
+        Never convert to a JavaScript number. Not an authorization or readiness certificate.
+    EventOperationTaskWithRevision:
+      type: object
+      additionalProperties: false
+      required: [task, aggregateRevision]
+      properties:
+        task: { $ref: '#/components/schemas/EventOperationTask' }
+        aggregateRevision: { $ref: '#/components/schemas/EventTaskAggregateRevision' }
     EventOperationTask:
       type: object
       additionalProperties: false

@@ -12,6 +12,9 @@ module TDF.EventOperations.Types
   , EventRaciAssignmentDTO(..)
   , EventTaskPolicyDTO(..)
   , EventOperationTaskDTO(..)
+  , EventTaskAggregateRevision
+  , parseEventTaskAggregateRevision
+  , EventOperationTaskWithRevisionDTO(..)
   , isSafePositiveInteger
   , allEventLifecycleStates
   , eventLifecycleStateText
@@ -221,7 +224,33 @@ instance FromJSON EventOperationTaskDTO where
     genericParseJSON (prefixedJsonOptions 3) raw
   parseJSON raw = genericParseJSON (prefixedJsonOptions 3) raw
 
--- This JSON-number transport must never round an identity/version in JavaScript.
+-- Constructor intentionally private: revisions are canonical, bounded decimal TEXT.
+newtype EventTaskAggregateRevision = EventTaskAggregateRevision Text
+  deriving (Eq, Show)
+
+parseEventTaskAggregateRevision :: Text -> Maybe EventTaskAggregateRevision
+parseEventTaskAggregateRevision raw
+  | not (T.null raw) && T.length raw <= 19
+    && T.head raw /= '0' && T.all (\c -> c >= '0' && c <= '9') raw
+    && (T.length raw < 19 || raw <= "9223372036854775807") = Just (EventTaskAggregateRevision raw)
+  | otherwise = Nothing
+
+instance ToJSON EventTaskAggregateRevision where
+  toJSON (EventTaskAggregateRevision raw) = String raw
+instance FromJSON EventTaskAggregateRevision where
+  parseJSON = withText "EventTaskAggregateRevision" $ \raw ->
+    maybe (fail "invalid aggregate revision") pure (parseEventTaskAggregateRevision raw)
+
+data EventOperationTaskWithRevisionDTO = EventOperationTaskWithRevisionDTO
+  { etrTask :: EventOperationTaskDTO
+  , etrAggregateRevision :: EventTaskAggregateRevision
+  } deriving (Eq, Generic, Show)
+instance ToJSON EventOperationTaskWithRevisionDTO where
+  toJSON = genericToJSON (prefixedJsonOptions 3)
+instance FromJSON EventOperationTaskWithRevisionDTO where
+  parseJSON = genericParseJSON (prefixedJsonOptions 3)
+
+-- Existing JSON-number fields keep their original safe-integer restriction.
 isSafePositiveInteger :: Int64 -> Bool
 isSafePositiveInteger value = value > 0 && value <= 9007199254740991
 

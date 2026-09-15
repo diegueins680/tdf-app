@@ -3,6 +3,7 @@ SELECT event_rehearsal.check_that(
   'rollback disables event operations');
 SELECT event_rehearsal.check_that(
   to_regprocedure('event_operation_read_snapshot(bigint,bigint)') IS NULL
+  AND to_regprocedure('event_operation_read_task_with_revision(bigint,bigint,bigint)') IS NULL
   AND to_regprocedure('event_operation_apply_transition(bigint,bigint,uuid,bigint,text,text,text,text)') IS NULL,
   'rollback removes the public SQL entry points');
 SELECT event_rehearsal.check_that(

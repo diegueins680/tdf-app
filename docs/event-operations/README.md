@@ -46,6 +46,8 @@
 - [Draft PR 20: task browser startup verification](pr-20-task-browser-startup.md)
 - [Task aggregate revision contract](task-revision-contract.md)
 - [Draft PR 21: canonical task aggregate revisions](pr-21-task-aggregate-revision.md)
+- [Coherent opt-in task revision read contract](task-revisioned-read-contract.md)
+- [Draft PR 22: typed task revision read](pr-22-task-revisioned-read.md)
 - [Draft PR 18: verify exact reservation-model regeneration](pr-18-pluscal-integrity.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)

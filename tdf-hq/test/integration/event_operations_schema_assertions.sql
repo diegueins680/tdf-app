@@ -102,5 +102,14 @@ SELECT event_rehearsal.check_that(
   AND (SELECT revision=1 FROM event_operation_task_revision WHERE activity_id=900011),
   'aggregate revisions reflect two RACI inserts and one policy, with failed writes rolled back');
 SELECT event_operation_lock_task_revision(900010,900010,4);
+SELECT event_rehearsal.check_that(
+  event_operation_read_task_with_revision(900010,900010,900001) = jsonb_build_object(
+    'task',event_operation_read_task(900010,900010,900001),'aggregateRevision','4')
+  AND event_operation_read_task_with_revision(900010,900010,900002) IS NULL,
+  'full-schema opt-in revision envelope reuses scoped canonical projection');
+SELECT event_rehearsal.check_that(
+  (SELECT snapshot=event_rehearsal.history_rows() FROM event_rehearsal.expected_history)
+  AND (SELECT snapshot=event_rehearsal.legacy_rows() FROM event_rehearsal.expected_legacy),
+  'revisioned read does not mutate legacy or immutable history');
 CREATE TABLE event_rehearsal.expected_task_revisions AS
   SELECT jsonb_agg(to_jsonb(t) ORDER BY activity_id) AS snapshot FROM event_operation_task_revision t;

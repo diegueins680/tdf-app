@@ -27,7 +27,7 @@ import Servant
 import TDF.Auth (AuthedUser(..), withCurrentAuthSession)
 import TDF.DB (Env(..))
 import TDF.EventOperations.API (EventOperationsAPI)
-import TDF.EventOperations.DatabaseBoundary (databaseFailureLog, loadSnapshot, loadTask, tryDatabaseAction)
+import TDF.EventOperations.DatabaseBoundary (databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, tryDatabaseAction)
 import qualified TDF.EventOperations.Types as EventOps
 
 type EventOperationsM = ReaderT Env Handler
@@ -37,6 +37,18 @@ eventOperationsServer user eventId =
        getEventOperationsSnapshot user eventId
   :<|> applyEventTransition user eventId
   :<|> getEventTask user eventId
+  :<|> getEventTaskWithRevision user eventId
+
+getEventTaskWithRevision :: AuthedUser -> Int64 -> Int64
+  -> EventOperationsM (Headers '[Header "Cache-Control" Text] EventOps.EventOperationTaskWithRevisionDTO)
+getEventTaskWithRevision user eventId activityId = do
+  unless (all EventOps.isSafePositiveInteger [eventId, activityId]) $
+    throwError (eventOperationDomainError "invalid_request")
+  requireEventOperationsEnabled
+  task <- runEventOperationsSessionDb user $
+    loadTaskWithRevision eventId activityId (fromSqlKey (auPartyId user))
+  value <- maybe (throwError (eventOperationDomainError "not_found")) pure task
+  pure (addHeader ("private, no-store" :: Text) value)
 
 getEventTask
   :: AuthedUser -> Int64 -> Int64
