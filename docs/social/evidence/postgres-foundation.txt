@@ -123,7 +123,7 @@ CREATE FUNCTION
 REVOKE
 COMMIT
 UPDATE 1
- social_v2_publish_batch 
+ social_v2_publish_batch
 -------------------------
                        4
 (1 row)
@@ -131,7 +131,7 @@ UPDATE 1
 DO
 UPDATE 1
 INSERT 0 1
- social_v2_publish_batch 
+ social_v2_publish_batch
 -------------------------
                        1
 (1 row)
@@ -142,14 +142,14 @@ DO
 DELETE 1
 DO
 INSERT 0 1
-                    social_v2_preferences                    
+                    social_v2_preferences
 -------------------------------------------------------------
  {"revision": 1, "discoverable": true, "personalized": true}
 (1 row)
 
 DO
 DO
-                  ?column?                  
+                  ?column?
 --------------------------------------------
  PASS: 29 TLC-generated consent transitions
 (1 row)

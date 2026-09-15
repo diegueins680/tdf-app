@@ -119,7 +119,7 @@ REVOKE
 REVOKE
 COMMIT
 UPDATE 1
- social_v2_publish_batch 
+ social_v2_publish_batch
 -------------------------
                        4
 (1 row)
@@ -127,7 +127,7 @@ UPDATE 1
 DO
 UPDATE 1
 INSERT 0 1
- social_v2_publish_batch 
+ social_v2_publish_batch
 -------------------------
                        1
 (1 row)
@@ -138,7 +138,7 @@ DO
 DELETE 1
 DO
 INSERT 0 1
-                    social_v2_preferences                    
+                    social_v2_preferences
 -------------------------------------------------------------
  {"revision": 1, "discoverable": true, "personalized": true}
 (1 row)
@@ -159,13 +159,13 @@ ANALYZE
 Time: 3735.800 ms (00:03.736)
 SET
 Time: 1.013 ms
-      ?column?      |                                         version                                          
+      ?column?      |                                         version
 --------------------+------------------------------------------------------------------------------------------
  PostgreSQL version | PostgreSQL 16.13 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
 (1 row)
 
 Time: 3.380 ms
-     ?column?     |   d   | count  
+     ?column?     |   d   | count
 ------------------+-------+--------
  synthetic degree |     1 | 100004
  synthetic degree |     2 |      1
@@ -174,7 +174,7 @@ Time: 3.380 ms
 (4 rows)
 
 Time: 933.362 ms
-      ?column?      | pg_total_relation_size 
+      ?column?      | pg_total_relation_size
 --------------------+------------------------
  pair storage bytes |               14827520
 (1 row)

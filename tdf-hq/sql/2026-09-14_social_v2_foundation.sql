@@ -62,16 +62,21 @@ LANGUAGE sql STABLE AS $$
       WHERE p.party_a=least(viewer,target) AND p.party_b=greatest(viewer,target)
         AND (p.block_a OR p.block_b))
 $$;
-CREATE OR REPLACE FUNCTION social_v2_state(viewer bigint, target bigint) RETURNS jsonb
-LANGUAGE sql STABLE AS $$
+-- Pure DTO constructor: callers must establish live account/visibility policy.
+CREATE OR REPLACE FUNCTION social_v2_pair_json(viewer bigint, target bigint, p social_v2_pair)
+RETURNS jsonb LANGUAGE sql IMMUTABLE AS $$
   SELECT jsonb_build_object('partyId',target,'revision',coalesce(p.revision,0),
     'following',CASE WHEN viewer=p.party_a THEN p.follow_a ELSE coalesce(p.follow_b,false) END,
     'requested',CASE WHEN viewer=p.party_a THEN p.consent_a ELSE coalesce(p.consent_b,false) END,
     'incoming',CASE WHEN viewer=p.party_a THEN p.consent_b ELSE coalesce(p.consent_a,false) END,
-    'connected',coalesce(p.consent_a AND p.consent_b,false) AND social_v2_allowed(viewer,target),
+    'connected',coalesce(p.consent_a AND p.consent_b,false) AND NOT coalesce(p.block_a OR p.block_b,false),
     'blocked',CASE WHEN viewer=p.party_a THEN p.block_a ELSE coalesce(p.block_b,false) END,
     'muted',CASE WHEN viewer=p.party_a THEN p.mute_a ELSE coalesce(p.mute_b,false) END,
     'dismissed',CASE WHEN viewer=p.party_a THEN p.dismiss_a ELSE coalesce(p.dismiss_b,false) END)
+$$;
+CREATE OR REPLACE FUNCTION social_v2_state(viewer bigint, target bigint) RETURNS jsonb
+LANGUAGE sql STABLE AS $$
+  SELECT social_v2_pair_json(viewer,target,p)
   FROM (VALUES(1)) seed(n) LEFT JOIN social_v2_pair p
     ON p.party_a=least(viewer,target) AND p.party_b=greatest(viewer,target)
 $$;

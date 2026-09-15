@@ -2,6 +2,13 @@
 set -euo pipefail
 TDF_SOCIAL_ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 TDF_SOCIAL_CONTAINER="tdf-social-verification-$$"
+python3 - "$TDF_SOCIAL_ROOT" <<'PYHASH'
+import hashlib,sys
+from pathlib import Path
+root=Path(sys.argv[1])
+for p in sorted((root/'tdf-hq/sql').glob('*social_v2*.sql')):
+    print(hashlib.sha256(p.read_bytes()).hexdigest(),p.relative_to(root))
+PYHASH
 trap 'docker rm -f "$TDF_SOCIAL_CONTAINER" >/dev/null 2>&1 || true' EXIT
  docker run --rm -d --name "$TDF_SOCIAL_CONTAINER" -e POSTGRES_PASSWORD=synthetic-only \
   -e POSTGRES_DB=social_test postgres:16-alpine >/dev/null
