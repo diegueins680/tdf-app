@@ -209,3 +209,14 @@ Root branch `codex/payment-reconciliation-evidence-view-20260915` depends on
 reader/UI increment; mobile #81 then #82 before consuming its pinned gitlink.
 The sibling staging-qualification draft #344 does not activate this reader or a
 provider. Preserve #80's mobile social-contract additions during eventual merge.
+
+Root draft [#385](https://github.com/diegueins680/tdf-app/pull/385) was created
+and verified at **19:04:26 UTC** with base #380, 19 changed files and initial
+head `f2898c7418050013b4e304bc53b539e906aa0d0a`; `git ls-remote` independently
+matched that SHA. The first restricted push failed DNS resolution; the approved
+retry succeeded. This delivery note is a subsequent documentation-only commit.
+At that observation, hosted build, catalog, repository, web/mobile/backend,
+persona/API and preview checks were still running/pending; production-migrations
+was successful and migration-tests skipped. None of the pending checks is claimed
+as passed. Root and mobile worktrees were clean before this note. No merge or
+production deployment was performed.
