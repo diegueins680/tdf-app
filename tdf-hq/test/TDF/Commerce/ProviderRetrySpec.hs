@@ -10,6 +10,7 @@ import           Control.Monad.Logger (runNoLoggingT)
 import           Control.Monad.Reader (runReaderT)
 import           Crypto.Hash (Digest, SHA256, hash)
 import qualified Data.Aeson as A
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteArray.Encoding as BAE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
@@ -28,7 +29,7 @@ import           Database.Persist.Postgresql (createPostgresqlPool)
 import           Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool)
 import           Network.Socket (SockAddr(..))
 import qualified Network.HTTP.Client as HC
-import           Servant (ServerError, errHTTPCode, errBody, runHandler, (:<|>)(..))
+import           Servant (NoContent, ServerError, errHTTPCode, errBody, runHandler, (:<|>)(..))
 import           System.Environment (lookupEnv, setEnv, unsetEnv)
 import qualified System.Timeout as Timeout
 import           Test.Hspec
@@ -344,12 +345,14 @@ spec :: Spec
 spec = do
   providerTransportSpec
   notificationMinimizationSpec
+  notificationIdentitySpec
   configured <- runIO (lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL")
   case configured of
     Nothing -> pure ()
     Just url -> beforeAll (openDatabase url) $ afterAll destroyAllResources $
       describe "provider-retry-runtime PostgreSQL" $ do
         notificationInboxSpec
+        notificationIdentityInboxSpec
         it "serializes different keys and permits only one active attempt" $ \pool -> do
           creation <- newCheckout pool
           results <- concurrently
@@ -801,6 +804,213 @@ notificationInboxSpec = describe "minimized notification inbox" $ do
       [PersistText (Event.pecProviderEventId creation)] :: SqlPersistT IO [Single Int64]) pool
     counts `shouldBe` [Single 0]
 
+notificationIdentitySpec :: Spec
+notificationIdentitySpec = describe "provider PlaceToPay signed notification identity" $ do
+  it "pins the v2 array encoding with an independently calculated SHA-256 golden" $
+    Event.placeToPayNotificationEventId (placeToPayNotification privateMarker)
+      `shouldBe` Right "ptp-v2-59b4f46382c7696e27c2062275a40c2ae1970a83c035853876fb48b1f436c35d"
+
+  it "ignores unsigned fields, whitespace, numeric spelling, escaped keys and signature casing" $ do
+    let expected = Event.placeToPayNotificationEventId (placeToPayNotification privateMarker)
+    forM_ placeToPayReplayVariants $ \raw -> do
+      Event.placeToPayNotificationEventId raw `shouldBe` expected
+      value <- requireRight (A.eitherDecodeStrict' raw)
+      PlaceToPay.verifyPlaceToPayNotification notificationConfig value `shouldSatisfy` isRight
+
+  it "keeps different signed request IDs, statuses, dates and signatures distinct" $ do
+    let original = Event.placeToPayNotificationEventId (placeToPayNotification privateMarker)
+    forM_ [signedPlaceToPayNotification 1235 "APPROVED" "2026-09-14T12:00:00Z" "synthetic-secret" ""
+      , signedPlaceToPayNotification 1234 "REJECTED" "2026-09-14T12:00:00Z" "synthetic-secret" ""
+      , signedPlaceToPayNotification 1234 "APPROVED" "2026-09-14T12:00:01Z" "synthetic-secret" ""
+      , signedPlaceToPayNotification 1234 "APPROVED" "2026-09-14T12:00:00Z" "rotated-synthetic-secret" ""] $ \raw -> do
+        Event.placeToPayNotificationEventId raw `shouldSatisfy` isRight
+        Event.placeToPayNotificationEventId raw `shouldNotBe` original
+
+  it "does not merge different field tuples even if provider concatenation is identical" $ do
+    let first = signedPlaceToPayNotification 12 "34APPROVED" "2026-09-14T12:00:00Z" "synthetic-secret" ""
+    Event.placeToPayNotificationEventId first
+      `shouldNotBe` Event.placeToPayNotificationEventId (placeToPayNotification "")
+
+  it "rejects invalid identity shapes and redacts payload details" $
+    forM_ ["[]", "{}", "{\"SYNTHETIC-PRIVATE\":", BS.replicate (1024 * 1024 + 1) 'x'
+      , signedPlaceToPayNotification (-1) "APPROVED" "2026-09-14T12:00:00Z" "synthetic-secret" ""
+      , signedPlaceToPayNotification 1234 "APPROVED" "not-a-date" "synthetic-secret" ""] $ \raw -> do
+        let result = Event.placeToPayNotificationEventId raw
+        result `shouldSatisfy` isLeft
+        show result `shouldNotContain` "SYNTHETIC-PRIVATE"
+
+  it "never treats successful identity derivation as authentication" $ do
+    let raw = signedPlaceToPayNotification 1234 "APPROVED" "2026-09-14T12:00:00Z" "wrong-secret" ""
+    Event.placeToPayNotificationEventId raw `shouldSatisfy` isRight
+    value <- requireRight (A.eitherDecodeStrict' raw)
+    PlaceToPay.verifyPlaceToPayNotification notificationConfig value `shouldSatisfy` isLeft
+
+notificationIdentityInboxSpec :: SpecWith ConnectionPool
+notificationIdentityInboxSpec = describe "PlaceToPay signed identity inbox" $ do
+  it "refuses to bypass signed deduplication through the untrusted store" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPlaceToPay
+    runSqlPool (Event.storeUntrustedProviderEvent creation) pool >>= (`shouldSatisfy` isLeft)
+    notificationRowCount pool creation `shouldReturn` 0
+
+  it "converges concurrent raw-body and caller-ID variations on one row and one claim" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPlaceToPay
+    results <- concurrently
+      [storeNotification pool creation { Event.pecRawPayload = raw
+        , Event.pecProviderEventId = "CALLER-" <> T.pack (show n) }
+      | (n, raw) <- zip [1 :: Int ..] placeToPayReplayVariants] >>= mapM requireRight
+    length (filter Event.pesInserted results) `shouldBe` 1
+    first <- case results of
+      result : _ -> pure result
+      [] -> fail "Expected concurrent notification results"
+    map Event.pesReference results `shouldSatisfy` all (== Event.pesReference first)
+    notificationRowCount pool creation `shouldReturn` 1
+    claims <- concurrently (replicate 4 (runSqlPool
+      (Event.claimProviderEvent (Event.pesReference first) notificationTime) pool))
+    length [() | Event.ProviderEventClaimed _ <- claims] `shouldBe` 1
+
+  it "does not requeue a processed canonical notification" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPlaceToPay
+    stored <- storeNotification pool creation >>= requireRight
+    _ <- runSqlPool (Event.claimProviderEvent (Event.pesReference stored) notificationTime) pool
+    runSqlPool (Event.markProviderEventProcessed (Event.pesReference stored)
+      Nothing Nothing Nothing notificationTime) pool
+    replay <- storeNotification pool creation { Event.pecRawPayload = last placeToPayReplayVariants }
+      >>= requireRight
+    Event.pesReference replay `shouldBe` Event.pesReference stored
+    Event.pesInserted replay `shouldBe` False
+    runSqlPool (Event.claimProviderEvent (Event.pesReference replay) notificationTime) pool
+      `shouldReturn` Event.ProviderEventAlreadyHandled "processed"
+
+  it "scopes deduplication by merchant and environment" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPlaceToPay
+    results <- mapM (storeNotification pool)
+      [creation, creation { Event.pecMerchantRef = Event.pecMerchantRef creation <> "-other" }
+      , creation { Event.pecEnvironment = Checkout.CheckoutProduction }] >>= mapM requireRight
+    map Event.pesInserted results `shouldBe` [True, True, True]
+
+  it "retains separate out-of-order signed states for authoritative reconciliation" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPlaceToPay
+    let changed = creation { Event.pecRawPayload = signedPlaceToPayNotification
+          1234 "PENDING" "2026-09-14T11:00:00Z" "synthetic-secret" "" }
+    results <- mapM (storeNotification pool) [creation, changed, changed, creation] >>= mapM requireRight
+    map Event.pesInserted results `shouldBe` [True, True, False, False]
+    notificationRowCount pool creation `shouldReturn` 2
+
+  it "rejects immutable metadata changes on canonical and historical replay" $ \pool -> do
+    forM_ [False, True] $ \historical -> do
+      creation <- newNotification Checkout.ProviderPlaceToPay
+      if historical then insertHistoricalNotification pool creation >> pure ()
+        else storeNotification pool creation >>= requireRight >> pure ()
+      forM_ [creation { Event.pecProviderResource = Just "OTHER-RESOURCE" }
+        , creation { Event.pecEventType = "OTHER_EVENT" }
+        , creation { Event.pecProviderCreatedAt = Just notificationTime }] $ \changed ->
+          storeNotification pool changed >>= (`shouldSatisfy` isLeft)
+      notificationRowCount pool creation `shouldReturn` 1
+
+  it "preserves exact historical uppercase minimized evidence without rewriting it" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPlaceToPay
+    let raw = uppercasePlaceToPaySignature (Event.pecRawPayload creation)
+    -- Independently reconstruct the prior projection, which retained hex casing.
+    value <- requireRight (A.eitherDecodeStrict' raw)
+    let oldProjection = case value of
+          A.Object fields -> encodeStrict (A.Object (KM.filterWithKey
+            (\key _ -> key == "requestId" || key == "signature" || key == "status")
+            (KM.mapWithKey (\key status -> if key /= "status" then status else case status of
+              A.Object details -> A.Object (KM.delete "message" details)
+              _ -> status) fields)))
+          _ -> error "Expected synthetic object"
+        replayCreation = creation { Event.pecRawPayload = raw, Event.pecProviderEventId = legacyPlaceToPayId raw }
+    historical <- insertHistoricalNotification pool replayCreation { Event.pecRawPayload = oldProjection }
+    replay <- storeNotification pool replayCreation >>= requireRight
+    Event.pesReference replay `shouldBe` historical
+    Event.pesInserted replay `shouldBe` False
+    readStoredNotification pool replay `shouldReturn` oldProjection
+
+  it "bounds reformatted pre-upgrade delivery to one canonical row and preserves the old row" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPlaceToPay
+    historical <- insertHistoricalNotification pool creation
+    results <- concurrently
+      [storeNotification pool creation { Event.pecRawPayload = raw }
+      | raw <- drop 1 placeToPayReplayVariants] >>= mapM requireRight
+    length (filter Event.pesInserted results) `shouldBe` 1
+    notificationRowCount pool creation `shouldReturn` 2
+    replay <- storeNotification pool creation >>= requireRight
+    Event.pesReference replay `shouldBe` historical
+    readStoredNotification pool replay `shouldReturn` Event.pecRawPayload creation
+
+  it "authenticates the original callback before identity persistence at the Servant handler" $ \pool ->
+    withNotificationEnvironment $ do
+      let bad = signedPlaceToPayNotification 991238 "APPROVED" "2026-09-14T12:00:00Z" "wrong-secret" privateMarker
+      countBefore <- handlerNotificationCount pool
+      failed <- notificationHandler pool bad
+      either (\err -> do
+        errHTTPCode err `shouldBe` 401
+        BL.toStrict (errBody err) `shouldSatisfy` (not . BS.isInfixOf (TE.encodeUtf8 privateMarker)))
+        (const (expectationFailure "Forged callback was accepted")) failed
+      handlerNotificationCount pool `shouldReturn` countBefore
+      let good = signedPlaceToPayNotification 991238 "APPROVED" "2026-09-14T12:00:00Z" "synthetic-secret" privateMarker
+      notificationHandler pool good >>= (`shouldSatisfy` isRight)
+      notificationHandler pool ("\n " <> uppercasePlaceToPaySignature good <> "\n") >>= (`shouldSatisfy` isRight)
+      handlerNotificationCount pool `shouldReturn` (countBefore + 1)
+
+notificationConfig :: PlaceToPay.PlaceToPayConfig
+notificationConfig = PlaceToPay.PlaceToPayConfig Checkout.CheckoutSandbox "synthetic-login" "synthetic-secret" []
+
+legacyPlaceToPayId :: BS.ByteString -> Text
+legacyPlaceToPayId raw = "ptp-" <> digestText (TE.decodeUtf8 raw)
+
+uppercasePlaceToPaySignature :: BS.ByteString -> BS.ByteString
+uppercasePlaceToPaySignature raw = case A.eitherDecodeStrict' raw of
+  Right (A.Object fields) -> encodeStrict $ A.Object $ KM.mapWithKey
+    (\key value -> if key /= "signature" then value else case value of
+      A.String signature -> A.String (T.toUpper signature); _ -> value) fields
+  _ -> error "Expected synthetic PlaceToPay object"
+
+placeToPayReplayVariants :: [BS.ByteString]
+placeToPayReplayVariants =
+  [ placeToPayNotification privateMarker
+  , placeToPayNotification "DIFFERENT-SYNTHETIC-PRIVATE"
+  , " \n" <> placeToPayNotification "" <> "\n "
+  , uppercasePlaceToPaySignature (placeToPayNotification "")
+  , TE.encodeUtf8 (T.replace "1234" "1234.0" (TE.decodeUtf8 (placeToPayNotification "")))
+  , TE.encodeUtf8 (T.replace "requestId" "request\\u0049d" (TE.decodeUtf8 (placeToPayNotification "")))
+  , "{\"status\":{\"date\":\"2026-09-14T12:00:00Z\",\"status\":\"APPROV\\u0045D\"},"
+      <> "\"signature\":\"sha256:" <> TE.encodeUtf8 (digestText "1234APPROVED2026-09-14T12:00:00Zsynthetic-secret")
+      <> "\",\"requestId\":1234,\"reference\":\"\"}"
+  ]
+
+notificationRowCount :: ConnectionPool -> Event.ProviderEventCreation -> IO Int64
+notificationRowCount pool creation = do
+  rows <- runSqlPool (rawSql
+    "SELECT count(*) FROM commerce_provider_event_inbox WHERE provider='placetopay'\
+    \ AND merchant_account_ref=?"
+    [PersistText (Event.pecMerchantRef creation)] :: SqlPersistT IO [Single Int64]) pool
+  case rows of [Single count] -> pure count; _ -> fail "Expected one count"
+
+notificationHandler :: ConnectionPool -> BS.ByteString -> IO (Either ServerError NoContent)
+notificationHandler pool raw = do
+  let _ :<|> _ :<|> receive :<|> _ = providerExecutionServer
+  runHandler (runReaderT (receive (BL.fromStrict raw)) (Env pool (error "Notification must not use AppConfig")))
+
+handlerNotificationCount :: ConnectionPool -> IO Int64
+handlerNotificationCount pool = do
+  creation <- newNotification Checkout.ProviderPlaceToPay
+  notificationRowCount pool creation { Event.pecMerchantRef = "synthetic-provider-retry-merchant" }
+
+withNotificationEnvironment :: IO a -> IO a
+withNotificationEnvironment action = bracket
+  (forM values $ \(name, _) -> (,) name <$> lookupEnv name)
+  (mapM_ (\(name, value) -> maybe (unsetEnv name) (setEnv name) value)) $ \_ -> do
+    forM_ values (uncurry setEnv)
+    action
+  where values =
+          [("COMMERCE_CHECKOUT_ENV", "sandbox"), ("COMMERCE_EVENT_ENCRYPTION_KEY", T.unpack recoveryEncryptionKey)
+          , ("PLACETOPAY_LOGIN", "synthetic-login"), ("PLACETOPAY_SECRET_KEY", "synthetic-secret")
+          , ("PLACETOPAY_RETURN_URL", "https://example.invalid/return")
+          , ("PLACETOPAY_NOTIFICATION_URL", "https://example.invalid/notify")
+          , ("PLACETOPAY_CARD_PAYMENT_METHODS", ""), ("PLACETOPAY_BANK_PAYMENT_METHODS", "")
+          , ("PLACETOPAY_DEUNA_PAYMENT_METHODS", "")]
+
 notificationProviders :: [Checkout.PaymentProvider]
 notificationProviders = [Checkout.ProviderPayPal, Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone]
 
@@ -828,11 +1038,14 @@ paypalNotification eventId amount privateValue = encodeStrict $ A.object
       , "links" A..= [privateValue], "description" A..= privateValue ] ]
 
 placeToPayNotification :: Text -> BS.ByteString
-placeToPayNotification privateValue = encodeStrict $ A.object
-  [ "requestId" A..= (1234 :: Int), "reference" A..= privateValue
-  , "signature" A..= ("sha256:" <> digestText "1234APPROVED2026-09-14T12:00:00Zsynthetic-secret")
-  , "status" A..= A.object ["status" A..= ("APPROVED" :: Text)
-      , "date" A..= ("2026-09-14T12:00:00Z" :: Text), "message" A..= privateValue]
+placeToPayNotification = signedPlaceToPayNotification 1234 "APPROVED" "2026-09-14T12:00:00Z" "synthetic-secret"
+
+signedPlaceToPayNotification :: Int64 -> Text -> Text -> Text -> Text -> BS.ByteString
+signedPlaceToPayNotification requestId status date secret privateValue = encodeStrict $ A.object
+  [ "requestId" A..= requestId, "reference" A..= privateValue
+  , "signature" A..= ("sha256:" <> digestText (T.pack (show requestId) <> status <> date <> secret))
+  , "status" A..= A.object ["status" A..= status
+      , "date" A..= date, "message" A..= privateValue]
   , "card" A..= privateValue ]
 
 notificationPayload :: Checkout.PaymentProvider -> Text -> Text -> BS.ByteString
@@ -847,14 +1060,17 @@ notificationPayload provider eventId privateValue = case provider of
 newNotification :: Checkout.PaymentProvider -> IO Event.ProviderEventCreation
 newNotification provider = do
   eventId <- ("EVENT-" <>) . toText <$> nextRandom
+  let rawPayload = notificationPayload provider eventId privateMarker
   pure Event.ProviderEventCreation
     { Event.pecProvider = provider, Event.pecEnvironment = Checkout.CheckoutSandbox
-    , Event.pecMerchantRef = "synthetic-inbox-merchant", Event.pecProviderEventId = eventId
+    , Event.pecMerchantRef = "synthetic-inbox-merchant-" <> eventId
+    , Event.pecProviderEventId = if provider == Checkout.ProviderPlaceToPay
+        then legacyPlaceToPayId rawPayload else eventId
     , Event.pecEventType = if provider == Checkout.ProviderPayPal
         then "PAYMENT.CAPTURE.COMPLETED" else "PAYMENT_NOTIFICATION"
     , Event.pecProviderCreatedAt = if provider == Checkout.ProviderPayPal then Just notificationTime else Nothing
     , Event.pecProviderResource = Just (if provider == Checkout.ProviderPayPal then "CAPTURE-1" else "1234")
-    , Event.pecRawPayload = notificationPayload provider eventId privateMarker
+    , Event.pecRawPayload = rawPayload
     , Event.pecEncryptionKey = recoveryEncryptionKey, Event.pecReceivedAt = notificationTime }
 
 storeNotification :: ConnectionPool -> Event.ProviderEventCreation -> IO (Either Text Event.ProviderEventStored)

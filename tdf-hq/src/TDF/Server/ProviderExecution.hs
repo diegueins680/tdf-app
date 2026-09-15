@@ -249,13 +249,15 @@ placeToPayNotification rawBody = do
   unless (notificationAuthenticated assessment
       && notificationRequiresQuery assessment) $
     throwError (unauthorizedNotification "PlaceToPay notification is not authoritative")
+  eventId <- either (throwError . badRequest) pure
+    (ProviderEvent.placeToPayNotificationEventId (BL.toStrict rawBody))
   now <- liftIO getCurrentTime
   stored <- liftIO $ runSqlPool
       (ProviderEvent.storeVerifiedProviderEvent ProviderEvent.ProviderEventCreation
         { ProviderEvent.pecProvider = Checkout.ProviderPlaceToPay
         , ProviderEvent.pecEnvironment = environment
         , ProviderEvent.pecMerchantRef = merchantRef
-        , ProviderEvent.pecProviderEventId = notificationEventId "ptp" rawBody
+        , ProviderEvent.pecProviderEventId = eventId
         , ProviderEvent.pecEventType = "SESSION_STATUS"
         , ProviderEvent.pecProviderCreatedAt = Nothing
         , ProviderEvent.pecProviderResource =
@@ -342,12 +344,6 @@ decodeProviderNotification rawBody
   | BL.length rawBody > 1024 * 1024 = Left "Provider notification body is too large"
   | otherwise = either (const (Left "Provider notification body is invalid")) Right
       (A.eitherDecode rawBody)
-
-notificationEventId :: Text -> BL.ByteString -> Text
-notificationEventId provider rawBody =
-  provider <> "-" <> TE.decodeUtf8
-    (BAE.convertToBase BAE.Base16
-      (hash (BL.toStrict rawBody) :: Digest SHA256))
 
 unauthorizedNotification :: Text -> ServerError
 unauthorizedNotification message = err401 { errBody = textBody message }

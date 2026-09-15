@@ -234,6 +234,13 @@ the initial transport already enforced a streaming/body deadline everywhere.
 still-unverified merchant sandboxes and staging payments. Historical encrypted
 payload retention remains subject to the [notification minimization boundary](notification-minimization-2026-09-14.md).
 
+**Identity follow-up, 2026-09-15 UTC:** [ADR 0118](../adr/0118-signed-payment-notification-identity.md)
+replaces raw-body-derived PlaceToPay IDs with signed-evidence identities for new
+rows. Concurrent formatting and unsigned-field variants converge; exact old
+redelivery preserves the original inbox reference. A reformatted pre-upgrade
+event may create one canonical query-trigger row, so this is not historical
+cleanup. See [verification and remaining limits](notification-identity-2026-09-14.md).
+
 ## 10. PCI, privacy, consumer, tax, and regulated fund flow
 
 ### PCI DSS

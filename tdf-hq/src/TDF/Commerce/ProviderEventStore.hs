@@ -25,6 +25,7 @@ module TDF.Commerce.ProviderEventStore
   , markProviderEventDeadLetter
   , validateProviderEventTimestamp
   , minimizeProviderEventPayload
+  , placeToPayNotificationEventId
   ) where
 
 import           Control.Applicative ((<|>))
@@ -173,7 +174,9 @@ storeProviderEvent
   -> Bool
   -> ProviderEventCreation
   -> SqlPersistT IO (Either Text ProviderEventStored)
-storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
+storeProviderEvent evidenceType signatureVerified creation@ProviderEventCreation{..}
+  | pecProvider == ProviderPlaceToPay && not signatureVerified =
+      pure (Left "PlaceToPay notifications require signature-verified evidence")
   | not (validEncryptionKey pecEncryptionKey) =
       pure (Left "Provider event encryption key must contain 32 to 256 safe characters")
   | not (validReference 128 pecProviderEventId) =
@@ -188,10 +191,41 @@ storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
       pure (Left "Provider event payload must contain 1 to 1048576 bytes")
   | otherwise = case minimizeProviderEventPayload pecProvider pecRawPayload of
     Left problem -> pure (Left problem)
-    Right retainedPayload -> do
+    Right retainedPayload
+      | pecProvider == ProviderPlaceToPay && signatureVerified -> do
+          -- PlaceToPay has no native event ID. A raw-body digest permits replay
+          -- amplification through unsigned fields, whitespace and hex casing.
+          -- Enforce the signed identity here, not only at the HTTP caller.
+          case placeToPayNotificationEventId pecRawPayload of
+            Left problem -> pure (Left problem)
+            Right canonicalId -> do
+              let legacyId = "ptp-" <> sha256Hex pecRawPayload
+              historical <- (rawSql
+                "SELECT id::text FROM commerce_provider_event_inbox\
+                \ WHERE provider = 'placetopay' AND environment = ?\
+                \ AND merchant_account_ref = ? AND provider_event_id = ?"
+                [ PersistText (checkoutEnvironmentText pecEnvironment)
+                , PersistText pecMerchantRef, PersistText legacyId
+                ] :: SqlPersistT IO [Single Text])
+              -- Exact historical redelivery keeps the old immutable reference.
+              -- This deliberately does not search/decrypt/rewrite old payloads.
+              -- A reformatted old delivery can create one new canonical row.
+              let selectedId = if null historical then canonicalId else legacyId
+              persistProviderEvent evidenceType signatureVerified
+                creation { pecProviderEventId = selectedId } retainedPayload
+      | otherwise -> persistProviderEvent evidenceType signatureVerified creation retainedPayload
+
+persistProviderEvent
+  :: Text -> Bool -> ProviderEventCreation -> ByteString
+  -> SqlPersistT IO (Either Text ProviderEventStored)
+persistProviderEvent evidenceType signatureVerified ProviderEventCreation{..} retainedPayload = do
       eventId <- liftIO (toText <$> nextRandom)
       let payloadHash = sha256Hex retainedPayload
           legacyPayloadHash = sha256Hex pecRawPayload
+          -- Pre-v2 minimization retained the original signature hex casing.
+          -- Only a validated original-body projection can authorize that hash.
+          legacyProjectionHash = either (const payloadHash) sha256Hex
+            (projectProviderEventPayload pecProvider pecRawPayload)
       inserted <- (rawSql
         "INSERT INTO commerce_provider_event_inbox (\
         \ id, provider, environment, merchant_account_ref, provider_event_id,\
@@ -226,7 +260,7 @@ storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
             \ WHERE provider = ? AND environment = ? AND merchant_account_ref = ?\
             \ AND provider_event_id = ? AND event_type = ?\
             \ AND signature_verified = ? AND evidence_type = ?\
-            \ AND (payload_sha256 = ? OR payload_sha256 = ?)\
+            \ AND (payload_sha256 = ? OR payload_sha256 = ? OR payload_sha256 = ?)\
             \ AND provider_resource_id IS NOT DISTINCT FROM ?\
             \ AND provider_created_at IS NOT DISTINCT FROM ?"
             [ PersistText (paymentProviderText pecProvider)
@@ -240,6 +274,7 @@ storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
             -- Exact redelivery of a pre-minimization event must still find its
             -- original row. Never rewrite that row or relax immutable metadata.
             , PersistText legacyPayloadHash
+            , PersistText legacyProjectionHash
             , maybe PersistNull PersistText pecProviderResource
             , maybe PersistNull PersistUTCTime pecProviderCreatedAt
             ] :: SqlPersistT IO [Single Text])
@@ -255,6 +290,39 @@ storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
 -- Existing inbox rows are intentionally not rewritten by this function.
 minimizeProviderEventPayload :: PaymentProvider -> ByteString -> Either Text ByteString
 minimizeProviderEventPayload provider rawPayload = do
+  projected <- projectProviderEventPayload provider rawPayload
+  if provider == ProviderPlaceToPay
+    then do
+      value <- either (const (Left "Invalid retained notification")) Right (eitherDecodeStrict' projected)
+      case value of
+        Object fields -> case KM.lookup "signature" fields of
+          Just (String signature) -> pure $ BL.toStrict $ A.encode $
+            Object (KM.insert "signature" (String (T.toLower signature)) fields)
+          _ -> Left "Invalid retained notification"
+        _ -> Left "Invalid retained notification"
+    else pure projected
+
+-- Versioned, unambiguous JSON-array encoding, independent of object ordering
+-- and unsigned fields. This is an identity function, NOT signature verification:
+-- callers must authenticate the original body before persisting evidence.
+placeToPayNotificationEventId :: ByteString -> Either Text Text
+placeToPayNotificationEventId rawPayload = do
+  retained <- minimizeProviderEventPayload ProviderPlaceToPay rawPayload
+  value <- either (const (Left invalidIdentity)) Right (eitherDecodeStrict' retained)
+  identity <- either (const (Left invalidIdentity)) Right $ parseEither
+    (A.withObject "PlaceToPay identity" $ \fields -> do
+      requestId <- fields .: "requestId" :: Parser Int64
+      statusValue <- fields .: "status"
+      (status, date) <- A.withObject "PlaceToPay identity status"
+        (\statusFields -> (,) <$> statusFields .: "status" <*> statusFields .: "date") statusValue
+        :: Parser (Text, Text)
+      signature <- fields .: "signature" :: Parser Text
+      pure (A.toJSON ("tdf:placetopay:notification:v2" :: Text, requestId, status, date, signature))) value
+  pure ("ptp-v2-" <> sha256Hex (BL.toStrict (A.encode identity)))
+  where invalidIdentity = "PlaceToPay notification identity is invalid"
+
+projectProviderEventPayload :: PaymentProvider -> ByteString -> Either Text ByteString
+projectProviderEventPayload provider rawPayload = do
   unless (not (BS.null rawPayload) && BS.length rawPayload <= maxProviderEventBytes) $
     Left "Provider event payload size is invalid"
   value <- either (const (Left invalidPayload)) Right (eitherDecodeStrict' rawPayload)
