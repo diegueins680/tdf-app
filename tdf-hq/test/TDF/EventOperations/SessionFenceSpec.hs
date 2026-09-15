@@ -107,14 +107,14 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
     snapshot pool user 109 >>= expectRight
     eventCounts pool 109 `shouldReturn` [0,0,0,1]
 
-  forM_ (zip [110..] ["read","new","replay","task","revisioned","raci","raci-replay"]) $ \(eventId, mode) ->
+  forM_ (zip [110..] ["read","new","replay","task","revisioned","raci","raci-replay","context"]) $ \(eventId, mode) ->
     it ("rejects real HTTP " <> mode <> " when revoked after production authentication") $ do
       (token,user) <- seedSession pool eventId
       if mode == "replay" then transition pool user eventId eventId 1 Planning >>= expectRight else pure ()
       if mode == "raci-replay" then do
         execute pool "INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id) VALUES (?,2,'responsible',1)"
           [PersistInt64 (eventId+10000)]
-        let _ :<|> _ :<|> _ :<|> _ :<|> apply = eventOperationsServer user eventId
+        let _ :<|> _ :<|> _ :<|> _ :<|> apply :<|> _ = eventOperationsServer user eventId
             revision = maybe (error "invalid fixture revision") id (parseEventTaskAggregateRevision "2")
         runHandler (runReaderT (apply (eventId+10000) (commandKey eventId)
           (EventRaciReassignmentCommand revision RaciResponsible 2 1 "test" "test"))
@@ -331,9 +331,9 @@ httpAfterAuthentication pool token eventId mode revoke = do
           runReaderT action env) eventOperationsServer
   Warp.testWithApplicationSettings (Warp.setHost "127.0.0.1" Warp.defaultSettings) (pure app) $ \port -> do
     manager <- HTTP.newManager HTTP.defaultManagerSettings
-    let readOnly = mode `elem` ["read", "task", "revisioned"]
-        suffix = if mode `elem` ["task", "revisioned"] then "/tasks/" <> show (eventId + 10000)
-                    <> (if mode == "revisioned" then "/revisioned" else "")
+    let readOnly = mode `elem` ["read", "task", "revisioned", "context"]
+        suffix = if mode `elem` ["task", "revisioned", "context"] then "/tasks/" <> show (eventId + 10000)
+                    <> (if mode == "revisioned" then "/revisioned" else if mode == "context" then "/raci/context" else "")
                  else if mode `elem` ["raci","raci-replay"] then "/tasks/" <> show (eventId + 10000) <> "/raci/reassign"
                  else if readOnly then "" else "/transitions"
         request = HTTP.defaultRequest

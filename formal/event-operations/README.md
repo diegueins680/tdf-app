@@ -51,6 +51,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `RaciEditorContext.cfg` | One reader/writer, manage/read/no grant, matching/foreign target, eligible/ineligible candidate, two revisions, clock 0–2; no fairness | PASS; 3,724 generated, 1,584 distinct states, depth 9 |
+| `RaciEditorContextEarly/Candidate/Mixed.cfg` | Use pre-wait authority, expose ineligible candidate or omit metadata fence | Expected exit 12 with `PrivateOptions`, `EligibleOptions`, `CoherentContext`; all three detected |
 | `CommandBoundary.cfg` | One command, four shape/target validity combinations, validation and commit/abort phases; no fairness | PASS; 14 generated/distinct states, depth 4 |
 | `CommandBoundaryEarly/Unbound.cfg` | Commit before decoding or omit request/receipt binding | Expected exit 12 with `ValidatedCommit`; both detected |
 | `RaciReassignment.cfg` | Two tasks/commands/keys, one committed obligation per task, revisions 1–3, clock 0–3, manage/read/no access; no fairness | PASS; 426,052 generated, 165,180 distinct states, depth 14 |
@@ -90,7 +92,12 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
-| `TaskReadStructure.als` assertions | Up to 4 atoms per top-level signature | PASS; all 3 checks UNSAT (no counterexample in scope) |
+| `TaskReadStructure.als` assertions | Up to 4 atoms per top-level signature; owners abstracted as equivalent effective grants | PASS; all 5 checks UNSAT, including manager-gated and exact-task recipient options (no counterexample in scope) |
+
+The PR 25 rerun completed all 22 positive TLC configurations, 48 named negative controls,
+13 PlusCal integrity tests, 2 SAT Alloy scenarios and 13 UNSAT assertions. Exact commands and
+executable refinement evidence appear in the [context contract](../../docs/event-operations/raci-editor-context-contract.md)
+and [PR 25 report](../../docs/event-operations/pr-25-raci-editor-context.md).
 
 The counts above came from completed commands. An earlier four-command lifecycle exploration was
 stopped after 1,126,075 distinct states because the audit permutations made that scope inefficient;
@@ -99,6 +106,9 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Coverage
 
+- `RaciEditorContext.tla`: current manager-only options, candidate eligibility and metadata
+  coherence. The SQL context is advisory: pagination, intervals, source eligibility and
+  lifecycle readiness additionally require executable tests; no editing or liveness claim.
 - `CommandBoundary.tla`: application validation before committing a SQL command and exact
   receipt binding, complementary to `SessionFence` and `RaciReassignment`; see the
   [HTTP contract](../../docs/event-operations/raci-api-contract.md). Does not prove SQL refinement.
@@ -232,3 +242,8 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
    requirements. The corrected model checks current validity through the decision. Real HTTP
    barriers and observed database blocking refine its atomic lock abstraction. Same-credential
    reactivation is explicit reauthorization, not a permanent-revocation guarantee.
+10. The first `RaciEditorContext` negative-control run failed because an unparenthesized latch
+    RHS allowed an incompletely assigned successor. The runner rejected this tool/model error;
+    it was not accepted as a business counterexample. Parenthesizing all three latch RHS
+    expressions corrected the specification without weakening invariants. The complete rerun
+    passed; Early/Candidate/Mixed mutations then produced the required named invariant failures.

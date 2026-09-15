@@ -43,6 +43,7 @@ test('both HTTP runners install task prerequisites before opted-in task fixtures
     const positions = ['2026-09-14_event_operations_api.sql', '2026-09-14_event_task_commit.sql',
       '2026-09-14_event_task_read.sql', '2026-09-15_event_task_revision.sql',
       '2026-09-15_event_task_revisioned_read.sql', '2026-09-15_event_raci_reassignment.sql',
+      '2026-09-15_event_raci_editor_context.sql',
       'event_operations_http_fixture.sql'].map(file => source.indexOf(file));
     assert.ok(positions.every(position => position >= 0), `${script} must install every prerequisite`);
     assert.deepEqual(positions, [...positions].sort((a, b) => a - b), `${script} prerequisite order`);

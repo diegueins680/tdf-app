@@ -20,3 +20,6 @@ SELECT event_rehearsal.check_that(
   NOT EXISTS (SELECT 1 FROM pg_proc WHERE pronamespace='public'::regnamespace
     AND proname IN ('event_operation_reassign_raci','event_operation_actor_can_manage_task')),
   'RACI command rollback removes only its entry points');
+SELECT event_rehearsal.check_that(
+  to_regprocedure('event_operation_read_raci_editor_context(bigint,bigint,bigint,bigint)') IS NULL,
+  'editor context rollback removes the read entry point');

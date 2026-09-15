@@ -19,6 +19,9 @@ on:
       - "scripts/test-event-task-revision-migration.sh"
       - "scripts/test-event-task-revisioned-read-migration.sh"
       - "scripts/test-event-raci-reassignment-migration.sh"
+      - "scripts/test-event-raci-editor-context-migration.sh"
+      - "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
+      - "tdf-hq/test/integration/event_raci_editor_context_*.sql"
       - "scripts/__tests__/event-raci-reassignment-runner.test.mjs"
       - "tdf-hq/test/integration/event_raci_reassignment_*.sql"
       - "scripts/__tests__/event-task-revisioned-read-runner.test.mjs"
@@ -82,6 +85,9 @@ on:
       - "scripts/test-event-task-revision-migration.sh"
       - "scripts/test-event-task-revisioned-read-migration.sh"
       - "scripts/test-event-raci-reassignment-migration.sh"
+      - "scripts/test-event-raci-editor-context-migration.sh"
+      - "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
+      - "tdf-hq/test/integration/event_raci_editor_context_*.sql"
       - "scripts/__tests__/event-raci-reassignment-runner.test.mjs"
       - "tdf-hq/test/integration/event_raci_reassignment_*.sql"
       - "scripts/__tests__/event-task-revisioned-read-runner.test.mjs"
@@ -241,6 +247,19 @@ jobs:
         run: node --test scripts/__tests__/event-raci-reassignment-runner.test.mjs
       - name: Check atomic reassignment, retries, rollback and concurrent authority
         run: sh scripts/test-event-raci-reassignment-migration.sh
+
+  postgres-raci-editor-context:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Verify editor context isolation and formal gates
+        run: node --test scripts/__tests__/event-raci-editor-context-runner.test.mjs
+      - name: Verify editor context scope, pagination, rollback and concurrent readers
+        run: sh scripts/test-event-raci-editor-context-migration.sh
 
   postgres-complete-schema:
     runs-on: ubuntu-latest

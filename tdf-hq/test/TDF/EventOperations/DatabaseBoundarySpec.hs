@@ -23,6 +23,28 @@ import TDF.EventOperations.Types
 
 spec :: Spec
 spec = describe "event operations database privacy boundary" $ do
+  it "validates private editor context flags, strict pages and exact target" $ do
+    let result = EventRaciEditorContextDTO 10 100 (revision "4") True True
+          [EventRaciAssignmentDTO 1 RaciAccountable] [1,2,3] Nothing
+        decodeContext = decodeRaciEditorContextRows 10 100 0 . pure . taskRow . toJSON
+    decodeContext result `shouldBe` Right (Just result)
+    forM_ [result { eccEventId=11 }, result { eccActivityId=101 }, result { eccCanManage=False },
+      result { eccOperationReady=False }, result { eccEligiblePartyIds=[1,1] },
+      result { eccEligiblePartyIds=[2,1] }, result { eccEligiblePartyIds=[0] },
+      result { eccEligiblePartyIds=[1..101] }, result { eccNextAfterPartyId=Just 3 },
+      result { eccReplaceableAssignments=replicate 2 (EventRaciAssignmentDTO 1 RaciAccountable) }]
+      $ \bad -> decodeContext bad `shouldBe` Left SnapshotDecodeError
+    decodeRaciEditorContextRows 10 100 2 [taskRow (toJSON result)] `shouldBe` Left SnapshotDecodeError
+    let page = result { eccEligiblePartyIds=[1..100], eccNextAfterPartyId=Just 100 }
+    decodeContext page `shouldBe` Right (Just page)
+    decodeContext (page { eccNextAfterPartyId=Just 99 }) `shouldBe` Left SnapshotDecodeError
+    let reader = result { eccCanManage=False, eccOperationReady=False,
+          eccReplaceableAssignments=[], eccEligiblePartyIds=[] }
+    decodeContext reader `shouldBe` Right (Just reader)
+    forM_ [Null, object ["canManage" .= True], object ["error" .= ("private diagnostic" :: Text)]] $ \raw ->
+      decodeRaciEditorContextRows 10 100 0 [taskRow raw] `shouldBe` Left SnapshotDecodeError
+    decodeRaciEditorContextRows 10 100 0 [Single Nothing] `shouldBe` Right Nothing
+
   it "validates a RACI receipt against the exact request before transaction completion" $ do
     let command = raciCommand "4"
         result = raciResult "6"

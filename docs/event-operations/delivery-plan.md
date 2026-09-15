@@ -198,3 +198,12 @@ client without changing any page. [The HTTP contract](raci-api-contract.md) and
 Next: scoped editor/readiness/eligibility UX with explicit conflict/consent handling; broader
 RACI and mobile/offline/notification workflows remain separate, and hosted failures must be
 resolved before claiming complete CI or production readiness.
+
+The twenty-fifth branch, `feat/event-raci-editor-context`, closes the missing authorization
+and recipient-discovery prerequisite identified before building the editor. An additive
+session-fenced read exposes current manager authority, conservative replaceable source pairs
+and paginated eligible Party IDs, without contacts, new grants or mutation. Its coherent
+revision is advisory and cannot replace command-time checks. See [the contract](raci-editor-context-contract.md)
+and [PR 25 evidence](pr-25-raci-editor-context.md). Next: the scoped web selector, deliberate
+confirmation and explicit stale/conflict handling; no UI, native mobile or production activation
+is included here. Naming/consent policies must not be inferred from access eligibility.

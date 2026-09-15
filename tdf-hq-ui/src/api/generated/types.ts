@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/event-operations/events/{eventId}/tasks/{activityId}/raci/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read current scoped RACI editing options without granting authority
+         * @description Current task readers may read the context. Only current managers receive options, and only during supported lifecycle states with current required accountability. Uses the same session/auth/task revision fences and one post-wait clock/snapshot. Returns minimal Party IDs, not contacts or names. Each keyset page is independently authorized; pages are not a consistent roster snapshot. All options are advisory; the command still revalidates authority, source, recipient and expected revision.
+         */
+        get: operations["getEventRaciEditorContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/event-operations/events/{eventId}/tasks/{activityId}/raci/reassign": {
         parameters: {
             query?: never;
@@ -6852,6 +6872,26 @@ export interface components {
         };
         /** @description Canonical ASCII decimal string in 1..9223372036854775807 (signed BIGINT maximum). Runtime decoders enforce the exact upper bound in addition to the pattern. Never convert to a JavaScript number. Not an authorization or readiness certificate. */
         EventTaskAggregateRevision: string;
+        EventRaciEditorContext: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+            /** @description Current scoped permission; never a command authorization token. */
+            canManage: boolean;
+            /** @description Current lifecycle/accountability gates; not event readiness or consent. */
+            operationReady: boolean;
+            /** @description Current unbounded source pairs; empty unless operationReady. */
+            replaceableAssignments: components["schemas"]["EventRaciAssignment"][];
+            /** @description Ascending current readers strictly after cursor; empty unless operationReady. */
+            eligiblePartyIds: number[];
+            /**
+             * Format: int64
+             * @description Omitted on final page; otherwise last of exactly 100 returned eligible IDs.
+             */
+            nextAfterPartyId?: number;
+        };
         EventRaciReassignmentCommand: {
             expectedRevision: components["schemas"]["EventTaskAggregateRevision"];
             /** @enum {string} */
@@ -13018,6 +13058,60 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getEventRaciEditorContext: {
+        parameters: {
+            query?: {
+                afterPartyId?: number;
+            };
+            header?: never;
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized context; no identity/contact discovery or write authority implied */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRaciEditorContext"];
+                };
+            };
+            /** @description Invalid or unsafe target/cursor */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled feature or opaque absent/foreign/unreadable task */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sanitized persistence or strict projection validation failure */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     reassignEventOperationTaskRaci: {
         parameters: {
             query?: never;

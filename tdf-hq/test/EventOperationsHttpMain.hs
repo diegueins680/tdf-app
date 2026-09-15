@@ -63,6 +63,37 @@ main = do
 
 httpSpec :: ConnectionPool -> HTTP.Manager -> Int -> Spec
 httpSpec pool manager port = describe "event operations authenticated HTTP / PostgreSQL" $ do
+  it "returns only current manager options and never treats assignment as recipient eligibility" $ do
+    response <- send "GET" "/80/tasks/8000/raci/context" (auth owner) Nothing
+    expectStatus 200 response
+    field "canManage" response `shouldBe` Just (Bool True)
+    field "operationReady" response `shouldBe` Just (Bool True)
+    field "eligiblePartyIds" response `shouldBe` decode "[1,2]"
+    field "aggregateRevision" response `shouldBe` Just (String "4")
+    lookup "Cache-Control" (HTTP.responseHeaders response) `shouldBe` Just "private, no-store"
+    readOnly <- send "GET" "/80/tasks/8000/raci/context" (auth collaborator) Nothing
+    expectStatus 200 readOnly
+    field "canManage" readOnly `shouldBe` Just (Bool False)
+    field "eligiblePartyIds" readOnly `shouldBe` decode "[]"
+    field "replaceableAssignments" readOnly `shouldBe` decode "[]"
+    send "GET" "/80/tasks/8000/raci/context" (auth outsider) Nothing >>= expectError 404 "not_found"
+    countFor "event_operation_audit_event" 80 `shouldReturn` 0
+
+  it "validates editor context cursor, exact target and current credentials" $ do
+    page <- send "GET" "/80/tasks/8000/raci/context?afterPartyId=1" (auth owner) Nothing
+    expectStatus 200 page
+    field "eligiblePartyIds" page `shouldBe` decode "[2]"
+    forM_ ["-1","9007199254740992","bad"] $ \cursor ->
+      send "GET" ("/80/tasks/8000/raci/context?afterPartyId=" <> cursor) (auth owner) Nothing >>= expectStatus 400
+    send "GET" "/81/tasks/8000/raci/context" (auth owner) Nothing >>= expectError 404 "not_found"
+    send "GET" "/80/tasks/8000/raci/context" [] Nothing >>= expectStatus 401
+
+  it "fails closed when editor context SQL is unavailable, leaving old task reads intact" $
+    bracket_ (execute "ALTER FUNCTION event_operation_read_raci_editor_context(BIGINT,BIGINT,BIGINT,BIGINT) RENAME TO raci_context_http_saved")
+      (execute "ALTER FUNCTION raci_context_http_saved(BIGINT,BIGINT,BIGINT,BIGINT) RENAME TO event_operation_read_raci_editor_context") $ do
+        send "GET" "/80/tasks/8000/raci/context" (auth owner) Nothing >>= expectError 503 "event_operations_unavailable"
+        send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectStatus 200
+
   it "opts into a coherent revision envelope without changing old task JSON or domain records" $ do
     before <- scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8000"
     original <- send "GET" "/80/tasks/8000" (auth owner) Nothing

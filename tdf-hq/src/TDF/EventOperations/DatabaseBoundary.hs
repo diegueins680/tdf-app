@@ -14,6 +14,8 @@ module TDF.EventOperations.DatabaseBoundary
   , loadTaskWithRevision
   , decodeRaciReassignmentRows
   , reassignRaci
+  , decodeRaciEditorContextRows
+  , loadRaciEditorContext
   ) where
 
 import Control.Exception
@@ -156,3 +158,35 @@ reassignRaci eventId activityId actorPartyId commandId command = do
      PersistText (raciRoleText (ercRole command)), PersistInt64 (ercFromPartyId command),
      PersistInt64 (ercToPartyId command), PersistText (ercReason command), PersistText (ercCorrelationId command)]
   either (liftIO . throwIO) pure (decodeRaciReassignmentRows eventId activityId commandId command rows)
+
+decodeRaciEditorContextRows :: Int64 -> Int64 -> Int64 -> [Single (Maybe Text)]
+  -> Either SnapshotDecodeError (Maybe EventRaciEditorContextDTO)
+decodeRaciEditorContextRows _ _ _ [Single Nothing] = Right Nothing
+decodeRaciEditorContextRows eventId activityId cursor [Single (Just raw)] =
+  case eitherDecodeStrict' (TE.encodeUtf8 raw) of
+    Right context | valid context -> Right (Just context)
+    _ -> Left SnapshotDecodeError
+  where
+    valid context =
+      eccEventId context == eventId && eccActivityId context == activityId
+      && all isSafePositiveInteger ([eventId,activityId] <> candidates <> map eraPartyId sources)
+      && cursor >= 0 && cursor <= 9007199254740991
+      && length candidates <= 100 && all (> cursor) candidates
+      && and (zipWith (<) candidates (drop 1 candidates))
+      && Set.size (Set.fromList [(eraPartyId a,eraRole a) | a <- sources]) == length sources
+      && (not (eccOperationReady context) || eccCanManage context)
+      && (eccOperationReady context || (null candidates && null sources && eccNextAfterPartyId context == Nothing))
+      && maybe True (\next -> length candidates == 100 && Just next == lastMaybe candidates)
+         (eccNextAfterPartyId context)
+      where candidates = eccEligiblePartyIds context
+            sources = eccReplaceableAssignments context
+    lastMaybe [] = Nothing
+    lastMaybe values = Just (last values)
+decodeRaciEditorContextRows _ _ _ _ = Left SnapshotDecodeError
+
+loadRaciEditorContext :: Int64 -> Int64 -> Int64 -> Int64
+  -> SqlPersistT IO (Maybe EventRaciEditorContextDTO)
+loadRaciEditorContext eventId activityId actorPartyId cursor = do
+  rows <- rawSql "SELECT event_operation_read_raci_editor_context(?, ?, ?, ?)::text"
+    [PersistInt64 eventId,PersistInt64 activityId,PersistInt64 actorPartyId,PersistInt64 cursor]
+  either (liftIO . throwIO) pure (decodeRaciEditorContextRows eventId activityId cursor rows)

@@ -43,3 +43,6 @@ SELECT event_rehearsal.check_that(
     '20000000-0000-4000-8000-000000000001',4,'accountable',900001,900002,
     'Synthetic full-schema reassignment','schema-rehearsal')->>'error'='feature_disabled',
   'RACI command reapply remains disabled');
+SELECT event_rehearsal.check_that(
+  event_operation_read_raci_editor_context(900010,900010,900001,0) IS NULL,
+  'restored editor context remains disabled');

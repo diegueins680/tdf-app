@@ -96,6 +96,10 @@ expect_counterexample TaskRevisionReadMixed.cfg CoherentRevisionRead task-revisi
 expect_counterexample TaskRevisionReadEarly.cfg NoExpiredDisclosure task-revision-read-early TaskRevisionRead.tla
 run_tlc RaciReassignment.tla RaciReassignment.cfg raci-reassignment
 run_tlc CommandBoundary.tla CommandBoundary.cfg command-boundary
+run_tlc RaciEditorContext.tla RaciEditorContext.cfg raci-editor-context
+expect_counterexample RaciEditorContextEarly.cfg PrivateOptions raci-context-early RaciEditorContext.tla
+expect_counterexample RaciEditorContextCandidate.cfg EligibleOptions raci-context-candidate RaciEditorContext.tla
+expect_counterexample RaciEditorContextMixed.cfg CoherentContext raci-context-mixed RaciEditorContext.tla
 expect_counterexample CommandBoundaryEarly.cfg ValidatedCommit command-boundary-early CommandBoundary.tla
 expect_counterexample CommandBoundaryUnbound.cfg ValidatedCommit command-boundary-unbound CommandBoundary.tla
 expect_counterexample RaciReassignmentEarly.cfg CurrentAuthority raci-reassignment-early RaciReassignment.tla
@@ -164,7 +168,7 @@ for command_index in 1 2 3 4 5 6 7 8; do
   fi
 done
 
-for command_index in 0 1 2 3; do
+for command_index in 0 1 2 3 4 5; do
   task_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
     -c "${command_index}" -s sat4j -t none \
     -o "${run_root}/alloy-task-read-${command_index}" TaskReadStructure.als 2>&1)"
