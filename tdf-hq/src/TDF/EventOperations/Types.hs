@@ -7,6 +7,12 @@ module TDF.EventOperations.Types
   , EventOperationSnapshotDTO(..)
   , EventTransitionCommand(..)
   , EventTransitionOutcomeDTO(..)
+  , EventTaskStatus(..)
+  , EventRaciRole(..)
+  , EventRaciAssignmentDTO(..)
+  , EventTaskPolicyDTO(..)
+  , EventOperationTaskDTO(..)
+  , isSafePositiveInteger
   , allEventLifecycleStates
   , eventLifecycleStateText
   , parseEventLifecycleState
@@ -143,6 +149,81 @@ instance ToJSON EventTransitionOutcomeDTO where
 
 instance FromJSON EventTransitionOutcomeDTO where
   parseJSON = genericParseJSON (prefixedJsonOptions 3)
+
+data EventTaskStatus = TaskPlanned | TaskConfirmed | TaskInProgress | TaskCompleted | TaskCancelled
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+taskStatusText :: EventTaskStatus -> Text
+taskStatusText status = case status of
+  TaskPlanned -> "planned"
+  TaskConfirmed -> "confirmed"
+  TaskInProgress -> "in_progress"
+  TaskCompleted -> "completed"
+  TaskCancelled -> "cancelled"
+
+instance ToJSON EventTaskStatus where
+  toJSON = toJSON . taskStatusText
+instance FromJSON EventTaskStatus where
+  parseJSON = withText "EventTaskStatus" $ \raw ->
+    maybe (fail "invalid task status") pure (lookup raw [(taskStatusText s, s) | s <- [minBound..maxBound]])
+
+data EventRaciRole = RaciResponsible | RaciAccountable | RaciConsulted | RaciInformed
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+raciRoleText :: EventRaciRole -> Text
+raciRoleText role = case role of
+  RaciResponsible -> "responsible"
+  RaciAccountable -> "accountable"
+  RaciConsulted -> "consulted"
+  RaciInformed -> "informed"
+
+instance ToJSON EventRaciRole where
+  toJSON = toJSON . raciRoleText
+instance FromJSON EventRaciRole where
+  parseJSON = withText "EventRaciRole" $ \raw ->
+    maybe (fail "invalid RACI role") pure (lookup raw [(raciRoleText r, r) | r <- [minBound..maxBound]])
+
+data EventRaciAssignmentDTO = EventRaciAssignmentDTO
+  { eraPartyId :: Int64
+  , eraRole :: EventRaciRole
+  } deriving (Eq, Generic, Show)
+instance ToJSON EventRaciAssignmentDTO where
+  toJSON = genericToJSON (prefixedJsonOptions 3)
+instance FromJSON EventRaciAssignmentDTO where
+  parseJSON = genericParseJSON (prefixedJsonOptions 3)
+
+data EventTaskPolicyDTO = EventTaskPolicyDTO
+  { etpRequiresAccountability :: Bool
+  , etpDependenciesGateCompletion :: Bool
+  , etpVersion :: Int64
+  } deriving (Eq, Generic, Show)
+instance ToJSON EventTaskPolicyDTO where
+  toJSON = genericToJSON (prefixedJsonOptions 3)
+instance FromJSON EventTaskPolicyDTO where
+  parseJSON = genericParseJSON (prefixedJsonOptions 3)
+
+data EventOperationTaskDTO = EventOperationTaskDTO
+  { eotEventId :: Int64
+  , eotActivityId :: Int64
+  , eotStatus :: EventTaskStatus
+  , eotVersion :: Int64
+  , eotPolicy :: Maybe EventTaskPolicyDTO
+  , eotRaci :: [EventRaciAssignmentDTO]
+  , eotAccountabilityNeedsAttention :: Bool
+  } deriving (Eq, Generic, Show)
+instance ToJSON EventOperationTaskDTO where
+  toJSON = genericToJSON (prefixedJsonOptions 3)
+instance FromJSON EventOperationTaskDTO where
+  parseJSON raw@(Object fields) = do
+    case KeyMap.lookup "policy" fields of
+      Just Null -> fail "policy must be omitted rather than null"
+      _ -> pure ()
+    genericParseJSON (prefixedJsonOptions 3) raw
+  parseJSON raw = genericParseJSON (prefixedJsonOptions 3) raw
+
+-- This JSON-number transport must never round an identity/version in JavaScript.
+isSafePositiveInteger :: Int64 -> Bool
+isSafePositiveInteger value = value > 0 && value <= 9007199254740991
 
 prefixedJsonOptions :: Int -> Options
 prefixedJsonOptions prefixLength =

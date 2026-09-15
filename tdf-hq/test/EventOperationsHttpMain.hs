@@ -35,6 +35,8 @@ import TDF.EventOperations.API (EventOperationsAPI)
 import TDF.EventOperations.HttpTestConfig (httpTestConfig)
 import TDF.EventOperations.Server (eventOperationsServer)
 import qualified TDF.EventOperations.SessionFenceSpec as SessionFence
+import qualified TDF.EventOperations.DatabaseBoundarySpec as Boundary
+import qualified TDF.EventOperations.TypesSpec as Types
 
 type ProtectedEvents = AuthProtect "bearer-token" :> EventOperationsAPI
 type HttpResponse = HTTP.Response BL.ByteString
@@ -54,11 +56,77 @@ main = do
     Warp.testWithApplicationSettings (Warp.setHost "127.0.0.1" Warp.defaultSettings) (pure app) $ \port -> do
       manager <- HTTP.newManager HTTP.defaultManagerSettings
       hspec $ do
+        Boundary.spec
+        Types.spec
         httpSpec pool manager port
         SessionFence.spec pool
 
 httpSpec :: ConnectionPool -> HTTP.Manager -> Int -> Spec
 httpSpec pool manager port = describe "event operations authenticated HTTP / PostgreSQL" $ do
+  it "serves an exact authorized task projection without HTTP caching" $ do
+    response <- send "GET" "/80/tasks/8000" (auth owner) Nothing
+    expectStatus 200 response
+    decode (HTTP.responseBody response) `shouldBe` (decode
+      "{\"eventId\":80,\"activityId\":8000,\"status\":\"planned\",\"version\":1,\"policy\":{\"requiresAccountability\":true,\"dependenciesGateCompletion\":true,\"version\":1},\"raci\":[{\"partyId\":1,\"role\":\"accountable\"},{\"partyId\":3,\"role\":\"responsible\"}],\"accountabilityNeedsAttention\":false}"
+      :: Maybe Value)
+    lookup "Cache-Control" (HTTP.responseHeaders response) `shouldBe` Just "private, no-store"
+
+  it "allows an exact task grant without granting the parent snapshot or sibling task" $ do
+    send "GET" "/80/tasks/8000" (auth collaborator) Nothing >>= expectStatus 200
+    send "GET" "/80" (auth collaborator) Nothing >>= expectError 404 "not_found"
+    missing <- send "GET" "/80/tasks/999999" (auth collaborator) Nothing
+    send "GET" "/80/tasks/8001" (auth collaborator) Nothing >>= expectOpaque missing
+    send "GET" "/81/tasks/8000" (auth collaborator) Nothing >>= expectOpaque missing
+    send "GET" "/80/tasks/8100" (auth owner) Nothing >>= expectOpaque missing
+    send "GET" "/80/tasks/8000" (auth outsider) Nothing >>= expectOpaque missing
+    send "GET" "/80/tasks/8000?actorPartyId=1&evaluatedAt=2020-01-01" (auth outsider) Nothing
+      >>= expectOpaque missing
+    countFor "event_operation_audit_event" 80 `shouldReturn` 0
+    countFor "event_operation_command_receipt" 80 `shouldReturn` 0
+
+  it "validates task captures and real credentials without fabricating a successful object" $ do
+    forM_ ["/80/tasks/no-id", "/80/tasks/0", "/0/tasks/8000", "/80/tasks/9007199254740992"] $ \path ->
+      send "GET" path (auth owner) Nothing >>= expectStatus 400
+    forM_ [[], auth "unknown", auth "http-inactive-test-token", auth "http-reset-test-token"] $ \headers ->
+      send "GET" "/80/tasks/8000" headers Nothing >>= expectStatus 401
+    response <- send "GET" "/80/tasks/8001" [("Cookie", "tdf_session=http-owner-test-token")] Nothing
+    expectStatus 200 response
+    field "status" response `shouldBe` Just (String "confirmed")
+    field "policy" response `shouldBe` Nothing
+
+  it "does not widen task authority after a downgrade to event.read" $
+    bracket_ (execute "UPDATE event_operation_grant SET scope_code='event.read',resource_kind='event',resource_id=NULL WHERE event_id=80")
+             (execute "UPDATE event_operation_grant SET scope_code='task.read',resource_kind='task',resource_id='8000' WHERE event_id=80") $ do
+      send "GET" "/80" (auth collaborator) Nothing >>= expectStatus 200
+      send "GET" "/80/tasks/8000" (auth collaborator) Nothing >>= expectError 404 "not_found"
+
+  it "reauthorizes task reads after expiry and revocation without changing assignments" $ do
+    bracket_ (execute "UPDATE event_operation_grant SET valid_from=clock_timestamp()-interval '2 days',valid_until=clock_timestamp()-interval '1 day' WHERE event_id=80")
+             (execute "UPDATE event_operation_grant SET valid_until=NULL WHERE event_id=80") $
+      send "GET" "/80/tasks/8000" (auth collaborator) Nothing >>= expectError 404 "not_found"
+    bracket_ (execute "UPDATE event_operation_grant SET revoked_at=clock_timestamp(),revoked_by_party_id=1,revocation_reason='HTTP task test' WHERE event_id=80")
+             (execute "UPDATE event_operation_grant SET revoked_at=NULL,revoked_by_party_id=NULL,revocation_reason=NULL WHERE event_id=80") $
+      send "GET" "/80/tasks/8000" (auth collaborator) Nothing >>= expectError 404 "not_found"
+    send "GET" "/80/tasks/8000" (auth collaborator) Nothing >>= expectStatus 200
+    scalar "SELECT count(*) FROM event_operation_raci_assignment WHERE activity_id=8000" `shouldReturn` 2
+
+  it "surfaces expired accountability explicitly without declaring the task ready" $
+    bracket_ (execute "UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()-interval '2 days',valid_until=clock_timestamp()-interval '1 day' WHERE activity_id=8000 AND raci_role='responsible'")
+             (execute "UPDATE event_operation_raci_assignment SET valid_until=NULL WHERE activity_id=8000") $ do
+      response <- send "GET" "/80/tasks/8000" (auth owner) Nothing
+      expectStatus 200 response
+      field "accountabilityNeedsAttention" response `shouldBe` Just (Bool True)
+      field "raci" response `shouldBe` (decode "[{\"partyId\":1,\"role\":\"accountable\"}]" :: Maybe Value)
+
+  it "sanitizes invalid task rows and a missing projection function, then recovers" $ do
+    bracket_ (execute "UPDATE event_logistics_activity SET status='private-invalid-status' WHERE id=8000")
+             (execute "UPDATE event_logistics_activity SET status='planned' WHERE id=8000") $
+      send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectError 503 "event_operations_unavailable"
+    bracket_ (execute "ALTER FUNCTION event_operation_read_task(BIGINT,BIGINT,BIGINT) RENAME TO task_read_test_saved")
+             (execute "ALTER FUNCTION task_read_test_saved(BIGINT,BIGINT,BIGINT) RENAME TO event_operation_read_task") $
+      send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectError 503 "event_operations_unavailable"
+    send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectStatus 200
+
   it "rejects missing, unknown, inactive and password-reset credentials before any command" $ do
     forM_ [[], auth "unknown", auth "http-inactive-test-token", auth "http-reset-test-token"] $ \headers -> do
       send "GET" "/60" headers Nothing >>= expectStatus 401
@@ -217,6 +285,7 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
   it "fails closed while the event operations feature is disabled" $
     bracket_ (setFlag False) (setFlag True) $ do
       send "GET" "/70" (auth owner) Nothing >>= expectError 404 "feature_disabled"
+      send "GET" "/80/tasks/8000" (auth owner) Nothing >>= expectError 404 "feature_disabled"
       post 70 19 owner (body 1 "planning") >>= expectError 404 "feature_disabled"
       countFor "event_operation_audit_event" 70 `shouldReturn` 0
 
@@ -244,7 +313,8 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
     send :: BS.ByteString -> BS.ByteString -> RequestHeaders -> Maybe Value -> IO HttpResponse
     send verb suffix headers payload = HTTP.httpLbs HTTP.defaultRequest
       { HTTP.host = "127.0.0.1", HTTP.port = port, HTTP.secure = False
-      , HTTP.path = "/event-operations/events" <> suffix, HTTP.method = verb
+      , HTTP.path = "/event-operations/events" <> fst (BS.break (== '?') suffix), HTTP.method = verb
+      , HTTP.queryString = snd (BS.break (== '?') suffix)
       , HTTP.requestHeaders = ("Content-Type", "application/json") : headers
       , HTTP.requestBody = HTTP.RequestBodyLBS (maybe BL.empty encode payload)
       , HTTP.redirectCount = 0, HTTP.responseTimeout = HTTP.responseTimeoutMicro 10000000

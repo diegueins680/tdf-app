@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -26,7 +27,7 @@ import Servant
 import TDF.Auth (AuthedUser(..), withCurrentAuthSession)
 import TDF.DB (Env(..))
 import TDF.EventOperations.API (EventOperationsAPI)
-import TDF.EventOperations.DatabaseBoundary (databaseFailureLog, loadSnapshot, tryDatabaseAction)
+import TDF.EventOperations.DatabaseBoundary (databaseFailureLog, loadSnapshot, loadTask, tryDatabaseAction)
 import qualified TDF.EventOperations.Types as EventOps
 
 type EventOperationsM = ReaderT Env Handler
@@ -35,6 +36,19 @@ eventOperationsServer :: AuthedUser -> ServerT EventOperationsAPI EventOperation
 eventOperationsServer user eventId =
        getEventOperationsSnapshot user eventId
   :<|> applyEventTransition user eventId
+  :<|> getEventTask user eventId
+
+getEventTask
+  :: AuthedUser -> Int64 -> Int64
+  -> EventOperationsM (Headers '[Header "Cache-Control" Text] EventOps.EventOperationTaskDTO)
+getEventTask user eventId activityId = do
+  unless (all EventOps.isSafePositiveInteger [eventId, activityId]) $
+    throwError (eventOperationDomainError "invalid_request")
+  requireEventOperationsEnabled
+  task <- runEventOperationsSessionDb user $
+    loadTask eventId activityId (fromSqlKey (auPartyId user))
+  value <- maybe (throwError (eventOperationDomainError "not_found")) pure task
+  pure (addHeader ("private, no-store" :: Text) value)
 
 runEventOperationsDb :: SqlPersistT IO a -> EventOperationsM a
 runEventOperationsDb action = do

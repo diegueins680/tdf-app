@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
@@ -34,4 +35,14 @@ test('HTTP harness refuses a missing DSN before compilation or SQL', () => {
 
 test('CI fixture runner refuses execution outside the declared service environment', () => {
   rejected('test-event-operations-http-ci.sh', {}, /requires the CI service container/);
+});
+
+test('both HTTP runners install task prerequisites before opted-in task fixtures', () => {
+  for (const script of ['test-event-operations-http.sh', 'test-event-operations-http-ci.sh']) {
+    const source = readFileSync(path.join(root, 'scripts', script), 'utf8');
+    const positions = ['2026-09-14_event_operations_api.sql', '2026-09-14_event_task_commit.sql',
+      '2026-09-14_event_task_read.sql', 'event_operations_http_fixture.sql'].map(file => source.indexOf(file));
+    assert.ok(positions.every(position => position >= 0), `${script} must install every prerequisite`);
+    assert.deepEqual(positions, [...positions].sort((a, b) => a - b), `${script} prerequisite order`);
+  }
 });

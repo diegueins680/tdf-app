@@ -10,6 +10,8 @@ for fixture in \
   tdf-hq/test/integration/event_operations_foundation_fixture.sql \
   tdf-hq/sql/2026-09-14_event_operations_foundation.sql \
   tdf-hq/sql/2026-09-14_event_operations_api.sql \
+  tdf-hq/sql/2026-09-14_event_task_commit.sql \
+  tdf-hq/sql/2026-09-14_event_task_read.sql \
   tdf-hq/test/integration/event_operations_http_fixture.sql; do
   psql -X -v ON_ERROR_STOP=1 -f "$repo_root/$fixture" >/dev/null
 done

@@ -48,13 +48,15 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
       Right _ -> expectationFailure "Revoked in-flight session disclosed an event snapshot"
 
   forM_ (zip [100..] mutations) $ \(eventId, (label, mutation)) ->
-    it ("rejects GET/new/replay for captured sessions after " <> label) $ do
+    it ("rejects GET/task/new/replay for captured sessions after " <> label) $ do
       (token, user) <- seedSession pool eventId
       accepted <- transition pool user eventId eventId 1 Planning
       expectRight accepted
+      taskSnapshot pool user eventId >>= expectRight
       before <- receipt pool eventId
       execute pool mutation [PersistText token]
       snapshot pool user eventId >>= expect401
+      taskSnapshot pool user eventId >>= expect401
       transition pool user eventId eventId 1 Planning >>= expect401
       transition pool user eventId (eventId+1000) 2 PendingApproval >>= expect401
       receipt pool eventId `shouldReturn` before
@@ -67,7 +69,9 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
   it "fails closed without a witness and binds both the copied actor and token owner" $ do
     (token,user) <- seedSession pool 106
     snapshot pool (user { auSessionWitness = Nothing }) 106 >>= expect401
+    taskSnapshot pool (user { auSessionWitness = Nothing }) 106 >>= expect401
     snapshot pool (user { auPartyId = toSqlKey 3 }) 106 >>= expect401
+    taskSnapshot pool (user { auPartyId = toSqlKey 3 }) 106 >>= expect401
     execute pool "UPDATE api_token SET party_id=3 WHERE token=?" [PersistText token]
     snapshot pool (user { auPartyId = toSqlKey 3 }) 106 >>= expect401
     eventCounts pool 106 `shouldReturn` [0,0,0,1]
@@ -99,12 +103,13 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
     snapshot pool user 109 >>= expectRight
     eventCounts pool 109 `shouldReturn` [0,0,0,1]
 
-  forM_ (zip [110..] ["read","new","replay"]) $ \(eventId, mode) ->
+  forM_ (zip [110..] ["read","new","replay","task"]) $ \(eventId, mode) ->
     it ("rejects real HTTP " <> mode <> " when revoked after production authentication") $ do
       (token,user) <- seedSession pool eventId
       if mode == "replay" then transition pool user eventId eventId 1 Planning >>= expectRight else pure ()
       before <- eventCounts pool eventId
-      response <- httpAfterAuthentication pool token eventId (mode == "read") $
+      taskSnapshot pool user eventId >>= expectRight
+      response <- httpAfterAuthentication pool token eventId mode $
         execute pool "UPDATE api_token SET active=FALSE WHERE token=?" [PersistText token]
       statusCode (HTTP.responseStatus response) `shouldBe` 401
       HTTP.responseBody response `shouldBe` "Invalid or inactive token"
@@ -141,8 +146,14 @@ snapshot pool user eventId =
 transition :: ConnectionPool -> AuthedUser -> Int64 -> Int64 -> Int64 -> EventLifecycleState
            -> IO (Either ServerError EventTransitionOutcomeDTO)
 transition pool user eventId key version target =
-  let _ :<|> apply = eventOperationsServer user eventId
+  let _ :<|> apply :<|> _ = eventOperationsServer user eventId
   in runHandler (runReaderT (apply (commandKey key) (command version target)) (Env pool httpTestConfig))
+
+taskSnapshot :: ConnectionPool -> AuthedUser -> Int64
+             -> IO (Either ServerError (Headers '[Header "Cache-Control" Text] EventOperationTaskDTO))
+taskSnapshot pool user eventId =
+  let _ :<|> _ :<|> getTask = eventOperationsServer user eventId
+  in runHandler (runReaderT (getTask (eventId + 10000)) (Env pool httpTestConfig))
 
 commandKey :: Int64 -> UUID.UUID
 commandKey n = UUID.fromWords 0 0 0 (fromIntegral n)
@@ -172,7 +183,9 @@ seedSession pool eventId = do
     rawExecute "INSERT INTO api_token(token,party_id,active) VALUES (?,1,TRUE)" [PersistText token]
     rawExecute "INSERT INTO social_event(id,organizer_party_id) VALUES (?,'1')" [PersistInt64 eventId]
     rawExecute "INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence) VALUES (?,'draft',1,'session fence test')" [PersistInt64 eventId]
-    rawExecute "INSERT INTO event_operation_relationship(event_id,party_id,relationship_kind) VALUES (?,1,'primary_owner')" [PersistInt64 eventId]) pool
+    rawExecute "INSERT INTO event_operation_relationship(event_id,party_id,relationship_kind) VALUES (?,1,'primary_owner')" [PersistInt64 eventId]
+    rawExecute "INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (?,?,'planned',1)"
+      [PersistInt64 (eventId + 10000), PersistInt64 eventId]) pool
   user <- authenticated pool token
   pure (token,user)
 
@@ -285,8 +298,8 @@ operationFirst pool eventId cancel = do
 
 type ProtectedEvents = AuthProtect "bearer-token" :> EventOperationsAPI
 
-httpAfterAuthentication :: ConnectionPool -> Text -> Int64 -> Bool -> IO () -> IO (HTTP.Response BL.ByteString)
-httpAfterAuthentication pool token eventId readOnly revoke = do
+httpAfterAuthentication :: ConnectionPool -> Text -> Int64 -> String -> IO () -> IO (HTTP.Response BL.ByteString)
+httpAfterAuthentication pool token eventId mode revoke = do
   authenticatedSignal <- newEmptyMVar
   continue <- newEmptyMVar
   let env = Env pool httpTestConfig
@@ -299,10 +312,13 @@ httpAfterAuthentication pool token eventId readOnly revoke = do
           runReaderT action env) eventOperationsServer
   Warp.testWithApplicationSettings (Warp.setHost "127.0.0.1" Warp.defaultSettings) (pure app) $ \port -> do
     manager <- HTTP.newManager HTTP.defaultManagerSettings
-    let request = HTTP.defaultRequest
+    let readOnly = mode `elem` ["read", "task"]
+        suffix = if mode == "task" then "/tasks/" <> show (eventId + 10000)
+                 else if readOnly then "" else "/transitions"
+        request = HTTP.defaultRequest
           { HTTP.host = "127.0.0.1", HTTP.port = port, HTTP.secure = False
           , HTTP.method = if readOnly then "GET" else "POST"
-          , HTTP.path = BS.pack ("/event-operations/events/" <> show eventId <> if readOnly then "" else "/transitions")
+          , HTTP.path = BS.pack ("/event-operations/events/" <> show eventId <> suffix)
           , HTTP.requestHeaders = [("Authorization","Bearer " <> TE.encodeUtf8 token),
               ("Content-Type","application/json"),("Idempotency-Key",TE.encodeUtf8 (UUID.toText (commandKey eventId)))]
           , HTTP.requestBody = HTTP.RequestBodyLBS (if readOnly then BL.empty else encode (command 1 Planning))

@@ -22,6 +22,8 @@ apply_sql() {
 apply_sql "$repo_root/tdf-hq/test/integration/event_operations_foundation_fixture.sql"
 apply_sql "$repo_root/tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
 apply_sql "$repo_root/tdf-hq/sql/2026-09-14_event_operations_api.sql"
+apply_sql "$repo_root/tdf-hq/sql/2026-09-14_event_task_commit.sql"
+apply_sql "$repo_root/tdf-hq/sql/2026-09-14_event_task_read.sql"
 apply_sql "$repo_root/tdf-hq/test/integration/event_operations_http_fixture.sql"
 test_port=$(docker port "$test_container" 5432/tcp)
 test_port=${test_port##*:}

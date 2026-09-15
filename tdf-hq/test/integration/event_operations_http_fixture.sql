@@ -54,3 +54,18 @@ INSERT INTO event_operation_grant(event_id,grantee_party_id,scope_code,issued_by
  (67,1,'event.approve',1),(67,2,'event.approve',1),(74,2,'event.read',1);
 UPDATE event_operation_feature_flag SET enabled=TRUE,updated_at=clock_timestamp(),
  updated_by_party_id=1,change_reason='disposable HTTP tests' WHERE feature_code='event.operations.api';
+
+BEGIN;
+INSERT INTO social_event(id,organizer_party_id) VALUES (80,'1'),(81,'1');
+INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence)
+ VALUES (80,'planning',1,'task HTTP fixture'),(81,'planning',1,'task HTTP fixture');
+INSERT INTO event_operation_relationship(event_id,party_id,relationship_kind)
+ VALUES (80,1,'primary_owner'),(81,1,'primary_owner');
+INSERT INTO event_logistics_activity(id,event_id,status,version)
+ VALUES (8000,80,'planned',1),(8001,80,'confirmed',1),(8100,81,'planned',1);
+INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id)
+ VALUES (8000,1,'accountable',1),(8000,3,'responsible',1);
+INSERT INTO event_operation_task_policy(activity_id) VALUES (8000);
+INSERT INTO event_operation_grant(event_id,grantee_party_id,scope_code,resource_kind,resource_id,issued_by_party_id)
+ VALUES (80,2,'task.read','task','8000',1);
+COMMIT;

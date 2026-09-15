@@ -8,6 +8,8 @@ module TDF.EventOperations.DatabaseBoundary
   , tryDatabaseAction
   , decodeSnapshotRows
   , loadSnapshot
+  , decodeTaskRows
+  , loadTask
   ) where
 
 import Control.Exception
@@ -15,13 +17,14 @@ import Control.Exception
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (Value, eitherDecodeStrict', object, (.=))
 import Data.Int (Int64)
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text.Encoding as TE
 import Database.Persist (PersistValue(..))
 import Database.Persist.Sql (Single(..), SqlPersistT, rawSql)
 import Database.PostgreSQL.Simple (SqlError(..))
 
-import TDF.EventOperations.Types (EventOperationSnapshotDTO(..))
+import TDF.EventOperations.Types
 
 data DatabaseFailure = TransactionConflict | DatabaseUnavailable
   deriving (Eq, Show)
@@ -67,3 +70,29 @@ loadSnapshot eventId actorPartyId = do
   rows <- rawSql "SELECT event_operation_read_snapshot(?, ?)::text"
     [PersistInt64 eventId, PersistInt64 actorPartyId]
   either (liftIO . throwIO) pure (decodeSnapshotRows eventId rows)
+
+decodeTaskRows
+  :: Int64 -> Int64 -> [Single (Maybe Text)] -> Either SnapshotDecodeError (Maybe EventOperationTaskDTO)
+decodeTaskRows _ _ [Single Nothing] = Right Nothing
+decodeTaskRows eventId activityId [Single (Just raw)] =
+  case eitherDecodeStrict' (TE.encodeUtf8 raw) of
+    Right task | valid task -> Right (Just task)
+    _ -> Left SnapshotDecodeError
+  where
+    valid task =
+      eotEventId task == eventId && eotActivityId task == activityId
+      && all isSafePositiveInteger
+        ([eotEventId task, eotActivityId task, eotVersion task] <> map eraPartyId (eotRaci task))
+      && maybe True (isSafePositiveInteger . etpVersion) (eotPolicy task)
+      && Set.size (Set.fromList [(eraPartyId a, eraRole a) | a <- eotRaci task]) == length (eotRaci task)
+      && eotAccountabilityNeedsAttention task == needsAttention task
+    needsAttention task = maybe False etpRequiresAccountability (eotPolicy task)
+      && (length (filter ((== RaciAccountable) . eraRole) (eotRaci task)) /= 1
+          || not (any ((== RaciResponsible) . eraRole) (eotRaci task)))
+decodeTaskRows _ _ _ = Left SnapshotDecodeError
+
+loadTask :: Int64 -> Int64 -> Int64 -> SqlPersistT IO (Maybe EventOperationTaskDTO)
+loadTask eventId activityId actorPartyId = do
+  rows <- rawSql "SELECT event_operation_read_task(?, ?, ?)::text"
+    [PersistInt64 eventId, PersistInt64 activityId, PersistInt64 actorPartyId]
+  either (liftIO . throwIO) pure (decodeTaskRows eventId activityId rows)

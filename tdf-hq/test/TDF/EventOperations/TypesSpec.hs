@@ -13,6 +13,16 @@ import TDF.EventOperations.Types
 
 spec :: Spec
 spec = describe "event operations executable API contracts" $ do
+  it "keeps both exact numeric transport endpoints and rejects their outside neighbors" $
+    map isSafePositiveInteger [-1, 0, 1, 9007199254740991, 9007199254740992]
+      `shouldBe` [False, False, True, True, False]
+
+  it "round-trips every canonical logistics status and RACI role" $ do
+    map (eitherDecode . encode) ([minBound..maxBound] :: [EventTaskStatus])
+      `shouldBe` map Right ([minBound..maxBound] :: [EventTaskStatus])
+    map (eitherDecode . encode) ([minBound..maxBound] :: [EventRaciRole])
+      `shouldBe` map Right ([minBound..maxBound] :: [EventRaciRole])
+
   it "round-trips every canonical lifecycle state" $ do
     map (eitherDecode . encode) allEventLifecycleStates
       `shouldBe` map Right allEventLifecycleStates
