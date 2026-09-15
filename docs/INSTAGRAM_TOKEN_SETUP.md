@@ -93,6 +93,43 @@ node scripts/refresh-instagram-token.mjs --refresh
 node scripts/refresh-instagram-token.mjs --setup
 ```
 
+## Messaging token checks (separate workflow)
+
+`Check Messaging Token` manages `INSTAGRAM_MESSAGING_TOKEN` and
+`FACEBOOK_MESSAGING_TOKEN`, not `INSTAGRAM_ACCESS_TOKEN` above. Its manual
+`action=check` is read-only:
+
+```bash
+node scripts/check-messaging-token.mjs --check
+gh workflow run check-messaging-token.yml \
+  --repo diegueins680/tdf-app --ref REVIEWED_REF_WITH_READ_ONLY_CHECK -f action=check
+```
+
+Replace the ref placeholder only with a reviewed revision containing this fix.
+Until it is merged, do not dispatch this workflow on the old `main`: its manual
+`check` action still runs credential maintenance. The CLI flag is also unsafe on
+older revisions that silently ignore arguments.
+
+Both tokens must pass the existing health checks without needing maintenance.
+Missing, invalid, expired, soon-expiring tokens or failed provider checks return
+a nonzero status; read-only mode never exchanges tokens, retrieves replacement
+Page tokens, or calls Fly. In Actions, this step receives only the messaging
+tokens and Meta inspector credentials; Fly credentials and CLI installation are
+limited to maintenance. Failure notifications retain their existing behavior.
+
+The hourly schedule and explicit `action=refresh` retain the existing
+refresh-when-needed behavior, including final verification and failure exits.
+They invoke `node scripts/check-messaging-token.mjs` without arguments, which can
+exchange tokens and update both Fly messaging secrets. Manual `refresh` is not
+an unconditional rotation and requires separate production-maintenance approval.
+Unknown CLI arguments and workflow actions fail instead of falling through to
+maintenance. Do not pass token values as arguments or paste them into logs.
+
+No schema migration or application deployment is needed for this change.
+Reverting it restores the old, potentially mutating manual `check` behavior;
+stop using manual checks on a reverted revision. Reverting code does not undo
+any separately authorized credential update.
+
 ## Token Lifecycle
 
 ```
@@ -122,6 +159,29 @@ The script provides detailed logging:
 Check the GitHub Actions logs for automated runs, or run locally with `--check`.
 
 ## Troubleshooting
+
+### Instagram Login account access works but metadata inspection returns API code 2
+
+Meta Support confirmed on September 15, 2026 that Facebook's `/debug_token`
+does not reliably support Instagram Login tokens, including tokens generated
+from the App Dashboard. Support stated that switching inspector app credentials
+does not resolve this limitation and that no equivalent documented read-only
+introspection API is available. This explains the observed account-access success
+followed by metadata failure; it is not evidence of a platform-wide outage.
+
+Support recommended the [Developer Portal Access Token Debugger](https://developers.facebook.com/tools/debug/accesstoken/)
+for manual inspection. An authorized operator must use the token only in Meta's
+trusted tool and must not paste it into chat, logs, issues, or screenshots. The
+tool's ability to inspect this repository's current token has not yet been
+verified. Record only non-secret validation results and any supported lifecycle
+requirements before deciding how to replace the unsupported API integration.
+
+Until a supported replacement preserves token validity, app ownership and
+authoritative expiry checks, the automated check remains blocked and fails
+closed. Account access alone is not a substitute for those checks. Do not infer
+an expiry date, rotate app secrets, rerun setup, or update Fly to mask this
+failure. The credential table and debugger implementation above describe the
+current code, not a supported workaround for Instagram Login tokens.
 
 ### "Token expired" errors
 - Run `node scripts/refresh-instagram-token.mjs --refresh`
