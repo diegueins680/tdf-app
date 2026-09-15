@@ -158,6 +158,15 @@ on the contextual authorization, time-window, history and HTTP conflict handling
 
 ### Pending product work
 
+The fifth dependent branch, `fix/event-command-replay-authorization`, closes the SQL receipt replay
+bypass with fresh read/write scope checks and an authorization epoch that serializes scope edits
+with lifecycle commands. The new `ReceiptReplay` finite model and all three negative controls pass
+their expected checks; the final PostgreSQL suite passes revoked/expired/future grants, surviving
+read permission after write expiry, receipt privacy/immutability, identity binding, duplicate
+replay and RC/RR/Serializable revocation races. The task-commit regression and repository formal
+audit tests passed again. Full evidence and remaining boundaries are in
+[PR 05](pr-05-replay-authorization.md). This does not complete HTTP/session/offline authorization.
+
 - Extend the typed lifecycle API beyond the five safe early edges only as each ticket, booking,
   contract, notification, public-visibility, and financial effect gains an atomic/outbox
   implementation and an executable failure/compensation test. Add HTTP-level authorization and

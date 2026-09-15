@@ -15,6 +15,8 @@
 - [Draft PR 03](pr-03-logistics-transaction-hardening.md)
 - [Draft PR 04](pr-04-task-commit-invariants.md)
 - [Task transaction contract](task-commit-contract.md)
+- [Receipt replay authorization contract](receipt-replay-contract.md)
+- [Draft PR 05](pr-05-replay-authorization.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)

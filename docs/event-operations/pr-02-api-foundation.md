@@ -87,3 +87,7 @@ revoked-scope replay must be corrected and tested before activation. HTTP integr
 tests, stale-session/offline replay, outbox effects, legacy lifecycle
 cutover, mobile client generation, web workspace UI, and every later domain phase remain. No provider,
 production database, credential, deployment, or real-money operation is touched.
+
+Follow-up: the dependent PR 05 branch corrects that SQL replay path with an authorization epoch,
+fresh-clock scope evaluation, immutable denial audit and PostgreSQL concurrency tests. This initial
+PR remains insufficient alone; the read-snapshot handler and exception logging still need hardening.

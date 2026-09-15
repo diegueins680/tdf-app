@@ -72,8 +72,8 @@ run_tlc TaskRaci.tla TaskRaci.cfg task-raci
 run_tlc TaskCommit.tla TaskCommit.cfg task-commit
 # Mutation checks must expose the precise regression, not just fail parsing.
 expect_counterexample() {
-  local config="$1" invariant="$2" slug="$3" result=0
-  run_tlc TaskCommit.tla "${config}" "${slug}" > "${run_root}/${slug}.log" 2>&1 || result=$?
+  local config="$1" invariant="$2" slug="$3" module="${4:-TaskCommit.tla}" result=0
+  run_tlc "${module}" "${config}" "${slug}" > "${run_root}/${slug}.log" 2>&1 || result=$?
   if [[ "${result}" != 12 ]] || ! grep -q "Invariant ${invariant} is violated" "${run_root}/${slug}.log"; then
     cat "${run_root}/${slug}.log"
     echo "Expected counterexample not detected: ${config}" >&2
@@ -83,6 +83,10 @@ expect_counterexample() {
 }
 expect_counterexample TaskCommitEarlyValidation.cfg NoBlockedCompletion early-validation
 expect_counterexample TaskCommitWriteSkew.cfg NoOrphanResponsibilities write-skew
+run_tlc ReceiptReplay.tla ReceiptReplay.cfg receipt-replay
+expect_counterexample ReceiptReplayBypass.cfg NoUnauthorizedDisclosure replay-bypass ReceiptReplay.tla
+expect_counterexample ReceiptReplayStaleClock.cfg NoUnauthorizedDisclosure replay-clock ReceiptReplay.tla
+expect_counterexample ReceiptReplayStaleSnapshot.cfg NoUnauthorizedDisclosure replay-snapshot ReceiptReplay.tla
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
 run_tlc OperationalLiveness.tla OperationalLiveness.cfg operational-liveness
 

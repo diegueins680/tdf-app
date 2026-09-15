@@ -52,6 +52,74 @@ transition_json() {
   psql_exec -qAt -c "SELECT event_operation_apply_transition($1,$2,'$3',$4,'$5',$6,'$7',encode(digest('$8','sha256'),'hex'));"
 }
 
+wait_for_replay_barrier() {
+  replay_backend="$1"; replay_wait="$2"; replay_attempt=0
+  until [ "$(psql_exec -qAtc "SELECT count(*) FROM pg_stat_activity WHERE application_name='$replay_backend' AND wait_event_type='$replay_wait'")" = 1 ]; do
+    replay_attempt=$((replay_attempt + 1))
+    if [ "$replay_attempt" -ge 50 ]; then
+      echo "Replay test backend did not reach $replay_wait: $replay_backend" >&2
+      exit 1
+    fi
+    sleep 0.1
+  done
+}
+
+test_replay_revocation_race() {
+  replay_event="$1"; replay_isolation="$2"
+  replay_command="30000000-0000-4000-8000-0000000000$replay_event"
+  psql_exec -c "BEGIN;
+    INSERT INTO social_event(id,organizer_party_id) VALUES ($replay_event,'1');
+    INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence)
+      VALUES ($replay_event,'planning',1,'replay race');
+    INSERT INTO event_operation_grant(event_id,grantee_party_id,scope_code,issued_by_party_id)
+      VALUES ($replay_event,2,'event.manage',1); COMMIT;" >/dev/null
+  replay_original=$(transition_json "$replay_event" 2 "$replay_command" 1 pending_approval NULL replay-race request-race)
+  test "$(json_field "$replay_original" '.version')" = 2
+  transition_json "$replay_event" 2 "$replay_command" 1 pending_approval NULL replay-race request-race > "$result_dir/replay-a.json" &
+  replay_a=$!
+  transition_json "$replay_event" 2 "$replay_command" 1 pending_approval NULL replay-race request-race > "$result_dir/replay-b.json" &
+  replay_b=$!
+  wait "$replay_a"; wait "$replay_b"
+  test "$(jq -s '[.[] | select(.replayed == true and .version == 2)] | length' "$result_dir/replay-a.json" "$result_dir/replay-b.json")" = 2
+
+  psql_exec -c "SET application_name='replay_coordinator_$replay_event';
+    SELECT pg_advisory_lock(885,$replay_event); SELECT pg_sleep(60);" > "$result_dir/coordinator.log" 2>&1 &
+  replay_coordinator=$!
+  wait_for_replay_barrier "replay_coordinator_$replay_event" Timeout
+  psql_exec -c "BEGIN; SET LOCAL application_name='replay_revoke_$replay_event';
+    UPDATE event_operation_grant SET revoked_at=clock_timestamp(),revoked_by_party_id=1,
+      revocation_reason='concurrent replay test' WHERE event_id=$replay_event;
+    SELECT pg_advisory_xact_lock(885,$replay_event); COMMIT;" > "$result_dir/revoke.log" 2>&1 &
+  replay_revoke=$!
+  wait_for_replay_barrier "replay_revoke_$replay_event" Lock
+  psql_exec --set=VERBOSITY=verbose -qAtc "BEGIN ISOLATION LEVEL $replay_isolation;
+    SET LOCAL application_name='replay_read_$replay_event';
+    SELECT event_operation_apply_transition($replay_event,2,'$replay_command',1,'pending_approval',NULL,'replay-race',encode(digest('request-race','sha256'),'hex'));
+    COMMIT;" > "$result_dir/read.log" 2>&1 &
+  replay_read=$!
+  wait_for_replay_barrier "replay_read_$replay_event" Lock
+  psql_exec -qAtc "SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+    WHERE datname=current_database() AND application_name='replay_coordinator_$replay_event'" >/dev/null
+  wait "$replay_coordinator" || true
+  wait "$replay_revoke"
+  if [ "$replay_isolation" = 'READ COMMITTED' ]; then
+    wait "$replay_read"
+    test "$(jq -r 'keys|join(",")' "$result_dir/read.log")" = error
+    test "$(jq -r '.error' "$result_dir/read.log")" = forbidden
+  else
+    if wait "$replay_read"; then
+      echo "Stale $replay_isolation command did not abort" >&2
+      exit 1
+    fi
+    grep -q 40001 "$result_dir/read.log" || { sed -n '1,50p' "$result_dir/read.log" >&2; exit 1; }
+  fi
+  replay_retry=$(transition_json "$replay_event" 2 "$replay_command" 1 pending_approval NULL replay-race request-race)
+  test "$(json_field "$replay_retry" '.error')" = forbidden
+  test "$(psql_exec -qAtc "SELECT version FROM event_operation_event_state WHERE event_id=$replay_event")" = 2
+  test "$(psql_exec -qAtc "SELECT count(*) FROM event_operation_transition WHERE event_id=$replay_event")" = 1
+  test "$(psql_exec -qAtc "SELECT count(*) FROM event_operation_command_receipt WHERE event_id=$replay_event")" = 1
+}
+
 apply_sql "$fixture_sql"
 apply_sql "$foundation_migration"
 apply_sql "$api_migration"
@@ -106,8 +174,9 @@ test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_audit_event WHER
 reused_key=$(transition_json 10 1 10000000-0000-4000-8000-000000000010 1 pending_approval NULL submit-review changed-request)
 test "$(json_field "$reused_key" '.error')" = "idempotency_conflict"
 reused_key_actor=$(transition_json 10 3 10000000-0000-4000-8000-000000000010 1 pending_approval NULL submit-review request-submit)
-test "$(json_field "$reused_key_actor" '.error')" = "idempotency_conflict"
-test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_audit_event WHERE event_id=10 AND command_id='10000000-0000-4000-8000-000000000010' AND outcome='conflict';")" = "2"
+test "$(json_field "$reused_key_actor" '.error')" = "forbidden"
+test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_audit_event WHERE event_id=10 AND command_id='10000000-0000-4000-8000-000000000010' AND outcome='conflict';")" = "1"
+test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_audit_event WHERE event_id=10 AND command_id='10000000-0000-4000-8000-000000000010' AND outcome='rejected';")" = "1"
 
 forbidden=$(transition_json 10 3 10000000-0000-4000-8000-000000000011 2 approved NULL outsider-approval request-outsider)
 test "$(json_field "$forbidden" '.error')" = "forbidden"
@@ -146,6 +215,12 @@ test "$(psql_exec -qAt -c 'SELECT version FROM event_operation_event_state WHERE
 test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_transition WHERE event_id=13;')" = "1"
 test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_command_receipt WHERE event_id=13 AND operation_code='event.lifecycle.transition';")" = "2"
 
+apply_sql "$repo_root/tdf-hq/test/integration/event_operations_replay_assertions.sql"
+test_replay_revocation_race 30 'READ COMMITTED'
+test_replay_revocation_race 31 'REPEATABLE READ'
+test_replay_revocation_race 32 'SERIALIZABLE'
+replay_epoch=$(psql_exec -qAtc 'SELECT authorization_version FROM event_operation_event_state WHERE event_id=20')
+
 apply_sql "$api_rollback"
 apply_sql "$api_rollback"
 test "$(psql_exec -qAt -c "SELECT enabled FROM event_operation_feature_flag WHERE feature_code='event.operations.api';")" = "f"
@@ -158,8 +233,11 @@ test "$(psql_exec -qAt -c "SELECT to_regprocedure('event_operation_apply_transit
 test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_transition WHERE event_id IN (10,12,13);')" = "5"
 
 apply_sql "$api_migration"
+test "$(psql_exec -qAtc 'SELECT authorization_version FROM event_operation_event_state WHERE event_id=20')" = "$replay_epoch"
+test "$(psql_exec -qAtc 'SELECT count(*) FROM event_operation_transition WHERE event_id=20')" = 1
+test "$(psql_exec -qAtc 'SELECT count(*) FROM event_operation_command_receipt WHERE event_id=20')" = 3
 test "$(psql_exec -qAt -c "SELECT enabled FROM event_operation_feature_flag WHERE feature_code='event.operations.api';")" = "f"
 test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_feature_flag_history WHERE feature_code='event.operations.api';")" = "3"
 test "$(psql_exec -qAt -c "SELECT to_regprocedure('event_operation_apply_transition(bigint,bigint,uuid,bigint,text,text,text,text)') IS NOT NULL;")" = "t"
 
-echo "Event operations API migration passed disabled-default and immutable flag history, contextual read, idempotent replay, global command-key, conflict/rejection audit, version conflict, separation-of-duties, effects gate, reason guard, concurrent transition, rollback, and reapply checks."
+echo "Event operations API migration passed disabled-default/immutable history, contextual authorization, revoked/expired/future/restricted replay, current-clock write authority, concurrent duplicate replay and revocation (RC/RR/Serializable), command-key binding, conflict/rejection audit, version conflict, separation-of-duties, effects gate, concurrent transition, rollback, and reapply checks."

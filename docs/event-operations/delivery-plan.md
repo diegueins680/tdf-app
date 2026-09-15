@@ -48,3 +48,10 @@ deferred final-state guards with a per-event write fence. It closes same-transac
 replacement and concurrent RACI-removal gaps and tests RC/RR/SERIALIZABLE writers, rollback and
 reapply. The complete operation contract and bounded results are linked from the specification
 index. This correction does not advance phase 4 to complete.
+
+`fix/event-command-replay-authorization` is the next dependent security correction: stored receipts
+are reauthorized, permission edits serialize with commands on an authorization epoch, and wall-clock
+expiry is checked after lock acquisition. The existing unmerged API migration is corrected in place
+because it has never entered the production manifest. Scope administration, consistent GET snapshot
+authorization, sensitive exception logging, full HTTP/offline tests and the remaining product phases
+are still required before activation.
