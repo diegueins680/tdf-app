@@ -105,6 +105,10 @@ for mutation in Stale Unlocked Party Credential Purpose Witness; do
 done
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
 run_tlc TaskRead.tla TaskRead.cfg task-read
+run_tlc TaskView.tla TaskView.cfg task-view
+expect_counterexample TaskViewLate.cfg CurrentView task-view-late TaskView.tla
+expect_counterexample TaskViewRetained.cfg CurrentView task-view-retained TaskView.tla
+expect_counterexample TaskViewInvalid.cfg ValidatedView task-view-invalid TaskView.tla
 for mutation in Scope Event Early; do
   expect_counterexample "TaskRead${mutation}.cfg" NoUnauthorizedTask "task-read-${mutation}" TaskRead.tla
 done

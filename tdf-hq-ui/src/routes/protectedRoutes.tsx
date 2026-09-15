@@ -79,7 +79,7 @@ const SecurityPage = lazy(() => import('../pages/SecurityPage'));
 const ServiceTypesPage = lazy(() => import('../pages/ServiceTypesPage'));
 const SocialEventsPage = lazy(() => import('../pages/SocialEventsPage'));
 const CollaborativeEventCreatorPage = lazy(() => import('../pages/CollaborativeEventCreatorPage'));
-const SocialEventDetailPage = lazy(() => import('../pages/SocialEventDetailPage'));
+const SocialEventDetailPage = lazy(() => import('../pages/SocialEventWorkspacePage'));
 const EventLogisticsPage = lazy(() => import('../pages/EventLogisticsPage'));
 const RecentlyDiscoveredEventsPage = lazy(() => import('../pages/RecentlyDiscoveredEventsPage'));
 const SocialInboxPage = lazy(() => import('../pages/SocialInboxPage'));

@@ -151,3 +151,11 @@ translation warning: two stripped generated trailing spaces, not different booki
 Fixed-width regeneration and a byte-exact, temporary-copy gate now precede TLC; real-translator
 mutation tests run in the same CI job. See [PR 18 evidence and limits](pr-18-pluscal-integrity.md).
 This hardens phase-2 evidence without advancing incomplete booking or workspace implementation.
+
+The nineteenth branch, `feat/event-task-raci-view`, adds a read-only task/RACI subview to the
+existing registered event route and links it from logistics. Its lightweight dispatcher does
+not import or mount the ordinary event overview for task links. The new bounded `TaskView`
+model precedes implementation; the existing exact-task API remains the only data source.
+Context-generation fencing, explicit bearer binding, strict route/DTO validation and abort
+cleanup protect rendered receipts. This is not a task editor, rich plan, readiness gate or
+mobile implementation; see [the scoped read contract](task-view-contract.md).
