@@ -12,8 +12,9 @@ for model in Relationships Feed RequestReplay; do
     "$TDF_SOCIAL_ROOT/formal/social/$model.tla" > "$TDF_SOCIAL_RESULTS/$model.txt" 2>&1
   grep 'Model checking completed. No error has been found.' "$TDF_SOCIAL_RESULTS/$model.txt"
 done
-for negative in StaleCache WithdrawalOwnership RequestIdentity FeedSkipped RequestConflict DeletedActor DeletedTarget StaleCommand; do
+for negative in StaleCache WithdrawalOwnership RequestIdentity FeedSkipped RequestConflict DeletedActor DeletedTarget StaleCommand StaleDelivery RequestOwnership UnblockResurrection UnblockOwnership; do
   module=Relationships
+  property_kind=Invariant
   case "$negative" in
     StaleCache) expected=AuthoritativeDenial ;;
     WithdrawalOwnership) expected=OwnConsentOnly ;;
@@ -23,6 +24,10 @@ for negative in StaleCache WithdrawalOwnership RequestIdentity FeedSkipped Reque
     DeletedActor) expected=InactiveActorCannotMutate ;;
     DeletedTarget) expected=DeletedTargetCannotMutate ;;
     StaleCommand) expected=StaleRelationshipCommandsDenied ;;
+    StaleDelivery) expected=DeliveryAuthority ;;
+    RequestOwnership) expected=OwnConsentOnly ;;
+    UnblockResurrection) expected=NoConsentResurrection; property_kind='Action property' ;;
+    UnblockOwnership) expected=BlockOwnership; property_kind='Action property' ;;
   esac
   set +e
   "$TDF_SOCIAL_JAVA" -cp "$TLA_JAR" tlc2.TLC -workers 1 \
@@ -32,6 +37,6 @@ for negative in StaleCache WithdrawalOwnership RequestIdentity FeedSkipped Reque
   result=$?
   set -e
   if [ "$result" -eq 0 ]; then echo "Expected $negative counterexample" >&2; exit 1; fi
-  grep "Invariant $expected is violated" "$TDF_SOCIAL_RESULTS/$negative.txt"
+  grep "$property_kind $expected is violated" "$TDF_SOCIAL_RESULTS/$negative.txt"
 done
 printf 'Evidence: %s\n' "$TDF_SOCIAL_RESULTS"

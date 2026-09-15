@@ -30,9 +30,9 @@ it is not evidence that this precise sequence was executed in production.
 
 | Requirement | Property/action | Required implementation mechanism | Current evidence |
 |---|---|---|---|
-| S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 100,031 distinct states; observable read safety + availability and liveness passed |
-| S-CONSENT | ConsentIntegrity, OwnConsentOnly / Request, Withdraw(a) | own consent only, unique pair, transactional revoke | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
-| S-BLOCK | ConsentIntegrity / Block, Unblock | common row locks with accept/send, no resurrection | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
+| S-AUTH | AuthoritativeDenial, DeliveryAuthority / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 101,855 distinct states; observable read safety + availability and liveness passed |
+| S-CONSENT | ConsentIntegrity, OwnConsentOnly / Request(a, revision), Withdraw(a, revision) | own consent only, unique pair, transactional revoke | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
+| S-BLOCK | ConsentIntegrity, NoConsentResurrection, BlockOwnership / Block, Unblock | common row locks with accept/send, no resurrection | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-DELETE | ConsentIntegrity / Delete | tombstone/revision, stale commands rejected | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-RETRY | AtMostOnce, RequestAdmission, ReplayEquality, BindingImmutable / Queue, Finish, Submit | request identity + immutable recipient/payload equality + transaction + terminal dedup | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-PROGRESS | Progress / Finish(r) | bounded retry or terminal rejection; fairness | TLC Progress passed; worker not qualified |
@@ -152,3 +152,26 @@ DeletedTargetCannotMutate and StaleRelationshipCommandsDenied respectively.
 Exact logs: `docs/social/model-evidence-tombstone-2026-09-15/`. SQL/HTTP refinement,
 including propagation of expected revisions through legacy clients, remains a
 separate activation requirement for downstream implementations.
+
+## Independent delivery and ownership guarantees
+
+Finish records the delivery-time revision and authority snapshot separately for
+every delivered request. DeliveryAuthority independently requires the queued
+revision to match that snapshot, bilateral consent, live principals, no block,
+and the relevant membership/privacy policy. A StaleDelivery mutant bypasses the
+Finish authorization guard and must fail this invariant after authority changes.
+A later revoke does not retroactively invalidate a delivery already authorized at
+its transaction boundary.
+
+OwnConsentOnly now records both Request and Withdraw preserving the other
+principal's intent. RequestOwnership attempts to synthesize the peer's consent
+and must fail. NoConsentResurrection is an action property requiring Unblock to
+preserve the pre-command consent set. BlockOwnership separately requires it to
+preserve all other principals' blocks. Their negative configurations restore
+consent or clear all blocks and must violate the named action property.
+
+Final complete run: three positive configurations and twelve specific negative
+controls passed. Relationships: 337,265 generated / 101,855 distinct, depth 11;
+Feed: 4,717 / 1,674, depth 17; RequestReplay: 2,384 / 272, depth 6. Exact logs:
+`docs/social/model-evidence-independent-guarantees-2026-09-15/`. These are bounded
+model results; downstream SQL, HTTP and legacy-client refinement remains required.
