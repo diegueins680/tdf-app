@@ -45,6 +45,8 @@
     "audit:catalog-lists:refresh": "node scripts/catalog-list-audit.mjs --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/build-catalog-decisions.mjs && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv",
     "audit:formal": "node scripts/audit-formal-methods.mjs",
     "verify:event-operations:formal": "bash scripts/verify-event-operations-formal.sh",
+    "verify:event-operations:pluscal": "node scripts/verify-event-operations-pluscal.mjs",
+    "test:event-operations-pluscal": "node --test scripts/__tests__/event-operations-pluscal.test.mjs",
     "verify:formal": "npm run verify:auto-loop && npm run audit:formal -- --fail-on error",
     "verify:auto-loop": "node scripts/verify-improvement-loop.mjs",
     "test:auto-loop": "node --test scripts/__tests__/continuous-improvement-loop.test.mjs",

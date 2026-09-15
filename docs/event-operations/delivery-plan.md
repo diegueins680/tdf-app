@@ -145,3 +145,9 @@ precedes implementation; current-session receipts, strict decoding, retry and ac
 states replace the global dismissal marker without migrating or deleting stored data.
 See [PR 17 verification and limits](pr-17-fanhub-onboarding.md). It does not complete the
 remaining event workspace, engagement, payment, offline or mobile phases.
+
+The eighteenth branch, `fix/reservation-pluscal-integrity`, closes the reported source/
+translation warning: two stripped generated trailing spaces, not different booking rules.
+Fixed-width regeneration and a byte-exact, temporary-copy gate now precede TLC; real-translator
+mutation tests run in the same CI job. See [PR 18 evidence and limits](pr-18-pluscal-integrity.md).
+This hardens phase-2 evidence without advancing incomplete booking or workspace implementation.

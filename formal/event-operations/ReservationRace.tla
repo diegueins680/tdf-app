@@ -61,7 +61,7 @@ Confirm:
   end if;
 end process;
 end algorithm; *)
-\* BEGIN TRANSLATION (chksum(pcal) = "14601121" /\ chksum(tla) = "6057351e")
+\* BEGIN TRANSLATION (chksum(pcal) = "14601121" /\ chksum(tla) = "aaece465")
 VARIABLES booking, seenCommands, overrideUsed, audit, pc, engagement
 
 vars == << booking, seenCommands, overrideUsed, audit, pc, engagement >>
@@ -95,11 +95,9 @@ Confirm(self) == /\ pc[self] = "Confirm"
                                              ELSE /\ audit' =        Append(audit,
                                                               [command |-> self, engagement |-> engagement[self],
                                                                result |-> "conflict", override |-> FALSE])
-                                                  /\ UNCHANGED << booking,
-                                                                  overrideUsed >>
+                                                  /\ UNCHANGED << booking, overrideUsed >>
                        ELSE /\ TRUE
-                            /\ UNCHANGED << booking, seenCommands,
-                                            overrideUsed, audit >>
+                            /\ UNCHANGED << booking, seenCommands, overrideUsed, audit >>
                  /\ pc' = [pc EXCEPT ![self] = "Done"]
                  /\ UNCHANGED engagement
 

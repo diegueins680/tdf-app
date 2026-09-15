@@ -63,6 +63,11 @@ run_tlc() {
 
 cd "${MODEL_DIR}"
 
+# Verify the source/translation link before TLC can accept a stale generated block.
+export JAVA_BIN TLA2TOOLS_JAR
+node "${SCRIPT_DIR}/verify-event-operations-pluscal.mjs"
+node --test "${SCRIPT_DIR}/__tests__/event-operations-pluscal.test.mjs"
+
 # Keep TLC sequential: 1.7.2 materializes standard modules through a shared temp location.
 run_tlc EventLifecycle.tla EventLifecycle.cfg event-lifecycle
 run_tlc ReservationRace.tla ReservationRace.cfg reservation-race
