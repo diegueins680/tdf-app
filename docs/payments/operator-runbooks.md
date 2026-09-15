@@ -2,6 +2,13 @@
 
 These procedures are safe defaults for sandbox and staging. They do not authorize production deployment, provider activation, a real charge, a refund or a payout.
 
+Payment HTTP transport uses a shared no-implicit-retry TLS pool, no redirects, a
+15-second total deadline and a one-MiB decompressed response limit. A timeout,
+oversized/invalid response or HTTP error does not prove that no charge occurred.
+Preserve the original attempt and reconcile; never switch providers based only on
+an HTTP 502/503. See [ADR 0117](../adr/0117-shared-bounded-payment-transport.md) and
+[transport verification](http-boundary-2026-09-14.md) for scope and rollout limits.
+
 For per-request intent keys, legacy reference preservation, conflicting provider evidence and
 the required old/new writer cutover, follow the [2026-09-14 retry safety supplement](retry-reconciliation-safety-2026-09-14.md).
 For lost create responses after payment/expiry or account suspension, follow the
