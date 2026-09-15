@@ -58,6 +58,13 @@ see [ADR 0124](../adr/0124-closed-checkout-approval-evidence.md) and
 It does not post a capture/suspense ledger or provide automatic refund/release.
 Staging and provider sandbox qualification remain unavailable.
 
+A subsequent 2026-09-15 increment adds a strict-admin, read-only exception view
+with redacted individual evidence, exact minor-unit strings and verified internal
+links; see [ADR 0125](../adr/0125-read-only-reconciliation-evidence.md) and
+[test/operator evidence](reconciliation-evidence-2026-09-15.md). Web and mobile
+contracts are regenerated; only web receives an admin screen. No provider is
+activated and review labels do not authorize financial actions.
+
 ## 2. Capability and access report
 
 | Capability | Result on 2026-09-11 | Evidence and limitation |

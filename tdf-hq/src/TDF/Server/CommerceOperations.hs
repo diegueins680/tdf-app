@@ -6,6 +6,7 @@ module TDF.Server.CommerceOperations
   , validateProviderEventReplayReason
   , validateProviderQueryFilters
   , providerQueryOutcome
+  , validateReconciliationFilters
   ) where
 
 import           Control.Monad (unless)
@@ -19,6 +20,7 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, getCurrentTime)
+import qualified Data.UUID as UUID
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql
   ( Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool )
@@ -42,9 +44,129 @@ commerceOperationsServer user =
   :<|> (\environment status limit offset -> requireAccess *>
           (addHeader ("no-store" :: Text) <$>
             listProviderQueriesHandler environment status limit offset))
+  :<|> (\environment status checkout limit offset -> requireAccess *>
+          (addHeader ("no-store" :: Text) <$>
+            listReconciliationHandler environment status checkout limit offset))
   where
     requireAccess = unless (hasStrictAdminAccess user) $
       throwError err403 { errBody = "Strict Admin access required" }
+
+validateReconciliationFilters
+  :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
+  -> Either Text (Text, Maybe Text, Maybe Text, Int, Int)
+validateReconciliationFilters rawEnvironment rawStatus rawCheckout rawLimit rawOffset = do
+  (environment, _, limit, offset) <-
+    validateProviderQueryFilters rawEnvironment Nothing rawLimit rawOffset
+  status <- case T.toLower . T.strip <$> rawStatus of
+    Nothing -> Right Nothing
+    Just "open" -> Right (Just "open")
+    Just "assigned" -> Right (Just "assigned")
+    Just "resolved" -> Right (Just "resolved")
+    Just "ignored" -> Right (Just "ignored")
+    _ -> Left "Unsupported reconciliation status"
+  checkout <- case rawCheckout of
+    Nothing -> Right Nothing
+    Just value -> maybe (Left "Invalid reconciliation checkout identifier")
+      (Right . Just . UUID.toText) (UUID.fromText (T.strip value))
+  pure (environment, status, checkout, limit, offset)
+
+listReconciliationHandler
+  :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
+  -> AppM CommerceReconciliationReportDTO
+listReconciliationHandler rawEnvironment rawStatus rawCheckout rawLimit rawOffset = do
+  (environment, status, checkout, limit, offset) <- either (throwError . badRequest) pure $
+    validateReconciliationFilters rawEnvironment rawStatus rawCheckout rawLimit rawOffset
+  Env{envPool = pool} <- ask
+  observed <- liftIO getCurrentTime
+  result <- liftIO $ tryAny $ flip runSqlPool pool $ do
+    rawExecute "SET TRANSACTION READ ONLY" []
+    rawExecute "SET LOCAL statement_timeout = '3s'" []
+    installed <- rawSql
+      "SELECT to_regclass('commerce_reconciliation_exception') IS NOT NULL\
+      \ AND to_regclass('commerce_provider_binding') IS NOT NULL\
+      \ AND to_regclass('commerce_payment_attempt') IS NOT NULL\
+      \ AND to_regclass('commerce_checkout_session') IS NOT NULL" []
+    if installed /= [Single True] then pure (False, []) else do
+      entries <- loadReconciliationEntries environment status checkout (limit + 1) offset
+      pure (True, entries)
+  case result of
+    Left _ -> throwError err503
+      { errBody = "Payment reconciliation report is temporarily unavailable"
+      , errHeaders = [("Cache-Control", "no-store")]
+      }
+    Right (ready, entries) -> pure CommerceReconciliationReportDTO
+      { crrGeneratedAt = observed, crrEnvironment = environment, crrStatus = status
+      , crrCheckoutId = checkout, crrSchemaReady = ready, crrEntries = take limit entries
+      , crrLimit = limit, crrOffset = offset, crrHasMore = length entries > limit
+      }
+
+-- Link only a unique stored attempt whose resource/account/environment and
+-- checkout agree. Never cast or return arbitrary legacy internal references.
+-- The link identifies a record; it is not proof of a capture or settlement.
+loadReconciliationEntries
+  :: Text -> Maybe Text -> Maybe Text -> Int -> Int
+  -> SqlPersistT IO [CommerceReconciliationEntryDTO]
+loadReconciliationEntries environment status checkout limit offset = do
+  rows <- rawSql
+    ("SELECT review.id::text,review.provider,review.status,review.exception_type,\
+     \ linked.checkout_id,linked.attempt_id,review.expected_amount_minor::text,\
+     \ review.actual_amount_minor::text,\
+     \ CASE WHEN review.currency ~ '^[A-Z]{3}$' THEN review.currency ELSE NULL END,\
+     \ review.detected_at,review.resolved_at\
+     \ FROM (SELECT id,provider,status,exception_type,internal_reference,provider_reference,\
+     \ merchant_account_ref,environment,expected_amount_minor,actual_amount_minor,currency,\
+     \ detected_at,resolved_at FROM commerce_reconciliation_exception WHERE environment=?"
+     <> maybe "" (const " AND status=?") status
+     <> maybe "" (const " AND internal_reference=?") checkout <>
+     " ORDER BY detected_at DESC,id DESC LIMIT ? OFFSET ?) review\
+     \ LEFT JOIN LATERAL (SELECT\
+     \ CASE WHEN COUNT(DISTINCT attempt.id)=1 THEN MIN(checkout.id::text) END AS checkout_id,\
+     \ CASE WHEN COUNT(DISTINCT attempt.id)=1 THEN MIN(attempt.id::text) END AS attempt_id\
+     \ FROM commerce_provider_binding binding\
+     \ JOIN commerce_payment_attempt attempt ON attempt.id=binding.payment_attempt_id\
+     \ JOIN commerce_checkout_session checkout ON checkout.id=attempt.checkout_id\
+     \ WHERE binding.provider=review.provider AND binding.environment=review.environment\
+     \ AND binding.merchant_account_ref=review.merchant_account_ref\
+     \ AND binding.provider_resource_id=review.provider_reference\
+     \ AND checkout.id::text=review.internal_reference AND checkout.environment=binding.environment\
+     \ AND attempt.provider=binding.provider AND attempt.environment=binding.environment\
+     \ AND attempt.merchant_account_ref=binding.merchant_account_ref\
+     \ AND attempt.amount_minor=binding.amount_minor AND attempt.currency=binding.currency\
+     \ AND checkout.total_minor=binding.amount_minor AND checkout.currency=binding.currency) linked ON TRUE\
+     \ ORDER BY review.detected_at DESC,review.id DESC")
+    ([PersistText environment] <> maybe [] (pure . PersistText) status
+      <> maybe [] (pure . PersistText) checkout <>
+      [PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)])
+    :: SqlPersistT IO
+      [(Single Text,Single Text,Single Text,Single Text,Single (Maybe Text),
+        Single (Maybe Text),Single (Maybe Text),Single (Maybe Text),Single (Maybe Text),
+        Single UTCTime,Single (Maybe UTCTime))]
+  pure [ CommerceReconciliationEntryDTO ident (safeProvider provider) (safeStatus state)
+           (safeReason reason) checkoutId attempt expected actual currency detected resolved
+       | (Single ident,Single provider,Single state,Single reason,Single checkoutId,
+          Single attempt,Single expected,Single actual,Single currency,Single detected,
+          Single resolved) <- rows ]
+  where
+    safeProvider provider = case provider of
+      "datafast" -> "datafast"
+      "paypal" -> "paypal"
+      "placetopay" -> "placetopay"
+      "payphone" -> "payphone"
+      "bank_transfer" -> "bank_transfer"
+      "stripe" -> "stripe"
+      _ -> "unrecognized"
+    safeStatus state = case state of
+      "open" -> "open"
+      "assigned" -> "assigned"
+      "resolved" -> "resolved"
+      "ignored" -> "ignored"
+      _ -> "unrecognized"
+    safeReason reason = case reason of
+      "verified_payment_on_closed_checkout" -> "closed_checkout_approval"
+      "scheduled_query_requires_review" -> "scheduled_query_review"
+      "provider_query_binding_mismatch" -> "binding_mismatch"
+      "provider_status_unknown" -> "unknown_provider_state"
+      _ -> "unrecognized"
 
 -- The gate above runs before filter validation and before any database access.
 -- Reading this view never reserves a provider budget, claims a lease or sends HTTP.

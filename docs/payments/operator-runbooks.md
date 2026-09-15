@@ -57,6 +57,14 @@ For matched approvals received after checkout expiry/cancellation, follow
 [closed-checkout evidence runbook](closed-checkout-approval-2026-09-15.md).
 These observations do not reopen inventory or post a capture. Keep the order on
 hold; a changed exception status is not permission to release it or charge again.
+For individual read-only reconciliation evidence, follow
+[ADR 0125](../adr/0125-read-only-reconciliation-evidence.md) and the
+[evidence-view procedure](reconciliation-evidence-2026-09-15.md). The new panel
+defaults to sandbox/open; its environment is independent of legacy aggregates.
+Use exact internal checkout UUIDs, treat missing schema/links/amounts explicitly,
+and retain holds until separately approved remediation. It has no release,
+refund, payout or provider-query controls. The mobile contract is generated;
+there is no new native admin screen.
 
 ## 1. Configuration and activation
 

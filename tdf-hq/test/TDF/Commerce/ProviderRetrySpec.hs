@@ -32,7 +32,7 @@ import           Database.PostgreSQL.Simple (SqlError(..))
 import           Network.Socket (SockAddr(..))
 import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
-import           Servant (NoContent, ServerError, errHTTPCode, errBody, runHandler, getResponse, getHeaders, (:<|>)(..))
+import           Servant (NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, (:<|>)(..))
 import           System.Environment (lookupEnv, setEnv, unsetEnv)
 import qualified System.Timeout as Timeout
 import           Test.Hspec
@@ -351,6 +351,7 @@ withProviderWire reader action = do
 
 spec :: Spec
 spec = do
+  reconciliationReportValidationSpec
   providerQueryReportValidationSpec
   providerTransportSpec
   notificationMinimizationSpec
@@ -360,6 +361,7 @@ spec = do
     Nothing -> pure ()
     Just url -> beforeAll (openDatabase url) $ afterAll destroyAllResources $
       describe "provider-retry-runtime PostgreSQL" $ do
+        reconciliationReportSpec
         providerQueryReportSpec
         queryRecoverySpec
         noChargeReplaySpec
@@ -1141,6 +1143,182 @@ withRecoveryEnvironment action = bracket
 
 -- These tests parse synthetic official-contract-shaped query responses and
 -- exercise the actual PostgreSQL financial path. They are not sandbox tests.
+reconciliationReportValidationSpec :: Spec
+reconciliationReportValidationSpec = describe "payment reconciliation report boundary" $ do
+  it "defaults to sandbox, bounds pages and normalizes exact UUID filters" $ do
+    Operations.validateReconciliationFilters Nothing Nothing Nothing Nothing Nothing
+      `shouldBe` Right ("sandbox",Nothing,Nothing,25,0)
+    Operations.validateReconciliationFilters (Just " production ") (Just "OPEN")
+      (Just "AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA") (Just 100) (Just 10000)
+      `shouldBe` Right ("production",Just "open",Just "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",100,10000)
+
+  it "rejects invalid filters before reading the database or echoing their contents" $ do
+    forM_ [(Just "synthetic_private",Nothing,Nothing,Nothing,Nothing),
+      (Nothing,Just "synthetic_private",Nothing,Nothing,Nothing),
+      (Nothing,Nothing,Just "synthetic_private",Nothing,Nothing),
+      (Nothing,Nothing,Nothing,Just 0,Nothing),(Nothing,Nothing,Nothing,Just 101,Nothing),
+      (Nothing,Nothing,Nothing,Nothing,Just (-1)),(Nothing,Nothing,Nothing,Nothing,Just 10001)] $
+      \(environment,status,checkout,limit,offset) -> do
+        result <- reconciliationReport [Admin] (error "Invalid filter accessed database")
+          environment status checkout limit offset
+        either errHTTPCode (const 200) result `shouldBe` 400
+        show result `shouldNotContain` "synthetic_private"
+
+  it "enforces strict-admin authorization before filters or database access" $ do
+    forM_ [[Customer],[Fan],[Webmaster],[StudioManager],[Admin,Webmaster],[Admin,Manager]] $ \roles -> do
+      result <- reconciliationReport roles (error "Unauthorized report accessed database")
+        (Just "invalid") Nothing Nothing Nothing Nothing
+      either errHTTPCode (const 200) result `shouldBe` 403
+
+reconciliationReportSpec :: SpecWith ConnectionPool
+reconciliationReportSpec = describe "read-only reconciliation evidence" $ do
+  it "distinguishes an empty installed report from missing schema" $ \pool -> do
+    emptyReport <- reconciliationReport [Admin] pool Nothing Nothing Nothing Nothing Nothing >>= requireRight
+    crrSchemaReady emptyReport `shouldBe` True
+    crrEnvironment emptyReport `shouldBe` "sandbox"
+    crrEntries emptyReport `shouldBe` []
+    let rename fromName toName = runSqlPool (rawExecute
+          ("ALTER TABLE " <> fromName <> " RENAME TO " <> toName) []) pool
+    bracket (rename "commerce_provider_binding" "synthetic_hidden_review_binding")
+      (const (rename "synthetic_hidden_review_binding" "commerce_provider_binding")) $ \_ -> do
+        report <- reconciliationReport [Admin] pool Nothing Nothing Nothing Nothing Nothing >>= requireRight
+        crrSchemaReady report `shouldBe` False
+        crrEntries report `shouldBe` []
+
+  it "redacts database failures and never reports them as empty success" $ \pool -> do
+    let rename fromName toName = runSqlPool (rawExecute
+          ("ALTER TABLE commerce_reconciliation_exception RENAME COLUMN " <> fromName <> " TO " <> toName) []) pool
+    bracket (rename "actual_amount_minor" "synthetic_private_column")
+      (const (rename "synthetic_private_column" "actual_amount_minor")) $ \_ -> do
+        result <- reconciliationReport [Admin] pool Nothing Nothing Nothing Nothing Nothing
+        either errHTTPCode (const 200) result `shouldBe` 503
+        show result `shouldNotContain` "synthetic_private_column"
+        show result `shouldNotContain` "SELECT"
+        either (\problem -> errHeaders problem `shouldContain` [("Cache-Control","no-store")])
+          (const (expectationFailure "Expected unavailable response")) result
+
+  forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
+    it ("links exact held evidence without changing " <> T.unpack (Checkout.paymentProviderText provider)) $ \pool -> do
+      payment <- closedPaymentFixture pool provider "expired"
+      approved <- parsedQuery payment Adapter.AdapterSucceeded
+      runSqlPool (Reconciliation.applyQueryResult payment approved "review-report-fixture" notificationTime)
+        pool `shouldReturn` Right Reconciliation.ReconciliationDeadLetter
+      snapshot <- runSqlPool (paymentSnapshot payment) pool
+      review <- runSqlPool (closedPaymentReviewSnapshot payment) pool
+      let checkoutId = Checkout.checkoutReferenceId (Execution.bppCheckout payment)
+          readReport = reconciliationReport [Admin,Fan,Customer] pool Nothing (Just "open")
+            (Just checkoutId) Nothing Nothing >>= requireRight
+      reports <- concurrently (replicate 4 readReport)
+      forM_ reports $ \report -> do
+        crrCheckoutId report `shouldBe` Just checkoutId
+        crrStatus report `shouldBe` Just "open"
+        case crrEntries report of
+          [entry] -> do
+            creProvider entry `shouldBe` Checkout.paymentProviderText provider
+            creReason entry `shouldBe` "closed_checkout_approval"
+            creCheckoutId entry `shouldBe` Just checkoutId
+            crePaymentAttemptId entry `shouldBe`
+              Just (Checkout.paymentAttemptReferenceId (Execution.bppAttempt payment))
+            creExpectedMinor entry `shouldBe` Just "12515"
+            creActualMinor entry `shouldBe` Just "12515"
+          _ -> expectationFailure "Expected one exact linked review"
+        let encoded = BL.toStrict (A.encode report)
+        forM_ [TE.encodeUtf8 (Execution.bppMerchantRef payment),
+          TE.encodeUtf8 (Execution.bppProviderResourceId payment),"merchant_account_ref",
+          "provider_reference","resolution_notes","redirect","lease_token"] $ \private ->
+            encoded `shouldNotSatisfy` BS.isInfixOf private
+      runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+      runSqlPool (closedPaymentReviewSnapshot payment) pool `shouldReturn` review
+
+  it "preserves Int64 extrema as strings and redacts arbitrary legacy values" $ \pool -> do
+    ident <- toText <$> nextRandom
+    runSqlPool (rawExecute
+      "INSERT INTO commerce_reconciliation_exception(id,provider,environment,merchant_account_ref,\
+      \ exception_type,internal_reference,provider_reference,expected_amount_minor,actual_amount_minor,\
+      \ currency,status,resolution_notes) VALUES (?::uuid,'synthetic_private_provider','sandbox',\
+      \ 'synthetic_private_merchant','synthetic_private_type','synthetic_private_reference',\
+      \ 'synthetic_private_resource',-9223372036854775808,9223372036854775807,\
+      \ 'synthetic_private_currency','open','synthetic_private_notes')" [PersistText ident]) pool
+    report <- reconciliationReport [Admin] pool Nothing Nothing Nothing Nothing Nothing >>= requireRight
+    case filter ((== ident) . creId) (crrEntries report) of
+      [entry] -> do
+        creProvider entry `shouldBe` "unrecognized"
+        creReason entry `shouldBe` "unrecognized"
+        creCheckoutId entry `shouldBe` Nothing
+        crePaymentAttemptId entry `shouldBe` Nothing
+        creCurrency entry `shouldBe` Nothing
+        creExpectedMinor entry `shouldBe` Just "-9223372036854775808"
+        creActualMinor entry `shouldBe` Just "9223372036854775807"
+      _ -> expectationFailure "Expected the redacted legacy review"
+    let encoded = BL.toStrict (A.encode report)
+    encoded `shouldNotSatisfy` BS.isInfixOf "synthetic_private"
+    encoded `shouldSatisfy` BS.isInfixOf "\"9223372036854775807\""
+
+  it "does not infer a binding from a checkout UUID with the wrong merchant account" $ \pool -> do
+    payment <- closedPaymentFixture pool Checkout.ProviderPayPhone "cancelled"
+    approved <- parsedQuery payment Adapter.AdapterSucceeded
+    runSqlPool (Reconciliation.applyQueryResult payment approved "wrong-merchant-report" notificationTime)
+      pool `shouldReturn` Right Reconciliation.ReconciliationDeadLetter
+    let checkoutId = Checkout.checkoutReferenceId (Execution.bppCheckout payment)
+    runSqlPool (rawExecute "UPDATE commerce_reconciliation_exception\
+      \ SET merchant_account_ref='synthetic_private_wrong_account' WHERE internal_reference=?"
+      [PersistText checkoutId]) pool
+    report <- reconciliationReport [Admin] pool Nothing Nothing (Just checkoutId) Nothing Nothing >>= requireRight
+    map creCheckoutId (crrEntries report) `shouldBe` [Nothing]
+    map crePaymentAttemptId (crrEntries report) `shouldBe` [Nothing]
+
+  it "separates environment and workflow filters with bounded deterministic pages" $ \pool -> do
+    checkoutId <- toText <$> nextRandom
+    forM_ [("sandbox","open"),("sandbox","open"),("sandbox","assigned"),("production","open")] $
+      \(environment,status) -> runSqlPool (rawExecute
+        "INSERT INTO commerce_reconciliation_exception(provider,environment,merchant_account_ref,\
+        \ exception_type,internal_reference,expected_amount_minor,actual_amount_minor,currency,status)\
+        \ VALUES ('paypal',?,'synthetic-account','provider_status_unknown',?,0,NULL,'USD',?)"
+        [PersistText environment,PersistText checkoutId,PersistText status]) pool
+    let page environment status offset = reconciliationReport [Admin] pool (Just environment)
+          (Just status) (Just checkoutId) (Just 1) (Just offset) >>= requireRight
+    first <- page "sandbox" "open" 0
+    second <- page "sandbox" "open" 1
+    crrHasMore first `shouldBe` True
+    crrHasMore second `shouldBe` False
+    map creId (crrEntries first) `shouldNotBe` map creId (crrEntries second)
+    map creExpectedMinor (crrEntries first) `shouldBe` [Just "0"]
+    map creActualMinor (crrEntries first) `shouldBe` [Nothing]
+    assigned <- page "sandbox" "assigned" 0
+    map creStatus (crrEntries assigned) `shouldBe` ["assigned"]
+    production <- page "production" "open" 0
+    crrEnvironment production `shouldBe` "production"
+    length (crrEntries production) `shouldBe` 1
+    crrHasMore production `shouldBe` False
+
+  it "bounds a locked reporting read without changing the exception" $ \pool -> do
+    locked <- newEmptyMVar
+    release <- newEmptyMVar
+    finished <- newEmptyMVar
+    let hold = runSqlPool (do
+          rawExecute "LOCK TABLE commerce_reconciliation_exception IN ACCESS EXCLUSIVE MODE" []
+          liftIO (putMVar locked ())
+          liftIO (takeMVar release)) pool
+        cleanupLock _ = putMVar release () >> takeMVar finished >>= either throwIO pure
+    bracket (forkFinally hold (putMVar finished)) cleanupLock $ \_ -> do
+      Timeout.timeout 5000000 (takeMVar locked) `shouldReturn` Just ()
+      result <- Timeout.timeout 8000000 (reconciliationReport [Admin] pool
+        Nothing Nothing Nothing Nothing Nothing)
+      fmap (either errHTTPCode (const 200)) result `shouldBe` Just 503
+
+reconciliationReport
+  :: [RoleEnum] -> ConnectionPool -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
+  -> IO (Either ServerError CommerceReconciliationReportDTO)
+reconciliationReport roles pool environment status checkout limit offset = do
+  let user = AuthedUser (toSqlKey 1) roles mempty
+      _ :<|> _ :<|> _ :<|> _ :<|> listReviews = Operations.commerceOperationsServer user
+  result <- runHandler (runReaderT (listReviews environment status checkout limit offset) (queryEnv pool))
+  case result of
+    Left problem -> pure (Left problem)
+    Right headers -> do
+      getHeaders headers `shouldContain` [("Cache-Control","no-store")]
+      pure (Right (getResponse headers))
+
 providerQueryReportValidationSpec :: Spec
 providerQueryReportValidationSpec = describe "provider query report boundary" $ do
   it "defaults to sandbox and validates bounded filters without echoing invalid input" $ do
@@ -1275,7 +1453,7 @@ queryReport
   -> IO (Either ServerError CommerceProviderQueriesDTO)
 queryReport roles pool environment status limit offset = do
   let user = AuthedUser (toSqlKey 1) roles mempty
-      _ :<|> _ :<|> _ :<|> listQueries = Operations.commerceOperationsServer user
+      _ :<|> _ :<|> _ :<|> listQueries :<|> _ = Operations.commerceOperationsServer user
   result <- runHandler (runReaderT (listQueries environment status limit offset) (queryEnv pool))
   case result of
     Left problem -> pure (Left problem)

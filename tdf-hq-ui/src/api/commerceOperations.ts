@@ -1,6 +1,16 @@
 import { get, post } from './client';
 import type { components } from './generated/types';
 
+export type CommerceReconciliationReport = components['schemas']['CommerceReconciliationReport'];
+export type CommerceReconciliationEntry = components['schemas']['CommerceReconciliationEntry'];
+export interface CommerceReconciliationFilters {
+  environment?: CommerceReconciliationReport['crrEnvironment'];
+  status?: NonNullable<CommerceReconciliationReport['crrStatus']>;
+  checkoutId?: string;
+  limit?: number;
+  offset?: number;
+}
+
 export type CommerceProviderQueries = components['schemas']['CommerceProviderQueries'];
 export type CommerceProviderQuery = components['schemas']['CommerceProviderQuery'];
 export interface CommerceProviderQueryFilters {
@@ -166,6 +176,15 @@ export interface CommercePaymentOverview {
 }
 
 export const CommerceOperations = {
+  listReconciliationExceptions: (params: CommerceReconciliationFilters = {}) => {
+    const query = new URLSearchParams();
+    query.set('environment', params.environment ?? 'sandbox');
+    if (params.status !== undefined) query.set('status', params.status);
+    if (params.checkoutId !== undefined) query.set('checkoutId', params.checkoutId);
+    if (params.limit !== undefined) query.set('limit', String(params.limit));
+    if (params.offset !== undefined) query.set('offset', String(params.offset));
+    return get<CommerceReconciliationReport>(`/admin/commerce/reconciliation-exceptions?${query.toString()}`);
+  },
   listProviderQueries: (params: CommerceProviderQueryFilters = {}) => {
     const query = new URLSearchParams();
     query.set('environment', params.environment ?? 'sandbox');
