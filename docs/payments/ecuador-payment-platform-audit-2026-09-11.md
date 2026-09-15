@@ -223,6 +223,17 @@ Every transition is validated and recorded with actor/source, prior/new state, t
 | Reconciliation failure | Canonical expected vs observed transaction/settlement records, exceptions, immutable ledger/history, operational dashboard. Models/UI exist; scheduled provider import remains blocked. |
 | Availability/provider outage | Priority routing by exact method; health/config gates; safe fallback only on conclusive no-charge result. PlaceToPay/PayPhone add target resilience after activation. |
 
+**Transport follow-up, 2026-09-15 UTC:** the initial adapter body-size check ran
+after full buffering, and legacy Datafast/PayPal helpers did not share its
+controls. [ADR 0117](../adr/0117-shared-bounded-payment-transport.md) repairs those
+gaps with streaming limits, a total deadline and a separate no-implicit-retry
+payment manager. Datafast retains its validated `oppwa.com` origin family;
+other selected providers use exact API hosts. This supersedes any inference that
+the initial transport already enforced a streaming/body deadline everywhere.
+[Execution evidence](http-boundary-2026-09-14.md) distinguishes tests from the
+still-unverified merchant sandboxes and staging payments. Historical encrypted
+payload retention remains subject to the [notification minimization boundary](notification-minimization-2026-09-14.md).
+
 ## 10. PCI, privacy, consumer, tax, and regulated fund flow
 
 ### PCI DSS

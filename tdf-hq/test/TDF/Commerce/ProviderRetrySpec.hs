@@ -3,8 +3,8 @@
 -- Real PostgreSQL persistence/concurrency tests; no provider HTTP or credentials.
 module TDF.Commerce.ProviderRetrySpec (spec) where
 
-import           Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar)
-import           Control.Exception (bracket, throwIO)
+import           Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar, threadDelay)
+import           Control.Exception (bracket, throwIO, toException)
 import           Control.Monad (forM, forM_, unless)
 import           Control.Monad.Logger (runNoLoggingT)
 import           Control.Monad.Reader (runReaderT)
@@ -15,19 +15,22 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Either (isLeft, isRight, rights)
 import           Data.Int (Int64)
+import           Data.IORef (newIORef, readIORef, atomicModifyIORef', modifyIORef')
 import           Data.Pool (destroyAllResources)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Data.Time (UTCTime(..), addUTCTime, fromGregorian, getCurrentTime)
+import           Data.Time (UTCTime(..), addUTCTime, diffUTCTime, fromGregorian, getCurrentTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Postgresql (createPostgresqlPool)
 import           Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool)
 import           Network.Socket (SockAddr(..))
-import           Servant (ServerError, errHTTPCode, runHandler, (:<|>)(..))
+import qualified Network.HTTP.Client as HC
+import           Servant (ServerError, errHTTPCode, errBody, runHandler, (:<|>)(..))
 import           System.Environment (lookupEnv, setEnv, unsetEnv)
+import qualified System.Timeout as Timeout
 import           Test.Hspec
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
@@ -37,6 +40,7 @@ import qualified TDF.Commerce.PaymentIntentStore as Intent
 import qualified TDF.Commerce.PaymentRuntimeStore as Runtime
 import           TDF.Commerce.ProviderAdapter (AdapterOperation(..))
 import qualified TDF.Commerce.ProviderAdapter as Adapter
+import qualified TDF.Commerce.ProviderAdapter.Http as ProviderHttp
 import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhone
 import qualified TDF.Commerce.ProviderAdapter.PlaceToPay as PlaceToPay
 import           TDF.Commerce.ProviderCapabilities (PaymentMethod(..))
@@ -47,8 +51,298 @@ import           TDF.Commerce.StateMachine (PaymentEvent(..))
 import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer)
 import qualified TDF.Server.ServiceStorefront as Storefront
 
+-- In-memory HTTP connection fixtures. These exercise the real HTTP executor,
+-- not a real provider, TLS handshake, socket, merchant account or sandbox.
+providerTransportSpec :: Spec
+providerTransportSpec = describe "provider HTTP transport boundary" $ do
+  it "allows configured provider destinations and pins redirects/header timeout" $ do
+    forM_ transportOrigins $ \(provider, origin) -> do
+      request <- ProviderHttp.parseProviderRequest provider (origin <> "/api/test") >>= requireRight
+      HC.redirectCount request `shouldBe` 0
+      HC.responseTimeout request `shouldBe` HC.responseTimeoutMicro 15000000
+      HC.cookieJar request `shouldSatisfy` maybe True (const False)
+
+  it "rejects spoofed hosts, URL credentials, explicit ports and unsafe URLs" $ do
+    forM_ ["http://api-m.sandbox.paypal.com/v2/orders"
+      , "https://api-m.sandbox.paypal.com.attacker.invalid/v2/orders"
+      , "https://user:synthetic-private@api-m.sandbox.paypal.com/v2/orders"
+      , "https://api-m.sandbox.paypal.com:443/v2/orders"
+      , "https://api-m.sandbox.paypal.com/v2/orders#synthetic-private"
+      , "https://api-m.sandbox.paypal.com\\@attacker.invalid/v2/orders"
+      , "https://api-m.sandbox.paypal.com/v2/\nsynthetic-private"
+      , "https://127.0.0.1/v2/orders", "not a URL synthetic-private"] $ \url -> do
+        result <- ProviderHttp.parseProviderRequest Checkout.ProviderPayPal url
+        result `shouldSatisfy` isLeft
+        either show (const "unexpected accepted request") result
+          `shouldNotContain` "synthetic-private"
+    ProviderHttp.parseProviderRequest Checkout.ProviderDatafast
+      "https://test.oppwa.com.attacker.invalid/v1/checkouts" >>= (`shouldSatisfy` isLeft)
+    ProviderHttp.parseProviderRequest Checkout.ProviderPayPhone
+      "https://api-m.sandbox.paypal.com/v2/orders" >>= (`shouldSatisfy` isLeft)
+
+  it "revalidates the parsed destination and rejects Host overrides or invalid UTF8" $ do
+    request <- paypalTransportRequest
+    forM_ [request { HC.secure = False }, request { HC.port = 8443 }
+      , request { HC.host = "attacker.invalid" }, request { HC.host = BS.pack ['\255'] }
+      , request { HC.requestHeaders = [("Host", "attacker.invalid")] }] $ \altered ->
+        ProviderHttp.prepareProviderRequest Checkout.ProviderPayPal altered `shouldSatisfy` isLeft
+
+  it "preserves form/JSON bytes, authorization and stable idempotency headers" $ do
+    request <- paypalTransportRequest
+    let original = request { HC.method = "POST"
+          , HC.requestHeaders = [("Authorization", "Bearer synthetic-token")
+              , ("PayPal-Request-Id", "synthetic-stable-request")]
+          , HC.requestBody = HC.RequestBodyBS "grant_type=client_credentials"
+          , HC.redirectCount = 10, HC.responseTimeout = HC.responseTimeoutNone }
+    prepared <- requireRight (ProviderHttp.prepareProviderRequest Checkout.ProviderPayPal original)
+    HC.method prepared `shouldBe` "POST"
+    HC.requestHeaders prepared `shouldBe` HC.requestHeaders original
+    case HC.requestBody prepared of
+      HC.RequestBodyBS bytes -> bytes `shouldBe` "grant_type=client_credentials"
+      _ -> expectationFailure "Form encoding changed"
+    HC.redirectCount prepared `shouldBe` 0
+
+  it "accepts exactly one MiB of JSON without rounding or altering decimal strings" $ do
+    let json = "\"" <> BS.replicate (1024 * 1024 - 2) 'a' <> "\""
+    reader <- chunkReader [BS.take 1024 json, BS.drop 1024 json]
+    value <- ProviderHttp.readProviderResponse 200 reader :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+    value `shouldBe` Right (A.String (T.replicate (1024 * 1024 - 2) "a"))
+    reader2 <- chunkReader ["{\"amount\":{\"value\":\"125.15\",\"currency_code\":\"USD\"}}"]
+    result <- ProviderHttp.readProviderResponse 201 reader2 :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+    result `shouldBe` Right (A.object ["amount" A..= A.object
+      ["value" A..= ("125.15" :: Text), "currency_code" A..= ("USD" :: Text)]])
+
+  it "stops reading at the first oversized chunk" $ do
+    readCount <- newIORef (0 :: Int)
+    reader <- chunkReader [BS.replicate (1024 * 1024) ' ', "x", "must-not-be-read"]
+    result <- ProviderHttp.readProviderResponse 200 (modifyIORef' readCount (+1) >> reader)
+      :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+    result `shouldSatisfy` isLeft
+    readIORef readCount `shouldReturn` 2
+
+  it "does not consume redirect, rejection or server-error response bodies" $ do
+    forM_ [301, 302, 307, 308, 400, 401, 409, 422, 429, 500, 503] $ \code -> do
+      result <- ProviderHttp.readProviderResponse code
+        (fail "Non-2xx response body must never be consumed")
+        :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+      result `shouldSatisfy` isLeft
+
+  it "redacts malformed JSON and typed parser errors" $ do
+    forM_ ["{synthetic-private-invalid-json", "\"synthetic-private-token\""] $ \body -> do
+      reader <- chunkReader [body]
+      result <- ProviderHttp.readProviderResponse 200 reader
+        :: IO (Either ProviderHttp.AdapterTransportError Storefront.ServiceDatafastPaymentStatus)
+      result `shouldSatisfy` isLeft
+      show result `shouldNotContain` "synthetic-private"
+
+  it "uses the same real executor for all four provider destinations" $ do
+    forM_ transportOrigins $ \(provider, origin) -> do
+      reader <- chunkReader [jsonWire "{\"ok\":true}"]
+      withProviderWire reader $ \manager connections _ _ -> do
+        request <- ProviderHttp.parseProviderRequest provider (origin <> "/api/test") >>= requireRight
+        result <- ProviderHttp.executeProviderRequest manager provider request
+          :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+        result `shouldBe` Right (A.object ["ok" A..= True])
+        connections `shouldReturn` 1
+
+  it "rejects a changed destination before opening any connection" $ do
+    withProviderWire (fail "No network allowed") $ \manager connections _ _ -> do
+      request <- paypalTransportRequest
+      result <- ProviderHttp.executeProviderRequest manager Checkout.ProviderPayPal
+        request { HC.host = "attacker.invalid" }
+        :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+      result `shouldSatisfy` isLeft
+      connections `shouldReturn` 0
+
+  it "does not follow a credential-bearing POST redirect" $ do
+    reader <- chunkReader ["HTTP/1.1 307 Temporary Redirect\r\nLocation: https://attacker.invalid/collect\r\nContent-Length: 0\r\n\r\n"]
+    withProviderWire reader $ \manager connections writes _ -> do
+      request <- paypalTransportRequest
+      result <- ProviderHttp.executeProviderRequest manager Checkout.ProviderPayPal request
+        { HC.method = "POST", HC.requestHeaders = [("Authorization", "Bearer synthetic-token")]
+        , HC.requestBody = HC.RequestBodyBS "{}" }
+        :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+      result `shouldSatisfy` isLeft
+      connections `shouldReturn` 1
+      sent <- writes
+      sent `shouldNotSatisfy` BS.isInfixOf "attacker.invalid"
+
+  it "redacts network parser exceptions and closes the failed response" $ do
+    reader <- chunkReader ["synthetic-private-invalid-http\r\n\r\n"]
+    withProviderWire reader $ \manager _ _ closes -> do
+      request <- paypalTransportRequest
+      result <- ProviderHttp.executeProviderRequest manager Checkout.ProviderPayPal request
+        :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+      result `shouldSatisfy` isLeft
+      show result `shouldNotContain` "synthetic-private"
+      closes >>= (`shouldSatisfy` (> 0))
+
+  it "disables stale-connection retries even for ambiguous POST results" $ do
+    HC.managerRetryableException ProviderHttp.providerManagerSettings
+      (toException (userError "synthetic-private-error")) `shouldBe` False
+    reader <- chunkReader [jsonWire "{}"]
+    withProviderWire reader $ \manager connections writes _ -> do
+      request <- paypalTransportRequest
+      _ <- (ProviderHttp.executeProviderRequest manager Checkout.ProviderPayPal request
+        :: IO (Either ProviderHttp.AdapterTransportError A.Value)) >>= requireRight
+      result <- ProviderHttp.executeProviderRequest manager Checkout.ProviderPayPal request
+        { HC.method = "POST", HC.requestBody = HC.RequestBodyBS "{}" }
+        :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+      result `shouldSatisfy` isLeft
+      connections `shouldReturn` 1
+      sent <- writes
+      length (filter (BS.isPrefixOf "POST ") (BS.lines sent)) `shouldBe` 1
+
+  it "bounds a body stalled after valid headers and closes its connection" $ do
+    first <- newIORef True
+    let reader = do
+          initial <- atomicModifyIORef' first (\value -> (False, value))
+          if initial then pure "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n"
+            else threadDelay 30000000 >> pure "{}"
+    withProviderWire reader $ \manager _ _ closes -> do
+      request <- paypalTransportRequest
+      started <- getCurrentTime
+      result <- Timeout.timeout 20000000
+        (ProviderHttp.executeProviderRequest manager Checkout.ProviderPayPal request
+          :: IO (Either ProviderHttp.AdapterTransportError A.Value))
+      result `shouldSatisfy` maybe False isLeft
+      finished <- getCurrentTime
+      diffUTCTime finished started `shouldSatisfy` (>= 14)
+      closes >>= (`shouldSatisfy` (> 0))
+
+  it "redacts decompression failures without throwing provider bytes" $ do
+    let body = "synthetic-private-invalid-gzip"
+    reader <- chunkReader ["HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: "
+      <> BS.pack (show (BS.length body)) <> "\r\n\r\n" <> body]
+    withProviderWire reader $ \manager _ _ _ -> do
+      request <- paypalTransportRequest
+      result <- ProviderHttp.executeProviderRequest manager Checkout.ProviderPayPal request
+        :: IO (Either ProviderHttp.AdapterTransportError A.Value)
+      result `shouldBe` Left (ProviderHttp.AdapterTransportError
+        "Payment provider is temporarily unavailable; reconcile before retrying.")
+      show result `shouldNotContain` "synthetic-private"
+
+  it "routes legacy PayPal order creation through the executor with stable request IDs" $ do
+    let created = "{\"id\":\"SYNTHETIC-ORDER\",\"links\":[{\"rel\":\"approve\",\"href\":\"https://www.sandbox.paypal.com/checkoutnow?token=SYNTHETIC-ORDER\"}]}"
+    reader <- chunkReader [jsonWire oauthFixture, jsonWire created, jsonWire oauthFixture, jsonWire created]
+    withProviderWire reader $ \manager _ writes _ -> do
+      let create = runHandler $ runReaderT
+            (Storefront.createPaypalOrderRemoteForService manager "synthetic-client" "synthetic-secret"
+              "https://api-m.sandbox.paypal.com" "synthetic-internal-order" 12515 "USD"
+              "Synthetic Buyer" "buyer@example.invalid")
+            (error "Remote helper must not access the database")
+      first <- create
+      second <- create
+      first `shouldSatisfy` isRight
+      second `shouldBe` first
+      sent <- writes
+      sent `shouldSatisfy` BS.isInfixOf "\"value\":\"125.15\""
+      let keys = filter (BS.isPrefixOf "PayPal-Request-Id:") (BS.lines sent)
+      length keys `shouldBe` 2
+      case keys of
+        [one, two] -> one `shouldBe` two
+        _ -> expectationFailure "Missing stable PayPal request IDs"
+
+  it "rejects unsafe PayPal OAuth tokens before sending a financial request" $ do
+    forM_ ["{\"access_token\":\"synthetic-private\\r\\nHeader: x\",\"token_type\":\"Bearer\"}"
+      , "{\"access_token\":\"synthetic-private\",\"token_type\":\"Basic\"}"] $ \oauth -> do
+        reader <- chunkReader [jsonWire oauth]
+        withProviderWire reader $ \manager _ writes _ -> do
+          result <- runHandler $ runReaderT
+            (Storefront.capturePaypalOrderRemoteForService manager "synthetic-client" "synthetic-secret"
+              "https://api-m.sandbox.paypal.com" "SYNTHETIC-ORDER")
+            (error "Remote helper must not access the database")
+          result `shouldSatisfy` isLeft
+          either (BL.toStrict . errBody) (const "unexpected success") result
+            `shouldNotSatisfy` BS.isInfixOf "synthetic-private"
+          sent <- writes
+          sent `shouldNotSatisfy` BS.isInfixOf "/capture"
+
+  it "preserves capture binding fields and the existing capture idempotency header" $ do
+    let captured = BL.toStrict $ A.encode $ A.object
+          [ "purchase_units" A..= [A.object
+              [ "custom_id" A..= ("synthetic-internal-order" :: Text)
+              , "payee" A..= A.object ["merchant_id" A..= ("synthetic-merchant" :: Text)]
+              , "payments" A..= A.object ["captures" A..= [A.object
+                  [ "id" A..= ("SYNTHETIC-CAPTURE" :: Text)
+                  , "status" A..= ("COMPLETED" :: Text)
+                  , "amount" A..= A.object ["value" A..= ("125.15" :: Text)
+                      , "currency_code" A..= ("USD" :: Text)] ]]] ]]]
+    reader <- chunkReader [jsonWire oauthFixture, jsonWire captured]
+    withProviderWire reader $ \manager _ writes _ -> do
+      outcome <- runHandler (runReaderT
+        (Storefront.capturePaypalOrderRemoteForService manager "synthetic-client" "synthetic-secret"
+          "https://api-m.sandbox.paypal.com" "SYNTHETIC-ORDER")
+        (error "Remote helper must not access the database")) >>= requireRight
+      Storefront.validatePaypalSuccessfulCapture "synthetic-internal-order" 12515 "USD"
+        "synthetic-merchant" outcome `shouldBe` Right ()
+      sent <- writes
+      sent `shouldSatisfy` BS.isInfixOf "POST /v2/checkout/orders/SYNTHETIC-ORDER/capture"
+      sent `shouldSatisfy` BS.isInfixOf "PayPal-Request-Id: capture-"
+
+  it "keeps generic provider response errors redacted at the legacy API boundary" $ do
+    reader <- chunkReader [jsonWire "synthetic-private-invalid-json"]
+    withProviderWire reader $ \manager _ _ _ -> do
+      request <- paypalTransportRequest
+      result <- runHandler $ runReaderT
+        (Storefront.providerResponse manager Checkout.ProviderPayPal request)
+        (error "Transport helper must not access the database")
+        :: IO (Either ServerError A.Value)
+      result `shouldSatisfy` isLeft
+      either errHTTPCode (const 0) result `shouldBe` 502
+      either (BL.toStrict . errBody) (const "unexpected success") result
+        `shouldNotSatisfy` BS.isInfixOf "synthetic-private"
+
+transportOrigins :: [(Checkout.PaymentProvider, String)]
+transportOrigins =
+  [ (Checkout.ProviderPayPal, "https://api-m.sandbox.paypal.com")
+  , (Checkout.ProviderPayPal, "https://api-m.paypal.com")
+  , (Checkout.ProviderDatafast, "https://test.oppwa.com")
+  , (Checkout.ProviderDatafast, "https://eu-prod.oppwa.com")
+  , (Checkout.ProviderPlaceToPay, "https://checkout-test.placetopay.ec")
+  , (Checkout.ProviderPlaceToPay, "https://checkout.placetopay.ec")
+  , (Checkout.ProviderPayPhone, "https://pay.payphonetodoesposible.com")
+  ]
+
+paypalTransportRequest :: IO HC.Request
+paypalTransportRequest = ProviderHttp.parseProviderRequest Checkout.ProviderPayPal
+  "https://api-m.sandbox.paypal.com/v2/checkout/orders" >>= requireRight
+
+chunkReader :: [BS.ByteString] -> IO HC.BodyReader
+chunkReader chunks = do
+  remaining <- newIORef chunks
+  pure $ atomicModifyIORef' remaining $ \current -> case current of
+    [] -> ([], BS.empty)
+    part : rest -> (rest, part)
+
+jsonWire :: BS.ByteString -> BS.ByteString
+jsonWire body = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
+  <> BS.pack (show (BS.length body)) <> "\r\n\r\n" <> body
+
+oauthFixture :: BS.ByteString
+oauthFixture = "{\"access_token\":\"synthetic-access-token\",\"token_type\":\"Bearer\"}"
+
+withProviderWire
+  :: HC.BodyReader
+  -> (HC.Manager -> IO Int -> IO BS.ByteString -> IO Int -> IO a)
+  -> IO a
+withProviderWire reader action = do
+  connections <- newIORef (0 :: Int)
+  writes <- newIORef []
+  closes <- newIORef (0 :: Int)
+  let connect _ _ _ = do
+        modifyIORef' connections (+1)
+        HC.makeConnection reader (\bytes -> modifyIORef' writes (bytes :))
+          (modifyIORef' closes (+1))
+      settings = HC.managerSetProxy HC.noProxy ProviderHttp.providerManagerSettings
+        { HC.managerTlsConnection = pure connect
+        , HC.managerRawConnection = pure connect }
+  bracket (HC.newManager settings) HC.closeManager $ \manager ->
+    action manager (readIORef connections) (BS.concat . reverse <$> readIORef writes) (readIORef closes)
+
 spec :: Spec
 spec = do
+  providerTransportSpec
   notificationMinimizationSpec
   configured <- runIO (lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL")
   case configured of
