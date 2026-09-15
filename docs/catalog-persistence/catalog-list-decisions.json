@@ -13360,6 +13360,285 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "2922d4c2e6bdb97f098e",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_lifecycle_transition_policy, event_operation_event_state",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Canonical lifecycle states are persisted in the event policy/state tables; the CHECK is the schema boundary mirrored by EventLifecycle.tla and must change with the canonical transition policy, never through a client-only list.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 16,
+        "values": [
+          "draft",
+          "planning",
+          "pending_approval",
+          "approved",
+          "published",
+          "staffing",
+          "ready",
+          "in_progress",
+          "completed",
+          "settlement_pending",
+          "settled",
+          "archived",
+          "reprogrammed",
+          "cancelled"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "f573cb9f122158b2cbb7",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_lifecycle_transition_policy.required_authority",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "These authority discriminants select the formal transition authorization predicate. The persisted policy owns the required authority; adding a value requires a reviewed authorization implementation and model refinement.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 27,
+        "values": [
+          "owner",
+          "event_approver",
+          "finance_approver",
+          "records_manager"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "eff124c79568650e3105",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_relationship.relationship_kind",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Ownership and coproduction kinds form the persisted event authorization boundary; they confer distinct scoped authority and cannot be extended as an unvalidated display list.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 139,
+        "values": [
+          "primary_owner",
+          "co_owner",
+          "coproducer"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "2777a364ae6e4c1869fc",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_grant.scope_code",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "The explicit grant capability allowlist limits event, task, booking, contract, finance and audit authority. It is persisted and schema-enforced; InvitationSafety.tla verifies attenuation, and future API consumers must use this authority.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 201,
+        "values": [
+          "event.read",
+          "event.manage",
+          "event.publish",
+          "event.approve",
+          "task.read",
+          "task.manage",
+          "booking.manage",
+          "contract.manage",
+          "finance.read",
+          "finance.approve",
+          "audit.read"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "a0240362e8e900f0696d",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_grant.resource_kind",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Resource kinds are the grant-scope discriminant. The adjacent identity constraint requires an event-wide NULL or an exact resource identifier, preventing cross-resource permission expansion.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 208,
+        "values": [
+          "event",
+          "session",
+          "task",
+          "booking",
+          "contract",
+          "document"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "2ed3195488b358f7b1e3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Immutable command-receipt outcomes are an exhaustive transaction protocol for replay, rejection and conflict; an editable business catalog would make historical command replay ambiguous.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 261,
+        "values": [
+          "accepted",
+          "rejected",
+          "conflict"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "902637e5c6c5636e6ce9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Immutable audit outcomes distinguish accepted, rejected, conflicted and explicitly justified override operations. The adjacent override-reason constraint and audit immutability bind the closed evidence protocol.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 282,
+        "values": [
+          "accepted",
+          "rejected",
+          "conflict",
+          "override"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "1d177c7618f2ff2c378a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_session.attendance_mode",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Attendance mode is persisted on the canonical event session. The schema defines the supported physical/virtual/hybrid modes; future form options must derive from that authority rather than inventing client-only modes.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 331,
+        "values": [
+          "physical",
+          "virtual",
+          "hybrid"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "fb4bd6f8670db424cc73",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_session.visibility",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Visibility is an authorization-sensitive persisted session policy. Public, unlisted, private, internal and role-restricted meanings require matching server predicates and cannot be altered by presentation-only catalog edits.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 335,
+        "values": [
+          "public",
+          "unlisted",
+          "private",
+          "internal",
+          "role_restricted"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "be354ff41d06ef751915",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_raci_assignment.raci_role",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "RACI roles are persisted responsibility/authority assignments. TaskRaci.tla, uniqueness indexes and task-completion guards bind Accountable and Responsible semantics; adding a role requires model and schema review.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 402,
+        "values": [
+          "responsible",
+          "accountable",
+          "consulted",
+          "informed"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "af3dc157ec31ebaa9385",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_task_override.override_kind",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Override kinds are the immutable, version-bound safety exception protocol. Every override requires actor, reason and policy reference; this checked registry must stay aligned with completion guards and TaskRaci.tla.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 432,
+        "values": [
+          "blocked_completion",
+          "responsibility_exception"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
     }
   ]
 }

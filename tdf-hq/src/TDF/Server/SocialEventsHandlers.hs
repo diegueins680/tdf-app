@@ -16,6 +16,7 @@ module TDF.Server.SocialEventsHandlers (
     validateInvitationFromPartyId,
     validateInvitationStatusInput,
     validateInvitationStatusUpdateInput,
+    validateInvitationUpdateAuthorization,
     normalizeInvitationStatus,
     normalizeArtistGenres,
     parseInvitationIdsEither,
@@ -3639,8 +3640,14 @@ socialEventsServer user =
         Env{..} <- ask
         eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
-        rows <- liftIO $ runSqlPool (selectList [EventInvitationEventId ==. eventKey] [Desc EventInvitationCreatedAt]) envPool
+        eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        let canManage = hasStrictAdminAccess user || isEventManager currentPartyId eventRow
+            invitationFilters =
+                [EventInvitationEventId ==. eventKey]
+                    <> if canManage
+                        then []
+                        else [EventInvitationToPartyId ==. Just currentPartyId]
+        rows <- liftIO $ runSqlPool (selectList invitationFilters [Desc EventInvitationCreatedAt]) envPool
         pure $
             map
                 ( \(Entity iid inv) ->
@@ -3663,7 +3670,9 @@ socialEventsServer user =
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
+        eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        unless (hasStrictAdminAccess user || isEventManager currentPartyId eventRow) $
+            throwError err403{errBody = "Only the event organizer can create invitations"}
         toParty <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
         fromParty <-
             either
@@ -3671,6 +3680,8 @@ socialEventsServer user =
                 pure
                 (validateInvitationFromPartyId currentPartyId (invitationFromPartyId dto))
         statusVal <- either throwError pure (validateInvitationStatusInput (invitationStatus dto))
+        when (statusVal /= "pending") $
+            throwError err400{errBody = "New invitations must have pending status"}
         key <-
             liftIO $
                 runSqlPool
@@ -3704,7 +3715,7 @@ socialEventsServer user =
         now <- liftIO getCurrentTime
         (eventKey, invitationKey) <- parseIds eventIdStr invitationIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
+        eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         mExisting <- liftIO $ runSqlPool (get invitationKey) envPool
         case mExisting of
             Nothing -> throwError err404{errBody = "Invitation not found"}
@@ -3712,11 +3723,23 @@ socialEventsServer user =
                 let dto = iudInvitation
                 when (eventInvitationEventId inv /= eventKey) $ throwError err400{errBody = "Invitation does not belong to this event"}
                 mStatusVal <- either throwError pure (validateInvitationStatusUpdateInput (invitationStatus dto))
+                toPartyVal <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
+                either
+                    throwError
+                    pure
+                    ( validateInvitationUpdateAuthorization
+                        (hasStrictAdminAccess user || isEventManager currentPartyId eventRow)
+                        currentPartyId
+                        (eventInvitationToPartyId inv)
+                        (eventInvitationStatus inv)
+                        toPartyVal
+                        mStatusVal
+                        iudMessageUpdate
+                    )
                 let messageVal = applyNullableTextUpdate iudMessageUpdate (eventInvitationMessage inv)
                     statusUpdates =
                         maybe [] (\statusVal -> [EventInvitationStatus =. Just statusVal]) mStatusVal
                     responseStatus = mStatusVal <|> eventInvitationStatus inv
-                toPartyVal <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
                 liftIO $
                     runSqlPool
                         ( update
@@ -7482,6 +7505,47 @@ validateInvitationStatusUpdateInput (Just rawStatus) =
                     }
         Just _ ->
             Just <$> validateInvitationStatusInput (Just rawStatus)
+
+validateInvitationUpdateAuthorization
+    :: Bool
+    -> T.Text
+    -> Maybe T.Text
+    -> Maybe T.Text
+    -> T.Text
+    -> Maybe T.Text
+    -> NullableFieldUpdate T.Text
+    -> Either ServerError ()
+validateInvitationUpdateAuthorization
+    isManager
+    currentPartyId
+    existingToPartyId
+    existingStatus
+    requestedToPartyId
+    requestedStatus
+    messageUpdate
+        | isManager = Right ()
+        | existingToPartyId /= Just currentPartyId =
+            Left err403{errBody = "Only the event organizer or invited party can update this invitation"}
+        | requestedToPartyId /= currentPartyId =
+            Left err403{errBody = "Invited parties cannot transfer invitations"}
+        | messageUpdate /= FieldMissing =
+            Left err403{errBody = "Invited parties cannot edit invitation messages"}
+        | otherwise =
+            case requestedStatus of
+                Just targetStatus
+                    | allowedRecipientTransition
+                        (normalizeInvitationStatus existingStatus)
+                        targetStatus -> Right ()
+                _ ->
+                    Left
+                        err403
+                            { errBody =
+                                "Invited parties may only accept or decline pending invitations"
+                            }
+  where
+    allowedRecipientTransition currentStatus targetStatus =
+        targetStatus == currentStatus
+            || (currentStatus == "pending" && targetStatus `elem` ["accepted", "declined"])
 
 toggleMomentReactionDb
     :: PartyId
