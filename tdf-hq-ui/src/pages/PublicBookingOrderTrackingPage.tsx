@@ -19,6 +19,7 @@ import {
 } from '../api/bookings';
 import { useMetaTags } from '../hooks/useMetaTags';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
+import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 
 const paidStatuses = new Set(['paid', 'partially_refunded', 'refunded']);
 
@@ -96,6 +97,7 @@ export default function PublicBookingOrderTrackingPage() {
   const [order, setOrder] = useState<PublicBookingCheckoutDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!validBookingId || !lookupToken) {
@@ -185,6 +187,19 @@ export default function PublicBookingOrderTrackingPage() {
                     La evidencia bancaria fue rechazada. Regresa al flujo de reserva o contacta a TDF para corregirla; no se confirmó ningún pago.
                   </Alert>
                 )}
+                {!paidStatuses.has(order.paymentStatus) && lookupToken && (
+                  <HostedProviderCheckout
+                    checkout={{
+                      checkoutId: order.checkoutId,
+                      lookupToken,
+                      returnPath: `/reservas/orden/${order.booking.bookingId}`,
+                    }}
+                    offeredMethods={order.paymentMethods}
+                    disabled={loading}
+                    onSafetyLockChange={setHostedPaymentLocked}
+                    onPaymentConfirmed={refresh}
+                  />
+                )}
               </>
             )}
 
@@ -192,7 +207,7 @@ export default function PublicBookingOrderTrackingPage() {
               <Button variant="contained" onClick={() => void refresh()} disabled={loading || !lookupToken}>
                 Verificar de nuevo
               </Button>
-              <Button variant="outlined" component={RouterLink} to="/reservar">
+              <Button variant="outlined" component={RouterLink} to="/reservar" disabled={hostedPaymentLocked}>
                 Nueva reserva
               </Button>
             </Stack>

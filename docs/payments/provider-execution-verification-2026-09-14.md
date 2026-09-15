@@ -9,7 +9,7 @@ This record supplements the market and regulatory review in [ecuador-payment-pla
 
 ## Outcome
 
-The shared backend can now create a provider-bound hosted payment operation, return durable status to a lookup-token holder, accept provider notifications, and reconcile them through an authenticated provider query. PlaceToPay and PayPhone remain operationally unavailable until the exact sandbox account, contract, credentials, method IDs, HTTPS URLs, database capability evidence, and worker flags are configured and tested. Legacy product UIs intentionally do not advertise these methods yet; web/mobile return and restore UX is a dependent delivery.
+The shared backend can create a provider-bound hosted payment operation, return durable status to a lookup-token holder, accept provider notifications, and reconcile them through an authenticated provider query. Web checkout now consumes exact server-offered PlaceToPay/PayPhone labels for tickets, courses, studio bookings, Domo deposits, and mixing/mastering orders; it persists one private attempt capability per tab, restores after redirects/app switching, polls durable status, and locks every alternative rail while a result is ambiguous or successful. Mobile paid tickets already hand off to this canonical web flow and its generated client is current. PlaceToPay and PayPhone remain operationally unavailable until the exact sandbox account, contract, credentials, method IDs, HTTPS URLs, database capability evidence, and worker flags are configured and tested.
 
 ```mermaid
 flowchart LR
@@ -50,6 +50,16 @@ No unpublished entitlement, onboarding acceptance, fee, refund, dispute, chargeb
 
 The OpenAPI source and generated web/mobile TypeScript clients contain these contracts. There is intentionally no unauthenticated mutation endpoint for cancel, capture, refund, reversal, dispute, settlement, or payout.
 
+## Client recovery and duplicate-charge controls
+
+- Product responses expose only exact labels returned by the runtime-ready canonical router: `placetopay_card`, `placetopay_bank_redirect`, `placetopay_deuna_qr`, or `payphone_wallet`. A browser key or provider logo cannot create availability.
+- The browser validates UUIDs, opaque-token bounds, idempotency-key format, and PlaceToPay's exact Ecuador HTTPS hosts before dispatch or navigation. Card data and CVV never cross TDF client code.
+- One per-provider/method idempotency key remains in tab-scoped storage until the server provides authoritative no-charge evidence. The opaque lookup token is kept out of URLs.
+- Before a create request is transmitted, the client stores a validated 24-hour, tab-scoped pending record containing the checkout capability, exact provider/method, safe internal return path, and—only for PayPhone—the digits needed to replay the same wallet request. If the network or tab is interrupted before an attempt ID arrives, reload permits only the exact same provider/method with the same idempotency key. The request is not sent when durable tab recovery is unavailable.
+- Once an attempt ID exists, the pending marker is replaced by a saved exact checkout/attempt/provider/method record. Pending, processing, customer-action, ambiguous, status-error, and successful states keep other provider/legacy controls locked. Returning to the product screen cannot clear an ambiguous or successful attempt; only an authoritative no-charge result releases fallback.
+- The generic return route trusts only the authenticated status endpoint, not provider query parameters. It clears recovery and permits another rail only for `confirmed_no_charge` or `failed` with `canRetryOrFallback=true`.
+- PayPhone is polled after the customer acts in its app. PlaceToPay navigation is restricted to `checkout-test.placetopay.ec` or `checkout.placetopay.ec`; the configured return URL is `/pagos/retorno` on the appropriate TDF origin.
+
 ## Persistence and transaction safety
 
 `commerce_provider_operation` stores a request fingerprint, stable provider-facing merchant reference, state, outcome certainty, immutable provider resource ID, and encrypted redirect URL. It never stores an Authorization header, credential, PAN, CVV, magnetic-stripe data, full provider request, or provider response. Claiming a remote create changes certainty to `ambiguous` before network contact. A timeout, malformed response, or post-contact persistence error therefore cannot permit cross-provider fallback.
@@ -73,7 +83,7 @@ All values are server-side environment/secret-manager entries. Values must never
 ## Known boundaries and blocked verification
 
 - No credentials or merchant contracts were available, so no adapter request was sent to a provider and no real notification was received.
-- Web/mobile checkout components do not yet invoke or restore this API. Existing product method selectors continue to expose only their already wired Datafast, PayPal, or manual-bank flows.
+- The current mobile implementation uses canonical web handoff for paid tickets; other native product checkout surfaces have no equivalent direct hosted-provider integration and remain dependent on their web flows.
 - The PlaceToPay implementation covers one-time WebCheckout create/query/notification only. Payment Links require the separate link API. Recurrence/token consent, check-in/authorization/capture/void, cancellation, and refund execution are not exposed.
 - PayPhone API Sale has no hosted redirect; the customer acts in the PayPhone app and the TDF client must poll the durable session. Same-day reversal and cancel adapter contracts are not exposed as customer/admin APIs. Post-settlement refund support remains commercially unverified.
 - A create transport failure with no provider resource ID remains `ambiguous` for operator/provider-console reconciliation. TDF will not retry another rail. PlaceToPay cannot be queried without its request ID; any provider-assisted recovery must be documented before automatic retry is permitted.
@@ -120,6 +130,46 @@ controls.
 These are still local/database tests. They do not change the provider sandbox,
 staging, live-transaction, settlement, or deployment evidence boundary.
 
+### Checkout surface completion record
+
+The dependent checkout verification completed at `2026-09-14T17:28:03Z`
+(`2026-09-14T12:28:03-05:00`) on macOS 14.7.7, Node 24.8.0,
+npm 11.6.0, and Stack 3.7.1/GHC 9.10.3. Parent implementation commits were
+`df92012aa` and `fa11c3044`; the generated mobile contract was commit
+`90a08f56fcd8df08dac2effd9253bceeb2c3e9a8`.
+
+| Command | Environment/evidence class | Outcome |
+|---|---|---|
+| `cd tdf-hq && stack test --fast --test-arguments='--match provider'` | Local compiled unit/property/mocked provider boundaries | Passed: 77 examples, 0 failures. Existing unrelated compiler warnings remain visible. |
+| Focused Jest command for capability/session/resume/return/component/event suites | Local jsdom/unit/integration with mocked HTTP boundary | Passed: 6 suites, 23 tests, 0 failures. Includes pre-response reload with the same idempotency key and alternate-rail lock. |
+| `cd tdf-hq-ui && npm run typecheck` | Local TypeScript | Passed. |
+| `cd tdf-hq-ui && npm run lint` | Local full UI source lint | Passed with zero warnings. |
+| `cd tdf-hq-ui && npm run build` | Local production TypeScript/Vite/bundle gate | Passed: 12,448 modules transformed; initial JS 378,243 gzip bytes. Vite emitted its existing advisory for chunks over 500 kB. |
+| Web generator plus `openapi-typescript` 7.10.1 against the mobile output | Local deterministic generation | Passed with no generated-file diff. The aggregate mobile wrapper skipped because this worktree has no mobile-local install; the exact generator output was still reproduced using the workspace-root install. |
+| `npm run typecheck` at mobile `90a08f56` | Local mobile TypeScript | Passed in the installed mobile worktree. |
+
+Corrective evidence is not hidden. The initial focused unit run exposed a test
+that used `.rejects` for a synchronous validator and was repaired. One later
+Jest invocation used the invalid `--run` option and executed no tests. One
+manual changed-file lint invocation explicitly included an ignored generated
+file and exited on that warning. A full lint run performed while a source patch
+was being applied read an inconsistent JSX snapshot and was discarded; the
+stable changed-file and canonical full lint commands then passed. None of these
+runs contacted a provider.
+
+The first hosted catalog-authority run for #334, [run
+34875189992](https://github.com/diegueins680/tdf-app/actions/runs/34875189992),
+failed with nine unreviewed fingerprints and one stale fingerprint after the
+client payment-method and recovery-state lists changed. The repair records
+provider/method vocabularies as consumers of `commerce_provider_method` and its
+capability registry, and records polling, presentation, dispatch, and browser
+recovery validators as P0 consumers of the provider-operation safety state
+machine. It does not blanket-exempt the values or make the browser authoritative.
+`npm run test:catalog-list-audit && npm run audit:catalog-lists` then passed
+locally across 1,411 tracked source files and 1,122 candidates with zero
+unreviewed or stale decisions. The hosted rerun is recorded only after GitHub
+reports its outcome.
+
 Run from the parent repository unless noted:
 
 ```text
@@ -140,4 +190,4 @@ The first is a compiled mocked/unit suite, the second uses disposable PostgreSQL
 4. Store secrets in the staging secret manager; validate authentication; then mark only the exact sandbox account and method-capability rows verified.
 5. Enable the sandbox notification and worker flags. Run approved/declined/cancelled/pending/timeout, duplicate/idempotent, forged/replayed/reordered callback, interruption/restore, and authoritative-query tests.
 6. Reconcile internal attempts/bindings/intents/ledger/receipts against both provider portals. Record sanitized provider request IDs and timestamps.
-7. Wire and accessibility-test the web/mobile return, app-switch, polling, pending/error, and retry UX. Production activation requires a separate change plus legal/accounting/PCI and provider sign-off.
+7. Exercise and accessibility-test the implemented web/mobile return, app-switch, polling, pending/error, and retry UX against each credentialed sandbox. Production activation requires a separate change plus legal/accounting/PCI and provider sign-off.

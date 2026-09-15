@@ -139,6 +139,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
 
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
     window.localStorage.setItem('tdf:event-ticket-checkout:41:92', 'secure-lookup-token');
     getStorefrontMock.mockReset().mockResolvedValue(storefrontFixture);
     getCheckoutMock.mockReset();
@@ -211,6 +212,18 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     ));
     expect(container.textContent).not.toContain('El servidor verificó el pago');
     expect(container.textContent).not.toContain('TICKET-');
+  });
+
+  it('renders only the exact hosted method labels supplied by the server', async () => {
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'awaiting_payment',
+      paymentMethods: ['placetopay_deuna_qr'],
+    }));
+    await renderTracking('/eventos/41/orden/92');
+
+    await waitForExpectation(() => expect(container.textContent).toContain('QR DeUna! · PlaceToPay'));
+    expect(container.textContent).not.toContain('Datafast');
+    expect(container.textContent).not.toContain('PayPhone');
   });
 
   it('shows ticket codes only after the server returns paid and issued states', async () => {

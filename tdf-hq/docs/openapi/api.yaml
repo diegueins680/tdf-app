@@ -8215,7 +8215,7 @@ components:
         depositPaidAt: { type: string, format: date-time, nullable: true }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
     PublicDomoPaypalCaptureRequest:
       type: object
       additionalProperties: false
@@ -8333,7 +8333,7 @@ components:
         quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
         tickets:
           type: array
           description: Empty until fulfillment issues tickets after verified payment.
@@ -8441,7 +8441,7 @@ components:
           type: array
           description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
           uniqueItems: true
-          items: { type: string, enum: [datafast, paypal, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
         manualPayment:
           allOf: [{ $ref: '#/components/schemas/PublicBookingManualPayment' }]
           nullable: true
@@ -8934,7 +8934,7 @@ components:
         ssocDeadline: { type: string, format: date, nullable: true }
     ServiceStorefrontOrder:
       type: object
-      required: [ssoId, ssoOrderNumber, ssoBuyerName, ssoBuyerEmail, ssoBuyerPhone, ssoArtistName, ssoPackageId, ssoServiceKind, ssoTier, ssoPriceUsdCents, ssoCurrency, ssoStatus, ssoPaymentProvider, ssoLookupToken, ssoPaidAt, ssoGenre, ssoSongCount, ssoNotes, ssoReferenceTrackUrl, ssoDeadline, ssoDeliverablesUrl, ssoCreatedAt, ssoUpdatedAt]
+      required: [ssoId, ssoOrderNumber, ssoBuyerName, ssoBuyerEmail, ssoBuyerPhone, ssoArtistName, ssoPackageId, ssoServiceKind, ssoTier, ssoPriceUsdCents, ssoCurrency, ssoStatus, ssoPaymentProvider, ssoCheckoutId, ssoLookupToken, ssoPaidAt, ssoGenre, ssoSongCount, ssoNotes, ssoReferenceTrackUrl, ssoDeadline, ssoDeliverablesUrl, ssoCreatedAt, ssoUpdatedAt]
       properties:
         ssoId: { type: string, format: uuid }
         ssoOrderNumber: { type: string }
@@ -8949,6 +8949,7 @@ components:
         ssoCurrency: { type: string, minLength: 3, maxLength: 3 }
         ssoStatus: { type: string }
         ssoPaymentProvider: { type: string, nullable: true }
+        ssoCheckoutId: { type: string, format: uuid, nullable: true, description: Canonical checkout identifier used by the provider-neutral payment session API. }
         ssoLookupToken: { type: string, nullable: true, writeOnly: true }
         ssoPaidAt: { type: string, format: date-time, nullable: true }
         ssoGenre: { type: string, nullable: true }
@@ -13013,7 +13014,7 @@ components:
           nullable: true
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
         checkoutAvailable: { type: boolean }
     CoursePaypalCaptureRequest:
       type: object

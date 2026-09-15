@@ -1802,6 +1802,7 @@ orderToDTOWithLookupToken lookupToken oid order = ServiceStorefrontOrderDTO
   , ssoCurrency = ME.serviceStorefrontOrderCurrency order
   , ssoStatus = ME.serviceStorefrontOrderStatus order
   , ssoPaymentProvider = ME.serviceStorefrontOrderPaymentProvider order
+  , ssoCheckoutId = toText <$> ME.serviceStorefrontOrderCheckoutId order
   , ssoLookupToken = lookupToken
   , ssoPaidAt = ME.serviceStorefrontOrderPaidAt order
   , ssoGenre = ME.serviceStorefrontOrderGenre order

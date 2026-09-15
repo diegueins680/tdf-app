@@ -17,6 +17,9 @@ describe('canonical checkout capability client', () => {
     getMock
       .mockResolvedValueOnce({ routes: [{ provider: 'datafast' }] })
       .mockResolvedValueOnce({ routes: [{ provider: 'paypal' }] })
+      .mockResolvedValueOnce({ routes: [] })
+      .mockResolvedValueOnce({ routes: [] })
+      .mockResolvedValueOnce({ routes: [] })
       .mockResolvedValueOnce({ routes: [] });
 
     await expect(loadAvailableCheckoutMethods({
@@ -27,10 +30,14 @@ describe('canonical checkout capability client', () => {
     })).resolves.toEqual({
       datafast: true,
       paypal: true,
+      placeToPayCard: false,
+      placeToPayBankRedirect: false,
+      placeToPayDeunaQr: false,
+      payPhoneWallet: false,
       bankTransfer: false,
     });
 
-    expect(getMock).toHaveBeenCalledTimes(3);
+    expect(getMock).toHaveBeenCalledTimes(6);
     for (const [path] of getMock.mock.calls) {
       const query = new URLSearchParams(path.split('?')[1]);
       expect(query.get('buyerCountry')).toBe('ZZ');

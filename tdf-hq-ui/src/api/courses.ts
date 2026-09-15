@@ -182,7 +182,14 @@ export interface CourseCheckoutResponse {
   fulfillmentStatus: string;
   holdExpiresAt?: string | null;
   quote?: CourseCheckoutQuote | null;
-  paymentMethods: ('datafast' | 'paypal')[];
+  paymentMethods: (
+    | 'datafast'
+    | 'paypal'
+    | 'placetopay_card'
+    | 'placetopay_bank_redirect'
+    | 'placetopay_deuna_qr'
+    | 'payphone_wallet'
+  )[];
   checkoutAvailable: boolean;
 }
 
