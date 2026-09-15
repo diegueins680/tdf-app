@@ -245,7 +245,9 @@ assessCallback config = parsePayPhoneValue $ A.withObject "PayPhone callback" $ 
 payPhoneStatus :: Int -> (AdapterResultState, ProviderOutcomeCertainty)
 payPhoneStatus statusCode = case statusCode of
   1 -> (AdapterPending, ProviderAmbiguous)
-  2 -> (AdapterDeclined, ProviderConfirmedNoCharge)
+  -- The documented terminal label is Canceled. The numeric code does not
+  -- establish whether the buyer, provider or issuer caused the outcome.
+  2 -> (AdapterCancelled, ProviderConfirmedNoCharge)
   3 -> (AdapterSucceeded, ProviderSucceeded)
   _ -> (AdapterUnknown, ProviderAmbiguous)
 

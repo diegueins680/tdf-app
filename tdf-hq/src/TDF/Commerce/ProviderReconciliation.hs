@@ -361,20 +361,25 @@ confirmNoCharge
   -> UTCTime
   -> SqlPersistT IO (Either Text ReconciliationDisposition)
 confirmNoCharge payment event failureCode eventId now = do
-  transitioned <- Intent.transitionPaymentIntent
-    (Intent.PaymentIntentReference (Execution.bppPaymentIntentId payment))
-    event "provider" eventId now
-  case transitioned of
+  observed <- Execution.validateNoChargeObservation payment
+  case observed of
     Left problem -> pure (Left problem)
-    Right _ -> do
-      Checkout.recordPaymentFailure
-        (Execution.bppCheckout payment)
-        (Execution.bppAttempt payment)
-        (Execution.bppProvider payment)
-        failureCode
-        eventId
-        now
-      pure (Right ReconciliationProcessed)
+    Right True -> pure (Right ReconciliationProcessed)
+    Right False -> do
+      transitioned <- Intent.transitionPaymentIntent
+        (Intent.PaymentIntentReference (Execution.bppPaymentIntentId payment))
+        event "provider" eventId now
+      case transitioned of
+        Left problem -> pure (Left problem)
+        Right _ -> do
+          if event == PaymentCancellationRequested
+            then Checkout.recordPaymentCancellation
+              (Execution.bppCheckout payment) (Execution.bppAttempt payment)
+              (Execution.bppProvider payment) eventId now
+            else Checkout.recordPaymentFailure
+              (Execution.bppCheckout payment) (Execution.bppAttempt payment)
+              (Execution.bppProvider payment) failureCode eventId now
+          pure (Right ReconciliationProcessed)
 
 markStillProcessing
   :: Execution.BoundProviderPayment

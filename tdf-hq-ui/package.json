@@ -9,7 +9,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit -p tsconfig.app.json && vite build && node scripts/check-initial-bundle.mjs",
+    "build:e2e": "vite build && node scripts/check-initial-bundle.mjs",
     "preview": "vite preview --port 5173",
+    "preview:e2e": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",

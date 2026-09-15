@@ -30,6 +30,12 @@ follow [ADR 0120](../adr/0120-durable-provider-query-recovery.md) and the
 budget schema before new callback binaries and drain old unmetered consumers
 before activation. Never manufacture a signed inbox event or infer no charge
 from a missing callback, expired lease or exhausted retry budget.
+For terminal no-charge replay and PayPhone cancellation classification, follow
+[ADR 0121](../adr/0121-history-preserving-no-charge-reconciliation.md) and the
+[history-preserving reconciliation evidence](no-charge-replay-2026-09-15.md).
+Never bulk relabel historical failed PayPhone records or let an old attempt's
+no-charge result change a newer attempt's checkout. Drain old reconciliation
+consumers before rollout; an image rollback reintroduces that replay defect.
 
 ## 1. Configuration and activation
 

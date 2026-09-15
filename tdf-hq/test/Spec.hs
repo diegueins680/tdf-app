@@ -2612,6 +2612,26 @@ main = hspec $ do
               payPhone ProviderAdapter.AdapterQuery locator wrongTransaction
               `shouldSatisfy` isLeft
 
+        it "classifies PayPhone code 2 as canceled without inferring an issuer decline" $ do
+            let response code = A.object
+                  [ "amount" .= (12515 :: Int)
+                  , "clientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "currency" .= ("USD" :: Text)
+                  , "statusCode" .= (code :: Int)
+                  , "transactionId" .= (45441137 :: Int)
+                  ]
+                parse = ProviderAdapter.adapterParseResponse
+                  payPhone ProviderAdapter.AdapterQuery locator
+                cancelled = parse (response 2)
+            fmap ProviderAdapter.adapterResultState cancelled
+              `shouldBe` Right ProviderAdapter.AdapterCancelled
+            fmap ProviderAdapter.adapterResultCertainty cancelled
+              `shouldBe` Right ProviderCapabilities.ProviderConfirmedNoCharge
+            fmap ProviderAdapter.adapterResultState (parse (response 1))
+              `shouldBe` Right ProviderAdapter.AdapterPending
+            fmap ProviderAdapter.adapterResultCertainty (parse (response 99))
+              `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
+
         it "never treats an unsigned PayPhone browser callback as payment evidence" $ do
             let callback = A.object
                   [ "id" .= (45441137 :: Int)

@@ -356,6 +356,7 @@ spec = do
     Just url -> beforeAll (openDatabase url) $ afterAll destroyAllResources $
       describe "provider-retry-runtime PostgreSQL" $ do
         queryRecoverySpec
+        noChargeReplaySpec
         notificationInboxSpec
         notificationIdentityInboxSpec
         reconciliationTransactionSpec
@@ -1131,6 +1132,177 @@ withRecoveryEnvironment action = bracket
 
 -- These tests parse synthetic official-contract-shaped query responses and
 -- exercise the actual PostgreSQL financial path. They are not sandbox tests.
+noChargeReplaySpec :: SpecWith ConnectionPool
+noChargeReplaySpec = describe "history-preserving no-charge reconciliation" $
+  forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
+    describe (T.unpack (Checkout.paymentProviderText provider)) $ do
+      it "records a new cancellation once and replays it concurrently without financial rewrites" $ \pool -> do
+        payment <- reconciliationFixture pool provider
+        cancelled <- parsedQuery payment Adapter.AdapterCancelled
+        cancelledResult pool payment cancelled
+        noChargeStates pool payment `shouldReturn` ("cancelled","cancelled","provider_cancelled")
+        snapshot <- runSqlPool (paymentSnapshot payment) pool
+        results <- concurrently (replicate 4 (runSqlPool
+          (Reconciliation.applyQueryResult payment cancelled "duplicate-cancel" notificationTime) pool))
+        results `shouldBe` replicate 4 (Right Reconciliation.ReconciliationProcessed)
+        runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+      it "preserves failed legacy intent, attempt, error code and audit after reclassified cancellation" $ \pool -> do
+        payment <- reconciliationFixture pool provider
+        legacy <- historicalDecline payment
+        cancelledResult pool payment legacy
+        noChargeStates pool payment `shouldReturn` ("failed","failed","provider_declined")
+        snapshot <- runSqlPool (paymentSnapshot payment) pool
+        cancelled <- parsedQuery payment Adapter.AdapterCancelled
+        results <- concurrently (replicate 4 (runSqlPool
+          (Reconciliation.applyQueryResult payment cancelled "legacy-cancel-replay" notificationTime) pool))
+        results `shouldBe` replicate 4 (Right Reconciliation.ReconciliationProcessed)
+        noChargeStates pool payment `shouldReturn` ("failed","failed","provider_declined")
+        runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+      it "does not downgrade a new cancellation when an older declined classification arrives" $ \pool -> do
+        payment <- reconciliationFixture pool provider
+        parsedQuery payment Adapter.AdapterCancelled >>= cancelledResult pool payment
+        snapshot <- runSqlPool (paymentSnapshot payment) pool
+        historicalDecline payment >>= cancelledResult pool payment
+        runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+      forM_ [False, True] $ \paid ->
+        it ("preserves a replacement attempt after old no-charge replay, paid=" <> show paid) $ \pool -> do
+          payment <- reconciliationFixture pool provider
+          historicalDecline payment >>= cancelledResult pool payment
+          let replacementProvider = if provider == Checkout.ProviderPayPhone
+                then Checkout.ProviderPlaceToPay else Checkout.ProviderPayPhone
+          replacement <- replacementPayment pool payment replacementProvider
+          now <- getCurrentTime
+          if paid then do
+            succeeded <- parsedQuery replacement Adapter.AdapterSucceeded
+            runSqlPool (Reconciliation.applyQueryResult replacement succeeded "replacement-success" now) pool
+              `shouldReturn` Right Reconciliation.ReconciliationProcessed
+            assertPaymentPosted pool replacement
+          else runSqlPool (Checkout.recordPaymentProcessing (Execution.bppCheckout replacement)
+            (Execution.bppAttempt replacement) replacementProvider "replacement-processing" now) pool
+          originalSnapshot <- runSqlPool (paymentSnapshot payment) pool
+          replacementSnapshot <- runSqlPool (paymentSnapshot replacement) pool
+          parsedQuery payment Adapter.AdapterCancelled >>= cancelledResult pool payment
+          runSqlPool (paymentSnapshot payment) pool `shouldReturn` originalSnapshot
+          runSqlPool (paymentSnapshot replacement) pool `shouldReturn` replacementSnapshot
+
+      it "keeps historical no-charge labels unchanged through the actual callback query pipeline" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          historicalDecline payment >>= cancelledResult pool payment
+          payload <- reconciliationNotification pool payment
+          snapshot <- runSqlPool (paymentSnapshot payment) pool
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment Adapter.AdapterCancelled))) getCurrentTime
+            (queryEnv pool) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationProcessed
+          runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+      it "applies cancellation through the fenced missed-callback worker without a capture" $ \pool ->
+        withQueryRecovery pool provider $ \merchant -> do
+          payment <- reconciliationFixtureWithMerchant merchant pool provider
+          prepareQueryJob pool payment
+          runQueryTick pool (\_ -> pure (Right (queryValue payment Adapter.AdapterCancelled)))
+            `shouldReturn` 1
+          queryJobState pool payment `shouldReturn` ("completed",1)
+          noChargeStates pool payment `shouldReturn` ("cancelled","cancelled","provider_cancelled")
+
+      it "rejects inconsistent terminal intent/attempt history without repairing it silently" $ \pool -> do
+        payment <- reconciliationFixture pool provider
+        historicalDecline payment >>= cancelledResult pool payment
+        runSqlPool (rawExecute "UPDATE commerce_payment_attempt SET status='processing' WHERE id=?::uuid"
+          [paymentAttemptParameter payment]) pool
+        snapshot <- runSqlPool (paymentSnapshot payment) pool
+        cancelled <- parsedQuery payment Adapter.AdapterCancelled
+        runSqlPool (Reconciliation.applyQueryResult payment cancelled "inconsistent-no-charge" notificationTime)
+          pool >>= (`shouldSatisfy` isLeft)
+        runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+      it "refuses no-charge replay with authorized, captured or refunded money" $ \pool ->
+        forM_ [(1,0,0),(1,1,0),(1,1,1)] $ \(authorized,captured,refunded) -> do
+          payment <- reconciliationFixture pool provider
+          historicalDecline payment >>= cancelledResult pool payment
+          runSqlPool (rawExecute
+            "UPDATE commerce_payment_intent SET authorized_minor=?,captured_minor=?,refunded_minor=?\
+            \ WHERE id=?::uuid" [PersistInt64 authorized,PersistInt64 captured,PersistInt64 refunded,
+              PersistText (Execution.bppPaymentIntentId payment)]) pool
+          snapshot <- runSqlPool (paymentSnapshot payment) pool
+          cancelled <- parsedQuery payment Adapter.AdapterCancelled
+          runSqlPool (Reconciliation.applyQueryResult payment cancelled "money-conflict" notificationTime)
+            pool >>= (`shouldSatisfy` isLeft)
+          runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+      it "refuses posted capture evidence even if a corrupt repair cleared intent counters" $ \pool -> do
+        payment <- reconciliationFixture pool provider
+        succeeded <- parsedQuery payment Adapter.AdapterSucceeded
+        runSqlPool (Reconciliation.applyQueryResult payment succeeded "ledger-guard-capture" notificationTime)
+          pool `shouldReturn` Right Reconciliation.ReconciliationProcessed
+        -- Deliberately incoherent local fixture: no guard or ledger row is
+        -- disabled/deleted. Verify the store's defense in depth directly;
+        -- the public reconciler also rejects the successful operation conflict.
+        runSqlPool (do
+          rawExecute "UPDATE commerce_payment_attempt SET status='failed' WHERE id=?::uuid"
+            [paymentAttemptParameter payment]
+          rawExecute "UPDATE commerce_payment_intent SET status='failed',authorized_minor=0,\
+            \ captured_minor=0,refunded_minor=0 WHERE id=?::uuid"
+            [PersistText (Execution.bppPaymentIntentId payment)]) pool
+        snapshot <- runSqlPool (paymentSnapshot payment) pool
+        runSqlPool (Execution.validateNoChargeObservation payment) pool >>= (`shouldSatisfy` isLeft)
+        runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+-- Reconstruct the old typed result only for historical compatibility fixtures.
+-- This is not presented as a result from the current PayPhone query parser.
+historicalDecline :: Execution.BoundProviderPayment -> IO Adapter.AdapterResult
+historicalDecline payment = do
+  result <- parsedQuery payment Adapter.AdapterCancelled
+  pure result { Adapter.adapterResultState = Adapter.AdapterDeclined }
+
+cancelledResult :: ConnectionPool -> Execution.BoundProviderPayment -> Adapter.AdapterResult -> Expectation
+cancelledResult pool payment result = runSqlPool
+  (Reconciliation.applyQueryResult payment result "no-charge-test" notificationTime) pool
+  `shouldReturn` Right Reconciliation.ReconciliationProcessed
+
+noChargeStates :: ConnectionPool -> Execution.BoundProviderPayment -> IO (Text,Text,Text)
+noChargeStates pool payment = do
+  rows <- runSqlPool (rawSql
+    "SELECT intent.status,attempt.status,attempt.failure_code FROM commerce_payment_attempt attempt\
+    \ JOIN commerce_payment_intent intent ON intent.id=attempt.payment_intent_id\
+    \ WHERE attempt.id=?::uuid AND intent.authorized_minor=0 AND intent.captured_minor=0\
+    \ AND intent.refunded_minor=0 AND NOT EXISTS (SELECT 1 FROM commerce_ledger_transaction txn\
+    \ WHERE txn.source_id=attempt.id::text)" [paymentAttemptParameter payment]) pool
+    :: IO [(Single Text,Single Text,Single Text)]
+  case rows of
+    [(Single intentStatus,Single attemptStatus,Single code)] -> pure (intentStatus,attemptStatus,code)
+    _ -> fail "Expected one no-charge payment without financial entries"
+
+replacementPayment
+  :: ConnectionPool -> Execution.BoundProviderPayment -> Checkout.PaymentProvider
+  -> IO Execution.BoundProviderPayment
+replacementPayment pool original provider = do
+  now <- getCurrentTime
+  key <- toText <$> nextRandom
+  let creation = Checkout.PaymentAttemptCreation
+        { Checkout.pacCheckout = Execution.bppCheckout original
+        , Checkout.pacProvider = provider, Checkout.pacEnvironment = Checkout.CheckoutSandbox
+        , Checkout.pacOperation = Checkout.OperationCreate, Checkout.pacAmountMinor = 12515
+        , Checkout.pacCurrency = "USD", Checkout.pacMerchantRef = Execution.bppMerchantRef original
+        , Checkout.pacIdempotencyKey = key, Checkout.pacCreatedAt = now
+        , Checkout.pacCorrelationId = "synthetic-replacement"
+        }
+      method = if provider == Checkout.ProviderPayPhone then MethodPayPhoneWallet else MethodCard
+  attempt <- runSqlPool (Runtime.beginPaymentAttemptForMethod method creation) pool >>= requireRight
+  let reference = providerReference provider (Checkout.paymentAttemptReferenceId attempt)
+  operation <- runSqlPool (Execution.prepareProviderOperation Execution.ProviderOperationPreparation
+    { Execution.popAttempt = attempt, Execution.popProvider = provider
+    , Execution.popEnvironment = Checkout.CheckoutSandbox
+    , Execution.popMerchantRef = Checkout.pacMerchantRef creation
+    , Execution.popProviderReference = reference, Execution.popOperation = AdapterCreate
+    , Execution.popIdempotencyKey = key, Execution.popRequestSha256 = digestText key
+    , Execution.popOccurredAt = now }) pool >>= requireRight
+  bindReconciliationFixture pool creation operation reference
+
 queryRecoverySpec :: SpecWith ConnectionPool
 queryRecoverySpec = describe "durable missed-callback recovery" $ do
   it "installs both recovery flags disabled and enforces a shared concurrent query budget" $ \pool -> do
@@ -1744,9 +1916,16 @@ reconciliationFixtureWithMerchant merchant pool provider = do
   -- Exercise TDF service revenue, not a ticket order without its fee/seat
   -- snapshot. Ticket fulfillment is covered by its separate runtime harness.
   (creation, operation, _) <- replayFixtureWithMerchant "service_booking" merchant pool provider
+  bindReconciliationFixture pool creation operation
+    (providerReference provider (Checkout.checkoutReferenceId (Checkout.pacCheckout creation)))
+
+bindReconciliationFixture
+  :: ConnectionPool -> Checkout.PaymentAttemptCreation -> Execution.ProviderOperationRecord
+  -> Text -> IO Execution.BoundProviderPayment
+bindReconciliationFixture pool creation operation reference = do
   let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
       attempt = Execution.porAttempt operation
-      reference = providerReference provider checkoutId
+      provider = Checkout.pacProvider creation
       state = if provider == Checkout.ProviderPlaceToPay
         then Adapter.AdapterRequiresCustomerAction else Adapter.AdapterPending
   resourceUuid <- toText <$> nextRandom
@@ -1790,7 +1969,7 @@ queryValue payment state
       ["transactionId" A..= resource, "clientTransactionId" A..= reference
       , "amount" A..= Execution.bppAmountMinor payment, "currency" A..= Execution.bppCurrency payment
       , "statusCode" A..= (case state of
-          Adapter.AdapterSucceeded -> 3; Adapter.AdapterDeclined -> 2
+          Adapter.AdapterSucceeded -> 3; Adapter.AdapterDeclined -> 2; Adapter.AdapterCancelled -> 2
           Adapter.AdapterPending -> 1; _ -> 99 :: Int)]
   where
     resource = read (T.unpack (Execution.bppProviderResourceId payment)) :: Int64
@@ -1815,7 +1994,7 @@ paymentSnapshot payment = rawSql
   "SELECT jsonb_build_object(\
   \ 'operation',jsonb_build_array(operation.status,operation.outcome_certainty,operation.updated_at,operation.completed_at),\
   \ 'checkout',jsonb_build_array(checkout.status,checkout.paid_minor,checkout.paid_at,checkout.updated_at),\
-  \ 'attempt',jsonb_build_array(attempt.status,attempt.updated_at),\
+  \ 'attempt',jsonb_build_array(attempt.status,attempt.updated_at,attempt.failure_code,attempt.failure_summary),\
   \ 'intent',jsonb_build_array(intent.status,intent.authorized_minor,intent.captured_minor,intent.updated_at),\
   \ 'ledger',(SELECT count(*) FROM commerce_ledger_transaction WHERE source_id=attempt.id::text),\
   \ 'entries',(SELECT count(*) FROM commerce_ledger_entry entry JOIN commerce_ledger_transaction txn\

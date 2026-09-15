@@ -23,6 +23,7 @@ module TDF.Commerce.ProviderExecutionStore
   , providerCreateRequestFingerprint
   , loadBoundProviderPayment
   , recordReconciledCreateResult
+  , validateNoChargeObservation
   , ProviderQueryClaim(..)
   , providerQueryRecoveryInstalled
   , reserveProviderQueryBudget
@@ -758,6 +759,47 @@ loadBoundProviderPayment provider environment merchantRef providerResource
           }
     [] -> Left "Provider callback does not match an immutable payment binding"
     _ -> Left "Provider callback matched multiple immutable payment bindings"
+
+-- Called only after authenticating/rebinding a no-charge query and locking its
+-- operation. True means coherent terminal financial history already exists and
+-- MUST NOT be rewritten (including legacy cancelled intents/failed attempts).
+-- False permits a first transition. Neither result authorizes another charge.
+validateNoChargeObservation :: BoundProviderPayment -> SqlPersistT IO (Either Text Bool)
+validateNoChargeObservation payment = do
+  rows <- rawSql
+    "SELECT intent.status,attempt.status,intent.authorized_minor,intent.captured_minor,\
+    \ intent.refunded_minor,EXISTS (SELECT 1 FROM commerce_ledger_transaction txn\
+    \ WHERE txn.source_id=attempt.id::text AND txn.status='posted')\
+    \ FROM commerce_payment_attempt attempt\
+    \ JOIN commerce_payment_intent intent ON intent.id=attempt.payment_intent_id\
+    \ WHERE attempt.id=?::uuid AND intent.id=?::uuid AND attempt.checkout_id=?::uuid\
+    \ AND intent.checkout_id=attempt.checkout_id AND attempt.provider=?\
+    \ AND intent.provider=attempt.provider AND attempt.environment=?\
+    \ AND attempt.merchant_account_ref=? AND attempt.amount_minor=?\
+    \ AND intent.amount_minor=attempt.amount_minor AND attempt.currency=?\
+    \ AND intent.currency=attempt.currency FOR UPDATE OF intent,attempt"
+    [ PersistText (Checkout.paymentAttemptReferenceId (bppAttempt payment))
+    , PersistText (bppPaymentIntentId payment)
+    , PersistText (Checkout.checkoutReferenceId (bppCheckout payment))
+    , PersistText (Checkout.paymentProviderText (bppProvider payment))
+    , PersistText (Checkout.checkoutEnvironmentText (bppEnvironment payment))
+    , PersistText (bppMerchantRef payment), PersistInt64 (bppAmountMinor payment)
+    , PersistText (bppCurrency payment)
+    ] :: SqlPersistT IO
+      [(Single Text, Single Text, Single Int64, Single Int64, Single Int64, Single Bool)]
+  pure $ case rows of
+    [(Single intentStatus, Single attemptStatus, Single authorized,
+      Single captured, Single refunded, Single posted)]
+      | authorized /= 0 || captured /= 0 || refunded /= 0 || posted ->
+          Left "No-charge evidence conflicts with recorded financial amounts"
+      | intentStatus `elem` ["failed", "cancelled"] ->
+          if attemptStatus `elem` ["failed", "cancelled"] then Right True
+          else Left "No-charge terminal intent and attempt disagree"
+      | intentStatus `elem` ["requires_payment_method", "requires_customer_action", "processing"]
+          && attemptStatus `elem` ["created", "requires_customer_action", "processing",
+              "failed", "cancelled", "expired", "requires_review"] -> Right False
+      | otherwise -> Left "No-charge evidence conflicts with the payment lifecycle"
+    _ -> Left "No-charge evidence does not match its payment binding"
 
 recordReconciledCreateResult
   :: BoundProviderPayment

@@ -45,10 +45,6 @@ jest.unstable_mockModule('../analytics/useAnalytics', () => ({
   useAnalytics: () => ({ capture: jest.fn() }),
 }));
 
-jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
-  markWebSignupCompleted: jest.fn(),
-}));
-
 jest.unstable_mockModule('../utils/env', () => ({
   env: { read: (key: string) => (key === 'VITE_GOOGLE_CLIENT_ID' ? 'fictional-google-client' : undefined) },
 }));
@@ -170,6 +166,9 @@ describe('LoginPage Google signup consent flow', () => {
 
       const signupDialog = document.querySelector<HTMLElement>('[role="dialog"]');
       expect(signupDialog).not.toBeNull();
+      expect(Array.from(signupDialog?.querySelectorAll('button') ?? []).some(
+        (button) => button.textContent === 'Ya tengo una cuenta',
+      )).toBe(true);
       expect(signupDialog?.querySelector(
         'input[aria-label="Acepto los términos y la política de privacidad"]',
       )).not.toBeNull();
