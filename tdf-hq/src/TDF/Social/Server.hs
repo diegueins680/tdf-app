@@ -13,12 +13,13 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text.Encoding as TE
 import Database.Persist (PersistValue(..))
-import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, toSqlKey, rawSql, runSqlPool)
 import Servant
 import System.Environment (lookupEnv)
 import TDF.Auth (AuthedUser(..))
 import TDF.DB (Env(..))
 import TDF.Social.API
+import TDF.Social.Session
 
 -- Both gates default closed: process flag plus database runtime switch.
 -- Account-only pilot: managed entities require richer principal context first.
@@ -31,10 +32,13 @@ socialV2Server user = me :<|> relationship :<|> mutate :<|> preferences :<|> fol
     gate = do
       enabled <- liftIO $ lookupEnv "SOCIAL_V2_ENABLED"
       unless (enabled == Just "true") $ throwError err404
-    query sql args = do
+    query = queryWith ReadSession
+    queryWith access sql args = do
       gate
       pool <- asks envPool
-      rows <- liftIO $ runSqlPool (rawSql sql args :: SqlPersistT IO [Single Text]) pool
+      result <- liftIO $ runSqlPool
+        (withSocialSession access user (rawSql sql args :: SqlPersistT IO [Single Text])) pool
+      rows <- either throwError pure result
       case rows of
         [Single body] -> case eitherDecodeStrict' (TE.encodeUtf8 body) of
           Right result -> checkResult result
@@ -64,10 +68,10 @@ socialV2Server user = me :<|> relationship :<|> mutate :<|> preferences :<|> fol
     mutate target (Command op revision key) = do
       gate
       validateTarget target
-      query "SELECT social_v2_mutate(?,?,?,?,?)::text"
+      queryWith (WriteSession (Just (toSqlKey target))) "SELECT social_v2_mutate(?,?,?,?,?)::text"
         [actor,PersistInt64 target,PersistText op,PersistInt64 revision,PersistText key]
     preferences (Preferences visible personalized revision) =
-      query "SELECT social_v2_preferences(?,?,?,?)::text"
+      queryWith (WriteSession Nothing) "SELECT social_v2_preferences(?,?,?,?)::text"
         [actor,PersistBool visible,PersistBool personalized,PersistInt64 revision]
     following cursor limit = do
       gate
@@ -77,8 +81,10 @@ socialV2Server user = me :<|> relationship :<|> mutate :<|> preferences :<|> fol
       -- allocated in an uncommitted transaction cannot appear behind its cursor.
       when (cursor == Nothing) $ do
         pool <- asks envPool
-        _ <- liftIO $ runSqlPool
-          (rawSql "SELECT social_v2_publish_batch()" [] :: SqlPersistT IO [Single Int64]) pool
+        result <- liftIO $ runSqlPool
+          (withSocialSession (WriteSession Nothing) user
+            (rawSql "SELECT social_v2_publish_batch()" [] :: SqlPersistT IO [Single Int64])) pool
+        _ <- either throwError pure result
         pure ()
       query "SELECT social_v2_feed(?,?,?)::text" [actor,maybe PersistNull PersistInt64 cursor,size]
     discover limit = do

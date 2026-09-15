@@ -33,6 +33,16 @@ jobs:
           TLA_JAR: /tmp/tla2tools-1.7.2.jar
           TDF_SOCIAL_RESULTS: /tmp/social-model-results
         run: bash scripts/social/check-models.sh
+      - name: Session authority safety, progress and specific negative controls
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/session-model-results
+        run: bash scripts/social/check-session-model.sh
+      - name: Regenerate observed session outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/session-trace-states -dump dot,actionlabels /tmp/session-traces.dot -config formal/social/SessionTraces.cfg formal/social/SessionBoundary.tla
+          python3 scripts/social/generate-session-cases.py /tmp/session-traces.dot /tmp/SessionModelCases.hs
+          diff -u scripts/social/SessionModelCases.hs /tmp/SessionModelCases.hs
       - name: Regenerate checked consent transitions
         run: |
           java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -metadir /tmp/social-consent-states -dump dot,actionlabels /tmp/social-consent.dot -config formal/social/ConsentTraces.cfg formal/social/ConsentTraces.tla
@@ -46,7 +56,9 @@ jobs:
         if: always()
         with:
           name: social-model-results
-          path: /tmp/social-model-results/*.txt
+          path: |
+            /tmp/social-model-results/*.txt
+            /tmp/session-model-results/*.txt
   social-client:
     runs-on: ubuntu-latest
     timeout-minutes: 15

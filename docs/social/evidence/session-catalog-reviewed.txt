@@ -1,0 +1,5 @@
+Command: node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /private/tmp/social-session-catalog-reviewed.json
+Observed exit: 0
+Candidates: 1111
+SessionAccess: genuine technical constant; internal database lock mode, not a business/security catalog.
+Existing gate and assertions unchanged.

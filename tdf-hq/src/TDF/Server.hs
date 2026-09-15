@@ -4254,7 +4254,7 @@ notifyEligibleFeatureReviewers requester feature actionName requestId now = do
   forM_ reviewerPartyIds $ \reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do
     rolesResult <- loadCanonicalPartyRoles reviewerPartyId
     roles <- either (liftIO . ioError . userError . T.unpack) pure rolesResult
-    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles)
+    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles) Nothing
     when (registryReviewerCanDecide reviewer feature actionName) $
       insert_ Notification
         { notificationRecipientPartyId = reviewerPartyId

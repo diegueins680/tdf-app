@@ -1,0 +1,29 @@
+✔ UI-only changes do not compile backend or mobile (72.921413ms)
+✔ ordinary backend changes avoid UI, mobile, contracts and migrations (4.751001ms)
+✔ public booking HTTP concurrency harness selects backend validation (1.378859ms)
+✔ OpenAPI changes validate both generated clients (1.410714ms)
+✔ schema model changes run backend and migration checks (0.544511ms)
+✔ production migration runner changes run backend and migration checks (6.739974ms)
+✔ root dependency changes cover every JavaScript consumer (16.005258ms)
+✔ pipeline changes fail safe across every scope (1.415606ms)
+✔ backend artifact builds can force backend validation (21.29246ms)
+✔ CI splits component checks and preserves Stack build caches (80.252146ms)
+✔ safe-install CI permits missing scripts without masking script failures (87.058746ms)
+✔ configured Datadog checks fail when tests or results are missing (9.993728ms)
+✔ persona browser journeys are artifacted and gate aggregate quality (20.186191ms)
+✔ backend quality compiles, tests and exports the binary in one Stack pass (7.547328ms)
+✔ backend quality exercises public booking concurrency with its tested binary (30.957133ms)
+✔ change detection includes deleted paths (10.220436ms)
+✔ backend image packages the tested artifact instead of recompiling Haskell (11.678931ms)
+✔ automatic migration integration matches the persisted production locale (6.021491ms)
+✔ backend image receives deterministic, non-empty release metadata (12.143703ms)
+✔ source Dockerfile introduces changing release metadata after compilation (14.85679ms)
+✔ affected active workflow actions use Node 24 majors (144.638449ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1414.906465
