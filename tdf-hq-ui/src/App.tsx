@@ -6,6 +6,7 @@ import RouteLoadingFallback from './routes/RouteLoadingFallback';
 import { renderProtectedRoutes } from './routes/protectedRoutes';
 import { renderPublicRoutes } from './routes/publicRoutes';
 import { useSession } from './session/SessionContext';
+import OnboardingRecovery from './session/OnboardingRecovery';
 import { lazyWithReload } from './utils/lazyWithReload';
 import { shouldRenderRadioWidget } from './utils/radioRouteVisibility';
 
@@ -25,6 +26,7 @@ function RoutedRadioWidget() {
 export default function App() {
   return (
     <AppErrorBoundary>
+      <OnboardingRecovery />
       <Suspense fallback={<RouteLoadingFallback />}>
         <Routes>
           {renderPublicRoutes()}

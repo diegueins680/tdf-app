@@ -8,8 +8,6 @@ import './i18n';
 import { SessionProvider } from './session/SessionContext';
 import { AppThemeProvider } from './theme/AppThemeProvider';
 import { reportMissingEnv } from './utils/env';
-import { getAnalyticsClient } from './analytics/posthog';
-import { startWebVitalsTracking } from './analytics/webVitals';
 import { LocalePreferencesProvider } from './contexts/LocalePreferencesContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -36,8 +34,15 @@ reportMissingEnv(['VITE_PAYPAL_CLIENT_ID']);
 // Initialize analytics as early as possible so pageviews captured by
 // posthog-js include the landing route. If VITE_POSTHOG_KEY is unset
 // this is a no-op.
-const analytics = getAnalyticsClient();
-startWebVitalsTracking(analytics);
+void import('./analytics/posthog')
+  .then(({ getAnalyticsClient }) => {
+    const analytics = getAnalyticsClient();
+    if (!analytics.ready) return;
+    void import('./analytics/webVitals')
+      .then(({ startWebVitalsTracking }) => startWebVitalsTracking(analytics))
+      .catch(() => undefined);
+  })
+  .catch(() => undefined);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
