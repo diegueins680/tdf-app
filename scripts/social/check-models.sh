@@ -5,7 +5,7 @@ TDF_SOCIAL_JAVA=${TDF_SOCIAL_JAVA:-java}
 TDF_SOCIAL_ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 TDF_SOCIAL_RESULTS=${TDF_SOCIAL_RESULTS:-$(mktemp -d)}
 mkdir -p "$TDF_SOCIAL_RESULTS"
-for model in Relationships Feed RequestReplay; do
+for model in Relationships Feed RequestReplay Reaction; do
   "$TDF_SOCIAL_JAVA" -XX:+UseParallelGC -cp "$TLA_JAR" tlc2.TLC \
     -workers 1 -metadir "$TDF_SOCIAL_RESULTS/states-$model" \
     -config "$TDF_SOCIAL_ROOT/formal/social/$model.cfg" \
