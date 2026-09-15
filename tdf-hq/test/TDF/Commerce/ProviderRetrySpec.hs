@@ -366,6 +366,7 @@ spec = do
         notificationInboxSpec
         notificationIdentityInboxSpec
         reconciliationTransactionSpec
+        captureReplaySpec
         it "serializes different keys and permits only one active attempt" $ \pool -> do
           creation <- newCheckout pool
           results <- concurrently
@@ -1795,6 +1796,78 @@ assertQueryUnpaid pool payment = do
     \ WHERE attempt.id=?::uuid" [paymentAttemptParameter payment]) pool
     :: IO [(Single Int64,Single Int64,Single Text,Single Int64,Single Int64)]
   rows `shouldBe` [(Single 0,Single 0,Single "ambiguous",Single 0,Single 0)]
+
+-- Shared CheckoutStore boundary: real PostgreSQL, synthetic verified evidence.
+-- These tests do not exercise provider HTTP or actual refunds/disputes.
+captureReplaySpec :: SpecWith ConnectionPool
+captureReplaySpec = describe "verified capture replay integrity" $
+  forM_ [Checkout.ProviderDatafast, Checkout.ProviderPayPal,
+      Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
+    describe (T.unpack (Checkout.paymentProviderText provider)) $ do
+      it "preserves the complete financial snapshot on later and concurrent replays" $ \pool -> do
+        payment <- captureFixture pool provider
+        runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+        snapshot <- runSqlPool (captureSnapshot payment) pool
+        let replay = payment { Checkout.vpOccurredAt = addUTCTime 3600 (Checkout.vpOccurredAt payment)
+                             , Checkout.vpCorrelationId = "synthetic-later-replay" }
+        outcomes <- concurrently (replicate 4 (runSqlPool (Checkout.recordVerifiedPayment replay) pool))
+        outcomes `shouldBe` replicate 4 (Right False)
+        runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+
+      it "rejects same-amount receipts belonging to another provider or external reference" $ \pool ->
+        forM_ ["adapter='synthetic-other-provider'", "external_reference='synthetic-other-reference'"] $ \change -> do
+          payment <- captureFixture pool provider
+          runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+          runSqlPool (rawExecute ("UPDATE commerce_receipt SET " <> change <> " WHERE checkout_id=?::uuid")
+            [PersistText (Checkout.checkoutReferenceId (Checkout.vpCheckout payment))]) pool
+          snapshot <- runSqlPool (captureSnapshot payment) pool
+          runSqlPool (Checkout.recordVerifiedPayment payment) pool >>= (`shouldSatisfy` isLeft)
+          runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+
+captureFixture :: ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment
+captureFixture pool provider = do
+  seed <- newCheckoutForDomain "service_booking" pool
+  let creation = seed { Checkout.pacProvider = provider }
+      method = case provider of
+        Checkout.ProviderPayPal -> MethodPayPalWallet
+        Checkout.ProviderPayPhone -> MethodPayPhoneWallet
+        _ -> MethodCard
+      checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+  attempt <- runSqlPool (Runtime.beginPaymentAttemptForMethod method creation) pool >>= requireRight
+  let resource = "synthetic-capture-" <> Checkout.paymentAttemptReferenceId attempt
+  _ <- runSqlPool (Checkout.bindProviderResource Checkout.ProviderBindingCreation
+    { Checkout.pbcAttempt = attempt, Checkout.pbcCheckout = Checkout.pacCheckout creation
+    , Checkout.pbcProvider = provider, Checkout.pbcEnvironment = Checkout.CheckoutSandbox
+    , Checkout.pbcMerchantRef = Checkout.pacMerchantRef creation, Checkout.pbcResourceType = "payment"
+    , Checkout.pbcProviderResource = resource, Checkout.pbcResourcePath = Nothing
+    , Checkout.pbcOrderReference = checkoutId, Checkout.pbcAmountMinor = 12515
+    , Checkout.pbcCurrency = "USD", Checkout.pbcStage = Checkout.AttemptProcessing
+    , Checkout.pbcOccurredAt = Checkout.pacCreatedAt creation
+    , Checkout.pbcCorrelationId = "synthetic-capture-binding" }) pool >>= requireRight
+  pure Checkout.VerifiedPayment
+    { Checkout.vpAttempt = attempt, Checkout.vpCheckout = Checkout.pacCheckout creation
+    , Checkout.vpProvider = provider, Checkout.vpEnvironment = Checkout.CheckoutSandbox
+    , Checkout.vpMerchantRef = Checkout.pacMerchantRef creation, Checkout.vpResourceType = "payment"
+    , Checkout.vpProviderResource = resource, Checkout.vpProviderResourcePath = Nothing
+    , Checkout.vpOrderReference = checkoutId, Checkout.vpProviderReference = checkoutId
+    , Checkout.vpAmountMinor = 12515, Checkout.vpCurrency = "USD"
+    , Checkout.vpEvidence = "server_to_server", Checkout.vpOccurredAt = Checkout.pacCreatedAt creation
+    , Checkout.vpCorrelationId = "synthetic-capture-verification" }
+
+captureSnapshot :: Checkout.VerifiedPayment -> SqlPersistT IO [Single Text]
+captureSnapshot payment = rawSql
+  "SELECT jsonb_build_object('checkout',to_jsonb(checkout),'attempt',to_jsonb(attempt),\
+  \ 'intent',to_jsonb(intent),\
+  \ 'receipts',(SELECT jsonb_agg(to_jsonb(receipt) ORDER BY receipt.id) FROM commerce_receipt receipt WHERE checkout_id=checkout.id),\
+  \ 'ledger',(SELECT jsonb_agg(to_jsonb(txn) ORDER BY txn.id) FROM commerce_ledger_transaction txn WHERE source_id=attempt.id::text),\
+  \ 'entries',(SELECT jsonb_agg(to_jsonb(entry) ORDER BY entry.id) FROM commerce_ledger_entry entry JOIN commerce_ledger_transaction txn ON txn.id=entry.transaction_id WHERE txn.source_id=attempt.id::text),\
+  \ 'history',(SELECT jsonb_agg(to_jsonb(history) ORDER BY history.id) FROM commerce_payment_state_history history WHERE payment_intent_id=intent.id),\
+  \ 'audit',(SELECT jsonb_agg(to_jsonb(audit) ORDER BY audit.id) FROM commerce_checkout_audit_event audit WHERE checkout_id=checkout.id)\
+  \ )::text FROM commerce_payment_attempt attempt\
+  \ JOIN commerce_checkout_session checkout ON checkout.id=attempt.checkout_id\
+  \ JOIN commerce_payment_intent intent ON intent.id=attempt.payment_intent_id\
+  \ WHERE attempt.id=?::uuid"
+  [PersistText (Checkout.paymentAttemptReferenceId (Checkout.vpAttempt payment))]
 
 reconciliationTransactionSpec :: SpecWith ConnectionPool
 reconciliationTransactionSpec = describe "authoritative query transaction ownership" $ do
