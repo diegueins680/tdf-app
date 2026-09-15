@@ -1,0 +1,158 @@
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+CREATE TABLE
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+INSERT 0 0
+CREATE TABLE
+NOTICE:  relation "social_v2_preference" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_pair" already exists, skipping
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_command" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+UPDATE 1
+DO
+DO
+BEGIN
+UPDATE 1
+COMMIT
+DO
+BEGIN
+CREATE TABLE
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+INSERT 0 0
+CREATE TABLE
+NOTICE:  relation "social_v2_preference" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_pair" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_command" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+NOTICE:  column "publication_position" of relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_publication" already exists, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+UPDATE 1
+ social_v2_publish_batch 
+-------------------------
+                       4
+(1 row)
+
+DO
+UPDATE 1
+INSERT 0 1
+ social_v2_publish_batch 
+-------------------------
+                       1
+(1 row)
+
+DO
+DELETE 1
+DO
+DELETE 1
+DO
+INSERT 0 1
+                    social_v2_preferences                    
+-------------------------------------------------------------
+ {"revision": 1, "discoverable": true, "personalized": true}
+(1 row)
+
+DO
+DO
+                  ?column?                  
+--------------------------------------------
+ PASS: 29 TLC-generated consent transitions
+(1 row)
+
+PASS: feed ordering, eligibility, edits, deletion, backdated publish, revocation, discovery opt-out/exclusions
+PASS: additive reapply, denied defaults, consent, retry, block race, preferences, closure, pause preserves new writes

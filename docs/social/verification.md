@@ -175,3 +175,40 @@ controls passed. Relationships: 337,265 generated / 101,855 distinct, depth 11;
 Feed: 4,717 / 1,674, depth 17; RequestReplay: 2,384 / 272, depth 6. Exact logs:
 `docs/social/model-evidence-independent-guarantees-2026-09-15/`. These are bounded
 model results; downstream SQL, HTTP and legacy-client refinement remains required.
+## Downstream SQL refinement after concurrent review
+
+The authority branch is rebased onto the reviewed audit commit `3151106f2` plus
+preview suppression `45aa887ff`; unrelated application branches were not merged.
+`ConsentTraces` now invokes actor-specific Withdraw and checks OwnConsentOnly.
+The generator derives the withdrawing actor from the removed consent, instead of
+always assuming actor A. TLC explored 32 trace states / 74 generated states and
+emitted 30 distinct SQL assertions.
+
+Running those assertions against the previous SQL failed at **model state 23**:
+with both intents true, actor A's disconnect erased B's intent. The repair clears
+only the caller's intent; block and social closure still clear both. The same
+native PostgreSQL fixture then passed all 30 transitions and the existing checks.
+Before/after logs are retained in `evidence/reviewed-sql-before.txt` and
+`evidence/reviewed-sql-after.txt`. This is an observed model-to-code counterexample,
+not merely a synthetic negative configuration of the model.
+
+The reviewed positive models were rerun here using Java 17.0.12 and the pinned TLC
+jar: Relationships 101,245 distinct states, Feed 1,674, RequestReplay 272. The runner
+also requires the six specifically named negative-control violations. These remain
+bounded specifications; external worker and full-platform refinement is unfinished.
+
+For the descending feed, the first response establishes an implicit traversal
+high-water mark. A later publication position is greater than that mark and also
+greater than the returned last-position cursor, so it cannot enter later pages.
+An empty response terminates the traversal; a new first-page request is a refresh.
+The implementation does not transport the exact initial mark. This mapping covers
+monotonic publication and eligibility removal only; newly eligible old content and
+an explicit resumable traversal token require further qualification.
+
+The subsequent audit head `6d5c25c20` adds independent delivery, tombstone, stale
+command and ownership properties. ConsentTraces passes the current revision to
+all four commands and supplies every negative-mode constant explicitly. Its 32
+states / 30 generated transition cases passed again against native PostgreSQL;
+see `evidence/consent-independent-review.txt` and `evidence/sql-independent-review.txt`.
+The SQL byte sequence of the generated assertions did not change. Delivery remains
+a model-level guarantee until the legacy worker integration is implemented.
