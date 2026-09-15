@@ -18494,10 +18494,9 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
-  it('strips common form-provider descriptors from first-run cohort copy', async () => {
-    // This matrix renders and unmounts the page once per provider title, so it
-    // needs a dedicated budget when the complete UI suite is under load.
-    const titles = [
+  // Each title has an independent watchdog; one slow matrix must not leave
+  // unfinished React work contaminating every subsequent test.
+  it.each([
       'Typeform - Beatmaking 101',
       'Typeform.com - Beatmaking 101',
       'Formulario de Typeform para Beatmaking 101',
@@ -18599,16 +18598,15 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - Formbricks survey',
       'MakeForms registration form for Beatmaking 101',
       'Youform application form - Beatmaking 101',
-    ];
+    ])('strips common form-provider descriptors from first-run cohort copy: %s', async (title) => {
+    listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+    listRegistrationsMock.mockResolvedValue([]);
 
-    for (const title of titles) {
-      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
-      listRegistrationsMock.mockResolvedValue([]);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
 
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-      const { cleanup } = await renderPage(container);
-
+    try {
       await waitForExpectation(() => {
         const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
         expect(emptyState).not.toBeNull();
@@ -18653,10 +18651,10 @@ describe('CourseRegistrationsAdminPage', () => {
         ).toBe('Abrir formulario público de Beatmaking 101');
         expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
       });
-
+    } finally {
       await cleanup();
     }
-  }, 15_000);
+  }, 5_000);
 
   it('strips ScoreApp quiz wrappers from first-run cohort copy', async () => {
     const titles = [
