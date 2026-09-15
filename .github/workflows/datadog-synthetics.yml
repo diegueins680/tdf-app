@@ -19,29 +19,41 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      DD_API_KEY: ${{ secrets.DD_API_KEY }}
-      DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
 
     steps:
     - uses: actions/checkout@v7
 
+    - name: Check Datadog configuration
+      id: datadog-config
+      env:
+        DD_API_KEY: ${{ secrets.DD_API_KEY }}
+        DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
+      run: |
+        if [ -n "$DD_API_KEY" ] && [ -n "$DD_APP_KEY" ]; then
+          echo 'configured=true' >> "$GITHUB_OUTPUT"
+        else
+          echo 'configured=false' >> "$GITHUB_OUTPUT"
+        fi
+
     # Run Synthetic tests within your GitHub workflow.
     # For additional configuration options visit the action within the marketplace: https://github.com/marketplace/actions/datadog-synthetics-ci
     - name: Run Datadog Synthetic tests
-      if: ${{ env.DD_API_KEY != '' && env.DD_APP_KEY != '' }}
+      if: ${{ steps.datadog-config.outputs.configured == 'true' }}
       uses: DataDog/synthetics-ci-github-action@87b505388a22005bb8013481e3f73a367b9a53eb # v1.4.0
       with:
-        api_key: ${{ env.DD_API_KEY }}
-        app_key: ${{ env.DD_APP_KEY }}
+        api_key: ${{ secrets.DD_API_KEY }}
+        app_key: ${{ secrets.DD_APP_KEY }}
         datadog_site: datadoghq.com # TDF Records, US1
         test_search_query: 'tag:e2e-tests' #Modify this tag to suit your tagging strategy
         fail_on_critical_errors: true
         fail_on_missing_tests: true
 
     - name: Skip Datadog Synthetic tests
-      if: ${{ env.DD_API_KEY == '' || env.DD_APP_KEY == '' }}
+      if: ${{ steps.datadog-config.outputs.configured == 'false' }}
       run: echo "Datadog API and/or APP key secrets are not configured. Skipping Synthetic tests."

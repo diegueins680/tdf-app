@@ -33,6 +33,8 @@ Add these secrets to your GitHub repository (Settings → Secrets and variables 
 | `INSTAGRAM_ACCESS_TOKEN` | Current token (short or long-lived) | ✅ Yes |
 | `INSTAGRAM_APP_SECRET` | Instagram App Secret from Meta Dashboard | ✅ Yes |
 | `INSTAGRAM_APP_ID` | App ID for the Meta app that issued the access token | ✅ Yes |
+| `FACEBOOK_APP_ID` | Parent Meta app ID used to authenticate the Facebook debugger | ✅ For checks |
+| `FACEBOOK_APP_SECRET` | Matching parent Meta app secret, distinct from the Instagram secret | ✅ For checks |
 | `FLY_APP_NAME` | Fly.io app name (default: tdf-hq) | ❌ Optional |
 | `FLY_API_TOKEN` | Fly.io API token for deployments | ✅ Yes |
 | `SLACK_WEBHOOK_URL` | Slack webhook for failure alerts | ❌ Optional |
@@ -46,6 +48,8 @@ Run the setup command to exchange your short-lived token for a long-lived token:
 export INSTAGRAM_ACCESS_TOKEN="your-short-lived-token"
 export INSTAGRAM_APP_ID="your-app-id"
 export INSTAGRAM_APP_SECRET="your-app-secret"
+export FACEBOOK_APP_ID="your-parent-meta-app-id"
+export FACEBOOK_APP_SECRET="your-parent-meta-app-secret"
 
 # Run setup
 node scripts/refresh-instagram-token.mjs --setup
@@ -133,6 +137,8 @@ Check the GitHub Actions logs for automated runs, or run locally with `--check`.
 - If the first request reports an expired session, obtain a replacement token through the approved Instagram login process; app-ID changes or retries cannot renew an expired token. Never disclose tokens in logs or issues.
 - Ensure the repository-level Actions secret `INSTAGRAM_APP_ID` is configured; the workflow intentionally has no hard-coded fallback
 - Verify that `INSTAGRAM_APP_ID` and `INSTAGRAM_APP_SECRET` belong to the same Meta app
+- The [Facebook token debugger](https://developers.facebook.com/docs/graph-api/reference/debug_token/) requires an app access token for the associated Meta application. The checker uses `FACEBOOK_APP_ID`/`FACEBOOK_APP_SECRET` for that inspector, while retaining the Instagram child ID/secret for Instagram Login and token exchange. For TDF, these are the parent **TDF Bot** and child **TDF Bot-IG** respectively; do not overwrite one pair with the other.
+- A successful debugger response must identify the configured Instagram app and include an authoritative expiration. Expired token or data-access deadlines fail, even if `is_valid` is true. Missing expiry is not treated as a never-expiring token.
 - Verify that `INSTAGRAM_ACCESS_TOKEN` was issued for that app and has not been revoked
 - Replace the affected repository secrets through GitHub's secret settings; never paste their values into logs or issues
 

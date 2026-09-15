@@ -274,7 +274,20 @@ import TDF.DTO.SocialEventsDTO (
     WaitlistJoinDTO (..),
  )
 import qualified TDF.Email as Email
-import TDF.Models (EngagementEvent (..), EntityField (PartyStripeCustomerId), Party (..), PartyId)
+import TDF.Models
+    ( EngagementEvent (..)
+    , EntityField
+        ( PartyStripeCustomerId
+        , EngagementEventActorPartyId
+        , EngagementEventEntityType
+        , EngagementEventEntityId
+        , EngagementEventEventType
+        , EngagementEventMetadata
+        , EngagementEventCreatedAt
+        )
+    , Party (..)
+    , PartyId
+    )
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.ModelsExtra as ME

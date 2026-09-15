@@ -25,12 +25,14 @@ import { pathToFileURL } from 'url';
 
 const TOKEN_FILE = join(process.cwd(), '.instagram-token-state.json');
 const INSTAGRAM_API_BASE = 'https://graph.instagram.com';
-const FACEBOOK_GRAPH_BASE = 'https://graph.facebook.com/v18.0';
+const FACEBOOK_GRAPH_BASE = 'https://graph.facebook.com/v26.0';
 
 // Read environment variables
 const TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN;
 const APP_ID = process.env.INSTAGRAM_APP_ID;
 const APP_SECRET = process.env.INSTAGRAM_APP_SECRET;
+const DEBUG_APP_ID = process.env.FACEBOOK_APP_ID;
+const DEBUG_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 const FLY_APP = process.env.FLY_APP_NAME || 'tdf-hq';
 
 function log(...args) {
@@ -158,16 +160,36 @@ export async function checkInstagramToken(token, requestOptions) {
   return checkTokenStatus(token, requestOptions);
 }
 
-export async function checkTokenStatus(token, requestOptions) {
+export async function checkTokenStatus(token, {
+  appId = DEBUG_APP_ID,
+  appSecret = DEBUG_APP_SECRET,
+  expectedAppId = APP_ID,
+  ...requestOptions
+} = {}) {
   log('Checking token status...');
 
-  // Check token info using Facebook's debug_token endpoint.
-  const debugUrl = `${FACEBOOK_GRAPH_BASE}/debug_token?input_token=${token}&access_token=${APP_ID}|${APP_SECRET}`;
-  const debugData = await makeRequest(debugUrl, requestOptions);
+  // The Facebook debugger authenticates the parent Meta application, not the
+  // Instagram Login child credentials used by ig_exchange_token.
+  if (!appId || !appSecret) {
+    throw new Error('FACEBOOK_APP_ID and FACEBOOK_APP_SECRET are required for token metadata validation');
+  }
+  if (!expectedAppId) throw new Error('INSTAGRAM_APP_ID is required to verify token ownership');
+  const debugUrl = new URL(`${FACEBOOK_GRAPH_BASE}/debug_token`);
+  debugUrl.searchParams.set('input_token', token);
+  debugUrl.searchParams.set('access_token', `${appId}|${appSecret}`);
+  const debugData = await makeRequest(debugUrl.toString(), requestOptions);
 
   const tokenInfo = debugData.data || {};
-  const expiresAt = tokenInfo.expires_at ? new Date(tokenInfo.expires_at * 1000) : null;
-  const isValid = tokenInfo.is_valid === true;
+  if (tokenInfo.is_valid === true && String(tokenInfo.app_id) !== String(expectedAppId)) {
+    throw new Error('Instagram access token belongs to a different application');
+  }
+  if (tokenInfo.is_valid === true && (!Number.isFinite(tokenInfo.expires_at) || tokenInfo.expires_at < 0)) {
+    throw new Error('Instagram token metadata has no authoritative expiration');
+  }
+  const deadlines = [tokenInfo.expires_at, tokenInfo.data_access_expires_at]
+    .filter(value => Number.isFinite(value) && value > 0);
+  const expiresAt = deadlines.length ? new Date(Math.min(...deadlines) * 1000) : null;
+  const isValid = tokenInfo.is_valid === true && (!expiresAt || expiresAt.getTime() > Date.now());
   const scopes = tokenInfo.scopes || [];
 
   log('Token status:', isValid ? 'VALID' : 'INVALID');

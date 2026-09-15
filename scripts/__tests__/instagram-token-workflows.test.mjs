@@ -5,10 +5,14 @@ import { test } from 'node:test';
 import {
   assertCheckConfiguration,
   assertTokenValid,
-  checkInstagramToken,
-  checkTokenStatus,
+  checkInstagramToken as checkInstagramTokenImpl,
+  checkTokenStatus as checkTokenStatusImpl,
 } from '../refresh-instagram-token.mjs';
 import { checkToken as checkMessagingToken } from '../check-messaging-token.mjs';
+
+const inspector = { appId: 'parent-app', appSecret: 'parent-secret', expectedAppId: 'instagram-app' };
+const checkTokenStatus = (token, options) => checkTokenStatusImpl(token, { ...inspector, ...options });
+const checkInstagramToken = (token, options) => checkInstagramTokenImpl(token, { ...inspector, ...options });
 
 function response({ ok, status, data, retryAfter = null }) {
   return {
@@ -150,7 +154,7 @@ test('token checks recover after a bounded transient failure', async () => {
     response({
       ok: true,
       status: 200,
-      data: { data: { is_valid: true, scopes: ['instagram_basic'] } },
+      data: { data: { is_valid: true, app_id: 'instagram-app', expires_at: 0, scopes: ['instagram_basic'] } },
     }),
   ];
 
@@ -173,6 +177,45 @@ test('an invalid token can never be classified as healthy', async () => {
   });
 
   assert.throws(() => assertTokenValid(status), /access token is invalid/);
+});
+
+test('metadata inspection authenticates the parent app but verifies the Instagram child owner', async () => {
+  const status = await checkTokenStatus('subject+token&value', {
+    fetchImpl: async rawUrl => {
+      const url = new URL(rawUrl);
+      assert.equal(url.origin, 'https://graph.facebook.com');
+      assert.equal(url.pathname, '/v26.0/debug_token');
+      assert.equal(url.searchParams.get('input_token'), 'subject+token&value');
+      assert.equal(url.searchParams.get('access_token'), 'parent-app|parent-secret');
+      return response({ ok: true, status: 200, data: { data: {
+        is_valid: true, app_id: 'instagram-app', expires_at: 0,
+      } } });
+    },
+  });
+  assert.equal(status.isValid, true);
+  for (const metadata of [
+    { is_valid: true, app_id: 'unrelated-app', expires_at: 0 },
+    { is_valid: true, app_id: 'instagram-app' },
+  ]) {
+    await assert.rejects(checkTokenStatus('redacted', {
+      fetchImpl: async () => response({ ok: true, status: 200, data: { data: metadata } }),
+    }), /different application|no authoritative expiration/);
+  }
+});
+
+test('metadata cannot mark an expired token or expired data grant healthy', async () => {
+  const now = Math.floor(Date.now() / 1000);
+  for (const deadlines of [
+    { expires_at: now - 60 },
+    { expires_at: now + 3600, data_access_expires_at: now - 60 },
+  ]) {
+    const status = await checkTokenStatus('redacted', {
+      fetchImpl: async () => response({ ok: true, status: 200, data: { data: {
+        is_valid: true, app_id: 'instagram-app', ...deadlines,
+      } } }),
+    });
+    assert.throws(() => assertTokenValid(status), /access token is invalid/);
+  }
 });
 
 test('token validation requires an explicit matching Meta application ID', () => {

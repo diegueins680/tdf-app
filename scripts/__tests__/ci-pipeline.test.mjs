@@ -37,6 +37,11 @@ test('configured Datadog checks fail when tests or results are missing', async (
   assert.match(workflow, /datadog_site: datadoghq\.com/);
   assert.match(workflow, /fail_on_critical_errors: true/);
   assert.match(workflow, /fail_on_missing_tests: true/);
+  assert.match(workflow, /permissions:\n  contents: read/);
+  assert.doesNotMatch(workflow, /runs-on: ubuntu-latest\n    env:/);
+  assert.match(workflow, /api_key: \$\{\{ secrets\.DD_API_KEY \}\}/);
+  assert.match(workflow, /app_key: \$\{\{ secrets\.DD_APP_KEY \}\}/);
+  assert.match(workflow, /steps\.datadog-config\.outputs\.configured == 'true'/);
 });
 
 test('persona browser journeys are artifacted and gate aggregate quality', async () => {
