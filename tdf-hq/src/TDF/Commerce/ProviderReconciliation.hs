@@ -304,6 +304,16 @@ applyQueryResultInTransaction
   -> UTCTime
   -> SqlPersistT IO (Either Text ReconciliationDisposition)
 applyQueryResultInTransaction payment result eventId now = do
+  review <- Execution.reviewClosedCheckoutApproval payment result eventId now
+  case review of
+    Left problem -> pure (Left problem)
+    Right True -> pure (Right ReconciliationDeadLetter)
+    Right False -> applyUnheldQueryResult payment result eventId now
+
+applyUnheldQueryResult
+  :: Execution.BoundProviderPayment -> AdapterResult -> Text -> UTCTime
+  -> SqlPersistT IO (Either Text ReconciliationDisposition)
+applyUnheldQueryResult payment result eventId now = do
   operationResult <- Execution.recordReconciledCreateResult payment result now
   case operationResult of
     Left problem -> pure (Left problem)

@@ -23,6 +23,7 @@ module TDF.Commerce.ProviderExecutionStore
   , providerCreateRequestFingerprint
   , loadBoundProviderPayment
   , recordReconciledCreateResult
+  , reviewClosedCheckoutApproval
   , validateNoChargeObservation
   , ProviderQueryClaim(..)
   , providerQueryRecoveryInstalled
@@ -40,6 +41,7 @@ import           Control.Monad (forM_, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Crypto.Hash (Digest, SHA256, hash)
 import qualified Data.ByteArray.Encoding as BAE
+import qualified Data.ByteString as BS
 import           Data.Int (Int64)
 import           Data.Maybe (fromMaybe)
 import           Data.Text (Text)
@@ -48,6 +50,7 @@ import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
+import qualified Data.UUID.V5 as UUID5
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql
   ( Single(..), SqlPersistT, rawExecute, rawSql, transactionSave, transactionUndo )
@@ -266,7 +269,15 @@ finishProviderQuery claim requestedStatus code = do
       \ attempt.amount_minor,attempt.currency,'open',clock_timestamp()\
       \ FROM commerce_provider_operation operation\
       \ JOIN commerce_payment_attempt attempt ON attempt.id=operation.payment_attempt_id\
-      \ WHERE operation.id=?::uuid ON CONFLICT DO NOTHING"
+      \ WHERE operation.id=?::uuid AND NOT EXISTS (\
+      \ SELECT 1 FROM commerce_reconciliation_exception review\
+      \ WHERE review.exception_type='verified_payment_on_closed_checkout'\
+      \ AND review.provider=operation.provider AND review.environment=operation.environment\
+      \ AND review.merchant_account_ref=operation.merchant_account_ref\
+      \ AND review.internal_reference=attempt.checkout_id::text\
+      \ AND review.provider_reference=operation.provider_resource_id\
+      \ AND review.actual_amount_minor=attempt.amount_minor AND review.currency=attempt.currency)\
+      \ ON CONFLICT DO NOTHING"
       [PersistText (pqcOperationId claim)]
 
 queryJobAudit :: Text -> Text -> Text -> SqlPersistT IO ()
@@ -801,6 +812,103 @@ validateNoChargeObservation payment = do
       | otherwise -> Left "No-charge evidence conflicts with the payment lifecycle"
     _ -> Left "No-charge evidence does not match its payment binding"
 
+-- | Called only after an authenticated query has matched a reloaded immutable
+-- binding. A closed checkout cannot consume inventory or recognize a capture.
+-- Keep exact observed money in a review record instead. This is NOT a ledger,
+-- settlement, receipt, refund instruction or permission to release a hold.
+--
+-- Lock order matches reconciliation: operation, then checkout/attempt. The
+-- deterministic primary key also deduplicates across callbacks and job leases.
+-- Once evidence exists, later status queries cannot release it, even if an
+-- operator changes the exception's workflow status or reopens the checkout.
+reviewClosedCheckoutApproval
+  :: BoundProviderPayment -> AdapterResult -> Text -> UTCTime
+  -> SqlPersistT IO (Either Text Bool)
+reviewClosedCheckoutApproval payment result correlation now = do
+  operations <- rawSql
+    "SELECT id::text FROM commerce_provider_operation\
+    \ WHERE payment_attempt_id=?::uuid AND operation='create'\
+    \ AND provider=? AND environment=? AND merchant_account_ref=?\
+    \ AND provider_resource_id=? AND provider_reference=? FOR UPDATE"
+    [ PersistText (Checkout.paymentAttemptReferenceId (bppAttempt payment))
+    , PersistText (Checkout.paymentProviderText (bppProvider payment))
+    , PersistText (Checkout.checkoutEnvironmentText (bppEnvironment payment))
+    , PersistText (bppMerchantRef payment), PersistText (bppProviderResourceId payment)
+    , PersistText (bppProviderReference payment)
+    ] :: SqlPersistT IO [Single Text]
+  case operations of
+    [Single operationId] -> do
+      states <- rawSql
+        "SELECT checkout.status FROM commerce_checkout_session checkout\
+        \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=checkout.id\
+        \ WHERE checkout.id=?::uuid AND attempt.id=?::uuid\
+        \ AND checkout.total_minor=? AND checkout.currency=?\
+        \ AND attempt.amount_minor=checkout.total_minor AND attempt.currency=checkout.currency\
+        \ FOR UPDATE OF checkout,attempt"
+        [ PersistText (Checkout.checkoutReferenceId (bppCheckout payment))
+        , PersistText (Checkout.paymentAttemptReferenceId (bppAttempt payment))
+        , PersistInt64 (bppAmountMinor payment), PersistText (bppCurrency payment)
+        ] :: SqlPersistT IO [Single Text]
+      case states of
+        [Single checkoutStatus] -> do
+          let exceptionId = closedCheckoutApprovalId operationId
+              scope =
+                [ PersistText (Checkout.paymentProviderText (bppProvider payment))
+                , PersistText (Checkout.checkoutEnvironmentText (bppEnvironment payment))
+                , PersistText (bppMerchantRef payment)
+                , PersistText (Checkout.checkoutReferenceId (bppCheckout payment))
+                , PersistText (bppProviderResourceId payment)
+                , PersistInt64 (bppAmountMinor payment), PersistInt64 (bppAmountMinor payment)
+                , PersistText (bppCurrency payment)
+                ]
+              matches = rawSql
+                "SELECT COALESCE(provider=? AND environment=? AND merchant_account_ref=?\
+                \ AND internal_reference=? AND provider_reference=?\
+                \ AND expected_amount_minor=? AND actual_amount_minor=? AND currency=?\
+                \ AND exception_type='verified_payment_on_closed_checkout',FALSE)\
+                \ FROM commerce_reconciliation_exception WHERE id=?::uuid FOR SHARE"
+                (scope <> [PersistText exceptionId]) :: SqlPersistT IO [Single Bool]
+          existing <- matches
+          case existing of
+            [Single True] -> pure (Right True)
+            [] | checkoutStatus `elem` ["expired", "cancelled"]
+                && adapterResultState result == AdapterSucceeded -> do
+              inserted <- rawSql
+                "INSERT INTO commerce_reconciliation_exception(id,exception_type,provider,environment,\
+                \ merchant_account_ref,internal_reference,provider_reference,expected_amount_minor,\
+                \ actual_amount_minor,currency,status,detected_at)\
+                \ VALUES (?::uuid,'verified_payment_on_closed_checkout',?,?,?,?,?,?,?,?,'open',?)\
+                \ ON CONFLICT (id) DO NOTHING RETURNING id::text"
+                ([PersistText exceptionId] <> scope <> [PersistUTCTime now])
+                :: SqlPersistT IO [Single Text]
+              verified <- matches
+              if verified /= [Single True]
+                then pure (Left "Closed checkout approval evidence conflicts with its binding")
+                else do
+                  when (not (null inserted)) $ rawExecute
+                    "INSERT INTO commerce_checkout_audit_event(checkout_id,event_type,from_status,\
+                    \ to_status,actor_type,correlation_id,metadata,created_at)\
+                    \ VALUES (?::uuid,'verified_payment_on_closed_checkout',?,?,'provider',?,\
+                    \ jsonb_build_object('exception_id',?::text,'attempt_id',?::text,\
+                    \ 'operation_id',?::text,'evidence','server_to_server'),?)"
+                    [ PersistText (Checkout.checkoutReferenceId (bppCheckout payment))
+                    , PersistText checkoutStatus, PersistText checkoutStatus, PersistText correlation
+                    , PersistText exceptionId
+                    , PersistText (Checkout.paymentAttemptReferenceId (bppAttempt payment))
+                    , PersistText operationId, PersistUTCTime now
+                    ]
+                  pure (Right True)
+            [] -> pure (Right False)
+            _ -> pure (Left "Closed checkout approval evidence conflicts with its binding")
+        _ -> pure (Left "Closed checkout review does not match its payment binding")
+    _ -> pure (Left "Provider create operation was not found for reconciliation")
+
+-- A versioned name in the URL UUID namespace, not an authentication token.
+-- Only canonical operation IDs loaded from PostgreSQL are passed here.
+closedCheckoutApprovalId :: Text -> Text
+closedCheckoutApprovalId operationId = toText $ UUID5.generateNamed UUID5.namespaceURL $
+  BS.unpack (TE.encodeUtf8 ("urn:tdf:payment-review:closed-checkout:v1:" <> operationId))
+
 recordReconciledCreateResult
   :: BoundProviderPayment
   -> AdapterResult
@@ -899,12 +1007,17 @@ loadOperation
   -> SqlPersistT IO (Either Text ProviderOperationRecord)
 loadOperation operationRef encryptionKey = do
   rows <- rawSql
-    "SELECT operation.payment_attempt_id::text, operation.provider, operation.status,\
-    \ operation.outcome_certainty, operation.provider_resource_id,\
-    \ CASE WHEN operation.redirect_url_ciphertext IS NULL THEN NULL\
+    "SELECT operation.payment_attempt_id::text, operation.provider,\
+    \ CASE WHEN review.id IS NOT NULL THEN 'ambiguous' ELSE operation.status END,\
+    \ CASE WHEN review.id IS NOT NULL THEN 'ambiguous' ELSE operation.outcome_certainty END,\
+    \ operation.provider_resource_id,\
+    \ CASE WHEN review.id IS NOT NULL OR operation.redirect_url_ciphertext IS NULL THEN NULL\
     \   ELSE pgp_sym_decrypt(operation.redirect_url_ciphertext, ?) END\
-    \ FROM commerce_provider_operation operation WHERE operation.id = ?::uuid"
+    \ FROM commerce_provider_operation operation\
+    \ LEFT JOIN commerce_reconciliation_exception review ON review.id=?::uuid\
+    \ WHERE operation.id = ?::uuid"
     [ PersistText encryptionKey
+    , PersistText (closedCheckoutApprovalId (providerOperationReferenceId operationRef))
     , PersistText (providerOperationReferenceId operationRef)
     ] :: SqlPersistT IO
       [(Single Text, Single Text, Single Text, Single Text,
