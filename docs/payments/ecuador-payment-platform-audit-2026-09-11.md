@@ -25,6 +25,14 @@ Four providers are justified because each adds a non-redundant rail or failure d
 
 The marketplace checkout is deliberately unavailable until a provider verifies connected accounts, split settlement, and seller payouts for TDF's Ecuador contract. TDF must not pool seller funds, describe an internal balance as escrow, or simulate a split with later manual transfers.
 
+The 2026-09-14/15 reconciliation continuation repairs caller-owned transaction
+atomicity and adds database-backed query contract tests; see [ADR 0119](../adr/0119-atomic-provider-query-application.md)
+and [verification](reconciliation-atomicity-2026-09-14.md). Independent
+missed-callback recovery and shared query budgets remain unimplemented. The
+source review also identified PayPhone's inherited canceled-as-declined mapping;
+its history-preserving compatibility fix remains open. No new operational
+provider or staging qualification is claimed by this continuation.
+
 ## 2. Capability and access report
 
 | Capability | Result on 2026-09-11 | Evidence and limitation |
