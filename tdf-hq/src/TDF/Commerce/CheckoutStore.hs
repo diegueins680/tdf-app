@@ -25,6 +25,7 @@ module TDF.Commerce.CheckoutStore
   , beginPaymentAttempt
   , bindProviderResource
   , recordPaymentFailure
+  , recordPaymentCancellation
   , recordPaymentProcessing
   , recordManualPaymentSelection
   , recordVerifiedPayment
@@ -524,6 +525,27 @@ recordPaymentFailure checkout attempt provider failureCode correlationId occurre
     (paymentProviderText provider)
     correlationId
     (objectText "failure_code" (T.take 120 failureCode))
+
+-- A provider-confirmed cancellation closes the attempt, not the order. Keep
+-- an active checkout retryable; never reopen a closed checkout. Call only for
+-- the first authoritative outcome, after the canonical intent transition.
+recordPaymentCancellation
+  :: CheckoutReference -> PaymentAttemptReference -> PaymentProvider
+  -> Text -> UTCTime -> SqlPersistT IO ()
+recordPaymentCancellation checkout attempt provider correlationId occurredAt = do
+  rawExecute
+    "UPDATE commerce_payment_attempt SET status='cancelled',\
+    \ failure_code='provider_cancelled',failure_summary='Provider confirmed no completed charge.',\
+    \ updated_at=? WHERE id=?::uuid AND checkout_id=?::uuid AND status <> 'succeeded'"
+    [PersistUTCTime occurredAt, PersistText (paymentAttemptReferenceId attempt),
+      PersistText (checkoutReferenceId checkout)]
+  rawExecute
+    "UPDATE commerce_checkout_session SET status='failed',updated_at=?\
+    \ WHERE id=?::uuid AND status IN ('awaiting_payment','processing')"
+    [PersistUTCTime occurredAt, PersistText (checkoutReferenceId checkout)]
+  insertAudit (checkoutReferenceId checkout) "payment_attempt_cancelled"
+    Nothing (Just "cancelled") (paymentProviderText provider) correlationId
+    (objectText "failure_code" "provider_cancelled")
 
 recordPaymentProcessing
   :: CheckoutReference
