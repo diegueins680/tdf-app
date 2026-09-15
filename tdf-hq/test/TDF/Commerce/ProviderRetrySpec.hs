@@ -941,17 +941,17 @@ notificationIdentityInboxSpec = describe "PlaceToPay signed identity inbox" $ do
   it "authenticates the original callback before identity persistence at the Servant handler" $ \pool ->
     withNotificationEnvironment $ do
       let bad = signedPlaceToPayNotification 991238 "APPROVED" "2026-09-14T12:00:00Z" "wrong-secret" privateMarker
-      before <- handlerNotificationCount pool
+      countBefore <- handlerNotificationCount pool
       failed <- notificationHandler pool bad
       either (\err -> do
         errHTTPCode err `shouldBe` 401
         BL.toStrict (errBody err) `shouldSatisfy` (not . BS.isInfixOf (TE.encodeUtf8 privateMarker)))
         (const (expectationFailure "Forged callback was accepted")) failed
-      handlerNotificationCount pool `shouldReturn` before
+      handlerNotificationCount pool `shouldReturn` countBefore
       let good = signedPlaceToPayNotification 991238 "APPROVED" "2026-09-14T12:00:00Z" "synthetic-secret" privateMarker
       notificationHandler pool good >>= (`shouldSatisfy` isRight)
       notificationHandler pool ("\n " <> uppercasePlaceToPaySignature good <> "\n") >>= (`shouldSatisfy` isRight)
-      handlerNotificationCount pool `shouldReturn` (before + 1)
+      handlerNotificationCount pool `shouldReturn` (countBefore + 1)
 
 notificationConfig :: PlaceToPay.PlaceToPayConfig
 notificationConfig = PlaceToPay.PlaceToPayConfig Checkout.CheckoutSandbox "synthetic-login" "synthetic-secret" []
