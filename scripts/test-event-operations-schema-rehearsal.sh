@@ -49,6 +49,7 @@ apply_event_migrations() {
   apply_sql tdf-hq/sql/2026-09-14_event_operations_api.sql
   apply_sql tdf-hq/sql/2026-09-14_event_task_commit.sql
   apply_sql tdf-hq/sql/2026-09-14_event_task_read.sql
+  apply_sql tdf-hq/sql/2026-09-15_event_task_revision.sql
 }
 
 test "$(psql_exec -qAtc "SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p')")" = 0
@@ -108,6 +109,7 @@ apply_sql tdf-hq/test/integration/event_operations_schema_seed.sql
 apply_event_migrations
 apply_event_migrations
 apply_sql tdf-hq/test/integration/event_operations_schema_assertions.sql
+apply_sql tdf-hq/sql/2026-09-15_event_task_revision_rollback.sql
 apply_sql tdf-hq/sql/2026-09-14_event_task_read_rollback.sql
 apply_sql tdf-hq/sql/2026-09-14_event_task_commit_rollback.sql
 apply_sql tdf-hq/sql/2026-09-14_event_operations_api_rollback.sql

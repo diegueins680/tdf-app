@@ -88,6 +88,9 @@ expect_counterexample() {
 }
 expect_counterexample TaskCommitEarlyValidation.cfg NoBlockedCompletion early-validation
 expect_counterexample TaskCommitWriteSkew.cfg NoOrphanResponsibilities write-skew
+run_tlc TaskRevision.tla TaskRevision.cfg task-revision
+expect_counterexample TaskRevisionRaci.cfg NoStaleCommit task-revision-raci TaskRevision.tla
+expect_counterexample TaskRevisionEarly.cfg NoStaleCommit task-revision-early TaskRevision.tla
 run_tlc ReceiptReplay.tla ReceiptReplay.cfg receipt-replay
 expect_counterexample ReceiptReplayBypass.cfg NoUnauthorizedDisclosure replay-bypass ReceiptReplay.tla
 expect_counterexample ReceiptReplayStaleClock.cfg NoUnauthorizedDisclosure replay-clock ReceiptReplay.tla

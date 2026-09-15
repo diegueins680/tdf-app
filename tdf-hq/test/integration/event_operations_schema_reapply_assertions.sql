@@ -31,3 +31,7 @@ DO $$ BEGIN
   EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
   END;
 END $$;
+SELECT event_rehearsal.check_that(
+  (SELECT snapshot=(SELECT jsonb_agg(to_jsonb(t) ORDER BY activity_id) FROM event_operation_task_revision t)
+    FROM event_rehearsal.expected_task_revisions), 'roll-forward never resets aggregate counters');
+SELECT event_operation_lock_task_revision(900010,900010,4);

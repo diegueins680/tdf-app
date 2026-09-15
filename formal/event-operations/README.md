@@ -51,6 +51,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `TaskRevision.cfg` | Two captured commands, one independent RACI write, activity 0–2, RACI 0–1, revision 1–4; no fairness | PASS; 110 generated, 93 distinct states, depth 8 |
+| `TaskRevisionRaci/Early.cfg` | Omit RACI revision advancement or compare before the write fence | Expected exit 12 with `NoStaleCommit`; both detected |
 | `TaskView.cfg` | 3 generations, 2 read slots, 2 targets, 2 accounts plus logged out; no network fairness | PASS; 2,617 generated, 898 distinct states, depth 7 |
 | `TaskViewLate/Retained/Invalid.cfg` | Omit current-receipt guard, clear-on-context-change or valid-DTO requirement | Expected exit 12 with `CurrentView` / `ValidatedView`; all three detected |
 | PlusCal regeneration / integrity tests | Pinned translator, width 120, byte-exact temporary-copy comparison; real translator mutations | PASS; exact match and 13 tests, no skips; source/checksum/whitespace drift rejected |

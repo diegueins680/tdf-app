@@ -12,6 +12,7 @@
 | Space | A physical venue/room/stage or virtual venue/channel assigned to a session. |
 | Workstream | Top-level operational partition such as production, hospitality, security, finance, or broadcast. |
 | Actionable task | Work item whose completion affects readiness and therefore requires Responsible and Accountable coverage. |
+| Task aggregate revision | Monotonic storage counter for one canonical task's activity, policy, RACI, outgoing dependencies and overrides. Distinct from the legacy activity version, event-wide write fence and immutable audit history. Matching it is not authorization or proof of current temporal readiness. |
 | RACI | Responsible does the work; exactly one Accountable party owns the outcome; Consulted participates bidirectionally; Informed receives relevant updates. |
 | Dependency | Directed “blocked task depends on prerequisite” relation. The graph must remain acyclic. |
 | Override | Exceptional authorized transition with a non-empty reason, policy reference, actor, time, and immutable audit evidence. |

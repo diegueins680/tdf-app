@@ -11,3 +11,7 @@ SELECT event_rehearsal.check_that(
 SELECT event_rehearsal.check_that(
   (SELECT snapshot=event_rehearsal.legacy_rows() FROM event_rehearsal.expected_legacy),
   'rollback preserves legacy fixture rows and production ledger');
+SELECT event_rehearsal.check_that(
+  to_regprocedure('event_operation_lock_task_revision(bigint,bigint,bigint)') IS NULL
+  AND (SELECT snapshot=(SELECT jsonb_agg(to_jsonb(t) ORDER BY activity_id) FROM event_operation_task_revision t)
+    FROM event_rehearsal.expected_task_revisions), 'rollback removes revision guard but retains counters');
