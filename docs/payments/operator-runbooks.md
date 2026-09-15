@@ -21,6 +21,11 @@ For PlaceToPay signed identity and the bounded legacy-redelivery compatibility
 rule, follow [ADR 0118](../adr/0118-signed-payment-notification-identity.md) and
 [identity verification](notification-identity-2026-09-14.md). Never treat a newly
 calculated callback ID as proof of a new payment or a verified signature.
+For atomic query application and caller-owned transaction/lock requirements,
+follow [ADR 0119](../adr/0119-atomic-provider-query-application.md) and
+[reconciliation verification](reconciliation-atomicity-2026-09-14.md). The
+independent missed-callback worker is not implemented by that change. Do not
+manufacture a signed inbox event or infer no charge from a missing callback.
 
 ## 1. Configuration and activation
 
