@@ -2424,7 +2424,7 @@ parsePaypalWebhookEnvelope rawBody
   | BL.null rawBody = Left "PayPal webhook body is empty"
   | BL.length rawBody > 1024 * 1024 = Left "PayPal webhook body exceeds 1048576 bytes"
   | otherwise = do
-      value <- either (Left . ("Invalid PayPal webhook JSON: " <>) . T.pack) Right
+      value <- either (const (Left "Invalid PayPal webhook JSON")) Right
         (eitherDecode rawBody :: Either String Value)
       case value of
         Object obj -> do
