@@ -9,6 +9,54 @@ servers:
     description: Development server
 
 paths:
+  /event-operations/events/{eventId}/tasks/{activityId}/raci/reassign:
+    post:
+      tags: [Event operations]
+      summary: Reassign one current unbounded RACI assignment atomically
+      description: >-
+        Planning-stage command on the canonical task. Requires current owner or applicable
+        task.manage authority; read-only current access permits exact historical replay only.
+        Revalidates the bound authenticated session and validates the SQL receipt before commit.
+        Preserves the revoked assignment, immutable audit and task-scoped idempotency receipt.
+        Result aggregateRevision equals expectedRevision plus two, including on exact replay.
+        No recipient consent, availability, booking or notification is implied.
+        Requires separately reviewed SQL/feature activation. Never automatically rebase or retry
+        with a new key after an ambiguous network failure. No actor/time/hash may be supplied.
+      operationId: reassignEventOperationTaskRaci
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        - name: activityId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventRaciReassignmentCommand' }
+      responses:
+        '200':
+          description: Committed or exactly replayed original outcome
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: ['private, no-store'] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventRaciReassignmentOutcome' }
+        '400': { description: 'Invalid capture, UUID, strict command fields or constraints' }
+        '401': { description: 'Missing, invalid or no-longer-current session' }
+        '403': { description: Current reader lacks task mutation authority }
+        '404': { description: Feature disabled or opaque absent/foreign/unreadable task }
+        '409': { description: 'Version/key conflict, unsupported lifecycle, timed source or ineligible/duplicate recipient' }
+        '503': { description: Sanitized persistence or receipt-validation failure; no success implied }
   /event-operations/events/{eventId}/tasks/{activityId}/revisioned:
     get:
       tags: [Event operations]
@@ -7385,6 +7433,35 @@ components:
         Canonical ASCII decimal string in 1..9223372036854775807 (signed BIGINT maximum).
         Runtime decoders enforce the exact upper bound in addition to the pattern.
         Never convert to a JavaScript number. Not an authorization or readiness certificate.
+    EventRaciReassignmentCommand:
+      type: object
+      additionalProperties: false
+      required: [expectedRevision, role, fromPartyId, toPartyId, reason, correlationId]
+      properties:
+        expectedRevision: { $ref: '#/components/schemas/EventTaskAggregateRevision' }
+        role: { type: string, enum: [responsible, accountable, consulted, informed] }
+        fromPartyId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        toPartyId:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9007199254740991
+          description: Must differ from fromPartyId and currently be eligible to read the exact task.
+        reason: { type: string, minLength: 1, maxLength: 2000, description: Nonblank; preserved without normalization. }
+        correlationId: { type: string, minLength: 1, maxLength: 200, description: Nonblank; bound to the idempotent request. }
+    EventRaciReassignmentOutcome:
+      type: object
+      additionalProperties: false
+      required: [eventId, activityId, commandId, role, fromPartyId, toPartyId, aggregateRevision, replayed]
+      properties:
+        eventId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        activityId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        commandId: { type: string, format: uuid }
+        role: { type: string, enum: [responsible, accountable, consulted, informed] }
+        fromPartyId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        toPartyId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        aggregateRevision: { $ref: '#/components/schemas/EventTaskAggregateRevision' }
+        replayed: { type: boolean }
     EventOperationTaskWithRevision:
       type: object
       additionalProperties: false
@@ -7505,6 +7582,11 @@ components:
             - version_conflict
             - transition_invalid
             - transition_effects_not_ready
+            - operation_not_ready
+            - assignment_not_replaceable
+            - assignee_unavailable
+            - assignment_conflict
+            - accountability_not_ready
             - separation_of_duties
             - event_operations_unavailable
             - invalid_database_response

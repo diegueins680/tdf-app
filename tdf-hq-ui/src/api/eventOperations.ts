@@ -8,6 +8,8 @@ export type EventTransitionCommand = components['schemas']['EventTransitionComma
 export type EventTransitionOutcome = components['schemas']['EventTransitionOutcome'];
 export type EventOperationTask = components['schemas']['EventOperationTask'];
 export type EventOperationTaskWithRevision = components['schemas']['EventOperationTaskWithRevision'];
+export type EventRaciReassignmentCommand = components['schemas']['EventRaciReassignmentCommand'];
+export type EventRaciReassignmentOutcome = components['schemas']['EventRaciReassignmentOutcome'];
 
 const safeInteger = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const taskSchema: z.ZodType<EventOperationTask> = z.object({
@@ -35,10 +37,26 @@ const taskSchema: z.ZodType<EventOperationTask> = z.object({
   }
 });
 
+const revisionSchema = z.string().regex(/^[1-9][0-9]{0,18}(?![\s\S])/)
+  .refine(value => value.length < 19 || value <= '9223372036854775807');
 const revisionedTaskSchema: z.ZodType<EventOperationTaskWithRevision> = z.object({
   task: taskSchema,
-  aggregateRevision: z.string().regex(/^[1-9][0-9]{0,18}(?![\s\S])/)
-    .refine(value => value.length < 19 || value <= '9223372036854775807'),
+  aggregateRevision: revisionSchema,
+}).strict();
+
+const raciRoleSchema = z.enum(['responsible', 'accountable', 'consulted', 'informed']);
+const commandKeySchema = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\s\S])/i);
+const commandText = (limit: number) => z.string()
+  .refine(value => value.trim().length > 0 && Array.from(value).length <= limit);
+const raciCommandSchema: z.ZodType<EventRaciReassignmentCommand> = z.object({
+  expectedRevision: revisionSchema, role: raciRoleSchema,
+  fromPartyId: safeInteger, toPartyId: safeInteger,
+  reason: commandText(2000), correlationId: commandText(200),
+}).strict().refine(value => value.fromPartyId !== value.toPartyId);
+const raciOutcomeSchema: z.ZodType<EventRaciReassignmentOutcome> = z.object({
+  eventId: safeInteger, activityId: safeInteger, commandId: commandKeySchema,
+  role: raciRoleSchema, fromPartyId: safeInteger, toPartyId: safeInteger,
+  aggregateRevision: revisionSchema, replayed: z.boolean(),
 }).strict();
 
 const taskPath = (eventId: number, activityId: number) => {
@@ -52,6 +70,31 @@ const eventPath = (eventId: number) =>
   `/event-operations/events/${encodeURIComponent(String(eventId))}`;
 
 export const EventOperations = {
+  reassignRaci: (eventId: number, activityId: number, commandId: string, command: EventRaciReassignmentCommand,
+    context?: { apiToken?: string; signal?: AbortSignal }): Promise<EventRaciReassignmentOutcome> => {
+    const path = `${taskPath(eventId, activityId)}/raci/reassign`;
+    const request = raciCommandSchema.safeParse(command);
+    if (!commandKeySchema.safeParse(commandId).success || !request.success) {
+      throw new Error('La solicitud de reasignación RACI no es válida.');
+    }
+    // Capture validated scalar fields: caller mutation must not change response binding.
+    const captured = request.data;
+    return post<unknown>(path, captured, {
+      cache: 'no-store', headers: { 'Idempotency-Key': commandId,
+        ...(context?.apiToken ? { Authorization: `Bearer ${context.apiToken}` } : {}) },
+      ...(context?.signal ? { signal: context.signal } : {}),
+    }).then(raw => {
+      const result = raciOutcomeSchema.safeParse(raw);
+      if (!result.success || result.data.eventId !== eventId || result.data.activityId !== activityId
+        || result.data.commandId.toLowerCase() !== commandId.toLowerCase()
+        || result.data.role !== captured.role || result.data.fromPartyId !== captured.fromPartyId
+        || result.data.toPartyId !== captured.toPartyId
+        || BigInt(result.data.aggregateRevision) !== BigInt(captured.expectedRevision) + 2n) {
+        throw new Error('La respuesta de reasignación no es válida. Conserva la solicitud original para verificarla.');
+      }
+      return result.data;
+    });
+  },
   taskWithRevision: (eventId: number, activityId: number, context?: { apiToken?: string; signal?: AbortSignal }): Promise<EventOperationTaskWithRevision> =>
     get<unknown>(`${taskPath(eventId, activityId)}/revisioned`, {
       cache: 'no-store',

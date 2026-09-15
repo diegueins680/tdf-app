@@ -189,3 +189,12 @@ atomically. [The contract](raci-reassignment-contract.md) precedes feature SQL; 
 strictly typed HTTP command with transaction-local session revalidation, followed by explicit
 editor conflicts/consent. No public command, notification, native mobile or production activation
 is included in this database increment.
+
+The twenty-fourth branch, `feat/event-raci-reassignment-api`, composes the private RACI
+command with the existing authenticated session transaction and validates the exact receipt
+before commit. Adds strict Haskell/OpenAPI/generated TypeScript transport and a validating web
+client without changing any page. [The HTTP contract](raci-api-contract.md) and
+[PR 24 evidence](pr-24-raci-reassignment-api.md) record bounds, rollback and verified behavior.
+Next: scoped editor/readiness/eligibility UX with explicit conflict/consent handling; broader
+RACI and mobile/offline/notification workflows remain separate, and hosted failures must be
+resolved before claiming complete CI or production readiness.

@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/event-operations/events/{eventId}/tasks/{activityId}/raci/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reassign one current unbounded RACI assignment atomically
+         * @description Planning-stage command on the canonical task. Requires current owner or applicable task.manage authority; read-only current access permits exact historical replay only. Revalidates the bound authenticated session and validates the SQL receipt before commit. Preserves the revoked assignment, immutable audit and task-scoped idempotency receipt. Result aggregateRevision equals expectedRevision plus two, including on exact replay. No recipient consent, availability, booking or notification is implied. Requires separately reviewed SQL/feature activation. Never automatically rebase or retry with a new key after an ambiguous network failure. No actor/time/hash may be supplied.
+         */
+        post: operations["reassignEventOperationTaskRaci"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/event-operations/events/{eventId}/tasks/{activityId}/revisioned": {
         parameters: {
             query?: never;
@@ -6832,6 +6852,38 @@ export interface components {
         };
         /** @description Canonical ASCII decimal string in 1..9223372036854775807 (signed BIGINT maximum). Runtime decoders enforce the exact upper bound in addition to the pattern. Never convert to a JavaScript number. Not an authorization or readiness certificate. */
         EventTaskAggregateRevision: string;
+        EventRaciReassignmentCommand: {
+            expectedRevision: components["schemas"]["EventTaskAggregateRevision"];
+            /** @enum {string} */
+            role: "responsible" | "accountable" | "consulted" | "informed";
+            /** Format: int64 */
+            fromPartyId: number;
+            /**
+             * Format: int64
+             * @description Must differ from fromPartyId and currently be eligible to read the exact task.
+             */
+            toPartyId: number;
+            /** @description Nonblank; preserved without normalization. */
+            reason: string;
+            /** @description Nonblank; bound to the idempotent request. */
+            correlationId: string;
+        };
+        EventRaciReassignmentOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            role: "responsible" | "accountable" | "consulted" | "informed";
+            /** Format: int64 */
+            fromPartyId: number;
+            /** Format: int64 */
+            toPartyId: number;
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+            replayed: boolean;
+        };
         EventOperationTaskWithRevision: {
             task: components["schemas"]["EventOperationTask"];
             aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
@@ -6888,7 +6940,7 @@ export interface components {
         };
         EventOperationError: {
             /** @enum {string} */
-            code: "feature_disabled" | "not_found" | "forbidden" | "invalid_request" | "reason_required" | "idempotency_conflict" | "version_conflict" | "transition_invalid" | "transition_effects_not_ready" | "separation_of_duties" | "event_operations_unavailable" | "invalid_database_response";
+            code: "feature_disabled" | "not_found" | "forbidden" | "invalid_request" | "reason_required" | "idempotency_conflict" | "version_conflict" | "transition_invalid" | "transition_effects_not_ready" | "operation_not_ready" | "assignment_not_replaceable" | "assignee_unavailable" | "assignment_conflict" | "accountability_not_ready" | "separation_of_duties" | "event_operations_unavailable" | "invalid_database_response";
         };
         MerchReputationSummary: {
             /** @enum {string} */
@@ -12966,6 +13018,78 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    reassignEventOperationTaskRaci: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventRaciReassignmentCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed or exactly replayed original outcome */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRaciReassignmentOutcome"];
+                };
+            };
+            /** @description Invalid capture, UUID, strict command fields or constraints */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current reader lacks task mutation authority */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled or opaque absent/foreign/unreadable task */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version/key conflict, unsupported lifecycle, timed source or ineligible/duplicate recipient */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sanitized persistence or receipt-validation failure; no success implied */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getEventOperationTaskWithRevision: {
         parameters: {
             query?: never;

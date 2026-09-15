@@ -51,6 +51,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `CommandBoundary.cfg` | One command, four shape/target validity combinations, validation and commit/abort phases; no fairness | PASS; 14 generated/distinct states, depth 4 |
+| `CommandBoundaryEarly/Unbound.cfg` | Commit before decoding or omit request/receipt binding | Expected exit 12 with `ValidatedCommit`; both detected |
 | `RaciReassignment.cfg` | Two tasks/commands/keys, one committed obligation per task, revisions 1–3, clock 0–3, manage/read/no access; no fairness | PASS; 426,052 generated, 165,180 distinct states, depth 14 |
 | `RaciReassignmentEarly/Version/Replay/Scope/Split/Audit.cfg` | Omit current authority, expected revision, replay, task-scoped key, atomic swap or audit | Expected exit 12 with the six named command invariants; all detected |
 | `TaskRevisionRead.cfg` | One reader/writer, staged uncommitted write, two revisions, clock 0–3, expiry 2; no fairness | PASS; 400 generated, 192 distinct states, depth 11 |
@@ -96,6 +98,10 @@ it is not reported as a pass. The checked configuration was reduced to two comma
 all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Coverage
+
+- `CommandBoundary.tla`: application validation before committing a SQL command and exact
+  receipt binding, complementary to `SessionFence` and `RaciReassignment`; see the
+  [HTTP contract](../../docs/event-operations/raci-api-contract.md). Does not prove SQL refinement.
 
 - `RaciReassignment.tla`: private planning-stage assignment replacement, retry before
   expected-version comparison, task-scoped keys and atomic obligation/audit commit.
