@@ -43,13 +43,15 @@ export async function captureFirstValueOnce(
   partyId: number | string | null | undefined,
   value: OnboardingFirstValue,
   complete: CompleteOnboarding = completeOnboardingProgress,
+  stillCurrent: () => boolean = () => true,
 ): Promise<boolean> {
-  if (!partyId) return false;
+  if (!partyId || !stillCurrent()) return false;
   let result: OnboardingCompletionResultDTO;
   try {
     result = await complete(value);
   } catch {
     return false;
   }
+  if (!stillCurrent()) return false;
   return captureReconciledFirstValue(analytics, partyId, result);
 }

@@ -110,6 +110,8 @@ const en = {
     followedSince: 'Fan since {{date}}',
   },
   artistFollow: {
+    stateError: 'We could not check whether you follow this artist.',
+    retry: 'Retry',
     authCta: 'Create an account or sign in to follow',
     resumeMessage: 'You are signed in. Continue where you left off and follow {{artist}}.',
     resumeAction: 'Follow now',

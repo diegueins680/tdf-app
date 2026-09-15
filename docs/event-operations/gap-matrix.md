@@ -76,3 +76,13 @@ Phase 1–2 can close EO-057 and make EO-001–062 traceable, but it does not ma
 end-to-end complete. Implementation must proceed in dependency order: authorization/audit/lifecycle,
 then transactional task/RACI and resource bindings, then engagement/contracts, then finance,
 collaboration/offline, and finally web/mobile completeness and hardening.
+
+## Incremental shared-profile audit (PR 16)
+
+EO-031–032, EO-052 and EO-058 remain incomplete. The [artist-follow repair](pr-16-artist-follow-continuity.md)
+restores explicit consent and local return continuity, with stale-context and retry tests,
+without introducing another profile or engagement system. Existing `fanFollowArtist`
+also auto-creates bidirectional club-member `PartyFollow` relationships; this requires
+separate consent/privacy modification and verification. Its policy is not validated by
+the artist-click model or synthetic browser fixture. FanHub's separate five failing
+onboarding tests remain a concrete integration gap, not silently replaced expectations.

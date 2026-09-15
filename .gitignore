@@ -68,6 +68,7 @@ playwright-report/
 test-results/
 blob-report/
 artifacts/persona-playwright/
+artifacts/artist-follow-playwright/
 
 # Temporary files
 tmp/

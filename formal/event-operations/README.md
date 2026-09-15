@@ -32,10 +32,12 @@ bash scripts/verify-event-operations-formal.sh
 The script validates JAR checksums, executes TLC sequentially, requires the Alloy scenario to be
 satisfiable, and requires every Alloy assertion to have no counterexample.
 
-## Bounds and results (2026-09-14)
+## Bounds and results (2026-09-14–15)
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `ArtistFollowConsent.cfg` | 2 Parties plus logged out, 2 artists, 3 context generations, known/unknown read and 1 command | PASS; 791 generated, 341 distinct states, depth 7 |
+| `ArtistFollowConsentClick/Unknown/Stale.cfg` | Negative controls: omit click, known-state or current-context guard | Expected exit 12 with `NoUnconfirmedMutation` or `CurrentTargetReceipt`; all three detected |
 | `WebOnboardingRecovery.cfg` | 2 request slots, 2 Parties plus logged-out state, 3 session generations; arbitrary response order | PASS; 883 generated, 179 distinct states, depth 7 |
 | `WebOnboardingRecoveryStale/Receipt/Overlap.cfg` | Negative controls: omit generation guard, server receipt guard or in-flight coalescing | Expected exit 12 with `CurrentSessionOnly`, `AuthoritativeOnly` or `SingleFlight`; all three detected |
 | `EventLifecycle.cfg` | 3 actors, 14 states, 2 command IDs | PASS; 3,613 generated/distinct states, depth 3 |
@@ -69,6 +71,10 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Coverage
 
+- `ArtistFollowConsent.tla`: client-side explicit consent, successful read before toggling,
+  frozen command context and suppression of stale UI receipts. It does not verify server
+  authorization or URL parsing; the [artist contract](../../docs/event-operations/artist-follow-continuity-contract.md)
+  supplies executable URL, component and browser refinements. No network liveness is assumed.
 - `WebOnboardingRecovery.tla`: client-only reconciliation receipt consumption and reconnect
   coalescing; session invalidation abstracts cleanup/logout/credential rotation. It does not
   model server authorization, database evidence or cookie transport identity. Two request slots

@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
 import type { ArtistProfileDTO, FanFollowDTO } from '../api/types';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
@@ -37,7 +37,9 @@ jest.unstable_mockModule('../api/fans', () => ({
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: sessionMock }),
+  useSession: () => ({ session: sessionMock, loading: false }),
+  getActiveSession: () => sessionMock,
+  getStoredSessionToken: () => null,
 }));
 
 jest.unstable_mockModule('../analytics/posthog', () => ({
@@ -51,6 +53,7 @@ jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
 jest.unstable_mockModule('../components/ArtistFansList', () => ({ default: () => null }));
 jest.unstable_mockModule('../components/LazyPaginatedList', () => ({ default: () => null }));
+jest.unstable_mockModule('../components/merch/MerchReputationSummary', () => ({ ArtistMerchStores: () => null }));
 jest.unstable_mockModule('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, options?: { artist?: string }) => ({
@@ -58,6 +61,8 @@ jest.unstable_mockModule('react-i18next', () => ({
       'artistFollow.resumeAction': 'Seguir ahora',
       'artistFollow.resumeMessage': `Ya ingresaste. Continúa donde estabas y sigue a ${options?.artist ?? ''}.`,
       'artistFollow.resumeError': `No pudimos seguir a ${options?.artist ?? ''}. Revisa tu conexión e inténtalo de nuevo.`,
+      'artistFollow.stateError': 'No pudimos comprobar si sigues a este artista.',
+      'artistFollow.retry': 'Reintentar',
     })[key] ?? key,
   }),
 }));
@@ -77,7 +82,11 @@ const artist: ArtistProfileDTO = {
 
 function LocationProbe() {
   const location = useLocation();
-  return <output aria-label="Ubicación actual">{`${location.pathname}${location.search}`}</output>;
+  return <>
+    <output aria-label="Ubicación actual">{`${location.pathname}${location.search}${location.hash}`}</output>
+    <Link to="/a/otra-artista?resume=follow&artistId=99#bio">Otro perfil de prueba</Link>
+    <Link to="/a/las-sinteticas?resume=follow&artistId=17">Volver al perfil de prueba</Link>
+  </>;
 }
 
 function renderPage(initialEntry: string) {
@@ -87,7 +96,7 @@ function renderPage(initialEntry: string) {
       mutations: { retry: false },
     },
   });
-  const view = render(
+  const tree = () => (
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
@@ -97,9 +106,10 @@ function renderPage(initialEntry: string) {
           />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
-  return { ...view, queryClient };
+  const view = render(tree());
+  return { ...view, queryClient, refreshSession: () => view.rerender(tree()) };
 }
 
 describe('ArtistPublicPage follow continuity', () => {
@@ -171,6 +181,8 @@ describe('ArtistPublicPage follow continuity', () => {
       analyticsClientMock,
       42,
       'artist_followed',
+      undefined,
+      expect.any(Function),
     ));
     await waitFor(() => {
       expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe('/a/las-sinteticas');
@@ -212,6 +224,8 @@ describe('ArtistPublicPage follow continuity', () => {
     }]);
     const view = renderPage('/a/las-sinteticas?resume=follow&artistId=17');
 
+    const followedButton = await screen.findByRole('button', { name: 'Dejar de seguir a Las Sintéticas' });
+    await waitFor(() => expect((followedButton as HTMLButtonElement).disabled).toBe(false));
     await waitFor(() => {
       expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe('/a/las-sinteticas');
     });
@@ -241,6 +255,75 @@ describe('ArtistPublicPage follow continuity', () => {
     expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe(
       '/a/las-sinteticas?resume=follow&artistId=17',
     );
+    view.queryClient.clear();
+  });
+
+  it('does not assume an unknown follow state is a new follow, and offers recovery after failure', async () => {
+    sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
+    let rejectLookup: ((reason: Error) => void) | undefined;
+    listFollowsMock.mockImplementationOnce(() => new Promise((_, reject) => { rejectLookup = reject; }));
+    const view = renderPage('/a/las-sinteticas?resume=follow&artistId=17');
+    const button = await screen.findByRole('button', { name: 'Seguir ahora' });
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(button);
+    expect(followMock).not.toHaveBeenCalled();
+    await act(async () => { rejectLookup?.(new Error('offline')); });
+    fireEvent.click(await screen.findByRole('button', { name: 'Reintentar' }));
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+    expect(followMock).not.toHaveBeenCalled();
+    view.queryClient.clear();
+  });
+
+  it('coalesces clicks and preserves unrelated query parameters and hash after success', async () => {
+    sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
+    let resolveFollow: ((value: Awaited<ReturnType<typeof followMock>>) => void) | undefined;
+    followMock.mockImplementationOnce(() => new Promise((resolve) => { resolveFollow = resolve; }));
+    const view = renderPage('/a/las-sinteticas?source=event&resume=follow&artistId=17#bio');
+    const button = await screen.findByRole('button', { name: 'Seguir ahora' });
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+    await act(async () => { fireEvent.click(button); fireEvent.click(button); });
+    expect(followMock).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      resolveFollow?.({ ffArtistId: 17, ffArtistName: 'Las Sintéticas', ffStartedAt: '2026-09-14T12:00:00Z' });
+    });
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent)
+      .toBe('/a/las-sinteticas?source=event#bio'));
+    expect(unfollowMock).not.toHaveBeenCalled();
+    view.queryClient.clear();
+  });
+
+  it.each(['logout', 'replace session', 'unmount', 'change profile', 'leave and return'])('suppresses a late follow callback after %s', async (change) => {
+    sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
+    let resolveFollow: ((value: Awaited<ReturnType<typeof followMock>>) => void) | undefined;
+    followMock.mockImplementationOnce(() => new Promise((resolve) => { resolveFollow = resolve; }));
+    const view = renderPage('/a/las-sinteticas?resume=follow&artistId=17');
+    const button = await screen.findByRole('button', { name: 'Seguir ahora' });
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(button);
+    await waitFor(() => expect(followMock).toHaveBeenCalledTimes(1));
+    if (change === 'unmount') view.unmount();
+    else if (change === 'change profile' || change === 'leave and return') {
+      getPublicArtistMock.mockResolvedValue({ ...artist, apArtistId: 99, apSlug: 'otra-artista', apDisplayName: 'Otra Artista' });
+      fireEvent.click(screen.getByRole('link', { name: 'Otro perfil de prueba' }));
+      await screen.findByRole('heading', { name: 'Otra Artista', level: 1 });
+      if (change === 'leave and return') {
+        getPublicArtistMock.mockResolvedValue(artist);
+        fireEvent.click(screen.getByRole('link', { name: 'Volver al perfil de prueba' }));
+        await screen.findByRole('heading', { name: 'Las Sintéticas', level: 1 });
+      }
+    }
+    else {
+      sessionMock = change === 'logout' ? null : { ...sessionMock };
+      view.refreshSession();
+    }
+    await act(async () => {
+      resolveFollow?.({ ffArtistId: 17, ffArtistName: 'Las Sintéticas', ffStartedAt: '2026-09-14T12:00:00Z' });
+    });
+    expect(captureFirstValueMock).not.toHaveBeenCalled();
+    if (change !== 'unmount') expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent)
+      .toBe(change === 'change profile'
+        ? '/a/otra-artista?resume=follow&artistId=99#bio'
+        : '/a/las-sinteticas?resume=follow&artistId=17');
     view.queryClient.clear();
   });
 });
