@@ -12,13 +12,20 @@ for model in Relationships Feed; do
     "$TDF_SOCIAL_ROOT/formal/social/$model.tla" > "$TDF_SOCIAL_RESULTS/$model.txt" 2>&1
   grep 'Model checking completed. No error has been found.' "$TDF_SOCIAL_RESULTS/$model.txt"
 done
-set +e
-"$TDF_SOCIAL_JAVA" -cp "$TLA_JAR" tlc2.TLC -workers 1 \
-  -metadir "$TDF_SOCIAL_RESULTS/states-negative" \
-  -config "$TDF_SOCIAL_ROOT/formal/social/StaleCache.cfg" \
-  "$TDF_SOCIAL_ROOT/formal/social/Relationships.tla" > "$TDF_SOCIAL_RESULTS/StaleCache.txt" 2>&1
-result=$?
-set -e
-if [ "$result" -eq 0 ]; then echo 'Expected stale-cache counterexample' >&2; exit 1; fi
-grep 'Invariant AuthoritativeDenial is violated' "$TDF_SOCIAL_RESULTS/StaleCache.txt"
+for negative in StaleCache WithdrawalOwnership RequestIdentity; do
+  case "$negative" in
+    StaleCache) expected=AuthoritativeDenial ;;
+    WithdrawalOwnership) expected=OwnConsentOnly ;;
+    RequestIdentity) expected=RequestAdmission ;;
+  esac
+  set +e
+  "$TDF_SOCIAL_JAVA" -cp "$TLA_JAR" tlc2.TLC -workers 1 \
+    -metadir "$TDF_SOCIAL_RESULTS/states-$negative" \
+    -config "$TDF_SOCIAL_ROOT/formal/social/$negative.cfg" \
+    "$TDF_SOCIAL_ROOT/formal/social/Relationships.tla" > "$TDF_SOCIAL_RESULTS/$negative.txt" 2>&1
+  result=$?
+  set -e
+  if [ "$result" -eq 0 ]; then echo "Expected $negative counterexample" >&2; exit 1; fi
+  grep "Invariant $expected is violated" "$TDF_SOCIAL_RESULTS/$negative.txt"
+done
 printf 'Evidence: %s\n' "$TDF_SOCIAL_RESULTS"
