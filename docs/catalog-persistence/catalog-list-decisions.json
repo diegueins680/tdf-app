@@ -13379,6 +13379,50 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "578a6926f6b1b91c0ae7",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "artist_release, record_release, release_external_resource, release_contributor",
+      "priority": "P3-consumer",
+      "risk": "Fixture drift could hide artwork matching errors or associate a cover with the wrong release.",
+      "justification": "Regression-test payload only, mirroring the existing artist release and public Records API contracts. Production artwork and credits remain API-owned; this fixture defines no selectable catalog values or persistent relationship.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "release-artwork-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "line": 4,
+        "kind": "object-registry",
+        "name": "release",
+        "valueCount": 7,
+        "consumerCount": 1,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "d41c643a9c6d200d5798",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "artist_release, record_release, release_external_resource, release_contributor",
+      "priority": "P3-consumer",
+      "risk": "Fixture drift could hide artwork matching errors or associate a cover with the wrong release.",
+      "justification": "Regression-test payload only, mirroring the existing artist release and public Records API contracts. Production artwork and credits remain API-owned; this fixture defines no selectable catalog values or persistent relationship.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "release-artwork-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "line": 8,
+        "kind": "object-registry",
+        "name": "catalogRelease",
+        "valueCount": 8,
+        "consumerCount": 0,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
     }
   ]
 }
