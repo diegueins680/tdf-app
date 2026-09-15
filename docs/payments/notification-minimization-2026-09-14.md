@@ -86,3 +86,9 @@ or unused-field variants. New same-ID events deduplicate projected evidence; thi
 claim of cross-ID semantic deduplication. Global ingress limits, historical cleanup, merchant
 onboarding, refunds/captures/voids, subscriptions, settlement/dispute execution, SRI processes
 and compliant marketplace payouts remain separately tracked work.
+
+**Follow-up, 2026-09-15 UTC:** [ADR 0118](../adr/0118-signed-payment-notification-identity.md)
+adds signed, versioned PlaceToPay identity for new events and exact historical
+redelivery compatibility. It addresses forward cross-ID amplification; it does
+not retroactively collapse or rewrite historical rows. The preceding paragraph
+describes the #347 implementation, not the later dependent fix.

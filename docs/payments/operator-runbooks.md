@@ -17,6 +17,10 @@ For bounded callback retention and compatibility with historical inbox rows, fol
 [notification minimization supplement](notification-minimization-2026-09-14.md) and
 [ADR 0116](../adr/0116-minimized-provider-notification-evidence.md). Never export decrypted
 callback bodies into support tickets, logs or test evidence.
+For PlaceToPay signed identity and the bounded legacy-redelivery compatibility
+rule, follow [ADR 0118](../adr/0118-signed-payment-notification-identity.md) and
+[identity verification](notification-identity-2026-09-14.md). Never treat a newly
+calculated callback ID as proof of a new payment or a verified signature.
 
 ## 1. Configuration and activation
 
@@ -56,12 +60,20 @@ Screenshots and mocks may support UX review but cannot be recorded as provider s
 1. Use an HTTPS public staging endpoint. Preserve the exact raw request bytes covered by the provider's signature scheme.
 2. Store the webhook identity/signing material and inbox encryption key in server-only secrets.
 3. Validate algorithm, signature, event ID, timestamp tolerance, environment and merchant before enqueueing.
-4. Encrypt the raw payload, hash it, and insert through the unique provider/environment/merchant/event key.
+4. After authenticating the original body, retain only the validated minimal evidence,
+   encrypt/hash that projection, and insert through the unique
+   provider/environment/merchant/event key. Do not persist arbitrary raw payloads.
 5. Acknowledge only according to provider retry semantics. Processing happens from the persistent inbox, not inline assumptions.
 6. Bind amount, currency, order and resource before a financial state change.
 7. Rotate by accepting old/new secrets only for a short documented overlap. Test both, remove old, and record the rotation audit event.
 8. For PayPhone, until a signed scheme is contractually documented, accept notification only as a hint and query the authenticated transaction endpoint before state change. Register `/NotificacionPago` when the provider portal requires the method name documented in PayPhone's current guide; the canonical notification URL is an equivalent alias.
 9. For PlaceToPay, verify the documented SHA-256 notification but still query the authenticated session endpoint and bind the stored request ID, reference, amount and currency before state change.
+10. PlaceToPay's current session documentation says callbacks are not retried.
+    Acknowledge only after durable acceptance and reconcile missed notifications.
+    Signed v2 IDs deduplicate new formatting/unsigned-field variants. Exact legacy
+    redelivery retains its original row; reformatted pre-upgrade evidence may
+    create one additional canonical query trigger. Never delete history to hide it.
+    Recurring notifications without `requestId` are not supported by this handler.
 
 ## 4. Deployment and rollback
 
