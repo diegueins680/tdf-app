@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import {
   bootstrapLifecycle, checkLifecycle, loadBundle, openBundle, refreshLifecycle,
-  requestMeta, retryDelay, saveBundle, sealBundle, validateBundle,
+  parseMetaResponse, requestMeta, retryDelay, saveBundle, sealBundle, validateBundle,
 } from '../lib/instagram-token-lifecycle.mjs';
 import { runLifecycle } from '../refresh-instagram-token.mjs';
 import { findLifecycleRun } from '../instagram-lifecycle-artifact.mjs';
@@ -18,7 +18,7 @@ const config = { appId: '123', appSecret: 'unit-test-secret-not-a-live-credentia
 const permissions = ['instagram_business_basic', 'instagram_business_manage_messages'];
 const response = (data, status = 200, retryAfter = null) => ({
   ok: status >= 200 && status < 300, status,
-  headers: { get: () => retryAfter }, json: async () => data,
+  headers: { get: () => retryAfter }, text: async () => JSON.stringify(data), json: async () => data,
 });
 const grant = () => ({ data: [{ access_token: 'test-short', user_id: '456', permissions: permissions.join(',') }] });
 const long = (extra = {}) => ({ access_token: 'test-long', token_type: 'bearer', expires_in: 5183944, ...extra });
@@ -27,6 +27,36 @@ const sequence = values => async () => {
   return response(values.shift());
 };
 const setupOptions = { ...config, code: 'test-single-use-code', redirectUri: 'https://example.test/callback' };
+
+test('numeric provider account IDs retain exact source digits beyond MAX_SAFE_INTEGER', () => {
+  const result = parseMetaResponse('{"user_id":17841445628242005,"expires_in":5183944}');
+  assert.equal(result.user_id, '17841445628242005');
+  assert.equal(result.expires_in, 5183944);
+  assert.equal(parseMetaResponse('{"data":[{"user_id":456}]}').data[0].user_id, '456');
+  assert.equal(parseMetaResponse('{"user_id":"17841445628242005"}').user_id, '17841445628242005');
+});
+
+test('numeric account IDs reject fractional, negative and exponent encodings', () => {
+  assert.throws(() => parseMetaResponse('{"user_id":1.5}'), /non-canonical/);
+  assert.throws(() => parseMetaResponse('{"user_id":-1}'), /non-canonical/);
+  assert.throws(() => parseMetaResponse('{"user_id":1e3}'), /non-canonical/);
+});
+
+test('bootstrap preserves numeric wire identity through grant, checkpoint and live verification', async () => {
+  let calls = 0;
+  const wireGrant = '{"access_token":"test-short","user_id":17841445628242005,"permissions":"instagram_business_basic"}';
+  const result = await bootstrapLifecycle({ ...setupOptions, expectedUserId: '17841445628242005' }, {
+    clock: () => NOW,
+    fetchImpl: async () => {
+      calls++;
+      if (calls === 2) return response(long());
+      return { ok: true, status: 200, text: async () => calls === 1 ? wireGrant : '{"user_id":17841445628242005}' };
+    },
+  });
+  assert.equal(calls, 3);
+  assert.equal(result.userId, '17841445628242005');
+  assert.equal(result.authorization.userId, result.userId);
+});
 function bundle() {
   return {
     version: 1, token: 'test-long', tokenSha256: createHash('sha256').update('test-long').digest('hex'),
@@ -199,7 +229,7 @@ test('network failures and malformed responses redact underlying sensitive detai
     maxAttempts: 1, fetchImpl: async () => { throw new TypeError('url?access_token=private-test-value'); },
   }), error => error.message === 'Meta network request failed or timed out');
   await assert.rejects(requestMeta('https://graph.instagram.com/v26.0/me', {}, {
-    fetchImpl: async () => ({ ok: true, status: 200, json: async () => { throw new Error('private-test-response'); } }),
+    fetchImpl: async () => ({ ok: true, status: 200, text: async () => { throw new Error('private-test-response'); } }),
   }), error => error.message === 'Meta returned malformed JSON');
 });
 
@@ -244,7 +274,7 @@ test('read-only checks retry malformed gateway responses with a bounded delay', 
   let calls = 0;
   const data = await requestMeta('https://graph.instagram.com/v26.0/me', {}, {
     fetchImpl: async () => ++calls === 1
-      ? { status: 503, json: async () => { throw new Error('HTML gateway body'); } }
+      ? { status: 503, text: async () => { throw new Error('HTML gateway body'); } }
       : response({ user_id: '456' }),
     sleep: async () => {},
   });

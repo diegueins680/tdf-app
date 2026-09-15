@@ -99,6 +99,20 @@ export function retryDelay(attempt, retryAfter, nowMs = Date.now(), random = Mat
   return Math.round(Math.min(1000 * (2 ** (attempt - 1)), 8000) * (0.75 + random() * 0.5));
 }
 
+export function parseMetaResponse(text) {
+  requireValue(typeof text === 'string' && text.length <= 1048576, 'Meta response exceeds the supported size');
+  return JSON.parse(text, (key, value, context) => {
+    // Meta can serialize Instagram IDs as JSON integer literals larger than
+    // MAX_SAFE_INTEGER. Node 22's source-aware reviver preserves their exact
+    // digits; String(value) would silently bind evidence to a rounded ID.
+    if (key === 'user_id' && typeof value === 'number') {
+      requireValue(typeof context?.source === 'string' && /^\d+$/.test(context.source), 'Meta returned a non-canonical numeric account ID');
+      return context.source;
+    }
+    return value;
+  });
+}
+
 export async function requestMeta(url, init = {}, {
   fetchImpl = globalThis.fetch, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)),
   random = Math.random, maxAttempts = 3,
@@ -112,7 +126,7 @@ export async function requestMeta(url, init = {}, {
     let networkFailure = false;
     try {
       response = await fetchImpl(target.toString(), { ...init, redirect: 'error', signal: AbortSignal.timeout(15000) });
-      try { data = await response.json(); } catch {
+      try { data = parseMetaResponse(await response.text()); } catch {
         if (response.status === 429 || response.status >= 500) data = {};
         else throw new LifecycleError('Meta returned malformed JSON');
       }

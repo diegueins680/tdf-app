@@ -18,6 +18,12 @@ The checker requires all of:
 
 OAuth code exchange must return the explicitly pinned account and the basic permission. Permission names in the checkpoint are the grant-time evidence, not a claim that every scope has been exercised now. Missing provider data-access metadata is recorded as absent, never fabricated as a deadline or claimed to be never-expiring. Live access checks detect revocation; a known data-access deadline is preserved across refresh and never silently extended or dropped.
 
+Provider `user_id` values may be JSON integer literals beyond JavaScript's safe
+integer range. Node 22's source-aware JSON reviver retains their exact digits;
+converting an already parsed number to a string is unsafe. Fractional, negative
+and exponent-form identifiers are rejected. Numeric lifetimes remain numeric and
+retain their separate strict validation.
+
 An existing raw `INSTAGRAM_ACCESS_TOKEN`, a legacy plaintext state file, a working `/me` response, or a manually authored approval record cannot bootstrap this evidence.
 
 ## Configuration
@@ -60,7 +66,14 @@ receiver/interceptor that validates its own unpredictable OAuth state and preven
 the callback request from reaching the production application. Confirm that
 interception before requesting authorization; fail closed if it is unavailable.
 The callback registration was inspected without changing or saving Meta settings.
-No authorization code was obtained by that inspection.
+The subsequent operator-only bootstrap used a separate attached-browser tab,
+bypassed service workers, and intercepted every request to the callback's origin
+at the request stage. A harmless probe verified a locally fulfilled response
+before authorization. The actual callback was also fulfilled locally, its fresh
+256-bit OAuth state was checked, and the one-use code was transferred directly to
+the Actions secret through process input, without logging or disk storage. Only
+that helper-owned tab was closed. This verifies the isolated receiver, not the
+success of any later provider exchange; workflow results must establish that.
 
 1. Verify the intended Instagram app/account and a registered callback that does **not** automatically write production credentials. Do not change production callback behavior as an incidental CI fix.
 2. Complete the approved Business Login authorization flow. Use and validate OAuth state at its callback. Store only the returned code in the repository secret through a secure operator interface; do not copy a callback URL containing the code into an issue or chat.
