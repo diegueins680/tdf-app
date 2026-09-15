@@ -143,6 +143,9 @@ requireCheckoutCompletion request = request
     completion = case prMethod request of
       MethodPayPalWallet -> [CapabilityCapture]
       MethodCard -> [CapabilityServerVerification]
+      MethodBankRedirect -> [CapabilityServerVerification]
+      MethodDeunaQr -> [CapabilityServerVerification]
+      MethodPayPhoneWallet -> [CapabilityServerVerification]
       _ -> []
     marketplace
       | prFlow request == FlowMarketplace =

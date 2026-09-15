@@ -353,6 +353,21 @@ withProviderWire reader action = do
 
 spec :: Spec
 spec = do
+  describe "complete checkout capability policy" $
+    it "requires the finishing operation and preserves extra restrictions idempotently" $ do
+      forM_ [MethodCard, MethodBankRedirect, MethodDeunaQr, MethodPayPhoneWallet] $ \method -> do
+        let request = (completionRequest method)
+              { Capabilities.prRequiredCapabilities = [Capabilities.CapabilityPartialRefund] }
+            normalized = Capabilities.requireCheckoutCompletion request
+        Capabilities.prRequiredCapabilities normalized `shouldBe`
+          [Capabilities.CapabilityPartialRefund, Capabilities.CapabilityOneTime,
+           Capabilities.CapabilityServerVerification]
+        Capabilities.requireCheckoutCompletion normalized `shouldBe` normalized
+      Capabilities.prRequiredCapabilities (Capabilities.requireCheckoutCompletion
+        (completionRequest MethodPayPalWallet)) `shouldBe`
+        [Capabilities.CapabilityOneTime, Capabilities.CapabilityCapture]
+      Capabilities.prRequiredCapabilities (Capabilities.requireCheckoutCompletion
+        (completionRequest MethodManualBankTransfer)) `shouldBe` [Capabilities.CapabilityOneTime]
   reconciliationReportValidationSpec
   providerQueryReportValidationSpec
   providerTransportSpec
