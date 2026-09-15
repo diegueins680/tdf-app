@@ -86,3 +86,9 @@ also auto-creates bidirectional club-member `PartyFollow` relationships; this re
 separate consent/privacy modification and verification. Its policy is not validated by
 the artist-click model or synthetic browser fixture. FanHub's separate five failing
 onboarding tests remain a concrete integration gap, not silently replaced expectations.
+
+PR 17 resolves that five-test FanHub baseline within a bounded compatibility repair:
+current-session canonical eligibility, explicit empty exit, validated terminal receipts,
+safe recovery and named loading states. See [PR 17 results](pr-17-fanhub-onboarding.md).
+This updates the incremental checkpoint, not the audited baseline classification above;
+shared hub follow/profile mutation fences, club consent and complete event UX remain gaps.

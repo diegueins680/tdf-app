@@ -98,3 +98,16 @@ unchanged and the synthetic browser tests do not exercise it. Do not infer membe
 consent from the artist-follow click or declare complete privacy compliance. Review the
 intended club policy, explicit consent, discoverability and revocation effects before a
 separate implementation; no data deletion or retroactive consent is authorized here.
+
+### FanHub optional exit and account-bound guidance (PR 17)
+
+The global dismissal marker could affect unrelated accounts and was not a canonical
+receipt. [FH-01–06](fanhub-onboarding-contract.md) replaces its use with validated
+authenticated eligibility and an explicit empty completion command. Reads and receipts
+check session object/generation/mounted lifetime, never use tokens as cache keys, and
+reject malformed or nonterminal HTTP-success payloads. Local guest/manager dismissal is
+ephemeral presentation, not account completion. An older GET cannot reopen a terminal
+acknowledgement in the same context. Same-context duplicate exits coalesce, while stale
+responses cannot hide or show a new account's guidance. These client fences do not undo
+already-dispatched server requests or establish cross-tab cookie isolation; existing
+server authorization and conditional completion remain independent requirements.

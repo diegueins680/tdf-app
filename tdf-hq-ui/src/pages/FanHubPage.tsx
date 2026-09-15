@@ -69,6 +69,8 @@ import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { firstNonEmptyString } from '../utils/stringValues';
+import { useTranslation } from 'react-i18next';
+import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -109,7 +111,8 @@ const primaryRecordsImage = (resources: RecordsResourceDTO[]): string =>
   '';
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
-  const { session } = useSession();
+  const { session, loading: sessionLoading } = useSession();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const qc = useQueryClient();
@@ -224,6 +227,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     [session?.modules, session?.roles],
   );
   const isHomeManagerView = location.pathname === '/inicio' && isAuthenticated && canManageReleases;
+  const onboarding = useFanHubOnboarding(session, sessionLoading, isHomeManagerView);
   const radioTargetPath = `${location.pathname}#radio`;
   const loginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
@@ -333,10 +337,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [releaseLinkDraft, setReleaseLinkDraft] = useState<string>('');
   const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
-  const [onboardingVisible, setOnboardingVisible] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return window.localStorage.getItem('fanhub-onboarding-dismissed') !== '1';
-  });
 
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
@@ -366,13 +366,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     if (!partyId) return;
     setArtistDraft((prev) => ({ ...prev, apuArtistId: partyId }));
   }, [session?.partyId]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!onboardingVisible) {
-      window.localStorage.setItem('fanhub-onboarding-dismissed', '1');
-    }
-  }, [onboardingVisible]);
 
   useEffect(() => {
     if (focusArtist && artistSectionRef.current) {
@@ -797,13 +790,26 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
-        {onboardingVisible && (
+        {onboarding.loading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.loading')} />}
+        {onboarding.loadError && (
+          <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.retryLoad}>{t('fanHubOnboarding.retry')}</Button>}>
+            {t('fanHubOnboarding.loadError')}
+          </Alert>
+        )}
+        {onboarding.saveError && (
+          <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.dismiss}>{t('fanHubOnboarding.retry')}</Button>}>
+            {t('fanHubOnboarding.saveError')}
+          </Alert>
+        )}
+        {onboarding.saving && <Alert severity="info" role="status">{t('fanHubOnboarding.saving')}</Alert>}
+        {onboarding.visible && (
           <Alert
             severity="info"
-            onClose={() => setOnboardingVisible(false)}
+            onClose={onboarding.saving ? undefined : onboarding.dismiss}
+            closeText={t('fanHubOnboarding.close')}
             icon={<VisibilityIcon />}
           >
-            <AlertTitle>{isHomeManagerView ? 'Lo más útil ahora' : 'Primeros pasos'}</AlertTitle>
+            <AlertTitle>{t(isHomeManagerView ? 'fanHubOnboarding.managerTitle' : 'fanHubOnboarding.title')}</AlertTitle>
             {isHomeManagerView ? (
               <Stack spacing={1}>
                 <Typography variant="body2">Atajos rápidos para operar el hub desde este inicio:</Typography>
@@ -1463,7 +1469,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 <Stack spacing={2}>
                   {artistProfileQuery.isLoading && (
                     <Box display="flex" justifyContent="center" py={1}>
-                      <CircularProgress size={20} />
+                      <CircularProgress size={20} aria-label={t('fanHubOnboarding.artistLoading')} />
                     </Box>
                   )}
                   {artistProfileQuery.isError && (
@@ -1499,7 +1505,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </Stack>
               ) : (
                 <>
-                  {artistProfileQuery.isLoading && <CircularProgress size={20} />}
+                  {artistProfileQuery.isLoading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.artistLoading')} />}
                   {artistProfileQuery.isError && (
                     <Alert severity="error">No pudimos cargar tu perfil de artista.</Alert>
                   )}
@@ -1739,7 +1745,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         {!isHomeManagerView && isLoading && (
           <Card sx={{ p: 3, borderRadius: 3 }}>
             <Stack spacing={1.5} alignItems="center" textAlign="center">
-              <CircularProgress size={22} />
+              <CircularProgress size={22} aria-label={t('fanHubOnboarding.catalogLoading')} />
               <Typography variant="subtitle1" fontWeight={700}>
                 Cargando catálogo de artistas
               </Typography>

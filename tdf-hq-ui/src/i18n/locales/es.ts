@@ -109,6 +109,18 @@ const es = {
     empty: 'Este artista aún no tiene fans.',
     followedSince: 'Fan desde {{date}}',
   },
+  fanHubOnboarding: {
+    title: 'Primeros pasos',
+    managerTitle: 'Lo más útil ahora',
+    loading: 'Cargando primeros pasos',
+    artistLoading: 'Cargando perfil del artista',
+    catalogLoading: 'Cargando catálogo de artistas',
+    close: 'Cerrar primeros pasos',
+    retry: 'Reintentar',
+    saving: 'Guardando tu salida de primeros pasos…',
+    loadError: 'No pudimos cargar tus primeros pasos. No mostraremos información de otra cuenta; revisa tu conexión e inténtalo de nuevo.',
+    saveError: 'No pudimos guardar que terminaste estos primeros pasos. Puedes reintentarlo sin perder tu progreso.',
+  },
   artistFollow: {
     stateError: 'No pudimos comprobar si sigues a este artista.',
     retry: 'Reintentar',

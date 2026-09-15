@@ -114,6 +114,12 @@ expect_counterexample ArtistFollowConsentClick.cfg NoUnconfirmedMutation artist-
 expect_counterexample ArtistFollowConsentUnknown.cfg NoUnconfirmedMutation artist-follow-unknown ArtistFollowConsent.tla
 expect_counterexample ArtistFollowConsentStale.cfg CurrentTargetReceipt artist-follow-stale ArtistFollowConsent.tla
 
+run_tlc FanHubOnboarding.tla FanHubOnboarding.cfg fanhub-onboarding
+expect_counterexample FanHubOnboardingConsent.cfg ConsentOnly fanhub-consent FanHubOnboarding.tla
+expect_counterexample FanHubOnboardingContext.cfg CurrentContext fanhub-context FanHubOnboarding.tla
+expect_counterexample FanHubOnboardingTerminal.cfg TerminalOnly fanhub-terminal FanHubOnboarding.tla
+expect_counterexample FanHubOnboardingFlight.cfg SingleFlight fanhub-flight FanHubOnboarding.tla
+
 scenario_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
   -c 0 -s sat4j -t none -o "${run_root}/alloy-scenario" EventStructure.als 2>&1)"
 printf '%s\n' "${scenario_output}"

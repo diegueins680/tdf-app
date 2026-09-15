@@ -138,3 +138,10 @@ A new bounded consent/context model precedes implementation; URL, rendered inter
 and synthetic browser tests cover retries and stale callbacks. See [PR 16 evidence and
 limits](pr-16-artist-follow-continuity.md). This shared-domain compatibility repair does
 not complete event talent discovery/hiring, FanHub onboarding, mobile or the product.
+
+The seventeenth branch, `fix/fanhub-authoritative-onboarding`, repairs the five reproduced
+FanHub failures using canonical eligibility and explicit optional exit. Its finite model
+precedes implementation; current-session receipts, strict decoding, retry and accessible
+states replace the global dismissal marker without migrating or deleting stored data.
+See [PR 17 verification and limits](pr-17-fanhub-onboarding.md). It does not complete the
+remaining event workspace, engagement, payment, offline or mobile phases.

@@ -109,6 +109,18 @@ const en = {
     empty: 'This artist does not have any fans yet.',
     followedSince: 'Fan since {{date}}',
   },
+  fanHubOnboarding: {
+    title: 'First steps',
+    managerTitle: 'Useful now',
+    loading: 'Loading first steps',
+    artistLoading: 'Loading artist profile',
+    catalogLoading: 'Loading artist catalog',
+    close: 'Close first steps',
+    retry: 'Retry',
+    saving: 'Saving your exit from first steps…',
+    loadError: 'We could not load your first steps. We will not show information from another account; check your connection and try again.',
+    saveError: 'We could not save your exit from first steps. You can retry without losing your progress.',
+  },
   artistFollow: {
     stateError: 'We could not check whether you follow this artist.',
     retry: 'Retry',

@@ -36,6 +36,8 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `FanHubOnboarding.cfg` | 3 context generations, 2 pending slots, valid/invalid eligibility, explicit/implicit exit, terminal/nonterminal receipts | PASS; 1,249 generated, 215 distinct states, depth 12 |
+| `FanHubOnboardingConsent/Context/Terminal/Flight.cfg` | Negative controls: missing consent, context, terminal or same-context single-flight guard | Expected exit 12 with `ConsentOnly`, `CurrentContext`, `TerminalOnly`, `SingleFlight`; all four detected |
 | `ArtistFollowConsent.cfg` | 2 Parties plus logged out, 2 artists, 3 context generations, known/unknown read and 1 command | PASS; 791 generated, 341 distinct states, depth 7 |
 | `ArtistFollowConsentClick/Unknown/Stale.cfg` | Negative controls: omit click, known-state or current-context guard | Expected exit 12 with `NoUnconfirmedMutation` or `CurrentTargetReceipt`; all three detected |
 | `WebOnboardingRecovery.cfg` | 2 request slots, 2 Parties plus logged-out state, 3 session generations; arbitrary response order | PASS; 883 generated, 179 distinct states, depth 7 |
@@ -70,6 +72,12 @@ it is not reported as a pass. The checked configuration was reduced to two comma
 all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Coverage
+
+- `FanHubOnboarding.tla`: explicit optional exit, current-context eligibility/receipts,
+  terminal-response validation and per-context single-flight. Stale reads cannot reopen a
+  terminal acknowledgement. The [FanHub contract](../../docs/event-operations/fanhub-onboarding-contract.md)
+  maps the finite abstraction to runtime decoding and rendered tests. No network liveness,
+  cross-tab identity or backend authorization proof is claimed.
 
 - `ArtistFollowConsent.tla`: client-side explicit consent, successful read before toggling,
   frozen command context and suppression of stale UI receipts. It does not verify server
