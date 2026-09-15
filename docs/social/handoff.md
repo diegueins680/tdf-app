@@ -202,3 +202,9 @@ checks. Those are results for the recorded parent source, not the new session pa
 The [session-boundary packet](session-boundary.md) adds current-token validation,
 executable safety/progress models, a reproduced handler regression and 82 passing
 PostgreSQL/HTTP cases. Overall full-platform delivery remains incomplete.
+
+The account session patch is now [draft PR #382](https://github.com/diegueins680/tdf-app/pull/382),
+dependent on #377, source `a68f235ca8a7d1987fd94defdba078228f77cd1c`. Its full local Stack build completed:
+2,542 examples, zero failures and application executable built. Focused fixture
+results and limits are in [session boundary](session-boundary.md). It remains
+unmerged and inactive; hosted checks of this patch are separate from parent CI.

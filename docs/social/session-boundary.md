@@ -100,8 +100,10 @@ coverage beyond the modeled transitions. No full-system formal proof is claimed.
 - External-database adapter on private PostgreSQL 16.10: **82 examples passed**;
   wrong-name and populated-database attempts were rejected, fixture rows preserved.
   `evidence/session-http-external.txt`. PostgreSQL 17 hosted execution is separate.
-- Workflow/scope tests: **21 passed**. Full backend build and new hosted CI results
-  are recorded separately when completed; parent checks do not qualify this change.
+- Workflow/scope tests: **21 passed**. Full new Stack backend build: **2,542 examples, zero failures**, application
+  executable built, exit 0 at source `a68f235ca8a7d1987fd94defdba078228f77cd1c`.
+  `evidence/session-backend-result.txt`. New hosted CI is tracked separately;
+  parent checks do not qualify this change.
 
 Toolchain: Stack 3.7.1, GHC 9.10.3 / lts-24.42, Java 17.0.12,
 TLC distribution 1.7.2 (reports 2.17), jar SHA256
