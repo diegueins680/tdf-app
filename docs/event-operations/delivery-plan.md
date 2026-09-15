@@ -36,3 +36,9 @@ the mutation transaction and only five early no-external-effect transitions are 
 enabled. It is not a complete phase-3 cutover: legacy lifecycle handlers remain, mobile generation is
 unavailable, external invitation conversion is incomplete, and transitions requiring public,
 booking, ticket, contract, notification, or financial effects deliberately fail closed.
+
+The next dependent branch begins phase 4 with a compatibility-preserving correction to the existing
+social-event logistics handler: an activity row and its complete assignment/dependency snapshot now
+commit or roll back together. PostgreSQL tests cover cyclic-update and cross-event-create failures.
+This is only phase-4 transaction hardening; RACI HTTP commands, templates, workstreams, checklists,
+recurrence, readiness, typed production requirements, and workspace views remain unimplemented.

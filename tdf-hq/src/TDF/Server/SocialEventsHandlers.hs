@@ -6497,26 +6497,31 @@ socialEventsServer user =
             then Just . elsDefaultTravelMode <$>
                 loadLogisticsSettings (defaultTimezone envConfig) envPool eventKey
             else pure modeVal
-        key <- liftIO $ runSqlPool (insert EventLogisticsActivity
-            { eventLogisticsActivityEventId = eventKey
-            , eventLogisticsActivityActivityType = typeVal
-            , eventLogisticsActivityTitle = titleVal
-            , eventLogisticsActivityNotes = cleanMaybeText (eacNotes dto)
-            , eventLogisticsActivityStartTime = eacStart dto
-            , eventLogisticsActivityEndTime = endVal
-            , eventLogisticsActivityPlaceId = placeKey
-            , eventLogisticsActivityOriginPlaceId = originKey
-            , eventLogisticsActivityDestinationPlaceId = destinationKey
-            , eventLogisticsActivityTravelMode = modeToStore
-            , eventLogisticsActivityBufferMinutes = bufferVal
-            , eventLogisticsActivityPriority = priorityVal
-            , eventLogisticsActivityStatus = statusVal
-            , eventLogisticsActivityVersion = 1
-            , eventLogisticsActivityCreatedByPartyId = currentPartyId
-            , eventLogisticsActivityCreatedAt = now
-            , eventLogisticsActivityUpdatedAt = now
-            }) envPool
-        replaceLogisticsActivityRelations envPool key (eacAssignments dto) dependencyKeys now
+        -- The activity and its dependency/assignment snapshot are one versioned write.
+        -- Database DAG guards can therefore reject the whole command without leaving
+        -- an activity whose visible relations belong to another state.
+        key <- liftIO $ runSqlPool (do
+            activityKey <- insert EventLogisticsActivity
+                { eventLogisticsActivityEventId = eventKey
+                , eventLogisticsActivityActivityType = typeVal
+                , eventLogisticsActivityTitle = titleVal
+                , eventLogisticsActivityNotes = cleanMaybeText (eacNotes dto)
+                , eventLogisticsActivityStartTime = eacStart dto
+                , eventLogisticsActivityEndTime = endVal
+                , eventLogisticsActivityPlaceId = placeKey
+                , eventLogisticsActivityOriginPlaceId = originKey
+                , eventLogisticsActivityDestinationPlaceId = destinationKey
+                , eventLogisticsActivityTravelMode = modeToStore
+                , eventLogisticsActivityBufferMinutes = bufferVal
+                , eventLogisticsActivityPriority = priorityVal
+                , eventLogisticsActivityStatus = statusVal
+                , eventLogisticsActivityVersion = 1
+                , eventLogisticsActivityCreatedByPartyId = currentPartyId
+                , eventLogisticsActivityCreatedAt = now
+                , eventLogisticsActivityUpdatedAt = now
+                }
+            replaceLogisticsActivityRelations activityKey (eacAssignments dto) dependencyKeys now
+            pure activityKey) envPool
         when (typeVal == "travel") $ void (verifyLogisticsActivityInternal envPool envConfig key Nothing)
         mCreated <- liftIO $ runSqlPool (getEntity key) envPool
         maybe (throwError err500{errBody = "Could not create logistics activity"}) (logisticsActivityEntityToDTO envPool) mCreated
@@ -6537,27 +6542,33 @@ socialEventsServer user =
                 loadLogisticsSettings (defaultTimezone envConfig) envPool eventKey
             else pure modeVal
         now <- liftIO getCurrentTime
-        updatedRows <- liftIO $ runSqlPool (updateWhereCount
-            [ EventLogisticsActivityId ==. activityKey
-            , EventLogisticsActivityVersion ==. expectedVersion
-            ]
-            [ EventLogisticsActivityActivityType =. typeVal
-            , EventLogisticsActivityTitle =. titleVal
-            , EventLogisticsActivityNotes =. cleanMaybeText (eacNotes dto)
-            , EventLogisticsActivityStartTime =. eacStart dto
-            , EventLogisticsActivityEndTime =. endVal
-            , EventLogisticsActivityPlaceId =. placeKey
-            , EventLogisticsActivityOriginPlaceId =. originKey
-            , EventLogisticsActivityDestinationPlaceId =. destinationKey
-            , EventLogisticsActivityTravelMode =. modeToStore
-            , EventLogisticsActivityBufferMinutes =. bufferVal
-            , EventLogisticsActivityPriority =. priorityVal
-            , EventLogisticsActivityStatus =. statusVal
-            , EventLogisticsActivityVersion =. nextVersion
-            , EventLogisticsActivityUpdatedAt =. now
-            ]) envPool
+        -- Keep the optimistic compare-and-swap and relation replacement in the same
+        -- transaction. A concurrent version loss or relation constraint failure
+        -- leaves both the activity row and its prior relations unchanged.
+        updatedRows <- liftIO $ runSqlPool (do
+            rowCount <- updateWhereCount
+                [ EventLogisticsActivityId ==. activityKey
+                , EventLogisticsActivityVersion ==. expectedVersion
+                ]
+                [ EventLogisticsActivityActivityType =. typeVal
+                , EventLogisticsActivityTitle =. titleVal
+                , EventLogisticsActivityNotes =. cleanMaybeText (eacNotes dto)
+                , EventLogisticsActivityStartTime =. eacStart dto
+                , EventLogisticsActivityEndTime =. endVal
+                , EventLogisticsActivityPlaceId =. placeKey
+                , EventLogisticsActivityOriginPlaceId =. originKey
+                , EventLogisticsActivityDestinationPlaceId =. destinationKey
+                , EventLogisticsActivityTravelMode =. modeToStore
+                , EventLogisticsActivityBufferMinutes =. bufferVal
+                , EventLogisticsActivityPriority =. priorityVal
+                , EventLogisticsActivityStatus =. statusVal
+                , EventLogisticsActivityVersion =. nextVersion
+                , EventLogisticsActivityUpdatedAt =. now
+                ]
+            when (rowCount > 0) $
+                replaceLogisticsActivityRelations activityKey (eacAssignments dto) dependencyKeys now
+            pure rowCount) envPool
         when (updatedRows == 0) $ throwError err409{errBody = "This activity was changed by another collaborator. Reload and try again."}
-        replaceLogisticsActivityRelations envPool activityKey (eacAssignments dto) dependencyKeys now
         when (typeVal == "travel") $ void (verifyLogisticsActivityInternal envPool envConfig activityKey Nothing)
         mUpdated <- liftIO $ runSqlPool (getEntity activityKey) envPool
         maybe (throwError err500{errBody = "Could not update logistics activity"}) (logisticsActivityEntityToDTO envPool) mUpdated
@@ -6673,24 +6684,23 @@ socialEventsServer user =
         validateLogisticsAssignments pool (eacAssignments dto)
         pure (typeVal, titleVal, endVal, placeKey, originKey, destinationKey, modeVal, bufferVal, priorityVal, statusVal, dependencyKeys)
 
-    replaceLogisticsActivityRelations :: ConnectionPool -> EventLogisticsActivityId -> [EventLogisticsAssignmentDTO] -> [EventLogisticsActivityId] -> UTCTime -> AppM ()
-    replaceLogisticsActivityRelations pool activityKey assignments dependencyKeys now =
-        liftIO $ runSqlPool (do
-            deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
-            deleteWhere [EventLogisticsDependencyActivityId ==. activityKey]
-            forM_ assignments $ \assignment -> insert_ EventLogisticsAssignment
-                { eventLogisticsAssignmentActivityId = activityKey
-                , eventLogisticsAssignmentPartyId = cleanMaybeText (elaPartyId assignment)
-                , eventLogisticsAssignmentExternalName = cleanMaybeText (elaExternalName assignment)
-                , eventLogisticsAssignmentExternalPhone = cleanMaybeText (elaExternalPhone assignment)
-                , eventLogisticsAssignmentExternalEmail = cleanMaybeText (elaExternalEmail assignment)
-                , eventLogisticsAssignmentCreatedAt = now
-                }
-            forM_ dependencyKeys $ \dependencyKey -> insert_ EventLogisticsDependency
-                { eventLogisticsDependencyActivityId = activityKey
-                , eventLogisticsDependencyDependsOnActivityId = dependencyKey
-                , eventLogisticsDependencyCreatedAt = now
-                }) pool
+    replaceLogisticsActivityRelations :: EventLogisticsActivityId -> [EventLogisticsAssignmentDTO] -> [EventLogisticsActivityId] -> UTCTime -> SqlPersistT IO ()
+    replaceLogisticsActivityRelations activityKey assignments dependencyKeys now = do
+        deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
+        deleteWhere [EventLogisticsDependencyActivityId ==. activityKey]
+        forM_ assignments $ \assignment -> insert_ EventLogisticsAssignment
+            { eventLogisticsAssignmentActivityId = activityKey
+            , eventLogisticsAssignmentPartyId = cleanMaybeText (elaPartyId assignment)
+            , eventLogisticsAssignmentExternalName = cleanMaybeText (elaExternalName assignment)
+            , eventLogisticsAssignmentExternalPhone = cleanMaybeText (elaExternalPhone assignment)
+            , eventLogisticsAssignmentExternalEmail = cleanMaybeText (elaExternalEmail assignment)
+            , eventLogisticsAssignmentCreatedAt = now
+            }
+        forM_ dependencyKeys $ \dependencyKey -> insert_ EventLogisticsDependency
+            { eventLogisticsDependencyActivityId = activityKey
+            , eventLogisticsDependencyDependsOnActivityId = dependencyKey
+            , eventLogisticsDependencyCreatedAt = now
+            }
 
     verifyLogisticsActivityInternal :: ConnectionPool -> AppConfig -> EventLogisticsActivityId -> Maybe T.Text -> AppM EventRouteVerificationDTO
     verifyLogisticsActivityInternal pool config activityKey checkpoint = do
