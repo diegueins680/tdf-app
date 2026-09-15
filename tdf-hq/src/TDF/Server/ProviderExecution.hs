@@ -31,14 +31,14 @@ import           TDF.API.ProviderExecution
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderAdapter
 import           TDF.Commerce.ProviderAdapter.Http
-  ( AdapterTransportError(..), executeAdapterRequest )
+  ( AdapterTransportError(..), executeAdapterRequest, sharedProviderManager )
 import qualified TDF.Commerce.ProviderAdapter.PlaceToPay as PlaceToPay
 import           TDF.Commerce.ProviderCapabilities
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.ProviderExecutionStore as Store
 import           TDF.Commerce.ProviderRuntimeConfig
-import           TDF.DB (Env(..), sharedTlsManager)
+import           TDF.DB (Env(..))
 import           TDF.Server.PaymentAvailability (loadRuntimeReadyRoutes)
 import           TDF.Server.PaymentCapabilities (parsePaymentMethod)
 
@@ -190,7 +190,7 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
         , Store.porOutcomeCertainty = ProviderAmbiguous
         }))
     Store.ProviderOperationClaimed operationRef -> do
-      transport <- liftIO (executeAdapterRequest sharedTlsManager adapterRequest)
+      transport <- liftIO (executeAdapterRequest sharedProviderManager adapterRequest)
       case transport of
         Left AdapterTransportError{adapterTransportPublicMessage} -> do
           markAmbiguous envPool operationRef checkout attempt provider

@@ -23,13 +23,13 @@ import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentIntentStore as Intent
 import           TDF.Commerce.ProviderAdapter
 import           TDF.Commerce.ProviderAdapter.Http
-  ( AdapterTransportError(..), executeAdapterRequest )
+  ( AdapterTransportError(..), executeAdapterRequest, sharedProviderManager )
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.ProviderExecutionStore as Execution
 import           TDF.Commerce.ProviderRuntimeConfig
   ( RuntimeProviderAdapter(..), loadRuntimeProviderAdapter )
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
-import           TDF.DB (Env(..), sharedTlsManager)
+import           TDF.DB (Env(..))
 
 data ReconciliationDisposition
   = ReconciliationProcessed
@@ -96,7 +96,7 @@ queryAndApply Env{envPool} adapter payload payment now = do
   case adapterBuildQuery adapter context locator of
     Left _ -> pure (deadLetter "Stored provider binding cannot form a safe query" ids)
     Right request -> do
-      response <- executeAdapterRequest sharedTlsManager request
+      response <- executeAdapterRequest sharedProviderManager request
       case response of
         Left AdapterTransportError{} ->
           pure (retry "Authoritative provider query is temporarily unavailable" ids)

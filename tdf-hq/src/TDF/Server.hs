@@ -54,7 +54,6 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TEE
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BS8
-import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
@@ -184,6 +183,7 @@ import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
@@ -11322,7 +11322,7 @@ createPublicBookingPaypalOrder rawBookingId mLookupToken = do
   (paypalOrderId, approvalUrl) <- case existing of
     Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager clientId clientSecret baseUrl
+      sharedProviderManager clientId clientSecret baseUrl
       (toPathPiece (sbpcBookingKey context))
       (fromIntegral (sbpcDepositMinor context))
       (sbpcCurrency context)
@@ -11370,7 +11370,7 @@ capturePublicBookingPaypalOrder
       attempt <- beginServiceBookingPaymentAttempt
         context Checkout.ProviderPayPal Checkout.OperationCapture merchantRef "capture"
       outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedTlsManager clientId clientSecret baseUrl suppliedPaypalOrderId
+        sharedProviderManager clientId clientSecret baseUrl suppliedPaypalOrderId
         `catchError` failServiceBookingPaymentAttempt
           context attempt Checkout.ProviderPayPal "paypal_capture_request"
       now <- liftIO getCurrentTime
@@ -17485,7 +17485,7 @@ createPaypalOrder rawId mIdempotency payload = do
   (ppOrderId, approvalUrl) <- case ME.marketplaceOrderPaypalOrderId order of
     Just storedOrderId -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager cid sec baseUrl
+      sharedProviderManager cid sec baseUrl
       (toPathPiece (msccOrderKey context))
       (msccTotalCents context)
       (msccCurrency context)
@@ -17596,7 +17596,7 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
       }
   attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
   outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-    sharedTlsManager cid sec baseUrl paypalOrderId
+    sharedProviderManager cid sec baseUrl paypalOrderId
     `catchError` \serverErr -> do
       liftIO $ flip runSqlPool envPool $
         Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
@@ -17723,7 +17723,7 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
   Env{ envPool } <- ask
   (cid, sec, baseUrl, _, merchantRef) <- ServiceStorefront.loadPaypalEnvForService
   outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-    sharedTlsManager cid sec baseUrl paypalOrderId
+    sharedProviderManager cid sec baseUrl paypalOrderId
   now <- liftIO getCurrentTime
   let status = ServiceStorefront.spcoStatus outcome
       nextStatus
@@ -17755,7 +17755,7 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
 requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
 requestDatafastCheckout orderKey totalCents currency name email mPhone = do
   dfEnv <- loadDatafastEnv
-  manager <- pure sharedTlsManager
+  let manager = sharedProviderManager
   let amountTxt = Internationalization.formatMinorUnitsDecimal
         currency (fromIntegral totalCents)
       currencyTxt = T.toUpper (T.strip currency)
@@ -17775,7 +17775,7 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
       allParams = baseParams <> phoneParam <> testModeParam <> dfExtraParams dfEnv
       body = RequestBodyBS (renderSimpleQuery False allParams)
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
-  req0 <- liftIO $ parseRequest (baseUrlClean ++ "/v1/checkouts")
+  req0 <- ServiceStorefront.providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")
   let req = req0
         { method = "POST"
         , requestBody = body
@@ -17784,40 +17784,30 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
             , ("Content-Type", "application/x-www-form-urlencoded")
             ]
         }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "Datafast checkout request failed." }
-  case eitherDecode (responseBody resp) of
-    Left _ -> throwError err502 { errBody = "No pudimos interpretar la respuesta de Datafast." }
-    Right dfResp -> do
-      code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfcResult dfResp)))
-      unless (isDfCheckoutSuccess code) $
-        throwError err502 { errBody = "Datafast rechazó la solicitud de pago." }
-      checkoutId <- either throwError pure (validateDatafastCheckoutId (dfcId dfResp))
-      let widgetUrl =
-            baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
-      pure (checkoutId, widgetUrl)
+  dfResp <- ServiceStorefront.providerResponse manager Checkout.ProviderDatafast req
+  code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfcResult dfResp)))
+  unless (isDfCheckoutSuccess code) $
+    throwError err502 { errBody = "Datafast rechazó la solicitud de pago." }
+  checkoutId <- either throwError pure (validateDatafastCheckoutId (dfcId dfResp))
+  let widgetUrl =
+        baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
+  pure (checkoutId, widgetUrl)
 
 datafastPaymentStatus :: DatafastEnv -> Text -> AppM DFPaymentStatus
 datafastPaymentStatus dfEnv resourcePathTxt = do
   resourcePath <- either throwError pure (validateDatafastResourcePath (Just resourcePathTxt))
-  manager <- pure sharedTlsManager
+  let manager = sharedProviderManager
   let rp = T.unpack resourcePath
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
       basePath = baseUrlClean ++ rp
       sep = if '?' `elem` basePath then "&" else "?"
       fullUrl = basePath ++ sep ++ "entityId=" ++ T.unpack (dfEntityId dfEnv)
-  req0 <- liftIO $ parseRequest fullUrl
+  req0 <- ServiceStorefront.providerRequest Checkout.ProviderDatafast fullUrl
   let req = req0
         { method = "GET"
         , requestHeaders = [("Authorization", "Bearer " <> TE.encodeUtf8 (dfBearerToken dfEnv))]
         }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "Datafast status request failed." }
-  case eitherDecode (responseBody resp) of
-    Left _ -> throwError err502 { errBody = "No pudimos leer el estado del pago de Datafast." }
-    Right statusResp -> pure statusResp
+  ServiceStorefront.providerResponse manager Checkout.ProviderDatafast req
 
 validateDatafastResourcePath :: Maybe Text -> Either ServerError Text
 validateDatafastResourcePath Nothing =
@@ -20379,27 +20369,6 @@ resolvePaypalBaseUrl mEnv =
     sandboxBase = "https://api-m.sandbox.paypal.com"
     liveBase = "https://api-m.paypal.com"
 
-paypalAccessToken :: Manager -> Text -> Text -> String -> AppM Text
-paypalAccessToken manager cid sec baseUrl = do
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v1/oauth2/token")
-  let authVal = BS8.pack "Basic " <> B64.encode (BS8.pack (T.unpack cid <> ":" <> T.unpack sec))
-      req = req0
-        { method = "POST"
-        , requestBody = RequestBodyLBS (BL8.pack "grant_type=client_credentials")
-        , requestHeaders =
-            [ ("Content-Type", "application/x-www-form-urlencoded")
-            , ("Authorization", authVal)
-            ]
-        }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "PayPal token request failed." }
-  token <- case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token PayPal: " <> err) }
-    Right tok -> pure tok
-  either throwError pure $
-    validatePayPalTokenResponse token
-
 validatePayPalTokenResponse :: PayPalToken -> Either ServerError Text
 validatePayPalTokenResponse PayPalToken{..} = do
   accessToken <- validatePayPalAccessTokenField payPalAccessToken
@@ -20437,58 +20406,6 @@ validatePayPalTokenTypeField mRawTokenType =
       Left err502
         { errBody = "PayPal token response token_type must be Bearer"
         }
-
-createPaypalOrderRemote
-  :: Manager
-  -> Text
-  -> Text
-  -> String
-  -> Int
-  -> Text
-  -> Text
-  -> Text
-  -> AppM (Text, Maybe Text)
-createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName buyerEmail = do
-  token <- paypalAccessToken manager cid sec baseUrl
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders")
-  let amountStr = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
-      body = object
-        [ "intent" .= ("CAPTURE" :: Text)
-        , "purchase_units" .=
-            [ object
-                [ "amount" .= object ["currency_code" .= T.toUpper currency, "value" .= amountStr]
-                ]
-            ]
-        , "payer" .= object
-            [ "name" .= object ["given_name" .= buyerName]
-            , "email_address" .= buyerEmail
-            ]
-        , "application_context" .= object ["shipping_preference" .= ("NO_SHIPPING" :: Text)]
-        ]
-      req = req0
-        { method = "POST"
-        , requestBody = RequestBodyLBS (encode body)
-        , requestHeaders =
-            [ ("Content-Type", "application/json")
-            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
-            ]
-        }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "PayPal create order falló." }
-  resObj <- case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear respuesta PayPal: " <> err) }
-    Right val -> pure (val :: PayPalCreateResponse)
-  approval <-
-    either throwError pure $
-      resolvePayPalApprovalUrlForBase baseUrl (pcrLinks resObj)
-  ppOrderId <-
-    either throwError pure $
-      validatePayPalCreateOrderIdField (pcrId resObj)
-  matchedApproval <-
-    either throwError pure $
-      validatePayPalApprovalUrlOrderToken ppOrderId approval
-  pure (ppOrderId, Just matchedApproval)
 
 resolvePayPalApprovalUrl :: [PayPalLink] -> Either ServerError Text
 resolvePayPalApprovalUrl links =
@@ -20625,39 +20542,6 @@ collectPayPalApprovalUrlToken (rawParam:remaining) tokens seenUserAction =
           collectPayPalApprovalUrlToken remaining tokens True
     _ ->
       Nothing
-
-capturePaypalOrderRemote
-  :: Manager
-  -> Text
-  -> Text
-  -> String
-  -> Text
-  -> AppM PayPalCaptureOutcome
-capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
-  token <- paypalAccessToken manager cid sec baseUrl
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack paypalOrderId ++ "/capture")
-  let req = req0
-        { method = "POST"
-        , requestBody = RequestBodyLBS "{}"
-        , requestHeaders =
-            [ ("Content-Type", "application/json")
-            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
-            ]
-        }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "PayPal capture falló." }
-  parsed <- case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear captura PayPal: " <> err) }
-    Right val -> pure val
-  statusTxt <-
-    either throwError pure (extractPayPalCaptureStatus parsed)
-  payerEmail <-
-    either throwError pure (extractPayPalPayerEmail parsed)
-  pure PayPalCaptureOutcome
-    { pcoStatus = statusTxt
-    , pcoPayerEmail = payerEmail
-    }
 
 extractPayPalCaptureStatus :: Value -> Either ServerError Text
 extractPayPalCaptureStatus (Object o) =

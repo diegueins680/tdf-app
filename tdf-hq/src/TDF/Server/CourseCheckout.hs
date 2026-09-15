@@ -43,7 +43,8 @@ import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.CourseCheckout as CourseDomain
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
-import           TDF.DB (Env(..), sharedTlsManager)
+import           TDF.DB (Env(..))
+import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Routes.Courses as Courses
@@ -1118,7 +1119,7 @@ createPublicCoursePaypalOrder rawSlug rawRegistrationId mLookupToken = do
   (paypalOrderId, approvalUrl) <- case existing of
     Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager clientId clientSecret baseUrl (registrationReference context)
+      sharedProviderManager clientId clientSecret baseUrl (registrationReference context)
       (fromIntegral (cpcDueNowMinor context)) (cpcCurrency context)
       (cpcBuyerName context) (cpcBuyerEmail context)
       `catchError` failCoursePaymentAttempt context attempt
@@ -1171,7 +1172,7 @@ capturePublicCoursePaypalOrder rawSlug rawRegistrationId mLookupToken request = 
       attempt <- beginCoursePaymentAttempt context Checkout.ProviderPayPal
         Checkout.OperationCapture merchantRef "capture"
       outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedTlsManager clientId clientSecret baseUrl suppliedOrderId
+        sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
         `catchError` failCoursePaymentAttempt context attempt
           Checkout.ProviderPayPal "paypal_capture_request"
       now <- liftIO getCurrentTime

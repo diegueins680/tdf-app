@@ -42,7 +42,8 @@ import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.EventTickets as TicketDomain
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
-import           TDF.DB (Env(..), sharedTlsManager)
+import           TDF.DB (Env(..))
+import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
@@ -1292,7 +1293,7 @@ createPublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken = do
   (paypalOrderId, approvalUrl) <- case existing of
     Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager clientId clientSecret baseUrl (ticketReference context)
+      sharedProviderManager clientId clientSecret baseUrl (ticketReference context)
       (fromIntegral (tpcAmountMinor context)) (tpcCurrency context)
       (tpcBuyerName context) (tpcBuyerEmail context)
       `catchError` failTicketPaymentAttempt context attempt
@@ -1343,7 +1344,7 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
       attempt <- beginTicketPaymentAttempt context Checkout.ProviderPayPal
         Checkout.OperationCapture merchantRef "capture"
       outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedTlsManager clientId clientSecret baseUrl suppliedOrderId
+        sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
         `catchError` failTicketPaymentAttempt context attempt
           Checkout.ProviderPayPal "paypal_capture_request"
       now <- liftIO getCurrentTime
