@@ -25,7 +25,7 @@ data-dropping down migration. No destructive legacy edge cleanup/backfill.
 Pair rows have ordered existing Party IDs, one primary key and independent intent,
 follow, block, mute and dismissal fields for each direction. Creation time stays
 immutable; revision advances under actor/credential/pair locks. Requests never
-write another person's intent. Disconnect/block clear bilateral consent; unblock
+write another person's intent. Disconnect withdraws only the caller's consent; block clears both intents. Unblock
 cannot restore it. A unique actor/request-key result log suppresses duplicate
 mutations; a mismatched key payload conflicts. Replays revalidate current eligibility
 and return current state, so a replay cannot present an old connection as current.
@@ -72,7 +72,7 @@ bounded version is measured separately. No graph infrastructure was added.
 
 ## Refinement evidence / incomplete criteria
 
-TLC's action-labelled ConsentTraces graph generates 29 distinct PostgreSQL transition
+TLC's action-labelled ConsentTraces graph generates 30 distinct PostgreSQL transition
 assertions via `generate-model-cases.py`; source DOT and generated SQL are committed.
 This covers Request/Withdraw/Block/Unblock only. Feed fixtures additionally cover
 ordering ties, edits, late inserts, deletion, membership revocation and exclusions.

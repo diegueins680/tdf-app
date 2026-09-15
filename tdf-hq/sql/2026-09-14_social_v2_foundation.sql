@@ -123,9 +123,9 @@ BEGIN
     RETURN '{"error":"no_request"}'::jsonb;
   END IF;
   UPDATE social_v2_pair SET
-    consent_a=CASE WHEN op IN ('block','disconnect') THEN false
+    consent_a=CASE WHEN op='block' OR (side_a AND op='disconnect') THEN false
       WHEN side_a AND op IN ('request','accept') THEN true ELSE consent_a END,
-    consent_b=CASE WHEN op IN ('block','disconnect') THEN false
+    consent_b=CASE WHEN op='block' OR (NOT side_a AND op='disconnect') THEN false
       WHEN NOT side_a AND op IN ('request','accept') THEN true ELSE consent_b END,
     follow_a=CASE WHEN op='block' THEN false WHEN side_a AND op IN ('follow','unfollow')
       THEN op='follow' ELSE follow_a END,
