@@ -15,6 +15,10 @@ jest.unstable_mockModule('react-i18next', () => ({
 
 jest.unstable_mockModule('../api/commerceOperations', () => ({
   CommerceOperations: {
+    listReconciliationExceptions: async () => ({
+      crrGeneratedAt: '2026-09-15T12:00:00Z', crrEnvironment: 'sandbox', crrStatus: 'open',
+      crrCheckoutId: null, crrSchemaReady: false, crrEntries: [], crrLimit: 25, crrOffset: 0, crrHasMore: false,
+    }),
     listProviderQueries: async () => ({
       cpqsGeneratedAt: '2026-09-15T12:00:00Z', cpqsEnvironment: 'sandbox',
       cpqsSchemaReady: false, cpqsRecoveryFlagEnabled: false, cpqsJobs: [], cpqsBudgets: [],

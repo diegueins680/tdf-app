@@ -4370,6 +4370,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/commerce/reconciliation-exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inspect redacted individual payment reconciliation exceptions
+         * @description Additive read-only contract (2026-09-15). Requires strict Admin access. Defaults to sandbox and echoes the applied filters. Amounts are exact decimal strings of signed 64-bit minor units, never floating-point JSON numbers. Exception labels, including resolved or ignored, do not authorize payment, refund, payout, hold release or fulfillment. No provider contact, free-text notes, merchant aliases or external references are returned. Internal links are present only for a uniquely matched stored binding; an absent link is not proof that no payment occurred. Missing schema is explicit, and reads have a three-second per-statement database timeout. Live offset pages may shift and are not an immutable accounting export.
+         */
+        get: operations["adminListCommerceReconciliationExceptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/commerce/provider-queries": {
         parameters: {
             query?: never;
@@ -8827,6 +8847,50 @@ export interface components {
             cpoSettlements: components["schemas"]["CommerceSettlementSummary"][];
             cpoSellerBalances: components["schemas"]["CommerceSellerBalanceSummary"][];
             cpoPayouts: components["schemas"]["CommercePayoutSummary"][];
+        };
+        CommerceReconciliationEntry: {
+            /** Format: uuid */
+            creId: string;
+            /**
+             * @description A recognized stored provider, not current merchant eligibility or availability
+             * @enum {string}
+             */
+            creProvider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer" | "stripe" | "unrecognized";
+            /** @enum {string} */
+            creStatus: "open" | "assigned" | "resolved" | "ignored" | "unrecognized";
+            /**
+             * @description Fixed safe classification, not raw stored exception text
+             * @enum {string}
+             */
+            creReason: "closed_checkout_approval" | "scheduled_query_review" | "binding_mismatch" | "unknown_provider_state" | "unrecognized";
+            /** Format: uuid */
+            creCheckoutId: string | null;
+            /** Format: uuid */
+            crePaymentAttemptId: string | null;
+            /** @description Exact signed 64-bit integer minor units; null means unknown, not zero */
+            creExpectedMinor: string | null;
+            /** @description Exact observed signed 64-bit minor units; not a booked capture or settlement */
+            creActualMinor: string | null;
+            creCurrency: string | null;
+            /** Format: date-time */
+            creDetectedAt: string;
+            /** Format: date-time */
+            creResolvedAt: string | null;
+        };
+        CommerceReconciliationReport: {
+            /** Format: date-time */
+            crrGeneratedAt: string;
+            /** @enum {string} */
+            crrEnvironment: "sandbox" | "production";
+            /** @enum {string|null} */
+            crrStatus: "open" | "assigned" | "resolved" | "ignored" | null;
+            /** Format: uuid */
+            crrCheckoutId: string | null;
+            crrSchemaReady: boolean;
+            crrEntries: components["schemas"]["CommerceReconciliationEntry"][];
+            crrLimit: number;
+            crrOffset: number;
+            crrHasMore: boolean;
         };
         CommerceProviderQuery: {
             /** Format: uuid */
@@ -21927,6 +21991,62 @@ export interface operations {
                 content?: never;
             };
             /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListCommerceReconciliationExceptions: {
+        parameters: {
+            query?: {
+                environment?: "sandbox" | "production";
+                status?: "open" | "assigned" | "resolved" | "ignored";
+                /** @description Exact internal checkout reference; optional, never a customer token */
+                checkoutId?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted review records, including explicit schema readiness and applied filters */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceReconciliationReport"];
+                };
+            };
+            /** @description Invalid filter or pagination */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Report temporarily unavailable; no database diagnostics exposed */
             503: {
                 headers: {
                     [name: string]: unknown;

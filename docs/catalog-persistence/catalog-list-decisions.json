@@ -13549,6 +13549,26 @@
       "reviewed": true
     },
     {
+      "id": "981b0370b1f911117959",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-versioned-redaction-projection",
+      "specializedModel": "commerce_provider_binding, commerce_reconciliation_exception",
+      "priority": "P0-security",
+      "risk": "Returning arbitrary historical provider text could disclose private data. Treating the response list as available payment methods could bypass contracted capability gates.",
+      "justification": "Reviewed the seven creProvider response tokens against loadReconciliationEntries.safeProvider and the generated OpenAPI consumers. This is a fixed output redaction boundary with an unrecognized fallback, not provider onboarding, routing or an editable merchant catalog. The canonical account/capability tables retain availability authority. Contract parity and synthetic private-provider database tests cover the projection; changing it requires coordinated security/API review under ADR 0125.",
+      "reviewed": true
+    },
+    {
+      "id": "2b2fe601e00052bd7a21",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-versioned-redaction-projection",
+      "specializedModel": "commerce_reconciliation_exception",
+      "priority": "P0-security",
+      "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
+      "justification": "Reviewed the five creReason response tokens against loadReconciliationEntries.safeReason, actual exception emitters and the generated contract. Only four known stored exception types are mapped; every other value becomes unrecognized. This output-only redaction vocabulary cannot mutate workflow, post money or release a hold. Contract parity, legacy-private-reason and closed-approval regressions cover this boundary; ADR 0125 records its limits.",
+      "reviewed": true
+    },
+    {
       "id": "072c90f7e568f32fe021",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
