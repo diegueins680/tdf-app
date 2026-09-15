@@ -22,6 +22,8 @@ module TDF.API.CommerceOperations
   , CommerceProviderQueryDTO(..)
   , CommerceProviderQueryBudgetDTO(..)
   , CommerceProviderQueriesDTO(..)
+  , CommerceReconciliationEntryDTO(..)
+  , CommerceReconciliationReportDTO(..)
   ) where
 
 import           Data.Aeson (FromJSON(..), ToJSON, genericParseJSON)
@@ -278,6 +280,40 @@ data CommerceProviderQueriesDTO = CommerceProviderQueriesDTO
 instance ToJSON CommerceProviderQueriesDTO
 instance FromJSON CommerceProviderQueriesDTO
 
+-- Exact decimal minor-unit strings avoid losing Int64 precision in JSON clients.
+-- Free-text notes, merchant/provider references and arbitrary diagnostics are absent.
+data CommerceReconciliationEntryDTO = CommerceReconciliationEntryDTO
+  { creId               :: Text
+  , creProvider         :: Text
+  , creStatus           :: Text
+  , creReason           :: Text
+  , creCheckoutId       :: Maybe Text
+  , crePaymentAttemptId :: Maybe Text
+  , creExpectedMinor    :: Maybe Text
+  , creActualMinor      :: Maybe Text
+  , creCurrency         :: Maybe Text
+  , creDetectedAt       :: UTCTime
+  , creResolvedAt       :: Maybe UTCTime
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON CommerceReconciliationEntryDTO
+instance FromJSON CommerceReconciliationEntryDTO
+
+data CommerceReconciliationReportDTO = CommerceReconciliationReportDTO
+  { crrGeneratedAt :: UTCTime
+  , crrEnvironment :: Text
+  , crrStatus      :: Maybe Text
+  , crrCheckoutId  :: Maybe Text
+  , crrSchemaReady :: Bool
+  , crrEntries     :: [CommerceReconciliationEntryDTO]
+  , crrLimit       :: Int
+  , crrOffset      :: Int
+  , crrHasMore     :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON CommerceReconciliationReportDTO
+instance FromJSON CommerceReconciliationReportDTO
+
 type CommerceOperationsAPI =
        "admin" :> "commerce" :> "overview"
          :> Get '[JSON] CommercePaymentOverviewDTO
@@ -297,3 +333,10 @@ type CommerceOperationsAPI =
          :> QueryParam "limit" Int
          :> QueryParam "offset" Int
          :> Get '[JSON] (Headers '[Header "Cache-Control" Text] CommerceProviderQueriesDTO)
+  :<|> "admin" :> "commerce" :> "reconciliation-exceptions"
+         :> QueryParam "environment" Text
+         :> QueryParam "status" Text
+         :> QueryParam "checkoutId" Text
+         :> QueryParam "limit" Int
+         :> QueryParam "offset" Int
+         :> Get '[JSON] (Headers '[Header "Cache-Control" Text] CommerceReconciliationReportDTO)

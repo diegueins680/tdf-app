@@ -5555,6 +5555,54 @@ paths:
         '400': { description: Invalid notification or mismatched store identifier }
         '409': { description: Provider event identifier conflicts with different immutable evidence }
         '503': { description: Provider account, feature flag, or secure storage is unavailable }
+  /admin/commerce/reconciliation-exceptions:
+    get:
+      tags: [Commerce operations]
+      summary: Inspect redacted individual payment reconciliation exceptions
+      description: >-
+        Additive read-only contract (2026-09-15). Requires strict Admin access.
+        Defaults to sandbox and echoes the applied filters. Amounts are exact
+        decimal strings of signed 64-bit minor units, never floating-point JSON
+        numbers. Exception labels, including resolved or ignored, do not authorize
+        payment, refund, payout, hold release or fulfillment. No provider contact,
+        free-text notes, merchant aliases or external references are returned.
+        Internal links are present only for a uniquely matched stored binding;
+        an absent link is not proof that no payment occurred. Missing schema is
+        explicit, and reads have a three-second per-statement database timeout.
+        Live offset pages may shift and are not an immutable accounting export.
+      operationId: adminListCommerceReconciliationExceptions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: environment
+          schema: { type: string, enum: [sandbox, production], default: sandbox }
+        - in: query
+          name: status
+          schema: { type: string, enum: [open, assigned, resolved, ignored] }
+        - in: query
+          name: checkoutId
+          schema: { type: string, format: uuid }
+          description: Exact internal checkout reference; optional, never a customer token
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, maximum: 10000, default: 0 }
+      responses:
+        '200':
+          description: Redacted review records, including explicit schema readiness and applied filters
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: [no-store] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommerceReconciliationReport' }
+        '400': { description: Invalid filter or pagination }
+        '401': { description: Authentication required }
+        '403': { description: Strict Admin access required }
+        '503': { description: Report temporarily unavailable; no database diagnostics exposed }
   /admin/commerce/provider-queries:
     get:
       tags: [Commerce operations]
@@ -9257,6 +9305,53 @@ components:
         cpoPayouts:
           type: array
           items: { $ref: '#/components/schemas/CommercePayoutSummary' }
+    CommerceReconciliationEntry:
+      type: object
+      additionalProperties: false
+      required: [creId, creProvider, creStatus, creReason, creCheckoutId, crePaymentAttemptId, creExpectedMinor, creActualMinor, creCurrency, creDetectedAt, creResolvedAt]
+      properties:
+        creId: { type: string, format: uuid }
+        creProvider:
+          type: string
+          enum: [datafast, paypal, placetopay, payphone, bank_transfer, stripe, unrecognized]
+          description: A recognized stored provider, not current merchant eligibility or availability
+        creStatus: { type: string, enum: [open, assigned, resolved, ignored, unrecognized] }
+        creReason:
+          type: string
+          enum: [closed_checkout_approval, scheduled_query_review, binding_mismatch, unknown_provider_state, unrecognized]
+          description: Fixed safe classification, not raw stored exception text
+        creCheckoutId: { type: string, format: uuid, nullable: true }
+        crePaymentAttemptId: { type: string, format: uuid, nullable: true }
+        creExpectedMinor:
+          type: string
+          nullable: true
+          pattern: '^-?(0|[1-9][0-9]{0,18})$'
+          description: Exact signed 64-bit integer minor units; null means unknown, not zero
+        creActualMinor:
+          type: string
+          nullable: true
+          pattern: '^-?(0|[1-9][0-9]{0,18})$'
+          description: Exact observed signed 64-bit minor units; not a booked capture or settlement
+        creCurrency: { type: string, nullable: true, pattern: '^[A-Z]{3}$' }
+        creDetectedAt: { type: string, format: date-time }
+        creResolvedAt: { type: string, format: date-time, nullable: true }
+    CommerceReconciliationReport:
+      type: object
+      additionalProperties: false
+      required: [crrGeneratedAt, crrEnvironment, crrStatus, crrCheckoutId, crrSchemaReady, crrEntries, crrLimit, crrOffset, crrHasMore]
+      properties:
+        crrGeneratedAt: { type: string, format: date-time }
+        crrEnvironment: { type: string, enum: [sandbox, production] }
+        crrStatus: { type: string, nullable: true, enum: [open, assigned, resolved, ignored] }
+        crrCheckoutId: { type: string, format: uuid, nullable: true }
+        crrSchemaReady: { type: boolean }
+        crrEntries:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/CommerceReconciliationEntry' }
+        crrLimit: { type: integer, minimum: 1, maximum: 100 }
+        crrOffset: { type: integer, minimum: 0, maximum: 10000 }
+        crrHasMore: { type: boolean }
     CommerceProviderQuery:
       type: object
       additionalProperties: false
