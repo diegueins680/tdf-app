@@ -13537,6 +13537,26 @@
       "risk": "Conflating transport ambiguity with binding mismatch could authorize unsafe retry or suppress a required operator review.",
       "justification": "This private Haskell sum type makes query construction, transport failure and binding validation exhaustive without persisting provider payloads. It is not an externally governed status catalog or a customer-editable setting; all failures preserve no-blind-fallback behavior.",
       "reviewed": true
+    },
+    {
+      "id": "4080f92d3868198965e6",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-security",
+      "risk": "Returning arbitrary stored diagnostics could disclose credentials or private provider data; making this projection editable would weaken the redaction boundary.",
+      "justification": "The 14 response tokens are the fixed server-authored query-worker outcomes plus an unrecognized fallback. They are an output redaction allowlist, not editable payment methods or business states. The Haskell projection maps every other stored value to unrecognized, and the API remains read-only with strict-admin authorization. Review matched the worker/store emitters to the OpenAPI enum and projection; unknown diagnostic and authorization regression tests cover the boundary.",
+      "reviewed": true
+    },
+    {
+      "id": "072c90f7e568f32fe021",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-security",
+      "risk": "Editable environment or recovery-protocol options could mislabel operational evidence or suggest unsupported states and actions to administrators.",
+      "justification": "These read-only filters mirror the two fixed provider environments and five internal query-job states accepted by validateProviderQueryFilters and the recovery table CHECK constraint. They do not select payment methods, mutate jobs or define editable business catalogs. Review matched the JSX options to the server validator and OpenAPI enums; environment-isolation and filter-validation regressions cover the boundary. Protocol changes require coordinated schema, API and UI review.",
+      "reviewed": true
     }
   ]
 }

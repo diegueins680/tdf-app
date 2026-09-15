@@ -24,6 +24,7 @@ import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import ReplayOutlinedIcon from '@mui/icons-material/ReplayOutlined';
 
 import PageShell, { EmptyState } from '../components/PageShell';
+import ProviderQueryRecoveryPanel from '../components/payments/ProviderQueryRecoveryPanel';
 import {
   CommerceOperations,
   type CommercePaymentOverview,
@@ -176,7 +177,8 @@ export default function CommerceProviderEventsPage() {
         <Button
           variant="outlined"
           startIcon={<RefreshOutlinedIcon />}
-          onClick={() => void Promise.all([eventsQuery.refetch(), overviewQuery.refetch()])}
+          onClick={() => void Promise.all([eventsQuery.refetch(), overviewQuery.refetch(),
+            queryClient.invalidateQueries({ queryKey: ['commerce-provider-queries'] })])}
           disabled={eventsQuery.isFetching || overviewQuery.isFetching}
         >
           {copy.refresh}
@@ -185,6 +187,7 @@ export default function CommerceProviderEventsPage() {
     >
       <Stack spacing={2}>
         <Alert severity="info">{copy.warning}</Alert>
+        <ProviderQueryRecoveryPanel />
         {overviewQuery.isError && <Alert severity="error">{copy.overviewError}</Alert>}
         {overviewQuery.data && (
           <Stack spacing={2}>

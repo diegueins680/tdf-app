@@ -36,6 +36,15 @@ For terminal no-charge replay and PayPhone cancellation classification, follow
 Never bulk relabel historical failed PayPhone records or let an old attempt's
 no-charge result change a newer attempt's checkout. Drain old reconciliation
 consumers before rollout; an image rollback reintroduces that replay defect.
+For the strict-admin read-only query-job report, follow
+[ADR 0122](../adr/0122-read-only-payment-query-observability.md) and
+[query observability evidence](query-observability-2026-09-15.md). The payment
+operations screen defaults its query report to sandbox. Select production
+explicitly for an authorized production read. Missing schema or a failed request
+is not an empty queue; completed queries are not paid orders. The database flag
+and next shared query slot do not establish worker liveness or merchant readiness.
+This view cannot replay or reset a terminal job. Its offset pages may shift while
+workers run and must not be used as an immutable financial export.
 
 ## 1. Configuration and activation
 

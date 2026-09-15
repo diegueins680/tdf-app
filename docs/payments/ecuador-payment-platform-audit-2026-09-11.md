@@ -38,6 +38,12 @@ see [ADR 0121](../adr/0121-history-preserving-no-charge-reconciliation.md) and t
 and remaining gates. No new operational provider or staging qualification is
 claimed by these continuations.
 
+A subsequent 2026-09-15 continuation adds strict-admin, read-only query-job and
+shared-budget visibility with explicit availability and environment filtering;
+see [ADR 0122](../adr/0122-read-only-payment-query-observability.md) and the
+[query observability record](query-observability-2026-09-15.md). It adds no
+provider activation, manual query reset, payment mutation or native admin screen.
+
 ## 2. Capability and access report
 
 | Capability | Result on 2026-09-11 | Evidence and limitation |
