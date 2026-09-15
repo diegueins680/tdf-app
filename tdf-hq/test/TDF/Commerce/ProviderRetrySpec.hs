@@ -367,6 +367,7 @@ spec = do
         notificationIdentityInboxSpec
         reconciliationTransactionSpec
         captureReplaySpec
+        manualCaptureReplaySpec
         it "serializes different keys and permits only one active attempt" $ \pool -> do
           creation <- newCheckout pool
           results <- concurrently
@@ -1815,7 +1816,9 @@ captureReplaySpec = describe "verified capture replay integrity" $
         runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
 
       it "rejects same-amount receipts belonging to another provider or external reference" $ \pool ->
-        forM_ ["adapter='synthetic-other-provider'", "external_reference='synthetic-other-reference'"] $ \change -> do
+        forM_ ["adapter='synthetic-other-provider'", "external_reference='synthetic-other-reference'"
+          , "external_reference=NULL", "receipt_number=receipt_number||'-other'"
+          , "amount_minor=1", "currency='EUR'"] $ \change -> do
           payment <- captureFixture pool provider
           runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
           runSqlPool (rawExecute ("UPDATE commerce_receipt SET " <> change <> " WHERE checkout_id=?::uuid")
@@ -1824,8 +1827,97 @@ captureReplaySpec = describe "verified capture replay integrity" $
           runSqlPool (Checkout.recordVerifiedPayment payment) pool >>= (`shouldSatisfy` isLeft)
           runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
 
+      it "acknowledges original capture after refund or dispute without reopening checkout" $ \pool ->
+        forM_ [("partially_refunded", 100), ("refunded", 12515), ("disputed", 0), ("chargeback", 0)] $ \(status, refunded) -> do
+          payment <- captureFixture pool provider
+          runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+          runSqlPool (do
+            rawExecute "UPDATE commerce_checkout_session SET status=?,refunded_minor=? WHERE id=?::uuid"
+              [PersistText status,PersistInt64 refunded,captureCheckoutParameter payment]
+            rawExecute "UPDATE commerce_payment_intent SET status=?,refunded_minor=? WHERE checkout_id=?::uuid"
+              [PersistText status,PersistInt64 refunded,captureCheckoutParameter payment]
+            rawExecute "UPDATE commerce_receipt SET voided_at=NOW() WHERE checkout_id=?::uuid"
+              [captureCheckoutParameter payment]) pool
+          snapshot <- runSqlPool (captureSnapshot payment) pool
+          runSqlPool (Checkout.recordVerifiedPayment payment
+            { Checkout.vpOccurredAt = addUTCTime 3600 (Checkout.vpOccurredAt payment) }) pool
+            `shouldReturn` Right False
+          runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+
+      it "does not rebuild missing receipts or accept duplicate historical receipts" $ \pool ->
+        forM_ ["DELETE FROM commerce_receipt WHERE checkout_id=?::uuid"
+          , "INSERT INTO commerce_receipt(checkout_id,receipt_number,kind,adapter,external_reference,amount_minor,currency,issued_at) SELECT checkout_id,receipt_number||'-duplicate',kind,adapter,external_reference,amount_minor,currency,issued_at FROM commerce_receipt WHERE checkout_id=?::uuid"] $ \corrupt -> do
+          payment <- captureFixture pool provider
+          runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+          runSqlPool (rawExecute corrupt [captureCheckoutParameter payment]) pool
+          snapshot <- runSqlPool (captureSnapshot payment) pool
+          runSqlPool (Checkout.recordVerifiedPayment payment) pool >>= (`shouldSatisfy` isLeft)
+          runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+
+      it "rejects incomplete historical money instead of silently completing it" $ \pool ->
+        forM_ ["UPDATE commerce_checkout_session SET paid_minor=1 WHERE id=?::uuid"
+          , "UPDATE commerce_checkout_session SET status='paid',paid_minor=total_minor WHERE id=?::uuid"
+          , "UPDATE commerce_payment_attempt SET status='succeeded' WHERE checkout_id=?::uuid"] $ \corrupt -> do
+          payment <- captureFixture pool provider
+          runSqlPool (rawExecute corrupt [captureCheckoutParameter payment]) pool
+          snapshot <- runSqlPool (captureSnapshot payment) pool
+          runSqlPool (Checkout.recordVerifiedPayment payment) pool >>= (`shouldSatisfy` isLeft)
+          runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+
+      it "preserves successful and closed attempt evidence during binding replay" $ \pool -> do
+        payment <- captureFixture pool provider
+        runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+        snapshot <- runSqlPool (captureSnapshot payment) pool
+        let binding = (captureBinding payment)
+              { Checkout.pbcOccurredAt = addUTCTime 3600 (Checkout.vpOccurredAt payment) }
+        outcomes <- concurrently (replicate 4 (runSqlPool (Checkout.bindProviderResource binding) pool))
+        outcomes `shouldBe` replicate 4 (Right ())
+        runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+        forM_ ["failed", "cancelled", "expired", "requires_review"] $ \status -> do
+          other <- captureFixture pool provider
+          runSqlPool (rawExecute "UPDATE commerce_payment_attempt SET status=? WHERE id=?::uuid"
+            [PersistText status,PersistText (Checkout.paymentAttemptReferenceId (Checkout.vpAttempt other))]) pool
+          closed <- runSqlPool (captureSnapshot other) pool
+          runSqlPool (Checkout.bindProviderResource (captureBinding other)) pool `shouldReturn` Right ()
+          runSqlPool (captureSnapshot other) pool `shouldReturn` closed
+
+      it "advances customer action once and never regresses processing during binding replay" $ \pool -> do
+        payment <- captureFixtureWithStage Checkout.AttemptRequiresCustomerAction pool provider
+        runSqlPool (Checkout.bindProviderResource (captureBinding payment)) pool `shouldReturn` Right ()
+        snapshot <- runSqlPool (captureSnapshot payment) pool
+        runSqlPool (Checkout.bindProviderResource (captureBinding payment)
+          { Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
+          , Checkout.pbcOccurredAt = addUTCTime 3600 (Checkout.vpOccurredAt payment) }) pool `shouldReturn` Right ()
+        runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+        runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+
+      it "rejects cross-checkout bindings before inserting another resource or audit" $ \pool -> do
+        payment <- captureFixture pool provider
+        other <- captureFixture pool provider
+        snapshots <- mapM (\value -> runSqlPool (captureSnapshot value) pool) [payment,other]
+        countBefore <- runSqlPool (rawSql "SELECT count(*) FROM commerce_provider_binding" []) pool :: IO [Single Int64]
+        runSqlPool (Checkout.bindProviderResource (captureBinding payment)
+          { Checkout.pbcCheckout = Checkout.vpCheckout other
+          , Checkout.pbcProviderResource = "synthetic-unbound-new-resource"
+          , Checkout.pbcResourceType = "synthetic-other-resource" }) pool >>= (`shouldSatisfy` isLeft)
+        mapM (\value -> runSqlPool (captureSnapshot value) pool) [payment,other] `shouldReturn` snapshots
+        runSqlPool (rawSql "SELECT count(*) FROM commerce_provider_binding" []) pool `shouldReturn` countBefore
+
+      it "still rejects first capture on expired or cancelled checkouts" $ \pool ->
+        forM_ ["expired", "cancelled"] $ \status -> do
+          payment <- captureFixture pool provider
+          runSqlPool (rawExecute "UPDATE commerce_checkout_session SET status=? WHERE id=?::uuid"
+            [PersistText status,captureCheckoutParameter payment]) pool
+          snapshot <- runSqlPool (captureSnapshot payment) pool
+          runSqlPool (Checkout.recordVerifiedPayment payment) pool >>= (`shouldSatisfy` isLeft)
+          runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+
 captureFixture :: ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment
-captureFixture pool provider = do
+captureFixture = captureFixtureWithStage Checkout.AttemptProcessing
+
+captureFixtureWithStage
+  :: Checkout.PaymentAttemptStage -> ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment
+captureFixtureWithStage stage pool provider = do
   seed <- newCheckoutForDomain "service_booking" pool
   let creation = seed { Checkout.pacProvider = provider }
       method = case provider of
@@ -1841,7 +1933,7 @@ captureFixture pool provider = do
     , Checkout.pbcMerchantRef = Checkout.pacMerchantRef creation, Checkout.pbcResourceType = "payment"
     , Checkout.pbcProviderResource = resource, Checkout.pbcResourcePath = Nothing
     , Checkout.pbcOrderReference = checkoutId, Checkout.pbcAmountMinor = 12515
-    , Checkout.pbcCurrency = "USD", Checkout.pbcStage = Checkout.AttemptProcessing
+    , Checkout.pbcCurrency = "USD", Checkout.pbcStage = stage
     , Checkout.pbcOccurredAt = Checkout.pacCreatedAt creation
     , Checkout.pbcCorrelationId = "synthetic-capture-binding" }) pool >>= requireRight
   pure Checkout.VerifiedPayment
@@ -1854,10 +1946,74 @@ captureFixture pool provider = do
     , Checkout.vpEvidence = "server_to_server", Checkout.vpOccurredAt = Checkout.pacCreatedAt creation
     , Checkout.vpCorrelationId = "synthetic-capture-verification" }
 
+captureBinding :: Checkout.VerifiedPayment -> Checkout.ProviderBindingCreation
+captureBinding payment = Checkout.ProviderBindingCreation
+  { Checkout.pbcAttempt = Checkout.vpAttempt payment, Checkout.pbcCheckout = Checkout.vpCheckout payment
+  , Checkout.pbcProvider = Checkout.vpProvider payment, Checkout.pbcEnvironment = Checkout.vpEnvironment payment
+  , Checkout.pbcMerchantRef = Checkout.vpMerchantRef payment, Checkout.pbcResourceType = Checkout.vpResourceType payment
+  , Checkout.pbcProviderResource = Checkout.vpProviderResource payment, Checkout.pbcResourcePath = Checkout.vpProviderResourcePath payment
+  , Checkout.pbcOrderReference = Checkout.vpProviderReference payment, Checkout.pbcAmountMinor = Checkout.vpAmountMinor payment
+  , Checkout.pbcCurrency = Checkout.vpCurrency payment, Checkout.pbcStage = Checkout.AttemptProcessing
+  , Checkout.pbcOccurredAt = Checkout.vpOccurredAt payment, Checkout.pbcCorrelationId = "synthetic-binding-replay" }
+
+captureCheckoutParameter :: Checkout.VerifiedPayment -> PersistValue
+captureCheckoutParameter = PersistText . Checkout.checkoutReferenceId . Checkout.vpCheckout
+
+manualCaptureReplaySpec :: SpecWith ConnectionPool
+manualCaptureReplaySpec = describe "approved bank transfer replay integrity" $ do
+  it "requires independent approval and preserves evidence on later settlement replay" $ \pool -> do
+    seed <- newCheckoutForDomain "service_booking" pool
+    let creation = seed { Checkout.pacProvider = Checkout.ProviderBankTransfer
+                        , Checkout.pacOperation = Checkout.OperationManualVerify }
+    attempt <- runSqlPool (Runtime.beginPaymentAttempt creation) pool >>= requireRight
+    evidence <- toText <$> nextRandom
+    let payment = Checkout.VerifiedPayment
+          { Checkout.vpAttempt = attempt, Checkout.vpCheckout = Checkout.pacCheckout creation
+          , Checkout.vpProvider = Checkout.ProviderBankTransfer
+          , Checkout.vpEnvironment = Checkout.CheckoutSandbox
+          , Checkout.vpMerchantRef = Checkout.pacMerchantRef creation
+          , Checkout.vpResourceType = "manual_evidence", Checkout.vpProviderResource = evidence
+          , Checkout.vpProviderResourcePath = Nothing
+          , Checkout.vpOrderReference = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+          , Checkout.vpProviderReference = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+          , Checkout.vpAmountMinor = 12515, Checkout.vpCurrency = "USD"
+          , Checkout.vpEvidence = "staff_verified_manual"
+          , Checkout.vpOccurredAt = Checkout.pacCreatedAt creation
+          , Checkout.vpCorrelationId = "synthetic-bank-approval" }
+    runSqlPool (do
+      rawExecute "INSERT INTO commerce_manual_payment_evidence(id,checkout_id,payment_attempt_id,status)\
+        \ VALUES (?::uuid,?::uuid,?::uuid,'awaiting_evidence')"
+        [PersistText evidence,captureCheckoutParameter payment,
+          PersistText (Checkout.paymentAttemptReferenceId attempt)]
+      rawExecute "UPDATE commerce_manual_payment_evidence\
+        \ SET status='submitted',customer_reference='synthetic-bank-reference',submitted_amount_minor=12515,\
+        \ currency='USD',submitted_at=NOW(),submitted_by=1 WHERE id=?::uuid" [PersistText evidence]) pool
+    _ <- runSqlPool (Checkout.bindProviderResource (captureBinding payment)) pool >>= requireRight
+    snapshot <- runSqlPool (captureSnapshot payment) pool
+    runSqlPool (Checkout.recordApprovedManualPayment payment) pool >>= (`shouldSatisfy` isLeft)
+    runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+    rejected <- try (runSqlPool (rawExecute "UPDATE commerce_manual_payment_evidence\
+      \ SET status='under_review',reviewed_by=1 WHERE id=?::uuid" [PersistText evidence]) pool)
+      :: IO (Either SqlError ())
+    rejected `shouldSatisfy` isLeft
+    runSqlPool (do
+      rawExecute "UPDATE commerce_manual_payment_evidence SET status='under_review',reviewed_by=2 WHERE id=?::uuid"
+        [PersistText evidence]
+      rawExecute "UPDATE commerce_manual_payment_evidence\
+        \ SET status='approved',reviewed_at=NOW(),review_notes='Synthetic independently approved evidence' WHERE id=?::uuid"
+        [PersistText evidence]) pool
+    runSqlPool (Checkout.recordApprovedManualPayment payment) pool `shouldReturn` Right True
+    paid <- runSqlPool (captureSnapshot payment) pool
+    outcomes <- concurrently (replicate 4 (runSqlPool (Checkout.recordApprovedManualPayment payment
+      { Checkout.vpOccurredAt = addUTCTime 3600 (Checkout.vpOccurredAt payment) }) pool))
+    outcomes `shouldBe` replicate 4 (Right False)
+    runSqlPool (captureSnapshot payment) pool `shouldReturn` paid
+
 captureSnapshot :: Checkout.VerifiedPayment -> SqlPersistT IO [Single Text]
 captureSnapshot payment = rawSql
   "SELECT jsonb_build_object('checkout',to_jsonb(checkout),'attempt',to_jsonb(attempt),\
   \ 'intent',to_jsonb(intent),\
+  \ 'manual',(SELECT jsonb_agg(to_jsonb(evidence) ORDER BY evidence.id) FROM commerce_manual_payment_evidence evidence WHERE checkout_id=checkout.id),\
   \ 'receipts',(SELECT jsonb_agg(to_jsonb(receipt) ORDER BY receipt.id) FROM commerce_receipt receipt WHERE checkout_id=checkout.id),\
   \ 'ledger',(SELECT jsonb_agg(to_jsonb(txn) ORDER BY txn.id) FROM commerce_ledger_transaction txn WHERE source_id=attempt.id::text),\
   \ 'entries',(SELECT jsonb_agg(to_jsonb(entry) ORDER BY entry.id) FROM commerce_ledger_entry entry JOIN commerce_ledger_transaction txn ON txn.id=entry.transaction_id WHERE txn.source_id=attempt.id::text),\

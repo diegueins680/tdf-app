@@ -62,6 +62,7 @@ for migration in \
   2026-08-15_marketplace_sale_checkout_runtime \
   2026-08-15_marketplace_rental_checkout_runtime \
   2026-08-14_checkout_event_refund_runtime \
+  2026-08-17_service_booking_manual_payments \
   2026-09-09_canonical_payment_lifecycle \
   2026-09-10_payment_attempt_intent_binding \
   2026-09-11_payment_intent_runtime_sync \

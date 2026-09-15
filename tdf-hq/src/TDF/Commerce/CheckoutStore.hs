@@ -400,7 +400,7 @@ beginPaymentAttempt PaymentAttemptCreation{..}
 bindProviderResource
   :: ProviderBindingCreation
   -> SqlPersistT IO (Either Text ())
-bindProviderResource ProviderBindingCreation{..}
+bindProviderResource binding@ProviderBindingCreation{..}
   | not (validProviderReference pbcProviderResource) =
       pure (Left "Provider resource reference is invalid")
   | T.null (T.strip pbcOrderReference) =
@@ -408,17 +408,54 @@ bindProviderResource ProviderBindingCreation{..}
   | pbcStage `notElem` [AttemptRequiresCustomerAction, AttemptProcessing] =
       pure (Left "Provider resource binding requires a pending payment stage")
   | otherwise = do
-      bindingId <- liftIO (toText <$> nextRandom)
-      created <- (rawSql
-        "INSERT INTO commerce_provider_binding (\
-        \ id, payment_attempt_id, provider, environment, merchant_account_ref,\
-        \ resource_type, provider_resource_id, provider_resource_path, merchant_reference,\
-        \ amount_minor, currency, created_at\
-        \) VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\
-        \ ON CONFLICT (provider, environment, merchant_account_ref, resource_type, provider_resource_id)\
-        \ DO NOTHING RETURNING id::text"
-        [ PersistText bindingId
+      locked <- rawSql
+        "SELECT attempt.id::text FROM commerce_checkout_session checkout\
+        \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=checkout.id\
+        \ WHERE checkout.id=?::uuid AND attempt.id=?::uuid FOR UPDATE OF checkout,attempt"
+        [ PersistText (checkoutReferenceId pbcCheckout)
         , PersistText (paymentAttemptReferenceId pbcAttempt)
+        ] :: SqlPersistT IO [Single Text]
+      if locked == [Single (paymentAttemptReferenceId pbcAttempt)]
+        then bindProviderResourceInTransaction binding
+        else pure (Left "Provider resource does not match its checkout and attempt")
+
+bindProviderResourceInTransaction :: ProviderBindingCreation -> SqlPersistT IO (Either Text ())
+bindProviderResourceInTransaction ProviderBindingCreation{..} = do
+  bindingId <- liftIO (toText <$> nextRandom)
+  created <- (rawSql
+    "INSERT INTO commerce_provider_binding (\
+    \ id, payment_attempt_id, provider, environment, merchant_account_ref,\
+    \ resource_type, provider_resource_id, provider_resource_path, merchant_reference,\
+    \ amount_minor, currency, created_at\
+    \) VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\
+    \ ON CONFLICT (provider, environment, merchant_account_ref, resource_type, provider_resource_id)\
+    \ DO NOTHING RETURNING id::text"
+    [ PersistText bindingId
+    , PersistText (paymentAttemptReferenceId pbcAttempt)
+    , PersistText (paymentProviderText pbcProvider)
+    , PersistText (checkoutEnvironmentText pbcEnvironment)
+    , PersistText pbcMerchantRef
+    , PersistText pbcResourceType
+    , PersistText pbcProviderResource
+    , maybe PersistNull PersistText pbcResourcePath
+    , PersistText pbcOrderReference
+    , PersistInt64 pbcAmountMinor
+    , PersistText (normalizeCurrency pbcCurrency)
+    , PersistUTCTime pbcOccurredAt
+    ] :: SqlPersistT IO [Single Text])
+  bindingMatches <- case created of
+    [_] -> pure True
+    [] -> do
+      rows <- rawSql
+        "SELECT EXISTS (\
+        \ SELECT 1 FROM commerce_provider_binding binding\
+        \ WHERE binding.payment_attempt_id = ?::uuid AND binding.provider = ?\
+        \ AND binding.environment = ? AND binding.merchant_account_ref = ?\
+        \ AND binding.resource_type = ? AND binding.provider_resource_id = ?\
+        \ AND binding.provider_resource_path IS NOT DISTINCT FROM ?\
+        \ AND binding.merchant_reference = ? AND binding.amount_minor = ?\
+        \ AND binding.currency = ?)"
+        [ PersistText (paymentAttemptReferenceId pbcAttempt)
         , PersistText (paymentProviderText pbcProvider)
         , PersistText (checkoutEnvironmentText pbcEnvironment)
         , PersistText pbcMerchantRef
@@ -428,71 +465,52 @@ bindProviderResource ProviderBindingCreation{..}
         , PersistText pbcOrderReference
         , PersistInt64 pbcAmountMinor
         , PersistText (normalizeCurrency pbcCurrency)
+        ]
+      pure (rows == [Single True])
+    _ -> pure False
+  if not bindingMatches
+    then pure (Left "Provider resource conflicts with an immutable binding")
+    else do
+      -- A resource binding is not authority to reopen terminal attempts or
+      -- regress processing to customer action. Exact replays are read-only.
+      advanced <- rawSql
+        "UPDATE commerce_payment_attempt SET status = ?, updated_at = ?\
+        \ WHERE id = ?::uuid AND checkout_id = ?::uuid\
+        \ AND (status = 'created' OR (status = 'requires_customer_action' AND ? = 'processing'))\
+        \ RETURNING id::text"
+        [ PersistText (paymentAttemptStageText pbcStage)
         , PersistUTCTime pbcOccurredAt
-        ] :: SqlPersistT IO [Single Text])
-      bindingMatches <- case created of
-        [_] -> pure True
-        [] -> do
-          rows <- rawSql
-            "SELECT EXISTS (\
-            \ SELECT 1 FROM commerce_provider_binding binding\
-            \ WHERE binding.payment_attempt_id = ?::uuid AND binding.provider = ?\
-            \ AND binding.environment = ? AND binding.merchant_account_ref = ?\
-            \ AND binding.resource_type = ? AND binding.provider_resource_id = ?\
-            \ AND binding.provider_resource_path IS NOT DISTINCT FROM ?\
-            \ AND binding.merchant_reference = ? AND binding.amount_minor = ?\
-            \ AND binding.currency = ?)"
-            [ PersistText (paymentAttemptReferenceId pbcAttempt)
-            , PersistText (paymentProviderText pbcProvider)
-            , PersistText (checkoutEnvironmentText pbcEnvironment)
-            , PersistText pbcMerchantRef
-            , PersistText pbcResourceType
-            , PersistText pbcProviderResource
-            , maybe PersistNull PersistText pbcResourcePath
-            , PersistText pbcOrderReference
-            , PersistInt64 pbcAmountMinor
-            , PersistText (normalizeCurrency pbcCurrency)
-            ]
-          pure (rows == [Single True])
-        _ -> pure False
-      if not bindingMatches
-        then pure (Left "Provider resource conflicts with an immutable binding")
-        else do
-          rawExecute
-            "UPDATE commerce_payment_attempt SET status = ?, updated_at = ?\
-            \ WHERE id = ?::uuid AND checkout_id = ?::uuid"
-            [ PersistText (paymentAttemptStageText pbcStage)
-            , PersistUTCTime pbcOccurredAt
-            , PersistText (paymentAttemptReferenceId pbcAttempt)
-            , PersistText (checkoutReferenceId pbcCheckout)
-            ]
-          let checkoutStatus = case pbcStage of
-                AttemptProcessing -> "processing"
-                _ -> "awaiting_payment"
-          rawExecute
-            "UPDATE commerce_checkout_session SET status = ?, updated_at = ?\
-            \ WHERE id = ?::uuid AND status NOT IN (\
-            \ 'paid','cancelled','expired','partially_refunded','refunded','disputed','chargeback')"
-            [ PersistText checkoutStatus
-            , PersistUTCTime pbcOccurredAt
-            , PersistText (checkoutReferenceId pbcCheckout)
-            ]
-          when (not (null created)) $ do
-            currentStatuses <- rawSql
-              "SELECT status FROM commerce_checkout_session WHERE id = ?::uuid"
-              [PersistText (checkoutReferenceId pbcCheckout)]
-            let currentCheckoutStatus = case currentStatuses of
-                  [Single status] -> Just status
-                  _ -> Nothing
-            insertAudit
-              (checkoutReferenceId pbcCheckout)
-              "provider_resource_bound"
-              Nothing
-              currentCheckoutStatus
-              (paymentProviderText pbcProvider)
-              pbcCorrelationId
-              (bindingMetadata pbcResourceType pbcProviderResource)
-          pure (Right ())
+        , PersistText (paymentAttemptReferenceId pbcAttempt)
+        , PersistText (checkoutReferenceId pbcCheckout)
+        , PersistText (paymentAttemptStageText pbcStage)
+        ] :: SqlPersistT IO [Single Text]
+      let checkoutStatus = case pbcStage of
+            AttemptProcessing -> "processing"
+            _ -> "awaiting_payment"
+      when (not (null advanced)) $ rawExecute
+        "UPDATE commerce_checkout_session SET status = ?, updated_at = ?\
+        \ WHERE id = ?::uuid AND status NOT IN (\
+        \ 'paid','cancelled','expired','partially_refunded','refunded','disputed','chargeback')"
+        [ PersistText checkoutStatus
+        , PersistUTCTime pbcOccurredAt
+        , PersistText (checkoutReferenceId pbcCheckout)
+        ]
+      when (not (null created)) $ do
+        currentStatuses <- rawSql
+          "SELECT status FROM commerce_checkout_session WHERE id = ?::uuid"
+          [PersistText (checkoutReferenceId pbcCheckout)]
+        let currentCheckoutStatus = case currentStatuses of
+              [Single status] -> Just status
+              _ -> Nothing
+        insertAudit
+          (checkoutReferenceId pbcCheckout)
+          "provider_resource_bound"
+          Nothing
+          currentCheckoutStatus
+          (paymentProviderText pbcProvider)
+          pbcCorrelationId
+          (bindingMetadata pbcResourceType pbcProviderResource)
+      pure (Right ())
 
 recordPaymentFailure
   :: CheckoutReference
@@ -618,7 +636,9 @@ recordVerifiedPayment payment@VerifiedPayment{..}
   | vpAmountMinor <= 0 = pure (Left "Verified amount must be positive")
   | otherwise = do
       paymentStates <- (rawSql
-        "SELECT checkout.status, attempt.status FROM commerce_checkout_session checkout\
+        "SELECT checkout.status, attempt.status, checkout.paid_minor = checkout.total_minor,\
+        \ checkout.paid_minor = 0 AND checkout.refunded_minor = 0\
+        \ FROM commerce_checkout_session checkout\
         \ JOIN commerce_payment_attempt attempt\
         \   ON attempt.checkout_id = checkout.id\
         \ JOIN commerce_provider_binding binding\
@@ -637,7 +657,8 @@ recordVerifiedPayment payment@VerifiedPayment{..}
         \ AND binding.merchant_reference = ?\
         \ AND binding.amount_minor = checkout.total_minor\
         \ AND binding.currency = checkout.currency\
-        \ AND checkout.status IN ('awaiting_payment','processing','failed','paid')\
+        \ AND checkout.status IN ('awaiting_payment','processing','failed','paid',\
+        \ 'partially_refunded','refunded','disputed','chargeback')\
         \ FOR UPDATE OF checkout, attempt"
         [ PersistText (checkoutReferenceId vpCheckout)
         , PersistText (paymentAttemptReferenceId vpAttempt)
@@ -651,10 +672,10 @@ recordVerifiedPayment payment@VerifiedPayment{..}
         , PersistText vpProviderResource
         , maybe PersistNull PersistText vpProviderResourcePath
         , PersistText vpProviderReference
-        ] :: SqlPersistT IO [(Single Text, Single Text)])
+        ] :: SqlPersistT IO [(Single Text, Single Text, Single Bool, Single Bool)])
       case paymentStates of
-        [(Single currentStatus, Single attemptStatus)] ->
-          completeVerifiedPayment payment currentStatus attemptStatus
+        [(Single currentStatus, Single attemptStatus, Single fullyPaid, Single unpaid)] ->
+          completeVerifiedPayment payment currentStatus attemptStatus fullyPaid unpaid
         [] -> pure (Left "Verified payment does not match the stored checkout and provider binding")
         _ -> pure (Left "Verified payment matched multiple immutable bindings")
 
@@ -667,7 +688,9 @@ recordApprovedManualPayment payment@VerifiedPayment{..}
       pure (Left validationError)
   | otherwise = do
       paymentStates <- (rawSql
-        "SELECT checkout.status, attempt.status FROM commerce_checkout_session checkout\
+        "SELECT checkout.status, attempt.status, checkout.paid_minor = checkout.total_minor,\
+        \ checkout.paid_minor = 0 AND checkout.refunded_minor = 0\
+        \ FROM commerce_checkout_session checkout\
         \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
         \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id = attempt.id\
         \ JOIN commerce_manual_payment_evidence evidence\
@@ -697,7 +720,8 @@ recordApprovedManualPayment payment@VerifiedPayment{..}
         \ AND evidence.reviewed_by IS NOT NULL\
         \ AND evidence.reviewed_by <> evidence.submitted_by\
         \ AND evidence.reviewed_at IS NOT NULL\
-        \ AND checkout.status IN ('awaiting_payment','processing','failed','paid')\
+        \ AND checkout.status IN ('awaiting_payment','processing','failed','paid',\
+        \ 'partially_refunded','refunded','disputed','chargeback')\
         \ FOR UPDATE OF checkout, attempt, evidence"
         [ PersistText (checkoutReferenceId vpCheckout)
         , PersistText (paymentAttemptReferenceId vpAttempt)
@@ -710,10 +734,10 @@ recordApprovedManualPayment payment@VerifiedPayment{..}
         , PersistText vpProviderResource
         , maybe PersistNull PersistText vpProviderResourcePath
         , PersistText vpProviderReference
-        ] :: SqlPersistT IO [(Single Text, Single Text)])
+        ] :: SqlPersistT IO [(Single Text, Single Text, Single Bool, Single Bool)])
       case paymentStates of
-        [(Single currentStatus, Single attemptStatus)] ->
-          completeVerifiedPayment payment currentStatus attemptStatus
+        [(Single currentStatus, Single attemptStatus, Single fullyPaid, Single unpaid)] ->
+          completeVerifiedPayment payment currentStatus attemptStatus fullyPaid unpaid
         [] -> pure (Left "Approved manual payment does not match immutable evidence and binding")
         _ -> pure (Left "Approved manual payment matched multiple immutable evidence rows")
 
@@ -732,17 +756,27 @@ completeVerifiedPayment
   :: VerifiedPayment
   -> Text
   -> Text
+  -> Bool
+  -> Bool
   -> SqlPersistT IO (Either Text Bool)
-completeVerifiedPayment payment@VerifiedPayment{..} currentStatus attemptStatus = do
+completeVerifiedPayment payment@VerifiedPayment{..} currentStatus attemptStatus fullyPaid unpaid = do
   ledgerStatus <- existingLedgerStatus vpAttempt
-  receiptValid <- existingReceiptIsCompatible vpCheckout vpAmountMinor vpCurrency
+  receiptMatch <- existingReceiptMatch payment
   case ledgerStatus of
     Just status | status /= "posted" ->
       pure (Left "Existing payment ledger transaction is not posted")
-    _ | currentStatus == "paid" && attemptStatus /= "succeeded" ->
-      pure (Left "Checkout is already paid by another payment attempt")
-    _ | not receiptValid ->
+    _ | receiptMatch == Just False ->
       pure (Left "Existing payment receipt conflicts with verified payment")
+    _ | currentStatus `elem` ["paid", "partially_refunded", "refunded", "disputed", "chargeback"] ->
+      -- An original capture remains historical evidence after a refund/dispute.
+      -- Acknowledging it must not update timestamps, reopen fulfillment, clear
+      -- refunds or reissue a voided receipt. Partial legacy evidence needs review.
+      pure $ if fullyPaid && attemptStatus == "succeeded"
+          && ledgerStatus == Just "posted" && receiptMatch == Just True
+        then Right False
+        else Left "Existing captured payment requires reconciliation"
+    _ | not unpaid || attemptStatus == "succeeded" || ledgerStatus /= Nothing || receiptMatch /= Nothing ->
+      pure (Left "Existing payment evidence requires reconciliation")
     _ -> do
       rawExecute
         "UPDATE commerce_payment_attempt\
@@ -963,21 +997,26 @@ existingLedgerStatus attempt = do
     [Single status] -> pure (Just status)
     _ -> pure (Just "ambiguous")
 
-existingReceiptIsCompatible
-  :: CheckoutReference
-  -> Int64
-  -> Text
-  -> SqlPersistT IO Bool
-existingReceiptIsCompatible checkout amount currency = do
+-- Include voided receipts: they cannot be silently replaced and still identify
+-- the original capture. This is not a claim that a voided receipt is valid.
+existingReceiptMatch :: VerifiedPayment -> SqlPersistT IO (Maybe Bool)
+existingReceiptMatch VerifiedPayment{..} = do
   rows <- rawSql
-    "SELECT amount_minor = ? AND currency = ?\
+    "SELECT amount_minor = ? AND currency = ? AND receipt_number = ?\
+    \ AND adapter = ? AND external_reference IS NOT DISTINCT FROM ?\
     \ FROM commerce_receipt\
-    \ WHERE checkout_id = ?::uuid AND kind = 'payment_receipt' AND voided_at IS NULL"
-    [ PersistInt64 amount
-    , PersistText (normalizeCurrency currency)
-    , PersistText (checkoutReferenceId checkout)
+    \ WHERE checkout_id = ?::uuid AND kind = 'payment_receipt' FOR SHARE"
+    [ PersistInt64 vpAmountMinor
+    , PersistText (normalizeCurrency vpCurrency)
+    , PersistText (receiptNumber vpCheckout)
+    , PersistText (paymentProviderText vpProvider)
+    , PersistText vpProviderResource
+    , PersistText (checkoutReferenceId vpCheckout)
     ]
-  pure (null rows || rows == [Single True])
+  pure $ case rows of
+    [] -> Nothing
+    [Single matches] -> Just matches
+    _ -> Just False
 
 insertAudit
   :: Text
