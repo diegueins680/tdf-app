@@ -48,3 +48,33 @@ test('npm and hosted verification always select the authoritative mode without a
   assert.match(workflow, /run: npm run test:event-operations-schema-rehearsal\s*$/);
   assert.doesNotMatch(workflow, /diagnostic-missing-merch|continue-on-error/);
 });
+
+test('task read runner is isolated and rejects caller-supplied configuration', () => {
+  const taskScript = path.join(root, 'scripts/test-event-task-read-migration.sh');
+  const taskSource = readFileSync(taskScript, 'utf8');
+  const result = spawnSync('sh', [taskScript, '--database-url=unused'], {
+    cwd: root, encoding: 'utf8', timeout: 5000,
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.match(taskSource, /docker run --rm -d --network none/);
+  assert.match(taskSource, /docker rm -f "\$test_container_id"/);
+  assert.match(taskSource, /-U postgres -d tdf_task_read_test/);
+  assert.doesNotMatch(taskSource, /DATABASE_URL|TEST_DSN|--env-file|--publish|\s-p\s/);
+});
+
+test('task read verification remains in the formal workflow and complete migration chain', () => {
+  const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(pkg.scripts['test:event-task-read-migration'], 'sh scripts/test-event-task-read-migration.sh');
+  const workflow = readFileSync(path.join(root, '.github/workflows/event-operations-formal.yml'), 'utf8');
+  assert.match(workflow, /postgres-task-read:/);
+  assert.match(workflow, /run: npm run test:event-task-read-migration/);
+  for (const file of ['scripts/test-event-task-read-migration.sh',
+    'tdf-hq/test/integration/event_task_read_assertions.sql']) {
+    assert.equal(workflow.split(`"${file}"`).length - 1, 2, `${file} must trigger PR and main verification`);
+  }
+  assert.match(source, /apply_sql tdf-hq\/sql\/2026-09-14_event_task_read.sql/);
+  assert.ok(source.indexOf('apply_sql tdf-hq/sql/2026-09-14_event_task_read_rollback.sql')
+    < source.indexOf('apply_sql tdf-hq/sql/2026-09-14_event_task_commit_rollback.sql'));
+});

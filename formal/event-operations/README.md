@@ -43,6 +43,8 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 | `TaskRaci.cfg` | 2 tasks, 3 collaborators, one documented override reason | PASS; 5,810 generated, 1,338 distinct states, depth 10 |
 | `TaskCommit.cfg` | 2 competing transactions, 2 Responsible people, 1 task, 1 abstract dependency, 5 operations | PASS; 121 generated, 112 distinct states, depth 5 |
 | `TaskCommitEarlyValidation.cfg` / `TaskCommitWriteSkew.cfg` | Negative controls: disable final validation / serialization respectively | Expected TLC exit 12 and named invariant violations; runner checks both |
+| `TaskRead.cfg` | 1 read, 8 permission classes, correct/wrong event, clock 0–3, expiry 2, task revisions 1–2 | PASS; 3,861 generated, 1,788 distinct states, depth 10 |
+| `TaskReadScope/Event/Early/Mixed.cfg` | Negative controls for scope widening, cross-event target, pre-wait authorization and mixed task/RACI projection | Expected exit 12 with `NoUnauthorizedTask` or `CoherentTaskProjection`; all four detected |
 | `ReceiptReplay.cfg` | 1 stored receipt/read attempt; 8 actor/event/hash bindings; 3 grants; clock 0–3, expiry 2 | PASS; 2,866 generated, 1,164 distinct states, depth 8 |
 | `ReceiptReplayBypass.cfg`, `ReceiptReplayStaleClock.cfg`, `ReceiptReplayStaleSnapshot.cfg` | Negative controls: omit authorization, fresh clock, or scope-write serialization | Expected exit 12 with `NoUnauthorizedDisclosure`; all three detected |
 | `SnapshotRead.cfg` | 1 read, 1 revocable grant, clock 0–3 with expiry 2, 2 representative secrets | PASS; 1,133 generated, 296 distinct states, depth 12 |
@@ -55,6 +57,8 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
+| `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
+| `TaskReadStructure.als` assertions | Up to 4 atoms per top-level signature | PASS; all 3 checks UNSAT (no counterexample in scope) |
 
 The counts above came from completed commands. An earlier four-command lifecycle exploration was
 stopped after 1,126,075 distinct states because the audit permutations made that scope inefficient;
@@ -73,6 +77,10 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
   accountable party, non-empty responsible set, and collaborator-removal orphan prevention.
 - `TaskCommit.tla`: separate prepare/commit steps, final transaction-state validation, and write
   serialization; negative controls detect blocked completion and concurrent responsibility loss.
+- `TaskRead.tla` / `TaskReadStructure.als`: exact task/event scope matching and coherent internal
+  task/RACI projection. The grant matcher does not infer permission from event.read, finance,
+  coproduction or assignment. SQL identity inputs are trusted; HTTP authentication remains the
+  existing separate session fence, not a capability of this projection.
 - `ReceiptReplay.tla`: historical receipt reads require current access and exact actor/event/hash
   binding. Captured decision evidence avoids incorrectly treating a later revocation as retroactive.
   Reauthorization, current time and scope-write serialization each have an independent negative control.

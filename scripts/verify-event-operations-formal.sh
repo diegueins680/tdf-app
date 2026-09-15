@@ -99,6 +99,11 @@ for mutation in Stale Unlocked Party Credential Purpose Witness; do
   expect_counterexample "SessionFence${mutation}.cfg" CurrentBoundSession "session-${mutation}" SessionFence.tla
 done
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
+run_tlc TaskRead.tla TaskRead.cfg task-read
+for mutation in Scope Event Early; do
+  expect_counterexample "TaskRead${mutation}.cfg" NoUnauthorizedTask "task-read-${mutation}" TaskRead.tla
+done
+expect_counterexample TaskReadMixed.cfg CoherentTaskProjection task-read-mixed TaskRead.tla
 run_tlc OperationalLiveness.tla OperationalLiveness.cfg operational-liveness
 
 scenario_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
@@ -116,6 +121,22 @@ for command_index in 1 2 3 4 5 6 7 8; do
   printf '%s\n' "${check_output}"
   if ! grep -q 'UNSAT' <<<"${check_output}"; then
     echo "Alloy command ${command_index} found a counterexample or did not complete." >&2
+    exit 1
+  fi
+done
+
+for command_index in 0 1 2 3; do
+  task_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
+    -c "${command_index}" -s sat4j -t none \
+    -o "${run_root}/alloy-task-read-${command_index}" TaskReadStructure.als 2>&1)"
+  printf '%s\n' "${task_output}"
+  if [[ "${command_index}" = 0 ]]; then
+    if grep -q 'UNSAT' <<<"${task_output}" || ! grep -q 'SAT' <<<"${task_output}"; then
+      echo 'Alloy task read scenario must be satisfiable.' >&2
+      exit 1
+    fi
+  elif ! grep -q 'UNSAT' <<<"${task_output}"; then
+    echo "Alloy task read assertion ${command_index} failed." >&2
     exit 1
   fi
 done

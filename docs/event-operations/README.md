@@ -29,6 +29,8 @@
 - [Draft PR 11: canonical schema migration dependencies](pr-11-schema-dependencies.md)
 - [Canonical merch expiry executable test contract](merch-expiry-test-contract.md)
 - [Draft PR 12: verify canonical checkout expiry](pr-12-merch-expiry-contract.md)
+- [Scoped task/RACI read contract](task-read-contract.md)
+- [Draft PR 13: scoped canonical task read projection](pr-13-task-read-projection.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)

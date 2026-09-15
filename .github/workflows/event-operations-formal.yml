@@ -13,6 +13,8 @@ on:
       - "scripts/test-event-operations-foundation-migration.sh"
       - "scripts/test-event-operations-api-migration.sh"
       - "scripts/test-event-task-commit-migration.sh"
+      - "scripts/test-event-task-read-migration.sh"
+      - "tdf-hq/test/integration/event_task_read_assertions.sql"
       - "scripts/test-event-operations-schema-rehearsal.sh"
       - "scripts/__tests__/event-operations-schema-rehearsal.test.mjs"
       - "scripts/__tests__/fixtures/production-schema-20260814.sql"
@@ -63,6 +65,8 @@ on:
       - "scripts/test-event-operations-foundation-migration.sh"
       - "scripts/test-event-operations-api-migration.sh"
       - "scripts/test-event-task-commit-migration.sh"
+      - "scripts/test-event-task-read-migration.sh"
+      - "tdf-hq/test/integration/event_task_read_assertions.sql"
       - "scripts/test-event-operations-schema-rehearsal.sh"
       - "scripts/__tests__/event-operations-schema-rehearsal.test.mjs"
       - "scripts/__tests__/fixtures/production-schema-20260814.sql"
@@ -164,6 +168,14 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check task commit constraints and concurrent writers
         run: npm run test:event-task-commit-migration
+
+  postgres-task-read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check scoped task projection and concurrent authorization
+        run: npm run test:event-task-read-migration
 
   postgres-complete-schema:
     runs-on: ubuntu-latest
