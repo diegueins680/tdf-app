@@ -4,7 +4,7 @@
 
 The user authorized discovering or setting up staging. An existing isolated Fly API/web pair
 was found in tracked configuration and verified over HTTPS. **It is healthy, not yet qualified
-for payment testing.** No new hosting resource, deployment, migration, secret update, provider
+for payment testing.** No new hosting resource, Fly/Koyeb deployment, migration, secret update, provider
 transaction or production change was performed. Authentication/authorization currently blocks
 inspection and setup through both configured hosting providers.
 
@@ -116,7 +116,10 @@ This branch depends on payment recovery [#343](https://github.com/diegueins680/t
 which depends on #340 → #334 → #332 → #331 (review/merge in reverse arrow order). The recovery
 branch includes the mobile contract pointer for mobile #79, dependent on mobile #78.
 No PR was merged. No hosting or database rollback is necessary because no runtime mutation
-was performed. Reverting this tooling removes the manual inspection only; it must not remove
+of the Fly/Koyeb staging pair was performed. GitHub PR creation triggered the repository's
+existing automatic Vercel/Cloudflare preview checks; those reported success on recovery #343.
+They are not evidence of a payment-qualified staging backend or a live provider transaction.
+Reverting this tooling removes the manual inspection only; it must not remove
 or rotate existing production secrets. Future staging-only credentials should be revoked by
 their owner after the qualification window, according to the approved secret lifecycle.
 
