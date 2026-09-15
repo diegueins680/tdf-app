@@ -9,14 +9,16 @@ module TDF.Commerce.ProviderReconciliation
   ( ReconciliationDisposition(..)
   , ProviderReconciliationResult(..)
   , processProviderEventIO
+  , processProviderEventWith
+  , applyQueryResult
   ) where
 
 import qualified Data.Aeson as A
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Time (UTCTime)
+import           Data.Time (UTCTime, getCurrentTime)
 import           Database.Persist.Sql
-  ( SqlPersistT, runSqlPool, transactionSave, transactionUndo )
+  ( SqlPersistT, rawExecute, runSqlPool )
 import           System.Entropy (getEntropy)
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
@@ -26,6 +28,7 @@ import           TDF.Commerce.ProviderAdapter.Http
   ( AdapterTransportError(..), executeAdapterRequest, sharedProviderManager )
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.ProviderExecutionStore as Execution
+import           TDF.Commerce.ProviderCapabilities (ProviderOutcomeCertainty(..))
 import           TDF.Commerce.ProviderRuntimeConfig
   ( RuntimeProviderAdapter(..), loadRuntimeProviderAdapter )
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
@@ -49,7 +52,20 @@ processProviderEventIO
   -> ProviderEvent.ProviderEventPayload
   -> UTCTime
   -> IO ProviderReconciliationResult
-processProviderEventIO env@Env{envPool} payload now =
+processProviderEventIO = processProviderEventWith
+  (executeAdapterRequest sharedProviderManager) getCurrentTime
+
+-- | Injectable transport/clock for contract tests. Production always uses the
+-- bounded, no-implicit-retry shared transport above. This does not bypass
+-- callback trust validation, immutable binding lookup or adapter parsing.
+processProviderEventWith
+  :: (AdapterRequest -> IO (Either AdapterTransportError A.Value))
+  -> IO UTCTime
+  -> Env
+  -> ProviderEvent.ProviderEventPayload
+  -> UTCTime
+  -> IO ProviderReconciliationResult
+processProviderEventWith fetch appliedAt env@Env{envPool} payload now =
   case validateStoredEventEnvelope payload of
     Left problem -> pure (deadLetter problem Nothing)
     Right (provider, environment, rawValue) -> do
@@ -72,16 +88,18 @@ processProviderEventIO env@Env{envPool} payload now =
                   case boundResult of
                     Left _ -> pure (retry
                       "Provider callback has no available immutable binding yet" Nothing)
-                    Right payment -> queryAndApply env rpaAdapter payload payment now
+                    Right payment -> queryAndApply fetch appliedAt env rpaAdapter payload payment now
 
 queryAndApply
-  :: Env
+  :: (AdapterRequest -> IO (Either AdapterTransportError A.Value))
+  -> IO UTCTime
+  -> Env
   -> ProviderAdapter
   -> ProviderEvent.ProviderEventPayload
   -> Execution.BoundProviderPayment
   -> UTCTime
   -> IO ProviderReconciliationResult
-queryAndApply Env{envPool} adapter payload payment now = do
+queryAndApply fetch appliedAt Env{envPool} adapter payload payment now = do
   nonce <- getEntropy 32
   let locator = PaymentLocator
         { plExternalId = Execution.bppProviderResourceId payment
@@ -96,7 +114,10 @@ queryAndApply Env{envPool} adapter payload payment now = do
   case adapterBuildQuery adapter context locator of
     Left _ -> pure (deadLetter "Stored provider binding cannot form a safe query" ids)
     Right request -> do
-      response <- executeAdapterRequest sharedProviderManager request
+      response <- fetch request
+      -- Record when the authoritative response was observed, not when a
+      -- possibly slow query started or when the callback was first delivered.
+      observedAt <- appliedAt
       case response of
         Left AdapterTransportError{} ->
           pure (retry "Authoritative provider query is temporarily unavailable" ids)
@@ -104,7 +125,7 @@ queryAndApply Env{envPool} adapter payload payment now = do
           case adapterParseResponse adapter AdapterQuery locator providerValue of
             Left _ -> do
               runSqlPool
-                (recordQueryMismatch payment now)
+                (recordQueryMismatch payment observedAt)
                 envPool
               pure (deadLetter
                 "Authoritative provider query did not match the immutable payment binding"
@@ -113,12 +134,17 @@ queryAndApply Env{envPool} adapter payload payment now = do
               applied <- runSqlPool
                 (applyQueryResult payment result
                   (ProviderEvent.providerEventReferenceId
-                    (ProviderEvent.pepReference payload)) now)
+                    (ProviderEvent.pepReference payload)) observedAt)
                 envPool
               pure $ case applied of
                 Left problem -> retry problem ids
                 Right disposition -> resultFor disposition ids
 
+-- | Apply only an authenticated query parsed by the provider adapter against
+-- a database-loaded immutable binding. The caller owns the transaction (and
+-- any worker lease lock). A domain rejection rolls back just this application;
+-- SQL exceptions escape so the outer transaction can roll back in full.
+-- Never use this with callback-supplied financial fields.
 applyQueryResult
   :: Execution.BoundProviderPayment
   -> AdapterResult
@@ -126,10 +152,46 @@ applyQueryResult
   -> UTCTime
   -> SqlPersistT IO (Either Text ReconciliationDisposition)
 applyQueryResult payment result eventId now = do
-  transactionSave
+  rebound <- Execution.loadBoundProviderPayment
+    (Execution.bppProvider payment) (Execution.bppEnvironment payment)
+    (Execution.bppMerchantRef payment) (Execution.bppProviderResourceId payment)
+    (Just (Execution.bppProviderReference payment))
+  if rebound /= Right payment || not (queryResultMatches payment result)
+    then pure (Left "Provider query result does not match its immutable binding")
+    else do
+      rawExecute "SAVEPOINT tdf_provider_query_apply" []
+      applied <- applyQueryResultInTransaction payment result eventId now
+      case applied of
+        Left _ -> rawExecute "ROLLBACK TO SAVEPOINT tdf_provider_query_apply" []
+        Right _ -> pure ()
+      rawExecute "RELEASE SAVEPOINT tdf_provider_query_apply" []
+      pure applied
+
+-- Both supported query parsers return exact money for every status. A create
+-- response (which lacks verified money), or a wrongly assembled typed result,
+-- must not accidentally become authoritative evidence at this boundary.
+queryResultMatches :: Execution.BoundProviderPayment -> AdapterResult -> Bool
+queryResultMatches payment result =
+  adapterResultExternalId result == Execution.bppProviderResourceId payment
+    && adapterResultAmountMinor result == Just (Execution.bppAmountMinor payment)
+    && adapterResultCurrency result == Just (Execution.bppCurrency payment)
+    && adapterResultCertainty result == expectedCertainty (adapterResultState result)
+  where
+    expectedCertainty AdapterSucceeded = ProviderSucceeded
+    expectedCertainty AdapterDeclined = ProviderConfirmedNoCharge
+    expectedCertainty AdapterCancelled = ProviderConfirmedNoCharge
+    expectedCertainty _ = ProviderAmbiguous
+
+applyQueryResultInTransaction
+  :: Execution.BoundProviderPayment
+  -> AdapterResult
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO (Either Text ReconciliationDisposition)
+applyQueryResultInTransaction payment result eventId now = do
   operationResult <- Execution.recordReconciledCreateResult payment result now
   case operationResult of
-    Left problem -> transactionUndo >> pure (Left problem)
+    Left problem -> pure (Left problem)
     Right () -> case adapterResultState result of
       AdapterSucceeded -> do
         verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
@@ -150,8 +212,8 @@ applyQueryResult payment result eventId now = do
           , Checkout.vpCorrelationId = correlationId eventId
           }
         case verified of
-          Left problem -> transactionUndo >> pure (Left problem)
-          Right _ -> transactionSave >> pure (Right ReconciliationProcessed)
+          Left problem -> pure (Left problem)
+          Right _ -> pure (Right ReconciliationProcessed)
       AdapterDeclined -> confirmNoCharge payment PaymentFailureConfirmed
         "provider_declined" eventId now
       AdapterCancelled -> confirmNoCharge payment PaymentCancellationRequested
@@ -170,11 +232,10 @@ applyQueryResult payment result eventId now = do
           (adapterResultAmountMinor result)
           (Execution.bppCurrency payment)
           now
-        transactionSave
         pure (Right ReconciliationRetry)
-      AdapterAuthorized -> transactionUndo >>
+      AdapterAuthorized ->
         pure (Left "Unsupported authorization state requires operator review")
-      AdapterReversed -> transactionUndo >>
+      AdapterReversed ->
         pure (Left "Unexpected reversal state requires operator review")
 
 confirmNoCharge
@@ -189,7 +250,7 @@ confirmNoCharge payment event failureCode eventId now = do
     (Intent.PaymentIntentReference (Execution.bppPaymentIntentId payment))
     event "provider" (correlationId eventId) now
   case transitioned of
-    Left problem -> transactionUndo >> pure (Left problem)
+    Left problem -> pure (Left problem)
     Right _ -> do
       Checkout.recordPaymentFailure
         (Execution.bppCheckout payment)
@@ -198,7 +259,6 @@ confirmNoCharge payment event failureCode eventId now = do
         failureCode
         (correlationId eventId)
         now
-      transactionSave
       pure (Right ReconciliationProcessed)
 
 markStillProcessing
@@ -213,7 +273,6 @@ markStillProcessing payment eventId now = do
     (Execution.bppProvider payment)
     (correlationId eventId)
     now
-  transactionSave
   pure (Right ReconciliationRetry)
 
 recordQueryMismatch
