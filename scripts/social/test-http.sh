@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 TDF_SOCIAL_ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-if [ "${TDF_SOCIAL_HTTP_NATIVE:-0}" = 1 ]; then
+if [ -n "${TDF_SOCIAL_HTTP_EMPTY_DATABASE_URL:-}" ]; then
+  # CI's explicitly created throwaway database. Refuse another name or any data.
+  psql_http() { psql "$TDF_SOCIAL_HTTP_EMPTY_DATABASE_URL" -X -v ON_ERROR_STOP=1 "$@"; }
+  [ "$(psql_http -Atc "SELECT current_database()='tdf_hq_social_session_test' AND NOT EXISTS(SELECT 1 FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p','v','m'))")" = t ] || {
+    echo 'Session tests require an empty tdf_hq_social_session_test database' >&2
+    exit 1
+  }
+  TDF_SOCIAL_HTTP_CONNECTION="$TDF_SOCIAL_HTTP_EMPTY_DATABASE_URL"
+elif [ "${TDF_SOCIAL_HTTP_NATIVE:-0}" = 1 ]; then
   # Fallback when Docker's shared VM/API is unavailable. Private cluster only.
   TDF_SOCIAL_PG_BIN=${TDF_SOCIAL_PG_BIN:-/usr/local/opt/postgresql@16/bin}
   TDF_SOCIAL_PG_DATA=$(mktemp -d)
@@ -31,6 +39,8 @@ INSERT INTO party SELECT n,'Synthetic '||n,false FROM generate_series(1,5) n;
 INSERT INTO user_credential SELECT n,n,true FROM generate_series(1,5) n;
 CREATE TABLE api_token(id bigint PRIMARY KEY,token text,party_id bigint,label text,active boolean);
 INSERT INTO api_token SELECT n,'synthetic-'||n,n,NULL,true FROM generate_series(1,5) n;
+INSERT INTO api_token VALUES(6,'synthetic-alt',1,NULL,true);
+CREATE TABLE social_session_effect(id integer PRIMARY KEY);
 CREATE TABLE party_security_role(id uuid,party_id bigint,role_id uuid,granted_by bigint,approved_by bigint,
   approval_mode text,emergency_reason text,source_revision_id uuid,source_policy_id uuid,active boolean,
   created_at timestamptz,revoked_at timestamptz,version integer);
@@ -43,11 +53,14 @@ SQL
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/fixture.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
-export TDF_SOCIAL_HTTP_DB="host=127.0.0.1 port=$TDF_SOCIAL_PORT user=postgres password=synthetic-only dbname=social_http connect_timeout=5"
+if [ -z "${TDF_SOCIAL_HTTP_CONNECTION:-}" ]; then
+  TDF_SOCIAL_HTTP_CONNECTION="host=127.0.0.1 port=$TDF_SOCIAL_PORT user=postgres password=synthetic-only dbname=social_http connect_timeout=5"
+fi
+export TDF_SOCIAL_HTTP_DB="$TDF_SOCIAL_HTTP_CONNECTION"
 cd "$TDF_SOCIAL_ROOT"
 TDF_SOCIAL_HTTP_BUILD=${TDF_SOCIAL_HTTP_BUILD:-$(mktemp -d)}
 # Models.hs exceeds GHC 9.10.3's bytecode breakpoint-index bound. Compile object
 # code with the repository's Stack toolchain instead of the interpreter.
-stack --stack-yaml tdf-hq/stack.yaml exec -- ghc -O0 -threaded -itdf-hq/src \
+stack --stack-yaml tdf-hq/stack.yaml exec -- ghc -O0 -threaded -itdf-hq/src -iscripts/social \
   -outputdir "$TDF_SOCIAL_HTTP_BUILD" scripts/social/HttpSpec.hs -o "$TDF_SOCIAL_HTTP_BUILD/social-http-spec"
 "$TDF_SOCIAL_HTTP_BUILD/social-http-spec" --fail-fast

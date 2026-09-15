@@ -61,3 +61,11 @@ was restarted. The mobile submodule was added as a separate git worktree at the
 recorded gitlink, preserving the original dirty `app/access-requests/review.tsx`.
 Only generated mobile types changed. GitHub branch pushes and draft PR creation
 were exercised; CI results and incomplete coverage are recorded in the handoff.
+
+### Session continuation — 2026-09-15
+
+The baseline authentication inventory above remains historical. The new
+[session boundary](session-boundary.md) retains an internal API token ID and
+revalidates it transactionally for `/social/v2`; legacy handlers and delegated
+entity contexts still need integration. The observed old-handler revocation bypass
+and generated model-to-PostgreSQL checks are recorded in that packet.

@@ -19,6 +19,7 @@ module TDF.Auth
   , moduleFromRegistryCode
   , modulesForRoles
   , loadAuthedUser
+  , isAuthenticatableApiTokenLabel
   , lookupUsernameFromToken
   , resolveUsernameFromLabel
   , extractToken
@@ -109,6 +110,8 @@ data AuthedUser = AuthedUser
   { auPartyId :: PartyId
   , auRoles   :: [RoleEnum]
   , auModules :: Set ModuleAccess
+  -- Internal reference only; never the bearer secret. Synthetic/system actors have none.
+  , auApiTokenId :: Maybe ApiTokenId
   } deriving (Show, Eq)
 
 -- | Create the Servant auth context using the database environment.
@@ -187,7 +190,7 @@ loadAuthedUser token = do
   mToken <- getBy (UniqueApiToken token)
   case mToken of
     Nothing -> pure Nothing
-    Just (Entity _ tok)
+    Just (Entity tokenKey tok)
       | not (apiTokenActive tok) -> pure Nothing
       | not (isAuthenticatableApiTokenLabel (apiTokenLabel tok)) -> pure Nothing
       | otherwise -> do
@@ -201,6 +204,7 @@ loadAuthedUser token = do
               { auPartyId = apiTokenPartyId tok
               , auRoles = roleList
               , auModules = modules
+              , auApiTokenId = Just tokenKey
               }
 
 isAuthenticatableApiTokenLabel :: Maybe Text -> Bool

@@ -210,6 +210,14 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Verify social session revocation and model-derived HTTP fixtures
+        env:
+          PGPASSWORD: postgres
+          TDF_SOCIAL_HTTP_EMPTY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_social_session_test
+        run: |
+          createdb -h postgres -U postgres tdf_hq_social_session_test
+          bash scripts/social/test-http.sh
+
       - name: Verify authenticated artist merch HTTP runtime
         env:
           PGPASSWORD: postgres

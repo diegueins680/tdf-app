@@ -104,7 +104,7 @@ A passing bounded model is evidence about that model and bounds, not the whole a
 | Full feed traversal and interaction product coverage | failed | Relationship list stops at 50; newly eligible old content needs refresh; private follow requests, reshares and complete recommendation-repeat evaluation absent |
 | Accessible responsive focused flows and safe selection | satisfied for preview | Existing profile/interest flows, named candidates, keyboard/ARIA and synthetic browser evidence; full-app/mobile journeys not qualified |
 | Shared server privacy/block policy across all existing surfaces | failed | Legacy DM, notifications, boosted feed, selectors, mentions, shared spaces and media are not consistently integrated; inactive API does not repair their production behavior |
-| Principal/entity/token and organization authority | failed | New API excludes organizations and derives actor from auth, but AuthedUser loses token/credential identity; session revocation races and delegated entity contexts require implementation |
+| Principal/entity/token and organization authority | failed | [Session boundary](session-boundary.md) retains token identity and verifies revocation races for the account-only API; delegated entities, credential provenance and global-role revocation remain incomplete |
 | Account suspension/deletion/export and stale external work | failed | Social closure tombstone is implemented; full account lifecycle, retention, export and queued worker refinement are incomplete |
 | Abuse/reporting/appeals and proportionate controls | failed | Mutation rate limit implemented; legacy reports reused in design, but general harassment report integration, mention controls and auditable moderation are incomplete |
 | Executable permissions/privacy/relationships/concurrency models | satisfied within documented model bounds | TLA+/TLC safety/liveness, explicit negative controls, independent observed read/delivery evidence and command revisions |
@@ -124,9 +124,9 @@ A passing bounded model is evidence about that model and bounds, not the whole a
 
 ## Remaining implementation order
 
-1. Retain authenticated credential/token identity and acting entity separately.
-   Model revocation and lock the same authority rows during protected writes.
-   Add cross-organization/actor-switch/revoked-token races before enabling delegates.
+1. Extend the implemented [account session boundary](session-boundary.md) to explicit
+   credential provenance and delegated entity authority. Token revocation is modeled
+   and tested; add cross-organization role-revocation cases before enabling delegates.
 2. Build an endpoint/field coverage map, then integrate shared authoritative denials
    into legacy social, fan-club, DM, notifications, discovery/search and media reads.
    Fence DM insert and notification delivery with revocation; remove manufactured
@@ -191,3 +191,14 @@ reported [SUCCESS](https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac
 Its target is uninspected; owner review is needed alongside the Vercel exception.
 `evidence/current-pr-355.json` records this distinct result. Do not misattribute the
 Vercel HTTP 403 to Cloudflare or describe provider deployments as all pending.
+
+## Continuation evidence — session enforcement
+
+The parent full Stack build completed successfully after the earlier snapshot:
+2,542 examples, zero failures, application executable built, `Completed 2 action(s)`.
+The parent [full CI run](https://github.com/diegueins680/tdf-app/actions/runs/34988405048)
+also completed successfully, including backend-quality and its runtime/migration
+checks. Those are results for the recorded parent source, not the new session patch.
+The [session-boundary packet](session-boundary.md) adds current-token validation,
+executable safety/progress models, a reproduced handler regression and 82 passing
+PostgreSQL/HTTP cases. Overall full-platform delivery remains incomplete.

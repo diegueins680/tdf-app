@@ -21,6 +21,8 @@ import TDF.Config (AppConfig(..))
 import TDF.DB (Env(..), makePool)
 import TDF.Social.API (SocialV2API)
 import TDF.Social.Server (socialV2Server)
+import SessionSpec (sessionSpec)
+import SessionBenchmark (benchmarkSession)
 
 type ProtectedSocial = AuthProtect "bearer-token" :> SocialV2API
 application :: Env -> Application
@@ -97,3 +99,7 @@ main = do
         status <$> call "synthetic-2" "GET" "/v2/me" "" >>= (`shouldBe` 401)
         sql "UPDATE party SET is_org=true WHERE id=3"
         status <$> call "synthetic-3" "GET" "/v2/me" "" >>= (`shouldBe` 404)
+
+      sessionSpec env
+
+  benchmarkSession env

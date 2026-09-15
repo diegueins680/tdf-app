@@ -278,3 +278,10 @@ refreshed application source (exit 0). This is independent of the still-running
 application executable compilation. Command, hashes and final output are recorded
 in `evidence/backend-refreshed-result.txt`; the earlier 2,540-example result remains
 historical. Full-app runtime and mobile social flows still require qualification.
+
+## Session revocation refinement — 2026-09-15
+
+[Session boundary](session-boundary.md) records the additional executable model,
+three specific negative controls, generated observed-outcome tests, actual
+pre-fix HTTP counterexample, lock races and fixture overhead. These extend the
+account-only pilot; they do not qualify legacy endpoints or managed entities.
