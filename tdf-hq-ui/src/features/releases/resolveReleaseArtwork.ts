@@ -25,7 +25,8 @@ export function getReleaseArtworkSources(release: ArtworkRelease, catalog: Recor
   ));
   // Legacy rows often have no platform links. Require a unique title AND credited
   // artist match; never substitute a different recording for an existing link.
-  const candidates = spotify || youtube ? linked : catalog.filter((entry) =>
+  const hasPlatformLink = Boolean(release.arSpotifyUrl?.trim()) || Boolean(release.arYoutubeUrl?.trim());
+  const candidates = hasPlatformLink ? linked : catalog.filter((entry) =>
     normalizeName(entry.title) === normalizeName(release.arTitle)
     && entry.contributors.some((credit) =>
       [credit.name, ...(credit.kind === 'credited-ensemble' ? credit.name.split(',') : [])]

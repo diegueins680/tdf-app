@@ -24,3 +24,10 @@ it('renders a named placeholder when no source exists', () => {
   render(<ReleaseArtwork sources={[]} title="DMT" artistName="Skankafe" />);
   expect(screen.getByRole('img', { name: 'Sin portada disponible: DMT' }).textContent).toBe('SK');
 });
+
+it('keeps failed sources skipped when a parent renders an equivalent source list', () => {
+  const { rerender } = render(<ReleaseArtwork sources={['broken.jpg', 'catalog.jpg']} title="DMT" artistName="Skankafe" />);
+  fireEvent.error(screen.getByRole('img'));
+  rerender(<ReleaseArtwork sources={['broken.jpg', 'catalog.jpg']} title="DMT" artistName="Skankafe" />);
+  expect(screen.getByRole('img').getAttribute('src')).toBe('catalog.jpg');
+});

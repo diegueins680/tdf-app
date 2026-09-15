@@ -45,6 +45,15 @@ describe('release artwork sources', () => {
     expect(getReleaseArtworkSources({ ...release, arSpotifyUrl: 'https://open.spotify.com/track/other' }, [catalogRelease])).toEqual([]);
   });
 
+  it('does not guess artwork when a populated platform link cannot be parsed', () => {
+    expect(getReleaseArtworkSources({ ...release, arSpotifyUrl: 'spotify:track:other' }, [catalogRelease])).toEqual([]);
+    expect(getReleaseArtworkSources({ ...release, arYoutubeUrl: 'unrecognized-video-link' }, [catalogRelease])).toEqual([]);
+  });
+
+  it('allows the legacy fallback when platform fields contain only whitespace', () => {
+    expect(getReleaseArtworkSources({ ...release, arSpotifyUrl: '  ', arYoutubeUrl: '\t' }, [catalogRelease])).toEqual([cover]);
+  });
+
   it('works when the optional catalog is unavailable and removes duplicate URLs', () => {
     expect(getReleaseArtworkSources({ ...release, artistHeroImageUrl: cover }, [])).toEqual([cover]);
     expect(getReleaseArtworkSources({ ...release, arCoverImageUrl: cover, artistHeroImageUrl: cover }, [catalogRelease])).toEqual([cover]);
