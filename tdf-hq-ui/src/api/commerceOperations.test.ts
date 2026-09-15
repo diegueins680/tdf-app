@@ -7,14 +7,14 @@ const { CommerceOperations } = await import('./commerceOperations');
 
 beforeEach(() => { getMock.mockReset(); postMock.mockReset(); });
 
-it('reads the sandbox query report by default without issuing a mutation', () => {
-  CommerceOperations.listProviderQueries();
+it('reads the sandbox query report by default without issuing a mutation', async () => {
+  await CommerceOperations.listProviderQueries();
   expect(getMock).toHaveBeenCalledWith('/admin/commerce/provider-queries?environment=sandbox');
   expect(postMock).not.toHaveBeenCalled();
 });
 
-it('preserves explicit pagination values for server validation', () => {
-  CommerceOperations.listProviderQueries({ environment: 'production', status: 'retry', limit: 0, offset: 0 });
+it('preserves explicit pagination values for server validation', async () => {
+  await CommerceOperations.listProviderQueries({ environment: 'production', status: 'retry', limit: 0, offset: 0 });
   expect(getMock).toHaveBeenCalledWith('/admin/commerce/provider-queries?environment=production&status=retry&limit=0&offset=0');
   expect(postMock).not.toHaveBeenCalled();
 });
