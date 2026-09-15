@@ -140,3 +140,43 @@ Access date **2026-09-14**, high confidence for documented mechanisms, not accou
 - [Koyeb API reference](https://www.koyeb.com/docs/reference/api) and
   [apps reference](https://www.koyeb.com/docs/reference/apps): authenticated app discovery
   mechanism. No inference of viable provisioning is drawn from the failed request.
+
+## Follow-up: catalog gate repair (2026-09-15 UTC)
+
+PR #344's [catalog check](https://github.com/diegueins680/tdf-app/actions/runs/34912159570)
+failed with two unreviewed candidates and zero stale decisions. The candidates were the exact
+`STAGING_APPS` target restriction (`d6ad7e3315a241e6d802`) and the redacted hosting-status
+output vocabulary (`f0efc071b84fe0a2cb13`). Following explicit user approval, commit
+`79f8366fd9cae469494bd7bbecebc2e3c788477b` adds narrow `security-system-registry` decisions with their risks and rationale.
+No candidate was hidden, no prior decision removed, and no audit or CI gate was weakened.
+
+Local preparation exposed two distinct setup issues, not additional hosted CI defects:
+
+- First `npm run audit:catalog-lists` could not load `typescript`; no audit ran.
+  `npm ci --ignore-scripts` then completed, installing 1565 packages from the unchanged lockfile.
+  This was preparation for source inspection, not a claim of native build readiness.
+- The next audit (report `2026-09-15T00:28:48.544Z`) found the same two candidates and 97
+  stale decisions because this new worktree's mobile submodule was uninitialized.
+  `git submodule update --init tdf-mobile` restored the committed
+  `9c86c459081b32b47579b9c95c8514029225ad75` checkout. The decisions were not deleted to hide
+  those missing files; no mobile source or submodule pointer was changed.
+
+After the two review entries were added, the six synthetic staging guard tests passed
+(2378.550307 ms), and `npm run test:catalog-list-audit` passed its one test (8800.920204 ms).
+Both results were observed by `2026-09-15T00:36:35Z`. The restored full-source audit rerun
+passed (exit 0), with report `2026-09-15T00:44:25.160Z`: 1415 files, 1124 candidates, zero
+unreviewed candidates and zero stale decisions. The exact-source hosted
+[catalog job 104207848422](https://github.com/diegueins680/tdf-app/actions/runs/34914104034/job/104207848422)
+also passed, running from `00:39:54Z` to `00:41:43Z` on 2026-09-15. Other CI, including the
+backend, was still running at 00:44:35. These passing checks do not establish staging login
+or a successful provider sandbox transaction. A secret-name-only GitHub recheck at 00:44:35
+still returned no `FLY_STAGING_*` entries.
+
+An approved final local `node scripts/inspect-payment-staging.mjs` run generated
+[this unchanged sanitized report](evidence/staging-access-2026-09-15T004740Z.json) at
+`2026-09-15T00:47:40.611Z` (exit 1). Both health endpoints again returned HTTP 200/OK, with
+API database OK. All six Fly metadata reads failed with `hosting_authentication_unavailable`;
+no local Koyeb credential was configured. Source was the same inspector code in `79f8366fd`;
+the report's `sourceCommit` is null because the local process had no `GITHUB_SHA` injected.
+It is not a statement about the deployed image SHA. Existing hosting and sandbox access
+blockers remain; no deployment or payment transaction followed this inspection.
