@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import { waitFor } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 
 const GOOGLE_CREDENTIAL =
   'e30.eyJlbWFpbCI6ImFuZHJlYUBleGFtcGxlLmNvbSIsIm5hbWUiOiJBbmRyZWEifQ.signature';
@@ -13,12 +13,14 @@ const GOOGLE_CONSENT_ERROR =
 const googleLoginRequestMock = jest.fn<(payload: Record<string, unknown>) => Promise<Record<string, unknown>>>();
 const loginMock = jest.fn();
 const signupResetMock = jest.fn();
+const signupRequestMock = jest.fn<(payload: Record<string, unknown>) => Promise<Record<string, unknown>>>();
+const analyticsCaptureMock = jest.fn();
 
 jest.unstable_mockModule('../api/auth', () => ({
   googleLoginRequest: (payload: Record<string, unknown>) => googleLoginRequestMock(payload),
   loginRequest: jest.fn(),
   requestPasswordReset: jest.fn(),
-  signupRequest: Object.assign(jest.fn(), { reset: signupResetMock }),
+  signupRequest: Object.assign(signupRequestMock, { reset: signupResetMock }),
 }));
 
 jest.unstable_mockModule('../api/meta', () => ({
@@ -31,6 +33,7 @@ jest.unstable_mockModule('../api/fans', () => ({
 
 jest.unstable_mockModule('../api/session', () => ({
   loadSessionSnapshot: () => Promise.resolve(null),
+  completeOnboardingProgress: jest.fn(),
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
@@ -42,11 +45,7 @@ jest.unstable_mockModule('../theme/AppThemeProvider', () => ({
 }));
 
 jest.unstable_mockModule('../analytics/useAnalytics', () => ({
-  useAnalytics: () => ({ capture: jest.fn() }),
-}));
-
-jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
-  markWebSignupCompleted: jest.fn(),
+  useAnalytics: () => ({ capture: analyticsCaptureMock }),
 }));
 
 jest.unstable_mockModule('../utils/env', () => ({
@@ -115,6 +114,8 @@ describe('LoginPage Google signup consent flow', () => {
   beforeEach(() => {
     googleCallback = null;
     googleLoginRequestMock.mockReset();
+    signupRequestMock.mockReset();
+    analyticsCaptureMock.mockReset();
     loginMock.mockReset();
     document.head.querySelectorAll('script[src="https://accounts.google.com/gsi/client"]').forEach((node) => node.remove());
 
@@ -237,6 +238,49 @@ describe('LoginPage Google signup consent flow', () => {
         expect.objectContaining({ partyId: 404, apiToken: 'fictional-session-token' }),
         { remember: true },
       );
+      expect(analyticsCaptureMock).toHaveBeenCalledWith('signup_completed', expect.objectContaining({ method: 'google' }));
+      expect(analyticsCaptureMock).not.toHaveBeenCalledWith('onboarding_completed', expect.anything());
+    } finally {
+      await cleanup();
+    }
+  }, 15_000);
+
+  it('signs up with a password only after consent without claiming first-value completion', async () => {
+    signupRequestMock.mockResolvedValueOnce({
+      token: 'fictional-password-session', partyId: 405, roles: ['Customer'], modules: [],
+    });
+    const cleanup = await renderLoginPage();
+    try {
+      await act(async () => {
+        findButton('¿Primera vez? Crear cuenta con Google')?.click();
+        await flushPromises();
+      });
+      const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
+      await act(async () => {
+        fireEvent.change(dialog.querySelector('[name="givenName"]')!, { target: { value: 'Andrea' } });
+        fireEvent.change(dialog.querySelector('[name="email"]')!, { target: { value: 'andrea@example.com' } });
+        fireEvent.change(dialog.querySelector('[name="newPassword"]')!, { target: { value: 'fictional-password-42' } });
+      });
+      expect(findButton('Crear e ingresar')?.disabled).toBe(true);
+      expect(signupRequestMock).not.toHaveBeenCalled();
+      await act(async () => {
+        fireEvent.click(dialog.querySelector('[aria-label="Acepto los términos y la política de privacidad"]')!);
+      });
+      await act(async () => {
+        findButton('Crear e ingresar')?.click();
+        await flushPromises();
+      });
+      expect(signupRequestMock).toHaveBeenCalledWith(expect.objectContaining({
+        firstName: 'Andrea', email: 'andrea@example.com', termsAccepted: true,
+        termsVersion: 'tdf-account-terms-v1', marketingOptIn: false,
+      }), expect.objectContaining({ client: expect.anything() }));
+      expect(loginMock).toHaveBeenCalledWith(
+        expect.objectContaining({ partyId: 405, apiToken: 'fictional-password-session' }),
+        { remember: true },
+      );
+      expect(analyticsCaptureMock).toHaveBeenCalledWith('signup_completed', expect.objectContaining({ method: 'password' }));
+      expect(analyticsCaptureMock).not.toHaveBeenCalledWith('first_value_completed', expect.anything());
+      expect(analyticsCaptureMock).not.toHaveBeenCalledWith('onboarding_completed', expect.anything());
     } finally {
       await cleanup();
     }

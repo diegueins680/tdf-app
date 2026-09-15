@@ -335,27 +335,34 @@ export function SessionProvider({ children }: SessionProviderProps) {
     const apiToken = session?.apiToken ?? undefined;
     const versionAtStart = sessionVersionRef.current;
     let cancelled = false;
+    let inFlight: Promise<void> | null = null;
+    const ownsSession = () => !cancelled
+      && versionAtStart === sessionVersionRef.current
+      && currentSession?.partyId === partyId;
 
-    void reconcileOnboardingProgress(apiToken)
-      .then((result) => {
-        if (
-          cancelled
-          || versionAtStart !== sessionVersionRef.current
-          || currentSession?.partyId !== partyId
-        ) return;
-        captureReconciledFirstValue(getAnalyticsClient(), partyId, result);
-      })
-      .catch((error) => {
-        if (
-          cancelled
-          || versionAtStart !== sessionVersionRef.current
-          || currentSession?.partyId !== partyId
-        ) return;
-        logger.warn('Failed to reconcile onboarding progress', error);
-      });
+    const reconcile = (): Promise<void> => {
+      if (!ownsSession()) return Promise.resolve();
+      if (inFlight) return inFlight;
+      inFlight = reconcileOnboardingProgress(apiToken)
+        .then((result) => {
+          if (!ownsSession()) return;
+          captureReconciledFirstValue(getAnalyticsClient(), partyId, result);
+        })
+        .catch((error) => {
+          if (!ownsSession()) return;
+          logger.warn('Failed to reconcile onboarding progress', error);
+        })
+        .finally(() => { inFlight = null; });
+      return inFlight;
+    };
+    const handleOnline = () => { void reconcile(); };
+
+    void reconcile();
+    window.addEventListener('online', handleOnline);
 
     return () => {
       cancelled = true;
+      window.removeEventListener('online', handleOnline);
     };
   }, [session?.apiToken, session?.partyId]);
 

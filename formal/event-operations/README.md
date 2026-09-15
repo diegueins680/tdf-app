@@ -36,6 +36,8 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `WebOnboardingRecovery.cfg` | 2 request slots, 2 Parties plus logged-out state, 3 session generations; arbitrary response order | PASS; 883 generated, 179 distinct states, depth 7 |
+| `WebOnboardingRecoveryStale/Receipt/Overlap.cfg` | Negative controls: omit generation guard, server receipt guard or in-flight coalescing | Expected exit 12 with `CurrentSessionOnly`, `AuthoritativeOnly` or `SingleFlight`; all three detected |
 | `EventLifecycle.cfg` | 3 actors, 14 states, 2 command IDs | PASS; 3,613 generated/distinct states, depth 3 |
 | `ReservationRace.cfg` | 2 overlapping engagements, 1 exclusive resource, unauthorized/no-reason override | PASS; 7 generated, 5 distinct states, depth 3 |
 | `ReservationOverride.cfg` | Same race, owner-authorized non-empty override reason | PASS; 7 generated, 5 distinct states, depth 3 |
@@ -67,6 +69,12 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Coverage
 
+- `WebOnboardingRecovery.tla`: client-only reconciliation receipt consumption and reconnect
+  coalescing; session invalidation abstracts cleanup/logout/credential rotation. It does not
+  model server authorization, database evidence or cookie transport identity. Two request slots
+  bound retries; no eventual-network-response or lossless analytics claim is made. The
+  [web integration contract](../../docs/event-operations/web-onboarding-integration-contract.md)
+  maps these transitions to provider tests and documents remaining limitations.
 - `EventLifecycle.tla`: controlled lifecycle transitions, separation of approval/settlement duties,
   visibility coupling, idempotency keys, and append-only audit behavior.
 - `ReservationRace.tla`: PlusCal translation of two concurrent confirmations for one exclusive

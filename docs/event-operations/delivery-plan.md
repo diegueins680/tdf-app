@@ -120,4 +120,14 @@ and a generated-type/runtime-validated web client. A real HTTP regression fails 
 route exists, then passes alongside the earlier session/lifecycle tests. No new SQL is added.
 See [PR 14 evidence and blockers](pr-14-task-read-api.md): the full UI typecheck currently fails
 on two unchanged onboarding imports; focused task client verification is not a substitute.
-Mobile, current-head full backend build, workspace views and remaining phases stay incomplete.
+Mobile, current-head full backend build, workspace views and remaining phases were incomplete
+at that checkpoint; the follow-up below records fresh verification.
+
+The fifteenth branch, `fix/web-onboarding-reconciliation-integration`, repairs those obsolete
+imports against the existing canonical server-evidence onboarding domain. Its new bounded
+receipt/coalescing model precedes implementation. `SessionProvider` owns reconnect recovery;
+Shell retains intent recovery and signup no longer calls removed local-marker functions.
+The whole-web application typecheck now passes. The stable PR-14 backend compile-only rerun
+also finished successfully. See [PR 15 verification and limitations](pr-15-web-onboarding-integration.md)
+for independent component and whole-repository gate results. Neither result establishes
+event workspace UX, mobile compatibility, full backend tests or end-to-end completion.

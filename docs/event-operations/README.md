@@ -33,6 +33,8 @@
 - [Draft PR 13: scoped canonical task read projection](pr-13-task-read-projection.md)
 - [Authenticated task read API contract](task-read-api-contract.md)
 - [Draft PR 14: typed task/RACI API and web client](pr-14-task-read-api.md)
+- [Web onboarding compatibility contract](web-onboarding-integration-contract.md)
+- [Draft PR 15: restore canonical web onboarding integration](pr-15-web-onboarding-integration.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)
