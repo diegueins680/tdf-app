@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-15T04:47:54.228Z",
+  "generatedAt": "2026-09-15T17:03:07.849Z",
   "repositoryRoot": ".",
-  "filesScanned": 1390,
-  "candidateCount": 1119,
+  "filesScanned": 1395,
+  "candidateCount": 1122,
   "byClassification": {
-    "dynamic-business-catalog": 732,
+    "dynamic-business-catalog": 735,
     "genuine-technical-constant": 57,
     "governed-reference-data": 111,
     "security-system-registry": 219
@@ -1682,6 +1682,7 @@
           "value": "id",
           "candidateIds": [
             "9f4bd75d43cac2910708",
+            "d41c643a9c6d200d5798",
             "79b01c55bd16eaf0a687"
           ]
         },
@@ -3694,7 +3695,7 @@
       "lines": [
         124
       ],
-      "consumerCount": 199,
+      "consumerCount": 200,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -3839,6 +3840,7 @@
         "scripts/audit-formal-methods.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
         "scripts/ci-change-scope.mjs",
         "scripts/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -3931,7 +3933,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 644,
+      "consumerCount": 645,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4219,7 +4221,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 644,
+      "consumerCount": 645,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4632,6 +4634,175 @@
       "similarCandidateIds": []
     },
     {
+      "id": "9d18084547600ae29ff6",
+      "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
+      "sourceKind": "test",
+      "surface": "automation",
+      "domain": "fan-social",
+      "kind": "object-registry",
+      "name": "instagram",
+      "line": 80,
+      "values": [
+        "ok",
+        "expiringSoon"
+      ],
+      "valueCount": 2,
+      "recommendedClassification": "dynamic-business-catalog",
+      "lines": [
+        80
+      ],
+      "consumerCount": 97,
+      "backendConsumers": [
+        "tdf-hq/config/default.env.example",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/sql/002_party_booking_enhancements.sql",
+        "tdf-hq/sql/2025-11-05_refactor_students_teachers_to_parties.sql",
+        "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center_rollback.sql",
+        "tdf-hq/sql/2026-08-16_event_research_ingestion.sql",
+        "tdf-hq/sql/init_schema.sql",
+        "tdf-hq/src/TDF/API/Admin.hs",
+        "tdf-hq/src/TDF/API/Instagram.hs",
+        "tdf-hq/src/TDF/API/InstagramOAuth.hs",
+        "tdf-hq/src/TDF/Artists/Enrichment.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/SocialDiscovery.hs",
+        "tdf-hq/src/TDF/Server/SocialSync.hs",
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+        "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
+        "tdf-hq/src/TDF/Services/InstagramSync.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/Artists/PromotionSpec.hs",
+        "tdf-hq/test/TDF/Profiles/ArtistSpec.hs",
+        "tdf-hq/test/TDF/ServerAdminSpec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/.env.example",
+        "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/instagramOAuth.ts",
+        "tdf-hq-ui/src/api/socialInbox.test.ts",
+        "tdf-hq-ui/src/api/socialInbox.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
+        "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
+        "tdf-hq-ui/src/hooks/useInstagramAuth.ts",
+        "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
+        "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
+        "tdf-hq-ui/src/pages/InstagramCallbackPage.tsx",
+        "tdf-hq-ui/src/pages/InstagramConnectPage.test.tsx",
+        "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+        "tdf-hq-ui/src/pages/PartiesPage.test.tsx",
+        "tdf-hq-ui/src/pages/PartiesPage.tsx",
+        "tdf-hq-ui/src/pages/SocialInboxPage.test.tsx",
+        "tdf-hq-ui/src/pages/SocialInboxPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/services/instagramAuth.test.ts",
+        "tdf-hq-ui/src/services/instagramAuth.ts",
+        "tdf-hq-ui/src/utils/accessControl.test.ts",
+        "tdf-hq-ui/src/utils/instagramTraffic.test.ts",
+        "tdf-hq-ui/src/utils/instagramTraffic.ts"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/app/(tabs)/more.tsx",
+        "tdf-mobile/app/(tabs)/parties.tsx",
+        "tdf-mobile/app/artistDetail.tsx",
+        "tdf-mobile/app/createArtistProfile.tsx",
+        "tdf-mobile/app/editArtistProfile.tsx",
+        "tdf-mobile/src/api/artists.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/api/parties.ts",
+        "tdf-mobile/src/api/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-mobile/src/types/index.ts"
+      ],
+      "automationConsumers": [
+        ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/archive/backfill-meta-inbox.sh",
+        "scripts/artist-enrichment.mjs",
+        "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
+        "scripts/diagnose-instagram.mjs",
+        "scripts/diagnose-social.mjs",
+        "scripts/get-instagram-token.mjs",
+        "scripts/instagram-openclaw-cdp.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/refresh-instagram-token.mjs",
+        "scripts/refresh-messaging-token.mjs",
+        "scripts/run-instagram-follower-invite-2026-09-09.sh"
+      ],
+      "apiAndIntegrationConsumers": [
+        ".github/workflows/refresh-instagram-token.yml",
+        "scripts/diagnose-instagram.mjs",
+        "scripts/get-instagram-token.mjs",
+        "scripts/instagram-openclaw-cdp.mjs",
+        "scripts/refresh-instagram-token.mjs",
+        "scripts/run-instagram-follower-invite-2026-09-09.sh",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/instagramOAuth.ts",
+        "tdf-hq-ui/src/api/socialInbox.test.ts",
+        "tdf-hq-ui/src/api/socialInbox.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
+        "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
+        "tdf-hq-ui/src/hooks/useInstagramAuth.ts",
+        "tdf-hq-ui/src/pages/InstagramCallbackPage.tsx",
+        "tdf-hq-ui/src/pages/InstagramConnectPage.test.tsx",
+        "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
+        "tdf-hq-ui/src/services/instagramAuth.test.ts",
+        "tdf-hq-ui/src/services/instagramAuth.ts",
+        "tdf-hq-ui/src/utils/instagramTraffic.test.ts",
+        "tdf-hq-ui/src/utils/instagramTraffic.ts",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/src/TDF/API/Admin.hs",
+        "tdf-hq/src/TDF/API/Instagram.hs",
+        "tdf-hq/src/TDF/API/InstagramOAuth.hs",
+        "tdf-hq/src/TDF/ServerInstagramOAuth.hs",
+        "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
+        "tdf-hq/src/TDF/Services/InstagramSync.hs",
+        "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
+        "tdf-mobile/src/api/artists.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/api/parties.ts",
+        "tdf-mobile/src/api/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "decision": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these result-field names would break the exhaustive no-credential-mutation invariant test.",
+      "justification": "Individually reviewed: ok and expiringSoon are boolean result-field keys from checkToken, used only by a 16-state unit-test fixture. They are not artist identities, selectable business values, or an independent persisted catalog. The test enumerates both tokens' validity and expiry flags and requires zero refresh calls in every read-only state.",
+      "exactDuplicateIds": [],
+      "similarCandidateIds": []
+    },
+    {
       "id": "249a1e4671d31741032a",
       "file": "scripts/__tests__/studio-internship-audit.test.mjs",
       "sourceKind": "test",
@@ -4970,7 +5141,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 644,
+      "consumerCount": 645,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5309,7 +5480,7 @@
       "lines": [
         167
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -5439,6 +5610,7 @@
         "scripts/audit-formal-methods.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
         "scripts/ci-change-scope.mjs",
         "scripts/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -5757,7 +5929,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 159,
+      "consumerCount": 160,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -5868,6 +6040,7 @@
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
         "scripts/ci-change-scope.mjs",
         "scripts/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -7379,7 +7552,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 188,
+      "consumerCount": 189,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -7526,6 +7699,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-feature-registry.mjs",
@@ -7545,6 +7719,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/fans.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -10192,7 +10367,7 @@
       "lines": [
         298
       ],
-      "consumerCount": 10,
+      "consumerCount": 11,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/src/TDF/Invoice/SRI.hs",
@@ -10201,6 +10376,7 @@
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/EstebanMunozReportPage.tsx"
       ],
@@ -10426,7 +10602,7 @@
       "lines": [
         136
       ],
-      "consumerCount": 134,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -10541,6 +10717,7 @@
         "scripts/audit-formal-methods.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
         "scripts/ci-change-scope.mjs",
         "scripts/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -10788,7 +10965,7 @@
       "lines": [
         93
       ],
-      "consumerCount": 131,
+      "consumerCount": 132,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -10900,6 +11077,7 @@
         "scripts/audit-formal-methods.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
         "scripts/ci-change-scope.mjs",
         "scripts/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -10973,7 +11151,7 @@
       "lines": [
         434
       ],
-      "consumerCount": 48,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
         "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql",
@@ -10999,6 +11177,7 @@
         "tdf-mobile/src/api/operations.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
@@ -11007,6 +11186,7 @@
         "scripts/artist-enrichment.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
+        "scripts/check-messaging-token.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
@@ -11031,6 +11211,7 @@
         "scripts/verify-event-operations-formal.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/deploy-stripe-ticketing.sh",
         "scripts/instagram-openclaw-cdp.mjs",
         "tdf-hq-ui/src/api/operations.test.ts",
@@ -11068,7 +11249,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 158,
+      "consumerCount": 159,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -11180,6 +11361,7 @@
         "scripts/audit-formal-methods.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
         "scripts/ci-change-scope.mjs",
         "scripts/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -19308,7 +19490,7 @@
       "lines": [
         77
       ],
-      "consumerCount": 234,
+      "consumerCount": 237,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -19379,6 +19561,8 @@
         "tdf-hq-ui/src/api/socialInbox.test.ts",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
@@ -19409,9 +19593,7 @@
         "tdf-hq-ui/src/pages/courseRegistrationFirstRunLabel.test.ts",
         "tdf-hq-ui/src/routes/protectedRoutes.tsx",
         "tdf-hq-ui/src/services/instagramAuth.ts",
-        "tdf-hq-ui/src/utils/accessControl.test.ts",
-        "tdf-hq-ui/src/utils/marketplace.test.ts",
-        "tdf-hq-ui/src/utils/marketplace.ts"
+        "tdf-hq-ui/src/utils/accessControl.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -19470,6 +19652,7 @@
         ".github/workflows/ci.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -19500,6 +19683,7 @@
         "scripts/test-unified-checkout-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/commerceOperations.ts",
         "tdf-hq-ui/src/api/domoQuotes.test.ts",
@@ -25141,7 +25325,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 145,
+      "consumerCount": 148,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -25205,6 +25389,8 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
@@ -25306,7 +25492,9 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
       "exactDuplicateIds": [],
-      "similarCandidateIds": []
+      "similarCandidateIds": [
+        "578a6926f6b1b91c0ae7"
+      ]
     },
     {
       "id": "333cc01f5a5e4a91c135",
@@ -25338,6 +25526,338 @@
       "priority": "P0-cutover",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "exactDuplicateIds": [],
+      "similarCandidateIds": []
+    },
+    {
+      "id": "578a6926f6b1b91c0ae7",
+      "file": "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+      "sourceKind": "test",
+      "surface": "web",
+      "domain": "music-catalog-cms",
+      "kind": "object-registry",
+      "name": "release",
+      "line": 4,
+      "values": [
+        "arReleaseId",
+        "arArtistId",
+        "arTitle",
+        "artistName",
+        "arCoverImageUrl",
+        "arSpotifyUrl",
+        "arYoutubeUrl"
+      ],
+      "valueCount": 7,
+      "recommendedClassification": "dynamic-business-catalog",
+      "lines": [
+        4
+      ],
+      "consumerCount": 154,
+      "backendConsumers": [
+        "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/sql/2026-05-25_content_engagement.sql",
+        "tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql",
+        "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
+        "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
+        "tdf-hq/sql/2026-08-07_records_cms_backfill_dry_run.sql",
+        "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
+        "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
+        "tdf-hq/sql/2026-08-13_distribution_accounting_core_rollback.sql",
+        "tdf-hq/sql/2026-08-13_distribution_product_seeds.sql",
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
+        "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+        "tdf-hq/sql/2026-08-14_catalog_integrity.sql",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+        "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-16_catalog_transitional_writer_resume.sql",
+        "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql",
+        "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts_rollback.sql",
+        "tdf-hq/sql/2026-09-07_catalog_slug_alias_integrity_revalidation.sql",
+        "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
+        "tdf-hq/sql/init_schema.sql",
+        "tdf-hq/sql/preflight_security_emergency_readiness.sql",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/API/Admin.hs",
+        "tdf-hq/src/TDF/Artists/Enrichment.hs",
+        "tdf-hq/src/TDF/Catalog/DB.hs",
+        "tdf-hq/src/TDF/Catalog/Integrity.hs",
+        "tdf-hq/src/TDF/Catalog/Models.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/Catalog/Types.hs",
+        "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Commerce/MerchReservationWorker.hs",
+        "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/BusinessRules.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Convert.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Normalize.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Parse.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Render.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Types.hs",
+        "tdf-hq/src/TDF/DDEX/Models.hs"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/api/admin.ts",
+        "tdf-hq-ui/src/api/cms.test.ts",
+        "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/records.test.ts",
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/components/navigationLabels.test.ts",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
+        "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
+        "tdf-hq-ui/src/pages/DistributionLandingPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
+        "tdf-hq-ui/src/pages/ManualPage.tsx",
+        "tdf-hq-ui/src/pages/MerchOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/utils/media.ts",
+        "tdf-hq-ui/src/utils/navigationLabels.ts",
+        "tdf-hq-ui/src/utils/releaseDate.test.ts"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/app/(tabs)/create.tsx",
+        "tdf-mobile/app/directory/manage.tsx",
+        "tdf-mobile/app/ticketCheckout.tsx",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-mobile/src/lib/liveBroadcastPublishing.ts",
+        "tdf-mobile/src/lib/recordsSnapshot.ts"
+      ],
+      "automationConsumers": [
+        ".github/workflows/build.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
+        "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/fixtures/production-ticketing-base.sql",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
+        "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/archive/change-venue-to-domo.py",
+        "scripts/archive/create-manual-shows.py",
+        "scripts/archive/create-verde70-events.py",
+        "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/catalog-list-audit.mjs",
+        "scripts/ci-change-scope.mjs",
+        "scripts/deploy-stripe-ticketing.sh",
+        "scripts/install-flyctl.mjs",
+        "scripts/lib/production-release.mjs",
+        "scripts/mobile-publishing-admin-audit.sh",
+        "scripts/order-catalog-foundation-seed.mjs",
+        "scripts/production-catalog-inventory.mjs",
+        "scripts/production-release.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/render-production-migration-batch.mjs",
+        "scripts/render-production-schema-preflight.mjs",
+        "scripts/render-production-schema-verification.mjs",
+        "scripts/sync-artist-shows-to-social-events.py",
+        "scripts/sync-concerts-with-apis.py",
+        "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-distribution-accounting-migration.sh",
+        "scripts/test-public-ticket-checkout-runtime-migration.sh",
+        "scripts/test-service-booking-checkout-runtime-migration.sh",
+        "scripts/verify-simulator-health.sh"
+      ],
+      "apiAndIntegrationConsumers": [
+        "scripts/deploy-stripe-ticketing.sh",
+        "tdf-hq-ui/src/api/admin.ts",
+        "tdf-hq-ui/src/api/cms.test.ts",
+        "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/records.test.ts",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
+        "tdf-hq/src/TDF/API/Admin.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/BusinessRules.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Convert.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Normalize.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Parse.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Render.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Types.hs",
+        "tdf-hq/src/TDF/DDEX/Models.hs",
+        "tdf-hq/src/TDF/DDEX/TestFixtures.hs",
+        "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
+        "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
+        "tdf-hq/test/integration/ddex_reference_cutover_negative.sh",
+        "tdf-hq/test/integration/ddex_reference_cutover_postgres.sql",
+        "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "decision": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "artist_release, record_release, release_external_resource, release_contributor",
+      "priority": "P3-consumer",
+      "risk": "Fixture drift could hide artwork matching errors or associate a cover with the wrong release.",
+      "justification": "Regression-test payload only, mirroring the existing artist release and public Records API contracts. Production artwork and credits remain API-owned; this fixture defines no selectable catalog values or persistent relationship.",
+      "exactDuplicateIds": [],
+      "similarCandidateIds": [
+        "de0e8d9be0f3cdc70c83"
+      ]
+    },
+    {
+      "id": "d41c643a9c6d200d5798",
+      "file": "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+      "sourceKind": "test",
+      "surface": "web",
+      "domain": "music-catalog-cms",
+      "kind": "object-registry",
+      "name": "catalogRelease",
+      "line": 8,
+      "values": [
+        "id",
+        "code",
+        "title",
+        "releaseTypeId",
+        "sortOrder",
+        "revision",
+        "contributors",
+        "resources"
+      ],
+      "valueCount": 8,
+      "recommendedClassification": "dynamic-business-catalog",
+      "lines": [
+        8
+      ],
+      "consumerCount": 72,
+      "backendConsumers": [
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/sql/2026-07-12_notification_table.sql",
+        "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
+        "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
+        "tdf-hq/sql/2026-08-07_records_cms_backfill_dry_run.sql",
+        "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+        "tdf-hq/sql/2026-08-26_music_directory_profile_media_reconciliation.sql",
+        "tdf-hq/sql/2026-09-04_contextual_reputation_preference_save.sql",
+        "tdf-hq/sql/2026-09-06_records_youtube_catalog.sql",
+        "tdf-hq/sql/2026-09-06_records_youtube_catalog_rollback.sql",
+        "tdf-hq/sql/2026-09-08_merch_reputation.sql",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/API/Feedback.hs",
+        "tdf-hq/src/TDF/API/Future.hs",
+        "tdf-hq/src/TDF/API/LiveSessions.hs",
+        "tdf-hq/src/TDF/API/Merch.hs",
+        "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Catalog/DB.hs",
+        "tdf-hq/src/TDF/Catalog/Types.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Convert.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Server/EventResearch.hs",
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/src/TDF/Server/MerchReputation.hs",
+        "tdf-hq/src/TDF/Server/Reviews.hs",
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/ServerProposals.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
+        "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/api/client.test.ts",
+        "tdf-hq-ui/src/api/errorMessage.ts",
+        "tdf-hq-ui/src/api/feedback.test.ts",
+        "tdf-hq-ui/src/api/feedback.ts",
+        "tdf-hq-ui/src/api/generated/client.test.ts",
+        "tdf-hq-ui/src/api/generated/client.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/merch.ts",
+        "tdf-hq-ui/src/components/UserRoleManagement.test.tsx",
+        "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
+        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/BookingsPage.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
+        "tdf-hq-ui/src/pages/OrdersPage.tsx",
+        "tdf-hq-ui/src/pages/bookingsPageLogic.ts"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "automationConsumers": [
+        "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
+        "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/archive/create-manual-shows.py",
+        "scripts/archive/seed-verde70.json",
+        "scripts/archive/shows-data.json",
+        "scripts/persona-test-program.mjs",
+        "scripts/sync-artist-shows-to-social-events.py",
+        "scripts/sync-concerts-with-apis.py",
+        "scripts/test-studio-internship-audit-api-e2e.mjs"
+      ],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/client.test.ts",
+        "tdf-hq-ui/src/api/errorMessage.ts",
+        "tdf-hq-ui/src/api/feedback.test.ts",
+        "tdf-hq-ui/src/api/feedback.ts",
+        "tdf-hq-ui/src/api/generated/client.test.ts",
+        "tdf-hq-ui/src/api/generated/client.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/merch.ts",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/src/TDF/API/Feedback.hs",
+        "tdf-hq/src/TDF/API/Future.hs",
+        "tdf-hq/src/TDF/API/LiveSessions.hs",
+        "tdf-hq/src/TDF/API/Merch.hs",
+        "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Convert.hs",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "decision": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "artist_release, record_release, release_external_resource, release_contributor",
+      "priority": "P3-consumer",
+      "risk": "Fixture drift could hide artwork matching errors or associate a cover with the wrong release.",
+      "justification": "Regression-test payload only, mirroring the existing artist release and public Records API contracts. Production artwork and credits remain API-owned; this fixture defines no selectable catalog values or persistent relationship.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -29469,7 +29989,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 493,
+      "consumerCount": 494,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -29618,6 +30138,7 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ux-quality-audit.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -29663,10 +30184,10 @@
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
-        "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/get-instagram-token.mjs",
         "scripts/refresh-instagram-token.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -29715,8 +30236,7 @@
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -32120,7 +32640,7 @@
       "lines": [
         215
       ],
-      "consumerCount": 68,
+      "consumerCount": 69,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -32159,6 +32679,7 @@
         "tdf-hq-ui/src/components/TicketTransferDialog.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
         "tdf-hq-ui/src/components/WaitlistJoinDialog.tsx",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
         "tdf-hq-ui/src/pages/CompaniesPage.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
@@ -33412,7 +33933,7 @@
         108,
         110
       ],
-      "consumerCount": 164,
+      "consumerCount": 165,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33544,6 +34065,7 @@
         ".github/workflows/event-operations-formal.yml",
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -33560,6 +34082,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/fans.ts",
@@ -33601,7 +34124,7 @@
       "lines": [
         108
       ],
-      "consumerCount": 233,
+      "consumerCount": 234,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33741,6 +34264,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -33770,6 +34294,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/accessRequests.ts",
         "tdf-hq-ui/src/api/bookings.ts",
@@ -33818,7 +34343,7 @@
         108,
         110
       ],
-      "consumerCount": 206,
+      "consumerCount": 207,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33959,6 +34484,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -33975,6 +34501,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/accessRequests.ts",
         "tdf-hq-ui/src/api/bookings.ts",
@@ -34019,7 +34546,7 @@
       "lines": [
         110
       ],
-      "consumerCount": 173,
+      "consumerCount": 174,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -34158,6 +34685,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -34178,6 +34706,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/fans.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -34219,7 +34748,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 152,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -34349,6 +34878,7 @@
         ".github/workflows/event-operations-formal.yml",
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -34364,6 +34894,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/fans.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -34404,7 +34935,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -34530,6 +35061,7 @@
         ".github/workflows/event-operations-formal.yml",
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -34545,6 +35077,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/fans.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -34585,7 +35118,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -34711,6 +35244,7 @@
         ".github/workflows/event-operations-formal.yml",
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -34726,6 +35260,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/fans.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -34766,7 +35301,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -34892,6 +35427,7 @@
         ".github/workflows/event-operations-formal.yml",
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -34907,6 +35443,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/fans.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -34947,7 +35484,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -35074,6 +35611,7 @@
         ".github/workflows/event-operations-formal.yml",
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -35089,6 +35627,7 @@
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/patchOpenApi",
         "tdf-hq-ui/src/api/fans.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -35705,7 +36244,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 31,
+      "consumerCount": 32,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -35735,6 +36274,7 @@
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.ts",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/utils/media.ts"
       ],
       "mobileConsumers": [
@@ -36226,7 +36766,7 @@
       "lines": [
         388
       ],
-      "consumerCount": 646,
+      "consumerCount": 647,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -36808,7 +37348,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 493,
+      "consumerCount": 494,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -36957,6 +37497,7 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ux-quality-audit.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -37002,10 +37543,10 @@
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
-        "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/get-instagram-token.mjs",
         "scripts/refresh-instagram-token.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -37054,8 +37595,7 @@
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -38767,7 +39307,7 @@
       "domain": "music-catalog-cms",
       "kind": "literal-union",
       "name": "SortOrder",
-      "line": 44,
+      "line": 45,
       "values": [
         "newest",
         "oldest",
@@ -38776,7 +39316,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        44
+        45
       ],
       "consumerCount": 100,
       "backendConsumers": [
@@ -38923,7 +39463,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "SORT_ORDER_OPTIONS",
-      "line": 45,
+      "line": 46,
       "values": [
         "newest",
         "oldest",
@@ -38932,7 +39472,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        45
+        46
       ],
       "consumerCount": 57,
       "backendConsumers": [
@@ -39026,7 +39566,7 @@
       "domain": "music-catalog-cms",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 275,
+      "line": 282,
       "values": [
         "all",
         "upcoming",
@@ -39038,7 +39578,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        275
+        282
       ],
       "consumerCount": 62,
       "backendConsumers": [
@@ -40985,7 +41525,7 @@
       "lines": [
         1032
       ],
-      "consumerCount": 208,
+      "consumerCount": 211,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
@@ -41015,6 +41555,7 @@
         "tdf-hq/sql/2026-09-06_records_youtube_catalog.sql",
         "tdf-hq/sql/2026-09-06_records_youtube_catalog_rollback.sql",
         "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
+        "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/LiveSessions.hs",
@@ -41035,8 +41576,7 @@
         "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/Catalog.hs",
-        "tdf-hq/src/TDF/Server/DDEX.hs"
+        "tdf-hq/src/TDF/Server/Catalog.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
@@ -41057,6 +41597,8 @@
         "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.tsx",
         "tdf-hq-ui/src/components/reputation/ContextualRankingPrototype.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
         "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
         "tdf-hq-ui/src/pages/AdminUsersPage.tsx",
@@ -41086,9 +41628,7 @@
         "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
         "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
-        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
-        "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts"
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/bookings.tsx",
@@ -42056,7 +42596,7 @@
         100,
         109
       ],
-      "consumerCount": 243,
+      "consumerCount": 245,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -42134,6 +42674,8 @@
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/pages/BookingsPage.partySelector.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
         "tdf-hq-ui/src/pages/CampaignAutomationsPage.partySelector.test.ts",
@@ -42157,9 +42699,7 @@
         "tdf-hq-ui/src/pages/MerchReputationPreferencesPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
-        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
-        "tdf-hq-ui/src/pages/OrdersPage.test.tsx",
-        "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts"
+        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -42905,7 +43445,7 @@
         1401,
         1413
       ],
-      "consumerCount": 48,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -42939,6 +43479,8 @@
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/i18n/index.ts",
         "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
@@ -43011,7 +43553,7 @@
         1263,
         1310
       ],
-      "consumerCount": 48,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -43045,6 +43587,8 @@
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/i18n/index.ts",
         "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
@@ -43113,7 +43657,7 @@
       "lines": [
         825
       ],
-      "consumerCount": 48,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -43147,6 +43691,8 @@
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/i18n/index.ts",
         "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
@@ -43214,7 +43760,7 @@
         889,
         1355
       ],
-      "consumerCount": 48,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -43248,6 +43794,8 @@
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/i18n/index.ts",
         "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
@@ -43314,7 +43862,7 @@
       "lines": [
         1075
       ],
-      "consumerCount": 48,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -43348,6 +43896,8 @@
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/i18n/index.ts",
         "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
@@ -43834,7 +44384,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 493,
+      "consumerCount": 494,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -43983,6 +44533,7 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ux-quality-audit.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -44028,10 +44579,10 @@
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
-        "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/get-instagram-token.mjs",
         "scripts/refresh-instagram-token.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -44080,8 +44631,7 @@
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -44122,7 +44672,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 493,
+      "consumerCount": 494,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -44271,6 +44821,7 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ux-quality-audit.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -44316,10 +44867,10 @@
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
-        "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/get-instagram-token.mjs",
         "scripts/refresh-instagram-token.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -44368,8 +44919,7 @@
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -44774,7 +45324,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 650,
+      "consumerCount": 651,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -45359,7 +45909,7 @@
       "lines": [
         138
       ],
-      "consumerCount": 493,
+      "consumerCount": 494,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -45508,6 +46058,7 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ux-quality-audit.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -45553,10 +46104,10 @@
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
-        "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/get-instagram-token.mjs",
         "scripts/refresh-instagram-token.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -45605,8 +46156,7 @@
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -46306,7 +46856,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 341,
+      "consumerCount": 342,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -53089,7 +53639,7 @@
       "lines": [
         88
       ],
-      "consumerCount": 244,
+      "consumerCount": 245,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -53247,6 +53797,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-country-reference.mjs",
         "scripts/test-canonical-payment-lifecycle-migration.sh",
+        "scripts/test-event-operations-foundation-migration.sh",
         "scripts/test-feature-migrations.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-stripe-integration.sh",
@@ -53321,7 +53872,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 45,
+      "consumerCount": 47,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
@@ -53344,6 +53895,8 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
@@ -53524,7 +54077,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -53637,6 +54190,7 @@
         "scripts/audit-formal-methods.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
         "scripts/ci-change-scope.mjs",
         "scripts/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -54144,7 +54698,7 @@
       "lines": [
         1116
       ],
-      "consumerCount": 142,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/docs/openapi/user-roles.yaml",
         "tdf-hq/sql/2025-11-04_academy.sql",
@@ -54217,6 +54771,8 @@
         "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
@@ -56793,7 +57349,7 @@
       "lines": [
         9878
       ],
-      "consumerCount": 644,
+      "consumerCount": 645,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57343,7 +57899,7 @@
       "lines": [
         10161
       ],
-      "consumerCount": 236,
+      "consumerCount": 237,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -57434,6 +57990,7 @@
         "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/features/releases/ReleaseArtwork.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/i18n/locales/de.ts",
@@ -57445,8 +58002,7 @@
         "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
         "tdf-hq-ui/src/pages/AdminUsersPage.tsx",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
-        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
-        "tdf-hq-ui/src/pages/BrainAdminPage.test.tsx"
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/bookings.tsx",
@@ -57582,7 +58138,7 @@
       "lines": [
         10218
       ],
-      "consumerCount": 645,
+      "consumerCount": 646,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57935,7 +58491,7 @@
       "lines": [
         11172
       ],
-      "consumerCount": 261,
+      "consumerCount": 263,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58015,6 +58571,8 @@
         "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
         "tdf-hq-ui/src/pages/BookingsPage.partySelector.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
@@ -58036,9 +58594,7 @@
         "tdf-hq-ui/src/pages/LabelTracksPage.tsx",
         "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
         "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx",
-        "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
-        "tdf-hq-ui/src/pages/MerchOrderReviewPage.tsx",
-        "tdf-hq-ui/src/pages/MerchReputationPage.tsx"
+        "tdf-hq-ui/src/pages/MerchAdminPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -58163,7 +58719,7 @@
       "lines": [
         11187
       ],
-      "consumerCount": 246,
+      "consumerCount": 248,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58240,6 +58796,8 @@
         "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/pages/BookingsPage.partySelector.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
         "tdf-hq-ui/src/pages/CampaignAutomationsPage.partySelector.test.ts",
@@ -58264,9 +58822,7 @@
         "tdf-hq-ui/src/pages/MerchReputationPreferencesPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
-        "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts",
-        "tdf-hq-ui/src/pages/PaymentsPage.partySelector.test.ts"
+        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -58384,7 +58940,7 @@
       "lines": [
         11219
       ],
-      "consumerCount": 248,
+      "consumerCount": 250,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58462,6 +59018,8 @@
         "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/pages/BookingsPage.partySelector.test.ts",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
         "tdf-hq-ui/src/pages/CampaignAutomationsPage.partySelector.test.ts",
@@ -58485,9 +59043,7 @@
         "tdf-hq-ui/src/pages/MerchReputationPreferencesPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
-        "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts",
-        "tdf-hq-ui/src/pages/PaymentsPage.partySelector.test.ts"
+        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -59147,7 +59703,7 @@
         12647,
         12699
       ],
-      "consumerCount": 644,
+      "consumerCount": 645,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -66957,7 +67513,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 21,
+      "consumerCount": 22,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
         "tdf-hq/sql/2026-08-13_distribution_product_seeds.sql",
@@ -66974,6 +67530,7 @@
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.ts",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/pages/DistributionLandingPage.tsx",
         "tdf-hq-ui/src/utils/media.ts"
       ],
@@ -72245,7 +72802,7 @@
       "lines": [
         119
       ],
-      "consumerCount": 63,
+      "consumerCount": 65,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -72282,6 +72839,8 @@
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
@@ -72355,7 +72914,7 @@
       "lines": [
         122
       ],
-      "consumerCount": 38,
+      "consumerCount": 40,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
@@ -72380,6 +72939,8 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
@@ -73621,7 +74182,7 @@
         398,
         406
       ],
-      "consumerCount": 137,
+      "consumerCount": 138,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -73729,6 +74290,7 @@
         "scripts/continuous-improvement-loop.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/sync-concerts-with-apis.py",
+        "scripts/test-event-operations-foundation-migration.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-records-youtube-catalog-migration.sh",
@@ -73885,7 +74447,7 @@
       "lines": [
         428
       ],
-      "consumerCount": 137,
+      "consumerCount": 138,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -74002,6 +74564,7 @@
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-event-operations-foundation-migration.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
@@ -74384,7 +74947,7 @@
       "lines": [
         564
       ],
-      "consumerCount": 31,
+      "consumerCount": 32,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/src/TDF/DDEX/Detect.hs",
@@ -74415,6 +74978,7 @@
         "tdf-mobile/src/providers/NetworkProvider.tsx"
       ],
       "automationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop.mjs",
@@ -74425,6 +74989,7 @@
         "scripts/test-party-selector-rate-limit-scope-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/get-instagram-token.mjs",
         "scripts/refresh-instagram-token.mjs",
         "tdf-hq/src/TDF/DDEX/Detect.hs",
@@ -75760,7 +76325,7 @@
       "lines": [
         816
       ],
-      "consumerCount": 69,
+      "consumerCount": 70,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -75796,6 +76361,7 @@
         "tdf-hq-ui/src/api/partySelector.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
@@ -84829,7 +85395,7 @@
       "lines": [
         104
       ],
-      "consumerCount": 63,
+      "consumerCount": 64,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -84896,6 +85462,7 @@
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-event-operations-foundation-migration.sh",
         "scripts/test-event-research-ingestion-migration.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
@@ -88245,7 +88812,7 @@
       "lines": [
         490
       ],
-      "consumerCount": 53,
+      "consumerCount": 54,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
@@ -88300,6 +88867,7 @@
         "tdf-mobile/src/components/reputation/CategoryPriorityList.tsx"
       ],
       "automationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/check-messaging-token.mjs",
@@ -88308,6 +88876,7 @@
         "scripts/test-public-ticket-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "tdf-hq-ui/src/api/cms.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/marketplace.ts",
@@ -91517,7 +92086,7 @@
       "lines": [
         816
       ],
-      "consumerCount": 48,
+      "consumerCount": 49,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -91562,6 +92131,7 @@
         "tdf-mobile/src/providers/NetworkProvider.tsx"
       ],
       "automationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/codex-logical-correctness-loop.sh",
@@ -91575,6 +92145,7 @@
         "scripts/test-party-selector-rate-limit-scope-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/get-instagram-token.mjs",
         "scripts/refresh-instagram-token.mjs",
         "tdf-hq/src/TDF/API/Merch.hs",
@@ -105200,7 +105771,7 @@
       "lines": [
         47
       ],
-      "consumerCount": 278,
+      "consumerCount": 280,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -105278,6 +105849,7 @@
         "tdf-hq-ui/src/features/ddex/DdexInboxPage.tsx",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx",
         "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
         "tdf-hq-ui/src/i18n/locales/de.ts",
@@ -105302,8 +105874,7 @@
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.test.tsx",
         "tdf-hq-ui/src/pages/InventoryPage.test.tsx",
-        "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx"
+        "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -105487,7 +106058,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 493,
+      "consumerCount": 494,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -105635,6 +106206,7 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/ux-quality-audit.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -105680,10 +106252,10 @@
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
-        "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/get-instagram-token.mjs",
         "scripts/refresh-instagram-token.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -105732,8 +106304,7 @@
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -107016,7 +107587,7 @@
       "lines": [
         1178
       ],
-      "consumerCount": 644,
+      "consumerCount": 645,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -112821,7 +113392,7 @@
       "lines": [
         118
       ],
-      "consumerCount": 244,
+      "consumerCount": 245,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -112978,6 +113549,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-country-reference.mjs",
         "scripts/test-canonical-payment-lifecycle-migration.sh",
+        "scripts/test-event-operations-foundation-migration.sh",
         "scripts/test-feature-migrations.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-stripe-integration.sh",
