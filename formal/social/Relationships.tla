@@ -1,6 +1,6 @@
 ------------------------- MODULE Relationships -------------------------
 EXTENDS Naturals, FiniteSets, TLC
-CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity
+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor
 VARIABLES consent, blocked, alive, members, private, version,
           cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe
 vars == <<consent, blocked, alive, members, private, version,
@@ -27,12 +27,12 @@ Withdraw(a) == /\ a \in consent /\ version < MaxVersion
                /\ UNCHANGED <<blocked, alive, members, private, cacheConsent,
                     cacheVersion, pending, terminal, delivered, lastRead,
                     queuedVersion, deliveryCount>>
-Block(a) == /\ a \notin blocked /\ version < MaxVersion
+Block(a) == /\ (UnsafeInactiveActor \/ a \in alive) /\ a \notin blocked /\ version < MaxVersion
             /\ blocked' = blocked \cup {a} /\ consent' = {}
             /\ version' = version + 1
             /\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,
                  pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
-Unblock(a) == /\ a \in blocked /\ version < MaxVersion
+Unblock(a) == /\ (UnsafeInactiveActor \/ a \in alive) /\ a \in blocked /\ version < MaxVersion
               /\ blocked' = blocked \ {a} /\ version' = version + 1
               /\ UNCHANGED <<consent, alive, members, private, cacheConsent,
                    cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
@@ -92,6 +92,8 @@ TypeOK == /\ consent \subseteq Actors /\ blocked \subseteq Actors
           /\ consentOwnerSafe \in BOOLEAN
 ConsentIntegrity == (blocked # {} \/ alive # Actors) => consent = {}
 OwnConsentOnly == consentOwnerSafe
+InactiveActorCannotMutate == \A a \in Actors \ alive:
+                              ~ENABLED Block(a) /\ ~ENABLED Unblock(a)
 ReadWasAuthorized == /\ lastRead.consent = Actors
                      /\ lastRead.blocked = {} /\ lastRead.alive = Actors
                      /\ (~lastRead.private \/ lastRead.members = Actors)

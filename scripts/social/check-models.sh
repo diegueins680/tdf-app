@@ -12,7 +12,7 @@ for model in Relationships Feed RequestReplay; do
     "$TDF_SOCIAL_ROOT/formal/social/$model.tla" > "$TDF_SOCIAL_RESULTS/$model.txt" 2>&1
   grep 'Model checking completed. No error has been found.' "$TDF_SOCIAL_RESULTS/$model.txt"
 done
-for negative in StaleCache WithdrawalOwnership RequestIdentity FeedSkipped RequestConflict; do
+for negative in StaleCache WithdrawalOwnership RequestIdentity FeedSkipped RequestConflict DeletedActor; do
   module=Relationships
   case "$negative" in
     StaleCache) expected=AuthoritativeDenial ;;
@@ -20,6 +20,7 @@ for negative in StaleCache WithdrawalOwnership RequestIdentity FeedSkipped Reque
     RequestIdentity) expected=RequestAdmission ;;
     FeedSkipped) expected=StablePagination; module=Feed ;;
     RequestConflict) expected=ReplayEquality; module=RequestReplay ;;
+    DeletedActor) expected=InactiveActorCannotMutate ;;
   esac
   set +e
   "$TDF_SOCIAL_JAVA" -cp "$TLA_JAR" tlc2.TLC -workers 1 \

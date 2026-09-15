@@ -30,7 +30,7 @@ it is not evidence that this precise sequence was executed in production.
 
 | Requirement | Property/action | Required implementation mechanism | Current evidence |
 |---|---|---|---|
-| S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 102,833 distinct states; observable read safety + availability and liveness passed |
+| S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 101,245 distinct states; observable read safety + availability and liveness passed |
 | S-CONSENT | ConsentIntegrity, OwnConsentOnly / Request, Withdraw(a) | own consent only, unique pair, transactional revoke | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-BLOCK | ConsentIntegrity / Block, Unblock | common row locks with accept/send, no resurrection | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-DELETE | ConsentIntegrity / Delete | tombstone/revision, stale commands rejected | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
@@ -123,3 +123,13 @@ RequestReplay: 2,384 generated / 272 distinct, depth 6. Current logs for all mod
 and counterexamples are committed under
 `docs/social/model-evidence-second-review-2026-09-15/`. Earlier result sections
 remain historical evidence of their explicitly described model versions.
+
+## Active actor follow-up
+
+Block and Unblock now require the authenticated actor to remain alive.
+InactiveActorCannotMutate checks that neither command is enabled for a deleted
+principal. The DeletedActor negative control removes that guard and must violate
+this exact invariant. Current complete run: Relationships 339,559 generated /
+101,245 distinct states, depth 11; Feed 4,717 / 1,674, depth 17; RequestReplay
+2,384 / 272, depth 6. All three positive configurations and six specific negative
+controls passed. Logs: `docs/social/model-evidence-active-actor-2026-09-15/`.
