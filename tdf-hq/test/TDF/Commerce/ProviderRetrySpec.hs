@@ -32,7 +32,7 @@ import           Database.PostgreSQL.Simple (SqlError(..))
 import           Network.Socket (SockAddr(..))
 import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
-import           Servant (NoContent, ServerError, errHTTPCode, errBody, runHandler, getResponse, getHeaders, (:<|>)(..))
+import           Servant (NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, (:<|>)(..))
 import           System.Environment (lookupEnv, setEnv, unsetEnv)
 import qualified System.Timeout as Timeout
 import           Test.Hspec
