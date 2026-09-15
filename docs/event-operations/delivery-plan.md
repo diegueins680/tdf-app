@@ -77,3 +77,10 @@ paths to the absent-target envelope. SQL regressions reproduce the old leak and 
 immutable diagnostics and isolation/rollback tests. The HTTP suite now has 18 passing scenarios,
 with exact status/body/non-Date-header comparisons and preserved readable-only mutation denials.
 In-flight token revocation, timing channels and the remaining end-to-end phases are still pending.
+
+The ninth branch, `fix/event-session-transaction-fence`, closes current-token revocation between
+authentication and the event transaction. It reuses `api_token` without a migration, adds an opaque
+request-local witness and locks/revalidates that row throughout reads/new commands/replays. The
+bounded model and six mutation controls preceded implementation. Production HTTP barriers and
+PostgreSQL lock observations complement captured-context tests. This does not complete global
+role revocation, permanent token invalidation, other domains, full-app integration or the product.

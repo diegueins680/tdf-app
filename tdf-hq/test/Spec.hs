@@ -8168,6 +8168,7 @@ main = hspec $ do
                         { auPartyId = toSqlKey 7
                         , auRoles = [Fan]
                         , auModules = modulesForRoles [Fan]
+                        , auSessionWitness = Nothing
                         }
                 payload =
                     InstagramOAuth.InstagramOAuthExchangeRequest
@@ -13493,6 +13494,7 @@ main = hspec $ do
                     { auPartyId = toSqlKey 1
                     , auRoles = roles
                     , auModules = modulesForRoles roles
+                    , auSessionWitness = Nothing
                     }
 
         it "allows operations users and rejects ordinary authenticated users before contract handlers run" $ do
@@ -17061,6 +17063,7 @@ socialSyncAdminUser =
         { auPartyId = toSqlKey 1
         , auRoles = [Admin]
         , auModules = modulesForRoles [Admin]
+        , auSessionWitness = Nothing
         }
 
 socialSyncListHandlerFor
@@ -17093,6 +17096,7 @@ radioPresenceUser =
         { auPartyId = toSqlKey 1
         , auRoles = [Fan]
         , auModules = modulesForRoles [Fan]
+        , auSessionWitness = Nothing
         }
 
 runRadioPresenceTest :: RadioPresenceTestM a -> IO (Either ServerError a)

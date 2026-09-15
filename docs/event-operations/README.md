@@ -23,6 +23,8 @@
 - [Draft PR 07](pr-07-http-verification.md)
 - [Command target privacy contract](command-privacy-contract.md)
 - [Draft PR 08](pr-08-command-privacy.md)
+- [Session transaction fence contract](session-fence-contract.md)
+- [Draft PR 09](pr-09-session-fence.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)

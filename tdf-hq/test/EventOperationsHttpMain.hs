@@ -34,6 +34,7 @@ import TDF.DB (Env(..))
 import TDF.EventOperations.API (EventOperationsAPI)
 import TDF.EventOperations.HttpTestConfig (httpTestConfig)
 import TDF.EventOperations.Server (eventOperationsServer)
+import qualified TDF.EventOperations.SessionFenceSpec as SessionFence
 
 type ProtectedEvents = AuthProtect "bearer-token" :> EventOperationsAPI
 type HttpResponse = HTTP.Response BL.ByteString
@@ -52,7 +53,9 @@ main = do
           hoistServerWithContext api ctxProxy (flip runReaderT env) eventOperationsServer
     Warp.testWithApplicationSettings (Warp.setHost "127.0.0.1" Warp.defaultSettings) (pure app) $ \port -> do
       manager <- HTTP.newManager HTTP.defaultManagerSettings
-      hspec (httpSpec pool manager port)
+      hspec $ do
+        httpSpec pool manager port
+        SessionFence.spec pool
 
 httpSpec :: ConnectionPool -> HTTP.Manager -> Int -> Spec
 httpSpec pool manager port = describe "event operations authenticated HTTP / PostgreSQL" $ do

@@ -77,6 +77,10 @@ old leaking path. Production activation still requires the complete security and
 
 ## Limitations and hosted checks
 
+Follow-up: [PR 09](pr-09-session-fence.md) implements the bounded current-token fence for event
+transactions. The in-flight-session limitation below describes this PR 08 checkpoint; global roles,
+other domains and permanent revocation semantics remain outside that correction.
+
 The in-flight authentication-to-command token-revocation window is still open. Constant-time
 behavior, rate limiting, full `mkApp` middleware, full production-schema rehearsal, browser/mobile,
 actual offline queues and later product phases remain separate gates. No live charges, deployments,

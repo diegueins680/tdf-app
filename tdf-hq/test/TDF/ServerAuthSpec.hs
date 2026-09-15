@@ -120,6 +120,7 @@ moduleAccessSpec = describe "validateModuleAccess" $ do
           { auPartyId = toSqlKey 1
           , auRoles = roles
           , auModules = modulesForRoles roles
+          , auSessionWitness = Nothing
           }
       assertRejected expectedMessage result =
         case result of
