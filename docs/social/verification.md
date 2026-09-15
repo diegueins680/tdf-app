@@ -1,4 +1,4 @@
-# Verification register (in progress)
+# Verification register — 2026-09-15 (partial delivery)
 
 ## Formal scope and limits
 
@@ -212,3 +212,33 @@ states / 30 generated transition cases passed again against native PostgreSQL;
 see `evidence/consent-independent-review.txt` and `evidence/sql-independent-review.txt`.
 The SQL byte sequence of the generated assertions did not change. Delivery remains
 a model-level guarantee until the legacy worker integration is implemented.
+## Implementation refinement actually executed
+
+| Requirement | Model action / property | Code boundary | Automated evidence and scope |
+|---|---|---|---|
+| S-AUTH | Read / AuthoritativeDenial | `social_v2_feed`, `social_v2_relationship` and read functions marked STABLE; `Social.Server` derives actor from auth | `read-model-tests.sql`: membership removal, blocked GET and snapshot classification; `HttpSpec.hs`: real token/actor/organization denial |
+| S-CONSENT | Request, Withdraw / ConsentIntegrity | `social_v2_mutate`, ordered pair primary key and independent consent columns | 30 TLC graph-derived transitions in `model-cases.sql`, request/accept fixtures; HTTP explicit acceptance and injected-actor rejection |
+| S-BLOCK | Block, Unblock / ConsentIntegrity | ordered actor/credential/pair locks, block constraint, denial before replay | `test-postgres.sh`: both block and accept observed waiting at an explicit barrier; blocked reader cannot poll revision |
+| S-DELETE | Delete / ConsentIntegrity | `social_v2_close` tombstone and preserved revisions | social closure + stale replay tests; NOT full account erasure/refinement |
+| S-RETRY | Queue, Finish / TypeOK | unique actor/request key, payload equality, current authorization and version check | directed follow/unfollow retries, stale revision, payload conflict, database constraints and rate limit; external worker/delivery not refined |
+| S-FEED | Publish, Page, Hide / StablePagination | serialized publication batch commits before read, immutable unique position, membership before page limit | SQL ties, edit, late insert, deletion and revocation; 50k-post synthetic workload; HTTP page/cursor limits |
+| S-REACTION | SetActive / RetrySafe | `toggleMomentReactionDb` row lock and atomic evidence insert | Reaction TLC 15 states; existing backend test passed in the 2,540-example run |
+| S-PROGRESS | Finish / Progress | model fairness/availability assumptions | model passed; existing notification/reindexing worker progress has NOT been implemented or qualified by this work |
+
+Seven HTTP examples passed on native PostgreSQL 16.10 with actual Servant and bearer
+authentication, object-compiled through Stack GHC 9.10.3. The Docker-backed HTTP
+attempt stalled after its API became unavailable (observed API 500); it was stopped
+and is not a pass. The interpreter attempt hit GHC's bytecode breakpoint-index limit.
+The native fixture starts/stops a private cluster. See `evidence/http-runtime-native.txt`.
+
+The pre-refresh Stack-built complete backend test binary ran **2,540 examples, zero failures**.
+The Stack command itself failed afterward trying to copy an unbuilt executable;
+these outcomes are distinct. CI #365 independently linked the application and passed
+its backend tests, then failed on the existing merch-migration prerequisite.
+
+Full web type checking after canonical regeneration still fails on two existing
+missing onboarding exports in LoginPage and AppShell. The earlier missing generated
+onboarding types and DirectorySearch error no longer appear after regeneration.
+Fifteen focused social tests and scoped ESLint passed. The local browser uses
+synthetic API/session fixtures; it does not establish full-app authenticated E2E or
+mobile runtime behavior. Screenshot and axe evidence is committed.

@@ -57,6 +57,10 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - name: Install the lockfile's missing Linux resolver binding
+        # The existing lock includes unrs-resolver 1.11.1 but omits its GNU/x64
+        # optional binding. Do not depend on implicit runtime postinstall.
+        run: npm install --no-save --package-lock=false --ignore-scripts @unrs/resolver-binding-linux-x64-gnu@1.11.1
       - name: Focused social contract and component tests
         env:
           NODE_OPTIONS: --experimental-vm-modules

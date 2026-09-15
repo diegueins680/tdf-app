@@ -42,7 +42,7 @@ main = do
           HTTP.httpLbs base {HTTP.method=method,
             HTTP.requestHeaders=[("Content-Type","application/json")] ++
               [("Authorization","Bearer "<>token) | not (BS.null token)],
-            HTTP.requestBody=HTTP.RequestBodyLBS body} manager
+            HTTP.requestBody=HTTP.RequestBodyLBS body, HTTP.responseTimeout=HTTP.responseTimeoutMicro 10000000} manager
         status response = statusCode (HTTP.responseStatus response)
         command token target body = call token "POST" ("/v2/relationships/"<>target) body
     hspec $ do

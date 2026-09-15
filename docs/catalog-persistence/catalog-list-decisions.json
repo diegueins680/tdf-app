@@ -13360,6 +13360,26 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "a70974a1cf51644e6038",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing wire keys or dispatch codes without versioned server compatibility breaks authorization and clients.",
+      "justification": "Keys of a synthetic API response fixture are a versioned wire shape, not editable business reference data.",
+      "reviewed": true
+    },
+    {
+      "id": "7b92aacf2fc26768a779",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing wire keys or dispatch codes without versioned server compatibility breaks authorization and clients.",
+      "justification": "Versioned social mutation operation codes select modeled permission transitions. Administrative catalog editing must not invent new commands or authorization paths; changes require a reviewed server/model/client contract change.",
+      "reviewed": true
     }
   ]
 }
