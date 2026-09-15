@@ -2,15 +2,18 @@
 
 ## Outcome
 
-This branch completes the evidence/audit and bounded formal-specification phases, implements an
-additive PostgreSQL foundation for the highest-risk invariants, and closes the existing authenticated
-event-invitation authorization flaw. It does **not** claim the entire multi-phase end-to-end product
-is complete. The remaining API, worker, web, mobile, engagement, finance, and collaboration work is
-listed below and remains production-disabled/unimplemented.
+The dependency-ordered local branch chain completes the evidence/audit and bounded formal-
+specification phases, implements an additive PostgreSQL foundation for the highest-risk invariants,
+closes the existing authenticated event-invitation authorization flaw, and adds the first typed,
+authenticated lifecycle API slice. It does **not** claim the entire multi-phase end-to-end product is
+complete. Public lifecycle effects, workers, workspace UI, mobile, engagement, finance, and
+collaboration work listed below remain production-disabled or unimplemented.
 
-Work is isolated on local branch `feat/event-operations-formal-foundation` at
-`/Users/diegosaa/GitHub/tdf-app-event-operations`, based on local `origin/main` commit `17a33eca1`.
-The dirty primary worktree and mobile submodule were not modified.
+Work is isolated at `/Users/diegosaa/GitHub/tdf-app-event-operations`. The first local branch,
+`feat/event-operations-formal-foundation`, is committed at `cde0e806b6a5365e1e9f5b4052b74e38ea1aa232`
+from local `origin/main` commit `17a33eca1`. The dependent API work is on
+`feat/event-operations-api-foundation`. The dirty primary worktree and mobile submodule were not
+modified.
 
 ## Completed artifacts
 
@@ -37,6 +40,18 @@ The dirty primary worktree and mobile submodule were not modified.
 - Restored the repository's previously implemented but later lost atomic/idempotent moment-reaction
   helper and its engagement evidence write. Also corrected the pre-existing `Text`/`Maybe Text` DTO
   projection mismatch that prevented this module from compiling.
+- Added a persistent `event.operations.api` feature flag that is disabled by default, cannot be
+  enabled without an actor and reason, and has immutable change history. A separate implementation-effect allowlist permits only five early
+  planning/review/approval edges whose effects are confined to canonical state and immutable audit.
+- Added a single PostgreSQL transition command boundary that rechecks the feature gate and
+  contextual time-bounded authority inside the transaction, locks event state, rejects stale
+  versions, applies global command-key idempotency, enforces independent approval, and records
+  accepted, rejected, and conflicting commands. Publish and every cross-domain transition remain
+  fail-closed with `transition_effects_not_ready`.
+- Added authenticated Servant snapshot/transition routes, strict JSON DTOs for all 14 canonical
+  states, explicit domain-error mappings, the matching OpenAPI contract, regenerated web types, and
+  a small typed web client. The snapshot exposes only the caller's active capabilities and currently
+  executable transitions.
 
 ## Verified evidence
 
@@ -49,6 +64,10 @@ The dirty primary worktree and mobile submodule were not modified.
 | `git diff --check` | PASS at the time recorded; no whitespace errors |
 | `bash -n scripts/verify-event-operations-formal.sh` and `sh -n scripts/test-event-operations-foundation-migration.sh` | PASS |
 | `package.json` JSON parse | PASS |
+| `npm run test:event-operations-api-migration` | PASS on ephemeral PostgreSQL 16; disabled default and activation guard, immutable flag history, contextual read, invalid-command/conflicting-key audit, exact replay, actor-changing global key conflict, version conflict, effects gate, reason guard, separation of duties, concurrent transition, rollback, reapply |
+| linked `tdf-hq-test --match 'event operations executable API contracts'` | PASS; 5 examples, 0 failures, including all 14 states, strict request decoding, and stable non-success error statuses |
+| local `openapi-typescript` 7.10.1 generation | PASS; OpenAPI parsed and web type artifact regenerated |
+| focused TypeScript compile of `eventOperations.ts` and generated types | PASS with strict mode, ES2022, bundler resolution, DOM libraries, React JSX, and Vite client types |
 
 Detailed TLC state counts, model bounds, fairness, counterexample corrections, checksums, and exact
 runner command are in `formal/event-operations/README.md`.
@@ -88,12 +107,31 @@ report.
   the root lockfile but absent from `node_modules` in both this clean worktree and the primary
   worktree. No dependency installation or test bypass was performed. The formal audit inside that
   command still passed with 0 critical findings and 0 errors.
+- The declared worktree `npm run generate:api:ui` command could not find `openapi-typescript` because
+  dependencies are incomplete. The already installed generator from the untouched primary worktree
+  ran against this branch successfully. Regeneration also brought the previously stale generated
+  client into line with other OpenAPI paths already in `main`, causing a larger mechanical diff than
+  the event-operations-only additions.
+- Full UI TypeScript checking, using the two existing dependency trees without installing packages,
+  reached only two unrelated baseline errors: `LoginPage.tsx` imports missing
+  `markWebSignupCompleted`, and `AppShell.tsx` imports missing
+  `retryPendingFirstValueCompletion`. The focused new-client compilation passed. The mobile API
+  generator was honestly skipped by its repository guard because the mobile submodule/install is
+  incomplete.
+- The API-target Haskell build compiled and linked all 208 test modules. As in the first branch,
+  Stack then returned nonzero only in copy/register because the separately absent `tdf-hq-exe`
+  artifact was not built by the requested target; the linked focused Hspec run passed.
+- The first hardened API-migration run failed before commit because the immutable flag-history trigger
+  referred to `event_operation_reject_mutation` instead of the foundation's actual
+  `event_operation_reject_history_mutation` helper. The name was corrected and the complete clean-
+  container test then passed; the failed run did not apply the migration to any persistent database.
 
 ## Remaining implementation
 
-- Wire the lifecycle/command/relationship/grant tables into typed Servant APIs with a disabled-by-
-  default `event.operations` flag, expected-version checks, rejected-command audit, and generated web/
-  mobile clients.
+- Extend the typed lifecycle API beyond the five safe early edges only as each ticket, booking,
+  contract, notification, public-visibility, and financial effect gains an atomic/outbox
+  implementation and an executable failure/compensation test. Add HTTP-level authorization and
+  database integration tests once the repository's API test harness can boot the migrated schema.
 - Replace legacy organizer-null claiming with a reviewed ownership migration/cutover.
 - Implement secure external invitation issue/accept/revoke/expire with token digest, account linking,
   command receipts, notification delivery, and replay tests. The new security table is foundation,
@@ -116,8 +154,8 @@ report.
 ## External limitations and prohibited actions
 
 `git remote show origin` could not resolve the GitHub SSH host and `gh auth status` reported invalid
-credentials. The work is committed only on the local feature branch; no remote branch, push, PR, CI
-run, review, or merge is claimed. No screenshots were produced. No production database, deployment,
+credentials. The first branch is committed locally and the dependent API branch is local; no remote
+branch, push, PR, CI run, review, or merge is claimed. No screenshots were produced. No production database, deployment,
 feature flag, credential, payment, refund, or payout was touched. The new migration is not added to
 the production manifest; that is a later reviewed rollout step after API/client compatibility and
 release rehearsal.

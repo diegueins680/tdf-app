@@ -106,6 +106,9 @@ executable tdf-hq-exe
     TDF.Leads.Model
     TDF.Email.Service
     TDF.FeatureRegistry
+    TDF.EventOperations.API
+    TDF.EventOperations.Server
+    TDF.EventOperations.Types
     TDF.Operations.API
     TDF.Operations.Model
     TDF.Operations.Server
@@ -351,6 +354,10 @@ test-suite tdf-hq-test
     TDF.Models
     TDF.ModelsExtra
     TDF.Models.SocialEventsModels
+    TDF.EventOperations.API
+    TDF.EventOperations.Server
+    TDF.EventOperations.Types
+    TDF.EventOperations.TypesSpec
     TDF.CMS.Models
       TDF.Catalog.Models
       TDF.Catalog.CountryReferenceSeed
