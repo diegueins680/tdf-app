@@ -84,3 +84,10 @@ request-local witness and locks/revalidates that row throughout reads/new comman
 bounded model and six mutation controls preceded implementation. Production HTTP barriers and
 PostgreSQL lock observations complement captured-context tests. This does not complete global
 role revocation, permanent token invalidation, other domains, full-app integration or the product.
+
+The tenth branch, `test/event-operations-schema-rehearsal`, adds a strict full-repository-schema
+rehearsal beside the reduced-fixture tests. It reproduces a pre-existing missing storefront
+migration dependency before reaching event SQL; an explicit supplemented diagnostic also exposes
+the provider/refund schema contract failure. Hosted verification never uses the diagnostic option.
+See [PR 10 evidence and limitations](pr-10-schema-rehearsal.md). This is an additional compatibility
+gate, not a green migration/release claim or completion of phase 3/4.
