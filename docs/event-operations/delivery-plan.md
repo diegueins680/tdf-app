@@ -105,3 +105,11 @@ expectation using the existing checkout-count contract. MX-01–05 add exact-bou
 paid-evidence, retry and expired-reservation rejection checks, allowing the unchanged downstream
 refund/settlement/rollback suite to execute. The owning runner is added to migration CI with path
 selection regressions. See [PR 12 evidence and limitations](pr-12-merch-expiry-contract.md).
+
+The thirteenth branch, `feat/event-task-read-projection`, begins the phase-4 read boundary
+without adding another task system. It projects canonical task/policy/current-RACI data under
+exact task/event grants, with current-time authorization after shared locks. Assignment alone
+and event.read/finance permissions do not disclose task state. New TLC/Alloy checks precede
+SQL, and disposable PostgreSQL tests cover permissions, races and reversible migration on
+reduced and complete schemas. See [PR 13 scope and limitations](pr-13-task-read-projection.md).
+The public task API, typed consumers, aggregate write tokens and workspace views remain next.

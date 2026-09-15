@@ -80,3 +80,19 @@ CREATE FUNCTION event_rehearsal.history_rows() RETURNS JSONB LANGUAGE sql AS $$
     'raci',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM event_operation_raci_assignment t))
 $$;
 CREATE TABLE event_rehearsal.expected_history AS SELECT event_rehearsal.history_rows() AS snapshot;
+
+-- The scoped projection also compiles/runs against the complete canonical schema,
+-- not only the reduced concurrency fixture. Assignment alone is not read authority.
+SELECT event_rehearsal.check_that(
+  event_operation_read_task(900010,900010,900001) = '{
+    "eventId":900010,"activityId":900010,"status":"planned","version":1,
+    "policy":{"requiresAccountability":true,"dependenciesGateCompletion":true,"version":1},
+    "raci":[{"partyId":900001,"role":"accountable"},{"partyId":900002,"role":"responsible"}],
+    "accountabilityNeedsAttention":false}'::JSONB,
+  'canonical schema task projection is exact and allowlisted');
+SELECT event_rehearsal.check_that(event_operation_read_task(900010,900010,900002) IS NULL,
+  'RACI alone cannot disclose task state');
+SELECT event_rehearsal.check_that(
+  (SELECT snapshot=event_rehearsal.history_rows() FROM event_rehearsal.expected_history)
+  AND (SELECT snapshot=event_rehearsal.legacy_rows() FROM event_rehearsal.expected_legacy),
+  'task reads preserve legacy and immutable records');
