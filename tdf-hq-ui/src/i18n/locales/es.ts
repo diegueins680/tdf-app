@@ -1,6 +1,23 @@
 const es = {
   Parties: 'Personas',
   Bookings: 'Agenda',
+  eventTask: {
+    title: 'Tarea y responsabilidades', back: 'Volver a eventos', open: 'Consultar RACI',
+    loading: 'Consultando tarea…', refresh: 'Actualizar', retry: 'Reintentar',
+    invalid: 'El enlace de la tarea no es válido.', signIn: 'Inicia sesión para consultar esta tarea.',
+    error: 'No pudimos consultar esta tarea. Puede no estar disponible o no tener acceso. Reintenta para comprobarlo.',
+    identity: 'Evento #{{event}} · Tarea #{{task}}', version: 'Versión de actividad: {{version}}',
+    policyVersion: 'Versión de política: {{version}}', accountability: 'Requiere responsabilidad definida',
+    dependencies: 'Las dependencias condicionan la finalización', yes: 'Sí', no: 'No',
+    noPolicy: 'No hay una política de responsabilidad registrada.',
+    attention: 'La responsabilidad requiere atención.', noAssignments: 'No hay asignaciones RACI registradas.',
+    raci: 'Asignaciones RACI', party: 'Persona', role: 'Rol', partyId: 'Persona #{{id}}',
+    role_responsible: 'R — Ejecuta', role_accountable: 'A — Rinde cuentas',
+    role_consulted: 'C — Consultada', role_informed: 'I — Informada',
+    status_planned: 'Planificada', status_confirmed: 'Confirmada', status_in_progress: 'En curso',
+    status_completed: 'Completada', status_cancelled: 'Cancelada',
+    readOnly: 'Esta consulta no confirma que las dependencias estén resueltas ni autoriza cambios. No incluye nombres, fechas ni una versión conjunta para editar.',
+  },
   Kanban: 'Pipelines',
   common: {
     save: 'Guardar',

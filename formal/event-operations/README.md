@@ -51,6 +51,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `TaskView.cfg` | 3 generations, 2 read slots, 2 targets, 2 accounts plus logged out; no network fairness | PASS; 2,617 generated, 898 distinct states, depth 7 |
+| `TaskViewLate/Retained/Invalid.cfg` | Omit current-receipt guard, clear-on-context-change or valid-DTO requirement | Expected exit 12 with `CurrentView` / `ValidatedView`; all three detected |
 | PlusCal regeneration / integrity tests | Pinned translator, width 120, byte-exact temporary-copy comparison; real translator mutations | PASS; exact match and 13 tests, no skips; source/checksum/whitespace drift rejected |
 | `FanHubOnboarding.cfg` | 3 context generations, 2 pending slots, valid/invalid eligibility, explicit/implicit exit, terminal/nonterminal receipts | PASS; 1,249 generated, 215 distinct states, depth 12 |
 | `FanHubOnboardingConsent/Context/Terminal/Flight.cfg` | Negative controls: missing consent, context, terminal or same-context single-flight guard | Expected exit 12 with `ConsentOnly`, `CurrentContext`, `TerminalOnly`, `SingleFlight`; all four detected |
@@ -88,6 +90,12 @@ it is not reported as a pass. The checked configuration was reduced to two comma
 all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Coverage
+
+- `TaskView.tla`: current-generation task rendering and validated receipt consumption.
+  Session/target/reload changes hide the old receipt; old responses cannot become visible.
+  The [task view contract](../../docs/event-operations/task-view-contract.md) maps the abstraction
+  to optional bearer/signal transport, local state, route isolation and rendered tests.
+  No cross-tab cookie identity, remote push revocation or network liveness proof is claimed.
 
 - `FanHubOnboarding.tla`: explicit optional exit, current-context eligibility/receipts,
   terminal-response validation and per-context single-flight. Stale reads cannot reopen a

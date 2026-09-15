@@ -40,6 +40,8 @@
 - [FanHub authoritative onboarding contract](fanhub-onboarding-contract.md)
 - [Draft PR 17: restore account-bound FanHub guidance and explicit exit](pr-17-fanhub-onboarding.md)
 - [PlusCal integrity contract](pluscal-integrity-contract.md)
+- [Scoped task/RACI web read contract](task-view-contract.md)
+- [Draft PR 19: task/RACI read view and unresolved browser gate](pr-19-task-raci-view.md)
 - [Draft PR 18: verify exact reservation-model regeneration](pr-18-pluscal-integrity.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)

@@ -45,8 +45,12 @@ const eventPath = (eventId: number) =>
   `/event-operations/events/${encodeURIComponent(String(eventId))}`;
 
 export const EventOperations = {
-  task: (eventId: number, activityId: number): Promise<EventOperationTask> =>
-    get<unknown>(taskPath(eventId, activityId), { cache: 'no-store' }).then(raw => {
+  task: (eventId: number, activityId: number, context?: { apiToken?: string; signal?: AbortSignal }): Promise<EventOperationTask> =>
+    get<unknown>(taskPath(eventId, activityId), {
+      cache: 'no-store',
+      ...(context?.apiToken ? { headers: { Authorization: `Bearer ${context.apiToken}` } } : {}),
+      ...(context?.signal ? { signal: context.signal } : {}),
+    }).then(raw => {
       const result = taskSchema.safeParse(raw);
       if (!result.success || result.data.eventId !== eventId || result.data.activityId !== activityId) {
         // Do not expose malformed server values or decoder diagnostics to logs/UI.
