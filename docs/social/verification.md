@@ -269,3 +269,12 @@ passed the social migration, publication/legacy-source-write and preserved-data
 pause assertions on native PostgreSQL 16.10. The final script passed again; see
 `evidence/schema-compatibility-final.txt` and [scope/commands](schema-compatibility.md).
 No assertions or baseline schema objects were removed to obtain this result.
+
+
+## Refreshed backend tests
+
+The newly Stack-linked test binary ran 2,542 examples with zero failures on the
+refreshed application source (exit 0). This is independent of the still-running
+application executable compilation. Command, hashes and final output are recorded
+in `evidence/backend-refreshed-result.txt`; the earlier 2,540-example result remains
+historical. Full-app runtime and mobile social flows still require qualification.

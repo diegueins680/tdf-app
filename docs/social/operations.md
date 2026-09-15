@@ -61,3 +61,10 @@ provider console, confirm its target, and remove the unintended review preview.
 Do not infer that the earlier failed provider checks describe this later result.
 Preview suppression was added to the refreshed audit branch and inherited by the
 remaining dependency stack. New production social flags were not activated.
+
+A later independently authored audit commit also has **Cloudflare Pages SUCCESS**
+at [deployment 77e2d52f](https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/77e2d52f-3869-47fb-bdd5-893667baada2),
+recorded in `evidence/current-pr-355.json`. Its target has not been inspected or
+removed by this task. The owner should inspect that target as well; the Vercel 403
+was not a Cloudflare authorization test. Our subsequent PR commits carry the
+Cloudflare-specific skip prefix, but independently authored audit commits did not.

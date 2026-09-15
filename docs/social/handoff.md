@@ -18,9 +18,10 @@ pending-deployment boundary; see the exception below.
 | 5 | [tdf-app #366](https://github.com/diegueins680/tdf-app/pull/366) | #365 | Membership-first Following queries, supporting indexes, statement snapshots and measured query budget |
 | 6 | [TDF-mobile #80](https://github.com/diegueins680/TDF-mobile/pull/80) | current mobile gitlink `790e03e1` | Generated additive contract; commit `c1832c5eb150299c12b36ba156ff38c981a6b046`; no mobile UI/runtime change |
 | 7 | [tdf-app #367](https://github.com/diegueins680/tdf-app/pull/367) | #366 and mobile #80 | Authenticated gated API, Following/Discover/Connections web preview, local vCard QR, account cache isolation, real HTTP and browser fixtures, synchronized contracts and reconciliation |
+| 8 | [tdf-app #377](https://github.com/diegueins680/tdf-app/pull/377) | #367 | Complete schema fixture + 102 registered migrations, publication/legacy source writes, preserved-data pause, final verification handoff |
 
 PR #355 was made ready by concurrent work; #356/#360/#365/#366/#367 and mobile #80
-are drafts at the recorded inspection. The code-bearing stack remains dependent and
+and #377 are drafts at the recorded inspection. The code-bearing stack remains dependent and
 unmerged. Current head/CI snapshots are recorded separately so historical results
 cannot be mistaken for checks of a rewritten commit.
 
@@ -71,6 +72,10 @@ combined contract.
   WCAG 2/2.1 AA checks (zero reported violations). Desktop/mobile screenshots were
   captured and visually inspected in `evidence/browser-refreshed/`. This is not
   authenticated full-app or native mobile E2E.
+- **Refreshed backend tests:** the newly linked Stack/GHC 9.10.3 test binary ran
+  **2,542 examples, zero failures**, exit 0. `evidence/backend-refreshed-result.txt`
+  records the command, source/binary/log hashes and final output. The full Stack
+  build wrapper is tracked separately while the application executable compiles.
 - **Historical backend:** the earlier Stack-built binary ran **2,540 examples, zero
   failures**. Its Stack wrapper later failed copying an unbuilt executable. Earlier
   CI independently passed backend tests before failing a merch-migration prerequisite.
@@ -112,7 +117,7 @@ A passing bounded model is evidence about that model and bounds, not the whole a
 | Complete-schema additive migration and preserved-write pause | satisfied on repository fixture | [Schema compatibility](schema-compatibility.md): complete schema-only baseline + 102 registered migrations; no live-data or lock-duration claim |
 | Old/new server coexistence and rollback after activation | failed | Every legacy deny guard remains required; rolling back to code that ignores new blocks is unsafe |
 | Small dependent review PRs, flags inactive, no merge | satisfied | Linked stack; dependencies, tests, limitations, flags and rollback documented; no merge performed |
-| Leave all deployment pending | failed | Automatic Vercel check reported success; provider target inspection/removal blocked by HTTP 403 |
+| Leave all deployment pending | failed | Vercel and later Cloudflare checks reported success; Vercel inspection returned HTTP 403 and Cloudflare target remains uninspected |
 | New graph engine/ML/broker/contact import/destructive cleanup | intentionally deferred | No measured requirement; no private relationship inference or unsupported infrastructure |
 | Production activation and product experiment | intentionally deferred | User explicitly reserved these actions; no new production social flag activated |
 | Overall requested completion | failed / incomplete | The required legacy, lifecycle, moderation, mobile, migration and instrumentation work remains |
@@ -147,3 +152,42 @@ Do not blindly delete a production target. Branch-scoped Vercel suppression and
 Cloudflare-specific skip prefixes were added to this stack without skipping CI;
 subsequent independently authored audit commits can still trigger provider checks.
 This exception prevents a claim that all deployments remained pending.
+
+
+## Published source references and CI snapshot
+
+Recorded application stack heads on 2026-09-15:
+
+| PR | Published commit | State at inspection |
+|---|---|---|
+| #355 | `6d5c25c20927f45c7ce80e90d0d5d58b33b206a6` | open, ready (concurrent audit work) |
+| #356 | `1078a07c5d6a7c5a54231e1640ea36d03f30b977` | open draft |
+| #360 | `fa6b99e7a4e718f7e6db7226ed01301ff762e4f9` | open draft |
+| #365 | `4962f005bc2413e60b0762b9b43572c80b9fd0cd` | open draft |
+| #366 | `aa56289c3b01d0d74d45c5e590882eca98fd5b2c` | open draft |
+| #367 | `9a68db7448909741b6084bfa41bfcfc55fba2597` | open draft |
+| mobile #80 | `c1832c5eb150299c12b36ba156ff38c981a6b046` | open draft |
+| #377 | `b689f88e2967d09af990a678749b7c42627f1ba1` (schema/test implementation) | open draft; later evidence-only commits may follow |
+
+At #367's exact head, [social CI](https://github.com/diegueins680/tdf-app/actions/runs/34988405056)
+passed both models/PostgreSQL and client/browser jobs. The [complete CI run](https://github.com/diegueins680/tdf-app/actions/runs/34988405048)
+passed repo, UI, mobile, persona, API tests/contracts and production-migration checks
+at inspection; backend was still running and migration-tests was skipped by scope.
+The saved `evidence/current-pr-*.json` snapshots include every result, including
+failed aggregate checks on canceled duplicate runs for some earlier PRs; those must
+not be described as all-green rollups. #377 adds its own schema CI run; the parent
+results do not establish that new job succeeded.
+
+
+At schema implementation `b689f88e2`, [schema/social CI](https://github.com/diegueins680/tdf-app/actions/runs/34991068129)
+completed successfully, including the actual **Complete schema compatibility and
+preserved-write pause** step on PostgreSQL 17, all models/PostgreSQL fixtures and
+the client/browser job. Exact job/step metadata is in `evidence/ci-schema-b689f88.json`.
+This independently verifies the Docker path; the native PostgreSQL 16.10 result
+remains separately recorded.
+
+A later Cloudflare Pages check on the independently updated audit branch also
+reported [SUCCESS](https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/77e2d52f-3869-47fb-bdd5-893667baada2).
+Its target is uninspected; owner review is needed alongside the Vercel exception.
+`evidence/current-pr-355.json` records this distinct result. Do not misattribute the
+Vercel HTTP 403 to Cloudflare or describe provider deployments as all pending.

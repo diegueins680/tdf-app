@@ -14,7 +14,9 @@ Actual native result: PostgreSQL **16.10**, pgvector available, passed twice inc
 the final portable harness. Evidence: `evidence/schema-compatibility-final.txt`.
 The baseline dump was generated from PostgreSQL 17; native 16 acceptance establishes
 compatibility with this fixture, not equivalence to the live database. CI uses a
-private `pgvector/pgvector:pg17` container and must report its own result.
+private `pgvector/pgvector:pg17` container. That actual schema step passed at
+`b689f88e2` in run [34991068129](https://github.com/diegueins680/tdf-app/actions/runs/34991068129);
+job/step metadata is committed separately from the native result.
 
 ```sh
 # Docker (same script as CI; no shared ports exposed):
