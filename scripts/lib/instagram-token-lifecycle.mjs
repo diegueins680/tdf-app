@@ -105,7 +105,7 @@ export function parseMetaResponse(text) {
     // Meta can serialize Instagram IDs as JSON integer literals larger than
     // MAX_SAFE_INTEGER. Node 22's source-aware reviver preserves their exact
     // digits; String(value) would silently bind evidence to a rounded ID.
-    if (key === 'user_id' && typeof value === 'number') {
+    if ((key === 'user_id' || key === 'id') && typeof value === 'number') {
       requireValue(typeof context?.source === 'string' && /^\d+$/.test(context.source), 'Meta returned a non-canonical numeric account ID');
       return context.source;
     }
@@ -195,6 +195,7 @@ export function validateBundle(bundle, { appId, expectedUserId, now = seconds() 
   requireValue(validId(appId) && bundle.appId === appId, 'Instagram access token belongs to a different application');
   requireValue(validId(bundle.userId) && (!expectedUserId || bundle.userId === expectedUserId), 'Instagram account does not match the approved account');
   requireValue(bundle.authorization?.method === 'instagram_authorization_code' && bundle.authorization.appId === appId && bundle.authorization.userId === bundle.userId, 'OAuth ownership provenance is missing or inconsistent');
+  requireValue(validId(bundle.authorization.scopedUserId), 'OAuth app-scoped identity evidence is missing');
   requireValue(Number.isSafeInteger(bundle.authorization.authorizedAt) && bundle.authorization.authorizedAt > 0 && bundle.authorization.authorizedAt <= bundle.issuedAt, 'Invalid authorization timestamp');
   requireValue(Number.isSafeInteger(bundle.issuedAt) && bundle.issuedAt > 0 && bundle.issuedAt <= now, 'Invalid lifecycle issuance timestamp');
   requireValue(Number.isSafeInteger(bundle.receivedAt) && bundle.receivedAt >= bundle.issuedAt && bundle.receivedAt <= now, 'Invalid lifecycle response timestamp');
@@ -227,16 +228,24 @@ export async function bootstrapLifecycle({ code, redirectUri, ...config }, optio
   // Single-use codes and credential mutations are never automatically retried.
   const short = oneAccount(await requestMeta(CODE_ENDPOINT, { method: 'POST', body: form }, { ...options, maxAttempts: 1 }));
   requireValue(validToken(short.access_token), 'Meta returned no short-lived credential');
-  requireValue(short.user_id === config.expectedUserId, 'OAuth authorization belongs to a different Instagram account');
   const permissions = parsePermissions(short.permissions);
+  // The grant's user_id is app-scoped; /me.user_id is the professional
+  // account ID. Bind the namespaces through the provider's same-token profile,
+  // never by accepting an arbitrary different ID or changing the configured pin.
+  const profileUrl = new URL(`${GRAPH}/v26.0/me`);
+  profileUrl.searchParams.set('fields', 'id,user_id');
+  profileUrl.searchParams.set('access_token', short.access_token);
+  const profile = oneAccount(await requestMeta(profileUrl, {}, options));
+  requireValue(validId(profile.id) && profile.id === short.user_id, 'OAuth grant does not match the live app-scoped identity');
+  requireValue(profile.user_id === config.expectedUserId, 'OAuth authorization belongs to a different Instagram professional account');
   const url = new URL(`${GRAPH}/access_token`);
   url.searchParams.set('grant_type', 'ig_exchange_token');
   url.searchParams.set('client_secret', config.appSecret);
   url.searchParams.set('access_token', short.access_token);
   const issuedAt = clock();
   const data = await requestMeta(url, {}, { ...options, maxAttempts: 1 });
-  const bundle = issuedBundle(data, { appId: config.appId, userId: short.user_id, permissions, issuedAt, receivedAt: clock(),
-    authorization: { method: 'instagram_authorization_code', appId: config.appId, userId: short.user_id, authorizedAt },
+  const bundle = issuedBundle(data, { appId: config.appId, userId: profile.user_id, permissions, issuedAt, receivedAt: clock(),
+    authorization: { method: 'instagram_authorization_code', appId: config.appId, userId: profile.user_id, scopedUserId: short.user_id, authorizedAt },
     previousDeadline: dataDeadline(short),
   });
   await checkLifecycle(bundle, config, { ...options, now: clock() });

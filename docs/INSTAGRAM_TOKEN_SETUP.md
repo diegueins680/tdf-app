@@ -16,7 +16,17 @@ The checker requires all of:
 5. Any previously supplied data-access deadline remaining valid.
 6. Live `/v26.0/me?fields=user_id` access for the same Instagram account.
 
-OAuth code exchange must return the explicitly pinned account and the basic permission. Permission names in the checkpoint are the grant-time evidence, not a claim that every scope has been exercised now. Missing provider data-access metadata is recorded as absent, never fabricated as a deadline or claimed to be never-expiring. Live access checks detect revocation; a known data-access deadline is preserved across refresh and never silently extended or dropped.
+OAuth code exchange must return the basic permission and an app-scoped user ID.
+The short token's `/me?fields=id,user_id` response must bind that grant ID to
+`id` and the explicitly pinned professional account to `user_id`. Meta's
+[Get Started field definitions](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/get-started)
+distinguish these namespaces; they must not be compared directly. Both IDs are
+preserved in authenticated authorization evidence. Permission names in the
+checkpoint are the grant-time evidence, not a claim that every scope has been
+exercised now. Missing provider data-access metadata is recorded as absent, never
+fabricated as a deadline or claimed to be never-expiring. Live access checks
+detect revocation; a known data-access deadline is preserved across refresh and
+never silently extended or dropped.
 
 Provider `user_id` values may be JSON integer literals beyond JavaScript's safe
 integer range. Node 22's source-aware JSON reviver retains their exact digits;
@@ -42,7 +52,7 @@ Repository Actions variables:
 | Name | Purpose |
 | --- | --- |
 | `INSTAGRAM_REDIRECT_URI` | Exact registered HTTPS callback used for the authorization request; only needed during setup. |
-| `INSTAGRAM_USER_ID` | Intended Instagram app-scoped user ID, explicitly checked during bootstrap and subsequent checks. |
+| `INSTAGRAM_USER_ID` | Intended Instagram professional account ID (`/me.user_id`), explicitly checked during bootstrap and subsequent checks; not the OAuth grant's app-scoped ID. |
 
 No Facebook inspector credential, Fly credential, GitHub secret-write token, or production deployment permission is passed to this workflow. The GitHub token has only contents/read and actions/read. The encryption context is `GITHUB_REPOSITORY` (or explicit `INSTAGRAM_LIFECYCLE_CONTEXT=owner/repo` for local use).
 

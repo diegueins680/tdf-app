@@ -21,6 +21,7 @@ const response = (data, status = 200, retryAfter = null) => ({
   headers: { get: () => retryAfter }, text: async () => JSON.stringify(data), json: async () => data,
 });
 const grant = () => ({ data: [{ access_token: 'test-short', user_id: '456', permissions: permissions.join(',') }] });
+const profile = () => ({ id: '456', user_id: '456' });
 const long = (extra = {}) => ({ access_token: 'test-long', token_type: 'bearer', expires_in: 5183944, ...extra });
 const sequence = values => async () => {
   assert.ok(values.length, 'Unexpected network request');
@@ -49,11 +50,11 @@ test('bootstrap preserves numeric wire identity through grant, checkpoint and li
     clock: () => NOW,
     fetchImpl: async () => {
       calls++;
-      if (calls === 2) return response(long());
-      return { ok: true, status: 200, text: async () => calls === 1 ? wireGrant : '{"user_id":17841445628242005}' };
+      if (calls === 3) return response(long());
+      return { ok: true, status: 200, text: async () => calls === 1 ? wireGrant : '{"id":17841445628242005,"user_id":17841445628242005}' };
     },
   });
-  assert.equal(calls, 3);
+  assert.equal(calls, 4);
   assert.equal(result.userId, '17841445628242005');
   assert.equal(result.authorization.userId, result.userId);
 });
@@ -62,13 +63,13 @@ function bundle() {
     version: 1, token: 'test-long', tokenSha256: createHash('sha256').update('test-long').digest('hex'),
     appId: '123', userId: '456', permissions, issuedAt: NOW - DAY, receivedAt: NOW - DAY,
     expiresIn: 5183944, expiresAt: NOW - DAY + 5183944, dataAccessExpiresAt: null,
-    authorization: { method: 'instagram_authorization_code', appId: '123', userId: '456', authorizedAt: NOW - DAY },
+    authorization: { method: 'instagram_authorization_code', appId: '123', userId: '456', scopedUserId: '456', authorizedAt: NOW - DAY },
   };
 }
 
 test('OAuth bootstrap binds app ID, app secret, callback, provider user and permissions before recording expiry', async () => {
   const calls = [];
-  const answers = [grant(), long(), { user_id: '456' }];
+  const answers = [grant(), profile(), long(), { user_id: '456' }];
   const result = await bootstrapLifecycle(setupOptions, { clock: () => NOW, fetchImpl: async (url, init) => {
     calls.push(new URL(url));
     assert.equal(init.redirect, 'error');
@@ -86,15 +87,16 @@ test('OAuth bootstrap binds app ID, app secret, callback, provider user and perm
   assert.equal(result.expiresAt, NOW + 5183944);
   assert.equal(result.authorization.appId, '123');
   assert.deepEqual(result.permissions, permissions);
-  assert.deepEqual(calls.map(x => x.hostname), ['api.instagram.com', 'graph.instagram.com', 'graph.instagram.com']);
-  assert.equal(calls[1].searchParams.get('grant_type'), 'ig_exchange_token');
-  assert.equal(calls[1].searchParams.get('client_secret'), config.appSecret);
-  assert.equal(calls[2].searchParams.get('fields'), 'user_id');
+  assert.deepEqual(calls.map(x => x.hostname), ['api.instagram.com', 'graph.instagram.com', 'graph.instagram.com', 'graph.instagram.com']);
+  assert.equal(calls[1].searchParams.get('fields'), 'id,user_id');
+  assert.equal(calls[2].searchParams.get('grant_type'), 'ig_exchange_token');
+  assert.equal(calls[2].searchParams.get('client_secret'), config.appSecret);
+  assert.equal(calls[3].searchParams.get('fields'), 'user_id');
 });
 
 test('expiry starts before the exchange request, never after network latency', async () => {
   const ticks = [NOW, NOW + 1, NOW + 19, NOW + 20];
-  const result = await bootstrapLifecycle(setupOptions, { clock: () => ticks.shift(), fetchImpl: sequence([grant(), long(), { user_id: '456' }]) });
+  const result = await bootstrapLifecycle(setupOptions, { clock: () => ticks.shift(), fetchImpl: sequence([grant(), profile(), long(), { user_id: '456' }]) });
   assert.equal(result.expiresAt, NOW + 1 + 5183944);
   assert.equal(result.receivedAt, NOW + 19);
 });
@@ -111,7 +113,6 @@ for (const [name, changed] of [
 for (const [name, data] of [
   ['missing identity', {}], ['empty account array', { data: [] }],
   ['ambiguous accounts', { data: [{ user_id: '456' }, { user_id: '456' }] }],
-  ['wrong account', { ...grant().data[0], user_id: '789' }],
   ['missing token', { ...grant().data[0], access_token: '' }],
   ['missing permissions', { ...grant().data[0], permissions: undefined }],
   ['missing basic grant', { ...grant().data[0], permissions: 'instagram_business_manage_messages' }],
@@ -123,7 +124,7 @@ for (const [name, data] of [
 
 for (const expires_in of [undefined, 0, -1, '5183944', 1.5, Infinity, 5184001]) {
   test('provider lifetime fails closed: ' + String(expires_in), async () => {
-    await assert.rejects(bootstrapLifecycle(setupOptions, { clock: () => NOW, fetchImpl: sequence([grant(), long({ expires_in })]) }), /authoritative token lifetime/);
+    await assert.rejects(bootstrapLifecycle(setupOptions, { clock: () => NOW, fetchImpl: sequence([grant(), profile(), long({ expires_in })]) }), /authoritative token lifetime/);
   });
 }
 
@@ -138,12 +139,37 @@ test('failed code exchange is not retried and cannot leak provider-echoed creden
   assert.equal(calls, 1);
 });
 
+test('bootstrap binds distinct app-scoped and professional IDs using the same short-token profile', async () => {
+  const result = await bootstrapLifecycle(setupOptions, { clock: () => NOW, fetchImpl: sequence([
+    { ...grant().data[0], user_id: '789' }, { id: '789', user_id: '456' }, long(), { user_id: '456' },
+  ]) });
+  assert.equal(result.userId, '456');
+  assert.equal(result.authorization.scopedUserId, '789');
+  assert.equal(result.authorization.userId, '456');
+});
+
+test('a professional account mismatch fails before long-lived exchange despite a valid scoped mapping', async () => {
+  const answers = [grant(), { id: '456', user_id: '789' }];
+  await assert.rejects(bootstrapLifecycle(setupOptions, { clock: () => NOW, fetchImpl: sequence(answers) }), /different Instagram professional account/);
+  assert.equal(answers.length, 0);
+});
+
+test('the expected professional account cannot authorize a different or missing grant-scoped identity', async () => {
+  await assert.rejects(bootstrapLifecycle(setupOptions, { clock: () => NOW,
+    fetchImpl: sequence([grant(), { id: '789', user_id: '456' }]),
+  }), /app-scoped identity/);
+  await assert.rejects(bootstrapLifecycle(setupOptions, { clock: () => NOW,
+    fetchImpl: sequence([grant(), { user_id: '456' }]),
+  }), /app-scoped identity/);
+});
+
 const invalidBundles = [
   ['missing evidence', () => null],
   ['raw-token mismatch', b => ({ ...b, token: 'different-test-token' })],
   ['wrong app', b => ({ ...b, appId: '789' })],
   ['wrong approved account', b => ({ ...b, userId: '789' })],
   ['missing ownership provenance', b => ({ ...b, authorization: null })],
+  ['missing scoped identity evidence', b => ({ ...b, authorization: { ...b.authorization, scopedUserId: undefined } })],
   ['mismatched grant owner', b => ({ ...b, authorization: { ...b.authorization, appId: '789' } })],
   ['future issuance', b => ({ ...b, issuedAt: NOW + 1 })],
   ['future response', b => ({ ...b, receivedAt: NOW + 1 })],
