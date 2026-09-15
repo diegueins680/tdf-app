@@ -30,7 +30,7 @@ it is not evidence that this precise sequence was executed in production.
 
 | Requirement | Property/action | Required implementation mechanism | Current evidence |
 |---|---|---|---|
-| S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 101,245 distinct states; observable read safety + availability and liveness passed |
+| S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 100,031 distinct states; observable read safety + availability and liveness passed |
 | S-CONSENT | ConsentIntegrity, OwnConsentOnly / Request, Withdraw(a) | own consent only, unique pair, transactional revoke | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-BLOCK | ConsentIntegrity / Block, Unblock | common row locks with accept/send, no resurrection | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
 | S-DELETE | ConsentIntegrity / Delete | tombstone/revision, stale commands rejected | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |
@@ -133,3 +133,22 @@ this exact invariant. Current complete run: Relationships 339,559 generated /
 101,245 distinct states, depth 11; Feed 4,717 / 1,674, depth 17; RequestReplay
 2,384 / 272, depth 6. All three positive configurations and six specific negative
 controls passed. Logs: `docs/social/model-evidence-active-actor-2026-09-15/`.
+
+## Tombstones and stale relationship commands
+
+Request, Withdraw, Block and Unblock now carry an explicit expected revision and
+can mutate only at the current revision. Block and Unblock require both principals
+to remain live; a surviving principal cannot modify a tombstoned pair. The model
+independently checks that all four commands are disabled against deleted targets
+and for every earlier revision. This covers delayed relationship commands as well
+as Queue/Finish delivery revisions; no resurrection or revision reset is modeled.
+Membership revocation, privacy changes and deletion remain external authoritative
+policy transitions, not user relationship commands.
+
+Three positive models and eight specific negative controls passed. Relationships:
+332,969 generated / 100,031 distinct states, depth 11. Feed and RequestReplay retain
+4,717 / 1,674 and 2,384 / 272 respectively. DeletedTarget and StaleCommand must fail
+DeletedTargetCannotMutate and StaleRelationshipCommandsDenied respectively.
+Exact logs: `docs/social/model-evidence-tombstone-2026-09-15/`. SQL/HTTP refinement,
+including propagation of expected revisions through legacy clients, remains a
+separate activation requirement for downstream implementations.

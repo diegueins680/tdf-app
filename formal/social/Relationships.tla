@@ -1,10 +1,14 @@
 ------------------------- MODULE Relationships -------------------------
 EXTENDS Naturals, FiniteSets, TLC
-CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor
+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor,
+          UnsafeDeletedTarget, UnsafeStaleVersion
 VARIABLES consent, blocked, alive, members, private, version,
           cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe
 vars == <<consent, blocked, alive, members, private, version,
           cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
+ValidCommandActor(a) == UnsafeInactiveActor \/
+                         (IF UnsafeDeletedTarget THEN a \in alive ELSE alive = Actors)
+CurrentCommand(expectedVersion) == UnsafeStaleVersion \/ expectedVersion = version
 Available == alive = Actors /\ blocked = {}
 Connected == Available /\ consent = Actors
 Permitted == Available /\ (~private \/ members = Actors)
@@ -15,27 +19,37 @@ Init == /\ consent = {} /\ blocked = {} /\ alive = Actors
         /\ queuedVersion = [r \in Requests |-> 0]
         /\ deliveryCount = [r \in Requests |-> 0]
         /\ consentOwnerSafe = TRUE
-Request(a) == /\ Available /\ a \notin consent /\ version < MaxVersion
-              /\ consent' = consent \cup {a} /\ version' = version + 1
-              /\ UNCHANGED <<blocked, alive, members, private, cacheConsent,
-                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
-Withdraw(a) == /\ a \in consent /\ version < MaxVersion
-               /\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \ {a}
-               /\ version' = version + 1
-               /\ consentOwnerSafe' =
-                    (consentOwnerSafe /\ consent' \ {a} = consent \ {a})
-               /\ UNCHANGED <<blocked, alive, members, private, cacheConsent,
-                    cacheVersion, pending, terminal, delivered, lastRead,
-                    queuedVersion, deliveryCount>>
-Block(a) == /\ (UnsafeInactiveActor \/ a \in alive) /\ a \notin blocked /\ version < MaxVersion
-            /\ blocked' = blocked \cup {a} /\ consent' = {}
-            /\ version' = version + 1
-            /\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,
-                 pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
-Unblock(a) == /\ (UnsafeInactiveActor \/ a \in alive) /\ a \in blocked /\ version < MaxVersion
-              /\ blocked' = blocked \ {a} /\ version' = version + 1
-              /\ UNCHANGED <<consent, alive, members, private, cacheConsent,
-                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>
+Request(a, expectedVersion) ==
+  /\ CurrentCommand(expectedVersion) /\ Available
+  /\ a \notin consent /\ version < MaxVersion
+  /\ consent' = consent \cup {a} /\ version' = version + 1
+  /\ UNCHANGED <<blocked, alive, members, private, cacheConsent,
+       cacheVersion, pending, terminal, delivered, lastRead, queuedVersion,
+       deliveryCount, consentOwnerSafe>>
+Withdraw(a, expectedVersion) ==
+  /\ CurrentCommand(expectedVersion) /\ alive = Actors
+  /\ a \in consent /\ version < MaxVersion
+  /\ consent' = (IF UnsafeWithdrawal THEN {} ELSE consent \ {a})
+  /\ version' = version + 1
+  /\ consentOwnerSafe' = (consentOwnerSafe /\ consent' \ {a} = consent \ {a})
+  /\ UNCHANGED <<blocked, alive, members, private, cacheConsent,
+       cacheVersion, pending, terminal, delivered, lastRead,
+       queuedVersion, deliveryCount>>
+Block(a, expectedVersion) ==
+  /\ CurrentCommand(expectedVersion) /\ ValidCommandActor(a)
+  /\ a \notin blocked /\ version < MaxVersion
+  /\ blocked' = blocked \cup {a} /\ consent' = {}
+  /\ version' = version + 1
+  /\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,
+       pending, terminal, delivered, lastRead, queuedVersion,
+       deliveryCount, consentOwnerSafe>>
+Unblock(a, expectedVersion) ==
+  /\ CurrentCommand(expectedVersion) /\ ValidCommandActor(a)
+  /\ a \in blocked /\ version < MaxVersion
+  /\ blocked' = blocked \ {a} /\ version' = version + 1
+  /\ UNCHANGED <<consent, alive, members, private, cacheConsent,
+       cacheVersion, pending, terminal, delivered, lastRead, queuedVersion,
+       deliveryCount, consentOwnerSafe>>
 Revoke(a) == /\ a \in members /\ version < MaxVersion
              /\ members' = members \ {a} /\ version' = version + 1
              /\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,
@@ -77,8 +91,10 @@ Finish(r) == /\ r \in pending /\ pending' = pending \ {r}
                          ELSE deliveryCount
              /\ UNCHANGED <<consent, blocked, alive, members, private, version,
                   cacheConsent, cacheVersion, lastRead, queuedVersion, consentOwnerSafe>>
-Next == (\E a \in Actors:
-          Request(a) \/ Withdraw(a) \/ Block(a) \/ Unblock(a) \/ Revoke(a) \/ Delete(a))
+Next == (\E a \in Actors, expectedVersion \in 0..MaxVersion:
+          Request(a, expectedVersion) \/ Withdraw(a, expectedVersion)
+          \/ Block(a, expectedVersion) \/ Unblock(a, expectedVersion))
+        \/ (\E a \in Actors: Revoke(a) \/ Delete(a))
         \/ Privacy \/ Refresh \/ Read
         \/ (\E r \in Requests: Queue(r) \/ Finish(r))
 Spec == Init /\ [][Next]_vars /\ \A r \in Requests: WF_vars(Finish(r))
@@ -93,7 +109,15 @@ TypeOK == /\ consent \subseteq Actors /\ blocked \subseteq Actors
 ConsentIntegrity == (blocked # {} \/ alive # Actors) => consent = {}
 OwnConsentOnly == consentOwnerSafe
 InactiveActorCannotMutate == \A a \in Actors \ alive:
-                              ~ENABLED Block(a) /\ ~ENABLED Unblock(a)
+                              ~ENABLED Block(a, version) /\ ~ENABLED Unblock(a, version)
+DeletedTargetCannotMutate == alive # Actors =>
+  \A a \in Actors:
+    /\ ~ENABLED Request(a, version) /\ ~ENABLED Withdraw(a, version)
+    /\ ~ENABLED Block(a, version) /\ ~ENABLED Unblock(a, version)
+StaleRelationshipCommandsDenied ==
+  \A expectedVersion \in {v \in 0..MaxVersion: v < version}, a \in Actors:
+    /\ ~ENABLED Request(a, expectedVersion) /\ ~ENABLED Withdraw(a, expectedVersion)
+    /\ ~ENABLED Block(a, expectedVersion) /\ ~ENABLED Unblock(a, expectedVersion)
 ReadWasAuthorized == /\ lastRead.consent = Actors
                      /\ lastRead.blocked = {} /\ lastRead.alive = Actors
                      /\ (~lastRead.private \/ lastRead.members = Actors)
