@@ -40,6 +40,8 @@ jobs:
           diff -u scripts/social/model-cases.sql /tmp/social-model-cases.sql
       - name: PostgreSQL migration, race and model refinement checks
         run: bash scripts/social/test-postgres.sh
+      - name: Complete schema compatibility and preserved-write pause
+        run: bash scripts/social/test-schema-compatibility.sh
       - uses: actions/upload-artifact@v7
         if: always()
         with:

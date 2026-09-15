@@ -51,8 +51,11 @@ combined contract.
 - **Real PostgreSQL:** private native PostgreSQL 16.10 fixtures passed additive
   reapplication, disabled defaults, retries/payload conflicts, ordered block/accept
   race, rate limits, closure, feed eligibility/order and pause preserving new writes.
-  Reconciliation ran with zero fixture violations. This is a deliberately minimal
-  schema, not a full production-schema rehearsal. Earlier Docker fixtures passed;
+  Reconciliation ran with zero fixture violations. Those initial tests use a minimal schema. The subsequent
+  [complete schema fixture](schema-compatibility.md) restored the schema-only
+  baseline, applied 102 registered migrations and passed additive reapply/backfill/
+  preserved-write pause on PostgreSQL 16.10. Live data and old/new server coexistence
+  remain unqualified. Earlier Docker fixtures passed;
   a later shared Docker API 500 blocked that path, so no Docker restart was attempted.
 - **Real HTTP:** **8 examples, 0 failures**, actual Servant bearer authentication and
   private PostgreSQL. Includes gate states, injected actor rejection, consent
@@ -106,7 +109,8 @@ A passing bounded model is evidence about that model and bounds, not the whole a
 | Performance thresholds and reproducible before/after | satisfied for documented synthetic read workload | Warm threshold met; mutation p95, multiple high-degree clubs, background lag, production histogram/storage/cost remain unqualified |
 | Useful-outcome metrics and post-release plan | failed for instrumentation; satisfied for plan | [Operations](operations.md); aggregate reconciliation/connected-pair stock is only a proxy. Consent-aware lead/conversation/booking/sale attribution is not instrumented |
 | Additive migration, idempotent publication backfill and preserved-write pause | satisfied on minimal non-production fixture | No manufactured legacy consent; pause retains blocks/preferences/positions. No destructive down migration |
-| Complete-schema migration, old/new coexistence and rollback after activation | failed | Need full-schema fixture and every legacy deny guard. Rolling back to code that ignores new blocks is unsafe |
+| Complete-schema additive migration and preserved-write pause | satisfied on repository fixture | [Schema compatibility](schema-compatibility.md): complete schema-only baseline + 102 registered migrations; no live-data or lock-duration claim |
+| Old/new server coexistence and rollback after activation | failed | Every legacy deny guard remains required; rolling back to code that ignores new blocks is unsafe |
 | Small dependent review PRs, flags inactive, no merge | satisfied | Linked stack; dependencies, tests, limitations, flags and rollback documented; no merge performed |
 | Leave all deployment pending | failed | Automatic Vercel check reported success; provider target inspection/removal blocked by HTTP 403 |
 | New graph engine/ML/broker/contact import/destructive cleanup | intentionally deferred | No measured requirement; no private relationship inference or unsupported infrastructure |
@@ -126,9 +130,9 @@ A passing bounded model is evidence about that model and bounds, not the whole a
    shared-space rules; add terminal stale-event handling and generated worker tests.
 4. Finish relationship pagination, private follow decisions and mobile flows, then
    run real authenticated web/mobile journeys and all meaningful legacy tests.
-5. Rehearse additive migration/backfill/reconciliation/preserved-write rollback on
-   a representative complete non-production schema; measure index-lock duration and
-   multi-club/high-degree query growth. Do not activate while any legacy bypass exists.
+5. Extend the passing complete-schema fixture to old/new application coexistence
+   and approved representative data; measure index-lock duration and multi-club/
+   high-degree query growth. Do not activate while any legacy bypass exists.
 6. Add consent-aware useful-outcome and guardrail instrumentation using existing
    conversion identifiers, run current CI, and prepare a separately approved rollout.
 

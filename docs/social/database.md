@@ -82,7 +82,9 @@ This covers Request/Withdraw/Block/Unblock only. Feed fixtures additionally cove
 ordering ties, edits, late inserts, deletion, membership revocation and exclusions.
 A real two-session test holds block's locks while acceptance waits.
 
-Still required before activation: full application-schema migration/rollback;
+The complete schema-only repository fixture plus 102 registered migrations now
+passes additive reapply/backfill/preserved-write pause; see [schema compatibility](schema-compatibility.md).
+Still required before activation: representative live-shape data and old/new server coexistence;
 full-app authenticated end-to-end tests (eight isolated real HTTP examples passed); complete legacy/block/media/notification
 coverage; private-follow requests; managed entities; session-token fencing; mobile
 cutover; general abuse reporting; complete long relationship-list pagination;
