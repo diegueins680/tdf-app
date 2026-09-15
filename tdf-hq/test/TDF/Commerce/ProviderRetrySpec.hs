@@ -1266,7 +1266,7 @@ reconciliationTransactionSpec = describe "authoritative query transaction owners
       rawExecute "RELEASE SAVEPOINT caller_owned" []) pool
     runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
 
-  it "applies provider cancellation atomically without capturing or releasing an ambiguous state" $ \pool -> do
+  it "applies confirmed provider cancellation atomically without creating a capture" $ \pool -> do
     payment <- reconciliationFixture pool Checkout.ProviderPlaceToPay
     result <- parsedQuery payment Adapter.AdapterCancelled
     runSqlPool (Reconciliation.applyQueryResult payment result "cancel-query" notificationTime) pool
@@ -1281,10 +1281,10 @@ reconciliationTransactionSpec = describe "authoritative query transaction owners
 
   it "rejects unsupported authorization and reversal results without changing history" $ \pool -> do
     payment <- reconciliationFixture pool Checkout.ProviderPlaceToPay
-    pending <- parsedQuery payment Adapter.AdapterPending
+    pendingResult <- parsedQuery payment Adapter.AdapterPending
     snapshot <- runSqlPool (paymentSnapshot payment) pool
     forM_ [Adapter.AdapterAuthorized, Adapter.AdapterReversed] $ \state ->
-      runSqlPool (Reconciliation.applyQueryResult payment pending { Adapter.adapterResultState = state }
+      runSqlPool (Reconciliation.applyQueryResult payment pendingResult { Adapter.adapterResultState = state }
         "unsupported-query" notificationTime) pool >>= (`shouldSatisfy` isLeft)
     runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
 
