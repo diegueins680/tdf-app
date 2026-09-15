@@ -4,7 +4,6 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { loadSessionSnapshot, logoutSessionRequest, reconcileOnboardingProgress } from '../api/session';
 import { captureReconciledFirstValue } from '../analytics/onboardingProgress';
-import { getAnalyticsClient } from '../analytics/posthog';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
 import type { LocalePreferences } from '../api/preferences';
 import { reconcileSessionPersonalData } from '../utils/sessionPersonalData';
@@ -320,13 +319,20 @@ export function SessionProvider({ children }: SessionProviderProps) {
   // Identify the user in analytics whenever the session changes. Reset on
   // logout so the next user does not inherit the previous distinct id.
   useEffect(() => {
-    const analytics = getAnalyticsClient();
-    if (!analytics.ready) return;
-    if (session?.partyId != null) {
-      analytics.identify(String(session.partyId));
-    } else {
-      analytics.reset();
-    }
+    const partyId = session?.partyId;
+    let cancelled = false;
+    void import('../analytics/posthog')
+      .then(({ getAnalyticsClient }) => {
+        if (cancelled) return;
+        const analytics = getAnalyticsClient();
+        if (!analytics.ready) return;
+        if (partyId != null) analytics.identify(String(partyId));
+        else analytics.reset();
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
   }, [session]);
 
   useEffect(() => {
@@ -337,7 +343,13 @@ export function SessionProvider({ children }: SessionProviderProps) {
     let cancelled = false;
 
     void reconcileOnboardingProgress(apiToken)
-      .then((result) => {
+      .then(async (result) => {
+        if (
+          cancelled
+          || versionAtStart !== sessionVersionRef.current
+          || currentSession?.partyId !== partyId
+        ) return;
+        const { getAnalyticsClient } = await import('../analytics/posthog');
         if (
           cancelled
           || versionAtStart !== sessionVersionRef.current

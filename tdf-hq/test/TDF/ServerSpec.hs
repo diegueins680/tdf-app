@@ -19,7 +19,10 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
-import Database.Persist (Entity(..), Key, PersistValue(PersistText), count, get, insert, insert_, insertKey, toPersistValue, (==.))
+import Database.Persist
+    ( Entity(..), Key, PersistValue(PersistText), count, get, insert, insert_, insertKey
+    , selectList, toPersistValue, (==.)
+    )
 import Database.Persist.Sql
     ( SqlPersistT
     , fromSqlKey
@@ -89,7 +92,7 @@ import qualified TDF.Calendar.Models as Cal
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Catalog.Models as Catalog
 import TDF.DB (Env (..))
-import TDF.DTO.SocialEventsDTO (ArtistDTO (..))
+import TDF.DTO.SocialEventsDTO (ArtistDTO (..), EventMomentReactionDTO (..))
 import TDF.Handlers.InputList
     ( AssetField (..)
     , renderInputListLatex
@@ -505,7 +508,7 @@ import TDF.ServerFanClub
     ( validateFanClubPostMutationTarget
     , validateFanClubPostPathId
     )
-import TDF.Server.SocialEventsHandlers (toggleMomentReactionDb, validateEventArtistIds)
+import TDF.Server.SocialEventsHandlers (redactMomentReactionIdentity, toggleMomentReactionDb, validateEventArtistIds)
 import TDF.ServerExtra
     ( validateFacebookReplyTarget
     , validateInstagramReplyTarget
@@ -5685,6 +5688,57 @@ spec = describe "TDF.Server helpers" $ do
                 Left serverErr ->
                     expectationFailure
                         ("Expected repeated moment-reaction completion to remain idempotent, got: " <> show serverErr)
+
+        it "redacts other parties' moment-reaction identities without changing reaction counts" $ do
+            now <- getCurrentTime
+            let reaction = EventMomentReactionDTO
+                    { emrReactionTypeId = "50800000-0000-4000-8000-000000000001"
+                    , emrReactionCode = "heart"
+                    , emrReactionNameEs = "Corazon"
+                    , emrReactionNameEn = "Heart"
+                    , emrReactionEmoji = "heart"
+                    , emrPartyId = Just "42"
+                    , emrCreatedAt = Just now
+                    }
+                own = redactMomentReactionIdentity "42" reaction
+                other = redactMomentReactionIdentity "43" reaction
+            (emrPartyId own, emrCreatedAt own) `shouldBe` (Just "42", Just now)
+            (emrPartyId other, emrCreatedAt other) `shouldBe` (Nothing, Nothing)
+            emrReactionTypeId other `shouldBe` emrReactionTypeId reaction
+            length (map (redactMomentReactionIdentity "43") [reaction]) `shouldBe` 1
+
+        it "repairs legacy reaction evidence once without changing the original action time" $ do
+            now <- getCurrentTime
+            let originalTime = addUTCTime (-3600) now
+            (reactionTimes, evidenceTimes) <- runNoLoggingT $ do
+                pool <- createSqlitePool ":memory:" 1
+                liftIO $ runSqlPool initializeAuthSchema pool
+                (_otherPartyId, partyId) <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                let momentKey = toSqlKey 42 :: Social.EventMomentId
+                    reactionType = fixtureUuidKey "50800000-0000-4000-8000-000000000001"
+                    actorPartyText = T.pack (show (fromSqlKey partyId))
+                liftIO $ flip runSqlPool pool $ do
+                    rawExecute "INSERT INTO event_moment(id) VALUES (42)" []
+                    insert_ Social.EventMomentReaction
+                        { Social.eventMomentReactionMomentId = momentKey
+                        , Social.eventMomentReactionReactionTypeId = Just reactionType
+                        , Social.eventMomentReactionReaction = Nothing
+                        , Social.eventMomentReactionReactorPartyId = actorPartyText
+                        , Social.eventMomentReactionCreatedAt = originalTime
+                        }
+                liftIO $ flip runSqlPool pool $ do
+                    _ <- toggleMomentReactionDb partyId actorPartyText momentKey reactionType (Just True) now
+                    _ <- toggleMomentReactionDb partyId actorPartyText momentKey reactionType (Just True) (addUTCTime 60 now)
+                    reactions <- selectList [Social.EventMomentReactionMomentId ==. momentKey] []
+                    evidence <- selectList
+                        [ M.EngagementEventActorPartyId ==. Just partyId
+                        , M.EngagementEventEntityType ==. "event_moment"
+                        , M.EngagementEventEventType ==. "reaction_added"
+                        ] []
+                    pure (map (Social.eventMomentReactionCreatedAt . entityVal) reactions,
+                          map (M.engagementEventCreatedAt . entityVal) evidence)
+            reactionTimes `shouldBe` [originalTime]
+            evidenceTimes `shouldBe` [originalTime]
 
         it "records moment-reaction additions atomically and retains evidence after removal" $ do
             states <-
