@@ -5,20 +5,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
+import type { OnboardingProgressDTO, OnboardingCompletionResultDTO } from '../api/session';
+import type { SessionUser } from '../session/SessionContext';
+import es from '../i18n/locales/es';
 
-interface OnboardingProgressFixture {
-  eligible: boolean;
-  completed: boolean;
-}
-
-const loadOnboardingProgressMock = jest.fn<() => Promise<OnboardingProgressFixture>>();
+const loadOnboardingProgressMock = jest.fn<(apiToken?: string) => Promise<OnboardingProgressDTO>>();
 const completeOnboardingProgressMock = jest.fn<() => Promise<unknown>>();
 const listArtistsMock = jest.fn(async () => []);
 const listFollowsMock = jest.fn(async () => []);
 const listMyClubsMock = jest.fn(async () => []);
 const releaseFeedRefetchMock = jest.fn(async () => undefined);
 const profileRefetchMock = jest.fn(async () => undefined);
-let sessionMock = {
+let sessionLoading = false;
+let sessionMock: SessionUser | null = {
   username: 'fan-42',
   displayName: 'Fan 42',
   roles: ['customer'],
@@ -27,7 +26,12 @@ let sessionMock = {
 };
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: sessionMock }),
+  useSession: () => ({ session: sessionMock, loading: sessionLoading }),
+  getActiveSession: () => sessionMock,
+}));
+
+jest.unstable_mockModule('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => es.fanHubOnboarding[key.replace('fanHubOnboarding.', '') as keyof typeof es.fanHubOnboarding] ?? key }),
 }));
 
 jest.unstable_mockModule('../api/session', () => ({
@@ -40,7 +44,7 @@ jest.unstable_mockModule('../api/fans', () => ({
     listArtists: listArtistsMock,
     listFollows: listFollowsMock,
     listMyClubs: listMyClubsMock,
-    getMyArtistProfile: jest.fn(),
+    getMyArtistProfile: jest.fn(async () => null),
     updateMyArtistProfile: jest.fn(),
     requestMyFanRole: jest.fn(),
     follow: jest.fn(),
@@ -124,10 +128,14 @@ jest.unstable_mockModule('../features/fanclubs/FanClubPreview', () => ({ FanClub
 
 const { default: FanHubPage } = await import('./FanHubPage');
 
-const eligibleProgress: OnboardingProgressFixture = { eligible: true, completed: false };
-const completedProgress: OnboardingProgressFixture = { eligible: false, completed: true };
+const eligibleProgress: OnboardingProgressDTO = {
+  eligible: true, signupCompletedAt: '2026-09-15T00:00:00Z', onboardingIntent: 'follow_artists',
+  completedAt: null, firstValue: null, firstValueCompletedAt: null, updatedAt: '2026-09-15T00:00:00Z',
+};
+const completedProgress: OnboardingProgressDTO = { ...eligibleProgress, eligible: false, completedAt: '2026-09-15T00:05:00Z' };
+const completedReceipt: OnboardingCompletionResultDTO = { newlyCompleted: true, progress: completedProgress };
 
-function renderPage() {
+function renderPage(initialEntry = '/fans') {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -136,7 +144,7 @@ function renderPage() {
   });
   const node = () => (
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/fans']}>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <FanHubPage />
       </MemoryRouter>
     </QueryClientProvider>
@@ -150,15 +158,13 @@ function renderPage() {
 }
 
 function closeOnboardingAlert() {
-  const title = screen.getByText('Primeros pasos');
-  const alert = title.closest('[role="alert"]');
-  const close = alert?.querySelector<HTMLButtonElement>('button');
-  if (!close) throw new Error('Expected onboarding close button');
-  fireEvent.click(close);
+  fireEvent.click(screen.getByRole('button', { name: 'Cerrar primeros pasos' }));
 }
 
 describe('FanHubPage authoritative onboarding continuity', () => {
   beforeEach(() => {
+    sessionLoading = false;
+    localStorage.clear();
     sessionMock = {
       username: 'fan-42',
       displayName: 'Fan 42',
@@ -167,7 +173,7 @@ describe('FanHubPage authoritative onboarding continuity', () => {
       partyId: 42,
     };
     loadOnboardingProgressMock.mockReset().mockResolvedValue(eligibleProgress);
-    completeOnboardingProgressMock.mockReset().mockResolvedValue({ newlyCompleted: true });
+    completeOnboardingProgressMock.mockReset().mockResolvedValue(completedReceipt);
     listArtistsMock.mockClear();
     listFollowsMock.mockClear();
     listMyClubsMock.mockClear();
@@ -203,7 +209,7 @@ describe('FanHubPage authoritative onboarding continuity', () => {
   it('restores the guidance and offers retry when completion persistence fails', async () => {
     completeOnboardingProgressMock
       .mockRejectedValueOnce(new Error('offline'))
-      .mockResolvedValueOnce({ newlyCompleted: true });
+      .mockResolvedValueOnce(completedReceipt);
     const view = renderPage();
 
     expect(await screen.findByText('Primeros pasos')).toBeTruthy();
@@ -275,5 +281,140 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     expect(screen.queryByText('Primeros pasos')).toBeNull();
     expect(screen.queryByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeNull();
     view.queryClient.clear();
+  });
+
+  it('does not read or show account guidance until session hydration completes', async () => {
+    sessionLoading = true;
+    const view = renderPage();
+    expect(screen.queryByText('Primeros pasos')).toBeNull();
+    expect(loadOnboardingProgressMock).not.toHaveBeenCalled();
+    sessionLoading = false;
+    view.rerenderPage();
+    await screen.findByText('Primeros pasos');
+    expect(completeOnboardingProgressMock).not.toHaveBeenCalled();
+  });
+
+  it('ignores legacy dismissal and blocked storage without persisting onboarding locally', async () => {
+    localStorage.setItem('fanhub-onboarding-dismissed', '1');
+    const storageRead = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('storage blocked'); });
+    const storageWrite = jest.spyOn(Storage.prototype, 'setItem');
+    try {
+      renderPage();
+      await screen.findByText('Primeros pasos');
+      closeOnboardingAlert();
+      await waitFor(() => expect(screen.queryByText('Primeros pasos')).toBeNull());
+      expect(storageRead).not.toHaveBeenCalledWith('fanhub-onboarding-dismissed');
+      expect(storageWrite.mock.calls.every(([key]) => key === 'fan-hub:genre-filter')).toBe(true);
+    } finally {
+      storageRead.mockRestore();
+      storageWrite.mockRestore();
+    }
+  });
+
+  it.each([null, {}, { ...eligibleProgress, eligible: 'true' }, { ...eligibleProgress, completedAt: 'yesterday' },
+    { ...eligibleProgress, signupCompletedAt: null }])(
+    'rejects malformed eligibility payload %#', async (payload) => {
+      loadOnboardingProgressMock.mockResolvedValueOnce(payload as OnboardingProgressDTO);
+      renderPage();
+      await screen.findByText(es.fanHubOnboarding.loadError);
+      expect(screen.queryByText('Primeros pasos')).toBeNull();
+      expect(completeOnboardingProgressMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([{}, { newlyCompleted: true }, { newlyCompleted: false, progress: eligibleProgress },
+    { newlyCompleted: true, progress: { ...eligibleProgress, eligible: false } }])(
+    'does not mistake a malformed or nonterminal receipt for success %#', async (receipt) => {
+      completeOnboardingProgressMock.mockResolvedValueOnce(receipt);
+      renderPage();
+      await screen.findByText('Primeros pasos');
+      closeOnboardingAlert();
+      await screen.findByText(es.fanHubOnboarding.saveError);
+      expect(screen.getByText('Primeros pasos')).toBeTruthy();
+      expect(completeOnboardingProgressMock).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('coalesces double close, sends no first value, and accepts an already-terminal receipt', async () => {
+    let resolveExit: ((value: unknown) => void) | undefined;
+    completeOnboardingProgressMock.mockImplementationOnce(() => new Promise((resolve) => { resolveExit = resolve; }));
+    sessionMock = { ...sessionMock!, apiToken: 'synthetic-exit-token' };
+    renderPage();
+    await screen.findByText('Primeros pasos');
+    const close = screen.getByRole('button', { name: 'Cerrar primeros pasos' });
+    await act(async () => { fireEvent.click(close); fireEvent.click(close); });
+    expect(completeOnboardingProgressMock).toHaveBeenCalledTimes(1);
+    expect(completeOnboardingProgressMock).toHaveBeenCalledWith(undefined, 'synthetic-exit-token');
+    expect(loadOnboardingProgressMock).toHaveBeenCalledWith('synthetic-exit-token');
+    expect((await screen.findByRole('status')).textContent).toBe(es.fanHubOnboarding.saving);
+    expect(screen.getByText('Primeros pasos')).toBeTruthy();
+    await act(async () => { resolveExit?.({ newlyCompleted: false, progress: completedProgress }); });
+    await waitFor(() => expect(screen.queryByText('Primeros pasos')).toBeNull());
+  });
+
+  it.each(['guest', 'manager'])('keeps %s tips separate from account completion', async (mode) => {
+    sessionMock = mode === 'guest' ? null : { username: 'manager', displayName: 'Manager', partyId: 42, roles: ['Admin'], modules: ['Admin'] };
+    renderPage(mode === 'manager' ? '/inicio' : '/fans');
+    await screen.findByText(mode === 'manager' ? 'Lo más útil ahora' : 'Primeros pasos');
+    closeOnboardingAlert();
+    expect(screen.queryByText(mode === 'manager' ? 'Lo más útil ahora' : 'Primeros pasos')).toBeNull();
+    expect(loadOnboardingProgressMock).not.toHaveBeenCalled();
+    expect(completeOnboardingProgressMock).not.toHaveBeenCalled();
+  });
+
+  it.each(['same-party rotation', 'unmount'])('ignores late eligibility after %s', async (change) => {
+    let resolveRead: ((value: OnboardingProgressDTO) => void) | undefined;
+    loadOnboardingProgressMock.mockImplementationOnce(() => new Promise((resolve) => { resolveRead = resolve; }));
+    const view = renderPage();
+    await waitFor(() => expect(loadOnboardingProgressMock).toHaveBeenCalledTimes(1));
+    if (change === 'unmount') view.unmount();
+    else {
+      sessionMock = { ...sessionMock!, apiToken: 'replacement-token' };
+      loadOnboardingProgressMock.mockResolvedValue(completedProgress);
+      view.rerenderPage();
+      await waitFor(() => expect(loadOnboardingProgressMock).toHaveBeenCalledTimes(2));
+    }
+    await act(async () => { resolveRead?.(eligibleProgress); });
+    expect(screen.queryByText('Primeros pasos')).toBeNull();
+    expect(completeOnboardingProgressMock).not.toHaveBeenCalled();
+  });
+
+  it('does not let an old completion hide guidance after a session leaves and returns', async () => {
+    let resolveExit: ((value: unknown) => void) | undefined;
+    completeOnboardingProgressMock.mockImplementationOnce(() => new Promise((resolve) => { resolveExit = resolve; }));
+    const original = sessionMock;
+    const view = renderPage();
+    await screen.findByText('Primeros pasos');
+    closeOnboardingAlert();
+    await waitFor(() => expect(completeOnboardingProgressMock).toHaveBeenCalledTimes(1));
+    sessionMock = null;
+    view.rerenderPage();
+    sessionMock = original;
+    view.rerenderPage();
+    await waitFor(() => expect(loadOnboardingProgressMock).toHaveBeenCalledTimes(2));
+    await act(async () => { resolveExit?.(completedReceipt); });
+    expect(await screen.findByText('Primeros pasos')).toBeTruthy();
+    expect(screen.queryByText(es.fanHubOnboarding.saveError)).toBeNull();
+    closeOnboardingAlert();
+    await waitFor(() => expect(completeOnboardingProgressMock).toHaveBeenCalledTimes(2));
+  });
+
+  it('does not reopen acknowledged guidance when a pre-completion refresh resolves late', async () => {
+    let resolveExit: ((value: unknown) => void) | undefined;
+    let resolveRead: ((value: OnboardingProgressDTO) => void) | undefined;
+    completeOnboardingProgressMock.mockImplementationOnce(() => new Promise((resolve) => { resolveExit = resolve; }));
+    const view = renderPage();
+    await screen.findByText('Primeros pasos');
+    closeOnboardingAlert();
+    await screen.findByText(es.fanHubOnboarding.saving);
+    loadOnboardingProgressMock.mockImplementationOnce(() => new Promise((resolve) => { resolveRead = resolve; }));
+    let refresh: Promise<void> | undefined;
+    await act(async () => { refresh = view.queryClient.invalidateQueries({ queryKey: ['onboarding-progress'] }); });
+    await waitFor(() => expect(loadOnboardingProgressMock).toHaveBeenCalledTimes(2));
+    await act(async () => { resolveExit?.(completedReceipt); });
+    await waitFor(() => expect(screen.queryByText(es.fanHubOnboarding.saving)).toBeNull());
+    await act(async () => { resolveRead?.(eligibleProgress); await refresh; });
+    expect(screen.queryByText('Primeros pasos')).toBeNull();
+    expect(completeOnboardingProgressMock).toHaveBeenCalledTimes(1);
   });
 });

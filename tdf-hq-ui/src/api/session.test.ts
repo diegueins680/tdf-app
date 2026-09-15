@@ -201,4 +201,17 @@ describe('session api', () => {
       'Authentication required',
     );
   });
+
+  it('binds eligibility and empty explicit exit to the captured bearer without a Party body', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => progressPayload } as Response);
+    await loadOnboardingProgress('captured-token');
+    expect(fetchMock).toHaveBeenLastCalledWith(expect.stringContaining('/session/onboarding'), {
+      credentials: 'include', headers: { Authorization: 'Bearer captured-token' },
+    });
+    await completeOnboardingProgress(undefined, 'captured-token');
+    expect(fetchMock).toHaveBeenLastCalledWith(expect.stringContaining('/session/onboarding/complete'), {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer captured-token' }, body: '{}',
+    });
+  });
 });

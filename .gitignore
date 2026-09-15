@@ -69,6 +69,7 @@ test-results/
 blob-report/
 artifacts/persona-playwright/
 artifacts/artist-follow-playwright/
+artifacts/fanhub-playwright/
 
 # Temporary files
 tmp/
