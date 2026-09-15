@@ -22,6 +22,8 @@ data, organization to event-scoped grants, and guest invitation to canonical par
 | Booking race | Two requests confirm the same artist/room/equipment. | Exclusion/capacity constraint inside one transaction, idempotency, concurrency test; justified override in separate privileged command. |
 | Task dependency race | Concurrent edges create a cycle after both prechecks pass. | Per-event graph serialization/serializable transaction and database-backed test. |
 | Responsibility orphan | Collaborator removed while still Accountable/Responsible. | Atomic reassignment or reject; RACI constraint and adversarial removal test. |
+| Cross-task command key leak | A private sibling's UUID receipt changes another task's outcome. | PR 23 namespaces operation keys by canonical task ID inside the existing ledger; current task read is checked before receipt lookup; payload/actor hash binding and concurrent retry tests. |
+| Timed responsibility loss | A replace-all editor omits unseen future or expired assignments. | PR 23 replaces one explicit active unbounded pair only, preserving old row/audit and every unrelated assignment; timed sources and expired required roles fail closed. |
 | Contract substitution | Party accepts v1 while server confirms edited v2. | Immutable content hash/version, current-version locks, required-party acceptance uniqueness, model-based test. |
 | Payment spoofing | Browser redirect marks payment paid. | Signature-verified webhook/server verification, environment/merchant/amount/currency/resource binding, provider inbox dedupe. |
 | Duplicate side effect | Retried webhook issues tickets or payout twice. | Scoped idempotency, unique provider event/resource keys, ledger uniqueness, retry/reorder tests. |

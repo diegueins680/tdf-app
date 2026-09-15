@@ -16,3 +16,7 @@ SELECT event_rehearsal.check_that(
   to_regprocedure('event_operation_lock_task_revision(bigint,bigint,bigint)') IS NULL
   AND (SELECT snapshot=(SELECT jsonb_agg(to_jsonb(t) ORDER BY activity_id) FROM event_operation_task_revision t)
     FROM event_rehearsal.expected_task_revisions), 'rollback removes revision guard but retains counters');
+SELECT event_rehearsal.check_that(
+  NOT EXISTS (SELECT 1 FROM pg_proc WHERE pronamespace='public'::regnamespace
+    AND proname IN ('event_operation_reassign_raci','event_operation_actor_can_manage_task')),
+  'RACI command rollback removes only its entry points');

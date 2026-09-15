@@ -38,3 +38,8 @@ SELECT event_rehearsal.check_that(
   (SELECT snapshot=(SELECT jsonb_agg(to_jsonb(t) ORDER BY activity_id) FROM event_operation_task_revision t)
     FROM event_rehearsal.expected_task_revisions), 'roll-forward never resets aggregate counters');
 SELECT event_operation_lock_task_revision(900010,900010,4);
+SELECT event_rehearsal.check_that(
+  event_operation_reassign_raci(900010,900010,900001,
+    '20000000-0000-4000-8000-000000000001',4,'accountable',900001,900002,
+    'Synthetic full-schema reassignment','schema-rehearsal')->>'error'='feature_disabled',
+  'RACI command reapply remains disabled');
