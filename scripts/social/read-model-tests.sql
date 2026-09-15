@@ -1,3 +1,7 @@
+DO $$ BEGIN
+  ASSERT NOT EXISTS(SELECT 1 FROM pg_proc WHERE proname IN
+    ('social_v2_feed','social_v2_discover','social_v2_me','social_v2_relationship') AND provolatile<>'s');
+END $$;
 UPDATE social_v2_runtime SET enabled=true;
 SELECT social_v2_publish_batch();
 DO $$ DECLARE page jsonb; BEGIN
@@ -40,6 +44,10 @@ DO $$ BEGIN
   ASSERT social_v2_discover(2,10)->'items'='[]'::jsonb;
 END $$;
 DO $$ BEGIN
+  ASSERT social_v2_relationship(2,5)->>'error'='unavailable';
+  ASSERT social_v2_relationship(5,2)->>'blocked'='true';
+  ASSERT social_v2_relationship(2,2)->>'error'='invalid';
+  ASSERT social_v2_relationship(2,999)->>'error'='unavailable';
   ASSERT jsonb_typeof(social_v2_me(2)->'relationships')='array';
   ASSERT social_v2_me(1)->>'error'='unavailable';
   ASSERT NOT social_v2_pair_json(2,5,(SELECT p FROM social_v2_pair p WHERE party_a=2 AND party_b=5))->>'connected'='true';

@@ -49,6 +49,10 @@ positions; reconcile missing source IDs, then call `social_v2_publish_batch` unt
 it returns zero before a pilot. Do not lower the runtime counter. Later batches
 may be called on first-page reads; an external worker is not required at this scale.
 
+Read functions are PostgreSQL `STABLE`: every internal SELECT uses the calling
+statement snapshot, matching the modeled read boundary. Membership-first queries
+and the visible-post/club/officer indexes reduce unrelated-history scanning.
+
 Descending keyset pages filter hidden posts, blocks, mutes, live accounts and the
 existing FanFollow/officer club authority before LIMIT. Following an author alone
 never grants club access. Source timestamps are returned separately from publication
@@ -85,3 +89,9 @@ cutover; general abuse reporting; complete long relationship-list pagination;
 account lifecycle integration; benchmark thresholds and post-release instrumentation.
 SQL fixture success does not satisfy those criteria. New prototype behavior is
 kept behind inactive gates until this work is finished.
+
+Relationship GET denies a recipient blocked by the other party, including revision
+metadata; the blocker can still read its own control. `read-model-tests.sql` checks
+both directions and the read functions' snapshot classification. Index additions
+are transactional in this inactive prototype; production table-size/lock-duration
+qualification and any staged concurrent index build remain rollout prerequisites.
