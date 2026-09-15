@@ -1816,12 +1816,12 @@ closedCheckoutEvidenceSpec = describe "closed checkout approval evidence" $
           it "retains exact observed money once without applying a late capture" $ \pool -> do
             payment <- closedPaymentFixture pool provider closedStatus
             result <- parsedQuery payment Adapter.AdapterSucceeded
-            before <- runSqlPool (closedPaymentFinancialSnapshot payment) pool
+            financialBefore <- runSqlPool (closedPaymentFinancialSnapshot payment) pool
             outcomes <- concurrently (replicate 4 (runSqlPool
               (Reconciliation.applyQueryResult payment result "late-approval" notificationTime) pool))
             outcomes `shouldBe` replicate 4 (Right Reconciliation.ReconciliationDeadLetter)
             assertClosedPaymentEvidence pool payment
-            runSqlPool (closedPaymentFinancialSnapshot payment) pool `shouldReturn` before
+            runSqlPool (closedPaymentFinancialSnapshot payment) pool `shouldReturn` financialBefore
             snapshot <- runSqlPool (paymentSnapshot payment) pool
             runSqlPool (Reconciliation.applyQueryResult payment result "later-replay"
               (addUTCTime 3600 notificationTime)) pool
@@ -1831,14 +1831,14 @@ closedCheckoutEvidenceSpec = describe "closed checkout approval evidence" $
           it "rolls back review evidence and its audit with the caller savepoint" $ \pool -> do
             payment <- closedPaymentFixture pool provider closedStatus
             result <- parsedQuery payment Adapter.AdapterSucceeded
-            before <- runSqlPool (paymentSnapshot payment) pool
+            snapshotBefore <- runSqlPool (paymentSnapshot payment) pool
             runSqlPool (do
               rawExecute "SAVEPOINT caller_owned" []
               applied <- Reconciliation.applyQueryResult payment result "late-rollback" notificationTime
               liftIO (applied `shouldBe` Right Reconciliation.ReconciliationDeadLetter)
               rawExecute "ROLLBACK TO SAVEPOINT caller_owned" []
               rawExecute "RELEASE SAVEPOINT caller_owned" []) pool
-            runSqlPool (paymentSnapshot payment) pool `shouldReturn` before
+            runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshotBefore
 
           it "holds reordered outcomes and never releases review from an exception status edit" $ \pool -> do
             payment <- closedPaymentFixture pool provider closedStatus
@@ -1920,6 +1920,16 @@ closedCheckoutEvidenceSpec = describe "closed checkout approval evidence" $
             Execution.porReference held `shouldBe` Execution.porReference original
             Execution.porProviderResourceId held `shouldBe` Execution.porProviderResourceId original
             load "wrong-synthetic-token" >>= (`shouldSatisfy` isLeft)
+            withRecoveryEnvironment $ do
+              let _ :<|> getSession :<|> _ = providerExecutionServer
+                  request token = runHandler (runReaderT (getSession checkoutId attemptId (Just token))
+                    (queryEnv pool))
+              dto <- request checkoutId >>= requireRight
+              pssState dto `shouldBe` "ambiguous"
+              pssOutcomeCertainty dto `shouldBe` "ambiguous"
+              pssRedirectUrl dto `shouldBe` Nothing
+              pssCanRetryOrFallback dto `shouldBe` False
+              request "wrong-synthetic-token" >>= assertHttpError 404
 
           it "fails closed if a retained review record has conflicting money" $ \pool -> do
             payment <- closedPaymentFixture pool provider closedStatus
