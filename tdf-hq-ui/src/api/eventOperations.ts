@@ -10,6 +10,7 @@ export type EventOperationTask = components['schemas']['EventOperationTask'];
 export type EventOperationTaskWithRevision = components['schemas']['EventOperationTaskWithRevision'];
 export type EventRaciReassignmentCommand = components['schemas']['EventRaciReassignmentCommand'];
 export type EventRaciReassignmentOutcome = components['schemas']['EventRaciReassignmentOutcome'];
+export type EventRaciEditorContext = components['schemas']['EventRaciEditorContext'];
 
 const safeInteger = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const taskSchema: z.ZodType<EventOperationTask> = z.object({
@@ -59,6 +60,24 @@ const raciOutcomeSchema: z.ZodType<EventRaciReassignmentOutcome> = z.object({
   aggregateRevision: revisionSchema, replayed: z.boolean(),
 }).strict();
 
+const raciEditorContextSchema: z.ZodType<EventRaciEditorContext> = z.object({
+  eventId: safeInteger, activityId: safeInteger, aggregateRevision: revisionSchema,
+  canManage: z.boolean(), operationReady: z.boolean(),
+  replaceableAssignments: z.array(z.object({ partyId: safeInteger, role: raciRoleSchema }).strict()),
+  eligiblePartyIds: z.array(safeInteger).max(100), nextAfterPartyId: safeInteger.optional(),
+}).strict().superRefine((value, context) => {
+  const ids = value.eligiblePartyIds;
+  const uniqueSources = new Set(value.replaceableAssignments.map(row => `${row.partyId}:${row.role}`));
+  if ((value.operationReady && !value.canManage)
+    || (!value.operationReady && (ids.length > 0 || value.replaceableAssignments.length > 0
+      || value.nextAfterPartyId !== undefined))
+    || !ids.every((id, index) => index === 0 || id > (ids[index - 1] ?? 0))
+    || uniqueSources.size !== value.replaceableAssignments.length
+    || (value.nextAfterPartyId !== undefined && (ids.length !== 100 || ids[99] !== value.nextAfterPartyId))) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: 'Contexto RACI inconsistente.' });
+  }
+});
+
 const taskPath = (eventId: number, activityId: number) => {
   if (![eventId, activityId].every(value => Number.isSafeInteger(value) && value > 0)) {
     throw new Error('Los identificadores de evento y tarea deben ser enteros positivos seguros.');
@@ -70,6 +89,25 @@ const eventPath = (eventId: number) =>
   `/event-operations/events/${encodeURIComponent(String(eventId))}`;
 
 export const EventOperations = {
+  raciEditorContext: (eventId: number, activityId: number, afterPartyId = 0,
+    context?: { apiToken?: string; signal?: AbortSignal }): Promise<EventRaciEditorContext> => {
+    const path = `${taskPath(eventId, activityId)}/raci/context`;
+    if (!Number.isSafeInteger(afterPartyId) || afterPartyId < 0) {
+      throw new Error('El cursor de destinatarios no es válido.');
+    }
+    return get<unknown>(`${path}?afterPartyId=${afterPartyId}`, {
+      cache: 'no-store',
+      ...(context?.apiToken ? { headers: { Authorization: `Bearer ${context.apiToken}` } } : {}),
+      ...(context?.signal ? { signal: context.signal } : {}),
+    }).then(raw => {
+      const result = raciEditorContextSchema.safeParse(raw);
+      if (!result.success || result.data.eventId !== eventId || result.data.activityId !== activityId
+        || result.data.eligiblePartyIds.some(id => id <= afterPartyId)) {
+        throw new Error('Las opciones de reasignación no son válidas. Actualiza la tarea.');
+      }
+      return result.data;
+    });
+  },
   reassignRaci: (eventId: number, activityId: number, commandId: string, command: EventRaciReassignmentCommand,
     context?: { apiToken?: string; signal?: AbortSignal }): Promise<EventRaciReassignmentOutcome> => {
     const path = `${taskPath(eventId, activityId)}/raci/reassign`;

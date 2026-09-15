@@ -24,4 +24,7 @@ type EventOperationsAPI = "event-operations" :> "events" :> Capture "eventId" In
        :> Header' '[Required, Strict] "Idempotency-Key" UUID
        :> ReqBody '[JSON] EventRaciReassignmentCommand
        :> Post '[JSON] (Headers '[Header "Cache-Control" Text] EventRaciReassignmentOutcomeDTO)
+  :<|> "tasks" :> Capture "activityId" Int64 :> "raci" :> "context"
+       :> QueryParam "afterPartyId" Int64
+       :> Get '[JSON] (Headers '[Header "Cache-Control" Text] EventRaciEditorContextDTO)
   )

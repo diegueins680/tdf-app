@@ -25,6 +25,20 @@ pred matches[g: Grant, p: Party, e: Event, t: Task] {
 pred canRead[p: Party, e: Event, t: Task] {
   some g: Grant | matches[g, p, e, t]
 }
+pred canManage[p: Party, e: Event, t: Task] {
+  some g: Grant | matches[g, p, e, t] and g.scope = TaskManage
+}
+pred editorCandidate[actor, candidate: Party, e: Event, t: Task] {
+  canManage[actor, e, t] and canRead[candidate, e, t]
+}
+assert CandidateRequiresCurrentManager {
+  all actor, candidate: Party, e: Event, t: Task | editorCandidate[actor,candidate,e,t]
+    implies some g: Current.effective | g.grantee=actor and g.scope=TaskManage and matches[g,actor,e,t]
+}
+assert CandidateIsTaskScoped {
+  all actor, candidate: Party, e: Event, t: Task | editorCandidate[actor,candidate,e,t]
+    implies t.event=e and some g: Current.effective | matches[g,candidate,e,t]
+}
 pred leastPrivilegeScenario {
   some disj p, other: Party, e: Event, disj t, sibling: Task, g: Grant | {
     t.event = e
@@ -55,3 +69,5 @@ run leastPrivilegeScenario for 4 but exactly 2 Party, exactly 2 Event, exactly 2
 check TargetIsEventLocal for 4
 check ExactGrantDoesNotWiden for 4
 check NoAmbientAuthority for 4
+check CandidateRequiresCurrentManager for 4
+check CandidateIsTaskScoped for 4

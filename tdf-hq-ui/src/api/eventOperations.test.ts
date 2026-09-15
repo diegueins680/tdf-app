@@ -12,6 +12,97 @@ const task = {
   accountabilityNeedsAttention: false,
 };
 
+describe('EventOperations RACI editor context contract', () => {
+  const context = {
+    eventId: 80, activityId: 8000, aggregateRevision: '4', canManage: true, operationReady: true,
+    replaceableAssignments: task.raci, eligiblePartyIds: [1, 2, 3],
+  };
+  const page = { ...context, eligiblePartyIds: Array.from({ length: 100 }, (_, index) => index + 1),
+    nextAfterPartyId: 100 };
+  beforeEach(() => { getMock.mockReset(); postMock.mockReset(); });
+
+  it('captures the bearer and signal on a single uncached read, without mutation', async () => {
+    const signal = new AbortController().signal;
+    getMock.mockResolvedValue(context);
+    await expect(EventOperations.raciEditorContext(80, 8000, undefined,
+      { apiToken: 'captured-context-test', signal })).resolves.toEqual(context);
+    expect(getMock).toHaveBeenCalledWith('/event-operations/events/80/tasks/8000/raci/context?afterPartyId=0', {
+      cache: 'no-store', headers: { Authorization: 'Bearer captured-context-test' }, signal,
+    });
+    expect(getMock).toHaveBeenCalledTimes(1);
+    expect(postMock).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])('accepts empty non-ready context with canManage=%s', async canManage => {
+    const result = { ...context, canManage, operationReady: false,
+      replaceableAssignments: [], eligiblePartyIds: [] };
+    getMock.mockResolvedValue(result);
+    await expect(EventOperations.raciEditorContext(80, 8000)).resolves.toEqual(result);
+  });
+
+  it('preserves maximum revision text and requests additional pages only explicitly', async () => {
+    const first = { ...page, aggregateRevision: '9223372036854775807' };
+    getMock.mockResolvedValue(first);
+    await expect(EventOperations.raciEditorContext(80, 8000)).resolves.toEqual(first);
+    expect(getMock).toHaveBeenCalledTimes(1);
+    const last = { ...context, aggregateRevision: '9223372036854775807', eligiblePartyIds: [101] };
+    getMock.mockResolvedValue(last);
+    await expect(EventOperations.raciEditorContext(80, 8000, 100)).resolves.toEqual(last);
+    expect(getMock).toHaveBeenLastCalledWith(
+      '/event-operations/events/80/tasks/8000/raci/context?afterPartyId=100', { cache: 'no-store' });
+    expect(getMock).toHaveBeenCalledTimes(2);
+    expect(postMock).not.toHaveBeenCalled();
+  });
+
+  it.each([-1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])(
+    'rejects invalid cursor %s before dispatch', value => {
+      expect(() => EventOperations.raciEditorContext(80, 8000, value)).toThrow('cursor');
+      expect(getMock).not.toHaveBeenCalled();
+    });
+  it.each([0, -1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])(
+    'rejects invalid target %s before dispatch', value => {
+      expect(() => EventOperations.raciEditorContext(value, 8000)).toThrow('identificadores');
+      expect(() => EventOperations.raciEditorContext(80, value)).toThrow('identificadores');
+      expect(getMock).not.toHaveBeenCalled();
+    });
+
+  it.each([null, {}, { ...context, eventId: 81 }, { ...context, activityId: 8001 },
+    { ...context, aggregateRevision: 4 }, { ...context, aggregateRevision: '04' },
+    { ...context, aggregateRevision: '9223372036854775808' },
+    { ...context, email: 'private-test-only' }, { ...context, canManage: false },
+    { ...context, operationReady: false }, { ...context, canManage: 'true' },
+    { ...context, replaceableAssignments: [...task.raci, task.raci[0]] },
+    { ...context, replaceableAssignments: [{ partyId: 1, role: 'owner' }] },
+    { ...context, replaceableAssignments: [{ partyId: 1, role: 'responsible', grant: 'private' }] },
+    { ...context, replaceableAssignments: [{ partyId: Number.MAX_SAFE_INTEGER + 1, role: 'responsible' }] },
+    { ...context, eligiblePartyIds: [1, 1] }, { ...context, eligiblePartyIds: [2, 1] },
+    { ...context, eligiblePartyIds: [0] }, { ...context, eligiblePartyIds: [Number.MAX_SAFE_INTEGER + 1] },
+    { ...context, eligiblePartyIds: Array.from({ length: 101 }, (_, index) => index + 1) },
+    { ...context, nextAfterPartyId: null }, { ...context, nextAfterPartyId: 3 },
+    { ...page, nextAfterPartyId: 99 }])(
+    'rejects malformed or contradictory context with sanitized errors (%#)', async raw => {
+      getMock.mockResolvedValue(raw);
+      await expect(EventOperations.raciEditorContext(80, 8000)).rejects.toThrow(
+        'Las opciones de reasignación no son válidas. Actualiza la tarea.');
+      expect(getMock).toHaveBeenCalledTimes(1);
+      expect(postMock).not.toHaveBeenCalled();
+    });
+
+  it('rejects candidates at or before the exclusive cursor', async () => {
+    getMock.mockResolvedValue(context);
+    await expect(EventOperations.raciEditorContext(80, 8000, 1)).rejects.toThrow('opciones');
+    await expect(EventOperations.raciEditorContext(80, 8000, 2)).rejects.toThrow('opciones');
+  });
+
+  it('propagates transport failure without fallback or retry', async () => {
+    const failure = new Error('not_found');
+    getMock.mockRejectedValue(failure);
+    await expect(EventOperations.raciEditorContext(80, 8000)).rejects.toBe(failure);
+    expect(getMock).toHaveBeenCalledTimes(1);
+    expect(postMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('EventOperations RACI command contract', () => {
   const key = '60000000-0000-4000-8000-000000000300';
   const command = { expectedRevision: '4', role: 'responsible' as const, fromPartyId: 3, toPartyId: 2,

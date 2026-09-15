@@ -17,6 +17,7 @@ module TDF.EventOperations.Types
   , EventOperationTaskWithRevisionDTO(..)
   , EventRaciReassignmentCommand(..)
   , EventRaciReassignmentOutcomeDTO(..)
+  , EventRaciEditorContextDTO(..)
   , validRaciReassignmentCommand
   , aggregateRevisionInteger
   , raciRoleText
@@ -295,6 +296,27 @@ instance ToJSON EventRaciReassignmentOutcomeDTO where
   toJSON = genericToJSON (prefixedJsonOptions 3)
 instance FromJSON EventRaciReassignmentOutcomeDTO where
   parseJSON = genericParseJSON (prefixedJsonOptions 3)
+
+-- Advisory editor context, never a command-authorization certificate.
+data EventRaciEditorContextDTO = EventRaciEditorContextDTO
+  { eccEventId :: Int64
+  , eccActivityId :: Int64
+  , eccAggregateRevision :: EventTaskAggregateRevision
+  , eccCanManage :: Bool
+  , eccOperationReady :: Bool
+  , eccReplaceableAssignments :: [EventRaciAssignmentDTO]
+  , eccEligiblePartyIds :: [Int64]
+  , eccNextAfterPartyId :: Maybe Int64
+  } deriving (Eq, Generic, Show)
+instance ToJSON EventRaciEditorContextDTO where
+  toJSON = genericToJSON (prefixedJsonOptions 3)
+instance FromJSON EventRaciEditorContextDTO where
+  parseJSON raw@(Object fields) = do
+    case KeyMap.lookup "nextAfterPartyId" fields of
+      Just Null -> fail "nextAfterPartyId must be omitted rather than null"
+      _ -> pure ()
+    genericParseJSON (prefixedJsonOptions 3) raw
+  parseJSON raw = genericParseJSON (prefixedJsonOptions 3) raw
 
 -- Existing JSON-number fields keep their original safe-integer restriction.
 isSafePositiveInteger :: Int64 -> Bool

@@ -29,7 +29,8 @@ import TDF.Auth (AuthedUser(..), withCurrentAuthSession)
 import TDF.DB (Env(..))
 import TDF.EventOperations.API (EventOperationsAPI)
 import TDF.EventOperations.DatabaseBoundary
-  ( databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, reassignRaci, tryDatabaseAction )
+  ( databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, reassignRaci,
+    loadRaciEditorContext, tryDatabaseAction )
 import qualified TDF.EventOperations.Types as EventOps
 
 type EventOperationsM = ReaderT Env Handler
@@ -41,6 +42,24 @@ eventOperationsServer user eventId =
   :<|> getEventTask user eventId
   :<|> getEventTaskWithRevision user eventId
   :<|> reassignEventTaskRaci user eventId
+  :<|> getRaciEditorContext user eventId
+
+getRaciEditorContext :: AuthedUser -> Int64 -> Int64 -> Maybe Int64
+  -> EventOperationsM (Headers '[Header "Cache-Control" Text] EventOps.EventRaciEditorContextDTO)
+getRaciEditorContext user eventId activityId afterPartyId =
+  action `catchError` (\failure -> throwError failure
+    { errHeaders = ("Cache-Control", "private, no-store") : errHeaders failure })
+  where
+    cursor = maybe 0 id afterPartyId
+    action = do
+      unless (all EventOps.isSafePositiveInteger [eventId,activityId]
+        && cursor >= 0 && cursor <= 9007199254740991) $
+        throwError (eventOperationDomainError "invalid_request")
+      requireEventOperationsEnabled
+      result <- runEventOperationsSessionDb user $
+        loadRaciEditorContext eventId activityId (fromSqlKey (auPartyId user)) cursor
+      context <- maybe (throwError (eventOperationDomainError "not_found")) pure result
+      pure (addHeader ("private, no-store" :: Text) context)
 
 reassignEventTaskRaci :: AuthedUser -> Int64 -> Int64 -> UUID.UUID
   -> EventOps.EventRaciReassignmentCommand
