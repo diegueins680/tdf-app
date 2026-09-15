@@ -9,20 +9,22 @@ import           Control.Monad (forM, forM_, unless)
 import           Control.Monad.Logger (runNoLoggingT)
 import           Control.Monad.Reader (runReaderT)
 import           Crypto.Hash (Digest, SHA256, hash)
+import qualified Data.Aeson as A
 import qualified Data.ByteArray.Encoding as BAE
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy as BL
 import           Data.Either (isLeft, isRight, rights)
 import           Data.Int (Int64)
 import           Data.Pool (destroyAllResources)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Data.Time (addUTCTime, getCurrentTime)
+import           Data.Time (UTCTime(..), addUTCTime, fromGregorian, getCurrentTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Postgresql (createPostgresqlPool)
-import           Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool)
+import           Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool)
 import           Network.Socket (SockAddr(..))
 import           Servant (ServerError, errHTTPCode, runHandler, (:<|>)(..))
 import           System.Environment (lookupEnv, setEnv, unsetEnv)
@@ -34,18 +36,26 @@ import           TDF.DB (Env(..))
 import qualified TDF.Commerce.PaymentIntentStore as Intent
 import qualified TDF.Commerce.PaymentRuntimeStore as Runtime
 import           TDF.Commerce.ProviderAdapter (AdapterOperation(..))
+import qualified TDF.Commerce.ProviderAdapter as Adapter
+import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhone
+import qualified TDF.Commerce.ProviderAdapter.PlaceToPay as PlaceToPay
 import           TDF.Commerce.ProviderCapabilities (PaymentMethod(..))
 import qualified TDF.Commerce.ProviderExecutionStore as Execution
+import qualified TDF.Commerce.ProviderEventStore as Event
+import qualified TDF.Commerce.ProviderEventWorker as EventWorker
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
 import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer)
+import qualified TDF.Server.ServiceStorefront as Storefront
 
 spec :: Spec
 spec = do
+  notificationMinimizationSpec
   configured <- runIO (lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL")
   case configured of
     Nothing -> pure ()
     Just url -> beforeAll (openDatabase url) $ afterAll destroyAllResources $
       describe "provider-retry-runtime PostgreSQL" $ do
+        notificationInboxSpec
         it "serializes different keys and permits only one active attempt" $ \pool -> do
           creation <- newCheckout pool
           results <- concurrently
@@ -334,6 +344,258 @@ spec = do
                 replicate 4 (Right (Execution.providerOperationReferenceId
                   (Execution.porReference operation)))
               assertCounts pool creation 1 1
+
+notificationMinimizationSpec :: Spec
+notificationMinimizationSpec = describe "provider notification evidence minimization" $ do
+  it "drops arbitrary PayPal fields recursively without changing capture evidence" $ do
+    let original = paypalNotification "WH-SYNTHETIC" "125.15" privateMarker
+    retained <- requireRight (Event.minimizeProviderEventPayload Checkout.ProviderPayPal original)
+    BS.isInfixOf (TE.encodeUtf8 privateMarker) retained `shouldBe` False
+    originalEnvelope <- requireRight (Storefront.parsePaypalWebhookEnvelope (BL.fromStrict original))
+    retainedEnvelope <- requireRight (Storefront.parsePaypalWebhookEnvelope (BL.fromStrict retained))
+    Storefront.parsePaypalWebhookCapture retainedEnvelope
+      `shouldBe` Storefront.parsePaypalWebhookCapture originalEnvelope
+    forM_ ["PAYMENT.CAPTURE.REFUNDED", "PAYMENT.CAPTURE.REVERSED"] $ \eventType -> do
+      let envelope = A.object
+            [ "id" A..= ("WH-SYNTHETIC" :: Text), "event_type" A..= (eventType :: Text)
+            , "create_time" A..= notificationTime
+            , "resource" A..= Storefront.pweResource originalEnvelope ]
+      minimized <- requireRight (Event.minimizeProviderEventPayload
+        Checkout.ProviderPayPal (encodeStrict envelope))
+      parsed <- requireRight (Storefront.parsePaypalWebhookEnvelope (BL.fromStrict minimized))
+      Storefront.parsePaypalWebhookCapture parsed
+        `shouldBe` Storefront.parsePaypalWebhookCapture originalEnvelope
+
+  it "retains no unused resource fields for unsupported PayPal events" $ do
+    let payload = encodeStrict $ A.object
+          [ "id" A..= ("WH-IGNORED" :: Text), "event_type" A..= ("CUSTOMER.DISPUTE.CREATED" :: Text)
+          , "create_time" A..= notificationTime
+          , "resource" A..= A.object ["id" A..= ("CASE-1" :: Text), "evidence" A..= privateMarker] ]
+    retained <- requireRight (Event.minimizeProviderEventPayload Checkout.ProviderPayPal payload)
+    BS.isInfixOf (TE.encodeUtf8 privateMarker) retained `shouldBe` False
+    parsed <- requireRight (Storefront.parsePaypalWebhookEnvelope (BL.fromStrict retained))
+    Storefront.pweResource parsed `shouldBe` A.object ["id" A..= ("CASE-1" :: Text)]
+
+  it "preserves PlaceToPay signed fields and still rejects a wrong signing secret" $ do
+    let original = placeToPayNotification privateMarker
+        config = PlaceToPay.PlaceToPayConfig Checkout.CheckoutSandbox
+          "synthetic-login" "synthetic-secret" []
+    retained <- requireRight (Event.minimizeProviderEventPayload Checkout.ProviderPlaceToPay original)
+    BS.isInfixOf (TE.encodeUtf8 privateMarker) retained `shouldBe` False
+    originalValue <- requireRight (A.eitherDecodeStrict' original)
+    retainedValue <- requireRight (A.eitherDecodeStrict' retained)
+    let assessed = PlaceToPay.verifyPlaceToPayNotification config retainedValue
+    assessed `shouldSatisfy` isRight
+    assessed `shouldBe` PlaceToPay.verifyPlaceToPayNotification config originalValue
+    PlaceToPay.verifyPlaceToPayNotification config { PlaceToPay.ptpSecretKey = "wrong-secret" }
+      retainedValue `shouldSatisfy` isLeft
+
+  it "canonicalizes PayPhone aliases and drops untrusted status/customer data" $ do
+    let alias = encodeStrict $ A.object
+          [ "id" A..= (1234 :: Int), "clientTransactionID" A..= ("CLIENT-1" :: Text)
+          , "StoreId" A..= ("synthetic-store" :: Text), "StatusCode" A..= (3 :: Int)
+          , "card" A..= privateMarker ]
+    retained <- requireRight (Event.minimizeProviderEventPayload Checkout.ProviderPayPhone alias)
+    retained `shouldBe` encodeStrict (A.object
+      [ "TransactionId" A..= (1234 :: Int), "ClientTransactionId" A..= ("CLIENT-1" :: Text)
+      , "StoreId" A..= ("synthetic-store" :: Text) ])
+    adapter <- requireRight (PayPhone.payPhoneAdapter
+      (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store"))
+    value <- requireRight (A.eitherDecodeStrict' retained)
+    assessment <- requireRight (Adapter.adapterAssessNotification adapter value)
+    Adapter.notificationExternalId assessment `shouldBe` "1234"
+    Adapter.notificationMerchantReference assessment `shouldBe` Just "CLIENT-1"
+    Adapter.notificationAuthenticated assessment `shouldBe` False
+    Adapter.notificationRequiresQuery assessment `shouldBe` True
+
+  it "is idempotent for every supported evidence schema" $
+    forM_ notificationProviders $ \provider -> do
+      let original = notificationPayload provider "EVENT-1" privateMarker
+      retained <- requireRight (Event.minimizeProviderEventPayload provider original)
+      Event.minimizeProviderEventPayload provider retained `shouldBe` Right retained
+
+  it "rejects malformed, oversized, wrong-type and unsupported evidence without echoing input" $ do
+    forM_ ["{\"SYNTHETIC-PRIVATE\":", "[]", "{}", BS.replicate (1024 * 1024 + 1) 'x'
+      , "{\"TransactionId\":1.5,\"ClientTransactionId\":\"CLIENT-1\"}"
+      , "{\"TransactionId\":-1,\"ClientTransactionId\":\"CLIENT-1\"}"
+      , "{\"TransactionId\":1,\"ClientTransactionId\":{\"card\":\"SYNTHETIC-PRIVATE\"}}"] $ \raw ->
+        forM_ notificationProviders $ \provider -> do
+          let result = Event.minimizeProviderEventPayload provider raw
+          result `shouldSatisfy` isLeft
+          show result `shouldNotContain` "SYNTHETIC-PRIVATE"
+    Event.minimizeProviderEventPayload Checkout.ProviderDatafast
+      (paypalNotification "WH-1" "125.15" privateMarker) `shouldSatisfy` isLeft
+
+  it "does not echo malformed PayPal JSON in public parser errors" $ do
+    let result = Storefront.parsePaypalWebhookEnvelope "{\"SYNTHETIC-PRIVATE\":"
+    result `shouldSatisfy` isLeft
+    show result `shouldNotContain` "SYNTHETIC-PRIVATE"
+
+  it "rejects nested retained-field objects, excessive field lengths and invalid timestamps" $ do
+    let invalidPayPal = encodeStrict $ A.object
+          [ "id" A..= ("WH-INVALID" :: Text), "event_type" A..= ("PAYMENT.CAPTURE.COMPLETED" :: Text)
+          , "create_time" A..= notificationTime
+          , "resource" A..= A.object ["amount" A..= A.object
+              ["value" A..= A.object ["card" A..= privateMarker]]] ]
+        invalidPlaceToPay = encodeStrict $ A.object
+          [ "requestId" A..= (1234 :: Int)
+          , "status" A..= A.object ["status" A..= ("APPROVED" :: Text), "date" A..= privateMarker]
+          , "signature" A..= ("sha256:" <> T.replicate 64 "a") ]
+        invalidPayPhone = encodeStrict $ A.object
+          [ "TransactionId" A..= (1234 :: Int), "ClientTransactionId" A..= T.replicate 129 "x" ]
+    forM_ [(Checkout.ProviderPayPal, invalidPayPal), (Checkout.ProviderPlaceToPay, invalidPlaceToPay)
+      , (Checkout.ProviderPayPhone, invalidPayPhone)] $ \(provider, raw) -> do
+        let result = Event.minimizeProviderEventPayload provider raw
+        result `shouldSatisfy` isLeft
+        show result `shouldNotContain` T.unpack privateMarker
+
+notificationInboxSpec :: SpecWith ConnectionPool
+notificationInboxSpec = describe "minimized notification inbox" $ do
+  forM_ notificationProviders $ \provider ->
+    it ("encrypts only retained " <> T.unpack (Checkout.paymentProviderText provider) <> " fields") $ \pool -> do
+      creation <- newNotification provider
+      stored <- storeNotification pool creation >>= requireRight
+      Event.pesInserted stored `shouldBe` True
+      retained <- requireRight (Event.minimizeProviderEventPayload provider (Event.pecRawPayload creation))
+      readStoredNotification pool stored `shouldReturn` retained
+      BS.isInfixOf (TE.encodeUtf8 privateMarker) retained `shouldBe` False
+      claim <- runSqlPool (Event.claimProviderEvent (Event.pesReference stored) notificationTime) pool
+      claim `shouldBe` Event.ProviderEventClaimed 1
+      loaded <- runSqlPool (Event.loadProviderEventPayload (Event.pesReference stored) recoveryEncryptionKey)
+        pool >>= requireRight
+      Event.pepRawPayload loaded `shouldBe` retained
+      show loaded `shouldBe` "ProviderEventPayload {payload = <redacted>}"
+      if provider == Checkout.ProviderPayPal
+        then EventWorker.validateStoredPaypalEvent loaded `shouldSatisfy` isRight
+        else pure ()
+
+  it "deduplicates ignored-field variations concurrently on one immutable event" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPayPal
+    let variant = creation { Event.pecRawPayload = paypalNotification
+          (Event.pecProviderEventId creation) "125.15" "DIFFERENT-SYNTHETIC-PRIVATE" }
+    stored <- concurrently [storeNotification pool creation, storeNotification pool variant]
+    results <- mapM requireRight stored
+    length [() | result <- results, Event.pesInserted result] `shouldBe` 1
+    map Event.pesReference results `shouldSatisfy` (\refs -> head refs == last refs)
+
+  it "rejects changed monetary evidence, metadata, resource and trust on replay" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPayPal
+    _ <- storeNotification pool creation >>= requireRight
+    let changedAmount = creation { Event.pecRawPayload = paypalNotification
+          (Event.pecProviderEventId creation) "0.01" privateMarker }
+    forM_ [changedAmount, creation { Event.pecProviderResource = Just "OTHER-CAPTURE" }
+      , creation { Event.pecEventType = "PAYMENT.CAPTURE.REVERSED" }
+      , creation { Event.pecProviderCreatedAt = Just (addUTCTime 1 notificationTime) }] $ \changed ->
+        storeNotification pool changed >>= (`shouldSatisfy` isLeft)
+    runSqlPool (Event.storeUntrustedProviderEvent creation) pool >>= (`shouldSatisfy` isLeft)
+
+  forM_ notificationProviders $ \provider ->
+    it ("preserves exact historical raw " <> T.unpack (Checkout.paymentProviderText provider) <> " redelivery") $ \pool -> do
+      creation <- newNotification provider
+      historical <- insertHistoricalNotification pool creation
+      replay <- storeNotification pool creation >>= requireRight
+      Event.pesReference replay `shouldBe` historical
+      Event.pesInserted replay `shouldBe` False
+      readStoredNotification pool replay `shouldReturn` Event.pecRawPayload creation
+
+  it "rejects malformed evidence before creating an inbox row" $ \pool -> do
+    creation <- newNotification Checkout.ProviderPayPal
+    result <- storeNotification pool creation { Event.pecRawPayload = "{\"card\":\"SYNTHETIC-PRIVATE\"}" }
+    result `shouldSatisfy` isLeft
+    counts <- runSqlPool (rawSql
+      "SELECT count(*) FROM commerce_provider_event_inbox WHERE provider_event_id=?"
+      [PersistText (Event.pecProviderEventId creation)] :: SqlPersistT IO [Single Int64]) pool
+    counts `shouldBe` [Single 0]
+
+notificationProviders :: [Checkout.PaymentProvider]
+notificationProviders = [Checkout.ProviderPayPal, Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone]
+
+privateMarker :: Text
+privateMarker = "SYNTHETIC-PRIVATE-CARD-CUSTOMER-TOKEN"
+
+notificationTime :: UTCTime
+notificationTime = UTCTime (fromGregorian 2026 9 14) (12 * 60 * 60)
+
+encodeStrict :: A.Value -> BS.ByteString
+encodeStrict = BL.toStrict . A.encode
+
+paypalNotification :: Text -> Text -> Text -> BS.ByteString
+paypalNotification eventId amount privateValue = encodeStrict $ A.object
+  [ "id" A..= eventId, "event_type" A..= ("PAYMENT.CAPTURE.COMPLETED" :: Text)
+  , "create_time" A..= notificationTime, "payer" A..= privateValue
+  , "resource" A..= A.object
+      [ "id" A..= ("CAPTURE-1" :: Text), "status" A..= ("COMPLETED" :: Text)
+      , "amount" A..= A.object ["value" A..= amount, "currency_code" A..= ("USD" :: Text)
+          , "card" A..= privateValue]
+      , "payee" A..= A.object ["merchant_id" A..= ("MERCHANT-1" :: Text), "email" A..= privateValue]
+      , "supplementary_data" A..= A.object ["related_ids" A..= A.object
+          ["order_id" A..= ("ORDER-1" :: Text), "token" A..= privateValue], "payer" A..= privateValue]
+      , "payment_source" A..= A.object ["card" A..= privateValue]
+      , "links" A..= [privateValue], "description" A..= privateValue ] ]
+
+placeToPayNotification :: Text -> BS.ByteString
+placeToPayNotification privateValue = encodeStrict $ A.object
+  [ "requestId" A..= (1234 :: Int), "reference" A..= privateValue
+  , "signature" A..= ("sha256:" <> digestText "1234APPROVED2026-09-14T12:00:00Zsynthetic-secret")
+  , "status" A..= A.object ["status" A..= ("APPROVED" :: Text)
+      , "date" A..= ("2026-09-14T12:00:00Z" :: Text), "message" A..= privateValue]
+  , "card" A..= privateValue ]
+
+notificationPayload :: Checkout.PaymentProvider -> Text -> Text -> BS.ByteString
+notificationPayload provider eventId privateValue = case provider of
+  Checkout.ProviderPayPal -> paypalNotification eventId "125.15" privateValue
+  Checkout.ProviderPlaceToPay -> placeToPayNotification privateValue
+  _ -> encodeStrict $ A.object
+    [ "TransactionId" A..= (1234 :: Int), "ClientTransactionId" A..= ("CLIENT-1" :: Text)
+    , "StoreId" A..= ("synthetic-store" :: Text), "StatusCode" A..= (3 :: Int)
+    , "customer" A..= privateValue ]
+
+newNotification :: Checkout.PaymentProvider -> IO Event.ProviderEventCreation
+newNotification provider = do
+  eventId <- ("EVENT-" <>) . toText <$> nextRandom
+  pure Event.ProviderEventCreation
+    { Event.pecProvider = provider, Event.pecEnvironment = Checkout.CheckoutSandbox
+    , Event.pecMerchantRef = "synthetic-inbox-merchant", Event.pecProviderEventId = eventId
+    , Event.pecEventType = if provider == Checkout.ProviderPayPal
+        then "PAYMENT.CAPTURE.COMPLETED" else "PAYMENT_NOTIFICATION"
+    , Event.pecProviderCreatedAt = if provider == Checkout.ProviderPayPal then Just notificationTime else Nothing
+    , Event.pecProviderResource = Just (if provider == Checkout.ProviderPayPal then "CAPTURE-1" else "1234")
+    , Event.pecRawPayload = notificationPayload provider eventId privateMarker
+    , Event.pecEncryptionKey = recoveryEncryptionKey, Event.pecReceivedAt = notificationTime }
+
+storeNotification :: ConnectionPool -> Event.ProviderEventCreation -> IO (Either Text Event.ProviderEventStored)
+storeNotification pool creation = runSqlPool
+  ((if Event.pecProvider creation == Checkout.ProviderPayPhone
+      then Event.storeUntrustedProviderEvent else Event.storeVerifiedProviderEvent) creation) pool
+
+readStoredNotification :: ConnectionPool -> Event.ProviderEventStored -> IO BS.ByteString
+readStoredNotification pool stored = do
+  rows <- runSqlPool (rawSql
+    "SELECT pgp_sym_decrypt_bytea(payload_ciphertext, ?) FROM commerce_provider_event_inbox WHERE id=?::uuid"
+    [PersistText recoveryEncryptionKey, PersistText (Event.providerEventReferenceId (Event.pesReference stored))]
+    :: SqlPersistT IO [Single BS.ByteString]) pool
+  case rows of
+    [Single value] -> pure value
+    _ -> expectationFailure "Expected one encrypted inbox row" >> pure BS.empty
+
+insertHistoricalNotification :: ConnectionPool -> Event.ProviderEventCreation -> IO Event.ProviderEventReference
+insertHistoricalNotification pool creation = do
+  eventId <- toText <$> nextRandom
+  let verified = Event.pecProvider creation /= Checkout.ProviderPayPhone
+  runSqlPool (rawExecute
+    "INSERT INTO commerce_provider_event_inbox (id,provider,environment,merchant_account_ref,\
+    \provider_event_id,event_type,signature_verified,evidence_type,provider_created_at,provider_resource_id,\
+    \payload_ciphertext,payload_sha256) VALUES (?::uuid,?,'sandbox',?,?,?,?,?,?,?,\
+    \pgp_sym_encrypt_bytea(?::bytea,?,'cipher-algo=aes256,compress-algo=1'),?)"
+    [ PersistText eventId, PersistText (Checkout.paymentProviderText (Event.pecProvider creation))
+    , PersistText (Event.pecMerchantRef creation), PersistText (Event.pecProviderEventId creation)
+    , PersistText (Event.pecEventType creation), PersistBool verified
+    , PersistText (if verified then "signature_verified" else "untrusted_callback")
+    , maybe PersistNull PersistUTCTime (Event.pecProviderCreatedAt creation)
+    , maybe PersistNull PersistText (Event.pecProviderResource creation)
+    , PersistByteString (Event.pecRawPayload creation), PersistText recoveryEncryptionKey
+    , PersistText (digestText (TE.decodeUtf8 (Event.pecRawPayload creation))) ]) pool
+  pure (Event.ProviderEventReference eventId)
 
 recoveryEncryptionKey :: Text
 recoveryEncryptionKey = "synthetic-provider-recovery-encryption-key"

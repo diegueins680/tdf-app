@@ -24,14 +24,21 @@ module TDF.Commerce.ProviderEventStore
   , markProviderEventRetry
   , markProviderEventDeadLetter
   , validateProviderEventTimestamp
+  , minimizeProviderEventPayload
   ) where
 
+import           Control.Applicative ((<|>))
+import           Control.Monad (unless)
 import           Control.Monad.IO.Class (liftIO)
 import           Crypto.Hash (Digest, SHA256, hash)
-import           Data.Aeson (FromJSON, eitherDecodeStrict')
+import           Data.Aeson (FromJSON, Value(..), eitherDecodeStrict', (.:), (.:?), (.=))
+import qualified Data.Aeson as A
+import qualified Data.Aeson.KeyMap as KM
+import           Data.Aeson.Types (Parser, parseEither)
 import qualified Data.ByteArray.Encoding as BAE
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -45,7 +52,7 @@ import           GHC.Generics (Generic)
 
 import           TDF.Commerce.CheckoutStore
   ( CheckoutEnvironment
-  , PaymentProvider
+  , PaymentProvider(..)
   , checkoutEnvironmentText
   , paymentProviderText
   )
@@ -114,7 +121,11 @@ data ProviderEventPayload = ProviderEventPayload
   , pepProviderCreatedAt  :: Maybe UTCTime
   , pepProviderResourceId :: Maybe Text
   , pepRawPayload         :: ByteString
-  } deriving (Eq, Show)
+  } deriving (Eq)
+
+-- Never let an incidental debug/show call reveal a decrypted historical body.
+instance Show ProviderEventPayload where
+  show _ = "ProviderEventPayload {payload = <redacted>}"
 
 data ProviderEventPayloadMetadata = ProviderEventPayloadMetadata
   { ppmId                  :: Text
@@ -175,9 +186,12 @@ storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
       pure (Left "Provider event resource ID is invalid")
   | BS.null pecRawPayload || BS.length pecRawPayload > maxProviderEventBytes =
       pure (Left "Provider event payload must contain 1 to 1048576 bytes")
-  | otherwise = do
+  | otherwise = case minimizeProviderEventPayload pecProvider pecRawPayload of
+    Left problem -> pure (Left problem)
+    Right retainedPayload -> do
       eventId <- liftIO (toText <$> nextRandom)
-      let payloadHash = sha256Hex pecRawPayload
+      let payloadHash = sha256Hex retainedPayload
+          legacyPayloadHash = sha256Hex pecRawPayload
       inserted <- (rawSql
         "INSERT INTO commerce_provider_event_inbox (\
         \ id, provider, environment, merchant_account_ref, provider_event_id,\
@@ -199,7 +213,7 @@ storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
         , PersistUTCTime pecReceivedAt
         , maybe PersistNull PersistUTCTime pecProviderCreatedAt
         , maybe PersistNull PersistText pecProviderResource
-        , PersistByteString pecRawPayload
+        , PersistByteString retainedPayload
         , PersistText pecEncryptionKey
         , PersistText payloadHash
         ] :: SqlPersistT IO [Single Text])
@@ -211,8 +225,10 @@ storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
             "SELECT id::text FROM commerce_provider_event_inbox\
             \ WHERE provider = ? AND environment = ? AND merchant_account_ref = ?\
             \ AND provider_event_id = ? AND event_type = ?\
-            \ AND signature_verified = ? AND evidence_type = ? AND payload_sha256 = ?\
-            \ AND provider_resource_id IS NOT DISTINCT FROM ?"
+            \ AND signature_verified = ? AND evidence_type = ?\
+            \ AND (payload_sha256 = ? OR payload_sha256 = ?)\
+            \ AND provider_resource_id IS NOT DISTINCT FROM ?\
+            \ AND provider_created_at IS NOT DISTINCT FROM ?"
             [ PersistText (paymentProviderText pecProvider)
             , PersistText (checkoutEnvironmentText pecEnvironment)
             , PersistText pecMerchantRef
@@ -221,13 +237,123 @@ storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
             , PersistBool signatureVerified
             , PersistText evidenceType
             , PersistText payloadHash
+            -- Exact redelivery of a pre-minimization event must still find its
+            -- original row. Never rewrite that row or relax immutable metadata.
+            , PersistText legacyPayloadHash
             , maybe PersistNull PersistText pecProviderResource
+            , maybe PersistNull PersistUTCTime pecProviderCreatedAt
             ] :: SqlPersistT IO [Single Text])
           case existing of
             [Single existingId] ->
               pure (Right (ProviderEventStored (ProviderEventReference existingId) False))
             _ -> pure (Left "Provider event ID conflicts with different immutable evidence")
         _ -> pure (Left "Provider event insert returned an ambiguous result")
+
+-- | Authentication always happens against the original body upstream. Only
+-- fields used by the current worker may cross the SQL/encryption boundary.
+-- Unrecognized card/customer/address/description/URL containers are discarded.
+-- Existing inbox rows are intentionally not rewritten by this function.
+minimizeProviderEventPayload :: PaymentProvider -> ByteString -> Either Text ByteString
+minimizeProviderEventPayload provider rawPayload = do
+  unless (not (BS.null rawPayload) && BS.length rawPayload <= maxProviderEventBytes) $
+    Left "Provider event payload size is invalid"
+  value <- either (const (Left invalidPayload)) Right (eitherDecodeStrict' rawPayload)
+  projected <- either (const (Left invalidPayload)) Right $ parseEither parser value
+  pure (BL.toStrict (A.encode projected))
+  where
+    invalidPayload = "Provider event payload does not match the retained evidence schema"
+    parser = case provider of
+      ProviderPayPal -> paypalEvidence
+      ProviderPlaceToPay -> placeToPayEvidence
+      ProviderPayPhone -> payPhoneEvidence
+      _ -> const (fail "Unsupported provider inbox schema")
+
+paypalEvidence :: Value -> Parser Value
+paypalEvidence = A.withObject "PayPal evidence" $ \envelope -> do
+  eventId <- envelope .: "id" >>= safeEvidenceText 128
+  eventType <- envelope .: "event_type" >>= safeEvidenceText 100
+  unless (validReference 128 eventId && validEventType eventType) (fail "Invalid identity")
+  createdAt <- envelope .: "create_time" >>= evidenceTimestamp
+  resource <- envelope .: "resource"
+  retainedResource <- case resource of
+    Object fields -> do
+      identifier <- optionalEvidenceText fields "id" 128
+      if eventType `elem`
+          ["PAYMENT.CAPTURE.COMPLETED", "PAYMENT.CAPTURE.REFUNDED", "PAYMENT.CAPTURE.REVERSED"]
+        then do
+          status <- optionalEvidenceText fields "status" 32
+          amount <- optionalEvidenceObject fields "amount" $ \amountFields -> do
+            value <- optionalEvidenceText amountFields "value" 32
+            currency <- optionalEvidenceText amountFields "currency_code" 3
+            pure (value <> currency)
+          payee <- optionalEvidenceObject fields "payee" $ \payeeFields ->
+            optionalEvidenceText payeeFields "merchant_id" 128
+          supplementary <- optionalEvidenceObject fields "supplementary_data" $ \extra ->
+            optionalEvidenceObject extra "related_ids" $ \related ->
+              optionalEvidenceText related "order_id" 128
+          pure (Object (identifier <> status <> amount <> payee <> supplementary))
+        else pure (Object identifier)
+    _ -> pure (Object KM.empty) -- Unsupported event resources are never interpreted.
+  pure $ A.object
+    [ "id" .= eventId, "event_type" .= eventType, "create_time" .= createdAt
+    , "resource" .= retainedResource ]
+
+placeToPayEvidence :: Value -> Parser Value
+placeToPayEvidence = A.withObject "PlaceToPay evidence" $ \envelope -> do
+  requestId <- envelope .: "requestId" :: Parser Int64
+  unless (requestId > 0) (fail "Invalid request ID")
+  statusValue <- envelope .: "status"
+  (status, date) <- A.withObject "PlaceToPay status" (\fields -> do
+    status <- fields .: "status" >>= safeEvidenceText 32
+    date <- fields .: "date" >>= evidenceTimestamp
+    pure (status, date)) statusValue
+  signature <- envelope .: "signature" >>= safeEvidenceText 71
+  unless (T.length signature == 71 && "sha256:" `T.isPrefixOf` T.toLower signature
+      && T.all (`elem` ("0123456789abcdef" :: String)) (T.toLower (T.drop 7 signature))) $
+    fail "Invalid signature format"
+  pure $ A.object
+    [ "requestId" .= requestId, "signature" .= signature
+    , "status" .= A.object ["status" .= status, "date" .= date] ]
+
+payPhoneEvidence :: Value -> Parser Value
+payPhoneEvidence = A.withObject "PayPhone evidence" $ \envelope -> do
+  transactionId <- (envelope .: "TransactionId" <|> envelope .: "id") :: Parser Int64
+  reference <- (envelope .: "ClientTransactionId" <|> envelope .: "clientTransactionID")
+    >>= safeEvidenceText 128
+  unless (transactionId > 0 && validReference 128 reference) (fail "Invalid binding")
+  store <- optionalEvidenceText envelope "StoreId" 128
+  -- Callback status is untrusted and unused: only the bound IDs trigger a query.
+  pure $ Object (KM.fromList
+    [ ("TransactionId", A.toJSON transactionId), ("ClientTransactionId", String reference) ]
+    <> store)
+
+safeEvidenceText :: Int -> Text -> Parser Text
+safeEvidenceText maxLength value = do
+  unless (not (T.null value) && T.length value <= maxLength
+      && T.all (\character -> character >= ' ' && character <= '~') value) $
+    fail "Invalid evidence text"
+  pure value
+
+evidenceTimestamp :: Text -> Parser Text
+evidenceTimestamp value = do
+  retained <- safeEvidenceText 64 value
+  _ <- A.parseJSON (String (T.strip retained)) :: Parser UTCTime
+  pure retained
+
+optionalEvidenceText :: A.Object -> A.Key -> Int -> Parser A.Object
+optionalEvidenceText fields key limit = do
+  value <- fields .:? key
+  case value of
+    Nothing -> pure KM.empty
+    Just textValue -> KM.singleton key . String <$> safeEvidenceText limit textValue
+
+optionalEvidenceObject
+  :: A.Object -> A.Key -> (A.Object -> Parser A.Object) -> Parser A.Object
+optionalEvidenceObject fields key project = do
+  value <- fields .:? key
+  case value of
+    Nothing -> pure KM.empty
+    Just objectValue -> KM.singleton key . Object <$> A.withObject "Evidence" project objectValue
 
 listProviderEvents
   :: Maybe Text
