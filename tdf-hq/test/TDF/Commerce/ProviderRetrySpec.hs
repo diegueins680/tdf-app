@@ -366,6 +366,7 @@ spec = do
         notificationInboxSpec
         notificationIdentityInboxSpec
         reconciliationTransactionSpec
+        closedCheckoutEvidenceSpec
         captureReplaySpec
         manualCaptureReplaySpec
         it "serializes different keys and permits only one active attempt" $ \pool -> do
@@ -1800,6 +1801,85 @@ assertQueryUnpaid pool payment = do
 
 -- Shared CheckoutStore boundary: real PostgreSQL, synthetic verified evidence.
 -- These tests do not exercise provider HTTP or actual refunds/disputes.
+closedCheckoutEvidenceSpec :: SpecWith ConnectionPool
+closedCheckoutEvidenceSpec = describe "closed checkout approval evidence" $
+  forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
+    describe (T.unpack (Checkout.paymentProviderText provider)) $
+      forM_ ["expired", "cancelled"] $ \closedStatus ->
+        describe (T.unpack closedStatus) $ do
+          it "retains exact observed money once without applying a late capture" $ \pool -> do
+            payment <- closedPaymentFixture pool provider closedStatus
+            result <- parsedQuery payment Adapter.AdapterSucceeded
+            before <- runSqlPool (closedPaymentFinancialSnapshot payment) pool
+            outcomes <- concurrently (replicate 4 (runSqlPool
+              (Reconciliation.applyQueryResult payment result "late-approval" notificationTime) pool))
+            outcomes `shouldBe` replicate 4 (Right Reconciliation.ReconciliationDeadLetter)
+            assertClosedPaymentEvidence pool payment
+            runSqlPool (closedPaymentFinancialSnapshot payment) pool `shouldReturn` before
+            snapshot <- runSqlPool (paymentSnapshot payment) pool
+            runSqlPool (Reconciliation.applyQueryResult payment result "later-replay"
+              (addUTCTime 3600 notificationTime)) pool
+              `shouldReturn` Right Reconciliation.ReconciliationDeadLetter
+            runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+          it "rolls back review evidence and its audit with the caller savepoint" $ \pool -> do
+            payment <- closedPaymentFixture pool provider closedStatus
+            result <- parsedQuery payment Adapter.AdapterSucceeded
+            before <- runSqlPool (paymentSnapshot payment) pool
+            runSqlPool (do
+              rawExecute "SAVEPOINT caller_owned" []
+              applied <- Reconciliation.applyQueryResult payment result "late-rollback" notificationTime
+              liftIO (applied `shouldBe` Right Reconciliation.ReconciliationDeadLetter)
+              rawExecute "ROLLBACK TO SAVEPOINT caller_owned" []
+              rawExecute "RELEASE SAVEPOINT caller_owned" []) pool
+            runSqlPool (paymentSnapshot payment) pool `shouldReturn` before
+
+closedPaymentFixture
+  :: ConnectionPool -> Checkout.PaymentProvider -> Text -> IO Execution.BoundProviderPayment
+closedPaymentFixture pool provider status = do
+  payment <- reconciliationFixture pool provider
+  runSqlPool (rawExecute "UPDATE commerce_checkout_session SET status=? WHERE id=?::uuid"
+    [PersistText status, PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout payment))]) pool
+  pure payment
+
+closedPaymentFinancialSnapshot :: Execution.BoundProviderPayment -> SqlPersistT IO [Single Text]
+closedPaymentFinancialSnapshot payment = rawSql
+  "SELECT jsonb_build_object(\
+  \ 'checkout',to_jsonb(checkout),'attempt',to_jsonb(attempt),'intent',to_jsonb(intent),\
+  \ 'operation',to_jsonb(operation),\
+  \ 'ledger',(SELECT jsonb_agg(to_jsonb(txn) ORDER BY txn.id) FROM commerce_ledger_transaction txn\
+  \ WHERE source_id=attempt.id::text),\
+  \ 'receipts',(SELECT jsonb_agg(to_jsonb(receipt) ORDER BY receipt.id) FROM commerce_receipt receipt\
+  \ WHERE checkout_id=checkout.id),\
+  \ 'history',(SELECT jsonb_agg(to_jsonb(history) ORDER BY history.id) FROM commerce_payment_state_history history\
+  \ WHERE payment_intent_id=intent.id))::text\
+  \ FROM commerce_payment_attempt attempt\
+  \ JOIN commerce_checkout_session checkout ON checkout.id=attempt.checkout_id\
+  \ JOIN commerce_payment_intent intent ON intent.id=attempt.payment_intent_id\
+  \ JOIN commerce_provider_operation operation ON operation.payment_attempt_id=attempt.id\
+  \ WHERE attempt.id=?::uuid"
+  [paymentAttemptParameter payment]
+
+assertClosedPaymentEvidence :: ConnectionPool -> Execution.BoundProviderPayment -> Expectation
+assertClosedPaymentEvidence pool payment = do
+  rows <- runSqlPool (rawSql
+    "SELECT exception.expected_amount_minor,exception.actual_amount_minor,exception.currency,\
+    \ exception.provider,exception.environment,exception.merchant_account_ref,exception.detected_at,\
+    \ (SELECT count(*) FROM commerce_checkout_audit_event audit\
+    \ WHERE audit.checkout_id=?::uuid AND audit.event_type='verified_payment_on_closed_checkout'\
+    \ AND audit.metadata->>'exception_id'=exception.id::text\
+    \ AND audit.metadata->>'attempt_id'=?)\
+    \ FROM commerce_reconciliation_exception exception WHERE exception.internal_reference=?\
+    \ AND exception.provider_reference=? AND exception.exception_type='verified_payment_on_closed_checkout'"
+    [ PersistText checkoutId, paymentAttemptParameter payment, PersistText checkoutId
+    , PersistText (Execution.bppProviderResourceId payment)]) pool
+    :: IO [(Single Int64, Single Int64, Single Text, Single Text, Single Text,
+      Single Text, Single UTCTime, Single Int64)]
+  rows `shouldBe` [(Single (Execution.bppAmountMinor payment),Single (Execution.bppAmountMinor payment),
+    Single (Execution.bppCurrency payment),Single (Checkout.paymentProviderText (Execution.bppProvider payment)),
+    Single "sandbox",Single (Execution.bppMerchantRef payment),Single notificationTime,Single 1)]
+  where checkoutId = Checkout.checkoutReferenceId (Execution.bppCheckout payment)
+
 captureReplaySpec :: SpecWith ConnectionPool
 captureReplaySpec = describe "verified capture replay integrity" $
   forM_ [Checkout.ProviderDatafast, Checkout.ProviderPayPal,
