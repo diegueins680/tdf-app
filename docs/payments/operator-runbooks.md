@@ -6,6 +6,8 @@ For per-request intent keys, legacy reference preservation, conflicting provider
 the required old/new writer cutover, follow the [2026-09-14 retry safety supplement](retry-reconciliation-safety-2026-09-14.md).
 For lost create responses after payment/expiry or account suspension, follow the
 [exact-response recovery supplement](terminal-recovery-2026-09-14.md).
+For the existing Fly staging URLs, verified access failures, dedicated credential names and
+qualification procedure, see [staging access evidence](staging-access-2026-09-14.md).
 
 ## 1. Configuration and activation
 

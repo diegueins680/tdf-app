@@ -21,6 +21,12 @@ on:
       - '.github/workflows/**'
       - 'fly.toml'
   workflow_dispatch:
+    inputs:
+      inspect_payment_staging:
+        description: Read-only metadata and secret-name inspection of the two fixed staging apps.
+        required: false
+        default: false
+        type: boolean
   workflow_call:
     inputs:
       force_backend:
@@ -39,6 +45,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  payment-staging-inspection:
+    if: github.event_name == 'workflow_dispatch' && inputs.inspect_payment_staging == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Verify staging target and redaction guards
+        run: node --test scripts/__tests__/payment-staging-inspection.test.mjs
+      - name: Install official Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1
+        with:
+          version: '0.4.103'
+      - name: Inspect only existing staging metadata
+        env:
+          FLY_STAGING_API_TOKEN: ${{ secrets.FLY_STAGING_API_TOKEN }}
+          FLY_STAGING_WEB_TOKEN: ${{ secrets.FLY_STAGING_WEB_TOKEN }}
+          KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
+          NO_COLOR: '1'
+        run: node scripts/inspect-payment-staging.mjs
+      - name: Upload allowlisted staging access report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: payment-staging-access-${{ github.sha }}
+          path: artifacts/payment-staging/access-report.json
+          if-no-files-found: ignore
+          retention-days: 7
+
   changes:
     runs-on: ubuntu-latest
     outputs:

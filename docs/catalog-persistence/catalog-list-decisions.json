@@ -4,6 +4,26 @@
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "decisions": [
     {
+      "id": "d6ad7e3315a241e6d802",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-fixed-staging-target-allowlist",
+      "specializedModel": "version-controlled nonproduction inspection targets",
+      "priority": "P0-security",
+      "risk": "A mutable or unrestricted app target could send hosting credentials to an unintended scope or inspect production configuration.",
+      "justification": "The two exact app names are an intentionally closed security boundary for read-only staging inspection, not a merchant-selectable payment catalog. Tests reject every other target; any expansion requires code review and app-scoped credentials.",
+      "reviewed": true
+    },
+    {
+      "id": "f0efc071b84fe0a2cb13",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-redacted-provider-status-projection",
+      "specializedModel": "Fly app and machine operational status vocabulary",
+      "priority": "P0-security",
+      "risk": "Echoing arbitrary status strings from hosting payloads could disclose sensitive or attacker-controlled content in CI logs and artifacts.",
+      "justification": "This fixed output vocabulary redacts all unrecognized app/machine states to unknown. It is not a payment state machine or business catalog, does not control availability, and cannot authorize a payment or deployment.",
+      "reviewed": true
+    },
+    {
       "id": "c3d1e41b543e7cbdaf00",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
