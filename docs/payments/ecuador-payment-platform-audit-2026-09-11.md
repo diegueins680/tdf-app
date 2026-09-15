@@ -44,6 +44,13 @@ see [ADR 0122](../adr/0122-read-only-payment-query-observability.md) and the
 [query observability record](query-observability-2026-09-15.md). It adds no
 provider activation, manual query reset, payment mutation or native admin screen.
 
+The next continuation repairs shared capture and binding replay across the four
+online providers and the existing independently approved bank-transfer finalizer;
+see [ADR 0123](../adr/0123-idempotent-capture-evidence-and-binding.md) and
+[capture replay evidence](capture-replay-integrity-2026-09-15.md). Historical
+receipts and post-capture refund/dispute states are preserved; first late payments
+still require separate reconciliation and fulfillment decisions.
+
 ## 2. Capability and access report
 
 | Capability | Result on 2026-09-11 | Evidence and limitation |

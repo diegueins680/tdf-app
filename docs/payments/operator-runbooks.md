@@ -45,6 +45,13 @@ is not an empty queue; completed queries are not paid orders. The database flag
 and next shared query slot do not establish worker liveness or merchant readiness.
 This view cannot replay or reset a terminal job. Its offset pages may shift while
 workers run and must not be used as an immutable financial export.
+For capture/binding replay, follow
+[ADR 0123](../adr/0123-idempotent-capture-evidence-and-binding.md) and the
+[capture replay verification record](capture-replay-integrity-2026-09-15.md).
+An original verified capture is not a new payment after a refund or dispute.
+Do not replace a mismatched/voided receipt or reconstruct missing ledger evidence
+to make a replay pass. Drain older binding writers before rollout, since they
+can still regress a successful attempt to processing.
 
 ## 1. Configuration and activation
 
