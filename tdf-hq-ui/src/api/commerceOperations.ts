@@ -1,4 +1,14 @@
 import { get, post } from './client';
+import type { components } from './generated/types';
+
+export type CommerceProviderQueries = components['schemas']['CommerceProviderQueries'];
+export type CommerceProviderQuery = components['schemas']['CommerceProviderQuery'];
+export interface CommerceProviderQueryFilters {
+  environment?: CommerceProviderQueries['cpqsEnvironment'];
+  status?: CommerceProviderQuery['cpqStatus'];
+  limit?: number;
+  offset?: number;
+}
 
 export type CommerceProviderEventStatus =
   | 'pending'
@@ -156,6 +166,14 @@ export interface CommercePaymentOverview {
 }
 
 export const CommerceOperations = {
+  listProviderQueries: (params: CommerceProviderQueryFilters = {}) => {
+    const query = new URLSearchParams();
+    query.set('environment', params.environment ?? 'sandbox');
+    if (params.status) query.set('status', params.status);
+    if (params.limit !== undefined) query.set('limit', String(params.limit));
+    if (params.offset !== undefined) query.set('offset', String(params.offset));
+    return get<CommerceProviderQueries>(`/admin/commerce/provider-queries?${query.toString()}`);
+  },
   getPaymentOverview: () => get<CommercePaymentOverview>('/admin/commerce/overview'),
 
   listProviderEvents: (params?: {

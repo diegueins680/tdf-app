@@ -4370,6 +4370,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/commerce/provider-queries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inspect redacted provider status-query recovery jobs
+         * @description Additive read-only contract (2026-09-15). Requires strict Admin access. Defaults to sandbox and returns only one environment. This does not claim jobs, reserve query budgets, contact providers or authorize payment retries. Completed jobs are not proof of paid orders. A disabled database flag is reported explicitly; an enabled flag is not evidence of a running worker, qualified account or valid credentials. Missing recovery schema is reported as cpqsSchemaReady=false, never as a verified empty queue. Reads have a three-second per-statement database timeout. Offset pagination is a live operational view, not an immutable export; refresh after concurrent changes.
+         */
+        get: operations["adminListCommerceProviderQueries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/commerce/overview": {
         parameters: {
             query?: never;
@@ -8807,6 +8827,59 @@ export interface components {
             cpoSettlements: components["schemas"]["CommerceSettlementSummary"][];
             cpoSellerBalances: components["schemas"]["CommerceSellerBalanceSummary"][];
             cpoPayouts: components["schemas"]["CommercePayoutSummary"][];
+        };
+        CommerceProviderQuery: {
+            /** Format: uuid */
+            cpqOperationId: string;
+            /** Format: uuid */
+            cpqCheckoutId: string;
+            /** Format: uuid */
+            cpqPaymentAttemptId: string;
+            cpqProvider: string;
+            /** @enum {string} */
+            cpqStatus: "pending" | "processing" | "retry" | "completed" | "dead_letter";
+            cpqAttemptCount: number;
+            /** @description Original operation state; not a job state */
+            cpqOperationStatus: string;
+            /** @enum {string} */
+            cpqOutcomeCertainty: "not_sent" | "confirmed_no_charge" | "ambiguous" | "succeeded";
+            /** Format: date-time */
+            cpqCreatedAt: string;
+            /** Format: date-time */
+            cpqLastAttemptAt: string | null;
+            /** Format: date-time */
+            cpqNextAttemptAt: string;
+            /** Format: date-time */
+            cpqLeaseExpiresAt: string | null;
+            /** Format: date-time */
+            cpqCompletedAt: string | null;
+            /**
+             * @description Known server-authored diagnostic only; all other stored text becomes unrecognized
+             * @enum {string|null}
+             */
+            cpqLastOutcome: "retry_exhausted" | "process_switch_disabled" | "binding_changed" | "query_unavailable" | "query_unsupported" | "query_binding_mismatch" | "query_application_rejected" | "query_applied" | "provider_nonterminal" | "provider_requires_review" | "configuration_revoked" | "operation_already_terminal" | "immutable_binding_unavailable" | "unrecognized" | null;
+        };
+        CommerceProviderQueryBudget: {
+            cpqbProvider: string;
+            /**
+             * Format: date-time
+             * @description Earliest shared query slot
+             */
+            cpqbNextQueryAt: string;
+        };
+        CommerceProviderQueries: {
+            /** Format: date-time */
+            cpqsGeneratedAt: string;
+            /** @enum {string} */
+            cpqsEnvironment: "sandbox" | "production";
+            cpqsSchemaReady: boolean;
+            /** @description Database flag only; never worker liveness or complete activation authority */
+            cpqsRecoveryFlagEnabled: boolean;
+            cpqsJobs: components["schemas"]["CommerceProviderQuery"][];
+            cpqsBudgets: components["schemas"]["CommerceProviderQueryBudget"][];
+            cpqsLimit: number;
+            cpqsOffset: number;
+            cpqsHasMore: boolean;
         };
         CommerceProviderEvent: {
             /** Format: uuid */
@@ -21854,6 +21927,60 @@ export interface operations {
                 content?: never;
             };
             /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListCommerceProviderQueries: {
+        parameters: {
+            query?: {
+                environment?: "sandbox" | "production";
+                status?: "pending" | "processing" | "retry" | "completed" | "dead_letter";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted operational snapshot, with explicit schema availability */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceProviderQueries"];
+                };
+            };
+            /** @description Invalid filter or pagination */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Report temporarily unavailable; no database diagnostics exposed */
             503: {
                 headers: {
                     [name: string]: unknown;

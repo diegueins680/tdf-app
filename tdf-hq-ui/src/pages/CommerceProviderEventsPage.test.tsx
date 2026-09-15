@@ -15,6 +15,11 @@ jest.unstable_mockModule('react-i18next', () => ({
 
 jest.unstable_mockModule('../api/commerceOperations', () => ({
   CommerceOperations: {
+    listProviderQueries: async () => ({
+      cpqsGeneratedAt: '2026-09-15T12:00:00Z', cpqsEnvironment: 'sandbox',
+      cpqsSchemaReady: false, cpqsRecoveryFlagEnabled: false, cpqsJobs: [], cpqsBudgets: [],
+      cpqsLimit: 25, cpqsOffset: 0, cpqsHasMore: false,
+    }),
     getPaymentOverview: () => getPaymentOverviewMock(),
     listProviderEvents: () => listProviderEventsMock(),
     replayProviderEvent: (eventId: string, reason: string) => replayProviderEventMock(eventId, reason),
