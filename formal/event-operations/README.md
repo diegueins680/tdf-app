@@ -29,13 +29,29 @@ ALLOY_JAR=/path/to/alloy-6.2.0.jar \
 bash scripts/verify-event-operations-formal.sh
 ```
 
-The script validates JAR checksums, executes TLC sequentially, requires the Alloy scenario to be
-satisfiable, and requires every Alloy assertion to have no counterexample.
+The script validates JAR checksums, requires exact PlusCal regeneration and its real-translator
+regression tests, executes TLC sequentially, requires the Alloy scenarios to be satisfiable,
+and requires every Alloy assertion to have no counterexample. Node 22+ is required for the
+integrity checker/tests; CI selects Node 22 explicitly.
+
+### PlusCal regeneration integrity
+
+`ReservationRace.tla` is generated with pinned `pcal.trans -nocfg -unixEOL -lineWidth 120`.
+The pre-TLC gate regenerates only a temporary copy and compares every byte, including checksum
+markers and whitespace; it never auto-repairs the checked-in model. It also scans additional
+PlusCal files while requiring ReservationRace to remain present. See the
+[integrity contract and regeneration commands](../../docs/event-operations/pluscal-integrity-contract.md).
+
+On 2026-09-15 the earlier warning was traced to two stripped trailing spaces in default-width
+generated `UNCHANGED` lists. Explicit width 120 emits those lists without wrapping and matches
+the committed file exactly, with no algorithm or expression changes. The checker is a
+reproducibility boundary, not proof of translator correctness or SQL refinement.
 
 ## Bounds and results (2026-09-14–15)
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| PlusCal regeneration / integrity tests | Pinned translator, width 120, byte-exact temporary-copy comparison; real translator mutations | PASS; exact match and 13 tests, no skips; source/checksum/whitespace drift rejected |
 | `FanHubOnboarding.cfg` | 3 context generations, 2 pending slots, valid/invalid eligibility, explicit/implicit exit, terminal/nonterminal receipts | PASS; 1,249 generated, 215 distinct states, depth 12 |
 | `FanHubOnboardingConsent/Context/Terminal/Flight.cfg` | Negative controls: missing consent, context, terminal or same-context single-flight guard | Expected exit 12 with `ConsentOnly`, `CurrentContext`, `TerminalOnly`, `SingleFlight`; all four detected |
 | `ArtistFollowConsent.cfg` | 2 Parties plus logged out, 2 artists, 3 context generations, known/unknown read and 1 command | PASS; 791 generated, 341 distinct states, depth 7 |

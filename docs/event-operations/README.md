@@ -39,6 +39,8 @@
 - [Draft PR 16: restore explicit artist-follow continuity](pr-16-artist-follow-continuity.md)
 - [FanHub authoritative onboarding contract](fanhub-onboarding-contract.md)
 - [Draft PR 17: restore account-bound FanHub guidance and explicit exit](pr-17-fanhub-onboarding.md)
+- [PlusCal integrity contract](pluscal-integrity-contract.md)
+- [Draft PR 18: verify exact reservation-model regeneration](pr-18-pluscal-integrity.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)
