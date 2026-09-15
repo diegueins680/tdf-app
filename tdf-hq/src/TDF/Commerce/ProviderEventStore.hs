@@ -12,6 +12,7 @@ module TDF.Commerce.ProviderEventStore
   , ProviderEventReplayError(..)
   , parseProviderEventReference
   , storeVerifiedProviderEvent
+  , storeUntrustedProviderEvent
   , listProviderEvents
   , listDueProviderEventReferences
   , providerEventStaleBefore
@@ -83,6 +84,7 @@ data ProviderEventRecord = ProviderEventRecord
   , perEnvironment         :: Text
   , perProviderEventId     :: Text
   , perEventType           :: Text
+  , perEvidenceType        :: Text
   , perProviderResourceId  :: Maybe Text
   , perStatus              :: Text
   , perAttemptCount        :: Int
@@ -107,6 +109,8 @@ data ProviderEventPayload = ProviderEventPayload
   , pepMerchantRef        :: Text
   , pepProviderEventId    :: Text
   , pepEventType          :: Text
+  , pepEvidenceType       :: Text
+  , pepSignatureVerified  :: Bool
   , pepProviderCreatedAt  :: Maybe UTCTime
   , pepProviderResourceId :: Maybe Text
   , pepRawPayload         :: ByteString
@@ -119,6 +123,8 @@ data ProviderEventPayloadMetadata = ProviderEventPayloadMetadata
   , ppmMerchantRef         :: Text
   , ppmProviderEventId     :: Text
   , ppmEventType           :: Text
+  , ppmEvidenceType        :: Text
+  , ppmSignatureVerified   :: Bool
   , ppmProviderCreatedAt   :: Maybe UTCTime
   , ppmProviderResourceId  :: Maybe Text
   , ppmPayloadSha256       :: Text
@@ -140,7 +146,23 @@ parseProviderEventReference rawReference =
 storeVerifiedProviderEvent
   :: ProviderEventCreation
   -> SqlPersistT IO (Either Text ProviderEventStored)
-storeVerifiedProviderEvent ProviderEventCreation{..}
+storeVerifiedProviderEvent = storeProviderEvent "signature_verified" True
+
+-- | Persist a callback that has no provider-authentication mechanism. It is a
+-- query trigger only: the worker must obtain authoritative status through the
+-- provider's authenticated server-to-server API before changing payment or
+-- fulfillment state.
+storeUntrustedProviderEvent
+  :: ProviderEventCreation
+  -> SqlPersistT IO (Either Text ProviderEventStored)
+storeUntrustedProviderEvent = storeProviderEvent "untrusted_callback" False
+
+storeProviderEvent
+  :: Text
+  -> Bool
+  -> ProviderEventCreation
+  -> SqlPersistT IO (Either Text ProviderEventStored)
+storeProviderEvent evidenceType signatureVerified ProviderEventCreation{..}
   | not (validEncryptionKey pecEncryptionKey) =
       pure (Left "Provider event encryption key must contain 32 to 256 safe characters")
   | not (validReference 128 pecProviderEventId) =
@@ -159,9 +181,9 @@ storeVerifiedProviderEvent ProviderEventCreation{..}
       inserted <- (rawSql
         "INSERT INTO commerce_provider_event_inbox (\
         \ id, provider, environment, merchant_account_ref, provider_event_id,\
-        \ event_type, signature_verified, received_at, provider_created_at,\
+        \ event_type, signature_verified, evidence_type, received_at, provider_created_at,\
         \ provider_resource_id, payload_ciphertext, payload_sha256, processing_status\
-        \) VALUES (?::uuid, ?, ?, ?, ?, ?, TRUE, ?, ?, ?,\
+        \) VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,\
         \ pgp_sym_encrypt_bytea(?::bytea, ?, 'cipher-algo=aes256,compress-algo=1'),\
         \ ?, 'pending')\
         \ ON CONFLICT (provider, environment, merchant_account_ref, provider_event_id)\
@@ -172,6 +194,8 @@ storeVerifiedProviderEvent ProviderEventCreation{..}
         , PersistText pecMerchantRef
         , PersistText pecProviderEventId
         , PersistText pecEventType
+        , PersistBool signatureVerified
+        , PersistText evidenceType
         , PersistUTCTime pecReceivedAt
         , maybe PersistNull PersistUTCTime pecProviderCreatedAt
         , maybe PersistNull PersistText pecProviderResource
@@ -187,13 +211,15 @@ storeVerifiedProviderEvent ProviderEventCreation{..}
             "SELECT id::text FROM commerce_provider_event_inbox\
             \ WHERE provider = ? AND environment = ? AND merchant_account_ref = ?\
             \ AND provider_event_id = ? AND event_type = ?\
-            \ AND signature_verified = TRUE AND payload_sha256 = ?\
+            \ AND signature_verified = ? AND evidence_type = ? AND payload_sha256 = ?\
             \ AND provider_resource_id IS NOT DISTINCT FROM ?"
             [ PersistText (paymentProviderText pecProvider)
             , PersistText (checkoutEnvironmentText pecEnvironment)
             , PersistText pecMerchantRef
             , PersistText pecProviderEventId
             , PersistText pecEventType
+            , PersistBool signatureVerified
+            , PersistText evidenceType
             , PersistText payloadHash
             , maybe PersistNull PersistText pecProviderResource
             ] :: SqlPersistT IO [Single Text])
@@ -228,7 +254,8 @@ listDueProviderEventReferences now requestedLimit = do
   let staleBefore = providerEventStaleBefore now
   rows <- rawSql
     "SELECT event.id::text FROM commerce_provider_event_inbox event\
-    \ WHERE event.signature_verified = TRUE\
+    \ WHERE (event.signature_verified = TRUE\
+    \   OR event.evidence_type = 'untrusted_callback')\
     \ AND EXISTS (SELECT 1 FROM revenue_feature_flag flag\
     \   WHERE flag.flag_key = 'checkout.provider_event_worker'\
     \   AND flag.environment = event.environment AND flag.enabled)\
@@ -262,12 +289,14 @@ loadProviderEventPayload eventRef encryptionKey
         \ 'ppmId', id::text, 'ppmProvider', provider, 'ppmEnvironment', environment,\
         \ 'ppmMerchantRef', merchant_account_ref,\
         \ 'ppmProviderEventId', provider_event_id, 'ppmEventType', event_type,\
+        \ 'ppmEvidenceType', evidence_type,\
+        \ 'ppmSignatureVerified', signature_verified,\
         \ 'ppmProviderCreatedAt', provider_created_at,\
         \ 'ppmProviderResourceId', provider_resource_id,\
         \ 'ppmPayloadSha256', payload_sha256)::text,\
         \ pgp_sym_decrypt_bytea(payload_ciphertext, ?)\
         \ FROM commerce_provider_event_inbox\
-        \ WHERE id = ?::uuid AND signature_verified = TRUE\
+        \ WHERE id = ?::uuid\
         \ AND processing_status = 'processing'"
         [ PersistText encryptionKey
         , PersistText (providerEventReferenceId eventRef)
@@ -285,6 +314,8 @@ loadProviderEventPayload eventRef encryptionKey
               , pepMerchantRef = ppmMerchantRef metadata
               , pepProviderEventId = ppmProviderEventId metadata
               , pepEventType = ppmEventType metadata
+              , pepEvidenceType = ppmEvidenceType metadata
+              , pepSignatureVerified = ppmSignatureVerified metadata
               , pepProviderCreatedAt = ppmProviderCreatedAt metadata
               , pepProviderResourceId = ppmProviderResourceId metadata
               , pepRawPayload = rawPayload
@@ -514,6 +545,7 @@ providerEventRecordSelect =
   "SELECT jsonb_build_object(\
   \ 'perId', id::text, 'perProvider', provider, 'perEnvironment', environment,\
   \ 'perProviderEventId', provider_event_id, 'perEventType', event_type,\
+  \ 'perEvidenceType', evidence_type,\
   \ 'perProviderResourceId', provider_resource_id, 'perStatus', processing_status,\
   \ 'perAttemptCount', attempt_count, 'perCheckoutId', checkout_id::text,\
   \ 'perPaymentAttemptId', payment_attempt_id::text, 'perRefundId', refund_id::text,\

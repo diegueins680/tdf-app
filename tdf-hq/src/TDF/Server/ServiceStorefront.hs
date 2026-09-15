@@ -480,6 +480,7 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
                       , Checkout.vpProviderResource = paymentId
                       , Checkout.vpProviderResourcePath = Just resourcePath
                       , Checkout.vpOrderReference = toPathPiece oid
+                      , Checkout.vpProviderReference = toPathPiece oid
                       , Checkout.vpAmountMinor = fromIntegral totalCents
                       , Checkout.vpCurrency = currency
                       , Checkout.vpEvidence = "server_to_server"
@@ -703,6 +704,7 @@ capturePaypalHandler mLookupToken ServiceStorefrontPaypalCaptureReq{..} = do
                       , Checkout.vpProviderResourcePath = Just
                           ("/v2/checkout/orders/" <> pcCapturePaypalId <> "/capture")
                       , Checkout.vpOrderReference = toPathPiece oid
+                      , Checkout.vpProviderReference = toPathPiece oid
                       , Checkout.vpAmountMinor = fromIntegral
                           (ME.serviceStorefrontOrderPriceUsdCents order)
                       , Checkout.vpCurrency = ME.serviceStorefrontOrderCurrency order
@@ -927,6 +929,7 @@ processPaypalWebhookEventIO env@Env{envPool = pool} environment merchantRef enve
                           , Checkout.vpProviderResourcePath = Just
                               ("/v2/checkout/orders/" <> pwcPaypalOrderId capture <> "/capture")
                           , Checkout.vpOrderReference = bpcDomainOrderId bound
+                          , Checkout.vpProviderReference = bpcDomainOrderId bound
                           , Checkout.vpAmountMinor = bpcExpectedAmount bound
                           , Checkout.vpCurrency = bpcCurrency bound
                           , Checkout.vpEvidence = "signature_verified_webhook"

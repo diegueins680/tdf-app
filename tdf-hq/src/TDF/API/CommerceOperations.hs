@@ -203,6 +203,7 @@ data CommerceProviderEventDTO = CommerceProviderEventDTO
   , cpeEnvironment        :: Text
   , cpeProviderEventId    :: Text
   , cpeEventType          :: Text
+  , cpeEvidenceType       :: Text
   , cpeProviderResourceId :: Maybe Text
   , cpeStatus             :: Text
   , cpeAttemptCount       :: Int

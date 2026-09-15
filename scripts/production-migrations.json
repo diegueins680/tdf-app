@@ -545,6 +545,11 @@
       "id": "2026-09-11_provider_capability_catalog",
       "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
       "introducedBy": "585ca46fd6699ec33c7520ba141500c5bf7e1139"
+    },
+    {
+      "id": "2026-09-13_provider_execution_runtime",
+      "path": "tdf-hq/sql/2026-09-13_provider_execution_runtime.sql",
+      "introducedBy": "6d81ee1296e4dfc9d5b3207904c4b3fde7f3f5e5"
     }
   ]
 }

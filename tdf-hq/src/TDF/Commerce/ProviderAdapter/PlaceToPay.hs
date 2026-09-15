@@ -20,6 +20,7 @@ import qualified Data.ByteArray.Encoding as BAE
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import           Data.Int (Int64)
+import           Data.List (nub)
 import           Data.Maybe (fromMaybe)
 import           Data.Scientific (Scientific)
 import           Data.Text (Text)
@@ -31,12 +32,13 @@ import           TDF.Commerce.CheckoutStore
   ( CheckoutEnvironment(..), PaymentProvider(..) )
 import           TDF.Commerce.ProviderAdapter
 import           TDF.Commerce.ProviderCapabilities
-  ( ProviderOutcomeCertainty(..) )
+  ( PaymentMethod, ProviderOutcomeCertainty(..) )
 
 data PlaceToPayConfig = PlaceToPayConfig
   { ptpEnvironment :: CheckoutEnvironment
   , ptpLogin       :: Text
   , ptpSecretKey   :: Text
+  , ptpPaymentMethods :: [(PaymentMethod, Text)]
   }
 
 placeToPayAdapter :: PlaceToPayConfig -> Either AdapterError ProviderAdapter
@@ -45,6 +47,11 @@ placeToPayAdapter config = do
     (Left (AdapterError "PlaceToPay login is missing or invalid."))
   unless (validVisibleCredential (ptpSecretKey config))
     (Left (AdapterError "PlaceToPay secret key is missing or invalid."))
+  unless (all (validPaymentMethodRestriction . snd) (ptpPaymentMethods config))
+    (Left (AdapterError "PlaceToPay payment-method configuration is invalid."))
+  unless (length (map fst (ptpPaymentMethods config))
+      == length (nub (map fst (ptpPaymentMethods config))))
+    (Left (AdapterError "PlaceToPay payment-method configuration is ambiguous."))
   pure ProviderAdapter
     { adapterProvider = ProviderPlaceToPay
     , adapterBuildCreate = buildCreate config
@@ -71,13 +78,17 @@ buildCreate config context payment = do
   validateContext context
   validateCreate payment
   validateUsdMoney (cpMoney payment)
+  paymentMethod <- maybe
+    (Left (AdapterError "PlaceToPay is not configured for this payment method."))
+    Right
+    (lookup (cpPaymentMethod payment) (ptpPaymentMethods config))
   pure AdapterRequest
     { arProvider = ProviderPlaceToPay
     , arOperation = AdapterCreate
     , arMethod = AdapterPost
     , arUrl = placeToPayBaseUrl config <> "/api/session"
     , arHeaders = jsonHeaders
-    , arBody = Just (A.object fields)
+    , arBody = Just (A.object ("paymentMethod" .= paymentMethod : fields))
     , arRetryPolicy = ReuseStableReference
     }
   where
@@ -345,6 +356,20 @@ validateRequestId requestId
 
 validHttpsUrl :: Text -> Bool
 validHttpsUrl url = "https://" `T.isPrefixOf` T.toLower url
+
+validPaymentMethodRestriction :: Text -> Bool
+validPaymentMethodRestriction value =
+  not (T.null value)
+    && T.length value <= 256
+    && all validCode (T.splitOn "," value)
+  where
+    validCode code =
+      not (T.null code)
+        && T.length code <= 32
+        && T.all (\character ->
+          (character >= 'a' && character <= 'z')
+            || (character >= '0' && character <= '9')
+            || character == '_') code
 
 validProcessUrl :: PlaceToPayConfig -> Text -> Bool
 validProcessUrl config url = (placeToPayBaseUrl config <> "/") `T.isPrefixOf` url

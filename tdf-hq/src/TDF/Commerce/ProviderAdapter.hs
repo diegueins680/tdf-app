@@ -48,7 +48,7 @@ import           Data.Time (UTCTime)
 
 import           TDF.Commerce.CheckoutStore (PaymentProvider)
 import           TDF.Commerce.ProviderCapabilities
-  ( ProviderOutcomeCertainty )
+  ( PaymentMethod, ProviderOutcomeCertainty )
 
 data AdapterOperation
   = AdapterCreate
@@ -152,7 +152,8 @@ data MoneyBreakdown = MoneyBreakdown
   } deriving (Eq, Show)
 
 data CreatePayment = CreatePayment
-  { cpReference        :: Text
+  { cpPaymentMethod    :: PaymentMethod
+  , cpReference        :: Text
   , cpDescription      :: Text
   , cpMoney            :: MoneyBreakdown
   , cpReturnUrl        :: Text

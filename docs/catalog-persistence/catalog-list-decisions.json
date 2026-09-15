@@ -556,13 +556,13 @@
       "reviewed": true
     },
     {
-      "id": "3f29362597ae742d63c2",
+      "id": "f16c19c9f3aa58944375",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger. Reviewed reconciled manifest: preserves all 102 main entries and their order and metadata, adds only the three payment migrations, and passes 65 manifest/CI tests without duplicate identifiers.",
+      "justification": "Migration identifiers and ordered script paths are deployment mechanics persisted in the migration ledger. This reviewed merge preserves all 105 parent entries with identical order and metadata and adds only provider_execution_runtime. All 60 release tests pass; 106 unique IDs were checked independently.",
       "reviewed": true,
       "reviewMethod": "source-and-manifest-review",
       "reviewBatch": "branch-audit-2026-09-15",
@@ -571,7 +571,7 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 105,
+        "valueCount": 106,
         "consumerCount": 33,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
@@ -13389,6 +13389,46 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "8075fffdb7bea3d397b5",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "commerce_provider_operation",
+      "priority": "P0-security",
+      "risk": "An unreviewed operation kind could initiate, cancel, query, or reverse a provider-side financial operation outside the supported adapter contract.",
+      "justification": "The closed operation vocabulary is enforced by the provider-operation ledger itself and changes only through a reviewed, versioned database migration plus matching adapter changes.",
+      "reviewed": true
+    },
+    {
+      "id": "c731e685c3acb9709e55",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "commerce_provider_operation",
+      "priority": "P0-security",
+      "risk": "Invalid operation states could permit duplicate execution, unsafe fallback, premature fulfillment, or loss of reconciliation work.",
+      "justification": "Provider-operation status is a database-enforced safety state machine, not a selectable business catalog; transitions are versioned with the canonical payment runtime.",
+      "reviewed": true
+    },
+    {
+      "id": "aedc7d3899ae13c4af5a",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "commerce_provider_operation",
+      "priority": "P0-security",
+      "risk": "Incorrect outcome certainty could enable fallback after an ambiguous request and create a duplicate charge across providers.",
+      "justification": "Outcome certainty is an auditable payment-safety state owned by the provider-operation ledger and deliberately constrained by a reviewed database contract.",
+      "reviewed": true
+    },
+    {
+      "id": "322d0f9cc40af6a02529",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "commerce_provider_operation",
+      "priority": "P0-security",
+      "risk": "A provider-dependent state without an immutable provider resource would make status queries and financial reconciliation unsafe or impossible.",
+      "justification": "This subset is a relational invariant on the canonical provider-operation state machine: every provider-dependent state must bind an external resource identifier.",
       "reviewed": true
     }
   ]
