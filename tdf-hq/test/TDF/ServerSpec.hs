@@ -19,7 +19,10 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
-import Database.Persist (Entity(..), Key, PersistValue(PersistText), count, get, insert, insert_, insertKey, toPersistValue, (==.))
+import Database.Persist
+    ( Entity(..), Key, PersistValue(PersistText), count, get, insert, insert_, insertKey
+    , selectList, toPersistValue, (==.)
+    )
 import Database.Persist.Sql
     ( SqlPersistT
     , fromSqlKey
