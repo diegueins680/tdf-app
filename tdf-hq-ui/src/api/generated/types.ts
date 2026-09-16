@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/event-operations/events/{eventId}/tasks/{activityId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete an opted-in preparation task with current RACI and completed dependencies
+         * @description Only draft/planning events and planned/confirmed tasks with both policy guards. Requires current owner or scoped task.manage authority; exact historical replay requires current read authority. Revalidates the bound session and SQL receipt inside the transaction before commit. Result aggregateRevision is exactly the original expectedRevision plus one, also on replay. No actor, time, hash or override can be supplied. No approver/evidence, live-event or notification flow is implied. No automatic rebase or retry with a new key after network ambiguity. Requires separately reviewed SQL/feature activation; disabled by default.
+         */
+        post: operations["completeEventOperationTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/event-operations/events/{eventId}/tasks/{activityId}/raci/context": {
         parameters: {
             query?: never;
@@ -6872,6 +6892,27 @@ export interface components {
         };
         /** @description Canonical ASCII decimal string in 1..9223372036854775807 (signed BIGINT maximum). Runtime decoders enforce the exact upper bound in addition to the pattern. Never convert to a JavaScript number. Not an authorization or readiness certificate. */
         EventTaskAggregateRevision: string;
+        EventTaskCompletionCommand: {
+            expectedRevision: components["schemas"]["EventTaskAggregateRevision"];
+            /** @description Nonblank; preserved without normalization. */
+            reason: string;
+            /** @description Nonblank; bound to the idempotent request. */
+            correlationId: string;
+        };
+        EventTaskCompletionOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            status: "completed";
+            /** Format: int32 */
+            activityVersion: number;
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+            replayed: boolean;
+        };
         EventRaciEditorContext: {
             /** Format: int64 */
             eventId: number;
@@ -6980,7 +7021,7 @@ export interface components {
         };
         EventOperationError: {
             /** @enum {string} */
-            code: "feature_disabled" | "not_found" | "forbidden" | "invalid_request" | "reason_required" | "idempotency_conflict" | "version_conflict" | "transition_invalid" | "transition_effects_not_ready" | "operation_not_ready" | "assignment_not_replaceable" | "assignee_unavailable" | "assignment_conflict" | "accountability_not_ready" | "separation_of_duties" | "event_operations_unavailable" | "invalid_database_response";
+            code: "feature_disabled" | "not_found" | "forbidden" | "invalid_request" | "reason_required" | "idempotency_conflict" | "version_conflict" | "transition_invalid" | "transition_effects_not_ready" | "operation_not_ready" | "assignment_not_replaceable" | "assignee_unavailable" | "assignment_conflict" | "accountability_not_ready" | "dependencies_not_ready" | "separation_of_duties" | "event_operations_unavailable" | "invalid_database_response";
         };
         MerchReputationSummary: {
             /** @enum {string} */
@@ -13058,6 +13099,78 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    completeEventOperationTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventTaskCompletionCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed or exactly replayed original completion receipt */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventTaskCompletionOutcome"];
+                };
+            };
+            /** @description Invalid capture, UUID, strict fields or constraints */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current reader lacks task mutation authority */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled or opaque absent/foreign/unreadable task */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version/key conflict, unsupported task/event/policy, current RACI or prerequisites not ready */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sanitized persistence, commit or receipt-validation failure; no success implied */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getEventRaciEditorContext: {
         parameters: {
             query?: {

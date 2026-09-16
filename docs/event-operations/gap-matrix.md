@@ -137,3 +137,10 @@ and preserves history through failures and down/up. [Verification](pr-31-task-co
 covers database decisions, real races, expiry, revocation and the complete schema.
 EO-026–028 remain partial: there is no completion HTTP/UI surface, approval/evidence
 workflow, override, reopening or live-event command in this increment.
+
+PR 32 exposes that preparation command through the current authenticated session
+fence and a strict pre-commit receipt decoder, with additive OpenAPI/web declarations.
+[Evidence](pr-32-task-completion-api.md) includes real HTTP post-write fault/commit
+rollback, concurrent replay and post-authentication revocation. Completion API is
+implemented behind the existing flag; web helper/UI, mobile/offline and richer task
+approval/evidence/lifecycle remain missing. EO-026–028 therefore remain partial.

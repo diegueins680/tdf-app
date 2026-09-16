@@ -226,3 +226,9 @@ authorization, write fences, versions and immutable evidence. See [PR 31](pr-31-
 Next: session-fenced completion HTTP/client contracts, then scoped review/readiness
 and explicit completion UX. Approval/evidence, override, reopening and live-event
 effects remain distinct contracts; none may be inferred from this preparation command.
+
+PR 32 adds the session-fenced completion HTTP boundary, strict pre-commit receipt
+validation and additive OpenAPI/generated web declarations ([evidence](pr-32-task-completion-api.md)).
+Next dependent increment: explicit request-capturing web client with target/revision
+validation, then scoped completion review/readiness UX. No UI should infer write
+authority from task visibility, cached RACI or a revision token.

@@ -107,7 +107,8 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
     snapshot pool user 109 >>= expectRight
     eventCounts pool 109 `shouldReturn` [0,0,0,1]
 
-  forM_ (zip [110..] ["read","new","replay","task","revisioned","raci","raci-replay","context"]) $ \(eventId, mode) ->
+  forM_ (zip [110..] ["read","new","replay","task","revisioned","raci","raci-replay","context",
+                      "complete","complete-replay"]) $ \(eventId, mode) ->
     it ("rejects real HTTP " <> mode <> " when revoked after production authentication") $ do
       (token,user) <- seedSession pool eventId
       if mode == "replay" then transition pool user eventId eventId 1 Planning >>= expectRight else pure ()
@@ -119,6 +120,16 @@ spec pool = describe "event operations in-flight session fence / PostgreSQL" $ d
         runHandler (runReaderT (apply (eventId+10000) (commandKey eventId)
           (EventRaciReassignmentCommand revision RaciResponsible 2 1 "test" "test"))
           (Env pool httpTestConfig)) >>= expectRight
+      else pure ()
+      if mode `elem` ["complete","complete-replay"] then do
+        execute pool "INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id) VALUES (?,1,'accountable',1),(?,2,'responsible',1); INSERT INTO event_operation_task_policy(activity_id,requires_accountability,dependencies_gate_completion) VALUES (?,TRUE,TRUE)"
+          (replicate 3 (PersistInt64 (eventId+10000)))
+        if mode == "complete-replay" then do
+          let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> apply = eventOperationsServer user eventId
+              revision = maybe (error "invalid fixture revision") id (parseEventTaskAggregateRevision "4")
+          runHandler (runReaderT (apply (eventId+10000) (commandKey eventId)
+            (EventTaskCompletionCommand revision "test" "test")) (Env pool httpTestConfig)) >>= expectRight
+        else pure ()
       else pure ()
       before <- eventCounts pool eventId
       taskSnapshot pool user eventId >>= expectRight
@@ -335,6 +346,7 @@ httpAfterAuthentication pool token eventId mode revoke = do
         suffix = if mode `elem` ["task", "revisioned", "context"] then "/tasks/" <> show (eventId + 10000)
                     <> (if mode == "revisioned" then "/revisioned" else if mode == "context" then "/raci/context" else "")
                  else if mode `elem` ["raci","raci-replay"] then "/tasks/" <> show (eventId + 10000) <> "/raci/reassign"
+                 else if mode `elem` ["complete","complete-replay"] then "/tasks/" <> show (eventId + 10000) <> "/complete"
                  else if readOnly then "" else "/transitions"
         request = HTTP.defaultRequest
           { HTTP.host = "127.0.0.1", HTTP.port = port, HTTP.secure = False
@@ -345,6 +357,7 @@ httpAfterAuthentication pool token eventId mode revoke = do
           , HTTP.requestBody = HTTP.RequestBodyLBS (if readOnly then BL.empty
               else if mode == "raci" then "{\"expectedRevision\":\"1\",\"role\":\"responsible\",\"fromPartyId\":2,\"toPartyId\":1,\"reason\":\"test\",\"correlationId\":\"test\"}"
               else if mode == "raci-replay" then "{\"expectedRevision\":\"2\",\"role\":\"responsible\",\"fromPartyId\":2,\"toPartyId\":1,\"reason\":\"test\",\"correlationId\":\"test\"}"
+              else if mode `elem` ["complete","complete-replay"] then "{\"expectedRevision\":\"4\",\"reason\":\"test\",\"correlationId\":\"test\"}"
               else encode (command 1 Planning))
           , HTTP.redirectCount = 0, HTTP.responseTimeout = HTTP.responseTimeoutMicro 30000000 }
     withWorker (HTTP.httpLbs request manager) $ \waitResponse _ -> do

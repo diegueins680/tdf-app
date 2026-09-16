@@ -461,7 +461,136 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
         send "POST" raciPath (auth owner <> idem 300) (Just raciBody)
           >>= expectError 503 "event_operations_unavailable"
         send "GET" "/82/tasks/8200/revisioned" (auth owner) Nothing >>= expectStatus 200
+  it "rejects invalid completion transport, stale revisions and unprivileged readers" $ do
+    execute "INSERT INTO social_event(id,organizer_party_id) VALUES(83,'1'); INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence) VALUES(83,'planning',1,'completion HTTP test'); INSERT INTO event_operation_relationship(event_id,party_id,relationship_kind) VALUES(83,1,'primary_owner')"
+    forM_ [8300..8306 :: Int] $ \task -> execute
+      ("INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES(" <> T.pack (show task)
+        <> ",83,'planned',1); INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id) VALUES("
+        <> T.pack (show task) <> ",1,'accountable',1),(" <> T.pack (show task)
+        <> ",3,'responsible',1); INSERT INTO event_operation_task_policy(activity_id,requires_accountability,dependencies_gate_completion) VALUES("
+        <> T.pack (show task) <> ",TRUE,TRUE)")
+    execute "INSERT INTO event_operation_grant(event_id,grantee_party_id,scope_code,resource_kind,resource_id,issued_by_party_id) VALUES(83,2,'task.read','task','8300',1)"
+    let patch key value = case completionBody "4" of Object fields -> Object (KM.insert key value fields); _ -> Null
+    forM_ [patch "actorPartyId" (Number 1), patch "override" (Bool True), patch "expectedRevision" (Number 4),
+      patch "reason" (String "\t"), patch "correlationId" Null, patch "expectedRevision" (String "04")]
+      $ \payload -> send "POST" completionPath (auth owner <> idem 400) (Just payload) >>= expectStatus 400
+    send "POST" completionPath (auth owner) (Just (completionBody "4")) >>= expectStatus 400
+    send "POST" completionPath (auth owner <> [("Idempotency-Key","invalid")])
+      (Just (completionBody "4")) >>= expectStatus 400
+    send "POST" completionPath (idem 400) (Just (completionBody "4")) >>= expectStatus 401
+    forM_ ["/83/tasks/0/complete", "/0/tasks/8300/complete", "/83/tasks/9007199254740992/complete"] $ \path ->
+      send "POST" path (auth owner <> idem 400) (Just (completionBody "4")) >>= expectStatus 400
+    complete 8300 400 collaborator "4" >>= expectError 403 "forbidden"
+    complete 8300 400 owner "3" >>= expectError 409 "version_conflict"
+    missing <- complete 999999 400 outsider "4"
+    complete 8300 400 outsider "4" >>= expectOpaque missing
+    send "POST" "/80/tasks/8300/complete" (auth owner <> idem 400) (Just (completionBody "4")) >>= expectOpaque missing
+    completionUnchanged
+
+  it "aborts real completion effects when the SQL receipt is malformed, foreign or unbound" $ do
+    let signature = "(BIGINT,BIGINT,BIGINT,UUID,BIGINT,TEXT,TEXT)"
+        restore = execute ("DROP FUNCTION event_operation_complete_task" <> signature
+          <> "; ALTER FUNCTION completion_http_saved" <> signature <> " RENAME TO event_operation_complete_task")
+    forM_ ["NULL", "'{}'::jsonb", "result || '{\"activityId\":999}'::jsonb",
+      "result || '{\"eventId\":80}'::jsonb", "result || '{\"aggregateRevision\":\"6\"}'::jsonb",
+      "result || '{\"status\":\"planned\"}'::jsonb", "result || '{\"activityVersion\":1}'::jsonb",
+      "result || '{\"commandId\":\"00000000-0000-0000-0000-000000000000\"}'::jsonb",
+      "'{\"error\":\"private diagnostic\"}'::jsonb"] $ \bad ->
+      bracket_ (execute ("ALTER FUNCTION event_operation_complete_task" <> signature <> " RENAME TO completion_http_saved; "
+        <> "CREATE FUNCTION event_operation_complete_task(bigint,bigint,bigint,uuid,bigint,text,text) RETURNS jsonb LANGUAGE plpgsql AS $$ DECLARE result jsonb; BEGIN result := completion_http_saved($1,$2,$3,$4,$5,$6,$7); RETURN " <> bad <> "; END $$")) restore $ do
+        response <- complete 8300 400 owner "4"
+        expectError 503 "event_operations_unavailable" response
+        lookup "Cache-Control" (HTTP.responseHeaders response) `shouldBe` Just "private, no-store"
+        completionUnchanged
+
+  it "does not report completion when a deferred failure rejects COMMIT" $
+    bracket_ (execute "CREATE FUNCTION completion_http_commit_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'private commit diagnostic' USING ERRCODE='ZX009'; END $$; CREATE CONSTRAINT TRIGGER completion_http_commit_failure AFTER INSERT ON event_operation_audit_event DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION completion_http_commit_failure()")
+      (execute "DROP TRIGGER completion_http_commit_failure ON event_operation_audit_event; DROP FUNCTION completion_http_commit_failure()") $ do
+        complete 8300 400 owner "4" >>= expectError 503 "event_operations_unavailable"
+        completionUnchanged
+
+  it "commits completion once and keeps its exact receipt while rejecting a changed request" $ do
+    response <- complete 8300 400 owner "4"
+    expectStatus 200 response
+    decode (HTTP.responseBody response) `shouldBe` Just (object
+      ["eventId" .= (83 :: Int), "activityId" .= (8300 :: Int), "commandId" .= commandId 400,
+       "status" .= ("completed" :: Text), "activityVersion" .= (2 :: Int),
+       "aggregateRevision" .= ("5" :: Text), "replayed" .= False])
+    lookup "Cache-Control" (HTTP.responseHeaders response) `shouldBe` Just "private, no-store"
+    complete 8300 400 owner "4" >>= expectReplay response
+    complete 8300 400 owner "5" >>= expectError 409 "idempotency_conflict"
+    complete 8300 410 owner "5" >>= expectError 409 "operation_not_ready"
+    scalar "SELECT version FROM event_logistics_activity WHERE id=8300" `shouldReturn` 2
+    countFor "event_operation_audit_event" 83 `shouldReturn` 1
+    countFor "event_operation_command_receipt" 83 `shouldReturn` 1
+
+  it "deduplicates simultaneous completion HTTP retries on the canonical transaction" $ do
+    let request = complete 8301 401 owner "4"
+    (first, second) <- parallelPair request request
+    mapM_ (expectStatus 200) [first,second]
+    sort [field "replayed" first,field "replayed" second] `shouldBe` [Just (Bool False),Just (Bool True)]
+    scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8301" `shouldReturn` 5
+    scalar "SELECT count(*) FROM event_operation_command_receipt WHERE operation_code='event.task.complete/8301'" `shouldReturn` 1
+
+  it "enforces current dependencies, RACI and lifecycle over HTTP without leaking prerequisite data" $ do
+    execute "INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES(8302,8303)"
+    complete 8302 402 owner "5" >>= expectError 409 "dependencies_not_ready"
+    bracket_ (execute "UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()-interval '2 days',valid_until=clock_timestamp()-interval '1 day' WHERE activity_id=8302 AND raci_role='responsible'")
+      (execute "UPDATE event_operation_raci_assignment SET valid_until=NULL WHERE activity_id=8302 AND raci_role='responsible'") $
+        complete 8302 402 owner "6" >>= expectError 409 "accountability_not_ready"
+    bracket_ (execute "UPDATE event_operation_event_state SET canonical_state='ready' WHERE event_id=83")
+      (execute "UPDATE event_operation_event_state SET canonical_state='planning' WHERE event_id=83") $ do
+        complete 8302 402 owner "7" >>= expectError 409 "operation_not_ready"
+        complete 8300 400 owner "4" >>= expectStatus 200
+    execute "UPDATE event_logistics_activity SET status='completed',version=version+1 WHERE id=8303"
+    complete 8302 402 owner "7" >>= expectStatus 200
+
+  it "returns historical completion only to a currently authorized reader after a downgrade" $ do
+    execute "INSERT INTO event_operation_grant(event_id,grantee_party_id,scope_code,resource_kind,resource_id,issued_by_party_id) VALUES(83,2,'task.manage','task','8304',1)"
+    complete 8304 404 collaborator "4" >>= expectStatus 200
+    execute "UPDATE event_operation_grant SET scope_code='task.read' WHERE event_id=83 AND resource_id='8304'"
+    replay <- complete 8304 404 collaborator "4"
+    expectStatus 200 replay
+    field "replayed" replay `shouldBe` Just (Bool True)
+    complete 8304 405 collaborator "5" >>= expectError 403 "forbidden"
+    execute "UPDATE event_operation_grant SET revoked_at=clock_timestamp(),revoked_by_party_id=1,revocation_reason='synthetic completion test' WHERE event_id=83 AND resource_id='8304'"
+    complete 8304 404 collaborator "4" >>= expectError 404 "not_found"
+
+  it "fails closed for disabled completion and absent SQL without changing existing read routes" $ do
+    bracket_ (setFlag False) (setFlag True) $
+      complete 8300 400 owner "4" >>= expectError 404 "feature_disabled"
+    bracket_ (execute "ALTER FUNCTION event_operation_complete_task(BIGINT,BIGINT,BIGINT,UUID,BIGINT,TEXT,TEXT) RENAME TO completion_http_saved")
+      (execute "ALTER FUNCTION completion_http_saved(BIGINT,BIGINT,BIGINT,UUID,BIGINT,TEXT,TEXT) RENAME TO event_operation_complete_task") $ do
+        complete 8300 400 owner "4" >>= expectError 503 "event_operations_unavailable"
+        send "GET" "/83/tasks/8300/revisioned" (auth owner) Nothing >>= expectStatus 200
+  it "preserves maximal completion revisions over HTTP and aborts legacy integer overflow" $ do
+    execute "UPDATE event_operation_task_revision SET revision=9223372036854775806 WHERE activity_id=8305"
+    result <- send "POST" "/83/tasks/8305/complete"
+      ([("Cookie","tdf_session=http-owner-test-token")] <> idem 415)
+      (Just (completionBody "9223372036854775806"))
+    expectStatus 200 result
+    field "aggregateRevision" result `shouldBe` Just (String "9223372036854775807")
+    complete 8305 415 owner "9223372036854775806" >>= expectReplay result
+    execute "UPDATE event_logistics_activity SET version=2147483647 WHERE id=8306"
+    complete 8306 416 owner "5" >>= expectError 503 "event_operations_unavailable"
+    scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8306" `shouldReturn` 5
+    scalar "SELECT count(*) FROM event_logistics_activity WHERE id=8306 AND status='planned' AND version=2147483647"
+      `shouldReturn` 1
+    scalar "SELECT count(*) FROM event_operation_command_receipt WHERE operation_code='event.task.complete/8306'"
+      `shouldReturn` 0
+    scalar "SELECT count(*) FROM event_operation_audit_event WHERE operation_code='event.task.complete' AND resource_id='8306'"
+      `shouldReturn` 0
   where
+    completionPath = "/83/tasks/8300/complete"
+    completionBody revision = object ["expectedRevision" .= (revision :: Text),
+      "reason" .= ("Preparación de prueba" :: Text), "correlationId" .= ("completion-http" :: Text)]
+    complete task key token revision = send "POST" (BS.pack ("/83/tasks/" <> show (task :: Int) <> "/complete"))
+      (auth token <> idem key) (Just (completionBody revision))
+    completionUnchanged = do
+      scalar "SELECT revision FROM event_operation_task_revision WHERE activity_id=8300" `shouldReturn` 4
+      scalar "SELECT count(*) FROM event_logistics_activity WHERE id=8300 AND status='planned' AND version=1" `shouldReturn` 1
+      countFor "event_operation_audit_event" 83 `shouldReturn` 0
+      countFor "event_operation_command_receipt" 83 `shouldReturn` 0
     raciPath = "/82/tasks/8200/raci/reassign"
     raciBody = object ["expectedRevision" .= ("4" :: Text), "role" .= ("responsible" :: Text),
       "fromPartyId" .= (3 :: Int), "toPartyId" .= (2 :: Int),

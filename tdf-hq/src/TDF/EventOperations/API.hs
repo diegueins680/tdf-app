@@ -27,4 +27,8 @@ type EventOperationsAPI = "event-operations" :> "events" :> Capture "eventId" In
   :<|> "tasks" :> Capture "activityId" Int64 :> "raci" :> "context"
        :> QueryParam "afterPartyId" Int64
        :> Get '[JSON] (Headers '[Header "Cache-Control" Text] EventRaciEditorContextDTO)
+  :<|> "tasks" :> Capture "activityId" Int64 :> "complete"
+       :> Header' '[Required, Strict] "Idempotency-Key" UUID
+       :> ReqBody '[JSON] EventTaskCompletionCommand
+       :> Post '[JSON] (Headers '[Header "Cache-Control" Text] EventTaskCompletionOutcomeDTO)
   )
