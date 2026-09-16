@@ -1,5 +1,42 @@
 # Payment review repairs
 
+## Follow-up: CI database, environment labels and verified refunds
+
+The backend CI container has PostgreSQL client tooling and a `postgres` service,
+but no Docker daemon. Mandatory runtime regressions now create a fresh owned
+`*_test` database on that service; a failed creation never deletes an existing
+database. Local runs retain owned disposable containers. The CI policy tests
+exercise both ownership outcomes rather than skipping database regressions.
+
+All six financial summary families now show their environment in the heading.
+The focused operator UI suite passes nine tests, including otherwise identical
+sandbox/production cards. Every currently registered migration introduction was
+verified as an ancestor after integrating the concurrent branch history; no
+unrelated commit was substituted to bypass release ancestry validation.
+
+The additive `2026-09-16_payment_intent_refund_sync.sql` migration updates bound
+canonical intents from verified successful refunds in the same transaction as
+the refund write. It records financial changes in immutable state history,
+preserves dispute/chargeback states and does not release failed payment intents.
+Existing verified bound refunds are reconciled under migration locks; inconsistent
+bindings or amounts abort rather than being silently adjusted. Reapplication and
+duplicate success updates do not double-count. Legacy unbound refunds retain
+their prior behavior. Existing migration checksums are unchanged.
+
+Apply through the reviewed migration lane before relying on canonical refund
+totals. Stop refund writers before using the paired rollback, which removes only
+the new synchronization trigger/functions and preserves totals and history.
+Resuming old writers after rollback can make canonical totals stale; prefer a
+forward fix. No production data, provider activation or deployment was changed.
+
+Datafast research: its [official integration guide](https://datafast.docs.oppwa.com/tutorials/integration-guide)
+documents failed and successful transactions sharing one checkout ID and a
+30-minute expiry. Its [transaction reports](https://datafast.docs.oppwa.com/reporting-transaction)
+support querying all transactions by merchant reference. Neither a decline nor
+expiry alone proves that an earlier submitted bank transaction cannot complete.
+The no-charge fallback finding remains blocked pending authoritative finality
+validation; no merchant sandbox transaction has been executed in this audit.
+
 The email/WhatsApp marketplace checkout remains a contact request. It retains
 buyer, inventory and idempotency validation and sends the order email only on
 creation. It does not create a payment attempt, select bank transfer or overwrite

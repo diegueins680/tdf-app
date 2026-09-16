@@ -287,7 +287,7 @@ export default function CommerceProviderEventsPage() {
               {overviewQuery.data.cpoSettlements.map((item) => (
                 <Card key={`${item.cssEnvironment}:${item.cssProvider}:${item.cssCurrency}:${item.cssStatus}`} variant="outlined">
                   <CardContent>
-                    <Typography variant="subtitle2">{copy.settlements} · {item.cssProvider} · {item.cssStatus}</Typography>
+                    <Typography variant="subtitle2">{copy.settlements} · {item.cssProvider} · {item.cssEnvironment ?? copy.unknownEnvironment} · {item.cssStatus}</Typography>
                     <Typography variant="body2">{copy.gross}: {formatMinor(item.cssGrossMinor, item.cssCurrency, locale)}</Typography>
                     <Typography variant="body2">{copy.providerFees}: {formatMinor(item.cssFeeMinor, item.cssCurrency, locale)}</Typography>
                     <Typography variant="body2">{copy.withholding}: {formatMinor(item.cssWithholdingMinor, item.cssCurrency, locale)}</Typography>
@@ -300,7 +300,7 @@ export default function CommerceProviderEventsPage() {
               {overviewQuery.data.cpoRefunds.map((item) => (
                 <Card key={`${item.crfEnvironment}:${item.crfProvider}:${item.crfCurrency}:${item.crfStatus}`} variant="outlined">
                   <CardContent>
-                    <Typography variant="subtitle2">{copy.refunds} · {item.crfProvider} · {item.crfStatus}</Typography>
+                    <Typography variant="subtitle2">{copy.refunds} · {item.crfProvider} · {item.crfEnvironment ?? copy.unknownEnvironment} · {item.crfStatus}</Typography>
                     <Typography variant="body2">{formatMinor(item.crfAmountMinor, item.crfCurrency, locale)} · {item.crfCount} {copy.records}</Typography>
                   </CardContent>
                 </Card>
@@ -308,7 +308,7 @@ export default function CommerceProviderEventsPage() {
               {overviewQuery.data.cpoDisputes.map((item) => (
                 <Card key={`${item.cdsEnvironment}:${item.cdsProvider}:${item.cdsCurrency}:${item.cdsKind}:${item.cdsStatus}`} variant="outlined">
                   <CardContent>
-                    <Typography variant="subtitle2">{copy.disputes} · {item.cdsProvider} · {item.cdsKind}</Typography>
+                    <Typography variant="subtitle2">{copy.disputes} · {item.cdsProvider} · {item.cdsEnvironment ?? copy.unknownEnvironment} · {item.cdsKind}</Typography>
                     <Typography variant="body2">{item.cdsStatus} · {formatMinor(item.cdsAmountMinor, item.cdsCurrency, locale)} · {item.cdsCount} {copy.records}</Typography>
                   </CardContent>
                 </Card>
@@ -316,7 +316,7 @@ export default function CommerceProviderEventsPage() {
               {overviewQuery.data.cpoSellerBalances.map((item) => (
                 <Card key={`${item.csbEnvironment}:${item.csbProvider}:${item.csbCurrency}:${item.csbAvailability}`} variant="outlined">
                   <CardContent>
-                    <Typography variant="subtitle2">{copy.sellerBalances} · {item.csbProvider} · {item.csbAvailability}</Typography>
+                    <Typography variant="subtitle2">{copy.sellerBalances} · {item.csbProvider} · {item.csbEnvironment ?? copy.unknownEnvironment} · {item.csbAvailability}</Typography>
                     <Typography variant="body2">{formatMinor(item.csbNetAmountMinor, item.csbCurrency, locale)} · {item.csbEntryCount} {copy.records}</Typography>
                   </CardContent>
                 </Card>
@@ -324,7 +324,7 @@ export default function CommerceProviderEventsPage() {
               {overviewQuery.data.cpoPayouts.map((item) => (
                 <Card key={`${item.cpsEnvironment}:${item.cpsProvider}:${item.cpsCurrency}:${item.cpsStatus}`} variant="outlined">
                   <CardContent>
-                    <Typography variant="subtitle2">{copy.payouts} · {item.cpsProvider} · {item.cpsStatus}</Typography>
+                    <Typography variant="subtitle2">{copy.payouts} · {item.cpsProvider} · {item.cpsEnvironment ?? copy.unknownEnvironment} · {item.cpsStatus}</Typography>
                     <Typography variant="body2">{formatMinor(item.cpsAmountMinor, item.cpsCurrency, locale)} · {item.cpsCount} {copy.records}</Typography>
                   </CardContent>
                 </Card>
@@ -332,7 +332,7 @@ export default function CommerceProviderEventsPage() {
               {overviewQuery.data.cpoReconciliationExceptions.map((item) => (
                 <Card key={`${item.crsEnvironment}:${item.crsProvider}:${item.crsCurrency ?? 'none'}:${item.crsStatus}`} variant="outlined">
                   <CardContent>
-                    <Typography variant="subtitle2">{copy.reconciliation} · {item.crsProvider} · {item.crsStatus}</Typography>
+                    <Typography variant="subtitle2">{copy.reconciliation} · {item.crsProvider} · {item.crsEnvironment ?? copy.unknownEnvironment} · {item.crsStatus}</Typography>
                     {item.crsCurrency && <Typography variant="body2">{copy.expected}: {formatMinor(item.crsExpectedMinor, item.crsCurrency, locale)} · {copy.actual}: {formatMinor(item.crsActualMinor, item.crsCurrency, locale)}</Typography>}
                     <Typography variant="caption" color="text.secondary">{item.crsCount} {copy.records}</Typography>
                   </CardContent>

@@ -394,4 +394,50 @@ assert_equal \
   "AUTH-100" \
   "Authorization evidence survived refused rollback"
 
+# Verify legacy refund reconciliation and new runtime refund synchronization.
+# All fixture money is synthetic; no external payment provider is contacted.
+refund_line_id='10000000-0000-4000-8000-000000000020'
+psql_exec -c "
+  UPDATE commerce_checkout_session SET paid_minor=2500,status='paid' WHERE id='$sync_checkout_id';
+  INSERT INTO commerce_checkout_line_item(id,checkout_id,line_number,product_type,product_id,
+    product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)
+  VALUES ('$refund_line_id','$sync_checkout_id',1,'ticket','ticket-200','v1','Test ticket',1,2500,2500,2500,'{}');
+" >/dev/null
+create_verified_refund() {
+  psql_exec -c "
+    INSERT INTO commerce_refund(id,checkout_id,payment_attempt_id,provider,environment,
+      merchant_account_ref,status,amount_minor,currency,reason_code,idempotency_key,requested_by)
+    VALUES ('$1','$sync_checkout_id','$sync_attempt_id','paypal','sandbox','merchant-test',
+      'requested',$2,'USD','customer_request','$1',1);
+    INSERT INTO commerce_refund_allocation(refund_id,line_item_id,amount_minor)
+      VALUES ('$1','$refund_line_id',$2);
+    UPDATE commerce_refund SET status='approved',approved_by=2 WHERE id='$1';
+    UPDATE commerce_refund SET status='processing' WHERE id='$1';
+    UPDATE commerce_refund SET status='succeeded',provider_refund_id='VERIFIED-$1',completed_at=now() WHERE id='$1';
+  " >/dev/null
+}
+create_verified_refund 10000000-0000-4000-8000-000000000021 500
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql
+assert_equal "$(psql_exec -Atc "SELECT status || ':' || refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 'partially_refunded:500' 'Existing verified refund reconciled once'
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_verified';")" 1 'Refund backfill history is idempotent'
+# A conflicting canonical capture must reject the whole verified-refund write.
+psql_exec -c "UPDATE commerce_payment_intent SET captured_minor=500 WHERE id='$sync_intent_id';" >/dev/null
+if create_verified_refund 10000000-0000-4000-8000-000000000023 2000; then
+  echo 'Refund synchronization accepted an amount above canonical capture' >&2
+  exit 1
+fi
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_refund WHERE id='10000000-0000-4000-8000-000000000023';")" 0 'Inconsistent refund transaction rolled back'
+assert_equal "$(psql_exec -Atc "SELECT refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 500 'Rejected refund preserved canonical balance'
+psql_exec -c "UPDATE commerce_payment_intent SET captured_minor=2500 WHERE id='$sync_intent_id';" >/dev/null
+create_verified_refund 10000000-0000-4000-8000-000000000022 2000
+psql_exec -c "UPDATE commerce_refund SET status='succeeded' WHERE id='10000000-0000-4000-8000-000000000022';" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT status || ':' || refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 'refunded:2500' 'Verified full refund synchronized without replay double counting'
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_verified';")" 2 'Exactly one history entry per refund change'
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync_rollback.sql
+assert_equal "$(psql_exec -Atc "SELECT refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 2500 'Refund rollback preserves money'
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_verified';")" 2 'Refund rollback preserves immutable history'
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_verified';")" 2 'Refund reapplication preserves history'
+
 echo "Canonical payment lifecycle migration checks passed"

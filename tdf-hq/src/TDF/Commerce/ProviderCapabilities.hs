@@ -137,15 +137,16 @@ providerCapabilities provider =
 requireCheckoutCompletion :: PaymentRouteRequest -> PaymentRouteRequest
 requireCheckoutCompletion request = request
   { prRequiredCapabilities = nub
-      (prRequiredCapabilities request <> billing <> completion <> marketplace)
+      (prRequiredCapabilities request <> [CapabilityOneTime] <> completion <> marketplace <> subscription)
   }
   where
-    billing = [CapabilityOneTime]
-      <> [CapabilityRecurring | prFlow request == FlowSubscription]
     completion = case prMethod request of
       MethodPayPalWallet -> [CapabilityCapture]
       MethodCard -> [CapabilityServerVerification]
       _ -> []
+    subscription
+      | prFlow request == FlowSubscription = [CapabilityRecurring]
+      | otherwise = []
     marketplace
       | prFlow request == FlowMarketplace =
           [CapabilityConnectedAccounts, CapabilitySplitSettlement, CapabilitySellerPayouts]
