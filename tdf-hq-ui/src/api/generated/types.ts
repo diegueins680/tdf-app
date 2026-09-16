@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+    "/event-operations/events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the authorized canonical lifecycle projection for an event
+         * @description Returns only capabilities currently held by the authenticated party and transitions whose policy, authority, and implementation-effect gate all permit execution. A disabled feature, an unknown event, and an event the caller cannot read all produce 404 so object identifiers do not disclose event existence.
+         */
+        get: operations["getEventOperationSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply an idempotent, version-guarded canonical lifecycle transition
+         * @description Uses optimistic concurrency and database row locking; it never silently applies last-write-wins. Reusing a command UUID with the same canonical request returns the stored result, while reuse with different content is rejected. Only early planning and independent-approval transitions are implementation-enabled in this phase. Publishing and every transition with ticket, booking, contract, notification, or financial effects remain closed until those effects are transactional or outboxed and verified.
+         */
+        post: operations["applyEventOperationTransition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social/followers": {
         parameters: {
             query?: never;
@@ -6736,6 +6776,43 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        EventLifecycleState: "draft" | "planning" | "pending_approval" | "approved" | "published" | "staffing" | "ready" | "in_progress" | "completed" | "settlement_pending" | "settled" | "archived" | "reprogrammed" | "cancelled";
+        EventOperationSnapshot: {
+            /** Format: int64 */
+            eventId: number;
+            canonicalState: components["schemas"]["EventLifecycleState"];
+            /** Format: int64 */
+            version: number;
+            /** @description Existing social-event state retained as migration evidence. */
+            legacyStateCode?: string;
+            capabilities: string[];
+            availableTransitions: components["schemas"]["EventLifecycleState"][];
+        };
+        EventTransitionCommand: {
+            /** Format: int64 */
+            expectedVersion: number;
+            targetState: components["schemas"]["EventLifecycleState"];
+            /** @description Omit when unnecessary; explicit null is rejected. */
+            reason?: string;
+            correlationId: string;
+        };
+        EventTransitionOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            canonicalState: components["schemas"]["EventLifecycleState"];
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            authorityCode: "owner" | "event_approver" | "finance_approver" | "records_manager";
+            replayed: boolean;
+        };
+        EventOperationError: {
+            /** @enum {string} */
+            code: "feature_disabled" | "not_found" | "forbidden" | "invalid_request" | "reason_required" | "idempotency_conflict" | "version_conflict" | "transition_invalid" | "transition_effects_not_ready" | "separation_of_duties" | "event_operations_unavailable" | "invalid_database_response";
+        };
         MerchReputationSummary: {
             /** @enum {string} */
             subjectKind: "store" | "product";
@@ -12814,6 +12891,134 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getEventOperationSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized event lifecycle projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationSnapshot"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled, event absent, or event not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Event operations persistence is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
+    applyEventOperationTransition: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Caller-generated UUID identifying this exact event transition command. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventTransitionCommand"];
+            };
+        };
+        responses: {
+            /** @description Accepted transition or exact replay of its stored result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventTransitionOutcome"];
+                };
+            };
+            /** @description Invalid command or a required rollback reason is absent */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated caller lacks the current contextual authority */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Feature disabled or event absent */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Version or command-key conflict, invalid lifecycle edge, missing implementation effects, or separation-of-duties violation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Event operations persistence is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
     listSocialFollowers: {
         parameters: {
             query?: never;

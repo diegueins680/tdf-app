@@ -9,6 +9,103 @@ servers:
     description: Development server
 
 paths:
+  /event-operations/events/{eventId}:
+    get:
+      tags: [Event operations]
+      summary: Read the authorized canonical lifecycle projection for an event
+      description: >-
+        Returns only capabilities currently held by the authenticated party and
+        transitions whose policy, authority, and implementation-effect gate all
+        permit execution. A disabled feature, an unknown event, and an event the
+        caller cannot read all produce 404 so object identifiers do not disclose
+        event existence.
+      operationId: getEventOperationSnapshot
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      responses:
+        '200':
+          description: Authorized event lifecycle projection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationSnapshot' }
+        '401': { description: Authentication required }
+        '404':
+          description: Feature disabled, event absent, or event not visible
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
+        '503':
+          description: Event operations persistence is unavailable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
+  /event-operations/events/{eventId}/transitions:
+    post:
+      tags: [Event operations]
+      summary: Apply an idempotent, version-guarded canonical lifecycle transition
+      description: >-
+        Uses optimistic concurrency and database row locking; it never silently
+        applies last-write-wins. Reusing a command UUID with the same canonical
+        request returns the stored result, while reuse with different content is
+        rejected. Only early planning and independent-approval transitions are
+        implementation-enabled in this phase. Publishing and every transition
+        with ticket, booking, contract, notification, or financial effects remain
+        closed until those effects are transactional or outboxed and verified.
+      operationId: applyEventOperationTransition
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Caller-generated UUID identifying this exact event transition command.
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventTransitionCommand' }
+      responses:
+        '200':
+          description: Accepted transition or exact replay of its stored result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventTransitionOutcome' }
+        '400':
+          description: Invalid command or a required rollback reason is absent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
+        '401': { description: Authentication required }
+        '403':
+          description: Authenticated caller lacks the current contextual authority
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
+        '404':
+          description: Feature disabled or event absent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
+        '409':
+          description: >-
+            Version or command-key conflict, invalid lifecycle edge, missing
+            implementation effects, or separation-of-duties violation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
+        '503':
+          description: Event operations persistence is unavailable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventOperationError' }
   /social/followers:
     get:
       tags: [Social]
@@ -7170,6 +7267,96 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    EventLifecycleState:
+      type: string
+      enum:
+        - draft
+        - planning
+        - pending_approval
+        - approved
+        - published
+        - staffing
+        - ready
+        - in_progress
+        - completed
+        - settlement_pending
+        - settled
+        - archived
+        - reprogrammed
+        - cancelled
+    EventOperationSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - eventId
+        - canonicalState
+        - version
+        - capabilities
+        - availableTransitions
+      properties:
+        eventId: { type: integer, format: int64, minimum: 1 }
+        canonicalState: { $ref: '#/components/schemas/EventLifecycleState' }
+        version: { type: integer, format: int64, minimum: 1 }
+        legacyStateCode:
+          type: string
+          description: Existing social-event state retained as migration evidence.
+        capabilities:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+        availableTransitions:
+          type: array
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/EventLifecycleState' }
+    EventTransitionCommand:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion, targetState, correlationId]
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 1 }
+        targetState: { $ref: '#/components/schemas/EventLifecycleState' }
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Omit when unnecessary; explicit null is rejected.
+        correlationId:
+          type: string
+          minLength: 1
+          maxLength: 200
+    EventTransitionOutcome:
+      type: object
+      additionalProperties: false
+      required: [eventId, canonicalState, version, commandId, authorityCode, replayed]
+      properties:
+        eventId: { type: integer, format: int64, minimum: 1 }
+        canonicalState: { $ref: '#/components/schemas/EventLifecycleState' }
+        version: { type: integer, format: int64, minimum: 2 }
+        commandId: { type: string, format: uuid }
+        authorityCode:
+          type: string
+          enum: [owner, event_approver, finance_approver, records_manager]
+        replayed: { type: boolean }
+    EventOperationError:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code:
+          type: string
+          enum:
+            - feature_disabled
+            - not_found
+            - forbidden
+            - invalid_request
+            - reason_required
+            - idempotency_conflict
+            - version_conflict
+            - transition_invalid
+            - transition_effects_not_ready
+            - separation_of_duties
+            - event_operations_unavailable
+            - invalid_database_response
     MerchReputationSummary:
       type: object
       required: [subjectKind, state]
