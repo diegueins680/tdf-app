@@ -26,6 +26,13 @@ increment before declaring the entire stack current. Do not replace the #82
 submodule with #83 and lose later generated recovery/evidence contracts.
 Mobile remains clean at #82 `33720ef45b0565005c4b54b0e0c106cc93831613`.
 
+At 04:42 UTC, mobile #83 advanced again to
+`337d46f25a8b7c7c688aa3657ffb599ecb4c47c7`. Its inspected complete four-line diff
+adds both `cpiEnvironment` and `cacEnvironment` in the generated contract. It
+still contains no refund-execution implementation. The first path-filtered
+`gh pr diff` command was rejected by the CLI; the corrected full PR diff succeeded.
+The moving upstream work remains deliberately outside the frozen refund test tree.
+
 At 2026-09-16 04:14 UTC, #393 CI on the exact parent head had successful build,
 catalog, repository, UI, persona, API-contract, production-migration and Cloudflare
 checks; backend-quality was still in progress. Mobile/API-runtime/migration
@@ -184,6 +191,106 @@ The same pair also passed on the backend-only intermediate tree at 04:22 UTC;
 the later runs replace those generated reports after the UI repair. Relative
 documentation links, `git diff --check` and byte equality of existing web/mobile
 generated contracts were checked. API contracts and mobile source did not change.
+
+### Full web gate: retained first-run failure
+
+`npm run quality:ui` ran from the root at unchanged final runtime/UI source.
+ESLint (zero-warning threshold) and TypeScript passed. The full Jest stage exited
+1 with **216 suites: 215 passed, one failed; 2,055 tests: 2,052 passed, three
+failed**, 484.766 seconds. Log completed 2026-09-16T04:39:23.328Z:
+`/private/tmp/tdf-payment-refund-ui-quality-20260916.log`. The build stage was not
+executed by this failed composite command.
+
+The failures are in `src/__tests__/MarketplacePage.test.tsx`: the inclusive rental
+date test exceeded the existing five-second timeout, followed by saved-buyer
+restoration and contact-checkout review assertions. The component, marketplace
+test file and Jest configuration are byte-unchanged from parent #393. The test
+output also reports unwrapped React `act` updates. This is evidence of a failure,
+not yet proof of its cause; no timeout, assertion or quality gate was weakened.
+The new refund-admin suite passed during the full run.
+
+An unchanged isolated replay,
+`npm test -- --runInBand --runTestsByPath src/__tests__/MarketplacePage.test.tsx`
+from `tdf-hq-ui`, passed all ten cases, exit 0, 8.911 seconds, completed
+2026-09-16T04:40:45.313Z. Log:
+`/private/tmp/tdf-payment-refund-marketplace-replay-20260916.log`. The rental case
+took 813 ms; the existing React `act` warnings remained. This supports an
+intermittent timing/isolation risk, not a proved cause or a fix for that risk.
+
+One full unchanged rerun used `npm test -- --runInBand`, with a subsequent
+`npm run build` guarded by `set -e -o pipefail`. During that rerun, the unchanged
+`AdminUsersPage` suite hit two five-second timeouts and subsequent assertions;
+it had passed in the first full run. At 04:46 UTC, `uptime` reported load averages
+108.44/54.83/40.17; the approved `sysctl -n hw.ncpu` check reported 16 CPUs.
+At 04:47, load remained 50.75/51.08/40.30. Resource contention is a plausible
+contributor, not a proved sole cause. No other user's processes were inspected
+or stopped, and no timeouts or assertions were weakened.
+
+After independent CI verification below succeeded, the redundant local rerun
+was intentionally stopped with `kill -TERM 68164`. Its PID, 23:41:12 local start
+time and exact `tdf-app-payment-checkout/tdf-hq-ui` working directory were checked
+first. The owning shell returned **143** at 04:52 UTC. This is an interrupted
+run, not a full passing run or a complete failed-suite count. Partial log:
+`/private/tmp/tdf-payment-refund-web-full-replay-20260916.log`, last write
+2026-09-16T04:52:34.644Z. The chained local build was not executed. No third
+full-suite attempt was made to seek a green result; local timing/isolation
+reliability remains an explicit follow-up issue.
+
+### Independent CI verification
+
+The [UI quality job](https://github.com/diegueins680/tdf-app/actions/runs/35055962490/job/104666174473)
+was verified through GitHub metadata and filtered test/build logs, not inferred
+from local targeted tests. PR head:
+`f19fda5922fafe1e1290ec316a37c7c7a30da98b`. Actual default PR merge checkout,
+reported by `git log -1 --format=%H` in CI:
+`1db6adcb9d1ccd76e21e957d7e56bcb7c158c03d`.
+GitHub Git API verified both commits have tree
+`19a060001c748824024d5069ed5f6c53a3bcee58`; the merge parents are exact parent
+#393 and `f19fda592`. Later delivery edits change documentation only.
+
+Environment: GitHub Actions `ubuntu-latest`, configured Node 22, `npm ci`, then
+the unchanged `npm run quality:ui` command from `.github/workflows/ci.yml`.
+Job started 2026-09-16T04:32:21Z and completed **success** at 04:38:38Z:
+
+- ESLint with `--max-warnings=0` and TypeScript passed.
+- At 04:37:51.846Z, **216/216 suites and 2,055/2,055 tests passed**, zero failures,
+  202.804 seconds. This includes the complete marketplace and refund admin suites.
+- `tsc --noEmit -p tsconfig.app.json && vite build && node scripts/check-initial-bundle.mjs`
+  passed; Vite finished at 04:38:35.159Z in 15.88 seconds. The bundle check reported
+  five preloads and 314,884 gzip bytes of initial JavaScript at 04:38:35.395Z.
+
+This is CI mock/unit/DOM/build evidence, not a provider sandbox, deployed staging,
+refund-specific browser run or native-device test. The general persona-web-e2e
+job also reported success in metadata; its individual scenarios were not inspected
+as refund qualification. Local failures above are retained despite CI success.
+
+## Delivery and review order
+
+Opened and independently verified **draft
+[#396](https://github.com/diegueins680/tdf-app/pull/396)**, head branch
+`codex/payment-refund-execution-safety-20260916`, base
+`codex/payment-worker-log-safety-20260915` (#393). Initial published head
+`f19fda5922fafe1e1290ec316a37c7c7a30da98b` matched both PR metadata and `git ls-remote`.
+No GitHub PR was merged and no manual deployment/provider operation was run.
+
+Focused commits:
+
+1. `e9ac411f0` — failing store/money regressions.
+2. `5b80af6b4` — execution fence, reservation/money repair and extended DB tests.
+3. `bdfafd964` — failing admin-control regressions.
+4. `28f0652a5` — admin controls and evidence-based copy.
+5. `f19fda592` — source-backed design, catalog reports and initial evidence.
+6. Final documentation-only delivery — retained local failures/interruption and
+   independent full CI verification; runtime/UI source remains unchanged.
+
+Review/merge order remains the existing payment stack through #393, then #396.
+Integrate the separately moving #331/mobile #83 work before complete-stack
+qualification. Do not enable refund/provider flags on this draft. At the last
+verified initial-head CI snapshot (04:48 UTC), build, catalog, repo/UI quality,
+persona, API-contract and production-migration checks were successful;
+backend-quality remained in progress. Skipped mobile/API-runtime/migration jobs
+were not exercised by CI. Final documentation pushes may start new checks;
+the earlier successful job is not a claim about those new runs.
 
 ## Remaining activation blockers
 
