@@ -1,0 +1,314 @@
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+CREATE TABLE
+INSERT 0 5
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+/Users/diegosaa/GitHub/tdf-app-social-enforcement-20260915/tdf-hq/tdf-hq.cabal was modified manually. Ignoring /Users/diegosaa/GitHub/tdf-app-social-enforcement-20260915/tdf-hq/package.yaml in favor of the Cabal file.
+If you want to use the package.yaml file instead of the Cabal file,
+then please delete the Cabal file.
+[15 of 17] Compiling SessionSpec      ( scripts/social/SessionSpec.hs, /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tmp.mgq3mnPebJ/SessionSpec.o )
+[16 of 17] Compiling Main             ( scripts/social/HttpSpec.hs, /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tmp.mgq3mnPebJ/Main.o ) [Source file changed]
+scripts/social/HttpSpec.hs:37:13: warning: [GHC-20125] [-Wmissing-fields]
+    • Fields of ‘AppConfig’ not initialised:
+        dbHost :: String
+        dbPort :: String
+        dbUser :: String
+        dbPass :: String
+        dbName :: String
+        dbConnUrl :: Maybe String
+        dbSslMode :: Maybe String
+        appPort :: Int
+        resetDb :: Bool
+        seedDatabase :: Bool
+        runMigrations :: Bool
+        seedTriggerToken :: Maybe Data.Text.Internal.Text
+        appBaseUrl :: Maybe Data.Text.Internal.Text
+        assetsBaseUrl :: Maybe Data.Text.Internal.Text
+        assetsRootDir :: FilePath
+        courseDefaultSlug :: Data.Text.Internal.Text
+        courseDefaultMapUrl :: Maybe Data.Text.Internal.Text
+        courseDefaultInstructorAvatar :: Maybe Data.Text.Internal.Text
+        openAiApiKey :: Maybe Data.Text.Internal.Text
+        openAiModel :: Data.Text.Internal.Text
+        openAiEmbedModel :: Data.Text.Internal.Text
+        chatKitWorkflowId :: Maybe Data.Text.Internal.Text
+        chatKitApiBase :: Data.Text.Internal.Text
+        ragTopK :: Int
+        ragChunkWords :: Int
+        ragChunkOverlap :: Int
+        ragAvailabilityDays :: Int
+        ragAvailabilityPerResource :: Int
+        ragRefreshHours :: Int
+        ragEmbedBatchSize :: Int
+        emailConfig :: Maybe TDF.Config.EmailConfig
+        googleClientId :: Maybe Data.Text.Internal.Text
+        facebookAppId :: Maybe Data.Text.Internal.Text
+        facebookAppSecret :: Maybe Data.Text.Internal.Text
+        facebookGraphBase :: Data.Text.Internal.Text
+        facebookMessagingToken :: Maybe Data.Text.Internal.Text
+        facebookMessagingPageId :: Maybe Data.Text.Internal.Text
+        facebookMessagingApiBase :: Data.Text.Internal.Text
+        instagramAppToken :: Maybe Data.Text.Internal.Text
+        instagramGraphBase :: Data.Text.Internal.Text
+        instagramMessagingToken :: Maybe Data.Text.Internal.Text
+        instagramMessagingAccountId :: Maybe Data.Text.Internal.Text
+        instagramMessagingApiBase :: Data.Text.Internal.Text
+        instagramVerifyToken :: Maybe Data.Text.Internal.Text
+        sessionCookieDomain :: Maybe Data.Text.Internal.Text
+        sessionCookiePath :: Data.Text.Internal.Text
+        sessionCookieSecure :: Bool
+        sessionCookieSameSite :: Data.Text.Internal.Text
+        sessionCookieMaxAgeSeconds :: Maybe Int
+        stripeSecretKey :: Maybe Data.Text.Internal.Text
+        stripePublishableKey :: Maybe Data.Text.Internal.Text
+        stripeWebhookSecret :: Maybe Data.Text.Internal.Text
+        contextualReputationEnabled :: Bool
+        publicReputationProjectionEnabled :: Bool
+        eventDiscoveryEnabled :: Bool
+        eventDiscoveryAutoPublish :: Bool
+        eventDiscoveryPilotLimit :: Int
+        ticketmasterApiKey :: Maybe Data.Text.Internal.Text
+        ticketmasterApiBase :: Data.Text.Internal.Text
+        eventDiscoveryLookaheadDays :: Int
+        eventDiscoveryMaxPagesPerCity :: Int
+        eventDiscoveryHourLocal :: Int
+        eventDiscoveryCountryCode :: Maybe Data.Text.Internal.Text
+        googleRoutesApiKey :: Maybe Data.Text.Internal.Text
+        googleRoutesApiBase :: Data.Text.Internal.Text
+        eventLogisticsRecheckEnabled :: Bool
+        artistEnrichmentEnabled :: Bool
+        artistEnrichmentAutoPublish :: Bool
+        artistEnrichmentHourLocal :: Int
+        artistEnrichmentBatchSize :: Int
+        artistEnrichmentStaleDays :: Int
+        defaultCurrency :: Data.Text.Internal.Text
+        supportedCurrencies :: [Data.Text.Internal.Text]
+        defaultTimezone :: Data.Text.Internal.Text
+        supportedLocales :: [Data.Text.Internal.Text]
+        defaultLocale :: Data.Text.Internal.Text
+        enableGdprCompliance :: Bool
+    • In the expression:
+        AppConfig {sessionCookieName = "social-fixture"}
+      In an equation for ‘cfg’:
+          cfg = AppConfig {sessionCookieName = "social-fixture"}
+      In a stmt of a 'do' block:
+        let cfg = AppConfig {sessionCookieName = "social-fixture"}
+            env = Env pool cfg
+            sql statement = runSqlPool (rawExecute statement []) pool
+   |
+37 |   let cfg = AppConfig {sessionCookieName = "social-fixture"}
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[17 of 17] Linking /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tmp.mgq3mnPebJ/social-http-spec [Objects changed]
+ld: warning: -U option is redundant when using -undefined dynamic_lookup
+ld: warning: ignoring duplicate libraries: '-lm'
+
+requires real bearer authentication even when the process gate is closed [✔]
+requires both process and database gates [✔]
+derives the actor from the token and rejects identity injection [✔]
+withdraws only the caller's consent and leaves the other intent intact [✔]
+denies blocked reads and stale acceptance but preserves the owner's unblock control [✔]
+serves an authorized Following page and rejects malformed cursors and page sizes [✔]
+rechecks authoritative membership on the next HTTP request [✔]
+denies inactive tokens and organization identities [✔]
+session authority on real PostgreSQL
+  refines checked model Read case 1 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 2 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 3 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 4 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 5 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 6 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 7 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 8 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 9 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 10 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 11 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 12 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 13 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 14 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 15 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 16 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 17 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 18 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 19 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 20 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 21 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 22 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 23 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 24 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 25 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 26 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 27 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 28 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 29 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 30 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 31 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 32 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 33 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 34 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 35 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 36 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 37 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 38 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 39 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 40 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 41 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 42 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 43 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 44 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 45 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 46 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 47 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 48 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 49 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 50 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 51 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 52 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 53 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 54 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 55 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 56 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 57 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 58 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 59 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 60 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 61 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 62 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 63 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  refines checked model Read case 64 [✔]
+NOTICE:  relation "social_session_effect" already exists, skipping
+  denies both handler reads and writes after their captured token is revoked [✘]
+
+Failures:
+
+  scripts/social/SessionSpec.hs:57:74:
+  1) session authority on real PostgreSQL denies both handler reads and writes after their captured token is revoked
+       expected: 401
+        but got: 200
+
+  To rerun use: --match "/session authority on real PostgreSQL/denies both handler reads and writes after their captured token is revoked/" --seed 1246625309
+
+Randomized with seed 1246625309
+
+Finished in 3.6492 seconds
+73 examples, 1 failure

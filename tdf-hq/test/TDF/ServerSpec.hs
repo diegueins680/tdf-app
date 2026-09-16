@@ -528,6 +528,7 @@ mkUser roles =
         { auPartyId = toSqlKey 1
         , auRoles = roles
         , auModules = modulesForRoles roles
+        , auApiTokenId = Nothing
         }
 
 futureAdminUser :: AuthedUser

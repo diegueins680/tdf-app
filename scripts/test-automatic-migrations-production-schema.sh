@@ -105,7 +105,42 @@ FROM (
 SQL
 )"
 
+# A reviewed rollout may already have enabled PayPal webhook intake. A restart
+# must preserve that state while continuing to reject absent or unstaged gates.
+psql "${database_url}" -X -v ON_ERROR_STOP=1 -c \
+  "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';" >/dev/null
 start_and_verify
+test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT enabled FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';")" = "t"
+
+verification_sql="$(node "${repo_root}/scripts/render-production-schema-verification.mjs")"
+assert_gate_rejected() {
+  local mutation="$1"
+  local output
+  if output="$(psql "${database_url}" -X -v ON_ERROR_STOP=1 2>&1 <<SQL
+BEGIN;
+${mutation}
+${verification_sql}
+ROLLBACK;
+SQL
+)"; then
+    echo "Schema verification unexpectedly accepted: ${mutation}" >&2
+    exit 1
+  fi
+  if [[ "${output}" != *'Production provider capability gates must exist; refunds and Datafast must remain disabled'* ]]; then
+    echo "${output}" >&2
+    echo "Schema verification failed for an unexpected reason" >&2
+    exit 1
+  fi
+}
+
+for flag in checkout.paypal.webhooks checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do
+  assert_gate_rejected "DELETE FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = '${flag}';"
+done
+for flag in checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do
+  assert_gate_rejected "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = '${flag}';"
+done
+psql "${database_url}" -X -v ON_ERROR_STOP=1 -c \
+  "UPDATE revenue_feature_flag SET enabled = FALSE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';" >/dev/null
 
 schema_after="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 <<'SQL'
 SELECT md5(string_agg(definition, E'\n' ORDER BY definition))

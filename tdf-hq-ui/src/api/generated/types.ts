@@ -4,6 +4,110 @@
  */
 
 export interface paths {
+    "/social/v2/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * getSocialV2Me
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        get: operations["getSocialV2Me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/v2/relationships/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * getSocialV2Relationship
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        get: operations["getSocialV2Relationship"];
+        put?: never;
+        /**
+         * mutateSocialV2Relationship
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        post: operations["mutateSocialV2Relationship"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/v2/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * updateSocialV2Preferences
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        put: operations["updateSocialV2Preferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/v2/following": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * getSocialV2Following
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        get: operations["getSocialV2Following"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/v2/discover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * getSocialV2Discover
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        get: operations["getSocialV2Discover"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social/followers": {
         parameters: {
             query?: never;
@@ -11962,6 +12066,88 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        SocialV2Me: {
+            discoverable: boolean;
+            personalized: boolean;
+            /** Format: int64 */
+            revision: number;
+            relationships: {
+                /** Format: int64 */
+                partyId: number;
+                /** Format: int64 */
+                revision: number;
+                following: boolean;
+                requested: boolean;
+                incoming: boolean;
+                connected: boolean;
+                blocked: boolean;
+                muted: boolean;
+                dismissed: boolean;
+                displayName: string;
+            }[];
+        };
+        SocialV2State: {
+            /** Format: int64 */
+            partyId: number;
+            /** Format: int64 */
+            revision: number;
+            following: boolean;
+            requested: boolean;
+            incoming: boolean;
+            connected: boolean;
+            blocked: boolean;
+            muted: boolean;
+            dismissed: boolean;
+        };
+        SocialV2Command: {
+            /** @enum {string} */
+            operation: "request" | "accept" | "disconnect" | "follow" | "unfollow" | "block" | "unblock" | "mute" | "unmute" | "dismiss" | "undismiss";
+            /** Format: int64 */
+            expectedRevision: number;
+            requestKey: string;
+        };
+        SocialV2PreferenceUpdate: {
+            discoverable: boolean;
+            personalized: boolean;
+            /** Format: int64 */
+            expectedRevision: number;
+        };
+        SocialV2Preferences: {
+            discoverable: boolean;
+            personalized: boolean;
+            /** Format: int64 */
+            revision: number;
+        };
+        SocialV2Feed: {
+            nextCursor: string | null;
+            items: {
+                /** Format: int64 */
+                postId: number;
+                position: string;
+                /** Format: date-time */
+                publishedAt: string;
+                /** Format: date-time */
+                createdAt: string;
+                title: string | null;
+                content: string;
+                /** Format: int64 */
+                authorId: number;
+                authorName: string;
+                /** Format: int64 */
+                artistId: number;
+            }[];
+        };
+        SocialV2Discover: {
+            personalized: boolean;
+            items: {
+                /** Format: int64 */
+                partyId: number;
+                displayName: string;
+                /** @enum {string} */
+                reason: "shared_interests" | "public_profile";
+                relationship: components["schemas"]["SocialV2State"];
+            }[];
+        };
         /** @enum {string} */
         DirectoryEntityType: "profile" | "classified" | "event" | "venue";
         /** @description Safe public location; exact residential address and private coordinates are structurally absent. */
@@ -12852,6 +13038,353 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getSocialV2Me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2Me"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSocialV2Relationship: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2State"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    mutateSocialV2Relationship: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocialV2Command"];
+            };
+        };
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2State"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateSocialV2Preferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocialV2PreferenceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2Preferences"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSocialV2Following: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2Feed"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSocialV2Discover: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2Discover"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listSocialFollowers: {
         parameters: {
             query?: never;

@@ -198,6 +198,8 @@ jobs:
         with:
           path: .stack-root
           key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+          restore-keys: |
+            stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Restore incremental backend objects
         uses: actions/cache@v6
@@ -216,6 +218,14 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: ./scripts/test-artist-self-service.sh
+
+      - name: Verify social session revocation and model-derived HTTP fixtures
+        env:
+          PGPASSWORD: postgres
+          TDF_SOCIAL_HTTP_EMPTY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_social_session_test
+        run: |
+          createdb -h postgres -U postgres tdf_hq_social_session_test
+          bash scripts/social/test-http.sh
 
       - name: Verify authenticated artist merch HTTP runtime
         env:

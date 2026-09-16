@@ -11,6 +11,7 @@
 
 module TDF.Server where
 
+import TDF.Social.Server (socialV2Server)
 import           Control.Applicative ((<|>))
 import           Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
 import           Control.Concurrent (forkIO)
@@ -3067,6 +3068,7 @@ socialServer user =
   :<|> socialListProfiles user
   :<|> socialGetProfile user
   :<|> socialListSuggestedFriends user
+  :<|> socialV2Server user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
 chatServer user =
@@ -4318,7 +4320,7 @@ notifyEligibleFeatureReviewers requester feature actionName requestId now = do
   forM_ reviewerPartyIds $ \reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do
     rolesResult <- loadCanonicalPartyRoles reviewerPartyId
     roles <- either (liftIO . ioError . userError . T.unpack) pure rolesResult
-    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles)
+    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles) Nothing
     when (registryReviewerCanDecide reviewer feature actionName) $
       insert_ Notification
         { notificationRecipientPartyId = reviewerPartyId

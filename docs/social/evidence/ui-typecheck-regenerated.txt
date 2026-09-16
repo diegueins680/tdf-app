@@ -1,0 +1,2 @@
+tdf-hq-ui/src/pages/LoginPage.tsx(56,10): error TS2305: Module '"../analytics/onboardingProgress"' has no exported member 'markWebSignupCompleted'.
+tdf-hq-ui/src/routes/AppShell.tsx(23,10): error TS2305: Module '"../analytics/onboardingProgress"' has no exported member 'retryPendingFirstValueCompletion'.
