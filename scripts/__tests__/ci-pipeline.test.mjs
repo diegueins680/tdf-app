@@ -2,9 +2,34 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+test('PostgreSQL runner uses the CI service and deletes only its newly created test database', () => {
+  const script = `
+    . "$1"
+    createdb() { echo "createdb $*"; return "$CREATE_RESULT"; }
+    psql() { echo "psql $*"; }
+    dropdb() { echo "dropdb $*"; }
+    docker() { echo unexpected-docker; exit 97; }
+    tdf_test_db_init tdf_owned_test
+    tdf_test_db_cleanup
+  `;
+  const invoke = (createResult) => spawnSync('sh', ['-eu', '-c', script, 'runner', path.join(root, 'scripts/lib/postgres-test-database.sh')], {
+    encoding: 'utf8',
+    env: { PATH: process.env.PATH, GITHUB_ACTIONS: 'true', TDF_TEST_POSTGRES_HOST: 'postgres', PGPASSWORD: 'synthetic-test-only', CREATE_RESULT: createResult },
+  });
+  const owned = invoke('0');
+  assert.equal(owned.status, 0, owned.stderr);
+  assert.match(owned.stdout, /createdb -h postgres -U postgres tdf_owned_test/);
+  assert.equal((owned.stdout.match(/dropdb/g) ?? []).length, 1);
+  assert.doesNotMatch(owned.stdout, /unexpected-docker/);
+  const existing = invoke('17');
+  assert.equal(existing.status, 17);
+  assert.doesNotMatch(existing.stdout, /dropdb|unexpected-docker/);
+});
 
 async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');

@@ -292,6 +292,23 @@ describe('CommerceProviderEventsPage', () => {
     });
   });
 
+  it('separates amount-component cards by environment and labels legacy rows', async () => {
+    const overview = buildOverview();
+    overview.cpoAmountComponents = [
+      { ...overview.cpoAmountComponents[0]!, cacEnvironment: 'production', cacAmountMinor: 700 },
+      { ...overview.cpoAmountComponents[0]!, cacEnvironment: 'sandbox', cacAmountMinor: 500 },
+      { ...overview.cpoAmountComponents[0]!, cacComponentType: 'subtotal' },
+    ];
+    getPaymentOverviewMock.mockResolvedValue(overview);
+    await act(async () => { await queryClient.invalidateQueries(); });
+    await waitFor(() => {
+      expect(container.textContent).toContain('production · tax');
+      expect(container.textContent).toContain('sandbox · tax');
+      expect(container.textContent).toContain('Entorno no informado · subtotal');
+    });
+  });
+
+
   it('shows redacted evidence and offers replay only for dead-letter records', () => {
     expect(container.textContent).toContain('Preparación de proveedores');
     expect(container.textContent).toContain('datafast');

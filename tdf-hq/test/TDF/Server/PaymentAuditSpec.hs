@@ -16,10 +16,10 @@ import Servant.Server (runHandler)
 import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.API.Types (MarketplaceCheckoutReq(..), MarketplaceOrderDTO(..))
-import TDF.API.CommerceOperations (CommercePaymentIntentSummaryDTO(..))
+import TDF.API.CommerceOperations (CommercePaymentIntentSummaryDTO(..), CommerceAmountComponentSummaryDTO(..))
 import TDF.DB (Env(..), makePool)
 import TDF.Server (checkoutCart, marketplaceSha256Text)
-import TDF.Server.CommerceOperations (loadPaymentIntentSummaries)
+import TDF.Server.CommerceOperations (loadPaymentIntentSummaries, loadAmountComponentSummaries)
 
 spec :: Spec
 spec = do
@@ -73,7 +73,15 @@ spec = do
         pool <- makePool (BS.pack url)
         flip runSqlPool pool $ do
           rawExecute "INSERT INTO commerce_checkout_session VALUES ('a5400000-0000-4000-8000-000000000003','service_booking','paid','production')" []
-          rawExecute "INSERT INTO commerce_payment_intent VALUES ('a5400000-0000-4000-8000-000000000001','captured','USD',5000,5000,5000,500),('a5400000-0000-4000-8000-000000000003','captured','USD',7000,7000,7000,0)" []
+          rawExecute "INSERT INTO commerce_payment_intent(checkout_id,status,currency,amount_minor,authorized_minor,captured_minor,refunded_minor) VALUES ('a5400000-0000-4000-8000-000000000001','captured','USD',5000,5000,5000,500),('a5400000-0000-4000-8000-000000000003','captured','USD',7000,7000,7000,0)" []
         rows <- runSqlPool loadPaymentIntentSummaries pool
         [(cpiEnvironment x,cpiCapturedMinor x,cpiRefundedMinor x) | x <- rows]
           `shouldBe` [("production",7000,0),("sandbox",5000,500)]
+      it "keeps amount components isolated by checkout environment" $ do
+        pool <- makePool (BS.pack url)
+        flip runSqlPool pool $ do
+          rawExecute "INSERT INTO commerce_payment_amount_component SELECT id,'tax','tax_document','USD',CASE WHEN checkout_id='a5400000-0000-4000-8000-000000000003'::uuid THEN 700 ELSE 500 END FROM commerce_payment_intent" []
+          rawExecute "INSERT INTO commerce_payment_amount_component SELECT id,'tax','tax_document','USD',200 FROM commerce_payment_intent WHERE checkout_id='a5400000-0000-4000-8000-000000000001'::uuid" []
+        rows <- runSqlPool loadAmountComponentSummaries pool
+        [(cacEnvironment x,cacCount x,cacAmountMinor x) | x <- rows]
+          `shouldBe` [("production",1,700),("sandbox",2,700)]

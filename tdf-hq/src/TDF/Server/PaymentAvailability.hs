@@ -9,6 +9,7 @@ module TDF.Server.PaymentAvailability
   , availableImplementedPaymentMethods
   , loadRuntimeReadyRoutes
   , bankTransferInstructionsReady
+  , manualTransferInstructionsConfigured
   ) where
 
 import           Control.Monad (filterM)
@@ -98,9 +99,7 @@ runtimeReady environment flow route = case routeProvider route of
     inboxKey <- liftIO (minimumEnvLength 32 "COMMERCE_EVENT_ENCRYPTION_KEY")
     pure (configured && webhookId && inboxKey)
   Checkout.ProviderBankTransfer ->
-    liftIO $ bankTransferInstructionsReady flow
-      <$> nonEmptyEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
-      <*> nonEmptyEnv "MERCH_BANK_TRANSFER_INSTRUCTIONS"
+    liftIO (manualTransferInstructionsConfigured flow)
   -- These adapters currently have contract tests but no end-to-end shared
   -- executor and public return flow. Keep them unavailable even if an operator
   -- accidentally changes account metadata.
@@ -115,6 +114,14 @@ runtimeReady environment flow route = case routeProvider route of
 bankTransferInstructionsReady :: ProductFlow -> Bool -> Bool -> Bool
 bankTransferInstructionsReady flow commerceReady merchReady =
   commerceReady || (flow == FlowMerchandise && merchReady)
+
+manualTransferInstructionsConfigured :: ProductFlow -> IO Bool
+manualTransferInstructionsConfigured flow = do
+  generic <- nonEmptyEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
+  merch <- if not generic && flow == FlowMerchandise
+    then nonEmptyEnv "MERCH_BANK_TRANSFER_INSTRUCTIONS"
+    else pure False
+  pure (bankTransferInstructionsReady flow generic merch)
 
 routeLabel :: PaymentRoute -> Maybe Text
 routeLabel route = case (routeProvider route, routeMethod route) of
