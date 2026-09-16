@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -286,6 +286,10 @@ export function NewAccessRequestPage() {
       navigate('/solicitudes-acceso', { replace: true });
     },
   });
+
+  if (requestedFeatureId === 'artist.onboarding' && action === 'create') {
+    return <Navigate to="/artista/crear" replace />;
+  }
 
   return (
     <Stack spacing={3} component="section" aria-labelledby="new-access-request-title" sx={{ maxWidth: 720 }}>

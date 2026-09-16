@@ -1279,6 +1279,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/artists/me/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate my artist profile immediately
+         * @description Creates the authenticated account's artist profile and grants only the Artist role through an audited automatic policy in one transaction. No manual approval or invitation is required. Repeated calls preserve existing profile content and create no duplicate grant. Revoked roles and inactive accounts cannot be reactivated this way. No target party or role is accepted.
+         */
+        post: operations["activateMyArtistProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/artists/search": {
         parameters: {
             query?: never;
@@ -15080,6 +15100,40 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ArtistProfile"][];
                 };
+            };
+        };
+    };
+    activateMyArtistProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artist profile ready to edit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistProfile"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Account or automatic artist policy does not allow activation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -1467,6 +1467,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           />
         )}
 
+        {focusArtist && session && !canEditArtist && (
+          <Alert severity="info" action={<Button component={RouterLink} to="/artista/crear">Crear mi perfil</Button>}>
+            Activa tu perfil de artista y empieza a editarlo, sin esperar aprobación.
+          </Alert>
+        )}
+
         {canEditArtist && (
           <div ref={artistSectionRef}>
             <ProfileSectionCard

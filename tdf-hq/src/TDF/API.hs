@@ -523,7 +523,8 @@ type FanSecureAPI =
          )
 
 type ArtistSecureAPI =
-       "me" :> "profile" :>
+       "me" :> "activate" :> Post '[JSON] ArtistProfileDTO
+  :<|> "me" :> "profile" :>
          ( Get '[JSON] ArtistProfileDTO
       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Post '[JSON] ArtistProfileDTO
       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO

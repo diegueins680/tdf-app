@@ -2,7 +2,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module TDF.Profiles.Artist
-  ( upsertArtistProfileRecord
+  ( activateOwnArtistProfile
+  , upsertArtistProfileRecord
   , validateArtistProfileUpsert
   , loadArtistProfileDTO
   , loadArtistProfileBySlugDTO
@@ -35,15 +36,60 @@ import           Data.Time                 (UTCTime, getCurrentTime)
 import           Data.UUID                 (UUID)
 import qualified Data.UUID                 as UUID
 import           Database.Persist
-import           Database.Persist.Sql      (SqlPersistT, fromSqlKey)
+import           Database.Persist.Sql      (SqlPersistT, fromSqlKey, rawSql)
 
+import           TDF.Catalog.Security (applySecurityRoleAssignmentPolicy)
 import qualified TDF.Catalog.Models        as Catalog
 import           TDF.DTO                   ( ArtistProfileDTO(..)
                                            , ArtistProfileUpsert(..)
                                            )
 import           TDF.Models
 import qualified TDF.Models                as M
+import qualified TDF.ModelsExtra           as ME
 import qualified TDF.Trials.Server         as TrialsServer (isValidHttpUrl)
+
+-- The caller supplies only the authenticated identity. Serialize repeated web/mobile
+-- activation on that Party so role, audit and profile creation are idempotent.
+activateOwnArtistProfile :: PartyId -> UTCTime -> SqlPersistT IO (Either Text ArtistProfileDTO)
+activateOwnArtistProfile partyId now = do
+  _ <- rawSql "SELECT ?? FROM party WHERE id = ? FOR UPDATE" [toPersistValue partyId] :: SqlPersistT IO [Entity Party]
+  credentials <- count [UserCredentialPartyId ==. partyId, UserCredentialActive ==. True]
+  if credentials /= 1
+    then pure (Left "Artist activation requires one active user account")
+    else do
+      result <- applySecurityRoleAssignmentPolicy
+        "artist.self-service.artist" partyId False (Just partyId)
+        "artist-self-service" ("artist-self-service:" <> T.pack (show (fromSqlKey partyId))) now
+      case result of
+        Left message -> pure (Left message)
+        Right _ -> do
+          profile <- loadOrCreateArtistProfileDTO partyId
+          pending <- selectList
+            [ ME.FeatureAccessRequestRequesterPartyId ==. partyId
+            , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
+            , ME.FeatureAccessRequestAction ==. "create"
+            , ME.FeatureAccessRequestStatus ==. "pending"
+            ] []
+          forM_ pending $ \(Entity key _) -> do
+            let note = Just "Perfil de artista activado por su titular, sin aprobación manual."
+            update key
+              [ ME.FeatureAccessRequestStatus =. "approved"
+              , ME.FeatureAccessRequestReviewerPartyId =. Nothing
+              , ME.FeatureAccessRequestReviewerNotes =. note
+              , ME.FeatureAccessRequestUpdatedAt =. now
+              , ME.FeatureAccessRequestDecidedAt =. Just now
+              , ME.FeatureAccessRequestExpiresAt =. Nothing
+              ]
+            insert_ ME.FeatureAccessRequestHistory
+              { ME.featureAccessRequestHistoryRequestId = key
+              , ME.featureAccessRequestHistoryActorPartyId = Just partyId
+              , ME.featureAccessRequestHistoryTransition = "automatically_approved"
+              , ME.featureAccessRequestHistoryFromStatus = Just "pending"
+              , ME.featureAccessRequestHistoryToStatus = "approved"
+              , ME.featureAccessRequestHistoryNote = note
+              , ME.featureAccessRequestHistoryCreatedAt = now
+              }
+          pure (Right profile)
 
 cleanOptionalText :: Maybe Text -> Maybe Text
 cleanOptionalText = (>>= nonBlank)
@@ -337,8 +383,8 @@ ensureArtistProfileEntity artistId = do
             , artistProfileCreatedAt        = now
             , artistProfileUpdatedAt        = Nothing
             }
-      key <- insert record
-      pure (Entity key record)
+      inserted <- insertBy record
+      pure (either id (\key -> Entity key record) inserted)
 
 searchArtistProfilesDTO
   :: MonadIO m

@@ -80,6 +80,8 @@ export const Fans = {
   unfollow: async (artistId: number) => {
     await remove(`/fans/me/follows/${artistId}`);
   },
+  activateMyArtistProfile: async () =>
+    (await send('/artists/me/activate', {})) as ArtistProfileDTO,
   getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
   updateMyArtistProfile: async (payload: ArtistProfileUpsert) =>
     (await update('/fans/me/artist-profile', payload)) as ArtistProfileDTO,

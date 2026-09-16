@@ -217,6 +217,7 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , loadOrCreateArtistProfileDTO
                                      , searchArtistProfilesDTO
                                      , resolvePublishedGenreSelections
+                                     , activateOwnArtistProfile
                                      , upsertArtistProfileRecord
                                      , validateArtistProfileUpsert
                                      )
@@ -3048,7 +3049,8 @@ fanSecureServer user =
 
 artistSecureServer :: AuthedUser -> ServerT ArtistSecureAPI AppM
 artistSecureServer user =
-       ( artistGetOwnProfile user
+       artistActivateOwnProfile user
+  :<|> ( artistGetOwnProfile user
     :<|> artistUpdateOwnProfile user
     :<|> artistUpdateOwnProfile user
        )
@@ -3931,7 +3933,66 @@ accessRequestsServer user =
         [Desc ME.FeatureAccessRequestRequestedAt]
       mapM loadFeatureAccessRequestDTO rows
 
-    createRequest (FeatureAccessRequestCreate requestedFeatureId requestedAction requestedJustification) = do
+    createRequest (FeatureAccessRequestCreate requestedFeatureId requestedAction requestedJustification)
+      | T.toLower (T.strip requestedFeatureId) == "artist.onboarding"
+      , T.toLower (T.strip requestedAction) == "create" = createArtistAccess
+      | otherwise = createReviewedRequest requestedFeatureId requestedAction requestedJustification
+
+    createArtistAccess = do
+      Env pool _ <- ask
+      now <- liftIO getCurrentTime
+      result <- liftIO $ flip runSqlPool pool $ do
+        activated <- activateOwnArtistProfile (auPartyId user) now
+        case activated of
+          Left message -> pure (Left message)
+          Right _ -> do
+            existing <- selectFirst
+              [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
+              , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
+              , ME.FeatureAccessRequestAction ==. "create"
+              , ME.FeatureAccessRequestStatus <-. ["pending", "approved"]
+              ] [Desc ME.FeatureAccessRequestRequestedAt]
+            let note = Just "Perfil de artista activado automáticamente por su titular, sin aprobación manual."
+            row <- case existing of
+              Just (Entity key request) | ME.featureAccessRequestStatus request == "approved" ->
+                pure (Entity key request)
+              _ -> do
+                (key, previous) <- case existing of
+                  Just (Entity key request) -> pure (key, Just (ME.featureAccessRequestStatus request))
+                  Nothing -> do
+                    key <- insert ME.FeatureAccessRequest
+                      { ME.featureAccessRequestRequesterPartyId = auPartyId user
+                      , ME.featureAccessRequestFeatureId = "artist.onboarding"
+                      , ME.featureAccessRequestAction = "create"
+                      , ME.featureAccessRequestRoleContext = encodeAccessContext (map roleToText (auRoles user))
+                      , ME.featureAccessRequestModuleContext = encodeAccessContext (map moduleName (Set.toList (auModules user)))
+                      , ME.featureAccessRequestJustification = Nothing
+                      , ME.featureAccessRequestStatus = "approved"
+                      , ME.featureAccessRequestReviewerGroup = "system-policy"
+                      , ME.featureAccessRequestReviewerPartyId = Nothing
+                      , ME.featureAccessRequestReviewerNotes = note
+                      , ME.featureAccessRequestRequestedAt = now
+                      , ME.featureAccessRequestUpdatedAt = now
+                      , ME.featureAccessRequestDecidedAt = Just now
+                      , ME.featureAccessRequestCancelledAt = Nothing
+                      , ME.featureAccessRequestExpiresAt = Nothing
+                      }
+                    pure (key, Nothing)
+                update key
+                  [ ME.FeatureAccessRequestStatus =. "approved"
+                  , ME.FeatureAccessRequestReviewerPartyId =. Nothing
+                  , ME.FeatureAccessRequestReviewerNotes =. note
+                  , ME.FeatureAccessRequestUpdatedAt =. now
+                  , ME.FeatureAccessRequestDecidedAt =. Just now
+                  , ME.FeatureAccessRequestExpiresAt =. Nothing
+                  ]
+                insert_ (featureAccessRequestHistoryRecord key (Just (auPartyId user)) "automatically_approved" previous "approved" note now)
+                writeFeatureAccessRequestAudit (Just (auPartyId user)) key "access_request_automatically_approved" "artist.onboarding" "create" "approved" now
+                getJustEntity key
+            pure (Right row)
+      either (\message -> throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) loadFeatureAccessRequestDTO result
+
+    createReviewedRequest requestedFeatureId requestedAction requestedJustification = do
       feature <- maybe
         (throwError err400 { errBody = "Unknown or unavailable feature" })
         pure
@@ -8615,6 +8676,15 @@ requireArtistAccess user@AuthedUser{..} = do
     throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Artist access required") }
   unless (hasCoherentAuthScope user) $
     throwError err403 { errBody = "Artist access requires coherent role grants" }
+
+artistActivateOwnProfile :: AuthedUser -> AppM ArtistProfileDTO
+artistActivateOwnProfile user = do
+  unless (hasCoherentAuthScope user) $
+    throwError err403 { errBody = "Artist activation requires a coherent account" }
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+  result <- liftIO $ flip runSqlPool pool $ activateOwnArtistProfile (auPartyId user) now
+  either (\message -> throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) pure result
 
 artistGetOwnProfile :: AuthedUser -> AppM ArtistProfileDTO
 artistGetOwnProfile user = do

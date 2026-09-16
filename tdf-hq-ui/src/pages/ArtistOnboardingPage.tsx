@@ -3,11 +3,13 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import BoltIcon from '@mui/icons-material/Bolt';
-import { useMemo } from 'react';
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
-import { useSession } from '../session/SessionContext';
+import { useMemo, useState } from 'react';
+import { Link as RouterLink, useSearchParams, useNavigate } from 'react-router-dom';
+import { useSession, getActiveSession, SESSION_STORAGE_KEY } from '../session/SessionContext';
 import { parsePositiveSafeInt } from '../utils/ids';
-import { accessRequestPath, getFeatureById } from '../features/featureRegistry';
+import { Fans } from '../api/fans';
+import { get } from '../api/client';
+import type { SessionResponseDTO } from '../api/session';
 
 const buildArtistSignupLink = (claimArtistId: number | null) => {
   const params = new URLSearchParams();
@@ -26,13 +28,31 @@ const buildArtistLoginLink = () => {
   return `/login?${params.toString()}`;
 };
 
-const artistAccessRequest = () => {
-  const feature = getFeatureById('artist.onboarding');
-  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';
-};
-
 export default function ArtistOnboardingPage() {
-  const { session } = useSession();
+  const { session, login } = useSession();
+  const navigate = useNavigate();
+  const [activating, setActivating] = useState(false);
+  const [activationError, setActivationError] = useState<string | null>(null);
+
+  const activateProfile = async () => {
+    if (!session?.partyId || activating) return;
+    const partyId = session.partyId;
+    setActivating(true);
+    setActivationError(null);
+    try {
+      await Fans.activateMyArtistProfile();
+      const refreshed = await get<SessionResponseDTO>('/session');
+      if (getActiveSession()?.partyId !== partyId || refreshed.partyId !== partyId) return;
+      login({ ...refreshed, apiToken: session.apiToken }, {
+        remember: !window.sessionStorage.getItem(SESSION_STORAGE_KEY),
+      });
+      navigate('/mi-artista');
+    } catch (error) {
+      setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Inténtalo de nuevo.');
+    } finally {
+      setActivating(false);
+    }
+  };
   const [searchParams] = useSearchParams();
 
   const claimArtistId = useMemo(() => {
@@ -101,24 +121,26 @@ export default function ArtistOnboardingPage() {
 
         {session?.partyId && (
           <Alert
-            severity={hasArtistRole ? 'success' : 'warning'}
+            severity={hasArtistRole ? 'success' : 'info'}
             action={
               hasArtistRole ? (
                 <Button color="inherit" size="small" component={RouterLink} to="/mi-artista">
                   Ir a mi perfil
                 </Button>
               ) : (
-                <Button color="inherit" size="small" component={RouterLink} to={artistAccessRequest()}>
-                  Solicitar acceso
+                <Button color="inherit" size="small" onClick={() => void activateProfile()} disabled={activating}>
+                  {activating ? 'Creando…' : 'Crear mi perfil'}
                 </Button>
               )
             }
           >
             {hasArtistRole
               ? 'Ya tienes una sesión activa. Puedes editar tu perfil de artista ahora.'
-              : 'Tu cuenta está activa. Para crear un perfil de artista, envía una solicitud revisada o reclama un perfil existente con correo verificable.'}
+              : 'Tu cuenta está activa. Crea tu perfil de artista ahora, sin esperar aprobación.'}
           </Alert>
         )}
+
+        {activationError && <Alert severity="error">{activationError}</Alert>}
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <Card variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
@@ -139,16 +161,18 @@ export default function ArtistOnboardingPage() {
                   Te llevamos directo al portal para completar tu perfil y publicarlo en tu URL.
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    component={RouterLink}
-                    to={buildArtistSignupLink(claimArtistId)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Crear mi perfil de artista
-                  </Button>
-                  <Button
+                  {session?.partyId ? (
+                    <Button variant="contained" size="large" disabled={activating}
+                      onClick={() => hasArtistRole ? navigate('/mi-artista') : void activateProfile()}>
+                      {activating ? 'Creando…' : hasArtistRole ? 'Editar mi perfil de artista' : 'Crear mi perfil de artista'}
+                    </Button>
+                  ) : (
+                    <Button variant="contained" size="large" component={RouterLink}
+                      to={buildArtistSignupLink(claimArtistId)} sx={{ textTransform: 'none' }}>
+                      Crear mi perfil de artista
+                    </Button>
+                  )}
+                  {!session?.partyId && <Button
                     variant="outlined"
                     size="large"
                     component={RouterLink}
@@ -156,7 +180,7 @@ export default function ArtistOnboardingPage() {
                     sx={{ textTransform: 'none' }}
                   >
                     Ya tengo cuenta
-                  </Button>
+                  </Button>}
                 </Stack>
               </Stack>
             </CardContent>

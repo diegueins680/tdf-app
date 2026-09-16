@@ -200,6 +200,7 @@ import TDF.FeatureRegistry
 import TDF.Models (ArtistProfile (..), Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
+import qualified TDF.Profiles.ArtistActivationSpec as ArtistActivationSpec
 import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.DDEX.Detect as DDEXDetect
@@ -16907,6 +16908,7 @@ main = hspec $ do
     EventDiscoverySpec.spec
     EventResearchSpec.spec
     ArtistSpec.spec
+    ArtistActivationSpec.spec
     ServerAuthSpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
