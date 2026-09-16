@@ -1,6 +1,6 @@
 # Legacy profile read boundary — 2026-09-15
 
-Status: implemented locally; draft dependent delivery, no activation or deployment.
+Status: implemented and locally verified; [draft PR #397](https://github.com/diegueins680/tdf-app/pull/397), no activation or deployment.
 Dependency: [DM/API PR #390](https://github.com/diegueins680/tdf-app/pull/390),
 code base `44a1c7bededf0ba4b54068d482667ac24299f8e4`. Client isolation #391 and
 verification #394 are parallel dependent work, not merged into this branch.
@@ -97,7 +97,10 @@ cardinality is proved. Identifier boundary behavior is separately tested at 0/10
 | PROFILE-07 Eligible operation progresses | Progress / WF(Read) | Available atomic read or terminal HTTP error | TLC temporal-property run; broader database/network availability assumed |
 
 Model result: **20,166 generated / 5,760 distinct states, depth 11**, safety and
-progress passed. All three unsafe configurations violated their intended invariant.
+progress passed. All three unsafe configurations violated their intended invariant. The final pause
+control preserves pair/closure checks and removes only activation memory: its
+five-state counterexample explicitly activates, pauses, revokes liveness and reads.
+The final model export reproduced all 2,880 SQL expectations byte-for-byte.
 The DOT exporter labels guarded transitions `Next`; the generator identifies the
 unique false→true `done` transition, which only Read can take, and consumes its
 actual `observed.returned` sequence. Empty extraction fails; expectations are not
@@ -197,7 +200,7 @@ the actual commit; a configured workflow is not a successful run.
 - **Satisfied locally:** optimized synthetic SQL threshold in all four workloads.
 - **Satisfied locally:** final-source Stack (2,542 examples), catalog audit, shell
   syntax and clean diff checks. Raw [evidence](evidence/profile-read-boundary/results.json).
-- **Blocked pending CI:** hosted CI has not run for this branch yet.
+- **Blocked pending CI:** hosted CI is running for this branch; no completed result is claimed.
 - **Blocked overall rollout:** legacy followers/friends/suggestions/search and
   notifications/media can still expose identities elsewhere; delegated entities,
   suspension/deletion integration and all affected native/browser journeys remain

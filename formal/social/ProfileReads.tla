@@ -12,7 +12,8 @@ DomainAllowed(t) == a \in live /\ t \in live /\ a \notin closed /\ t \notin clos
 Allowed(t) == t \in People /\ (~Required(t) \/ DomainAllowed(t))
 Returned(t) == t \in People /\
   (IF UnsafeCache THEN TRUE
-   ELSE IF UnsafePause THEN (~enabled \/ DomainAllowed(t))
+   ELSE IF UnsafePause THEN
+     (~(enabled \/ (t=b /\ pairExists) \/ a \in closed \/ t \in closed) \/ DomainAllowed(t))
    ELSE Allowed(t)) /\
   (~UnsafePreferences \/ t # b \/ (discoverable /\ ~muted))
 Init == /\ enabled=FALSE /\ activated=FALSE /\ pairExists=FALSE

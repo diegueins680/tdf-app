@@ -1,4 +1,4 @@
-4071e28beb0cf3b1670f61535ed923c46c3344ccc6bf7b83bcfff69223bb84f5  formal/social/ProfileReads.tla
+a1f17be07a647c7d6fc12644e5f977ed5bc442d77988e1b5df37d972f31f90e7  formal/social/ProfileReads.tla
 4231193428a903b7086074c756527ae639e70a3d1ea691aaabeb6e9b778efc8f  tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql
 b5b1a839ced9d1e906ed1f573da1f5268d1280de8cbbcd5c51385c79add77de2  tdf-hq/src/TDF/Social/Profiles.hs
 9677c9541bb32b666c23f541546bbb4581f0de8743b405d181dfbbce3338ff80  scripts/social/ProfileSpec.hs

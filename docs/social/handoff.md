@@ -268,3 +268,9 @@ builds on #390 (`44a1c7bed`). #391 contains parallel chat client cache isolation
 #394 records completed DM build/client baseline evidence. Broader legacy identity
 surfaces, delegation and rollout remain incomplete. See the new packet for exact
 local results, failed experiments, migration/pause steps and acceptance statuses.
+
+Published profile delivery: [draft #397](https://github.com/diegueins680/tdf-app/pull/397),
+implementation `7706258a9e8ecbe0b99b4fd23903df606848ad03`, dependent on #390.
+The follow-up model-only commit isolates the pause-memory negative control and
+reproduces unchanged SQL expectations. Local Stack/HTTP/model/schema/performance
+checks passed; hosted checks are running. All PRs remain unmerged.
