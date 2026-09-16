@@ -148,3 +148,65 @@ then this integration. Mobile main and #83's integrated ancestry plus #85 preced
 the mobile integration; publish its exact commit before the root gitlink.
 No PR was merged. Keep all provider execution/recovery flags disabled pending
 the runbooks' sandbox, account, contract and environment evidence.
+
+## Published integration and supplemental checks
+
+- Root implementation merge: `60fe0aea06b9153b953005290ecc8ba9659c04aa`;
+  [draft #414](https://github.com/diegueins680/tdf-app/pull/414), base #408.
+- Mobile final code: `ff77c2060034762f69aed81473c8f94a25684d7e`;
+  [draft #88](https://github.com/diegueins680/TDF-mobile/pull/88), base #85.
+  Both remote heads, draft status and bases were read back after publication.
+- Migration ID/path order comparison: all 107 downstream, 106 upstream and 102
+  default-main entries retained in the 108-entry merged manifest. Existing SQL
+  migrations are unchanged; only the new forward/rollback pair is added.
+- Strict catalog JSON/CSV audits: PASS, 1,458 scanned files / 1,137 candidates,
+  zero unreviewed and zero stale decisions. Regeneration preserves reviewed
+  security/business classifications; deriving the new mobile subject type
+  eliminates the redundant handwritten enum.
+- `npm run test:production-release && npm run test:ci-pipeline`: 60 + 23 tests
+  PASS at the implementation merge; output in the execution transcript.
+- `npm run lint`, `tdf-hq-ui`: PASS, zero warnings; command output in
+  `/private/tmp/tdf-payment-stack-web-lint-20260916.log`. Exit 0 was observed before
+  2026-09-16T20:06:07Z (the log timestamp reflects startup, not completion).
+- `npm run build`, `tdf-hq-ui`: PASS at 19:58:03Z; TypeScript/Vite plus bundle
+  gate, five preloads / 314,065 gzip initial JS bytes. Existing chunk-size warning
+  remains; no budget was relaxed. Log: `tdf-payment-stack-web-build-20260916.log`.
+- `npm test -- --runTestsByPath src/pages/CourseRegistrationsAdminPage.test.tsx`,
+  `tdf-hq-ui`: unchanged complete rerun PASS, 626 tests / one suite, 169.535s,
+  19:59:08Z. Log: `tdf-payment-stack-course-rerun-20260916.log`.
+- `npm test -- --runTestsByPath src/components/payments/HeldRefundRecoveryPanel.test.tsx src/pages/CommerceProviderEventsPage.test.tsx src/api/commerceOperations.test.ts src/pages/AccessRequestsPage.test.tsx`,
+  `tdf-hq-ui`: 41 tests / four suites PASS, 26.413s, 19:59:45Z. Log:
+  `tdf-payment-stack-focused-web-20260916.log`.
+- Native PostgreSQL shutdown completed; `pg_ctl status` subsequently reported
+  no server running. Fixture files were retained, not erased.
+
+The latest full-web rerun (`npm test`, `tdf-hq-ui`) and hosted CI were still
+pending when these supplemental results were assembled. The following final
+verification entry, when present, supersedes only that pending status and does
+not erase the earlier failed attempts.
+
+### Final hosted web evidence and local interruption
+
+The hosted [web-quality job](https://github.com/diegueins680/tdf-app/actions/runs/35144435997/job/104956908672)
+passed at **2026-09-16T20:12:35Z**. Its actual log records **217 suites / 2,089
+tests passed**, 203.867s, at 20:11:49Z, followed by a successful build/bundle gate
+(five preloads, 314,884 gzip initial bytes). The workflow API confirms
+`head_sha=60fe0aea06b9153b953005290ecc8ba9659c04aa`; this is the tested code
+integration, not a different branch or mock provider environment.
+
+The same [CI run](https://github.com/diegueins680/tdf-app/actions/runs/35144435997)
+also reported successful mobile quality, API contracts, migration tests,
+production-migration contract checks, repository quality, and persona browser
+journeys. Catalog authority passed in its separate workflow. Backend quality
+was still in progress at the last observation; do not call the aggregate run
+complete. These browser journeys do not constitute provider sandbox checkout.
+Automatic preview checks reported success, but no preview payment flow or
+deployed source/environment qualification was performed by this integration.
+
+After verifying the complete hosted result, stop the duplicate slow local web
+run: exit **143**, last log write **20:18:57Z**. It had recorded 82 passing and
+four failing suites, with timeout failures; it is **not a local full-suite pass**.
+Keep `/private/tmp/tdf-payment-stack-web-final-20260916.log` alongside the earlier
+failed logs. No test assertions, timeout thresholds, or quality gates were
+relaxed. The subsequent root commit only records this evidence; new hosted
+checks on that documentation-only head may still be pending.
