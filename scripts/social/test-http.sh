@@ -37,6 +37,8 @@ CREATE TABLE party(id bigint PRIMARY KEY,display_name text NOT NULL,is_org boole
 CREATE TABLE user_credential(id bigint PRIMARY KEY,party_id bigint REFERENCES party(id),active boolean NOT NULL DEFAULT true);
 INSERT INTO party SELECT n,'Synthetic '||n,false FROM generate_series(1,5) n;
 INSERT INTO user_credential SELECT n,n,true FROM generate_series(1,5) n;
+CREATE TABLE fan_profile(id bigserial PRIMARY KEY,fan_party_id bigint UNIQUE REFERENCES party(id),display_name text,avatar_url text,bio text,city text);
+INSERT INTO fan_profile(fan_party_id,bio) SELECT n,'profile bio '||n FROM generate_series(1,5) n;
 CREATE TABLE api_token(id bigint PRIMARY KEY,token text,party_id bigint,label text,active boolean);
 INSERT INTO api_token SELECT n,'synthetic-'||n,n,NULL,true FROM generate_series(1,5) n;
 INSERT INTO api_token VALUES(6,'synthetic-alt',1,NULL,true);
@@ -60,6 +62,7 @@ psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql"
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/dm-read-refinement.sql"
 # psql \ir needs a real local path in Docker too, so concatenate the control and
 # generated cases instead of relying on the container seeing the checkout.
@@ -74,6 +77,18 @@ grep 'DmReads observed case .* mismatch' "$TDF_SOCIAL_READ_NEGATIVE"
 echo 'PASS: generated cases reject the deliberately unsafe read projection'
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/dm-read-model-cases.sql"
 echo 'PASS: 1440 checked model outcomes refine thread preview/message/cursor policy on PostgreSQL'
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/profile-read-refinement.sql"
+TDF_SOCIAL_PROFILE_NEGATIVE=$(mktemp)
+if { cat "$TDF_SOCIAL_ROOT/scripts/social/profile-read-negative.sql";
+     cat "$TDF_SOCIAL_ROOT/scripts/social/profile-read-model-cases.sql"; echo 'ROLLBACK;'; } |
+   psql_http > "$TDF_SOCIAL_PROFILE_NEGATIVE" 2>&1; then
+  echo 'FAIL: unsafe profile policy unexpectedly passed generated cases' >&2
+  exit 1
+fi
+grep 'ProfileReads observed case .* mismatch' "$TDF_SOCIAL_PROFILE_NEGATIVE"
+echo 'PASS: generated cases reject the deliberately unsafe profile policy'
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/profile-read-model-cases.sql"
+echo 'PASS: checked profile outcomes refine PostgreSQL policy, ordering and payload'
 if [ "${TDF_SOCIAL_CHAT_SQL_ONLY:-0}" = 1 ]; then
   echo 'SQL-only mode: HTTP tests were not run'
   exit 0

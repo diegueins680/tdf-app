@@ -7,6 +7,7 @@ on:
       - 'tdf-hq/sql/*social_v2*'
       - 'tdf-hq/src/TDF/Social/**'
       - 'tdf-hq/src/TDF/API/Chat.hs'
+      - 'tdf-hq/src/TDF/API/SocialProfiles.hs'
       - 'tdf-hq-ui/src/features/social/**'
       - 'tdf-hq-ui/src/api/socialV2*'
       - 'tdf-hq-ui/src/pages/SocialPage.tsx'
@@ -64,6 +65,16 @@ jobs:
           java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/dm-read-states -dump dot,actionlabels /tmp/dm-read-traces.dot -config formal/social/DmReadTraces.cfg formal/social/DmReads.tla
           python3 scripts/social/generate-dm-read-cases.py /tmp/dm-read-traces.dot /tmp/dm-read-model-cases.sql
           diff -u scripts/social/dm-read-model-cases.sql /tmp/dm-read-model-cases.sql
+      - name: Profile read safety, progress and specific counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/profile-read-model-results
+        run: bash scripts/social/check-profile-reads-model.sh
+      - name: Regenerate checked profile read outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/profile-read-states -dump dot,actionlabels /tmp/profile-read-traces.dot -config formal/social/ProfileReads.cfg formal/social/ProfileReads.tla
+          python3 scripts/social/generate-profile-read-cases.py /tmp/profile-read-traces.dot /tmp/profile-read-model-cases.sql
+          diff -u scripts/social/profile-read-model-cases.sql /tmp/profile-read-model-cases.sql
       - name: PostgreSQL refinement of DM read observations
         env:
           TDF_SOCIAL_CHAT_SQL_ONLY: '1'
@@ -88,6 +99,7 @@ jobs:
             /tmp/session-model-results/*.txt
             /tmp/dm-model-results/*.txt
             /tmp/dm-read-model-results/*.txt
+            /tmp/profile-read-model-results/*.txt
   social-client:
     runs-on: ubuntu-latest
     timeout-minutes: 15
