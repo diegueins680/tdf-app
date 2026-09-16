@@ -120,3 +120,12 @@ confirms parent #398's real RACI/PostgreSQL browser job passed; its old UI failu
 is not retroactively green. Catalog governance (179 unreviewed / nine stale),
 external provider checks, native mobile and the broader event operations gaps
 remain open. No production or real-money action was performed.
+
+PR 30 strengthens RACI review accessibility evidence after #399 passed UI, formal,
+PostgreSQL and real-browser gates but failed one WebKit contrast assertion.
+The original observation was not reproduced in 13 local repetitions; no speculative
+style change was made. [Evidence](pr-30-raci-review-accessibility.md): 15/15 expanded
+browser cases validate light/dark review, safe initial focus, exact retry and a
+known low-contrast negative control. Full axe node diagnostics are retained.
+This does not establish the hosted failure's root cause or close complete a11y,
+native-mobile, catalog governance or end-to-end event-operations requirements.

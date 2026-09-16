@@ -27,3 +27,16 @@ test('browser editor uses isolated API interception and retained task regression
   assert.match(fixture, /expect\(writes\[1\]\).toEqual\(writes\[0\]\)/);
   assert.match(fixture, /status: 404/);
 });
+
+test('RACI accessibility keeps full-document diagnostics, themes, focus and a negative contrast control', () => {
+  const fixture = read('e2e/web/event-raci-editor.spec.mjs');
+  assert.match(fixture, /for \(const theme of \['dark', 'light'\]\)/);
+  assert.match(fixture, /Volver sin enviar' \}\)\)\.toBeFocused\(\)/);
+  assert.match(fixture, /axe\.run\(document\)/);
+  assert.match(fixture, /\['serious', 'critical'\]\.includes\(impact\)/);
+  assert.match(fixture, /testInfo\.attach\('raci-review-accessibility'/);
+  assert.match(fixture, /JSON\.stringify\(violations, null, 2\)/);
+  assert.match(fixture, /expect\(violations\)\.toEqual\(\[\]\)/);
+  assert.match(fixture, /contrast\.nodes\.some/);
+  assert.doesNotMatch(fixture, /disableRules|runOnly|waitForTimeout|test\.skip|test\.fixme/);
+});
