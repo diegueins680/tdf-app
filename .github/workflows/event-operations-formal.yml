@@ -57,6 +57,8 @@ on:
       - "tdf-hq/tdf-hq.cabal"
       - "tdf-hq/docs/openapi/api.yaml"
       - "tdf-hq-ui/src/api/eventOperations.ts"
+      - "tdf-hq-ui/src/api/eventTaskCompletion*.test.ts"
+      - "scripts/__tests__/event-task-completion-client.test.mjs"
       - "tdf-hq-ui/src/components/events/EventRaciEditor.tsx"
       - "tdf-hq-ui/src/pages/EventTaskPage*"
       - "scripts/__tests__/event-raci-web-editor.test.mjs"
@@ -129,6 +131,8 @@ on:
       - "tdf-hq/tdf-hq.cabal"
       - "tdf-hq/docs/openapi/api.yaml"
       - "tdf-hq-ui/src/api/eventOperations.ts"
+      - "tdf-hq-ui/src/api/eventTaskCompletion*.test.ts"
+      - "scripts/__tests__/event-task-completion-client.test.mjs"
       - "tdf-hq-ui/src/components/events/EventRaciEditor.tsx"
       - "tdf-hq-ui/src/pages/EventTaskPage*"
       - "scripts/__tests__/event-raci-web-editor.test.mjs"
@@ -168,6 +172,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+
+      - name: Verify completion client model wiring
+        run: node --test scripts/__tests__/event-task-completion-client.test.mjs
 
       - name: Download pinned formal tools
         shell: bash

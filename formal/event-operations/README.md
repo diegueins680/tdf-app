@@ -51,6 +51,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `TaskCompletionClient.cfg` | One invocation, two caller/receipt identities, shape boolean, at most two dispatches; no fairness or rollback assumption | PASS before client code; 44 generated, 32 distinct states, depth 4 |
+| `TaskCompletionClientCapture/Shape/Binding/Retry.cfg` | Remove request capture, receipt shape, receipt binding or no-retry guard | All four expected exit 12: OriginalRequestSent / ValidatedReceipt / ValidatedReceipt / SingleDispatch |
 | `TaskCompletion.cfg` | Two attempts, one task, two keys, one intervening edit, prerequisite/lifecycle booleans, three grants, clock 0–3, distinct RACI/grant expiries; no fairness | PASS; 944,014 generated, 231,576 distinct states, depth 14 |
 | `TaskCompletionAuthority/Version/Dependencies/Raci/Lifecycle/Replay/Audit.cfg` | Remove fresh authority, revision, dependency, current RACI, lifecycle, replay or audit guard | All seven expected exit 12 with their named invariant failures |
 | `RaciWebEditor.cfg` | Three context generations, two revisions, eligible/ineligible context, one reviewed body/key, two attempts, valid/invalid receipt; no fairness | PASS; 154 generated, 120 distinct states, depth 9 |
@@ -199,6 +201,13 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Assumptions and limitations
 
+- PR 33 ran only the new completion-client model and its four controls locally;
+  unchanged server/Alloy model evidence is inherited from the exact checked PR 32
+  parent. The full runner now configures 25 positive TLC checks and 64 negative
+  controls; that updated full suite has not been rerun locally in PR 33. See the
+  [client checkpoint and exact commands](../../docs/event-operations/task-completion-client-contract.md).
+  The model does not establish client authorization, text validation, HTTP rollback,
+  arbitrary JavaScript interleavings or durable offline recovery.
 - Time is a bounded integer abstraction. Application tests must cover IANA timezone conversion,
   daylight-saving changes, UTC persistence, recurrence, and event-local presentation.
 - A reservation confirmation is one atomic transition. PostgreSQL exclusion constraints and
