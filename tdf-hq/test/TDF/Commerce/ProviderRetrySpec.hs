@@ -57,6 +57,7 @@ import qualified TDF.Commerce.ProviderExecutionStore as Execution
 import qualified TDF.Commerce.ProviderEventStore as Event
 import qualified TDF.Commerce.ProviderEventWorker as EventWorker
 import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
+import qualified TDF.Commerce.RefundSafetySpec as RefundSafety
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
 import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer)
 import qualified TDF.Server.PaymentAvailability as Availability
@@ -373,6 +374,7 @@ spec = do
   providerTransportSpec
   notificationMinimizationSpec
   notificationIdentitySpec
+  RefundSafety.spec
   configured <- runIO (lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL")
   case configured of
     Nothing -> pure ()
@@ -389,6 +391,7 @@ spec = do
         captureReplaySpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
+        RefundSafety.databaseSpec captureFixture
         it "serializes different keys and permits only one active attempt" $ \pool -> do
           creation <- newCheckout pool
           results <- concurrently

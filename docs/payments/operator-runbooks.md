@@ -177,6 +177,18 @@ requires new-contact gates and must not be manually labeled paid or declined to 
 6. On authoritative success, append state/ledger evidence, allocate refund across tax/commission/seller liability, create the SRI credit-note workflow, and notify the customer.
 7. Never change fulfillment/history generically to manufacture a refund.
 
+The [refund execution fence](../adr/0128-refund-execution-fence.md) grants only
+one provider execution permit. Repeating approval on `processing` is a read of
+the held state, not another POST or a successful refund. A mismatch, timeout,
+unknown response or crash after claiming keeps the amount reserved. Historical
+`failed` rows also remain reserved and cannot be cancelled or reissued through
+the store because their original outcome may be uncertain. Query the original
+provider/capture/refund identity and escalate unresolved evidence; do not clear
+the hold by SQL or use a new idempotency key. This increment does not implement
+automatic held-refund resolution. Drain older refund handlers before rollout;
+disable affected refund commands before any rollback to the previous binary.
+See [test evidence and limits](refund-execution-safety-2026-09-16.md).
+
 ## 7. Dispute and chargeback
 
 1. Ingest or manually register the provider dispute ID, kind, amount, currency, reason and due date.

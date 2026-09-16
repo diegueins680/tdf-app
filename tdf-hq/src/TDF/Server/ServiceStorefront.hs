@@ -1465,11 +1465,19 @@ approveServiceRefundHandler user rawRefundId = do
           pending <- liftIO $ flip runSqlPool envPool $
             Refund.recordRefundPending refundRef (proRefundId outcome) now
           either (throwError . refundConflictError) (const (pure ())) pending
-        providerStatus -> do
-          liftIO $ flip runSqlPool envPool $
-            Refund.recordRefundFailure
-              refundRef ("paypal_" <> T.toLower providerStatus) now
-          throwError err502 { errBody = "PayPal did not complete the refund" }
+        _ -> do
+          -- Retain a matched refund ID for read-only reconciliation. An unknown
+          -- outcome must not release funds or permit another refund POST.
+          held <- liftIO $ flip runSqlPool envPool $ do
+            pending <- Refund.recordRefundPending refundRef (proRefundId outcome) now
+            case pending of
+              Left message -> pure (Left message)
+              Right () -> do
+                Refund.recordRefundFailure refundRef "paypal_refund_status_unverified" now
+                pure (Right ())
+          either (throwError . refundConflictError) (const (pure ())) held
+          throwError err502
+            { errBody = "Refund outcome requires reconciliation; do not resubmit" }
       updated <- liftIO $ flip runSqlPool envPool $ Refund.loadRefund refundRef
       maybe (throwError err500 { errBody = "Refund could not be reloaded" })
         (pure . serviceRefundToDTO orderNumber) updated

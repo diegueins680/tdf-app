@@ -211,8 +211,9 @@ export default function MerchAdminPage() {
                 </Stack>
                 <Typography variant="body2" color="text.secondary">{language === 'en' ? 'Requested by' : 'Solicitado por'} {refund.requestedByName}{refund.approvedByName ? ` · ${language === 'en' ? 'Approved by' : 'Aprobado por'} ${refund.approvedByName}` : ''}</Typography>
                 {refund.requestNote && <Typography>{refund.requestNote}</Typography>}
-                {!refund.executionAvailable && <Alert severity="info">{language === 'en' ? 'Provider execution is unavailable; no money has moved from this workflow.' : 'La ejecución con el proveedor no está disponible; este flujo no ha movido dinero.'}</Alert>}
-                {['requested', 'approved', 'failed'].includes(refund.status) && <>
+                {!refund.executionAvailable && <Alert severity="info">{language === 'en' ? 'Provider execution is unavailable here. Check the original refund evidence to confirm its financial outcome.' : 'La ejecución con el proveedor no está disponible aquí. Consulta la evidencia original del reembolso para confirmar su estado financiero.'}</Alert>}
+                {(refund.status === 'processing' || refund.status === 'failed') && <Alert severity="warning">{language === 'en' ? 'Funds remain reserved in the refundable balance until the original refund is reconciled. Do not cancel or submit another refund.' : 'Los fondos siguen reservados en el saldo reembolsable hasta conciliar el reembolso original. No lo canceles ni envíes otro reembolso.'}</Alert>}
+                {(refund.status === 'requested' || refund.status === 'approved') && <>
                   <TextField multiline minRows={2} required inputProps={{ minLength: 10, maxLength: 2000 }} label={language === 'en' ? 'Independent review note' : 'Nota de revisión independiente'} value={reviewNote} onChange={(event) => setRefundReviewNotes({ ...refundReviewNotes, [refund.id]: event.target.value })} />
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                     {refund.status === 'requested' && <Button variant="contained" disabled={reviewNote.trim().length < 10 || reviewRefund.isPending} onClick={() => reviewRefund.mutate({ id: refund.id, decision: 'approve' })}>{language === 'en' ? 'Approve request only' : 'Aprobar solo la solicitud'}</Button>}
