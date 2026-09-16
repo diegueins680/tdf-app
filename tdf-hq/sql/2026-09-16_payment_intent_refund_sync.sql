@@ -38,7 +38,7 @@ BEGIN
   WHERE attempt.payment_intent_id = target_intent AND refund.status = 'succeeded';
   IF verified_total = intent.refunded_minor THEN RETURN; END IF;
   IF verified_total < intent.refunded_minor OR verified_total > intent.captured_minor
-    OR intent.status NOT IN ('captured','partially_refunded','refunded','disputed','chargeback') THEN
+    OR intent.status NOT IN ('captured','partially_captured','partially_refunded','refunded','disputed','chargeback') THEN
     RAISE EXCEPTION 'Verified refunds conflict with canonical captured balance' USING ERRCODE = '23514';
   END IF;
   -- Do not erase a dispute/chargeback state while recording financial evidence.
@@ -50,7 +50,7 @@ BEGIN
     status = next_status, updated_at = clock_timestamp() WHERE id = target_intent;
   INSERT INTO commerce_payment_state_history
     (payment_intent_id, from_status, to_status, event_type, actor_type, correlation_id, occurred_at)
-    VALUES (target_intent, intent.status, next_status, 'refund_verified', 'provider', correlation, clock_timestamp());
+    VALUES (target_intent, intent.status, next_status, 'refund_completion_verified', 'provider', correlation, clock_timestamp());
 END
 $$;
 

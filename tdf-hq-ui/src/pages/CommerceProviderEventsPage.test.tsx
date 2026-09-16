@@ -316,6 +316,26 @@ describe('CommerceProviderEventsPage', () => {
     });
   });
 
+  it('labels both environments on every financial summary family', async () => {
+    const overview = buildOverview();
+    overview.cpoSettlements = ['sandbox', 'production'].map((cssEnvironment) => ({ ...overview.cpoSettlements[0]!, cssEnvironment }));
+    overview.cpoRefunds = ['sandbox', 'production'].map((crfEnvironment) => ({ ...overview.cpoRefunds[0]!, crfEnvironment }));
+    overview.cpoDisputes = ['sandbox', 'production'].map((cdsEnvironment) => ({ ...overview.cpoDisputes[0]!, cdsEnvironment }));
+    overview.cpoSellerBalances = ['sandbox', 'production'].map((csbEnvironment) => ({ ...overview.cpoSellerBalances[0]!, csbEnvironment }));
+    overview.cpoPayouts = ['sandbox', 'production'].map((cpsEnvironment) => ({ ...overview.cpoPayouts[0]!, cpsEnvironment }));
+    overview.cpoReconciliationExceptions = ['sandbox', 'production'].map((crsEnvironment) => ({ ...overview.cpoReconciliationExceptions[0]!, crsEnvironment }));
+    getPaymentOverviewMock.mockResolvedValue(overview);
+    await act(async () => { await queryClient.invalidateQueries(); });
+    await waitFor(() => {
+      const headings = Array.from(container.querySelectorAll('.MuiTypography-subtitle2')).map((node) => node.textContent);
+      for (const environment of ['sandbox', 'production']) {
+        for (const suffix of ['reported', 'processing', 'inquiry', 'pending', 'pending_review', 'open']) {
+          expect(headings.some((heading) => heading?.includes(`paypal · ${environment} · ${suffix}`))).toBe(true);
+        }
+      }
+    });
+  });
+
   it('labels canonical totals by environment and marks legacy responses as unknown', async () => {
     const overview = buildOverview();
     const summary = overview.cpoPaymentIntents[0]!;

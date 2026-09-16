@@ -183,7 +183,7 @@ jobs:
     env:
       REQUIRE_STACK: '1'
       TDF_TEST_POSTGRES_HOST: postgres
-      PGPASSWORD: postgres
+      TDF_TEST_POSTGRES_PASSWORD: postgres
       STACK_ROOT: ${{ github.workspace }}/.stack-root
       BACKEND_BINARY_OUT: ${{ github.workspace }}/tdf-hq/.release/tdf-hq-exe
     steps:

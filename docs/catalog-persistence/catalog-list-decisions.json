@@ -594,22 +594,22 @@
       "reviewed": true
     },
     {
-      "id": "3f29362597ae742d63c2",
+      "id": "c0a63f75a0ba080e97af",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger. Reviewed reconciled manifest: preserves all 102 main entries and their order and metadata, adds only the three payment migrations, and passes 65 manifest/CI tests without duplicate identifiers.",
+      "justification": "Migration identifiers and ordered script paths are deployment execution mechanics, not user-selectable business catalogs. Individually reviewed the appended 2026-09-16 payment-intent refund synchronization migration: prior entries, order and metadata are unchanged; its introduction f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b is an ancestor containing the SQL path. The additive migration and its preservation-only rollback passed PostgreSQL reconciliation, replay and inconsistent-amount tests. Manifest and CI-policy tests passed.",
       "reviewed": true,
       "reviewMethod": "source-and-manifest-review",
-      "reviewBatch": "branch-audit-2026-09-15",
+      "reviewBatch": "refund-sync-manifest-review-2026-09-16",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 105,
+        "valueCount": 106,
         "consumerCount": 33,
         "exactDuplicateIds": [],
         "similarCandidateIds": []

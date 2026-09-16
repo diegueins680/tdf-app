@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 test('PostgreSQL runner uses the CI service and deletes only its newly created test database', () => {
   const script = `
     . "$1"
-    createdb() { echo "createdb $*"; return "$CREATE_RESULT"; }
+    createdb() { test "$PGPASSWORD" = "$TDF_TEST_POSTGRES_PASSWORD"; echo "createdb $*"; return "$CREATE_RESULT"; }
     psql() { echo "psql $*"; }
     dropdb() { echo "dropdb $*"; }
     docker() { echo unexpected-docker; exit 97; }
@@ -19,7 +19,7 @@ test('PostgreSQL runner uses the CI service and deletes only its newly created t
   `;
   const invoke = (createResult) => spawnSync('sh', ['-eu', '-c', script, 'runner', path.join(root, 'scripts/lib/postgres-test-database.sh')], {
     encoding: 'utf8',
-    env: { PATH: process.env.PATH, GITHUB_ACTIONS: 'true', TDF_TEST_POSTGRES_HOST: 'postgres', PGPASSWORD: 'synthetic-test-only', CREATE_RESULT: createResult },
+    env: { PATH: process.env.PATH, GITHUB_ACTIONS: 'true', TDF_TEST_POSTGRES_HOST: 'postgres', TDF_TEST_POSTGRES_PASSWORD: 'synthetic-test-only', CREATE_RESULT: createResult },
   });
   const owned = invoke('0');
   assert.equal(owned.status, 0, owned.stderr);
@@ -37,6 +37,9 @@ async function source(relativePath) {
 
 test('CI splits component checks and preserves Stack build caches', async () => {
   const workflow = await source('.github/workflows/ci.yml');
+  // General config tests must not inherit the runtime fixture's libpq password.
+  assert.doesNotMatch(workflow, /^      PGPASSWORD:/m);
+  assert.match(workflow, /^      TDF_TEST_POSTGRES_PASSWORD: postgres$/m);
   for (const job of ['repo-quality:', 'ui-quality:', 'mobile-quality:', 'backend-quality:', 'quality:']) {
     assert.match(workflow, new RegExp(`^  ${job}`, 'm'));
   }

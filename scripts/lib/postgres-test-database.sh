@@ -11,7 +11,9 @@ tdf_test_db_init() {
   tdf_test_container=""
   if [ "${GITHUB_ACTIONS:-}" = true ]; then
     test "${TDF_TEST_POSTGRES_HOST:-}" = postgres
-    test -n "${PGPASSWORD:-}"
+    test -n "${TDF_TEST_POSTGRES_PASSWORD:-}"
+    PGPASSWORD=$TDF_TEST_POSTGRES_PASSWORD
+    export PGPASSWORD
     createdb -h postgres -U postgres "$tdf_test_database"
     tdf_test_db_owned=true
     TDF_TEST_DATABASE_URL="host=postgres port=5432 user=postgres dbname=$tdf_test_database"
