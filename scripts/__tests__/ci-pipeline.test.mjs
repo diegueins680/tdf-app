@@ -65,6 +65,16 @@ test('backend quality compiles, tests and exports the binary in one Stack pass',
   assert.doesNotMatch(script, /stack --no-terminal test/);
 });
 
+test('backend quality requires the canonical payment PostgreSQL regressions', async () => {
+  const quality = await source('scripts/quality-backend.sh');
+  const runner = await source('scripts/test-payment-audit-runtime.sh');
+  assert.match(quality, /scripts\/test-payment-audit-runtime\.sh/);
+  assert.match(runner, /TDF_PAYMENT_FALLBACK_DATABASE_URL=/);
+  assert.match(runner, /2026-09-11_payment_intent_runtime_sync\.sql/);
+  assert.match(runner, /--fail-on=empty/);
+  assert.match(runner, /test -x "\$test_binary"/);
+});
+
 test('backend quality exercises public booking concurrency with its tested binary', async () => {
   const workflow = await source('.github/workflows/ci.yml');
   const integration = await source('scripts/test-public-booking-http-concurrency.sh');

@@ -8,6 +8,7 @@ module TDF.Server.PaymentAvailability
   ( ProductFlow(..)
   , availableImplementedPaymentMethods
   , loadRuntimeReadyRoutes
+  , bankTransferInstructionsReady
   ) where
 
 import           Control.Monad (filterM)
@@ -68,7 +69,7 @@ loadRuntimeReadyRoutes request = do
   Env{..} <- ask
   activations <- liftIO $ flip runSqlPool envPool $
     loadProviderActivations (prEnvironment request)
-  filterM (runtimeReady (prEnvironment request))
+  filterM (runtimeReady (prEnvironment request) (prFlow request))
     (routePayments activations (requireCheckoutCompletion request))
 
 requiredCapabilities :: ProductFlow -> [PaymentCapability]
@@ -82,8 +83,8 @@ requiredCapabilities flow =
         ]
       else []
 
-runtimeReady :: Checkout.CheckoutEnvironment -> PaymentRoute -> AppM Bool
-runtimeReady environment route = case routeProvider route of
+runtimeReady :: Checkout.CheckoutEnvironment -> ProductFlow -> PaymentRoute -> AppM Bool
+runtimeReady environment flow route = case routeProvider route of
   Checkout.ProviderDatafast ->
     ((== environment) . ServiceStorefront.sdfEnvironment
       <$> ServiceStorefront.loadServiceDatafastEnv)
@@ -97,7 +98,7 @@ runtimeReady environment route = case routeProvider route of
     inboxKey <- liftIO (minimumEnvLength 32 "COMMERCE_EVENT_ENCRYPTION_KEY")
     pure (configured && webhookId && inboxKey)
   Checkout.ProviderBankTransfer ->
-    liftIO $ (||)
+    liftIO $ bankTransferInstructionsReady flow
       <$> nonEmptyEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
       <*> nonEmptyEnv "MERCH_BANK_TRANSFER_INSTRUCTIONS"
   -- These adapters currently have contract tests but no end-to-end shared
@@ -109,6 +110,11 @@ runtimeReady environment route = case routeProvider route of
   Checkout.ProviderCash -> pure False
   Checkout.ProviderPos -> pure False
   Checkout.ProviderCardano -> pure False
+
+-- Merchandise-specific instructions must never enable another product's rail.
+bankTransferInstructionsReady :: ProductFlow -> Bool -> Bool -> Bool
+bankTransferInstructionsReady flow commerceReady merchReady =
+  commerceReady || (flow == FlowMerchandise && merchReady)
 
 routeLabel :: PaymentRoute -> Maybe Text
 routeLabel route = case (routeProvider route, routeMethod route) of

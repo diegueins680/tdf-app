@@ -354,4 +354,42 @@ describe('CommerceProviderEventsPage', () => {
       'Credenciales reparadas por operador',
     );
   });
+
+  it('shows only capabilities verified for the account environment', async () => {
+    const overview = buildOverview();
+    const production = overview.cpoProviderAccounts[1]!;
+    production.cpaCapabilities = [
+      { cpcPaymentMethod: 'paypal_wallet', cpcCapability: 'one_time', cpcVerificationStatus: 'sandbox_verified', cpcVerifiedAt: null },
+      { cpcPaymentMethod: 'paypal_wallet', cpcCapability: 'capture', cpcVerificationStatus: 'production_verified', cpcVerifiedAt: null },
+    ];
+    getPaymentOverviewMock.mockResolvedValue(overview);
+    await act(async () => { await queryClient.invalidateQueries(); });
+    await waitFor(() => {
+      const card = container.querySelectorAll('[data-testid="commerce-provider-readiness-card"]')[1];
+      expect(card?.textContent).toContain('paypal_wallet/capture');
+      expect(card?.textContent).not.toContain('paypal_wallet/one_time');
+    });
+  });
+
+  it('separates amount components by environment and labels legacy totals as unknown', async () => {
+    const overview = buildOverview();
+    const component = overview.cpoAmountComponents[0]!;
+    overview.cpoAmountComponents = [
+      { ...component, cacEnvironment: 'sandbox', cacAmountMinor: 100 },
+      { ...component, cacEnvironment: 'production', cacAmountMinor: 200 },
+      { ...component, cacEnvironment: undefined, cacAmountMinor: 300 },
+    ];
+    getPaymentOverviewMock.mockResolvedValue(overview);
+    await act(async () => { await queryClient.invalidateQueries(); });
+    await waitFor(() => {
+      const cards = container.querySelectorAll('[data-testid="commerce-amount-component-summary"]');
+      expect(cards).toHaveLength(3);
+      expect(cards[0]?.textContent).toContain('sandbox · tax');
+      expect(cards[0]?.textContent).toContain('1,00');
+      expect(cards[1]?.textContent).toContain('production · tax');
+      expect(cards[1]?.textContent).toContain('2,00');
+      expect(cards[2]?.textContent).toContain('Entorno no informado · tax');
+      expect(cards[2]?.textContent).toContain('3,00');
+    });
+  });
 });

@@ -1268,8 +1268,11 @@ confirmPublicEventTicketDatafastStatus rawEventId rawOrderId mLookupToken rawRes
           then runDB $ Checkout.recordPaymentProcessing
             (tpcCheckout context) attempt Checkout.ProviderDatafast
             (ticketPaymentCorrelationId context Checkout.ProviderDatafast "status") now
-          else runDB $ Checkout.recordPaymentFailure
+          else runDB $ PaymentRuntime.recordProviderPaymentFailure
             (tpcCheckout context) attempt Checkout.ProviderDatafast resultCode
+            (ServiceStorefront.validateDatafastSuccessfulPayment
+              (ticketReference context) (fromIntegral (tpcAmountMinor context))
+              (tpcCurrency context) providerStatus)
             (ticketPaymentCorrelationId context Checkout.ProviderDatafast "status") now
       loadTicketCheckoutDTO orderKey Nothing
 createPublicEventTicketPaypalOrder
@@ -1404,9 +1407,12 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
         "PENDING" -> runDB $ Checkout.recordPaymentProcessing
           (tpcCheckout context) attempt Checkout.ProviderPayPal
           (ticketPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
-        providerStatus -> runDB $ Checkout.recordPaymentFailure
+        providerStatus -> runDB $ PaymentRuntime.recordProviderPaymentFailure
           (tpcCheckout context) attempt Checkout.ProviderPayPal
           ("paypal_" <> T.toLower providerStatus)
+          (ServiceStorefront.validatePaypalSuccessfulCapture
+            (ticketReference context) (fromIntegral (tpcAmountMinor context))
+            (tpcCurrency context) merchantRef outcome)
           (ticketPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
       loadTicketCheckoutDTO (tpcOrderKey context) Nothing
 

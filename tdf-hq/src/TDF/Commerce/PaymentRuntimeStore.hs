@@ -14,12 +14,17 @@ module TDF.Commerce.PaymentRuntimeStore
   , operationCapabilities
   , providerOperationCapabilities
   , productFlowForDomain
+  , recordProviderPaymentFailure
+  , providerConfirmsNoCharge
   ) where
 
+import           Control.Monad.IO.Class (liftIO)
+import           Data.Either (isRight)
 import           Data.Text (Text)
+import           Data.Time (UTCTime)
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql
-  ( Single(..), SqlPersistT, rawSql, transactionSave, transactionUndo )
+  ( Single(..), SqlPersistT, rawExecute, rawSql, transactionSave, transactionUndo )
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentIntentStore as Intent
@@ -27,6 +32,7 @@ import           TDF.Commerce.ProviderCapabilities
   ( PaymentCapability(..), PaymentMethod(..), PaymentRoute(..)
   , PaymentRouteRequest(..), ProductFlow(..), routePayments )
 import           TDF.Commerce.ProviderCapabilityStore (loadProviderActivations)
+import           TDF.Commerce.StateMachine (PaymentEvent(..), PaymentLifecycle(..), PaymentState(..))
 
 beginPaymentAttempt
   :: Checkout.PaymentAttemptCreation
@@ -58,6 +64,8 @@ beginPaymentAttempt creation =
         }
       case intentResult of
         Left problem -> transactionUndo >> pure (Left problem)
+        Right intent | paymentState (Intent.pisLifecycle intent) == PaymentFailed ->
+          transactionUndo >> pure (Left "This provider definitively declined; use another verified provider")
         Right intent -> do
           attemptResult <- Checkout.beginPaymentAttempt creation
           case attemptResult of
@@ -69,6 +77,75 @@ beginPaymentAttempt creation =
               case bindingResult of
                 Left problem -> transactionUndo >> pure (Left problem)
                 Right () -> transactionSave >> pure (Right attempt)
+
+-- Only authenticated status/capture responses for an already-bound resource
+-- may enter here. Transport/authentication errors use recordPaymentFailure
+-- directly and keep the canonical intent active. Binding validation is the
+-- same amount/currency/order/merchant validation used by the success path.
+recordProviderPaymentFailure
+  :: Checkout.CheckoutReference
+  -> Checkout.PaymentAttemptReference
+  -> Checkout.PaymentProvider
+  -> Text
+  -> Either Text ()
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO ()
+recordProviderPaymentFailure checkout attempt provider code binding correlation now
+  | not (providerConfirmsNoCharge provider code && isRight binding) =
+      Checkout.recordPaymentFailure checkout attempt provider code correlation now
+  | otherwise = do
+    -- Serialize against fallback creation, which also locks the checkout first.
+    _ <- rawSql "SELECT id::text FROM commerce_checkout_session WHERE id = ?::uuid FOR UPDATE"
+      [PersistText (Checkout.checkoutReferenceId checkout)] :: SqlPersistT IO [Single Text]
+    rows <- rawSql
+      "SELECT intent.id::text, intent.status FROM commerce_payment_intent intent\
+      \ JOIN commerce_payment_attempt attempt ON attempt.payment_intent_id = intent.id\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = intent.checkout_id\
+      \ WHERE attempt.id = ?::uuid AND attempt.checkout_id = ?::uuid\
+      \ AND intent.checkout_id = attempt.checkout_id AND intent.provider = attempt.provider\
+      \ AND attempt.provider = ? AND attempt.environment = checkout.environment\
+      \ AND intent.amount_minor = attempt.amount_minor AND intent.currency = attempt.currency\
+      \ AND intent.authorized_minor = 0 AND intent.captured_minor = 0\
+      \ AND attempt.status <> 'succeeded' FOR UPDATE OF intent, attempt"
+      [ PersistText (Checkout.paymentAttemptReferenceId attempt)
+      , PersistText (Checkout.checkoutReferenceId checkout)
+      , PersistText (Checkout.paymentProviderText provider)
+      ] :: SqlPersistT IO [(Single Text, Single Text)]
+    case rows of
+      [(Single _, Single "failed")] -> pure ()
+      [(Single intentId, Single _)] -> do
+        result <- Intent.transitionPaymentIntent (Intent.PaymentIntentReference intentId)
+          PaymentFailureConfirmed "provider" correlation now
+        either (const reject) (const (pure ())) result
+        retireAttempts
+        Checkout.recordPaymentFailure checkout attempt provider code correlation now
+      -- Never retire a captured/authorized or mismatched intent on a decline.
+      _ -> reject
+  where
+    reject = liftIO (ioError (userError "Confirmed decline does not match an unpaid canonical intent"))
+    -- A PayPal capture and its earlier create attempt share this intent.
+    -- Retire both so legacy "other active provider" guards see the same result.
+    retireAttempts = rawExecute
+      "UPDATE commerce_payment_attempt SET status = 'failed', failure_code = ?, updated_at = ?\
+      \ WHERE payment_intent_id = (SELECT payment_intent_id FROM commerce_payment_attempt\
+      \ WHERE id = ?::uuid) AND checkout_id = ?::uuid AND provider = ?\
+      \ AND status <> 'succeeded'"
+      [ PersistText code, PersistUTCTime now
+      , PersistText (Checkout.paymentAttemptReferenceId attempt)
+      , PersistText (Checkout.checkoutReferenceId checkout)
+      , PersistText (Checkout.paymentProviderText provider)
+      ]
+
+-- Explicit documented declines only, not broad error prefixes or generic FAILED.
+-- Sources: PayPal capture_status; OPPWA result codes (see review repair runbook).
+providerConfirmsNoCharge :: Checkout.PaymentProvider -> Text -> Bool
+providerConfirmsNoCharge provider code = case (provider, code) of
+  (Checkout.ProviderPayPal, "paypal_declined") -> True
+  (Checkout.ProviderDatafast, "800.100.151") -> True -- invalid card
+  (Checkout.ProviderDatafast, "800.100.153") -> True -- invalid CVV
+  (Checkout.ProviderDatafast, "800.100.155") -> True -- insufficient credit
+  _ -> False
 
 validateCanonicalRoute
   :: Checkout.PaymentAttemptCreation

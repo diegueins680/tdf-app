@@ -4,6 +4,7 @@
 module TDF.Server.CommerceOperations
   ( commerceOperationsServer
   , loadPaymentIntentSummaries
+  , loadAmountComponentSummaries
   , validateProviderEventReplayReason
   ) where
 
@@ -151,16 +152,19 @@ loadAmountComponentSummaries
   :: SqlPersistT IO [CommerceAmountComponentSummaryDTO]
 loadAmountComponentSummaries = do
   rows <- rawSql
-    "SELECT component_type, source, currency, COUNT(*)::bigint,\
-    \ COALESCE(SUM(amount_minor), 0)::bigint\
-    \ FROM commerce_payment_amount_component\
-    \ GROUP BY component_type, source, currency\
-    \ ORDER BY currency, component_type, source"
+    "SELECT checkout.environment, component.component_type, component.source,\
+    \ component.currency, CAST(COUNT(*) AS bigint),\
+    \ CAST(COALESCE(SUM(component.amount_minor), 0) AS bigint)\
+    \ FROM commerce_payment_amount_component component\
+    \ JOIN commerce_payment_intent intent ON intent.id = component.payment_intent_id\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = intent.checkout_id\
+    \ GROUP BY checkout.environment, component.component_type, component.source, component.currency\
+    \ ORDER BY checkout.environment, component.currency, component.component_type, component.source"
     [] :: SqlPersistT IO
-      [(Single Text, Single Text, Single Text, Single Int64, Single Int64)]
+      [(Single Text, Single Text, Single Text, Single Text, Single Int64, Single Int64)]
   pure
-    [ CommerceAmountComponentSummaryDTO componentType source currency count amount
-    | ( Single componentType, Single source, Single currency, Single count
+    [ CommerceAmountComponentSummaryDTO environment componentType source currency count amount
+    | ( Single environment, Single componentType, Single source, Single currency, Single count
       , Single amount ) <- rows
     ]
 

@@ -74,7 +74,8 @@ instance ToJSON CommercePaymentIntentSummaryDTO
 instance FromJSON CommercePaymentIntentSummaryDTO
 
 data CommerceAmountComponentSummaryDTO = CommerceAmountComponentSummaryDTO
-  { cacComponentType :: Text
+  { cacEnvironment   :: Text
+  , cacComponentType :: Text
   , cacSource        :: Text
   , cacCurrency      :: Text
   , cacCount         :: Int64

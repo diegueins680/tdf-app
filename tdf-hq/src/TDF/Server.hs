@@ -11293,8 +11293,11 @@ confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = d
             (sbpcCheckout context) attempt Checkout.ProviderDatafast
             (serviceBookingPaymentCorrelationId context Checkout.ProviderDatafast "status")
             now
-          else runDB $ Checkout.recordPaymentFailure
+          else runDB $ PaymentRuntime.recordProviderPaymentFailure
             (sbpcCheckout context) attempt Checkout.ProviderDatafast resultCode
+            (ServiceStorefront.validateDatafastSuccessfulPayment
+              (toPathPiece (sbpcBookingKey context)) (fromIntegral (sbpcDepositMinor context))
+              (sbpcCurrency context) providerStatus)
             (serviceBookingPaymentCorrelationId context Checkout.ProviderDatafast "status")
             now
       loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
@@ -11435,9 +11438,12 @@ capturePublicBookingPaypalOrder
           (sbpcCheckout context) attempt Checkout.ProviderPayPal
           (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
           now
-        status -> runDB $ Checkout.recordPaymentFailure
+        status -> runDB $ PaymentRuntime.recordProviderPaymentFailure
           (sbpcCheckout context) attempt Checkout.ProviderPayPal
           ("paypal_" <> T.toLower status)
+          (ServiceStorefront.validatePaypalSuccessfulCapture
+            (toPathPiece (sbpcBookingKey context)) (fromIntegral (sbpcDepositMinor context))
+            (sbpcCurrency context) merchantRef outcome)
           (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
           now
       loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
@@ -17380,7 +17386,15 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
           if pending
             then Checkout.recordPaymentProcessing checkout attempt Checkout.ProviderDatafast
               ("marketplace-datafast:" <> toPathPiece orderKey) now
-            else Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast code
+            else PaymentRuntime.recordProviderPaymentFailure checkout attempt Checkout.ProviderDatafast code
+              (do
+                either (const (Left "Datafast amount or currency mismatch")) Right $
+                  validateDatafastSuccessfulPaymentAmountAndCurrency
+                    (ME.marketplaceOrderTotalUsdCents order) (ME.marketplaceOrderCurrency order)
+                    (dfpAmount statusResp) (dfpCurrency statusResp)
+                unless (dfpMerchantTransactionId statusResp == Just (toPathPiece orderKey))
+                  (Left "Datafast order mismatch")
+                unless (isJust paymentId) (Left "Datafast payment ID missing"))
               ("marketplace-datafast:" <> toPathPiece orderKey) now
     [] -> pure ()
     _ -> throwError (marketplaceCheckoutInternal
@@ -17645,8 +17659,12 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
     "PENDING" -> recordPendingPaypalCapture
       checkout attempt orderKey order outcome correlationId now
     _ -> liftIO $ flip runSqlPool envPool $ do
-      Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
-        ("paypal_" <> T.toLower status) correlationId now
+      PaymentRuntime.recordProviderPaymentFailure checkout attempt Checkout.ProviderPayPal
+        ("paypal_" <> T.toLower status)
+        (ServiceStorefront.validatePaypalSuccessfulCapture
+          (toPathPiece orderKey) (ME.marketplaceOrderTotalUsdCents order)
+          (ME.marketplaceOrderCurrency order) merchantRef outcome)
+        correlationId now
       update orderKey
         [ ME.MarketplaceOrderStatus =. "paypal_failed"
         , ME.MarketplaceOrderUpdatedAt =. now

@@ -148,6 +148,7 @@ import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import qualified TDF.Server.Merch as MerchServer
@@ -2111,6 +2112,40 @@ main = hspec $ do
                       , ("sandbox", "captured", "USD", 2, 7000, 7000, 7000, 500)
                       ]
 
+        it "aggregates amount components only within the checkout environment" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                summaries <- runSqlPool (do
+                    rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY, environment TEXT NOT NULL)" []
+                    rawExecute "CREATE TABLE commerce_payment_intent (id TEXT PRIMARY KEY, checkout_id TEXT)" []
+                    rawExecute "CREATE TABLE commerce_payment_amount_component (payment_intent_id TEXT, component_type TEXT, source TEXT, currency TEXT, amount_minor BIGINT)" []
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('s','sandbox'),('p','production')" []
+                    rawExecute "INSERT INTO commerce_payment_intent VALUES ('si','s'),('pi','p')" []
+                    rawExecute "INSERT INTO commerce_payment_amount_component VALUES ('si','tax','tax_document','USD',100),('si','tax','tax_document','USD',200),('pi','tax','tax_document','USD',900)" []
+                    CommerceOperationsServer.loadAmountComponentSummaries) pool
+                summaries `shouldBe`
+                    [ CommerceOperationsAPI.CommerceAmountComponentSummaryDTO "production" "tax" "tax_document" "USD" 1 900
+                    , CommerceOperationsAPI.CommerceAmountComponentSummaryDTO "sandbox" "tax" "tax_document" "USD" 2 300
+                    ]
+
+    describe "manual transfer runtime configuration" $ do
+        it "uses merchandise instructions only for merchandise and general instructions for all flows" $
+            forM_ [minBound .. maxBound] $ \flow -> do
+                PaymentAvailability.bankTransferInstructionsReady flow False True
+                    `shouldBe` (flow == ProviderCapabilities.FlowMerchandise)
+                PaymentAvailability.bankTransferInstructionsReady flow True False `shouldBe` True
+                PaymentAvailability.bankTransferInstructionsReady flow False False `shouldBe` False
+
+    describe "authoritative provider declines" $ do
+        it "recognizes explicit no-charge responses without treating outages or mismatches as declines" $ do
+            PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderPayPal "paypal_declined" `shouldBe` True
+            PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderDatafast "800.100.151" `shouldBe` True
+            PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderDatafast "800.100.153" `shouldBe` True
+            PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderDatafast "800.100.155" `shouldBe` True
+            forM_ ["paypal_failed", "paypal_capture_request", "provider_binding_mismatch", "UNKNOWN"] $ \code ->
+                PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderPayPal code `shouldBe` False
+            forM_ ["900.100.300", "900.100.400", "800.100.190", "000.200.000"] $ \code ->
+                PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderDatafast code `shouldBe` False
+
     describe "marketplace contact checkout boundary" $ do
         it "retains checkout preparation without selecting a payment rail or changing payment state" $ do
             source <- readFile "src/TDF/Server.hs"
@@ -2410,6 +2445,25 @@ main = hspec $ do
               , ProviderCapabilities.CapabilitySellerPayouts
               ] $ \capability ->
                 ProviderCapabilities.routePayments [missing capability] request `shouldBe` []
+
+        it "requires recurring verification in addition to completion for subscriptions" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowSubscription
+                  , ProviderCapabilities.prRequiredCapabilities = []
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                oneTimeOnly = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= ProviderCapabilities.CapabilityRecurring) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            ProviderCapabilities.prRequiredCapabilities request `shouldContain`
+                [ProviderCapabilities.CapabilityRecurring, ProviderCapabilities.CapabilityCapture]
+            ProviderCapabilities.routePayments [oneTimeOnly] request `shouldBe` []
+            map ProviderCapabilities.routeProvider
+                (ProviderCapabilities.routePayments [verified] request)
+                `shouldBe` [CheckoutStore.ProviderPayPal]
 
         it "derives routing policy from the immutable checkout domain" $ do
             PaymentRuntimeStore.productFlowForDomain "event_ticket_order"

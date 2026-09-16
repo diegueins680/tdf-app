@@ -1226,8 +1226,11 @@ confirmPublicDomoDatafastStatus rawQuoteId mLookupToken rawResourcePath = do
         then runDB $ Checkout.recordPaymentProcessing
           (dpcCheckout context) attempt Checkout.ProviderDatafast
           (domoPaymentCorrelationId context Checkout.ProviderDatafast "status") now
-        else runDB $ Checkout.recordPaymentFailure
+        else runDB $ PaymentRuntime.recordProviderPaymentFailure
           (dpcCheckout context) attempt Checkout.ProviderDatafast resultCode
+          (ServiceStorefront.validateDatafastSuccessfulPayment
+            (domoReference context) (fromIntegral (dpcAmountMinor context))
+            (dpcCurrency context) providerStatus)
           (domoPaymentCorrelationId context Checkout.ProviderDatafast "status") now
       loadDomoQuoteDTO (dpcQuoteId context) Nothing
 
@@ -1359,9 +1362,12 @@ capturePublicDomoPaypalOrder rawQuoteId mLookupToken request = do
         "PENDING" -> runDB $ Checkout.recordPaymentProcessing
           (dpcCheckout context) attempt Checkout.ProviderPayPal
           (domoPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
-        providerStatus -> runDB $ Checkout.recordPaymentFailure
+        providerStatus -> runDB $ PaymentRuntime.recordProviderPaymentFailure
           (dpcCheckout context) attempt Checkout.ProviderPayPal
           ("paypal_" <> T.toLower providerStatus)
+          (ServiceStorefront.validatePaypalSuccessfulCapture
+            (domoReference context) (fromIntegral (dpcAmountMinor context))
+            (dpcCurrency context) merchantRef outcome)
           (domoPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
       loadDomoQuoteDTO (dpcQuoteId context) Nothing
 

@@ -8955,8 +8955,9 @@ components:
     CommerceAmountComponentSummary:
       type: object
       additionalProperties: false
-      required: [cacComponentType, cacSource, cacCurrency, cacCount, cacAmountMinor]
+      required: [cacEnvironment, cacComponentType, cacSource, cacCurrency, cacCount, cacAmountMinor]
       properties:
+        cacEnvironment: { type: string, enum: [sandbox, production] }
         cacComponentType: { type: string, enum: [subtotal, discount, tax, customer_fee, provider_fee, platform_commission, seller_payable, withholding, refund, chargeback, fx_adjustment] }
         cacSource: { type: string, enum: [quote, provider_estimate, provider_actual, tax_document, manual_adjustment] }
         cacCurrency: { type: string, minLength: 3, maxLength: 3 }
