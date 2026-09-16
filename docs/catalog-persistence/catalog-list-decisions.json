@@ -4,6 +4,150 @@
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "decisions": [
     {
+      "id": "6ab46a9a823aa52bd8e8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Treating callable transport methods as editable values could redirect authenticated commands or invalidate receipt binding.",
+      "justification": "EventOperations is an object of seven typed API functions, not a selectable business list. Its keys dispatch existing canonical endpoints; each function validates its own request and receipt.",
+      "reviewed": true
+    },
+    {
+      "id": "ed9e380a46b4f315e551",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Editable local phases could bypass deliberate confirmation, single-flight guards or exact uncertain replay.",
+      "justification": "EventRaciEditor Phase discriminates transient React control flow, not event lifecycle or business workflow records. RaciWebEditor models its confirmation, context and retry semantics; labels remain localized separately.",
+      "reviewed": true
+    },
+    {
+      "id": "2922d4c2e6bdb97f098e",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_lifecycle_transition_policy and event_operation_event_state",
+      "risk": "Unreviewed lifecycle additions could bypass approval, public-visibility or settlement guards.",
+      "justification": "The foundation constrains the fourteen canonical operation states used by the persisted transition policy and EventLifecycle model. These are closed executable protocol states, not arbitrary event-type labels; extensions require a reviewed model, migration and compatible handlers.",
+      "reviewed": true
+    },
+    {
+      "id": "f573cb9f122158b2cbb7",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_lifecycle_transition_policy.required_authority",
+      "risk": "An unsupported authority code could defeat separation of duties or silently deny a valid transition.",
+      "justification": "Owner, event approver, finance approver and records manager are interpreted authorization discriminants of the canonical transition policy. Their assignments are contextual data; expanding their executable meaning requires reviewed authorization code and formal checks.",
+      "reviewed": true
+    },
+    {
+      "id": "eff124c79568650e3105",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_relationship.relationship_kind",
+      "risk": "Treating a coproducer as an owner can silently expand read or write authority.",
+      "justification": "The three ownership/coproduction relationship kinds are security semantics consumed by scoped authorization. Actual parties, validity windows, revocation and provenance are persisted in the canonical relationship table, not hardcoded in the list.",
+      "reviewed": true
+    },
+    {
+      "id": "2777a364ae6e4c1869fc",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_grant.scope_code",
+      "risk": "An unrecognized or conflated capability could authorize financial or assignment mutations beyond a grant's scope.",
+      "justification": "The eleven event/task/booking/contract/finance/audit capability codes are a fail-closed authorization registry. Grant recipients, resources, issuers and expiration remain database records; adding a capability requires corresponding checked enforcement, not catalog editing alone.",
+      "reviewed": true
+    },
+    {
+      "id": "a0240362e8e900f0696d",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_grant.resource_kind",
+      "risk": "Ambiguous resource kinds can broaden an object-specific grant into event-wide access.",
+      "justification": "Grant resource discriminants determine the identity and authorization boundary, including the separate constraint requiring no resource_id for event scope and a nonblank identity otherwise. They are not discovery categories or user-editable venue types.",
+      "reviewed": true
+    },
+    {
+      "id": "2ed3195488b358f7b1e3",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_command_receipt.outcome",
+      "risk": "Changing receipt outcome semantics could present rejected work as committed or corrupt idempotent replay.",
+      "justification": "Accepted, rejected and conflict are immutable command-receipt protocol outcomes coupled to request hashes and transaction results. The runtime creates evidence rows; administrators cannot invent additional success outcomes through a business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "902637e5c6c5636e6ce9",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_audit_event.outcome",
+      "risk": "An unrestricted outcome could conceal an override or bypass mandatory justification in immutable evidence.",
+      "justification": "The audit outcome registry distinguishes accepted, rejected, conflict and override; the adjacent database constraint requires a nonblank reason for override. Values encode audit semantics rather than customizable event categories.",
+      "reviewed": true
+    },
+    {
+      "id": "1d177c7618f2ff2c378a",
+      "classification": "governed-reference-data",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_session.attendance_mode",
+      "risk": "Unsupported attendance modes can produce inconsistent physical/virtual venue and access behavior.",
+      "justification": "Physical, virtual and hybrid are the canonical session attendance discriminants required by the event specification. Each session persists its selection; this migration constrains that reference domain and is not a separate editable event-type catalog. Extensions require coordinated schema and consumer review.",
+      "reviewed": true
+    },
+    {
+      "id": "fb4bd6f8670db424cc73",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_session.visibility",
+      "risk": "Treating visibility as an arbitrary label can disclose private or role-restricted resources.",
+      "justification": "Public, unlisted, private, internal and role_restricted are privacy policy discriminants, not presentation labels. Session records persist the selected scope; new scopes require fail-closed readers, authorization tests and compatible formal visibility semantics.",
+      "reviewed": true
+    },
+    {
+      "id": "be354ff41d06ef751915",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_raci_assignment.raci_role",
+      "risk": "Additional unchecked roles could evade the exactly-one Accountable and required Responsible constraints.",
+      "justification": "RACI's four roles have fixed responsibility semantics verified by TaskRaci and TaskCommit, while assignees and validity windows are canonical persisted rows. The role constraint cannot be expanded by a generic business-list editor independently of these invariants.",
+      "reviewed": true
+    },
+    {
+      "id": "af3dc157ec31ebaa9385",
+      "classification": "security-system-registry",
+      "disposition": "retain-versioned-database-constraint",
+      "specializedModel": "event_operation_task_override.override_kind",
+      "risk": "An unrestricted exception category could bypass dependency or responsibility safety without an applicable policy.",
+      "justification": "Blocked completion and responsibility exception identify the two schema-level override classes bound to a task version, authorizer, reason and policy reference. This classification does not expose or enable an override command; current preparation completion still rejects overrides.",
+      "reviewed": true
+    },
+    {
+      "id": "9f7714307b6856ea63cf",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Expanding exception details can expose database internals or mishandle cancellation and retryable conflicts.",
+      "justification": "DatabaseFailure is the Haskell exception-classification boundary: SQL serialization/deadlock errors map to TransactionConflict, other synchronous failures to DatabaseUnavailable, and asynchronous cancellation is rethrown. These are sanitized runtime variants, not business catalog entries.",
+      "reviewed": true
+    },
+    {
+      "id": "747165e201d9c11c2215",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "event_logistics_activity.status and EventTaskStatus wire contract",
+      "risk": "A DTO-only status expansion could accept task states unsupported by persisted transitions or completion guards.",
+      "justification": "The five Haskell task constructors encode the existing canonical activity status strings and reject unknown wire values. This typed consumer is not a new status authority; future changes must align canonical task constraints, API schemas, generated consumers and formal transitions.",
+      "reviewed": true
+    },
+    {
+      "id": "b7bf17e6cd7bfdd01325",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "event_operation_raci_assignment.raci_role and EventRaciRole wire contract",
+      "risk": "A client/server role mismatch could misidentify accountability or authorize an unsupported reassignment.",
+      "justification": "The Haskell RACI constructors are an exhaustive typed consumer of the canonical four-role assignment constraint, with explicit JSON conversion and rejection of unknown roles. Assignment identity and scope remain persisted and checked, not owned by this enum.",
+      "reviewed": true
+    },
+    {
       "id": "c3d1e41b543e7cbdaf00",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",

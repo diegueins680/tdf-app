@@ -79,3 +79,21 @@ Rollback reverts only helper/tests/docs. No persisted data, accepted agreements,
 audit history or migration is affected. No merge, deployment, production activation
 or real-money action was performed. The broader event-operations mission remains
 incomplete.
+
+## Subsequent hosted checkpoint
+
+Draft #413 exact `cbbb3da9f20c2314c73a5114b8c0aa943647054e` passed the
+[Linux persona job](https://github.com/diegueins680/tdf-app/actions/runs/35143458319/job/104953603099):
+**114 passed / 12 existing skips / zero unexpected or flaky results**, 232.2s.
+Formal `verify` and aggregate `quality` also passed. The original catalog failure
+remains separate; this is not an all-checks-green claim.
+
+Downloaded JSON attachments provide concrete evidence of the synchronization gap:
+in **dark Linux WebKit**, after cancel focus, `raci-review-paint-before` recorded
+the dialog container's computed opacity **0** and an animation with
+`playState=running`, `pending=true`, `endTime=225`. The final attachment recorded
+opacity **1**, no animations and readiness true. Axe then passed. The light journey
+was already opaque in its first measurement and passed as well. Thus the run
+demonstrates focus can precede paint readiness, but does not reproduce the exact
+original light-theme contrast sample or establish a universal engine root cause.
+No animations or CSS were altered by the readiness helper.
