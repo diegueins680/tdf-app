@@ -578,6 +578,7 @@ import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
+import qualified TDF.Server.EventRelationsSpec as EventRelationsSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 import qualified TDF.Trials.DTO as TrialsDTO
@@ -16915,6 +16916,7 @@ main = hspec $ do
     ServerFanClubSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
+    EventRelationsSpec.spec
     PublicLeadSpec.spec
     WhatsAppHistorySpec.spec
 

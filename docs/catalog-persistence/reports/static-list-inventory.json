@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-16T03:11:37.338Z",
+  "generatedAt": "2026-09-16T03:56:10.440Z",
   "repositoryRoot": ".",
-  "filesScanned": 1395,
+  "filesScanned": 1397,
   "candidateCount": 1122,
   "byClassification": {
     "dynamic-business-catalog": 735,
@@ -3933,7 +3933,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 645,
+      "consumerCount": 647,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4221,7 +4221,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 645,
+      "consumerCount": 647,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5141,7 +5141,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 645,
+      "consumerCount": 647,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -36767,7 +36767,7 @@
       "lines": [
         388
       ],
-      "consumerCount": 647,
+      "consumerCount": 649,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -42597,7 +42597,7 @@
         100,
         109
       ],
-      "consumerCount": 245,
+      "consumerCount": 246,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -45325,7 +45325,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 651,
+      "consumerCount": 653,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -57350,7 +57350,7 @@
       "lines": [
         9878
       ],
-      "consumerCount": 645,
+      "consumerCount": 647,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58139,7 +58139,7 @@
       "lines": [
         10218
       ],
-      "consumerCount": 646,
+      "consumerCount": 648,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58492,7 +58492,7 @@
       "lines": [
         11172
       ],
-      "consumerCount": 263,
+      "consumerCount": 264,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58720,7 +58720,7 @@
       "lines": [
         11187
       ],
-      "consumerCount": 248,
+      "consumerCount": 249,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58941,7 +58941,7 @@
       "lines": [
         11219
       ],
-      "consumerCount": 250,
+      "consumerCount": 251,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -59704,7 +59704,7 @@
         12647,
         12699
       ],
-      "consumerCount": 645,
+      "consumerCount": 647,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -98287,8 +98287,10 @@
       "lines": [
         432
       ],
-      "consumerCount": 2,
-      "backendConsumers": [],
+      "consumerCount": 3,
+      "backendConsumers": [
+        "tdf-hq/test/TDF/Server/EventRelationsSpec.hs"
+      ],
       "webConsumers": [],
       "mobileConsumers": [],
       "automationConsumers": [
@@ -103196,7 +103198,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1615,
+      "line": 1616,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -103207,7 +103209,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1615
+        1616
       ],
       "consumerCount": 54,
       "backendConsumers": [
@@ -105053,7 +105055,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 678,
+      "line": 679,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -105065,7 +105067,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        678
+        679
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -107395,7 +107397,7 @@
       "lines": [
         432
       ],
-      "consumerCount": 151,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -107436,6 +107438,7 @@
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/Server/EventRelationsSpec.hs",
         "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
@@ -107588,7 +107591,7 @@
       "lines": [
         1178
       ],
-      "consumerCount": 645,
+      "consumerCount": 647,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",

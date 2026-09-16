@@ -410,6 +410,7 @@ test-suite tdf-hq-test
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec
+    TDF.Server.EventRelationsSpec
     TDF.Social.FollowSpec
     TDF.Services
     TDF.Services.InstagramMessaging

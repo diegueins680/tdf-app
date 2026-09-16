@@ -199,6 +199,14 @@ describe('SocialEventsAPI', () => {
     );
   });
 
+  it.each(['Accepted', 'Declined'])('omits message edits for a status-only %s response', async (status) => {
+    getMock.mockResolvedValueOnce([{ invitationId: '12', invitationToPartyId: '99' }]);
+    await SocialEventsAPI.respondInvitation('7', '12', status);
+    expect(putMock).toHaveBeenCalledWith('/social-events/events/7/invitations/12', {
+      invitationToPartyId: '99', invitationStatus: status,
+    });
+  });
+
   it('respondInvitation throws when invitation is not found', async () => {
     getMock.mockResolvedValueOnce([]);
 

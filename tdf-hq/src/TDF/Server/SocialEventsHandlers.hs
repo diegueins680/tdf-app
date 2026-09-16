@@ -8,6 +8,7 @@
 module TDF.Server.SocialEventsHandlers (
     publicUpcomingEventsServer,
     collectMatchingRows,
+    replaceLogisticsActivityRelations,
     socialEventsServer,
     stripeWebhookServer,
     validateRsvpPageLimit,
@@ -6691,24 +6692,6 @@ socialEventsServer user =
         validateLogisticsAssignments pool (eacAssignments dto)
         pure (typeVal, titleVal, endVal, placeKey, originKey, destinationKey, modeVal, bufferVal, priorityVal, statusVal, dependencyKeys)
 
-    replaceLogisticsActivityRelations :: EventLogisticsActivityId -> [EventLogisticsAssignmentDTO] -> [EventLogisticsActivityId] -> UTCTime -> SqlPersistT IO ()
-    replaceLogisticsActivityRelations activityKey assignments dependencyKeys now = do
-        deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
-        deleteWhere [EventLogisticsDependencyActivityId ==. activityKey]
-        forM_ assignments $ \assignment -> insert_ EventLogisticsAssignment
-            { eventLogisticsAssignmentActivityId = activityKey
-            , eventLogisticsAssignmentPartyId = cleanMaybeText (elaPartyId assignment)
-            , eventLogisticsAssignmentExternalName = cleanMaybeText (elaExternalName assignment)
-            , eventLogisticsAssignmentExternalPhone = cleanMaybeText (elaExternalPhone assignment)
-            , eventLogisticsAssignmentExternalEmail = cleanMaybeText (elaExternalEmail assignment)
-            , eventLogisticsAssignmentCreatedAt = now
-            }
-        forM_ dependencyKeys $ \dependencyKey -> insert_ EventLogisticsDependency
-            { eventLogisticsDependencyActivityId = activityKey
-            , eventLogisticsDependencyDependsOnActivityId = dependencyKey
-            , eventLogisticsDependencyCreatedAt = now
-            }
-
     verifyLogisticsActivityInternal :: ConnectionPool -> AppConfig -> EventLogisticsActivityId -> Maybe T.Text -> AppM EventRouteVerificationDTO
     verifyLogisticsActivityInternal pool config activityKey checkpoint = do
         activity <- maybe (throwError err404{errBody = "Logistics activity not found"}) pure =<< liftIO (runSqlPool (get activityKey) pool)
@@ -10189,3 +10172,30 @@ generateUniqueTicketCode = do
     case mExisting of
         Nothing -> pure code
         Just _ -> generateUniqueTicketCode
+
+
+replaceLogisticsActivityRelations :: EventLogisticsActivityId -> [EventLogisticsAssignmentDTO] -> [EventLogisticsActivityId] -> UTCTime -> SqlPersistT IO ()
+replaceLogisticsActivityRelations activityKey assignments dependencyKeys now = do
+    deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
+    existing <- selectList [EventLogisticsDependencyActivityId ==. activityKey] []
+    let retained = Set.fromList
+            [eventLogisticsDependencyDependsOnActivityId row | Entity _ row <- existing]
+    -- Keep unchanged edges and their identity: a completion override authorizes
+    -- the existing graph, while the deferred guard must still reject new edges.
+    deleteWhere
+        [ EventLogisticsDependencyActivityId ==. activityKey
+        , EventLogisticsDependencyDependsOnActivityId /<-. dependencyKeys
+        ]
+    forM_ assignments $ \assignment -> insert_ EventLogisticsAssignment
+        { eventLogisticsAssignmentActivityId = activityKey
+        , eventLogisticsAssignmentPartyId = cleanMaybeText (elaPartyId assignment)
+        , eventLogisticsAssignmentExternalName = cleanMaybeText (elaExternalName assignment)
+        , eventLogisticsAssignmentExternalPhone = cleanMaybeText (elaExternalPhone assignment)
+        , eventLogisticsAssignmentExternalEmail = cleanMaybeText (elaExternalEmail assignment)
+        , eventLogisticsAssignmentCreatedAt = now
+        }
+    forM_ (filter (`Set.notMember` retained) dependencyKeys) $ \dependencyKey -> insert_ EventLogisticsDependency
+        { eventLogisticsDependencyActivityId = activityKey
+        , eventLogisticsDependencyDependsOnActivityId = dependencyKey
+        , eventLogisticsDependencyCreatedAt = now
+        }
