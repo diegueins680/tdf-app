@@ -72,6 +72,12 @@ status-lookup gates for bank/DeUna/PayPhone. See
 [integrated-stack verification](stack-integration-2026-09-15.md). This does not
 activate providers or refresh commercial/market findings.
 
+The next continuation removes exception-content logging from payment-event and
+merchandise reservation workers and isolates diagnostic sink failures across the
+three commerce workers. See [ADR 0127](../adr/0127-payment-worker-diagnostic-boundaries.md)
+and [worker diagnostic verification](worker-log-safety-2026-09-15.md). Provider
+activation, financial state changes and commercial research are outside that repair.
+
 ## 2. Capability and access report
 
 | Capability | Result on 2026-09-11 | Evidence and limitation |
