@@ -129,13 +129,87 @@ not the saved evidence. UTC timestamps are completed-log modification times.
 | `npm run typecheck:ui` | 16:54:27Z | Passed, exit 0; in-progress source, before explicit error-contract generation; `/private/tmp/tdf-held-refund-web-typecheck-20260916.log` |
 | `npm run quality:repo`, `7729b00fc` | 17:05:45Z | Passed, exit 0; before the two additional contract tests; `/private/tmp/tdf-held-refund-repo-quality-20260916.log` |
 | `node --test scripts/__tests__/payment-query-report-contract.test.mjs`, source committed as `12439478e` | 17:12:51Z | 8 tests passed, 5.399s, exit 0; `/private/tmp/tdf-held-refund-contract-20260916.log` |
+| `TDF_PROVIDER_RETRY_DATABASE_URL=DEV_URL stack test --fast --rerun-tests --test-arguments='--match=held-refund'`, approved, `tdf-hq` | 17:23:27Z | 51 examples, 0 failures, 1.8327s; includes 18 real DB cases and 33 adapter/handler cases; exit 0; `/private/tmp/tdf-held-refund-db-fix-approved-20260916.log` |
+| `TDF_PROVIDER_RETRY_DATABASE_URL=FINAL_URL sh scripts/test-provider-retry-runtime.sh`, approved | 17:37:52Z | 249 examples, 0 failures, 36.9766s; harness exit 0 including repeat-apply, empty rollback/reapply, operator policy preservation and rejection of used-history rollback; `/private/tmp/tdf-held-refund-db-final-20260916.log` |
+| `stack test --fast --rerun-tests`, `tdf-hq`, `74a8e6b1e` | 17:39:12Z | 2665 examples, 0 failures, 29.3169s; exit 0; no provider-test DB configured; `/private/tmp/tdf-held-refund-backend-full-20260916.log` |
+| `npm run test:ui`, source `12439478e` (then documentation-only commits) | 17:26:24Z | 217 suites / 2072 tests passed, 685.422s, exit 0; `/private/tmp/tdf-held-refund-web-full-20260916.log` |
+| `npm run typecheck` | 17:12:28Z | Web and mobile both executed/passed, exit 0; generated error contracts changed while the command ran, so the later build/mobile CI additionally qualifies them; `/private/tmp/tdf-held-refund-typecheck-final-20260916.log` |
+| `REQUIRE_MOBILE_WORKSPACE=1 npm run test:mobile`, first full run | 17:19:15Z | 327 passed, 2 failed / 68 suites, 731.703s, exit 1; TicketCheckout guest-auth timeout and EventDetailLiveBroadcastLifecycle callback wait; `/private/tmp/tdf-held-refund-mobile-20260916.log` |
+| `npm run test -- --runTestsByPath __tests__/TicketCheckout.test.tsx __tests__/EventDetailLiveBroadcastLifecycle.test.tsx`, `tdf-mobile` | 17:36:23Z | 15 tests / 2 suites passed unchanged, 42.268s, exit 0; `/private/tmp/tdf-held-refund-mobile-rerun-20260916.log` |
+| `REQUIRE_MOBILE_WORKSPACE=1 npm run test:mobile`, final, mobile `b9222df77` | 17:38:36Z | All 329 tests / 68 suites passed unchanged, 56.541s, exit 0; `/private/tmp/tdf-held-refund-mobile-final-20260916.log` |
+| `npm run lint`, `tdf-mobile`, `b9222df77` | 17:36:04Z | Passed with zero-warning policy, exit 0; `/private/tmp/tdf-held-refund-lint-mobile-20260916.log` |
+| `npm run quality:repo`, `74a8e6b1e` | 17:39:48Z | 234 tests passed; formal audit 9801 findings, 0 critical/errors, 387 warnings, 9414 info; exit 0; `/private/tmp/tdf-held-refund-repo-quality-final-20260916.log` |
+| `npm run build --workspace=tdf-hq-ui`, runtime sources unchanged from `12439478e` | 17:40:36Z | TypeScript, Vite and bundle budget passed; Vite 1m30s, 5 preloads / 314060 gzip bytes initial JS; exit 0; `/private/tmp/tdf-held-refund-build-20260916.log` |
+| `node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output docs/catalog-persistence/reports/static-list-inventory.json` | 17:16:50Z | 1438 files, 1136 classified candidates; strict exit 0. JSON inventory generated at 17:16:49.300Z. |
+| Same strict catalog command with `--format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv` | 17:19:15Z | Exit 0; matching reviewed CSV saved. Both report formats committed in `74a8e6b1e`. |
 
-Full backend/real-DB, mobile, full web, final type checks and catalog report results
-are pending. An ongoing full mobile run has already reported a five-second timeout
-in the unchanged `TicketCheckout` guest-auth navigation test; it is not treated as
-passing or hidden by increasing the timeout. Final outcomes must be appended.
+`DEV_URL` is
+`postgresql://postgres@/tdf_provider_retry_test?host=/private/tmp/tdf-held-refund-pg.DJ9udy`;
+`FINAL_URL` uses `/private/tmp/tdf-held-refund-final-pg.Vt5p7T` instead. Both were
+fresh initialized clusters (the final harness started with an empty database).
+Init commands used PostgreSQL 16 `initdb -U postgres --auth=trust --no-locale -E UTF8`,
+`pg_ctl` with a private socket directory and `-h ''`, and `createdb`. Restricted
+startup/socket attempts failed on shared-memory/socket permissions and were
+rerun with approval; no test or gate was weakened. Both task-owned clusters were
+stopped with `pg_ctl -D CLUSTER/data stop -m fast` after verification; synthetic
+data and logs remain available. No existing user database was cleared or stopped.
 
-Remote draft delivery is pending verification. No review is requested yet.
+Other development checks: `--match=refund-safety` compile run at 16:41:18Z passed
+5 examples (0.0034s); `/private/tmp/tdf-held-refund-compile-20260916.log`. The first
+new adapter compile failed at 16:42:01Z; `/private/tmp/tdf-held-refund-unit-20260916.log`.
+The initial real DB failure completed at 16:47:51Z; the restricted socket rerun
+completed at 16:55:50Z (seed 1326528375, 0.0315s). The earlier targeted web command
+without `serviceStorefront.test` passed 17 tests / 2 suites at 16:54:24Z;
+`/private/tmp/tdf-held-refund-web-20260916.log`. These interim results do not replace
+the final suites above. Generating both API clients succeeded three times during
+contract development using openapi-typescript 7.10.1; final files compare identical.
+
+Mobile's first two failures were not reproduced by either the focused rerun or
+the final full suite. The runtime, assertions and timeouts were unchanged (the
+entire mobile diff is one generated type file). Heavy concurrent compilation was
+observed locally; timing sensitivity is an inference, not a proven root cause.
+
+## Draft delivery and CI follow-up
+
+- [Root draft #408](https://github.com/diegueins680/tdf-app/pull/408), base #401,
+  verified OPEN/draft at `8f0fb5edc38f9dcbccfc437683d1b86104cd896e` after push.
+- [Mobile draft #85](https://github.com/diegueins680/TDF-mobile/pull/85), base #82,
+  verified OPEN/draft at `b9222df77d0a187cca4359278704362ec17fb3af` after push.
+  Its own check rollup was empty; the root PR's mobile-quality check succeeded.
+- Required review order: #396 -> #401 -> #408; mobile #82 -> #85, preserving #83's
+  independent newer work for the stack-integration PR. No review request or merge
+  was submitted. Root source references the published mobile commit.
+
+At root `8f0fb5edc`, build, catalog, repo quality, persona E2E, mobile quality,
+API-contract tests/contracts and production-migration validation passed. Backend
+quality was still running. Web quality failed on one unnecessary test-only type
+assertion at HeldRefundRecoveryPanel.test.tsx:66, not on a payment assertion.
+[Failed job](https://github.com/diegueins680/tdf-app/actions/runs/35129106493/job/104905496923).
+Its log is `/private/tmp/tdf-held-refund-ci-ui-approved-20260916.log`; the first
+restricted download failed on connectivity and the approved retry succeeded.
+The CI-repair skill was used; its separate plan helper is unavailable, so the
+one-line plan was supplied directly. The user explicitly approved the fix.
+
+Initial fix `7aa641ccb` used `toBeDisabled()` but this Jest setup does not load that
+matcher: 25/26 targeted tests passed and one failed with TypeError (32.209s, exit 1,
+17:43:39Z, `/private/tmp/tdf-held-refund-web-ci-fix-20260916.log`). Its targeted lint
+passed at 17:43:02Z (`/private/tmp/tdf-held-refund-lint-fix-20260916.log`).
+Final fix `8480d19c6` checks the standard DOM `disabled` attribute without a cast
+or extra matcher. No business logic, timeout or lint rule changes. The same
+targeted command passed all 26 tests / 3 suites in 12.167s, exit 0;
+`/private/tmp/tdf-held-refund-web-ci-final-20260916.log`. The exact fixed test also
+passes `./node_modules/.bin/eslint tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.test.tsx --max-warnings=0`,
+exit 0; `/private/tmp/tdf-held-refund-lint-final-20260916.log`.
+
+The earlier full local web lint eventually reproduced CI's same unnecessary-cast
+error (exit 1, `/private/tmp/tdf-held-refund-lint-web-20260916.log`); it had read the
+pre-fix source. A passing build or unit suite is not a substitute for lint. Final
+source has passing targeted lint, with full updated-head CI still to be observed.
+Final runtime/backend/OpenAPI/mobile files are unchanged from `12439478e`;
+subsequent source edits only replace that test assertion. Test and build evidence
+above is scoped to the recorded revisions, not silently presented as rerun on
+documentation-only commits. Root push/head verification is updated at handoff.
+
 
 ## Configuration and sandbox runbook
 
