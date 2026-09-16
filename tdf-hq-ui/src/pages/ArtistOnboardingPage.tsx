@@ -22,20 +22,20 @@ const buildArtistSignupLink = (claimArtistId: number | null) => {
   return `/login?${params.toString()}`;
 };
 
-const buildArtistLoginLink = () => {
+const buildArtistLoginLink = (claimArtistId: number | null) => {
   const params = new URLSearchParams();
-  params.set('redirect', '/mi-artista');
+  params.set('redirect', claimArtistId === null ? '/mi-artista' : `/artista/crear?claimArtistId=${claimArtistId}`);
   return `/login?${params.toString()}`;
 };
 
 export default function ArtistOnboardingPage() {
-  const { session, login } = useSession();
+  const { session, login, logout } = useSession();
   const navigate = useNavigate();
   const [activating, setActivating] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
 
   const activateProfile = async () => {
-    if (!session?.partyId || activating) return;
+    if (!session?.partyId || activating || claimArtistId !== null) return;
     const partyId = session.partyId;
     setActivating(true);
     setActivationError(null);
@@ -59,6 +59,12 @@ export default function ArtistOnboardingPage() {
     const raw = searchParams.get('claimArtistId') ?? searchParams.get('claim');
     return parsePositiveSafeInt(raw);
   }, [searchParams]);
+
+  const continueClaim = () => {
+    if (claimArtistId === null) return;
+    logout();
+    navigate(buildArtistSignupLink(claimArtistId));
+  };
 
   const hasArtistRole = useMemo(() => {
     const roles = session?.roles ?? [];
@@ -119,7 +125,14 @@ export default function ArtistOnboardingPage() {
           </Stack>
         </Box>
 
-        {session?.partyId && (
+        {session?.partyId && claimArtistId !== null && (
+          <Alert severity="info">
+            Para reclamar este perfil, registra su cuenta con el correo asociado al artista.
+            Al continuar se cerrará tu sesión actual y se conservará el perfil seleccionado.
+          </Alert>
+        )}
+
+        {session?.partyId && claimArtistId === null && (
           <Alert
             severity={hasArtistRole ? 'success' : 'info'}
             action={
@@ -161,7 +174,11 @@ export default function ArtistOnboardingPage() {
                   Te llevamos directo al portal para completar tu perfil y publicarlo en tu URL.
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-                  {session?.partyId ? (
+                  {session?.partyId && claimArtistId !== null ? (
+                    <Button variant="contained" size="large" onClick={continueClaim}>
+                      Cerrar sesión y reclamar perfil
+                    </Button>
+                  ) : session?.partyId ? (
                     <Button variant="contained" size="large" disabled={activating}
                       onClick={() => hasArtistRole ? navigate('/mi-artista') : void activateProfile()}>
                       {activating ? 'Creando…' : hasArtistRole ? 'Editar mi perfil de artista' : 'Crear mi perfil de artista'}
@@ -176,7 +193,7 @@ export default function ArtistOnboardingPage() {
                     variant="outlined"
                     size="large"
                     component={RouterLink}
-                    to={buildArtistLoginLink()}
+                    to={buildArtistLoginLink(claimArtistId)}
                     sx={{ textTransform: 'none' }}
                   >
                     Ya tengo cuenta
