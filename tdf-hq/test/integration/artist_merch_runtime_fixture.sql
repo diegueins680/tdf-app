@@ -241,3 +241,30 @@ WHERE environment='sandbox'
     'merch.refunds',
     'merch.disputes'
   );
+
+-- The canonical provider catalog is fail-closed. Activate only the synthetic
+-- sandbox manual-review rail needed by this isolated runtime test; no provider
+-- endpoint, credential, settlement account, or funds are involved.
+UPDATE commerce_provider_account
+SET status='ready',
+    contract_status='approved',
+    credential_status='validated',
+    merchant_account_ref='synthetic-merch-runtime-bank-review',
+    enabled=TRUE,
+    verified_at=now(),
+    verified_by=1,
+    disabled_reason=NULL,
+    updated_at=now()
+WHERE provider='bank_transfer'
+  AND environment='sandbox';
+
+UPDATE commerce_provider_capability capability
+SET verification_status='sandbox_verified',
+    verified_at=now(),
+    updated_at=now()
+FROM commerce_provider_account account
+WHERE capability.provider_account_id=account.id
+  AND account.provider='bank_transfer'
+  AND account.environment='sandbox'
+  AND capability.payment_method='manual_bank_transfer'
+  AND capability.capability='one_time';

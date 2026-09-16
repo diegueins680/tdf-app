@@ -72,6 +72,7 @@ import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { assertNever } from '../utils/assertNever';
 import { formatCurrencyForUser, resolveRuntimeCurrency } from '../utils/formatters';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
+import { loadAvailableCheckoutMethods } from '../api/paymentCapabilities';
 import {
   clearSessionPersonalData,
   readSessionPersonalData,
@@ -494,7 +495,7 @@ export default function MarketplacePage() {
   const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string; lookupToken: string } | null>(null);
   const [paypalError, setPaypalError] = useState<string | null>(null);
   const showStripeOption = false;
-  const paypalEnabled = Boolean(paypalClientId);
+  const paypalConfiguredInBrowser = Boolean(paypalClientId);
   const columnScrollHeight = { xs: 'auto', md: 'calc(100vh - 240px)' };
   const datafastFormRef = useRef<HTMLDivElement>(null);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
@@ -502,8 +503,6 @@ export default function MarketplacePage() {
   const [datafastError, setDatafastError] = useState<string | null>(null);
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
   const [datafastUnavailable, setDatafastUnavailable] = useState(false);
-  const showPaypalOption = paypalEnabled;
-  const showDatafastOption = !datafastUnavailable;
   const [paymentMethod, setPaymentMethod] = useState<MarketplacePaymentMethod>(() => {
     if (typeof window === 'undefined') return 'contact';
     const saved = localStorage.getItem(PAYMENT_PREF_KEY);
@@ -544,6 +543,26 @@ export default function MarketplacePage() {
   const rentalCartItem = cartItems.find((item) => item.mciPurpose === 'rent') ?? null;
   const isRentalCart = Boolean(rentalCartItem);
   const paypalCurrency = cart?.mcCurrency?.trim().toUpperCase() ?? null;
+  const marketplacePaymentMethodsQuery = useQuery({
+    queryKey: [
+      'marketplacePaymentMethods',
+      cart?.mcCurrency ?? '',
+      cart?.mcSubtotalCents ?? 0,
+      isRentalCart,
+    ],
+    enabled: Boolean(cart && cart.mcSubtotalCents > 0),
+    retry: false,
+    queryFn: () => loadAvailableCheckoutMethods({
+      currency: cart?.mcCurrency ?? 'USD',
+      amountMinor: cart?.mcSubtotalCents ?? 0,
+      productFlow: 'marketplace',
+      marketplace: true,
+    }),
+  });
+  const showPaypalOption = paypalConfiguredInBrowser
+    && Boolean(marketplacePaymentMethodsQuery.data?.paypal);
+  const showDatafastOption = !datafastUnavailable
+    && Boolean(marketplacePaymentMethodsQuery.data?.datafast);
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
@@ -622,7 +641,7 @@ export default function MarketplacePage() {
   }, [paymentMethod]);
 
   useEffect(() => {
-    if (!paypalClientId || !paypalCurrency || typeof window === 'undefined') return;
+    if (!showPaypalOption || !paypalClientId || !paypalCurrency || typeof window === 'undefined') return;
     if (window.paypal) {
       setPaypalReady(true);
       return;
@@ -636,7 +655,7 @@ export default function MarketplacePage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, [paypalClientId, paypalCurrency]);
+  }, [paypalClientId, paypalCurrency, showPaypalOption]);
 
   useEffect(() => {
     if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
@@ -1069,10 +1088,10 @@ export default function MarketplacePage() {
     rentalTermsAccepted,
   ]);
   useEffect(() => {
-    if (!paypalEnabled && (modules.has('ops') || modules.has('admin'))) {
+    if (!paypalConfiguredInBrowser && (modules.has('ops') || modules.has('admin'))) {
       logger.warn('PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID en build o runtime.');
     }
-  }, [paypalEnabled, modules]);
+  }, [paypalConfiguredInBrowser, modules]);
 
   useEffect(() => {
     if (!listingsQuery.isSuccess) return;
@@ -2437,6 +2456,11 @@ export default function MarketplacePage() {
                               />
                             )}
                           </Stack>
+                          {marketplacePaymentMethodsQuery.isError && (
+                            <Alert severity="warning" variant="outlined">
+                              Los pagos en línea no están disponibles. Puedes enviar una solicitud sin pago.
+                            </Alert>
+                          )}
                           {paymentMethod === 'card' && (
                             <Stack direction="row" spacing={0.5} alignItems="center">
                               <CreditCardIcon fontSize="small" color="primary" />

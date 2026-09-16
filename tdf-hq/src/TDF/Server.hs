@@ -101,6 +101,7 @@ import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.Server.Catalog as CatalogServer
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Catalog.Models as Catalog
 import           TDF.Catalog.Security
   ( applySecurityRoleAssignmentPolicy
@@ -183,6 +184,7 @@ import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Server.DomoQuoteCheckout as DomoQuoteCheckoutServer
@@ -10751,6 +10753,8 @@ loadPublicBookingCheckoutDTO bookingKey lookupToken = do
         sbrvPaymentStatus
         sbrvHoldExpiresAt
         (Api.pbmpStatus <$> manualPayment)
+        sbrvDepositMinor
+        sbrvCurrency
       pure Api.PublicBookingCheckoutDTO
         { Api.pbcBooking = dto
         , Api.pbcCheckoutId = sbrvCheckoutId
@@ -10779,8 +10783,10 @@ loadPublicBookingPaymentMethods
   -> Text
   -> UTCTime
   -> Maybe Text
+  -> Int64
+  -> Text
   -> AppM [Text]
-loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatus = do
+loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatus amountMinor currency = do
   now <- liftIO getCurrentTime
   if paymentStatus `notElem` ["awaiting_payment", "failed"]
       || holdExpiresAt <= now
@@ -10796,27 +10802,12 @@ loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatu
             Checkout.domainEnabledForEnvironment checkoutEnvironment "service_bookings"
           if not domainEnabled
             then pure []
-            else do
-              datafastEnabled <- ((\datafast -> do
-                  if ServiceStorefront.sdfEnvironment datafast /= checkoutEnvironment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      checkoutEnvironment Checkout.ProviderDatafast)
-                =<< ServiceStorefront.loadServiceDatafastEnv)
-                `catchError` const (pure False)
-              paypalEnabled <- ((\(_, _, _, paypalEnvironment, _) -> do
-                  if paypalEnvironment /= checkoutEnvironment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      checkoutEnvironment Checkout.ProviderPayPal)
-                =<< ServiceStorefront.loadPaypalEnvForService)
-                `catchError` const (pure False)
-              bankTransferEnabled <- runDB $ Checkout.providerEnabledForEnvironment
-                checkoutEnvironment Checkout.ProviderBankTransfer
-              pure $
-                ["datafast" | datafastEnabled]
-                  <> ["paypal" | paypalEnabled]
-                  <> ["bank_transfer" | bankTransferEnabled]
+            else PaymentAvailability.availableImplementedPaymentMethods
+              checkoutEnvironment
+              PaymentAvailability.FlowBooking
+              amountMinor
+              currency
+              True
 
 serviceBookingLookupNotFound :: ServerError
 serviceBookingLookupNotFound = err404 { errBody = "Booking order not found" }
@@ -11033,7 +11024,7 @@ beginServiceBookingPaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginServiceBookingPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = sbpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = sbpcEnvironment context
@@ -16355,41 +16346,10 @@ data MarketplaceSaleCheckoutContext = MarketplaceSaleCheckoutContext
 
 checkoutCart :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
 checkoutCart rawId mIdempotency payload = do
-  context <- prepareMarketplaceSaleCheckout "bank_transfer" rawId mIdempotency payload
-  now <- liftIO getCurrentTime
-  Env{ envPool } <- ask
-  providerEnabled <- liftIO $ flip runSqlPool envPool $
-    Checkout.providerEnabledForEnvironment
-      (msccEnvironment context) Checkout.ProviderBankTransfer
-  unless providerEnabled $
-    throwError err503
-      { errBody = "Bank transfer checkout is disabled in this environment" }
-  attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
-        { Checkout.pacCheckout = msccCheckout context
-        , Checkout.pacProvider = Checkout.ProviderBankTransfer
-        , Checkout.pacEnvironment = msccEnvironment context
-        , Checkout.pacOperation = Checkout.OperationManualVerify
-        , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
-        , Checkout.pacCurrency = msccCurrency context
-        , Checkout.pacMerchantRef = "tdf-marketplace-manual"
-        , Checkout.pacIdempotencyKey = msccIdempotencyKey context
-        , Checkout.pacCreatedAt = now
-        , Checkout.pacCorrelationId = "marketplace-manual:" <> toPathPiece (msccOrderKey context)
-        }
-  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
-  liftIO $ flip runSqlPool envPool $ do
-    Checkout.recordManualPaymentSelection
-      (msccCheckout context)
-      attempt
-      Checkout.ProviderBankTransfer
-      ("marketplace-manual:" <> toPathPiece (msccOrderKey context))
-      now
-    update (msccOrderKey context)
-      [ ME.MarketplaceOrderStatus =. "awaiting_manual_confirmation"
-      , ME.MarketplaceOrderPaymentProvider =. Just "bank_transfer"
-      , ME.MarketplaceOrderUpdatedAt =. now
-      ]
+  -- Contact coordination creates an unpaid request, not a bank-transfer
+  -- payment selection. It must remain available without online/custody capability
+  -- approval and must not create a payment intent, attempt, evidence or receipt.
+  context <- prepareMarketplaceSaleCheckout "contact" rawId mIdempotency payload
   orderDto <- loadMarketplaceOrderWithLookup context
   when (msccCreated context) $ sendMarketplaceOrderCreatedEmail orderDto
   pure orderDto
@@ -16502,7 +16462,7 @@ ensureMarketplacePaymentRailAvailable rawProvider context = do
   let provider = T.toLower (T.strip rawProvider)
       checkoutId = Checkout.checkoutReferenceId (msccCheckout context)
   conflicts <- runDB $ case provider of
-    "bank_transfer" -> rawSql
+    candidate | candidate `elem` ["bank_transfer", "contact"] -> rawSql
       "SELECT 1::bigint FROM commerce_payment_attempt\
       \ WHERE checkout_id = ?::uuid\
       \ AND provider IN ('datafast','paypal','stripe')\
@@ -16513,8 +16473,8 @@ ensureMarketplacePaymentRailAvailable rawProvider context = do
     _ -> pure []
   unless (null (conflicts :: [Single Int64])) $
     throwError err409
-      { errBody = if provider == "bank_transfer"
-          then "An online payment is awaiting customer action or processing; verify it before selecting bank transfer"
+      { errBody = if provider `elem` ["bank_transfer", "contact"]
+          then "An online payment is awaiting customer action or processing; verify it before requesting manual coordination"
           else "Manual payment evidence is under review; resolve it before starting an online payment"
       }
   where
@@ -17252,7 +17212,7 @@ createDatafastCheckout rawId mIdempotency payload = do
   unless providerEnabled $
     throwError err503 { errBody = "Datafast checkout is disabled in this environment" }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = msccCheckout context
       , Checkout.pacProvider = Checkout.ProviderDatafast
       , Checkout.pacEnvironment = msccEnvironment context
@@ -17389,7 +17349,7 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
           { errBody = "DATAFAST_ENV does not match the stored checkout environment"
           }
       attemptResult <- liftIO $ flip runSqlPool envPool $
-        Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+        PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
           { Checkout.pacCheckout = checkout
           , Checkout.pacProvider = Checkout.ProviderDatafast
           , Checkout.pacEnvironment = checkoutEnvironment
@@ -17476,7 +17436,7 @@ createPaypalOrder rawId mIdempotency payload = do
   unless providerEnabled $
     throwError err503 { errBody = "PayPal checkout is disabled in this environment" }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = msccCheckout context
       , Checkout.pacProvider = Checkout.ProviderPayPal
       , Checkout.pacEnvironment = msccEnvironment context
@@ -17591,7 +17551,7 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
       { errBody = "PAYPAL_ENV does not match the stored checkout environment"
       }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = checkout
       , Checkout.pacProvider = Checkout.ProviderPayPal
       , Checkout.pacEnvironment = paypalEnvironment

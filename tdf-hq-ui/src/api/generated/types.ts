@@ -4266,6 +4266,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/commerce/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the redacted canonical payment operations overview
+         * @description Strict-admin view of provider activation gates and aggregate financial states. Merchant account references, credentials, secrets, and raw provider payloads are never returned.
+         */
+        get: operations["adminGetCommercePaymentOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/commerce/provider-events": {
         parameters: {
             query?: never;
@@ -8516,11 +8536,178 @@ export interface components {
             /** Format: date-time */
             ssrecCheckedAt: string;
         };
+        CommerceProviderCapability: {
+            cpcPaymentMethod: string;
+            cpcCapability: string;
+            /** @enum {string} */
+            cpcVerificationStatus: "documented" | "contract_required" | "sandbox_verified" | "production_verified" | "disabled";
+            /** Format: date-time */
+            cpcVerifiedAt: string | null;
+        };
+        CommerceProviderAccount: {
+            /** @enum {string} */
+            cpaProvider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer";
+            /** @enum {string} */
+            cpaEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            cpaStatus: "disabled" | "testing" | "ready" | "suspended" | "blocked";
+            /** @enum {string} */
+            cpaContractStatus: "unverified" | "pending" | "approved" | "blocked";
+            /** @enum {string} */
+            cpaCredentialStatus: "absent" | "configured" | "validated" | "invalid";
+            cpaSettlementCurrency: string;
+            cpaEnabled: boolean;
+            cpaFeatureEnabled: boolean;
+            /** Format: date-time */
+            cpaVerifiedAt: string | null;
+            cpaDisabledReason: string | null;
+            cpaCapabilities: components["schemas"]["CommerceProviderCapability"][];
+        };
+        CommercePaymentIntentSummary: {
+            /** @enum {string} */
+            cpiEnvironment: "sandbox" | "production";
+            cpiStatus: string;
+            cpiCurrency: string;
+            /** Format: int64 */
+            cpiCount: number;
+            /** Format: int64 */
+            cpiAmountMinor: number;
+            /** Format: int64 */
+            cpiAuthorizedMinor: number;
+            /** Format: int64 */
+            cpiCapturedMinor: number;
+            /** Format: int64 */
+            cpiRefundedMinor: number;
+        };
+        CommerceAmountComponentSummary: {
+            /** @enum {string} */
+            cacEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            cacComponentType: "subtotal" | "discount" | "tax" | "customer_fee" | "provider_fee" | "platform_commission" | "seller_payable" | "withholding" | "refund" | "chargeback" | "fx_adjustment";
+            /** @enum {string} */
+            cacSource: "quote" | "provider_estimate" | "provider_actual" | "tax_document" | "manual_adjustment";
+            cacCurrency: string;
+            /** Format: int64 */
+            cacCount: number;
+            /** Format: int64 */
+            cacAmountMinor: number;
+        };
+        CommerceCommissionSummary: {
+            ccmProvider: string;
+            /** @enum {string} */
+            ccmEnvironment: "sandbox" | "production";
+            ccmCurrency: string;
+            /** Format: int64 */
+            ccmCount: number;
+            /** Format: int64 */
+            ccmBasisAmountMinor: number;
+            /** Format: int64 */
+            ccmCommissionMinor: number;
+            /** Format: int64 */
+            ccmProviderFeeMinor: number;
+            /** Format: int64 */
+            ccmTaxMinor: number;
+            /** Format: int64 */
+            ccmSellerNetMinor: number;
+        };
+        CommerceRefundSummary: {
+            crfProvider: string;
+            /** @enum {string} */
+            crfEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            crfStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+            crfCurrency: string;
+            /** Format: int64 */
+            crfCount: number;
+            /** Format: int64 */
+            crfAmountMinor: number;
+        };
+        CommerceDisputeSummary: {
+            cdsProvider: string;
+            /** @enum {string} */
+            cdsEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            cdsKind: "inquiry" | "dispute" | "chargeback";
+            cdsStatus: string;
+            cdsCurrency: string;
+            /** Format: int64 */
+            cdsCount: number;
+            /** Format: int64 */
+            cdsAmountMinor: number;
+        };
+        CommerceReconciliationSummary: {
+            crsProvider: string;
+            crsEnvironment: string;
+            /** @enum {string} */
+            crsStatus: "open" | "assigned" | "resolved" | "ignored";
+            crsCurrency: string | null;
+            /** Format: int64 */
+            crsCount: number;
+            /** Format: int64 */
+            crsExpectedMinor: number;
+            /** Format: int64 */
+            crsActualMinor: number;
+        };
+        CommerceSettlementSummary: {
+            cssProvider: string;
+            cssEnvironment: string;
+            cssStatus: string;
+            cssCurrency: string;
+            /** Format: int64 */
+            cssCount: number;
+            /** Format: int64 */
+            cssGrossMinor: number;
+            /** Format: int64 */
+            cssFeeMinor: number;
+            /** Format: int64 */
+            cssWithholdingMinor: number;
+            /** Format: int64 */
+            cssRefundMinor: number;
+            /** Format: int64 */
+            cssChargebackMinor: number;
+            /** Format: int64 */
+            cssNetMinor: number;
+        };
+        CommerceSellerBalanceSummary: {
+            csbProvider: string;
+            csbEnvironment: string;
+            /** @enum {string} */
+            csbAvailability: "available" | "pending";
+            csbCurrency: string;
+            /** Format: int64 */
+            csbEntryCount: number;
+            /** Format: int64 */
+            csbNetAmountMinor: number;
+        };
+        CommercePayoutSummary: {
+            cpsProvider: string;
+            cpsEnvironment: string;
+            cpsStatus: string;
+            cpsCurrency: string;
+            /** Format: int64 */
+            cpsCount: number;
+            /** Format: int64 */
+            cpsAmountMinor: number;
+        };
+        CommercePaymentOverview: {
+            /** Format: date-time */
+            cpoGeneratedAt: string;
+            cpoProviderAccounts: components["schemas"]["CommerceProviderAccount"][];
+            cpoPaymentIntents: components["schemas"]["CommercePaymentIntentSummary"][];
+            cpoAmountComponents: components["schemas"]["CommerceAmountComponentSummary"][];
+            cpoCommissions: components["schemas"]["CommerceCommissionSummary"][];
+            cpoRefunds: components["schemas"]["CommerceRefundSummary"][];
+            cpoDisputes: components["schemas"]["CommerceDisputeSummary"][];
+            cpoReconciliationExceptions: components["schemas"]["CommerceReconciliationSummary"][];
+            cpoSettlements: components["schemas"]["CommerceSettlementSummary"][];
+            cpoSellerBalances: components["schemas"]["CommerceSellerBalanceSummary"][];
+            cpoPayouts: components["schemas"]["CommercePayoutSummary"][];
+        };
         CommerceProviderEvent: {
             /** Format: uuid */
             cpeId: string;
             /** @enum {string} */
-            cpeProvider: "paypal" | "datafast" | "stripe" | "bank_transfer" | "cash" | "pos" | "cardano";
+            cpeProvider: "paypal" | "datafast" | "placetopay" | "payphone" | "stripe" | "bank_transfer" | "cash" | "pos" | "cardano";
             /** @enum {string} */
             cpeEnvironment: "sandbox" | "production";
             cpeProviderEventId: string;
@@ -21293,6 +21480,33 @@ export interface operations {
             };
             /** @description Provider status could not be read */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminGetCommercePaymentOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted provider readiness and canonical financial aggregates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommercePaymentOverview"];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

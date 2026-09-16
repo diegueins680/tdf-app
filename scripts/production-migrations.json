@@ -189,13 +189,17 @@
     {
       "id": "2026-08-13_unified_checkout_core",
       "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
-      "compatibleAppliedChecksums": ["88cf1d810f96d17ae52895f08914f51aefa4f45c08df7cd314627bf2dca5da8f"],
+      "compatibleAppliedChecksums": [
+        "88cf1d810f96d17ae52895f08914f51aefa4f45c08df7cd314627bf2dca5da8f"
+      ],
       "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b"
     },
     {
       "id": "2026-08-13_distribution_accounting_core",
       "path": "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
-      "compatibleAppliedChecksums": ["4d7419295635c826506c1505d1771e2234216e7a8dcb116c35186bd8342f4e18"],
+      "compatibleAppliedChecksums": [
+        "4d7419295635c826506c1505d1771e2234216e7a8dcb116c35186bd8342f4e18"
+      ],
       "introducedBy": "9c4a621e62073d263989fde9bf51ef5b16107e55"
     },
     {
@@ -296,7 +300,9 @@
     {
       "id": "2026-08-18_music_directory_profile_images",
       "path": "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
-      "compatibleAppliedChecksums": ["7a7c21f0e30e3233e91602a4dbb69cc51827bab7cb30f74a8224bf173e559807"],
+      "compatibleAppliedChecksums": [
+        "7a7c21f0e30e3233e91602a4dbb69cc51827bab7cb30f74a8224bf173e559807"
+      ],
       "introducedBy": "f1665e92c8db9d86a890c7d3e61173de0ca8226d"
     },
     {
@@ -327,7 +333,9 @@
     {
       "id": "2026-08-24_studio_audit_historical_failure_gate",
       "path": "tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql",
-      "compatibleAppliedChecksums": ["77a5614724738789d870e7ed5afb3e50b6df19936fd6440b5a3735db3a6285bb"],
+      "compatibleAppliedChecksums": [
+        "77a5614724738789d870e7ed5afb3e50b6df19936fd6440b5a3735db3a6285bb"
+      ],
       "introducedBy": "f0ea79a2304202c0bb8c55dcc4c91f5b57aeb4ab"
     },
     {
@@ -408,7 +416,9 @@
     {
       "id": "2026-09-08_notification_notif_type_not_null_repair",
       "path": "tdf-hq/sql/2026-09-08_notification_notif_type_not_null_repair.sql",
-      "compatibleAppliedChecksums": ["7942288682d50a655dd81f072b0ccd91d262d070b493cacad2602565e8e42347"],
+      "compatibleAppliedChecksums": [
+        "7942288682d50a655dd81f072b0ccd91d262d070b493cacad2602565e8e42347"
+      ],
       "introducedBy": "d5ecbf3f97f62940c7d66537e5b9a1141c45128c"
     },
     {
@@ -520,6 +530,26 @@
       "id": "2026-09-10_payment_attempt_intent_binding",
       "path": "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
       "introducedBy": "709036630fcad32102b67a34996c4da73bc4d128"
+    },
+    {
+      "id": "2026-09-11_payment_intent_runtime_sync",
+      "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+      "introducedBy": "0e07d8d1e2ab3f9831a548a9a77702f7e20c26b1"
+    },
+    {
+      "id": "2026-09-11_manual_bank_provider_activation",
+      "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+      "introducedBy": "a177068959f31f269ad24efe454c2978798105ae"
+    },
+    {
+      "id": "2026-09-11_provider_capability_catalog",
+      "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+      "introducedBy": "585ca46fd6699ec33c7520ba141500c5bf7e1139"
+    },
+    {
+      "id": "2026-09-16_payment_intent_refund_sync",
+      "path": "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql",
+      "introducedBy": "f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b"
     }
   ]
 }

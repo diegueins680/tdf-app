@@ -59,17 +59,44 @@ apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
 apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
+apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql
+apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql
+apply_file tdf-hq/sql/2026-09-11_provider_capability_catalog.sql
+apply_file tdf-hq/sql/2026-09-11_provider_capability_catalog.sql
 
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_account WHERE enabled=FALSE AND status='disabled';")" \
-  "8" \
+  "10" \
   "Provider accounts default disabled"
+
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_capability capability JOIN commerce_provider_account account ON account.id=capability.provider_account_id WHERE account.provider='bank_transfer' AND capability.payment_method='manual_bank_transfer' AND capability.capability='one_time' AND capability.verification_status='documented';")" \
+  "2" \
+  "Manual bank transfer requires explicit environment verification"
+
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_capability WHERE source_reference LIKE '%#tdf-capability-catalog-2026-09-11';")" \
+  "84" \
+  "Provider capability catalog is documentation-only and idempotent"
 
 if psql_exec -c "UPDATE commerce_provider_account SET enabled=TRUE WHERE provider='placetopay' AND environment='production';" >/dev/null 2>&1; then
   echo "Provider account enabled without contract, credentials and verification" >&2
   exit 1
 fi
 
+apply_file tdf-hq/sql/2026-09-11_provider_capability_catalog_rollback.sql
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_capability WHERE source_reference LIKE '%#tdf-capability-catalog-2026-09-11';")" \
+  "0" \
+  "Untouched provider documentation catalog rollback"
+apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation_rollback.sql
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_account WHERE provider='bank_transfer';")" \
+  "0" \
+  "Unused manual bank provider activation rollback"
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync_rollback.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding_rollback.sql
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='commerce_payment_attempt' AND column_name='payment_intent_id';")" \
@@ -83,6 +110,9 @@ assert_equal \
 
 apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
+apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql
+apply_file tdf-hq/sql/2026-09-11_provider_capability_catalog.sql
 
 checkout_id='10000000-0000-4000-8000-000000000001'
 attempt_id='10000000-0000-4000-8000-000000000002'
@@ -90,6 +120,12 @@ intent_id='10000000-0000-4000-8000-000000000003'
 authorization_id='10000000-0000-4000-8000-000000000004'
 connected_id='10000000-0000-4000-8000-000000000005'
 payout_id='10000000-0000-4000-8000-000000000006'
+sync_checkout_id='10000000-0000-4000-8000-000000000007'
+sync_attempt_id='10000000-0000-4000-8000-000000000008'
+sync_intent_id='10000000-0000-4000-8000-000000000009'
+failure_checkout_id='10000000-0000-4000-8000-000000000010'
+failure_attempt_id='10000000-0000-4000-8000-000000000011'
+failure_intent_id='10000000-0000-4000-8000-000000000012'
 
 psql_exec -c "
   INSERT INTO commerce_checkout_session(
@@ -127,6 +163,34 @@ psql_exec -c "
   WHERE id='$attempt_id';
 " >/dev/null
 
+# A production intent with the same status/currency must not be combined with
+# sandbox money in the operator overview. Roll back this independent fixture.
+overview_totals=$(psql_exec -qAt -c "BEGIN;
+  INSERT INTO commerce_checkout_session(
+    id, domain_type, domain_order_id, status, environment, currency,
+    subtotal_minor, total_minor, customer_email, lookup_token_hash,
+    idempotency_key, expires_at
+  ) VALUES (
+    '30000000-0000-4000-8000-000000000001', 'marketplace_sale', 'overview-production',
+    'awaiting_payment', 'production', 'USD', 9000, 9000,
+    'overview@example.test', 'overview-lookup', 'overview-checkout', NOW() + interval '30 minutes'
+  );
+  INSERT INTO commerce_payment_intent(
+    checkout_id, status, capture_method, provider, payment_method,
+    amount_minor, currency, idempotency_key
+  ) VALUES (
+    '30000000-0000-4000-8000-000000000001', 'processing', 'manual',
+    'placetopay', 'card', 9000, 'USD', 'overview-intent'
+  );
+  SELECT checkout.environment || ':' || intent.status || ':' || intent.currency || ':' || SUM(intent.amount_minor)
+  FROM commerce_payment_intent intent
+  JOIN commerce_checkout_session checkout ON checkout.id = intent.checkout_id
+  GROUP BY checkout.environment, intent.status, intent.currency
+  ORDER BY checkout.environment, intent.currency, intent.status;
+  ROLLBACK;")
+assert_equal "$overview_totals" 'production:processing:USD:9000
+sandbox:processing:USD:10000' 'Operator intent totals remain environment-scoped'
+
 if psql_exec -c "UPDATE commerce_payment_attempt SET payment_intent_id='20000000-0000-4000-8000-000000000099' WHERE id='$attempt_id';" >/dev/null 2>&1; then
   echo "Payment attempt accepted a nonexistent canonical intent" >&2
   exit 1
@@ -141,6 +205,141 @@ if psql_exec -c "UPDATE commerce_payment_intent SET captured_minor=10001 WHERE i
   echo "Payment intent accepted a capture above its immutable total" >&2
   exit 1
 fi
+
+psql_exec -c "
+  INSERT INTO commerce_checkout_session(
+    id, domain_type, domain_order_id, status, environment, currency,
+    subtotal_minor, total_minor, customer_email, lookup_token_hash,
+    idempotency_key, expires_at
+  ) VALUES (
+    '$sync_checkout_id', 'event_ticket_order', 'ticket-200', 'awaiting_payment',
+    'sandbox', 'USD', 2500, 2500, 'buyer@example.test', 'lookup-hash-sync',
+    'checkout-key-sync', NOW() + interval '30 minutes'
+  );
+  INSERT INTO commerce_payment_intent(
+    id, checkout_id, status, capture_method, provider, payment_method,
+    amount_minor, currency, idempotency_key
+  ) VALUES (
+    '$sync_intent_id', '$sync_checkout_id', 'requires_payment_method',
+    'automatic', 'paypal', 'paypal_wallet', 2500, 'USD', 'intent-key-sync'
+  );
+  INSERT INTO commerce_payment_attempt(
+    id, checkout_id, provider, environment, operation, status, amount_minor,
+    currency, merchant_account_ref, idempotency_key
+  ) VALUES (
+    '$sync_attempt_id', '$sync_checkout_id', 'paypal', 'sandbox', 'create',
+    'created', 2500, 'USD', 'merchant-test', 'attempt-key-sync'
+  );
+  UPDATE commerce_payment_attempt SET payment_intent_id='$sync_intent_id'
+   WHERE id='$sync_attempt_id';
+  UPDATE commerce_payment_attempt SET status='requires_customer_action'
+   WHERE id='$sync_attempt_id';
+" >/dev/null
+
+assert_equal \
+  "$(psql_exec -Atc "SELECT status FROM commerce_payment_intent WHERE id='$sync_intent_id';")" \
+  "requires_customer_action" \
+  "Provider customer action synchronized to canonical intent"
+
+psql_exec -c "
+  UPDATE commerce_payment_attempt SET status='processing'
+   WHERE id='$sync_attempt_id';
+  UPDATE commerce_payment_attempt SET status='succeeded'
+   WHERE id='$sync_attempt_id';
+" >/dev/null
+
+assert_equal \
+  "$(psql_exec -Atc "SELECT status || ':' || authorized_minor || ':' || captured_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" \
+  "captured:2500:2500" \
+  "Authoritative success synchronized exact canonical capture"
+assert_equal \
+  "$(psql_exec -Atc "SELECT string_agg(from_status || '>' || to_status, ',' ORDER BY CASE from_status WHEN 'requires_payment_method' THEN 1 WHEN 'requires_customer_action' THEN 2 WHEN 'processing' THEN 3 ELSE 4 END) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id';")" \
+  "requires_payment_method>requires_customer_action,requires_customer_action>processing,processing>captured" \
+  "Canonical runtime state history"
+
+# Exercise verified refunds through the existing approval/allocation guards.
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql
+psql_exec -c "
+  UPDATE commerce_checkout_session SET status='paid',paid_minor=2500 WHERE id='$sync_checkout_id';
+  INSERT INTO commerce_checkout_line_item(checkout_id,line_number,product_type,product_id,product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)
+    VALUES ('$sync_checkout_id',1,'ticket','test','1','Fixture',1,2500,2500,2500,'{}');
+  INSERT INTO commerce_refund(checkout_id,payment_attempt_id,provider,environment,
+    merchant_account_ref,status,amount_minor,currency,reason_code,idempotency_key,requested_by)
+  VALUES
+    ('$sync_checkout_id','$sync_attempt_id','paypal','sandbox','merchant-test','requested',600,'USD','customer_request','sync-partial',1),
+    ('$sync_checkout_id','$sync_attempt_id','paypal','sandbox','merchant-test','requested',1900,'USD','customer_request','sync-full',1);
+  UPDATE commerce_refund SET status='approved',approved_by=2 WHERE checkout_id='$sync_checkout_id';
+  UPDATE commerce_refund SET status='processing' WHERE checkout_id='$sync_checkout_id';
+  INSERT INTO commerce_refund_allocation(refund_id,line_item_id,amount_minor)
+    SELECT refund.id,line.id,refund.amount_minor FROM commerce_refund refund
+    JOIN commerce_checkout_line_item line ON line.checkout_id=refund.checkout_id
+    WHERE refund.checkout_id='$sync_checkout_id';
+  UPDATE commerce_refund SET status='succeeded',provider_refund_id='REFUND-PARTIAL',completed_at=now()
+    WHERE idempotency_key='sync-partial';
+" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT status || ':' || refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 'partially_refunded:600' 'Verified partial refund synchronized'
+psql_exec -c "UPDATE commerce_refund SET status='succeeded' WHERE idempotency_key='sync-partial';" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_completion_verified';")" 1 'Refund replay did not duplicate state history'
+# A smaller canonical capture must independently reject the larger refund even
+# though it remains within the legacy checkout's paid amount.
+psql_exec -c "UPDATE commerce_payment_intent SET captured_minor=1000 WHERE id='$sync_intent_id';" >/dev/null
+if refund_error=$(psql_exec -v VERBOSITY=verbose -c "UPDATE commerce_refund SET status='succeeded',provider_refund_id='REFUND-FULL',completed_at=now() WHERE idempotency_key='sync-full';" 2>&1); then
+  echo 'Refund exceeded canonical captured amount' >&2; exit 1
+fi
+case "$refund_error" in *23514*canonical*) ;; *) echo "Unexpected refund error: $refund_error" >&2; exit 1;; esac
+assert_equal "$(psql_exec -Atc "SELECT status FROM commerce_refund WHERE idempotency_key='sync-full';")" processing 'Rejected refund rolled back its status'
+assert_equal "$(psql_exec -Atc "SELECT refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 600 'Rejected refund preserved canonical amount'
+psql_exec -c "UPDATE commerce_payment_intent SET captured_minor=2500 WHERE id='$sync_intent_id';" >/dev/null
+# An environment mismatch is rejected by the existing refund binding guard.
+if psql_exec -c "INSERT INTO commerce_refund(checkout_id,payment_attempt_id,provider,environment,merchant_account_ref,status,amount_minor,currency,reason_code,idempotency_key,requested_by) VALUES ('$sync_checkout_id','$sync_attempt_id','paypal','production','merchant-test','requested',100,'USD','customer_request','sync-wrong-env',1);" >/dev/null 2>&1; then
+  echo 'Cross-environment refund was accepted' >&2; exit 1
+fi
+psql_exec -c "UPDATE commerce_refund SET status='succeeded',provider_refund_id='REFUND-FULL',completed_at=now() WHERE idempotency_key='sync-full';" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT status || ':' || refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 'refunded:2500' 'Verified final refund synchronized'
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_completion_verified';")" 2 'Exactly one history row per verified refund'
+
+# A provider/transport failure is not proof that no charge exists. It must
+# leave the intent active so another provider cannot be selected prematurely.
+psql_exec -c "
+  INSERT INTO commerce_checkout_session(
+    id, domain_type, domain_order_id, status, environment, currency,
+    subtotal_minor, total_minor, customer_email, lookup_token_hash,
+    idempotency_key, expires_at
+  ) VALUES (
+    '$failure_checkout_id', 'marketplace_sale', 'sale-failure',
+    'awaiting_payment', 'sandbox', 'USD', 3200, 3200,
+    'buyer@example.test', 'lookup-hash-failure', 'checkout-key-failure',
+    NOW() + interval '30 minutes'
+  );
+  INSERT INTO commerce_payment_intent(
+    id, checkout_id, status, capture_method, provider, payment_method,
+    amount_minor, currency, idempotency_key
+  ) VALUES (
+    '$failure_intent_id', '$failure_checkout_id', 'requires_payment_method',
+    'automatic', 'datafast', 'card', 3200, 'USD', 'intent-key-failure'
+  );
+  INSERT INTO commerce_payment_attempt(
+    id, checkout_id, payment_intent_id, provider, environment, operation,
+    status, amount_minor, currency, merchant_account_ref, idempotency_key
+  ) VALUES (
+    '$failure_attempt_id', '$failure_checkout_id', '$failure_intent_id',
+    'datafast', 'sandbox', 'create', 'created', 3200, 'USD',
+    'merchant-test', 'attempt-key-failure'
+  );
+  UPDATE commerce_payment_attempt SET status='failed'
+   WHERE id='$failure_attempt_id';
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT status FROM commerce_payment_intent WHERE id='$failure_intent_id';")" \
+  "requires_payment_method" \
+  "Ambiguous attempt failure did not release canonical routing lock"
+
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync_rollback.sql
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id';")" \
+  "5" \
+  "Runtime-sync rollback retained immutable history"
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
 
 if psql_exec -c "
   INSERT INTO commerce_connected_account(
@@ -235,5 +434,64 @@ assert_equal \
   "$(psql_exec -Atc "SELECT provider_authorization_id FROM commerce_payment_authorization WHERE id='$authorization_id';")" \
   "AUTH-100" \
   "Authorization evidence survived refused rollback"
+
+# Verify legacy refund reconciliation and new runtime refund synchronization.
+# All fixture money is synthetic; no external payment provider is contacted.
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync_rollback.sql
+sync_checkout_id='10000000-0000-4000-8000-000000000024'
+sync_intent_id='10000000-0000-4000-8000-000000000025'
+sync_attempt_id='10000000-0000-4000-8000-000000000026'
+refund_line_id='10000000-0000-4000-8000-000000000020'
+psql_exec -c "
+  INSERT INTO commerce_checkout_session(id,domain_type,domain_order_id,status,environment,currency,
+    subtotal_minor,total_minor,paid_minor,customer_email,lookup_token_hash,idempotency_key,expires_at)
+  VALUES ('$sync_checkout_id','event_ticket_order','refund-backfill','paid','sandbox','USD',
+    2500,2500,2500,'fixture@example.test','refund-backfill','refund-backfill',now()+interval '30 minutes');
+  INSERT INTO commerce_payment_intent(id,checkout_id,status,capture_method,provider,payment_method,
+    amount_minor,authorized_minor,captured_minor,currency,idempotency_key)
+  VALUES ('$sync_intent_id','$sync_checkout_id','captured','automatic','paypal','paypal_wallet',2500,2500,2500,'USD','refund-backfill');
+  INSERT INTO commerce_payment_attempt(id,checkout_id,payment_intent_id,provider,environment,operation,status,
+    amount_minor,currency,merchant_account_ref,idempotency_key)
+  VALUES ('$sync_attempt_id','$sync_checkout_id','$sync_intent_id','paypal','sandbox','capture','succeeded',2500,'USD','merchant-test','refund-backfill');
+  INSERT INTO commerce_checkout_line_item(id,checkout_id,line_number,product_type,product_id,
+    product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)
+  VALUES ('$refund_line_id','$sync_checkout_id',1,'ticket','ticket-200','v1','Test ticket',1,2500,2500,2500,'{}');
+" >/dev/null
+create_verified_refund() {
+  psql_exec -c "
+    INSERT INTO commerce_refund(id,checkout_id,payment_attempt_id,provider,environment,
+      merchant_account_ref,status,amount_minor,currency,reason_code,idempotency_key,requested_by)
+    VALUES ('$1','$sync_checkout_id','$sync_attempt_id','paypal','sandbox','merchant-test',
+      'requested',$2,'USD','customer_request','$1',1);
+    INSERT INTO commerce_refund_allocation(refund_id,line_item_id,amount_minor)
+      VALUES ('$1','$refund_line_id',$2);
+    UPDATE commerce_refund SET status='approved',approved_by=2 WHERE id='$1';
+    UPDATE commerce_refund SET status='processing' WHERE id='$1';
+    UPDATE commerce_refund SET status='succeeded',provider_refund_id='VERIFIED-$1',completed_at=now() WHERE id='$1';
+  " >/dev/null
+}
+create_verified_refund 10000000-0000-4000-8000-000000000021 500
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql
+assert_equal "$(psql_exec -Atc "SELECT status || ':' || refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 'partially_refunded:500' 'Existing verified refund reconciled once'
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_completion_verified';")" 1 'Refund backfill history is idempotent'
+# A conflicting canonical capture must reject the whole verified-refund write.
+psql_exec -c "UPDATE commerce_payment_intent SET captured_minor=500 WHERE id='$sync_intent_id';" >/dev/null
+if create_verified_refund 10000000-0000-4000-8000-000000000023 2000; then
+  echo 'Refund synchronization accepted an amount above canonical capture' >&2
+  exit 1
+fi
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_refund WHERE id='10000000-0000-4000-8000-000000000023';")" 0 'Inconsistent refund transaction rolled back'
+assert_equal "$(psql_exec -Atc "SELECT refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 500 'Rejected refund preserved canonical balance'
+psql_exec -c "UPDATE commerce_payment_intent SET captured_minor=2500 WHERE id='$sync_intent_id';" >/dev/null
+create_verified_refund 10000000-0000-4000-8000-000000000022 2000
+psql_exec -c "UPDATE commerce_refund SET status='succeeded' WHERE id='10000000-0000-4000-8000-000000000022';" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT status || ':' || refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 'refunded:2500' 'Verified full refund synchronized without replay double counting'
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_completion_verified';")" 2 'Exactly one history entry per refund change'
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync_rollback.sql
+assert_equal "$(psql_exec -Atc "SELECT refunded_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" 2500 'Refund rollback preserves money'
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_completion_verified';")" 2 'Refund rollback preserves immutable history'
+apply_file tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id' AND event_type='refund_completion_verified';")" 2 'Refund reapplication preserves history'
 
 echo "Canonical payment lifecycle migration checks passed"
