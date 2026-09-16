@@ -41,6 +41,7 @@ legacy reciprocal PartyFollow edges can have been manufactured by a single actor
 | Disconnect/block | active owner, target relation valid | revocation serialized with acceptance/send; unblock needs new consent |
 | Protected club content | existing club officer/fan authority and live visibility | hidden/deleted excluded; social connection cannot substitute membership |
 | DM send | thread participant + bilateral explicit consent + no block | administrator has no ordinary social block bypass |
+| DM preview/history | current token + thread participant + current DM policy | filter names/previews/count contributions and authorize before scoped cursor errors; [read boundary](dm-read-boundary.md) retains denials across pause |
 | Recommendation/reason/count | eligible public candidate; consented signals | filter before scoring/aggregation/limit; no confidential transactions or mutual names |
 | Cached/projection read | current authority independently allows it | stale cache can deny availability, never grant access |
 | Queue delivery/retry | current authority at transaction boundary; matching revision and dedup key | revoked/deleted/stale work terminates without delivery |

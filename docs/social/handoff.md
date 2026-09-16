@@ -103,7 +103,7 @@ A passing bounded model is evidence about that model and bounds, not the whole a
 | Default chronological Following and separate explainable Discover | satisfied for inactive web/API preview | Immutable publication order, reauthorized cursor, declared-interest/public-profile explanations and opt-out; sparse recall limitation documented |
 | Full feed traversal and interaction product coverage | failed | Relationship list stops at 50; newly eligible old content needs refresh; private follow requests, reshares and complete recommendation-repeat evaluation absent |
 | Accessible responsive focused flows and safe selection | satisfied for preview | Existing profile/interest flows, named candidates, keyboard/ARIA and synthetic browser evidence; full-app/mobile journeys not qualified |
-| Shared server privacy/block policy across all existing surfaces | failed | Legacy DM, notifications, boosted feed, selectors, mentions, shared spaces and media are not consistently integrated; inactive API does not repair their production behavior |
+| Shared server privacy/block policy across all existing surfaces | failed | DM read/write/API integration is delivered in #386/#390 and web isolation in #391; notifications, boosted feed, selectors, mentions, shared spaces and media still need integration; inactive code does not repair production behavior |
 | Principal/entity/token and organization authority | failed | [Session boundary](session-boundary.md) retains token identity and verifies revocation races for the account-only API; delegated entities, credential provenance and global-role revocation remain incomplete |
 | Account suspension/deletion/export and stale external work | failed | Social closure tombstone is implemented; full account lifecycle, retention, export and queued worker refinement are incomplete |
 | Abuse/reporting/appeals and proportionate controls | failed | Mutation rate limit implemented; legacy reports reused in design, but general harassment report integration, mention controls and auditable moderation are incomplete |
@@ -251,11 +251,26 @@ shared server policy rather than exposing a second client contract. The bounded
 DmReads model passed 9,648 distinct states and three specific negative controls;
 1,440 generated observations passed on private PostgreSQL, and a membership-only
 unsafe control failed at case 36. Complete-schema apply/reapply and pause passed.
-The actual bearer HTTP suite passed **93 examples, zero failures**. Final backend
-build and hosted CI results are pending until recorded at their actual source version. Do not infer them from earlier PR checks.
+The actual bearer HTTP suite passed **93 examples, zero failures**. Full local
+Stack build/tests passed **2,542 examples, zero failures**. The Docker PostgreSQL
+17.10 complete-schema fixture passed after the temporary-server readiness repair.
+Social CI passed at `44a1c7bededf0ba4b54068d482667ac24299f8e4`; full CI remains
+separately tracked. Do not infer current checks from earlier PR results.
 
 This reduces the legacy-DM blocker only. Old readers must be drained before any
 activation; profile/search/media/notifications, organization authority, moderation,
 message retry semantics, thread pagination, native/full-app journeys and product
 instrumentation remain incomplete. The historical deployment exception above still
 applies. No production flag or deployment is authorized by these tests.
+
+| Follow-up PR | Dependency | Actual implemented verification |
+|---|---|---|
+| [#390](https://github.com/diegueins680/tdf-app/pull/390), draft | #386 | DM read/API model, 1,440 SQL observations, 93 HTTP examples, full local backend, schema/readiness repair; implementation `02755bc410eecb5c3e03938121f1197102c709e1`, readiness `44a1c7bededf0ba4b54068d482667ac24299f8e4` |
+| [#391](https://github.com/diegueins680/tdf-app/pull/391), draft | #390 | Account-scoped web queries, drafts, read markers and selected conversation; denied-refetch display/badge withdrawal; 28 focused tests, lint and app typecheck passed. Current implementation/evidence head `8b7daf9c81da8e2c1d1fe8f785371fb33d174078`; hosted rerun separately tracked |
+
+The extra web TypeScript invocation including all test files failed in unchanged
+fixtures; the repository application-only typecheck passed. Logs retain that
+distinction. The initial child model job failed on PostgreSQL container startup,
+not a formal invariant; the retained failure and readiness repair are documented.
+No missing high-degree DM benchmark, native journey, migration rollout lock duration
+or outstanding overall criterion is marked passed by these focused results.

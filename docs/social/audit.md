@@ -69,3 +69,16 @@ The baseline authentication inventory above remains historical. The new
 revalidates it transactionally for `/social/v2`; legacy handlers and delegated
 entity contexts still need integration. The observed old-handler revocation bypass
 and generated model-to-PostgreSQL checks are recorded in that packet.
+
+### Legacy chat continuation — 2026-09-15
+
+PR #390 covers all four existing ChatAPI operations without changing their wire
+DTOs. `TDF.API.Chat` shares the contract with the HTTP fixture; `TDF.Social.Chat`
+centralizes policy selection/session checks/error mapping; the additive chat SQL
+checks eligibility before previews, fields and cursor errors. Eleven new bearer
+HTTP cases plus the existing 82 session/social cases passed. PR #391 scopes the
+existing ChatPage/useChatUnreadCount/read-state helpers by account and withdraws
+stale display data on error. No managed-entity, generic profile, notification or
+media endpoint is implicitly covered by these chat-specific checks. Full-schema
+PostgreSQL 16.10 native and 17.10 Docker fixtures passed; legacy readers remain a
+cutover blocker, while the retained #386 trigger protects legacy writers.
