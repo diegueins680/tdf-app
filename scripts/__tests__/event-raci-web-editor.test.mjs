@@ -40,3 +40,18 @@ test('RACI accessibility keeps full-document diagnostics, themes, focus and a ne
   assert.match(fixture, /contrast\.nodes\.some/);
   assert.doesNotMatch(fixture, /disableRules|runOnly|waitForTimeout|test\.skip|test\.fixme/);
 });
+
+test('review paint readiness fails closed before one axe scan and retains diagnostics', () => {
+  const fixture = read('e2e/web/event-raci-editor.spec.mjs');
+  const helper = read('e2e/web/helpers/review-paint.mjs');
+  assert.match(fixture, /expect\.poll\(async \(\) => \(await dialog\.evaluate\(inspectReviewPaint\)\)\.ready\)\.toBe\(true\)/);
+  assert(fixture.indexOf("attach('raci-review-paint-before'") < fixture.indexOf('axe.run(document)'));
+  assert(fixture.indexOf("attach('raci-review-paint-final'") < fixture.indexOf('axe.run(document)'));
+  assert.match(helper, /style\.opacity === '1'/);
+  assert.match(helper, /element\.getAnimations\(\{ subtree: true \}\)/);
+  assert.match(helper, /ancestors\.flatMap/);
+  assert.match(helper, /animation\.playState !== 'paused'/);
+  assert.match(fixture, /motion\.pause\(\); motion\.currentTime = 500/);
+  assert.match(fixture, /parent\.style\.opacity = '0.6'/);
+  assert.doesNotMatch(helper, /\.finish\(|\.cancel\(|setTimeout|style\.[a-z]+\s*=(?!=)/);
+});
