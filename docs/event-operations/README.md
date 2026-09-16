@@ -1,5 +1,7 @@
 # Event operations specification index
 
+- [RACI paint readiness contract](raci-review-paint-contract.md)
+- [Draft PR 34: measured RACI review paint readiness](pr-34-raci-review-paint.md)
 - [Captured completion client contract](task-completion-client-contract.md)
 - [Draft PR 33: validated task completion client](pr-33-task-completion-client.md)
 - [Authenticated completion contract](task-completion-api-contract.md)
