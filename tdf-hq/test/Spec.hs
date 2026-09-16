@@ -2481,6 +2481,47 @@ main = hspec $ do
               ] $ \capability ->
                 ProviderCapabilities.routePayments [missing capability] request `shouldBe` []
 
+        it "advertises PayPal and Datafast only for the configured approved merchant" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                flip runSqlPool pool $ do
+                    rawExecute "CREATE TABLE commerce_provider_account (id TEXT, provider TEXT, environment TEXT, enabled BOOLEAN, credential_status TEXT, contract_status TEXT, feature_flag_key TEXT, merchant_account_ref TEXT)" []
+                    rawExecute "CREATE TABLE commerce_provider_capability (provider_account_id TEXT, payment_method TEXT, capability TEXT, verification_status TEXT)" []
+                    rawExecute "CREATE TABLE revenue_feature_flag (flag_key TEXT, environment TEXT, enabled BOOLEAN)" []
+                    rawExecute "INSERT INTO commerce_provider_account VALUES ('p','paypal','sandbox',1,'validated','approved','paypal','merchant-A'),('d','datafast','sandbox',1,'validated','approved','datafast','merchant-A')" []
+                    rawExecute "INSERT INTO commerce_provider_capability VALUES ('p','paypal_wallet','one_time','sandbox_verified'),('p','paypal_wallet','capture','sandbox_verified'),('d','card','one_time','sandbox_verified'),('d','card','server_verification','sandbox_verified')" []
+                let routes method = fmap (fmap (map ProviderCapabilities.routeProvider)) $
+                      runHandler $ runReaderT
+                        (PaymentAvailability.loadRuntimeReadyRoutes cardRequest
+                          { ProviderCapabilities.prMethod = method })
+                        (Env pool (error "Availability must not read unrelated application configuration"))
+                    checkBoth paypal datafast = do
+                      routes ProviderCapabilities.MethodPayPalWallet `shouldReturn` Right paypal
+                      routes ProviderCapabilities.MethodCard `shouldReturn` Right datafast
+                    fixture merchant =
+                      [ ("PAYPAL_CLIENT_ID", Just "synthetic-client")
+                      , ("PAYPAL_CLIENT_SECRET", Just "synthetic-secret")
+                      , ("PAYPAL_MERCHANT_ID", Just merchant)
+                      , ("PAYPAL_ENV", Just "sandbox")
+                      , ("PAYPAL_WEBHOOK_ID", Just "synthetic-webhook")
+                      , ("COMMERCE_EVENT_ENCRYPTION_KEY", Just (replicate 32 'x'))
+                      , ("DATAFAST_ENTITY_ID", Just merchant)
+                      , ("DATAFAST_BEARER_TOKEN", Just "synthetic-token")
+                      , ("DATAFAST_BASE_URL", Just "https://eu-test.oppwa.com")
+                      , ("DATAFAST_ENV", Just "sandbox")
+                      , ("DATAFAST_TEST_MODE", Nothing)
+                      ]
+                -- Only local environment parsing and SQLite queries; no provider requests.
+                withEnvOverrides (fixture "merchant-A") $
+                  checkBoth [CheckoutStore.ProviderPayPal] [CheckoutStore.ProviderDatafast]
+                withEnvOverrides (fixture "merchant-B") $ checkBoth [] []
+                withEnvOverrides (fixture "") $ checkBoth [] []
+                withEnvOverrides (fixture "merchant-A") $
+                  withEnvOverrides [("PAYPAL_ENV", Just "production"), ("DATAFAST_ENV", Just "production")] $
+                    checkBoth [] []
+                flip runSqlPool pool $
+                  rawExecute "UPDATE commerce_provider_account SET merchant_account_ref=NULL" []
+                withEnvOverrides (fixture "merchant-A") $ checkBoth [] []
+
         it "requires recurring verification in addition to completion for subscriptions" $ do
             let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
                   { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet

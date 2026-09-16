@@ -70,8 +70,9 @@ loadRuntimeReadyRoutes request = do
   Env{..} <- ask
   activations <- liftIO $ flip runSqlPool envPool $
     loadProviderActivations (prEnvironment request)
-  filterM (runtimeReady (prEnvironment request) (prFlow request))
-    (routePayments activations (requireCheckoutCompletion request))
+  readyActivations <- filterM
+    (runtimeReady (prEnvironment request) (prFlow request)) activations
+  pure (routePayments readyActivations (requireCheckoutCompletion request))
 
 requiredCapabilities :: ProductFlow -> [PaymentCapability]
 requiredCapabilities flow =
@@ -84,15 +85,16 @@ requiredCapabilities flow =
         ]
       else []
 
-runtimeReady :: Checkout.CheckoutEnvironment -> ProductFlow -> PaymentRoute -> AppM Bool
-runtimeReady environment flow route = case routeProvider route of
+runtimeReady :: Checkout.CheckoutEnvironment -> ProductFlow -> ProviderActivation -> AppM Bool
+runtimeReady environment flow activation = case paProvider activation of
   Checkout.ProviderDatafast ->
-    ((== environment) . ServiceStorefront.sdfEnvironment
+    ((\configured -> ServiceStorefront.sdfEnvironment configured == environment
+        && merchantMatches (ServiceStorefront.sdfEntityId configured))
       <$> ServiceStorefront.loadServiceDatafastEnv)
       `catchError` const (pure False)
   Checkout.ProviderPayPal -> do
-    configured <- ((\(_, _, _, configuredEnvironment, _) ->
-        pure (configuredEnvironment == environment))
+    configured <- ((\(_, _, _, configuredEnvironment, merchantRef) ->
+        pure (configuredEnvironment == environment && merchantMatches merchantRef))
       =<< ServiceStorefront.loadPaypalEnvForService)
       `catchError` const (pure False)
     webhookId <- liftIO (nonEmptyEnv "PAYPAL_WEBHOOK_ID")
@@ -109,6 +111,9 @@ runtimeReady environment flow route = case routeProvider route of
   Checkout.ProviderCash -> pure False
   Checkout.ProviderPos -> pure False
   Checkout.ProviderCardano -> pure False
+  where
+    merchantMatches configured =
+      not (T.null (T.strip configured)) && paMerchantRef activation == Just configured
 
 -- Merchandise-specific instructions must never enable another product's rail.
 bankTransferInstructionsReady :: ProductFlow -> Bool -> Bool -> Bool
