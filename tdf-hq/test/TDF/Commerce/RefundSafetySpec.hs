@@ -4,7 +4,7 @@
 module TDF.Commerce.RefundSafetySpec (spec, databaseSpec) where
 
 import Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar)
-import Control.Exception (throwIO)
+import Control.Exception (throwIO, try)
 import Control.Monad (forM, forM_)
 import Data.Either (isLeft, rights)
 import Data.Int (Int64)
@@ -13,12 +13,14 @@ import Data.Time (addUTCTime)
 import Data.UUID (toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (PersistValue(..))
-import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool)
+import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool)
+import Database.PostgreSQL.Simple (SqlError)
 import Test.Hspec
 import qualified Test.QuickCheck as QC
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.RefundStore as Refund
+import qualified TDF.Commerce.StateMachine as State
 
 spec :: Spec
 spec = describe "refund-safety money invariants" $ do
@@ -42,6 +44,11 @@ spec = describe "refund-safety money invariants" $ do
           in (Refund.validateRefundAmount paid refunded reserved requested "USD" "usd" == Right ())
                QC.=== expected
         _ -> QC.property False
+
+  it "rejects overflow in the canonical refund transition" $
+    State.transitionPayment
+      (State.PaymentLifecycle State.PaymentPartiallyRefunded maxBound maxBound maxBound 1)
+      (State.PaymentRefundVerified maxBound) `shouldSatisfy` isLeft
 
 databaseSpec
   :: (ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment)
@@ -201,6 +208,60 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
       "SELECT status,refunded_minor FROM commerce_checkout_session WHERE id=?::uuid"
       [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
     rows `shouldBe` [(Single ("refunded" :: Text), Single (12515 :: Int64))]
+    assertIntentBalance pool creation "refunded" 12515 2
+
+  it "refuses canonical balance drift without completing or posting a refund" $ \pool -> do
+    creation <- fixture pool
+    record <- request pool creation
+    _ <- claim pool record >>= requireRight
+    runSqlPool (rawExecute
+      "UPDATE commerce_payment_intent SET status='partially_refunded',refunded_minor=1\
+      \ WHERE checkout_id=?::uuid"
+      [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
+    complete pool record "synthetic-drift-refund" "synthetic-drift"
+      >>= (`shouldSatisfy` isLeft)
+    assertHeld pool record
+    assertIntentBalance pool creation "partially_refunded" 1 0
+
+  it "does not overwrite a canonical dispute while completing a refund" $ \pool -> do
+    creation <- fixture pool
+    record <- request pool creation
+    _ <- claim pool record >>= requireRight
+    runSqlPool (rawExecute
+      "UPDATE commerce_payment_intent SET status='disputed' WHERE checkout_id=?::uuid"
+      [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
+    complete pool record "synthetic-disputed-refund" "synthetic-dispute"
+      >>= (`shouldSatisfy` isLeft)
+    assertHeld pool record
+    assertIntentBalance pool creation "disputed" 0 0
+
+  it "rejects an invalid canonical correlation before any financial mutation" $ \pool -> do
+    creation <- fixture pool
+    record <- request pool creation
+    _ <- claim pool record >>= requireRight
+    complete pool record "synthetic-invalid-correlation" ""
+      >>= (`shouldSatisfy` isLeft)
+    assertHeld pool record
+    assertIntentBalance pool creation "captured" 0 0
+
+  it "rolls back the intent and refund if a later financial write fails" $ \pool -> do
+    creation <- fixture pool
+    record <- request pool creation
+    _ <- claim pool record >>= requireRight
+    -- The invalid integer cast runs AFTER real completion in the same transaction.
+    -- No temporary trigger or weakened financial constraint is needed.
+    result <- try (runSqlPool (do
+      verified <- Refund.recordVerifiedRefund (completion record "synthetic-atomic-refund"
+        "synthetic-atomic")
+      _ <- rawSql "SELECT 'synthetic-rollback'::bigint" []
+        :: SqlPersistT IO [Single Int64]
+      pure verified) pool) :: IO (Either SqlError (Either Text Bool))
+    result `shouldSatisfy` isLeft
+    assertHeld pool record
+    assertIntentBalance pool creation "captured" 0 0
+    complete pool record "synthetic-atomic-refund" "synthetic-atomic"
+      `shouldReturn` Right True
+    assertIntentBalance pool creation "refunded" 12515 1
 
   it "never replaces an immutable pending provider refund reference" $ \pool -> do
     creation <- fixture pool
@@ -245,6 +306,39 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
       runSqlPool (Refund.requestSingleLineRefund creation) pool >>= requireRight
     claim pool record = runSqlPool (Refund.approveRefundForProcessing
       (Refund.rrReference record) 2 (Refund.rrCreatedAt record)) pool
+    complete pool record providerRef correlation =
+      runSqlPool (Refund.recordVerifiedRefund (completion record providerRef correlation)) pool
+
+completion :: Refund.RefundRecord -> Text -> Text -> Refund.VerifiedRefund
+completion record providerRef correlation = Refund.VerifiedRefund
+  { Refund.vrRefund = Refund.rrReference record, Refund.vrProviderRefund = providerRef
+  , Refund.vrAmountMinor = Refund.rrAmountMinor record, Refund.vrCurrency = Refund.rrCurrency record
+  , Refund.vrOccurredAt = Refund.rrCreatedAt record, Refund.vrCorrelationId = correlation
+  }
+
+assertHeld :: ConnectionPool -> Refund.RefundRecord -> Expectation
+assertHeld pool record = do
+  rows <- runSqlPool (rawSql
+    "SELECT refund.status,checkout.refunded_minor,\
+    \ (SELECT COUNT(*) FROM commerce_ledger_transaction WHERE source_id=refund.id::text\
+    \ AND transaction_type='payment_refund'),\
+    \ (SELECT COUNT(*) FROM commerce_receipt WHERE checkout_id=checkout.id AND kind='credit_note')\
+    \ FROM commerce_refund refund JOIN commerce_checkout_session checkout\
+    \ ON checkout.id=refund.checkout_id WHERE refund.id=?::uuid"
+    [PersistText (Refund.refundReferenceId (Refund.rrReference record))]) pool
+    :: IO [(Single Text, Single Int64, Single Int64, Single Int64)]
+  rows `shouldBe` [(Single "processing", Single 0, Single 0, Single 0)]
+
+assertIntentBalance :: ConnectionPool -> Refund.RefundCreation -> Text -> Int64 -> Int64 -> Expectation
+assertIntentBalance pool creation status refunded historyCount = do
+  rows <- runSqlPool (rawSql
+    "SELECT intent.status,intent.refunded_minor,\
+    \ (SELECT COUNT(*) FROM commerce_payment_state_history history\
+    \ WHERE history.payment_intent_id=intent.id AND history.event_type='refund_verified')\
+    \ FROM commerce_payment_intent intent WHERE intent.checkout_id=?::uuid"
+    [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
+    :: IO [(Single Text, Single Int64, Single Int64)]
+  rows `shouldBe` [(Single status, Single refunded, Single historyCount)]
 
 assertFinancialCount :: ConnectionPool -> Refund.RefundCreation -> Int64 -> Expectation
 assertFinancialCount pool creation count = do
@@ -258,6 +352,8 @@ assertFinancialCount pool creation count = do
     [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
     :: IO [(Single Int64, Single Int64, Single Int64)]
   rows `shouldBe` [(Single (count * Refund.rcAmountMinor creation), Single count, Single count)]
+  assertIntentBalance pool creation (if count == 0 then "captured" else "refunded")
+    (count * Refund.rcAmountMinor creation) count
 
 requireRight :: Show error => Either error value -> IO value
 requireRight = either (fail . show) pure
