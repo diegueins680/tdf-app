@@ -61,3 +61,16 @@ additive and can be retained across a UI pause; there is no destructive rollback
 No measured collaboration/booking/sales gain is claimed. No merges, deployment
 commands, production flag activation or production experiments are part of this PR.
 The earlier automatic-provider deployment exception remains in [handoff](handoff.md).
+
+## Hosted verification
+
+At implementation/evidence head `8b7daf9c81da8e2c1d1fe8f785371fb33d174078`,
+[social CI](https://github.com/diegueins680/tdf-app/actions/runs/35052928324)
+passed both model/PostgreSQL and social-client jobs after the readiness repair.
+[Full CI](https://github.com/diegueins680/tdf-app/actions/runs/35052928363) passed
+UI quality, persona journeys, repository quality, contracts, production migrations
+and the aggregate gate. Backend/mobile/migration-test jobs were skipped by this
+UI-only diff and are not counted as passes; backend verification belongs to #390.
+Build-image and catalog jobs also passed. Exact check snapshot:
+`evidence/chat-client-isolation/ci-8b7daf9c8.json`. Later evidence-only commits
+should not be mistaken for new implementation checks.
