@@ -78,6 +78,13 @@ three commerce workers. See [ADR 0127](../adr/0127-payment-worker-diagnostic-bou
 and [worker diagnostic verification](worker-log-safety-2026-09-15.md). Provider
 activation, financial state changes and commercial research are outside that repair.
 
+The 2026-09-16 refund continuation fences repeated provider execution, preserves
+uncertain and historical-failed reservations, and checks money with unbounded
+integer comparisons. See [ADR 0128](../adr/0128-refund-execution-fence.md) and
+[refund safety evidence](refund-execution-safety-2026-09-16.md). Automatic held
+refund resolution, the newest #331/mobile #83 integration, sandbox qualification
+and broader refund financial projections remain unfinished; no activation is implied.
+
 ## 2. Capability and access report
 
 | Capability | Result on 2026-09-11 | Evidence and limitation |
