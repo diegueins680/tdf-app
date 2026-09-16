@@ -246,3 +246,13 @@ integration increment. No PR was merged.
 
 The remaining commits contain generated catalog inventories and this evidence,
 ADR and runbook documentation only; they do not modify the tested runtime.
+
+Delivery verified at 2026-09-16 02:52 UTC: pushed
+`codex/payment-stack-integration-20260915` and opened draft
+[#389](https://github.com/diegueins680/tdf-app/pull/389), base
+`codex/payment-reconciliation-evidence-view-20260915` (#385). Both `git ls-remote`
+and GitHub PR metadata returned `7cb3876674e380c7efce9c69849d8090e1febdd1`, the
+documentation commit after the tested source and catalog commit. PR metadata
+confirmed OPEN and draft. CI was queued/in progress, not claimed passed. This
+delivery note is a subsequent documentation-only commit. No provider transaction,
+production deployment, PR merge or new mobile PR was performed.
