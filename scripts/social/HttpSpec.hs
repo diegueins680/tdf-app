@@ -25,6 +25,8 @@ import SessionSpec (sessionSpec)
 import ChatSpec (chatSpec)
 import ProfileSpec (profileSpec)
 import LegacyWriteBenchmark (benchmarkLegacyWrites)
+import FanEffectsBenchmark (benchmarkFanEffects)
+import FanEffectsSpec (fanEffectsSpec)
 import LegacyWriteSpec (legacyWriteSpec)
 import RelationshipReadSpec (relationshipReadSpec)
 import RelationshipReadBenchmark (benchmarkRelationshipReads)
@@ -112,9 +114,12 @@ main = do
       profileSpec env
       relationshipReadSpec env
       legacyWriteSpec env
+      fanEffectsSpec env
 
   benchmarkSession env
   benchmarkProfiles env
   benchmarkRelationshipReads env
 
   benchmarkLegacyWrites env
+
+  benchmarkFanEffects env

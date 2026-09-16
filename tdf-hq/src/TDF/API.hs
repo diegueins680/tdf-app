@@ -7,6 +7,7 @@
 module TDF.API where
 
 import qualified TDF.API.Chat as Chat
+import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
 import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
 import TDF.API.SocialProfiles (ProfileListAPI, ProfileGetAPI)
 import TDF.Social.API (SocialV2API)
@@ -464,8 +465,8 @@ type FanSecureAPI =
          )
   :<|> "me" :> "follows" :>
          ( Get '[JSON] [FanFollowDTO]
-      :<|> Capture "artistId" Int64 :> Post '[JSON] FanFollowDTO
-      :<|> Capture "artistId" Int64 :> Delete '[JSON] NoContent
+      :<|> FollowArtistAPI
+      :<|> UnfollowArtistAPI
          )
   :<|> "me" :> "artist-profile" :>
          ( Get '[JSON] ArtistProfileDTO

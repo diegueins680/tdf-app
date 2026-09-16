@@ -305,3 +305,18 @@ search/media/notification/delegation/moderation gaps. Do not label all relations
 writers complete. Parent #402 backend CI remains pending in the recorded snapshot.
 No production flag was activated and no deployment command issued; the earlier
 Vercel/Cloudflare provider exception still requires owner review/removal.
+
+
+## Fan subscription continuation — 2026-09-16
+
+[Fan-effects boundary](fan-effects-boundary.md) implements the next dependent slice
+after #409. Following an artist keeps its subscription, while automatic member
+profiles, reciprocal member follows and new named notifications retire after
+canonical enforcement. Follow/unfollow share current-session and account locks.
+Actual local results: 12,738 TLC states, four detected counterexamples, 1,141 HTTP
+examples, 2,542 backend tests, native PostgreSQL 16 complete-schema reapply/pause,
+11 selector tests, UI typecheck/lint and bounded handler benchmark passed.
+Hosted qualification is pending; local Docker PG17 failed environmentally.
+Parent #409 full CI35129595035 completed successfully. Historical notification
+serving/counts, fan-follow GET, explicit profile publication/privacy and previously
+listed rollout blockers remain open. No deployment/activation is authorized.
