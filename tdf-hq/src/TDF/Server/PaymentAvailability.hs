@@ -9,6 +9,8 @@ module TDF.Server.PaymentAvailability
   , availableImplementedPaymentMethods
   , loadRuntimeReadyRoutes
   , publicPaymentRouteLabel
+  , bankTransferInstructionsReady
+  , manualTransferInstructionsConfigured
   ) where
 
 import           Control.Monad (filterM)
@@ -74,7 +76,7 @@ loadRuntimeReadyRoutes request = do
   Env{..} <- ask
   activations <- liftIO $ flip runSqlPool envPool $
     loadProviderActivations (prEnvironment request)
-  filterM (runtimeReady (prEnvironment request))
+  filterM (runtimeReady (prEnvironment request) (prFlow request))
     (routePayments activations (requireCheckoutCompletion request))
 
 requiredCapabilities :: ProductFlow -> [PaymentCapability]
@@ -88,8 +90,8 @@ requiredCapabilities flow =
         ]
       else []
 
-runtimeReady :: Checkout.CheckoutEnvironment -> PaymentRoute -> AppM Bool
-runtimeReady environment route = case routeProvider route of
+runtimeReady :: Checkout.CheckoutEnvironment -> ProductFlow -> PaymentRoute -> AppM Bool
+runtimeReady environment flow route = case routeProvider route of
   Checkout.ProviderDatafast ->
     ((== environment) . ServiceStorefront.sdfEnvironment
       <$> ServiceStorefront.loadServiceDatafastEnv)
@@ -103,9 +105,7 @@ runtimeReady environment route = case routeProvider route of
     inboxKey <- liftIO (minimumEnvLength 32 "COMMERCE_EVENT_ENCRYPTION_KEY")
     pure (configured && webhookId && inboxKey)
   Checkout.ProviderBankTransfer ->
-    liftIO $ (||)
-      <$> nonEmptyEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
-      <*> nonEmptyEnv "MERCH_BANK_TRANSFER_INSTRUCTIONS"
+    liftIO (manualTransferInstructionsConfigured flow)
   Checkout.ProviderPlaceToPay ->
     liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
       (routeMethod route))
@@ -115,6 +115,19 @@ runtimeReady environment route = case routeProvider route of
   Checkout.ProviderCash -> pure False
   Checkout.ProviderPos -> pure False
   Checkout.ProviderCardano -> pure False
+
+-- Merchandise-specific instructions must never enable another product's rail.
+bankTransferInstructionsReady :: ProductFlow -> Bool -> Bool -> Bool
+bankTransferInstructionsReady flow commerceReady merchReady =
+  commerceReady || (flow == FlowMerchandise && merchReady)
+
+manualTransferInstructionsConfigured :: ProductFlow -> IO Bool
+manualTransferInstructionsConfigured flow = do
+  generic <- nonEmptyEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
+  merch <- if not generic && flow == FlowMerchandise
+    then nonEmptyEnv "MERCH_BANK_TRANSFER_INSTRUCTIONS"
+    else pure False
+  pure (bankTransferInstructionsReady flow generic merch)
 
 publicPaymentRouteLabel :: PaymentRoute -> Maybe Text
 publicPaymentRouteLabel route = case (routeProvider route, routeMethod route) of

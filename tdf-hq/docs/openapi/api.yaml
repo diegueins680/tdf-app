@@ -9227,8 +9227,9 @@ components:
     CommercePaymentIntentSummary:
       type: object
       additionalProperties: false
-      required: [cpiStatus, cpiCurrency, cpiCount, cpiAmountMinor, cpiAuthorizedMinor, cpiCapturedMinor, cpiRefundedMinor]
+      required: [cpiEnvironment, cpiStatus, cpiCurrency, cpiCount, cpiAmountMinor, cpiAuthorizedMinor, cpiCapturedMinor, cpiRefundedMinor]
       properties:
+        cpiEnvironment: { type: string, enum: [sandbox, production] }
         cpiStatus: { type: string }
         cpiCurrency: { type: string, minLength: 3, maxLength: 3 }
         cpiCount: { type: integer, format: int64, minimum: 0 }
@@ -9239,8 +9240,9 @@ components:
     CommerceAmountComponentSummary:
       type: object
       additionalProperties: false
-      required: [cacComponentType, cacSource, cacCurrency, cacCount, cacAmountMinor]
+      required: [cacEnvironment, cacComponentType, cacSource, cacCurrency, cacCount, cacAmountMinor]
       properties:
+        cacEnvironment: { type: string, enum: [sandbox, production] }
         cacComponentType: { type: string, enum: [subtotal, discount, tax, customer_fee, provider_fee, platform_commission, seller_payable, withholding, refund, chargeback, fx_adjustment] }
         cacSource: { type: string, enum: [quote, provider_estimate, provider_actual, tax_document, manual_adjustment] }
         cacCurrency: { type: string, minLength: 3, maxLength: 3 }
@@ -10639,6 +10641,43 @@ components:
         newlyCompleted:
           type: boolean
           description: True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence.
+    ExperimentAssignment:
+      description: Existing assignment DTO shared with the mobile client. This schema does not declare or enable an experiment endpoint.
+      type: object
+      required: [experimentId, experimentVersion, experimentEnabled, experimentEligible, variant, assignedAt, eligibleUntil, exposedAt, newlyAssigned]
+      properties:
+        experimentId:
+          type: string
+        experimentVersion:
+          type: integer
+        experimentEnabled:
+          type: boolean
+        experimentEligible:
+          type: boolean
+        variant:
+          type: string
+        assignedAt:
+          type: string
+          format: date-time
+          nullable: true
+        eligibleUntil:
+          type: string
+          format: date-time
+          nullable: true
+        exposedAt:
+          type: string
+          format: date-time
+          nullable: true
+        newlyAssigned:
+          type: boolean
+    ExperimentExposureResult:
+      type: object
+      required: [assignment, newlyExposed]
+      properties:
+        assignment:
+          $ref: '#/components/schemas/ExperimentAssignment'
+        newlyExposed:
+          type: boolean
     SessionResponse:
       type: object
       required: [username, displayName, partyId, roles, modules, featureFlags, preferences]
@@ -14184,6 +14223,7 @@ components:
       required:
         - id
         - requesterPartyId
+        - requesterName
         - featureId
         - action
         - roleContext
@@ -14201,6 +14241,10 @@ components:
           type: integer
           format: int64
           description: Internal subject identifier; clients must not expose it unnecessarily.
+        requesterName:
+          type: string
+          nullable: true
+          description: Requester's display name, or null when unavailable. Visible only to the requester and authorized reviewers.
         featureId:
           type: string
         action:

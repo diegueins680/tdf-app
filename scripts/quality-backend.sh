@@ -26,8 +26,12 @@ fi
 
 (
   cd "$BACKEND_DIR"
-  STACK_ROOT="$STACK_ROOT_DIR" stack "${build_args[@]}"
+  env -u TDF_PAYMENT_AUDIT_DATABASE_URL STACK_ROOT="$STACK_ROOT_DIR" stack "${build_args[@]}"
 )
+
+# Exercise the real contact handler and financial overview query against a
+# disposable PostgreSQL database using the executable just built above.
+STACK_ROOT="$STACK_ROOT_DIR" sh "$ROOT/scripts/test-payment-audit-runtime.sh"
 
 if [ -n "${BACKEND_BINARY_OUT:-}" ]; then
   copied_binary="$(dirname "$BACKEND_BINARY_OUT")/tdf-hq-exe"

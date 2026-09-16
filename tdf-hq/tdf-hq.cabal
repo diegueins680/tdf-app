@@ -408,6 +408,7 @@ test-suite tdf-hq-test
     TDF.Commerce.WorkerLoggingSpec
     TDF.Commerce.RefundSafetySpec
     TDF.Commerce.RefundRecoverySpec
+    TDF.Server.PaymentAuditSpec
     TDF.Server.ServiceStorefront
     TDF.ServerAuth
     TDF.ServerAuthSpec

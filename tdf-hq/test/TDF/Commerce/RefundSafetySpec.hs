@@ -350,7 +350,9 @@ assertIntentBalance pool creation status refunded historyCount = do
   rows <- runSqlPool (rawSql
     "SELECT intent.status,intent.refunded_minor,\
     \ (SELECT COUNT(*) FROM commerce_payment_state_history history\
-    \ WHERE history.payment_intent_id=intent.id AND history.event_type LIKE 'PaymentRefundVerified %')\
+    \ WHERE history.payment_intent_id=intent.id\
+    \ AND (history.event_type LIKE 'PaymentRefundVerified %'\
+    \ OR history.event_type='refund_completion_verified'))\
     \ FROM commerce_payment_intent intent WHERE intent.checkout_id=?::uuid"
     [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
     :: IO [(Single Text, Single Int64, Single Int64)]

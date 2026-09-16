@@ -8757,6 +8757,8 @@ export interface components {
             cpaCapabilities: components["schemas"]["CommerceProviderCapability"][];
         };
         CommercePaymentIntentSummary: {
+            /** @enum {string} */
+            cpiEnvironment: "sandbox" | "production";
             cpiStatus: string;
             cpiCurrency: string;
             /** Format: int64 */
@@ -8771,6 +8773,8 @@ export interface components {
             cpiRefundedMinor: number;
         };
         CommerceAmountComponentSummary: {
+            /** @enum {string} */
+            cacEnvironment: "sandbox" | "production";
             /** @enum {string} */
             cacComponentType: "subtotal" | "discount" | "tax" | "customer_fee" | "provider_fee" | "platform_commission" | "seller_payable" | "withholding" | "refund" | "chargeback" | "fx_adjustment";
             /** @enum {string} */
@@ -9872,6 +9876,25 @@ export interface components {
             progress: components["schemas"]["OnboardingProgress"];
             /** @description True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence. */
             newlyCompleted: boolean;
+        };
+        /** @description Existing assignment DTO shared with the mobile client. This schema does not declare or enable an experiment endpoint. */
+        ExperimentAssignment: {
+            experimentId: string;
+            experimentVersion: number;
+            experimentEnabled: boolean;
+            experimentEligible: boolean;
+            variant: string;
+            /** Format: date-time */
+            assignedAt: string | null;
+            /** Format: date-time */
+            eligibleUntil: string | null;
+            /** Format: date-time */
+            exposedAt: string | null;
+            newlyAssigned: boolean;
+        };
+        ExperimentExposureResult: {
+            assignment: components["schemas"]["ExperimentAssignment"];
+            newlyExposed: boolean;
         };
         SessionResponse: {
             username: string;
@@ -12026,6 +12049,8 @@ export interface components {
              * @description Internal subject identifier; clients must not expose it unnecessarily.
              */
             requesterPartyId: number;
+            /** @description Requester's display name, or null when unavailable. Visible only to the requester and authorized reviewers. */
+            requesterName: string | null;
             featureId: string;
             action: string;
             roleContext: string[];

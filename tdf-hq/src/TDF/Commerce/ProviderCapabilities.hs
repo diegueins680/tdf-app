@@ -85,6 +85,7 @@ data PaymentCapability
 -- environment-variable names or from a mock test.
 data ProviderActivation = ProviderActivation
   { paProvider             :: PaymentProvider
+  , paMerchantRef          :: Maybe Text
   , paEnvironment          :: CheckoutEnvironment
   , paFeatureEnabled       :: Bool
   , paCredentialsValidated :: Bool
@@ -137,7 +138,7 @@ providerCapabilities provider =
 requireCheckoutCompletion :: PaymentRouteRequest -> PaymentRouteRequest
 requireCheckoutCompletion request = request
   { prRequiredCapabilities = nub
-      (prRequiredCapabilities request <> [CapabilityOneTime] <> completion <> marketplace)
+      (prRequiredCapabilities request <> [CapabilityOneTime] <> completion <> marketplace <> subscription)
   }
   where
     completion = case prMethod request of
@@ -147,6 +148,9 @@ requireCheckoutCompletion request = request
       MethodDeunaQr -> [CapabilityServerVerification]
       MethodPayPhoneWallet -> [CapabilityServerVerification]
       _ -> []
+    subscription
+      | prFlow request == FlowSubscription = [CapabilityRecurring]
+      | otherwise = []
     marketplace
       | prFlow request == FlowMarketplace =
           [CapabilityConnectedAccounts, CapabilitySplitSettlement, CapabilitySellerPayouts]
