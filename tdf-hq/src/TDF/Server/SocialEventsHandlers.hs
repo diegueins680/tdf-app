@@ -8,6 +8,7 @@
 module TDF.Server.SocialEventsHandlers (
     publicUpcomingEventsServer,
     collectMatchingRows,
+    replaceLogisticsActivityDependencies,
     socialEventsServer,
     stripeWebhookServer,
     validateRsvpPageLimit,
@@ -6694,7 +6695,7 @@ socialEventsServer user =
     replaceLogisticsActivityRelations :: EventLogisticsActivityId -> [EventLogisticsAssignmentDTO] -> [EventLogisticsActivityId] -> UTCTime -> SqlPersistT IO ()
     replaceLogisticsActivityRelations activityKey assignments dependencyKeys now = do
         deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
-        deleteWhere [EventLogisticsDependencyActivityId ==. activityKey]
+        replaceLogisticsActivityDependencies activityKey dependencyKeys now
         forM_ assignments $ \assignment -> insert_ EventLogisticsAssignment
             { eventLogisticsAssignmentActivityId = activityKey
             , eventLogisticsAssignmentPartyId = cleanMaybeText (elaPartyId assignment)
@@ -6702,11 +6703,6 @@ socialEventsServer user =
             , eventLogisticsAssignmentExternalPhone = cleanMaybeText (elaExternalPhone assignment)
             , eventLogisticsAssignmentExternalEmail = cleanMaybeText (elaExternalEmail assignment)
             , eventLogisticsAssignmentCreatedAt = now
-            }
-        forM_ dependencyKeys $ \dependencyKey -> insert_ EventLogisticsDependency
-            { eventLogisticsDependencyActivityId = activityKey
-            , eventLogisticsDependencyDependsOnActivityId = dependencyKey
-            , eventLogisticsDependencyCreatedAt = now
             }
 
     verifyLogisticsActivityInternal :: ConnectionPool -> AppConfig -> EventLogisticsActivityId -> Maybe T.Text -> AppM EventRouteVerificationDTO
@@ -10177,6 +10173,26 @@ matchesFinanceFilters mDirection mSource mStatus entry =
     directionOk = maybe True (== efeDirection entry) mDirection
     sourceOk = maybe True (== efeSource entry) mSource
     statusOk = maybe True (== efeStatus entry) mStatus
+
+-- Keep retained edges and their provenance intact. Re-inserting an unchanged
+-- edge would falsely classify it as a newly acquired prerequisite in the
+-- deferred completion guard. The caller owns the activity transaction/lock.
+replaceLogisticsActivityDependencies
+    :: EventLogisticsActivityId -> [EventLogisticsActivityId] -> UTCTime -> SqlPersistT IO ()
+replaceLogisticsActivityDependencies activityKey dependencyKeys now = do
+    existing <- selectList [EventLogisticsDependencyActivityId ==. activityKey] []
+    let requested = Set.fromList dependencyKeys
+        previous = Set.fromList
+            (map (eventLogisticsDependencyDependsOnActivityId . entityVal) existing)
+    forM_ existing $ \(Entity dependencyId dependency) ->
+        unless (Set.member (eventLogisticsDependencyDependsOnActivityId dependency) requested) $
+            delete dependencyId
+    forM_ (Set.toList (Set.difference requested previous)) $ \dependencyKey ->
+        insert_ EventLogisticsDependency
+            { eventLogisticsDependencyActivityId = activityKey
+            , eventLogisticsDependencyDependsOnActivityId = dependencyKey
+            , eventLogisticsDependencyCreatedAt = now
+            }
 
 generateUniqueTicketCode :: (MonadIO m) => ReaderT SqlBackend m T.Text
 generateUniqueTicketCode = do

@@ -147,7 +147,17 @@ if psql_exec -c "UPDATE event_logistics_activity SET status='completed',version=
 fi
 
 psql_exec -c "INSERT INTO event_operation_task_override(activity_id,activity_version,override_kind,reason,policy_reference,authorized_by_party_id) VALUES (100,1,'blocked_completion','Emergency venue access','event-ops-emergency-v1',1);" >/dev/null
-psql_exec -c "UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=100;" >/dev/null
+retained_dependency_id=$(psql_exec -qAt -c 'SELECT id FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101;')
+# The handler applies a set difference, not DELETE+INSERT for unchanged edges.
+psql_exec -c "BEGIN;
+  UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=100 AND version=1;
+  DELETE FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id NOT IN (101);
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id)
+    SELECT 100,101 WHERE NOT EXISTS (
+      SELECT 1 FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101
+    );
+  COMMIT;" >/dev/null
+test "$(psql_exec -qAt -c 'SELECT id FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101;')" = "$retained_dependency_id"
 
 # A historical override cannot authorize a newly inserted or retargeted edge.
 for edge_sql in \
@@ -160,6 +170,19 @@ for edge_sql in \
 done
 psql_exec -c 'UPDATE event_logistics_dependency SET depends_on_activity_id=101 WHERE activity_id=100 AND depends_on_activity_id=101;' >/dev/null
 test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_task_override WHERE activity_id=100;')" = 1
+# Overrides remain version-bound: this fix must not silently reuse an older
+# authorization for a later command. With a fresh authorization, a later edit
+# preserving the same graph succeeds without recreating its edges.
+if psql_exec -c 'UPDATE event_logistics_activity SET version=3 WHERE id=100 AND version=2;' >/dev/null 2>&1; then
+  echo 'expected a later version to require its own blocked-completion authorization' >&2
+  exit 1
+fi
+psql_exec -c "BEGIN;
+  INSERT INTO event_operation_task_override(activity_id,activity_version,override_kind,reason,policy_reference,authorized_by_party_id)
+    VALUES (100,2,'blocked_completion','Authorized follow-up edit','event-ops-emergency-v1',1);
+  UPDATE event_logistics_activity SET version=3 WHERE id=100 AND version=2;
+  COMMIT;" >/dev/null
+test "$(psql_exec -qAt -c 'SELECT id FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101;')" = "$retained_dependency_id"
 
 psql_exec -c "INSERT INTO event_operation_audit_event(event_id,actor_party_id,actor_reference,operation_code,resource_kind,resource_id,outcome,reason,correlation_id) VALUES (10,1,'party:1','task.override','task','100','override','Emergency venue access','test:override');" >/dev/null
 if psql_exec -c "UPDATE event_operation_audit_event SET operation_code='tampered';" >/dev/null 2>&1; then
