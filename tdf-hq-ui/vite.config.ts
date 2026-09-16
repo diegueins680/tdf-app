@@ -117,6 +117,9 @@ export default defineConfig({
           if (id.includes('@hello-pangea/dnd')) return 'dnd';
           if (id.includes('luxon')) return 'luxon';
           if (id.includes('qrcode')) return 'qrcode';
+          // Validation belongs to lazy route/API consumers, not the eager shared
+          // vendor bundle. Keep the full validators; load them with their routes.
+          if (id.includes('/node_modules/zod/')) return 'zod';
           return 'vendor';
         },
       },

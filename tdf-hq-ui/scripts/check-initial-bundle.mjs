@@ -8,7 +8,7 @@ const DIST_DIR = path.resolve(SCRIPT_DIR, '..', 'dist');
 const INDEX_PATH = path.join(DIST_DIR, 'index.html');
 const MAX_INITIAL_GZIP_BYTES = 410 * 1024;
 const MAX_MODULE_PRELOADS = 8;
-const ROUTE_CHUNK_PATTERN = /(?:^|\/)(?:fullcalendar|mui-x|dnd|qrcode)-|Page-/;
+const ROUTE_CHUNK_PATTERN = /(?:^|\/)(?:fullcalendar|mui-x|dnd|qrcode|zod)-|Page-/;
 const SECRET_PATTERNS = [
   { label: 'OpenAI-style API key', pattern: /\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{20,}\b/ },
 ];
