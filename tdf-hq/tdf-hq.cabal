@@ -83,6 +83,8 @@ executable tdf-hq-exe
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
     TDF.Commerce.ProviderAdapter.PayPhone
+    TDF.Commerce.ProviderAdapter.PayPalRefund
+    TDF.Commerce.RefundReconciliation
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -338,6 +340,8 @@ test-suite tdf-hq-test
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
     TDF.Commerce.ProviderAdapter.PayPhone
+    TDF.Commerce.ProviderAdapter.PayPalRefund
+    TDF.Commerce.RefundReconciliation
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -403,6 +407,7 @@ test-suite tdf-hq-test
     TDF.Commerce.ProviderRetrySpec
     TDF.Commerce.WorkerLoggingSpec
     TDF.Commerce.RefundSafetySpec
+    TDF.Commerce.RefundRecoverySpec
     TDF.Server.ServiceStorefront
     TDF.ServerAuth
     TDF.ServerAuthSpec

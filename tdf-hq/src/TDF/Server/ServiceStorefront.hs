@@ -50,7 +50,7 @@ module TDF.Server.ServiceStorefront
 import           Control.Monad (when, unless)
 import           Control.Monad.Except (catchError)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader (ReaderT, ask)
+import           Control.Monad.Reader (ReaderT, ask, runReaderT)
 import           Control.Exception.Safe (tryAny)
 import           Crypto.Hash (Digest, SHA256, hash)
 import           Data.Aeson (Result(..), eitherDecode, FromJSON(..), Value(..), (.=), (.:), (.:?), object, withObject)
@@ -88,6 +88,8 @@ import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.ProviderAdapter.Http as ProviderHttp
 import qualified TDF.Commerce.RefundStore as Refund
+import qualified TDF.Commerce.RefundReconciliation as RefundRecovery
+import qualified TDF.Commerce.ProviderAdapter.PayPalRefund as RefundQuery
 import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
 import           TDF.DB (Env(..))
 import           TDF.Internationalization (formatMinorUnitsDecimal, formatMoney, normalizeCurrencyCode)
@@ -126,6 +128,8 @@ serviceStorefrontAdminServer user =
   :<|> (\orderId idempotency request ->
           requireAccess *> requestServiceRefundHandler user orderId idempotency request)
   :<|> (\refundId -> requireAccess *> approveServiceRefundHandler user refundId)
+  :<|> (\refundId -> requireAccess *> (addHeader "no-store" <$> serviceRefundRecoveryHandler user False refundId))
+  :<|> (\refundId -> requireAccess *> (addHeader "no-store" <$> serviceRefundRecoveryHandler user True refundId))
   :<|> (\orderId -> requireAccess *> reconcileServiceOrderHandler orderId)
   where
     requireAccess = unless (hasStrictAdminAccess user) $
@@ -1331,6 +1335,74 @@ updateOrderAdminHandler orderIdText ServiceStorefrontOrderUpdate{..} = do
           _ -> pure ()
         replace oid updatedOrder
       pure (orderToDTO oid updatedOrder)
+
+-- GET reads local readiness only. POST may finalize exact positive evidence but
+-- never issues a capture/refund POST to the provider. No browser payload is evidence.
+serviceRefundRecoveryHandler
+  :: AuthedUser -> Bool -> Text -> AppM ServiceStorefrontRefundRecoveryDTO
+serviceRefundRecoveryHandler user shouldQuery rawId = do
+  env@Env{..} <- ask
+  ref <- parseRefundReference rawId
+  let configured binding = do
+        result <- runHandler (runReaderT (refundQueryConfigured binding) env)
+        pure (either (const False) id result)
+      query binding = do
+        result <- runHandler (runReaderT (getPaypalRefundRemote binding) env)
+        pure (either (const (Left RefundRecovery.RefundRecoveryQueryFailed)) Right result)
+  result <- liftIO $ if shouldQuery
+    then RefundRecovery.reconcileKnownRefund envPool ref (fromSqlKey (auPartyId user))
+      configured query
+    else RefundRecovery.readRefundRecovery envPool ref configured
+  view <- either (throwError . refundRecoveryError) pure result
+  let record = RefundRecovery.rrvRefund view
+  pure ServiceStorefrontRefundRecoveryDTO
+    { ssrrRefundId = Refund.refundReferenceId (Refund.rrReference record)
+    , ssrrEnvironment = Refund.rrEnvironment record, ssrrStatus = Refund.rrStatus record
+    , ssrrAmountMinor = T.pack (show (Refund.rrAmountMinor record))
+    , ssrrCurrency = Refund.rrCurrency record, ssrrCanQuery = RefundRecovery.rrvCanQuery view
+    , ssrrOutcome = RefundRecovery.rrvOutcome view
+    , ssrrCheckedAt = RefundRecovery.rrvCheckedAt view
+    }
+
+refundRecoveryError :: RefundRecovery.RefundRecoveryError -> ServerError
+refundRecoveryError problem = case problem of
+  RefundRecovery.RefundRecoveryNotFound -> err404 { errBody = "Refund not found" }
+  RefundRecovery.RefundRecoveryUnavailable -> err503
+    { errBody = "Refund reconciliation is unavailable; funds remain reserved" }
+  RefundRecovery.RefundRecoveryConflict -> err409
+    { errBody = "Refund evidence requires review; do not issue another refund" }
+  RefundRecovery.RefundRecoveryRateLimited -> err429
+    { errBody = "Provider query limit reached; wait before checking again"
+    , errHeaders = [("Retry-After", "10")] }
+  RefundRecovery.RefundRecoveryQueryFailed -> err502
+    { errBody = "Provider refund could not be verified; funds remain reserved" }
+
+refundQueryConfigured :: RefundQuery.RefundQueryBinding -> AppM Bool
+refundQueryConfigured binding = do
+  enabled <- liftIO (lookupEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED")
+  if enabled /= Just "true" then pure False else
+    (do
+      (_, _, _, environment, merchant) <- loadPaypalEnvForService
+      pure (environment == RefundQuery.rqbEnvironment binding
+        && merchant == RefundQuery.rqbMerchantId binding)) `catchError` (const (pure False))
+
+getPaypalRefundRemote :: RefundQuery.RefundQueryBinding -> AppM RefundQuery.RefundQueryOutcome
+getPaypalRefundRemote binding = do
+  ready <- refundQueryConfigured binding
+  unless ready $ throwError err503 { errBody = "Refund query configuration is unavailable" }
+  (cid, secret, baseUrl, _, _) <- loadPaypalEnvForService
+  -- Validate path/money before obtaining a credentialed provider token.
+  _ <- either (const (throwError (refundRecoveryError RefundRecovery.RefundRecoveryConflict))) pure
+    (RefundQuery.validateRefundQueryBinding binding)
+  let manager = ProviderHttp.sharedProviderManager
+  token <- paypalAccessTokenForService manager cid secret baseUrl
+  request <- either (const (throwError (refundRecoveryError RefundRecovery.RefundRecoveryUnavailable)))
+    pure (RefundQuery.buildRefundQuery token binding)
+  response <- liftIO (ProviderHttp.executeAdapterRequest manager request)
+  value <- either (const (throwError (refundRecoveryError RefundRecovery.RefundRecoveryQueryFailed)))
+    pure response
+  either (const (throwError (refundRecoveryError RefundRecovery.RefundRecoveryConflict))) pure
+    (RefundQuery.parseRefundQuery binding value)
 
 listServiceRefundsHandler :: Text -> AppM [ServiceStorefrontRefundDTO]
 listServiceRefundsHandler orderNumber = do

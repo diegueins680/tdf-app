@@ -91,6 +91,12 @@ integer comparisons. See [ADR 0128](../adr/0128-refund-execution-fence.md) and
 refund resolution, the newest #331/mobile #83 integration, sandbox qualification
 and broader refund financial projections remain unfinished; no activation is implied.
 
+The next 2026-09-16 continuation adds explicit, gated GET-based recovery for known
+PayPal mixing/mastering refund IDs, through the atomic canonical accounting repair
+in #401. See [ADR 0130](../adr/0130-known-id-refund-query-recovery.md) and
+[verification/runbook](held-refund-query-2026-09-16.md). Unknown-ID and other-domain
+recovery remain held; merchant sandbox and staging qualification are not implied.
+
 ## 2. Capability and access report
 
 | Capability | Result on 2026-09-11 | Evidence and limitation |

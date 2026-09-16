@@ -10,6 +10,25 @@
   },
   "decisions": [
     {
+      "id": "036743bc7fa528633711",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Making positive verification versus held evidence editable could bypass binding validation or release an ambiguous refund reservation.",
+      "justification": "Individually reviewed: RefundQueryOutcome is a two-constructor internal adapter result, produced only after validating exact known refund/capture/amount/currency evidence. It is not a merchant-selectable payment state catalog. Persisted refund states and the canonical transition remain authoritative; this compiled decision never grants another refund execution permit.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "held-refund-query-2026-09-16",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
+        "line": 36,
+        "kind": "haskell-sum-type",
+        "name": "RefundQueryOutcome",
+        "valueCount": 2
+      }
+    },
+    {
       "id": "9d18084547600ae29ff6",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -1059,14 +1078,16 @@
       "reviewed": true
     },
     {
-      "id": "8f3e91d141addebb8077",
+      "id": "d3cdffe88a58e2d2fe6f",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
-      "reviewed": true
+      "justification": "Individually reviewed: ServiceStorefront method names are typed HTTP dispatch mechanics, including the new readiness GET and explicit refund-lookup POST. They are not selectable business values or authorities for refund state, provider availability, permissions or amounts; those remain server-owned.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "held-refund-query-2026-09-16"
     },
     {
       "id": "63e4a77ce8e989c851a9",

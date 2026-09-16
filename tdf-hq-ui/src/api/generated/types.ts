@@ -4246,6 +4246,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/services/storefront/refunds/{refundId}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Read local held-refund status and query readiness
+         * @description Strict Admin only. Does not contact the provider. Supports known PayPal refund IDs for the mixing/mastering storefront only. Missing configuration or qualification never enables the action.
+         */
+        get: operations["adminGetServiceRefundRecovery"];
+        put?: never;
+        /**
+         * Query a held refund without issuing another refund
+         * @description Requires the exact environment flag, process switch, qualified merchant account, and verified capabilities. Uses only GET for the known refund resource (OAuth token acquisition is separate). Validates original capture, refund ID, amount and currency. Exact completion may atomically update local financial records. All other outcomes remain held. Concurrent operators share a query quota. A timeout or HTTP error is never proof of no refund. Do not retry by submitting a new refund.
+         */
+        post: operations["adminReconcileServiceRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/services/storefront/orders/{orderId}/reconcile": {
         parameters: {
             query?: never;
@@ -8672,6 +8698,24 @@ export interface components {
             ssrfCreatedAt: string;
             /** Format: date-time */
             ssrfCompletedAt: string | null;
+        };
+        ServiceStorefrontRefundRecovery: {
+            /** Format: uuid */
+            ssrrRefundId: string;
+            /** @enum {string} */
+            ssrrEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            ssrrStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+            /** @description Positive exact Int64 minor units; never parse through floating point */
+            ssrrAmountMinor: string;
+            /** @enum {string} */
+            ssrrCurrency: "USD";
+            /** @description Query readiness */
+            ssrrCanQuery: boolean;
+            /** @enum {string} */
+            ssrrOutcome: "not_queried" | "held" | "completed" | "already_completed";
+            /** Format: date-time */
+            ssrrCheckedAt: string | null;
         };
         ServiceStorefrontReconciliation: {
             /** Format: uuid */
@@ -21705,6 +21749,152 @@ export interface operations {
             };
             /** @description PayPal request failed; refund remains processing or failed */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminGetServiceRefundRecovery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Local refund evidence and exact-environment readiness */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefundRecovery"];
+                };
+            };
+            /** @description Invalid refund UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Known refund or original capture binding unavailable; manual review required */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Readiness could not be verified */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminReconcileServiceRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Completed, already completed by a concurrent observation, or still held */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefundRecovery"];
+                };
+            };
+            /** @description Invalid refund UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Shared provider query limit reached */
+            429: {
+                headers: {
+                    /** @description Seconds before another query may be attempted */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence could not be verified; funds remain reserved */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reconciliation unavailable or authority changed; no financial completion applied */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
