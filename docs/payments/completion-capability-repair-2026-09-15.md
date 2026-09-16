@@ -22,3 +22,10 @@ change is needed. The provider sandbox and native-stack qualification gates rema
 
 Validation results are recorded after execution in the audit report. No test
 result or production qualification is inferred merely from this code change.
+
+The later [integrated-stack verification](stack-integration-2026-09-15.md)
+preserves this upstream repair alongside durable replay/recovery. It adds real
+local-PostgreSQL coverage and extends completion qualification to the three
+implemented non-card hosted methods that require authenticated status lookup;
+see [ADR 0126](../adr/0126-checkout-completion-capability-gates.md). This remains
+local synthetic evidence, not a merchant sandbox qualification.

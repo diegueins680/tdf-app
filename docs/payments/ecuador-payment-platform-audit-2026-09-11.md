@@ -65,6 +65,13 @@ links; see [ADR 0125](../adr/0125-read-only-reconciliation-evidence.md) and
 contracts are regenerated; only web receives an admin screen. No provider is
 activated and review labels do not authorize financial actions.
 
+The next continuation merges updated #331 and latest observed main into the
+dependent stack, preserves the Datafast/PayPal completion repair and adds verified
+status-lookup gates for bank/DeUna/PayPhone. See
+[ADR 0126](../adr/0126-checkout-completion-capability-gates.md) and
+[integrated-stack verification](stack-integration-2026-09-15.md). This does not
+activate providers or refresh commercial/market findings.
+
 ## 2. Capability and access report
 
 | Capability | Result on 2026-09-11 | Evidence and limitation |
