@@ -85,6 +85,7 @@ data PaymentCapability
 -- environment-variable names or from a mock test.
 data ProviderActivation = ProviderActivation
   { paProvider             :: PaymentProvider
+  , paMerchantRef          :: Maybe Text
   , paEnvironment          :: CheckoutEnvironment
   , paFeatureEnabled       :: Bool
   , paCredentialsValidated :: Bool

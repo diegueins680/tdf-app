@@ -2153,6 +2153,7 @@ main = hspec $ do
     describe "provider-neutral payment routing" $ do
         let active provider = ProviderCapabilities.ProviderActivation
               { ProviderCapabilities.paProvider = provider
+              , ProviderCapabilities.paMerchantRef = Just "merchant-test"
               , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
               , ProviderCapabilities.paFeatureEnabled = True
               , ProviderCapabilities.paCredentialsValidated = True
@@ -2687,6 +2688,7 @@ main = hspec $ do
         it "advertises only adapter-backed methods and operations" $ do
             let activePayPhone = ProviderCapabilities.ProviderActivation
                   { ProviderCapabilities.paProvider = CheckoutStore.ProviderPayPhone
+                  , ProviderCapabilities.paMerchantRef = Just "merchant-test"
                   , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
                   , ProviderCapabilities.paFeatureEnabled = True
                   , ProviderCapabilities.paCredentialsValidated = True

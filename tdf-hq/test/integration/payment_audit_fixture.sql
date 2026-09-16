@@ -19,3 +19,5 @@ CREATE TABLE revenue_feature_flag(flag_key text, environment text, enabled boole
 INSERT INTO revenue_feature_flag VALUES ('commerce.provider.bank_transfer','sandbox',false);
 ALTER TABLE commerce_payment_intent ADD COLUMN id uuid DEFAULT gen_random_uuid();
 CREATE TABLE commerce_payment_amount_component(payment_intent_id uuid, component_type text, source text, currency text, amount_minor bigint);
+CREATE TABLE commerce_provider_account(id uuid PRIMARY KEY, provider text, environment text, enabled boolean, credential_status text, contract_status text, feature_flag_key text, merchant_account_ref text);
+CREATE TABLE commerce_provider_capability(provider_account_id uuid, payment_method text, capability text, verification_status text);

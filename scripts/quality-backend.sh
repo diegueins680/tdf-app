@@ -26,7 +26,7 @@ fi
 
 (
   cd "$BACKEND_DIR"
-  STACK_ROOT="$STACK_ROOT_DIR" stack "${build_args[@]}"
+  env -u TDF_PAYMENT_AUDIT_DATABASE_URL STACK_ROOT="$STACK_ROOT_DIR" stack "${build_args[@]}"
 )
 
 # Exercise the real contact handler and financial overview query against a
