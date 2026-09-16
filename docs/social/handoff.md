@@ -462,3 +462,15 @@ Skipped mobile/API-contract-test jobs are not passes. The 708 generated HTTP cas
 run in the backend job; do not claim their hosted execution from the SQL-only social
 job. They passed locally as part of the 1,141-example run. Continue monitoring the
 full run and preserve its actual final result here without changing #415's head.
+
+
+### #415 final snapshot for this continuation
+
+[Latest actual checks](evidence/fan-effects-ci/latest-checks.json) show successful
+UI quality, persona browser, migration tests, production-migration qualification,
+API contracts, repository quality, catalog, Safe Install and both social jobs.
+Only the full CI backend job remains **in progress**, at build/test. The local
+2,542-test and 1,141-HTTP results remain valid but do not substitute for that job.
+Mobile and API-contract-test jobs were skipped. Continue with run35144567540's
+final backend result and the next integration inventory; no whole-task completion
+or production readiness is claimed.
