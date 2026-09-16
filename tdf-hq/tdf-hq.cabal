@@ -402,6 +402,7 @@ test-suite tdf-hq-test
     TDF.Server.MerchRuntimeSpec
     TDF.Commerce.ProviderRetrySpec
     TDF.Commerce.WorkerLoggingSpec
+    TDF.Commerce.RefundSafetySpec
     TDF.Server.ServiceStorefront
     TDF.ServerAuth
     TDF.ServerAuthSpec
