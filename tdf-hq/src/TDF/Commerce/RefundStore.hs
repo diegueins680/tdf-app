@@ -158,7 +158,7 @@ requestAllocatedRefund creation@RefundCreation{..} allocations
               reservedRows <- (rawSql
                 "SELECT COALESCE(SUM(amount_minor), 0) FROM commerce_refund\
                 \ WHERE checkout_id = ?::uuid\
-                \ AND status IN ('requested','approved','processing')"
+                \ AND status IN ('requested','approved','processing','failed')"
                 [PersistText (checkoutReferenceId rcCheckout)] :: SqlPersistT IO [Single Int64])
               let reservedMinor = case reservedRows of
                     [Single amount] -> amount
@@ -225,10 +225,12 @@ cancelRefundRequest refundRef actor now
       case records of
         [record]
           | rrStatus record == "cancelled" -> pure (Right (record, False))
-          | rrStatus record `elem` ["requested", "approved", "failed"] -> do
+          | rrStatus record == "failed" ->
+              pure (Left "Historical failed refund requires reconciliation before release")
+          | rrStatus record == "requested" || rrStatus record == "approved" -> do
               rawExecute
                 "UPDATE commerce_refund SET status='cancelled',updated_at=?\
-                \ WHERE id=?::uuid AND status IN ('requested','approved','failed')"
+                \ WHERE id=?::uuid AND status IN ('requested','approved')"
                 [PersistUTCTime now, PersistText (refundReferenceId refundRef)]
               updated <- loadRefund refundRef
               maybe
@@ -237,10 +239,14 @@ cancelRefundRequest refundRef actor now
                 updated
           | rrStatus record == "succeeded" ->
               pure (Left "Succeeded refund evidence is immutable")
-          | otherwise -> pure (Left "Refund cannot be cancelled while provider processing is active")
+          | otherwise -> pure
+              (Left "Refund cannot be cancelled while provider processing is active")
         [] -> pure (Left "Refund was not found")
         _ -> pure (Left "Refund lookup was ambiguous")
 
+-- | A committed processing row is a non-expiring execution fence, not a retry lease.
+-- The caller may contact the provider only when the returned permit is True.
+-- Historical failed rows may represent ambiguous verification and need reconciliation.
 approveRefundForProcessing
   :: RefundReference
   -> Int64
@@ -256,7 +262,10 @@ approveRefundForProcessing refundRef approver now
           | rrStatus record == "cancelled" -> pure (Left "Cancelled refund cannot be approved")
           | rrRequestedBy record == approver ->
               pure (Left "Refund approval requires a different authenticated party")
-          | rrStatus record `elem` ["requested", "approved", "failed", "processing"] -> do
+          | rrStatus record == "processing" -> pure (Right (record, False))
+          | rrStatus record == "failed" ->
+              pure (Left "Historical failed refund requires reconciliation before re-execution")
+          | rrStatus record == "requested" || rrStatus record == "approved" -> do
               let approvedBy = case rrApprovedBy record of
                     Just existing -> existing
                     Nothing -> approver
@@ -271,7 +280,7 @@ approveRefundForProcessing refundRef approver now
               rawExecute
                 "UPDATE commerce_refund SET status = 'processing', approved_by = ?,\
                 \ failure_code = NULL, failure_summary = NULL, updated_at = ?\
-                \ WHERE id = ?::uuid AND status IN ('approved','failed','processing')"
+                \ WHERE id = ?::uuid AND status = 'approved'"
                 [ PersistInt64 approvedBy
                 , PersistUTCTime now
                 , PersistText (refundReferenceId refundRef)
@@ -297,7 +306,7 @@ recordRefundPending refundRef providerRefundId now
       rawExecute
         "UPDATE commerce_refund SET status = 'processing', provider_refund_id = ?,\
         \ updated_at = ? WHERE id = ?::uuid\
-        \ AND status IN ('approved','processing','failed')\
+        \ AND status = 'processing'\
         \ AND (provider_refund_id IS NULL OR provider_refund_id = ?)"
         [ PersistText providerRefundId
         , PersistUTCTime now
@@ -309,6 +318,9 @@ recordRefundPending refundRef providerRefundId now
         then Right ()
         else Left "Provider refund ID conflicts with immutable refund evidence"
 
+-- | Compatibility name: failure to verify a refund is not proof that it failed.
+-- Keep its reservation and execution fence; only authoritative reconciliation
+-- may release funds. Callers supply fixed diagnostic codes, never provider payloads.
 recordRefundFailure
   :: RefundReference
   -> Text
@@ -316,8 +328,8 @@ recordRefundFailure
   -> SqlPersistT IO ()
 recordRefundFailure refundRef failureCode now =
   rawExecute
-    "UPDATE commerce_refund SET status = 'failed', failure_code = ?,\
-    \ failure_summary = 'Provider refund failed; inspect redacted operational logs.',\
+    "UPDATE commerce_refund SET failure_code = ?,\
+    \ failure_summary = 'Refund outcome requires reconciliation; funds remain reserved.',\
     \ updated_at = ? WHERE id = ?::uuid AND status = 'processing'"
     [ PersistText (T.take 120 failureCode)
     , PersistUTCTime now
@@ -402,13 +414,15 @@ validateRefundAmount
   -> Text
   -> Text
   -> Either Text ()
-validateRefundAmount paidMinor refundedMinor reservedMinor requestedMinor storedCurrency requestedCurrency
+validateRefundAmount
+    paidMinor refundedMinor reservedMinor requestedMinor storedCurrency requestedCurrency
   | requestedMinor <= 0 = Left "Refund amount must be positive"
   | normalizeCurrency storedCurrency /= normalizeCurrency requestedCurrency =
       Left "Refund currency does not match the captured payment"
   | refundedMinor < 0 || reservedMinor < 0 || paidMinor <= 0 =
       Left "Stored refund balance is invalid"
-  | requestedMinor > paidMinor - refundedMinor - reservedMinor =
+  | toInteger requestedMinor + toInteger refundedMinor + toInteger reservedMinor
+      > toInteger paidMinor =
       Left "Refund amount exceeds the unreserved captured balance"
   | otherwise = Right ()
 
@@ -418,7 +432,8 @@ validateRefundReason rawReason
       Left "Refund reason code must contain 2 to 64 characters"
   | not (isAsciiLower (T.head reason)) =
       Left "Refund reason code must begin with a lowercase letter"
-  | not (T.all (\character -> isAsciiLower character || isDigit character || character == '_') reason) =
+  | not (T.all
+      (\character -> isAsciiLower character || isDigit character || character == '_') reason) =
       Left "Refund reason code contains unsupported characters"
   | otherwise = Right reason
   where
@@ -549,7 +564,7 @@ validateLineAllocations
 validateLineAllocations checkout allocations = do
   rows <- (rawSql
     "SELECT item.id::text,item.total_minor,coalesce(sum(allocation.amount_minor)\
-    \ FILTER (WHERE refund.status IN ('requested','approved','processing','succeeded')),0)\
+    \ FILTER (WHERE refund.status IN ('requested','approved','processing','failed','succeeded')),0)\
     \ FROM commerce_checkout_line_item item\
     \ LEFT JOIN commerce_refund_allocation allocation ON allocation.line_item_id=item.id\
     \ LEFT JOIN commerce_refund refund ON refund.id=allocation.refund_id\
@@ -559,8 +574,8 @@ validateLineAllocations checkout allocations = do
     , PersistArray (map (PersistText . raLineItemId) allocations)
     ] :: SqlPersistT IO [(Single Text, Single Int64, Single Int64)])
   let requested = sortOn raLineItemId allocations
-      available = sortOn raLineItemId
-        [RefundAllocation lineId (total - committed)
+      available = sortOn fst
+        [(lineId, toInteger total - toInteger committed)
         | (Single lineId, Single total, Single committed) <- rows]
   pure $ if length rows /= length allocations
     then Left "Refund allocation does not belong to the immutable checkout"
@@ -568,9 +583,9 @@ validateLineAllocations checkout allocations = do
       then Right ()
       else Left "Refund allocation exceeds an immutable line balance"
   where
-    allocationFits requested available =
-      raLineItemId requested == raLineItemId available
-        && raAmountMinor requested <= raAmountMinor available
+    allocationFits requested (lineId, available) =
+      raLineItemId requested == lineId
+        && toInteger (raAmountMinor requested) <= available
 
 loadRefundForUpdate :: RefundReference -> SqlPersistT IO [RefundRecord]
 loadRefundForUpdate refundRef =
@@ -621,7 +636,8 @@ refundRows suffix params = do
 providerRefundIsCompatible :: RefundReference -> Text -> SqlPersistT IO Bool
 providerRefundIsCompatible refundRef providerRefundId = do
   rows <- (rawSql
-    "SELECT provider_refund_id = ? FROM commerce_refund WHERE id = ?::uuid"
+    "SELECT provider_refund_id = ? FROM commerce_refund\
+    \ WHERE id = ?::uuid AND status = 'processing'"
     [ PersistText providerRefundId
     , PersistText (refundReferenceId refundRef)
     ] :: SqlPersistT IO [Single (Maybe Bool)])

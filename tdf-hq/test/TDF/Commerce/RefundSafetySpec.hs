@@ -47,7 +47,7 @@ databaseSpec
   :: (ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment)
   -> SpecWith ConnectionPool
 databaseSpec captureFixture = describe "refund-safety execution and reservation" $ do
-  it "grants one durable execution claim, including retries long after provider retention" $ \pool -> do
+  it "grants one durable claim, including retries long after provider retention" $ \pool -> do
     creation <- fixture pool
     record <- request pool creation
     (_, first) <- claim pool record >>= requireRight
@@ -65,7 +65,7 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
     length (rights results) `shouldBe` 8
     length (filter snd (rights results)) `shouldBe` 1
 
-  it "keeps two-person approval and permits a separately approved request exactly once" $ \pool -> do
+  it "keeps two-person approval and permits a separately approved request once" $ \pool -> do
     creation <- fixture pool
     record <- request pool creation
     runSqlPool (Refund.approveRefundForProcessing (Refund.rrReference record) 1
@@ -95,7 +95,7 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
       >>= (`shouldSatisfy` isLeft)
     assertFinancialCount pool creation 0
 
-  it "quarantines legacy failed requests without reissuing, cancelling or releasing them" $ \pool -> do
+  it "quarantines legacy failed requests without reissuing, cancelling or release" $ \pool -> do
     creation <- fixture pool
     record <- request pool creation
     _ <- claim pool record >>= requireRight
@@ -144,17 +144,91 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
         [creation, creation { Refund.rcIdempotencyKey = "synthetic-competing-refund" }]]
     length (rights results) `shouldBe` 1
 
+  it "reserves a failed line even when another line has enough unreserved funds" $ \pool -> do
+    creation <- fixtureWithLines pool [7500, 5015]
+    lines' <- runSqlPool (rawSql
+      "SELECT id::text FROM commerce_checkout_line_item WHERE checkout_id=?::uuid\
+      \ ORDER BY line_number"
+      [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
+    line <- case lines' of
+      [Single first, Single _] -> pure first
+      _ -> fail "Expected two synthetic immutable lines"
+    record <- runSqlPool (Refund.requestAllocatedRefund
+      creation { Refund.rcAmountMinor = 7500 } [Refund.RefundAllocation line 7500]) pool
+      >>= requireRight
+    _ <- claim pool record >>= requireRight
+    runSqlPool (rawExecute "UPDATE commerce_refund SET status='failed' WHERE id=?::uuid"
+      [PersistText (Refund.refundReferenceId (Refund.rrReference record))]) pool
+    runSqlPool (Refund.requestAllocatedRefund creation
+      { Refund.rcAmountMinor = 1, Refund.rcIdempotencyKey = "synthetic-same-line-overcommit" }
+      [Refund.RefundAllocation line 1]) pool >>= (`shouldSatisfy` isLeft)
+    runSqlPool (Refund.recordRefundPending (Refund.rrReference record)
+      "synthetic-legacy-late-pending" (Refund.rcCreatedAt creation)) pool
+      >>= (`shouldSatisfy` isLeft)
+    runSqlPool (Refund.loadRefund (Refund.rrReference record)) pool
+      >>= ((`shouldBe` Just "failed") . fmap Refund.rrStatus)
+
+  it "releases a cancelled pre-execution reservation without sending a refund" $ \pool -> do
+    creation <- fixture pool
+    record <- request pool creation
+    _ <- runSqlPool (Refund.approveRefundRequest (Refund.rrReference record) 2
+      (Refund.rcCreatedAt creation)) pool >>= requireRight
+    _ <- runSqlPool (Refund.cancelRefundRequest (Refund.rrReference record) 2
+      (Refund.rcCreatedAt creation)) pool >>= requireRight
+    claim pool record >>= (`shouldSatisfy` isLeft)
+    replacement <- request pool creation { Refund.rcIdempotencyKey = "synthetic-pre-send-replace" }
+    Refund.rrStatus replacement `shouldBe` "requested"
+    assertFinancialCount pool creation 0
+
+  it "completes concurrent partial refunds once each without exceeding the capture" $ \pool -> do
+    creation <- fixture pool
+    first <- request pool creation { Refund.rcAmountMinor = 6000 }
+    second <- request pool creation
+      { Refund.rcAmountMinor = 6515, Refund.rcIdempotencyKey = "synthetic-second-partial" }
+    forM_ [first, second] $ \record -> claim pool record >>= requireRight
+      >>= ((`shouldBe` True) . snd)
+    let complete record = runSqlPool (Refund.recordVerifiedRefund Refund.VerifiedRefund
+          { Refund.vrRefund = Refund.rrReference record
+          , Refund.vrProviderRefund =
+              "synthetic-" <> Refund.refundReferenceId (Refund.rrReference record)
+          , Refund.vrAmountMinor = Refund.rrAmountMinor record, Refund.vrCurrency = "USD"
+          , Refund.vrOccurredAt = Refund.rcCreatedAt creation
+          , Refund.vrCorrelationId = "synthetic-partial-completion"
+          }) pool
+    concurrent [complete first, complete second] `shouldReturn` [Right True, Right True]
+    concurrent [complete first, complete second] `shouldReturn` [Right False, Right False]
+    rows <- runSqlPool (rawSql
+      "SELECT status,refunded_minor FROM commerce_checkout_session WHERE id=?::uuid"
+      [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
+    rows `shouldBe` [(Single ("refunded" :: Text), Single (12515 :: Int64))]
+
+  it "never replaces an immutable pending provider refund reference" $ \pool -> do
+    creation <- fixture pool
+    record <- request pool creation
+    _ <- claim pool record >>= requireRight
+    let pending value = runSqlPool (Refund.recordRefundPending (Refund.rrReference record)
+          value (Refund.rcCreatedAt creation)) pool
+    pending "synthetic-original-refund" `shouldReturn` Right ()
+    pending "synthetic-original-refund" `shouldReturn` Right ()
+    pending "synthetic-replacement-refund" >>= (`shouldSatisfy` isLeft)
+    runSqlPool (Refund.loadRefund (Refund.rrReference record)) pool
+      >>= ((`shouldBe` Just (Just "synthetic-original-refund")) . fmap Refund.rrProviderRefundId)
+
   where
-    fixture pool = do
+    fixture pool = fixtureWithLines pool [12515]
+    fixtureWithLines pool amounts = do
       payment <- captureFixture pool Checkout.ProviderPayPal
-      lineId <- toText <$> nextRandom
-      runSqlPool (rawExecute
-        "INSERT INTO commerce_checkout_line_item(id,checkout_id,line_number,product_type,\
-        \ product_id,product_version,description,quantity,unit_amount_minor,subtotal_minor,\
-        \ total_minor,snapshot) VALUES (?::uuid,?::uuid,1,'service','synthetic','1',\
-        \ 'Synthetic refund fixture',1,12515,12515,12515,'{}'::jsonb)"
-        [PersistText lineId, PersistText (Checkout.checkoutReferenceId (Checkout.vpCheckout payment))])
-        pool
+      requestId <- toText <$> nextRandom
+      forM_ (zip [1..] amounts) $ \(lineNumber, amount) -> do
+        lineId <- toText <$> nextRandom
+        runSqlPool (rawExecute
+          "INSERT INTO commerce_checkout_line_item(id,checkout_id,line_number,product_type,\
+          \ product_id,product_version,description,quantity,unit_amount_minor,subtotal_minor,\
+          \ total_minor,snapshot) VALUES (?::uuid,?::uuid,?,'service','synthetic','1',\
+          \ 'Synthetic refund fixture',1,?,?,?,'{}'::jsonb)"
+          ([PersistText lineId,
+            PersistText (Checkout.checkoutReferenceId (Checkout.vpCheckout payment)),
+            PersistInt64 lineNumber] <> replicate 3 (PersistInt64 amount))) pool
       runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
       pure Refund.RefundCreation
         { Refund.rcCheckout = Checkout.vpCheckout payment
@@ -164,10 +238,11 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
         , Refund.rcMerchantRef = Checkout.vpMerchantRef payment
         , Refund.rcAmountMinor = Checkout.vpAmountMinor payment
         , Refund.rcCurrency = "USD", Refund.rcReasonCode = "customer_request"
-        , Refund.rcIdempotencyKey = "synthetic-refund-" <> lineId
+        , Refund.rcIdempotencyKey = "synthetic-refund-" <> requestId
         , Refund.rcRequestedBy = 1, Refund.rcCreatedAt = Checkout.vpOccurredAt payment
         }
-    request pool creation = runSqlPool (Refund.requestSingleLineRefund creation) pool >>= requireRight
+    request pool creation =
+      runSqlPool (Refund.requestSingleLineRefund creation) pool >>= requireRight
     claim pool record = runSqlPool (Refund.approveRefundForProcessing
       (Refund.rrReference record) 2 (Refund.rrCreatedAt record)) pool
 
