@@ -64,7 +64,7 @@ TDF Ticketing System - Production Webhooks
 
 Example:
 ```
-whsec_1234567890abcdefghijklmnopqrstuvwxyz
+whsec_REPLACE_WITH_YOUR_ENDPOINT_SIGNING_SECRET
 ```
 
 ## Step 5: Configure Environment Variables
