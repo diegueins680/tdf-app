@@ -103,7 +103,7 @@ A passing bounded model is evidence about that model and bounds, not the whole a
 | Default chronological Following and separate explainable Discover | satisfied for inactive web/API preview | Immutable publication order, reauthorized cursor, declared-interest/public-profile explanations and opt-out; sparse recall limitation documented |
 | Full feed traversal and interaction product coverage | failed | Relationship list stops at 50; newly eligible old content needs refresh; private follow requests, reshares and complete recommendation-repeat evaluation absent |
 | Accessible responsive focused flows and safe selection | satisfied for preview | Existing profile/interest flows, named candidates, keyboard/ARIA and synthetic browser evidence; full-app/mobile journeys not qualified |
-| Shared server privacy/block policy across all existing surfaces | failed | Legacy DM, notifications, boosted feed, selectors, mentions, shared spaces and media are not consistently integrated; inactive API does not repair their production behavior |
+| Shared server privacy/block policy across all existing surfaces | failed | DM read/write/API integration is delivered in #386/#390 and web isolation in #391; notifications, boosted feed, selectors, mentions, shared spaces and media still need integration; inactive code does not repair production behavior |
 | Principal/entity/token and organization authority | failed | [Session boundary](session-boundary.md) retains token identity and verifies revocation races for the account-only API; delegated entities, credential provenance and global-role revocation remain incomplete |
 | Account suspension/deletion/export and stale external work | failed | Social closure tombstone is implemented; full account lifecycle, retention, export and queued worker refinement are incomplete |
 | Abuse/reporting/appeals and proportionate controls | failed | Mutation rate limit implemented; legacy reports reused in design, but general harassment report integration, mention controls and auditable moderation are incomplete |
@@ -251,11 +251,226 @@ shared server policy rather than exposing a second client contract. The bounded
 DmReads model passed 9,648 distinct states and three specific negative controls;
 1,440 generated observations passed on private PostgreSQL, and a membership-only
 unsafe control failed at case 36. Complete-schema apply/reapply and pause passed.
-The actual bearer HTTP suite passed **93 examples, zero failures**. Final backend
-build and hosted CI results are pending until recorded at their actual source version. Do not infer them from earlier PR checks.
+The actual bearer HTTP suite passed **93 examples, zero failures**. Full local
+Stack build/tests passed **2,542 examples, zero failures**. The Docker PostgreSQL
+17.10 complete-schema fixture passed after the temporary-server readiness repair.
+Social CI passed at `44a1c7bededf0ba4b54068d482667ac24299f8e4`; full CI remains
+separately tracked. Do not infer current checks from earlier PR results.
 
 This reduces the legacy-DM blocker only. Old readers must be drained before any
 activation; profile/search/media/notifications, organization authority, moderation,
 message retry semantics, thread pagination, native/full-app journeys and product
 instrumentation remain incomplete. The historical deployment exception above still
 applies. No production flag or deployment is authorized by these tests.
+
+| Follow-up PR | Dependency | Actual implemented verification |
+|---|---|---|
+| [#390](https://github.com/diegueins680/tdf-app/pull/390), draft | #386 | DM read/API model, 1,440 SQL observations, 93 HTTP examples, full local backend, schema/readiness repair; implementation `02755bc410eecb5c3e03938121f1197102c709e1`, readiness `44a1c7bededf0ba4b54068d482667ac24299f8e4` |
+| [#391](https://github.com/diegueins680/tdf-app/pull/391), draft | #390 | Account-scoped web queries, drafts, read markers and selected conversation; denied-refetch display/badge withdrawal; 28 focused tests, lint and app typecheck passed. Current implementation/evidence head `8b7daf9c81da8e2c1d1fe8f785371fb33d174078`; hosted rerun separately tracked |
+
+The extra web TypeScript invocation including all test files failed in unchanged
+fixtures; the repository application-only typecheck passed. Logs retain that
+distinction. The initial child model job failed on PostgreSQL container startup,
+not a formal invariant; the retained failure and readiness repair are documented.
+No missing high-degree DM benchmark, native journey, migration rollout lock duration
+or outstanding overall criterion is marked passed by these focused results.
+
+## Verified profile continuation — 2026-09-15
+
+[Draft #397](https://github.com/diegueins680/tdf-app/pull/397), base #390, implements
+both profile read boundaries. Implementation `7706258a9e8ecbe0b99b4fd23903df606848ad03`;
+final model/evidence head `7c452efcbc7b45e797b7ebd590dfffccf0fc9751`. No merge or
+new production activation. Local results: TLC 5,760 distinct states and three
+intended counterexamples; 2,880 generated PostgreSQL outcomes; 104 HTTP examples;
+2,542 Stack examples; complete-schema PG17 migration/reapply/pause; catalog audit;
+all passed. Synthetic protected SQL p95 12.11–43.76ms passed the declared 50ms
+threshold after the scalar version failed at 76.33ms. No production-scale claim.
+
+[Social CI](https://github.com/diegueins680/tdf-app/actions/runs/35056386037) and
+[full CI](https://github.com/diegueins680/tdf-app/actions/runs/35056386064) are running
+at the final profile head; the [snapshot](evidence/profile-ci/initial-final-head-checks.json)
+is not a completed result. #390 full CI35052835558 still reports its backend
+build/test step in progress, so it too remains unqualified remotely. Do not cancel
+these runs by pushing evidence changes to their implementation branches. Inspect
+the final statuses/logs and append exact-SHA results in this verification branch.
+
+Remaining implementation work is **incomplete**, not an unavailable-tool excuse:
+`socialListFollowers`, `socialListFollowing`, `socialListFriends` still load legacy
+edges/names without canonical exclusion; `socialListSuggestedFriends` traverses
+unbounded second-degree edges and exposes counts before privacy filtering. Those
+are the next bounded compatibility repair. Legacy add-friend/vCard writers can
+manufacture mutual follows and need a consent-preserving compatibility design,
+though canonical DM no longer accepts those edges as consent. Broader search,
+notifications/media, entity delegation, moderation/lifecycle integration, native
+journeys and outcome instrumentation remain unfinished. Rollout stays blocked.
+
+The supplemental test-inclusive web TypeScript failure is confirmed pre-existing:
+parent/candidate diagnostics match byte-for-byte (134 lines); evidence commit
+`029dd5382` in #394. Application-only typecheck and focused client tests passed.
+Prior automatic provider deployment exceptions remain unresolved; no deployment
+command was issued in this continuation.
+
+## Completed parent CI — 2026-09-16
+
+- #390 [full CI35052835558](https://github.com/diegueins680/tdf-app/actions/runs/35052835558)
+  completed **success** at `44a1c7bededf0ba4b54068d482667ac24299f8e4`, including
+  backend build/tests and runtime/session, merch, schema and booking checks.
+- #397 [full CI35056386064](https://github.com/diegueins680/tdf-app/actions/runs/35056386064)
+  completed **success** at `7c452efcbc7b45e797b7ebd590dfffccf0fc9751` after one
+  failed-job rerun. The initial Chromium desktop rejected-login test hit its
+  30-second deadline waiting for a mocked error alert (45 passed, 10 skipped,
+  one failed). UI/e2e/package/CI inputs are unchanged from the passing #390 parent.
+  No assertions, timeout settings or code were changed to obtain the rerun result.
+  This demonstrates an intermittent run outcome, not a diagnosed root cause.
+  The [first failure](evidence/completed-parent-ci/profile-browser-first-failure.txt)
+  and [final run](evidence/completed-parent-ci/profile-rerun-final.json) are retained.
+- #397 [social CI35056386037](https://github.com/diegueins680/tdf-app/actions/runs/35056386037)
+  completed both model/PostgreSQL and social-client jobs successfully at that head.
+  Scoped-out UI/mobile jobs in full CI remain **skipped**, not passes.
+
+These results supersede earlier pending snapshots, without qualifying unimplemented
+platform scope or authorizing deployment. All dependent PRs remain unmerged.
+
+## Published relationship-read delivery — 2026-09-16
+
+[Draft #402](https://github.com/diegueins680/tdf-app/pull/402), dependent on #397,
+head `8b2d1557a5e72e0346af1fd43dc7cf36033da067`, implements legacy followers,
+following and friends GET authorization plus retirement of inferred suggestions
+once canonical enforcement starts. [Review packet](https://github.com/diegueins680/tdf-app/blob/8b2d1557a5e72e0346af1fd43dc7cf36033da067/docs/social/relationship-read-boundary.md)
+contains 24,192-state TLC results, three negative controls, 8,064 generated SQL
+observations, two expected SQL failures, 116 passing real bearer HTTP examples,
+2,542 passing Stack examples, complete-schema/pause tests, source fingerprints and
+synthetic degree-100/10,004 performance. Catalog audit and SQL volatility/UTC checks
+passed. Hosted CI for this new head is pending; parent success does not qualify it.
+
+Next implementation boundary: `socialAddFriend` and `vcardExchange` manufacture
+reciprocal legacy follows and return names without canonical policy; removal also
+needs a defined compatibility effect on canonical consent. Model the writer and
+retry/block/accept boundary before changing behavior. Preserve historical meaning
+and do not backfill accepted consent from legacy reciprocal rows. Broader client
+cutover, search/media/notification privacy, delegation and lifecycle/moderation
+remain incomplete; unpaginated legacy arrays still require a scale migration.
+No production flag activation, merge or deployment command occurred. The prior
+provider-triggered deployment exception still requires target/removal verification.
+
+### #402 initial hosted verification
+
+At head `8b2d1557a5e72e0346af1fd43dc7cf36033da067`, both jobs in
+[social CI35122347901](https://github.com/diegueins680/tdf-app/actions/runs/35122347901)
+passed: models/PostgreSQL and social client. The catalog audit also passed.
+[Full CI35122347920](https://github.com/diegueins680/tdf-app/actions/runs/35122347920)
+remains in progress, including backend and persona browser jobs. See the
+[actual status snapshot](evidence/relationship-ci/initial-checks.json). Its skipped
+UI/mobile jobs are not passing tests. Await the final full-run result and inspect
+any failed-job logs without weakening assertions; record completion here to avoid
+cancelling implementation CI with documentation pushes.
+
+
+### #402 final full CI and #409 explicit legacy writes — 2026-09-16
+
+[Full CI35122347920](https://github.com/diegueins680/tdf-app/actions/runs/35122347920)
+completed **success** at `8b2d1557a5e72e0346af1fd43dc7cf36033da067`, including backend
+build/tests, social session/model HTTP fixtures, artist-merch runtime, complete-schema
+automatic migrations and public-booking HTTP conflict checks. Browser, migration,
+quality and contract jobs also passed. The UI/mobile/API-contract-test jobs were
+skipped, not passed. [Final actual run JSON](evidence/relationship-ci/final-full-ci.json)
+supersedes the earlier pending snapshots without changing implementation branches.
+
+[Draft #409](https://github.com/diegueins680/tdf-app/pull/409) depends on #402.
+Exact source: `7e601607f60b2987e502c4a14db821bbf37df296`.
+[Review packet](https://github.com/diegueins680/tdf-app/blob/7e601607f60b2987e502c4a14db821bbf37df296/docs/social/legacy-write-boundary.md)
+records the repaired friend POST/DELETE and vCard writes, a shared locked current-token
+transaction, and retirement with non-cacheable 410 after canonical enforcement. It
+preserves historical timestamps/NFC metadata and never invents canonical consent.
+Local checks passed: TLC 4,320 distinct states and three specific counterexamples;
+288 generated real HTTP observations; **417 HTTP examples**, **2,542 Stack examples**,
+zero failures; PostgreSQL 17 complete-schema/reapply/pause and catalog audit. Guard-only
+synthetic p95 was 8.06ms at degree 0 and 12.22ms at degree 10,004 against a predeclared
+50ms threshold, excluding bearer/mutation/HTTP. Failed development attempts and
+exact source/log hashes are preserved. Hosted checks are **running**, not yet passed:
+[actual initial snapshot](evidence/legacy-write-ci/initial-checks.json).
+
+**Next repair:** `Server.fanFollowArtist` auto-follows every fan-club member in both
+directions and emits artist-follower notifications. This side effect remains outside
+#409, creates unwanted historical graph edges and unbounded work, and blocks activation.
+Preserve the artist FanFollow subscription, model membership/notification authority and
+retire implicit member-to-member follows without converting old rows into consent.
+Canonical DM policy already prevents these legacy edges from granting accepted-connection
+rights. Old-client cutover, search/media/notifications, delegation, lifecycle/moderation,
+legacy list pagination and native journeys remain incomplete. All PRs remain unmerged;
+no production flag activation or deployment command occurred. Earlier automatic provider
+deployment exceptions remain unresolved and still need owner target/removal verification.
+
+
+### #409 initial hosted results
+
+At `7e601607f60b2987e502c4a14db821bbf37df296`, both jobs in
+[social CI35129594549](https://github.com/diegueins680/tdf-app/actions/runs/35129594549)
+passed: model/PostgreSQL and social client. Catalog authority, repository quality,
+migration tests and API contract jobs also passed. The full
+[CI35129595035](https://github.com/diegueins680/tdf-app/actions/runs/35129595035)
+still has backend and persona browser work running; Safe Install is also pending.
+[Actual snapshot](evidence/legacy-write-ci/current-checks.json). No failures were
+reported at this snapshot, but this is not a completed full CI result. Record its
+final result here; do not push evidence-only changes to the implementation branch
+while that run is active. The next repair remains fan-club fanout and notifications.
+
+
+### #409 final CI and #415 fan subscriptions — 2026-09-16
+
+Parent [full CI35129595035](https://github.com/diegueins680/tdf-app/actions/runs/35129595035)
+completed **success** at `7e601607f60b2987e502c4a14db821bbf37df296`; the backend,
+browser, migrations, repository quality and contracts passed. Skipped jobs are
+not passing checks. [Final run JSON](evidence/legacy-write-ci/final-full-ci.json)
+supersedes the earlier pending snapshots.
+
+[Draft #415](https://github.com/diegueins680/tdf-app/pull/415) depends on #409, with
+source `daf6c5a680b81928c2e2c66df98063328e6d5e9c`.
+[Exact-source review packet](https://github.com/diegueins680/tdf-app/blob/daf6c5a680b81928c2e2c66df98063328e6d5e9c/docs/social/fan-effects-boundary.md)
+contains the subscription/effect separation, current-session serialization and
+corrected member-profile empty state. Local results: TLC **12,738 distinct states**,
+four detected counterexamples, **708 generated observations**, **1,141 HTTP examples**
+and **2,542 backend examples**, zero failures. Native PostgreSQL 16.10 complete-schema
+apply/reapply/pause, UI app typecheck/lint, 11 selector tests and catalog audit passed.
+Local Docker PG17 failed environmentally (read-only filesystem); it is not a passed
+PG17 check. Synthetic repaired-handler p95 was 49.22/50.05ms at 100/10,000 members,
+within declared 100/250ms thresholds; no production performance claim.
+
+Hosted [social35144567539](https://github.com/diegueins680/tdf-app/actions/runs/35144567539)
+and [full35144567540](https://github.com/diegueins680/tdf-app/actions/runs/35144567540)
+are pending in the [initial snapshot](evidence/fan-effects-ci/initial-checks.json).
+Record later results here without restarting implementation CI for evidence-only edits.
+The whole social task remains incomplete; all PRs remain unmerged, no deployment
+command or production activation occurred. Earlier automatic provider deployment
+exceptions still need owner review/removal. See [next integration inventory](fan-integration-next.md).
+
+
+### #415 hosted social verification passed
+
+At exact source `daf6c5a680b81928c2e2c66df98063328e6d5e9c`, both jobs in
+[social CI35144567539](https://github.com/diegueins680/tdf-app/actions/runs/35144567539)
+completed **success**: model/PostgreSQL (including regeneration, controls and complete
+schema) and social client/browser. [Actual final social run](evidence/fan-effects-ci/social-current.json).
+Hosted PostgreSQL qualification supersedes the local Docker limitation for that CI
+fixture; the local Docker failure remains recorded. This does not establish a new
+member-profile browser journey or native runtime coverage.
+
+[Full CI35144567540](https://github.com/diegueins680/tdf-app/actions/runs/35144567540)
+is still running: repository quality and API contracts passed; backend, UI, persona
+browser and migration work remain pending in the [snapshot](evidence/fan-effects-ci/full-current.json).
+Skipped mobile/API-contract-test jobs are not passes. The 708 generated HTTP cases
+run in the backend job; do not claim their hosted execution from the SQL-only social
+job. They passed locally as part of the 1,141-example run. Continue monitoring the
+full run and preserve its actual final result here without changing #415's head.
+
+
+### #415 final snapshot for this continuation
+
+[Latest actual checks](evidence/fan-effects-ci/latest-checks.json) show successful
+UI quality, persona browser, migration tests, production-migration qualification,
+API contracts, repository quality, catalog, Safe Install and both social jobs.
+Only the full CI backend job remains **in progress**, at build/test. The local
+2,542-test and 1,141-HTTP results remain valid but do not substitute for that job.
+Mobile and API-contract-test jobs were skipped. Continue with run35144567540's
+final backend result and the next integration inventory; no whole-task completion
+or production readiness is claimed.
