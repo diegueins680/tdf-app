@@ -7,7 +7,7 @@ GitHub Actions job104857160527 completed the Stack suite, then failed at `test-p
 The initial Stack build/test subshell must not inherit `TDF_PAYMENT_AUDIT_DATABASE_URL`:
 `PaymentAuditSpec` uses its presence to enable the PostgreSQL examples, but their
 fixture is not loaded until the subsequent mandatory runtime runner. The parent
-retains the URL so that runner initializes the fixture and executes the same three
+retains the URL so that runner initializes the fixture and executes all PostgreSQL
 examples with `--fail-on=empty`. Orchestration regressions cover this ordering and
 verify that failures from either Stack or the runtime runner remain fatal. This
 changes test setup only; no production schema, credentials, or deployment change
