@@ -50,7 +50,8 @@ startProviderEventWorker env = do
   rawKey <- lookupEnv "COMMERCE_EVENT_ENCRYPTION_KEY"
   case validateEncryptionKey (T.pack <$> rawKey) of
     Left _ -> void $ tryAny $ hPutStrLn stderr
-      "{\"component\":\"provider-event-worker\",\"level\":\"warning\",\"message\":\"worker disabled: COMMERCE_EVENT_ENCRYPTION_KEY is missing or invalid\"}"
+      ("{\"component\":\"provider-event-worker\",\"level\":\"warning\","
+        <> "\"message\":\"worker disabled: COMMERCE_EVENT_ENCRYPTION_KEY is missing or invalid\"}")
     Right encryptionKey -> void (forkIO (workerLoop env encryptionKey))
 
 workerLoop :: Env -> Text -> IO ()
@@ -68,7 +69,8 @@ providerEventWorkerIterationWith tick logError logInfo = do
     -- Exception text can contain credentials, SQL parameters or provider payloads.
     -- Diagnostics must neither render it nor repeat a tick when its sink fails.
     Left _ -> void $ tryAny $ logError
-      "{\"component\":\"provider-event-worker\",\"level\":\"error\",\"message\":\"tick failed\"}"
+      ("{\"component\":\"provider-event-worker\",\"level\":\"error\","
+        <> "\"message\":\"tick failed\"}")
     Right stats
       | stats /= emptyStats ->
           void $ tryAny $ logInfo

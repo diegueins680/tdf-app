@@ -171,7 +171,8 @@ providerQueryWorkerIterationWith tick logError = do
     -- A failed diagnostic must not end lease recovery or repeat provider work.
     -- tryAny deliberately preserves asynchronous cancellation at both boundaries.
     Left _ -> void $ tryAny $ logError
-      "{\"component\":\"provider-query-worker\",\"level\":\"error\",\"message\":\"tick failed; lease recovery required\"}"
+      ("{\"component\":\"provider-query-worker\",\"level\":\"error\","
+        <> "\"message\":\"tick failed; lease recovery required\"}")
     Right _ -> pure ()
 
 queryWorkerEnabled :: IO Bool

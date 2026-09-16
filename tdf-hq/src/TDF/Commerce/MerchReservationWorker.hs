@@ -57,7 +57,8 @@ merchReservationWorkerIterationWith tick logError logInfo = do
   case result of
     -- Database exceptions are untrusted diagnostics, not safe log fields.
     Left _ -> void $ tryAny $ logError
-      "{\"component\":\"merch-reservation-worker\",\"level\":\"error\",\"message\":\"tick failed\"}"
+      ("{\"component\":\"merch-reservation-worker\",\"level\":\"error\","
+        <> "\"message\":\"tick failed\"}")
     Right released
       | released > 0 ->
           void $ tryAny $ logInfo
