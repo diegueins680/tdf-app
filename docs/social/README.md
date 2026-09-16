@@ -19,3 +19,6 @@ Use [audit](audit.md), [decisions](research.md), [policy](policy.md), and
 The objective is useful music-industry connections and subsequent collaboration,
 bookings and sales. Activity alone is not success. Preserve the existing payments,
 booking, releases, event and media authorities. No graph service is proposed.
+
+Legacy chat enforcement: [write boundary](dm-write-boundary.md),
+[read/API boundary](dm-read-boundary.md), and [session authority](session-boundary.md).

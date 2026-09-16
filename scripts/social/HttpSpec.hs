@@ -22,6 +22,7 @@ import TDF.DB (Env(..), makePool)
 import TDF.Social.API (SocialV2API)
 import TDF.Social.Server (socialV2Server)
 import SessionSpec (sessionSpec)
+import ChatSpec (chatSpec)
 import SessionBenchmark (benchmarkSession)
 
 type ProtectedSocial = AuthProtect "bearer-token" :> SocialV2API
@@ -101,5 +102,6 @@ main = do
         status <$> call "synthetic-3" "GET" "/v2/me" "" >>= (`shouldBe` 404)
 
       sessionSpec env
+      chatSpec env
 
   benchmarkSession env

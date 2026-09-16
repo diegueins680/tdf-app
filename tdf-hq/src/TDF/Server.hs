@@ -11,6 +11,7 @@
 
 module TDF.Server where
 
+import qualified TDF.Social.Chat as SocialChat
 import TDF.Social.Server (socialV2Server)
 import           Control.Applicative ((<|>))
 import           Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
@@ -3069,7 +3070,7 @@ socialServer user =
   :<|> socialV2Server user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
-chatServer user =
+chatServer user = SocialChat.chatPolicyServer user $
        chatListThreads user
   :<|> chatGetOrCreateDM user
   :<|> chatListMessages user
@@ -12395,29 +12396,10 @@ validateChatMessageListLookup
   -> Maybe Int64
   -> Maybe Int64
   -> Either ServerError (Int64, Maybe Int64, Maybe Int64)
-validateChatMessageListLookup threadId mBeforeId mAfterId = do
-  threadIdValid <- validatePositiveIdField "threadId" threadId
-  beforeIdValid <- validateOptionalPositiveIdField "beforeId" mBeforeId
-  afterIdValid <- validateOptionalPositiveIdField "afterId" mAfterId
-  when (isJust beforeIdValid && isJust afterIdValid) $
-    Left err400 { errBody = "Use either beforeId or afterId" }
-  pure (threadIdValid, beforeIdValid, afterIdValid)
+validateChatMessageListLookup = SocialChat.validateLookup
 
 validateChatSendMessageBody :: Text -> Either ServerError Text
-validateChatSendMessageBody rawBody
-  | T.null body =
-      Left err400 { errBody = "Mensaje vacío" }
-  | T.length body > 5000 =
-      Left err400 { errBody = "Mensaje demasiado largo (max 5000 caracteres)" }
-  | T.any isUnsupportedChatMessageChar body =
-      Left err400 { errBody = "message must not contain control or formatting characters" }
-  | otherwise =
-      Right body
-  where
-    body = T.strip rawBody
-    isUnsupportedChatMessageChar ch =
-      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
-        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+validateChatSendMessageBody = SocialChat.validateBody
 
 validateBookingListFilters :: Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> Either ServerError (Maybe Int64, Maybe Int64, Maybe Int64)
 validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do

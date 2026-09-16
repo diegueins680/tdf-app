@@ -242,3 +242,20 @@ and production activation remain blocked. No new message store or consent backfi
 
 The earlier Vercel/Cloudflare deployment exceptions remain unresolved. No deployment
 command or new production flag activation was issued during this continuation.
+
+## Legacy DM read/API follow-up — 2026-09-15
+
+[Read/API boundary](dm-read-boundary.md) extends #386 to existing thread previews,
+message history, thread opening and send error mapping. It preserves DTOs and adds
+shared server policy rather than exposing a second client contract. The bounded
+DmReads model passed 9,648 distinct states and three specific negative controls;
+1,440 generated observations passed on private PostgreSQL, and a membership-only
+unsafe control failed at case 36. Complete-schema apply/reapply and pause passed.
+The actual bearer HTTP suite passed **93 examples, zero failures**. Final backend
+build and hosted CI results are pending until recorded at their actual source version. Do not infer them from earlier PR checks.
+
+This reduces the legacy-DM blocker only. Old readers must be drained before any
+activation; profile/search/media/notifications, organization authority, moderation,
+message retry semantics, thread pagination, native/full-app journeys and product
+instrumentation remain incomplete. The historical deployment exception above still
+applies. No production flag or deployment is authorized by these tests.

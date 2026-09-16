@@ -292,6 +292,7 @@ data ChatThreadDTO = ChatThreadDTO
   , ctUpdatedAt        :: UTCTime
   } deriving (Show, Generic)
 instance ToJSON ChatThreadDTO
+instance FromJSON ChatThreadDTO
 
 data ChatMessageDTO = ChatMessageDTO
   { cmId            :: Int64
@@ -301,6 +302,7 @@ data ChatMessageDTO = ChatMessageDTO
   , cmCreatedAt     :: UTCTime
   } deriving (Show, Generic)
 instance ToJSON ChatMessageDTO
+instance FromJSON ChatMessageDTO
 
 data ChatSendMessageRequest = ChatSendMessageRequest
   { csmBody :: Text

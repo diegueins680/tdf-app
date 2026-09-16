@@ -33,15 +33,20 @@ psql_schema -Atc 'SELECT count(*) AS registered_migrations FROM tdf_schema_migra
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
+psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/scripts/social/schema-compatibility.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_pause.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
+psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
 psql_schema <<'SQL'
 DO $$ BEGIN
   ASSERT NOT (SELECT enabled FROM social_v2_runtime);
   ASSERT (SELECT activated_once FROM social_v2_runtime);
+  ASSERT social_v2_chat_threads(900000001)->'result'='[]'::jsonb;
+  ASSERT social_v2_chat_messages(900000001,900000001,NULL,NULL,50)->>'error'='unavailable';
+  ASSERT social_v2_chat_send(900000001,900000001,'denied',true)->>'error'='forbidden';
   ASSERT (SELECT count(*) FROM chat_message WHERE body='Synthetic legacy DM')=1;
   BEGIN
     INSERT INTO chat_message(thread_id,sender_party_id,body,created_at)
