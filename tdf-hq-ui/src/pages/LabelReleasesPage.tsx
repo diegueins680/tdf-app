@@ -3,12 +3,10 @@ import { useMemo, useState } from 'react';
 import {
   Alert,
   Autocomplete,
-  Avatar,
   Box,
   Button,
   Card,
   CardContent,
-  CardMedia,
   Chip,
   Grid,
   IconButton,
@@ -28,6 +26,9 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Admin } from '../api/admin';
 import { Fans } from '../api/fans';
+import { Records } from '../api/records';
+import ReleaseArtwork from '../features/releases/ReleaseArtwork';
+import { getReleaseArtworkSources } from '../features/releases/resolveReleaseArtwork';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import type { ArtistProfileDTO, ArtistReleaseDTO, ArtistReleaseUpsert } from '../api/types';
 import StreamingPlayer from '../components/StreamingPlayer';
@@ -125,6 +126,12 @@ export default function LabelReleasesPage() {
       const flat = releasesPerArtist.flat() as ReleaseRow[];
       return flat.sort((a, b) => compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'desc'));
     },
+  });
+
+  const recordsQuery = useQuery({
+    queryKey: ['records-feed', 'es'],
+    queryFn: () => Records.getFeed('es'),
+    staleTime: 5 * 60 * 1000,
   });
 
   const createMutation = useMutation({
@@ -564,6 +571,7 @@ export default function LabelReleasesPage() {
               renderItems={(visibleReleases) => (
                 <Grid container spacing={2}>
                   {visibleReleases.map((release) => {
+                    const artworkSources = getReleaseArtworkSources(release, recordsQuery.data?.releases ?? []);
                     const sources = buildReleaseStreamingSources({
                       arReleaseId: release.arReleaseId,
                       arArtistId: release.arArtistId,
@@ -579,29 +587,7 @@ export default function LabelReleasesPage() {
                     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                       <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         <Stack direction="row" spacing={2}>
-                          {(release.arCoverImageUrl ?? release.artistHeroImageUrl) && (
-                            <CardMedia
-                              component="img"
-                              image={release.arCoverImageUrl ?? release.artistHeroImageUrl ?? undefined}
-                              alt={release.arTitle}
-                              sx={{
-                                width: 120,
-                                height: 120,
-                                borderRadius: 2,
-                                objectFit: 'cover',
-                                border: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            />
-                          )}
-                          {!release.arCoverImageUrl && !release.artistHeroImageUrl && (
-                            <Avatar
-                              variant="rounded"
-                              sx={{ width: 120, height: 120, fontWeight: 700, bgcolor: 'grey.200', color: 'text.primary' }}
-                            >
-                              {release.artistName.slice(0, 2).toUpperCase()}
-                            </Avatar>
-                          )}
+                          <ReleaseArtwork sources={artworkSources} title={release.arTitle} artistName={release.artistName} />
                           <Stack spacing={0.5} flex={1} minWidth={0}>
                             <Stack direction="row" alignItems="center" spacing={1} justifyContent="space-between">
                               <Typography variant="h6" noWrap>
@@ -684,7 +670,7 @@ export default function LabelReleasesPage() {
                           <StreamingPlayer
                             title={release.arTitle}
                             artist={release.artistName}
-                            posterUrl={release.arCoverImageUrl ?? release.artistHeroImageUrl}
+                            posterUrl={artworkSources[0]}
                             sources={sources}
                             variant="compact"
                           />
