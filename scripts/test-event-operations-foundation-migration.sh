@@ -254,6 +254,35 @@ psql_exec -c "BEGIN;
   COMMIT;" >/dev/null
 test "$(psql_exec -qAt -c 'SELECT id FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101;')" = "$retained_dependency_id"
 
+# An override issued while a task is open cannot approve later graph changes.
+psql_exec -c "BEGIN;
+  INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (160,10,'planned',1);
+  INSERT INTO event_operation_task_policy(activity_id,requires_accountability) VALUES (160,false);
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (160,101);
+  INSERT INTO event_operation_task_override(activity_id,activity_version,override_kind,reason,policy_reference,authorized_by_party_id)
+    VALUES (160,1,'blocked_completion','Original graph only','event-ops-emergency-v1',1);
+  COMMIT;
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (160,103);
+" >/dev/null
+if graph_error=$(psql_exec -v VERBOSITY=verbose -c "UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=160 AND version=1;" 2>&1); then
+  echo 'expected open-task graph change to invalidate earlier override' >&2; exit 1
+fi
+case "$graph_error" in *23514*incomplete\ dependencies*) ;; *) echo 'unexpected stale graph override error' >&2; exit 1;; esac
+test "$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=160;")" = planned:1
+psql_exec -c "BEGIN;
+  UPDATE event_logistics_activity SET version=2 WHERE id=160;
+  INSERT INTO event_operation_task_override(activity_id,activity_version,override_kind,reason,policy_reference,authorized_by_party_id)
+    VALUES (160,2,'blocked_completion','Reviewed changed graph','event-ops-emergency-v1',1);
+  UPDATE event_logistics_activity SET status='completed',version=3 WHERE id=160;
+  COMMIT;" >/dev/null
+test "$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=160;")" = completed:3
+test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_task_override WHERE activity_id=160;')" = 2
+test "$(psql_exec -qAt -c 'SELECT jsonb_array_length(dependency_snapshot) FROM event_operation_task_override WHERE activity_id=160 AND activity_version=1;')" = 1
+test "$(psql_exec -qAt -c 'SELECT dependency_snapshot = event_operation_dependency_snapshot(160) FROM event_operation_task_override WHERE activity_id=160 AND activity_version=2;')" = t
+if psql_exec -c "UPDATE event_operation_task_override SET dependency_snapshot='[]'::jsonb WHERE activity_id=160;" >/dev/null 2>&1; then
+  echo 'expected approved dependency snapshots to remain immutable' >&2; exit 1
+fi
+
 psql_exec -c "INSERT INTO event_operation_audit_event(event_id,actor_party_id,actor_reference,operation_code,resource_kind,resource_id,outcome,reason,correlation_id) VALUES (10,1,'party:1','task.override','task','100','override','Emergency venue access','test:override');" >/dev/null
 if psql_exec -c "UPDATE event_operation_audit_event SET operation_code='tampered';" >/dev/null 2>&1; then
   echo "expected audit history mutation to be rejected" >&2

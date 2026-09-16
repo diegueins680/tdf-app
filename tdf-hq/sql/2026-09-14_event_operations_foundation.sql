@@ -457,6 +457,17 @@ CREATE TABLE IF NOT EXISTS event_operation_task_override (
   )
 );
 
+-- Historical approvals cannot be attributed to an unknown graph. Do not backfill
+-- them from today's edges: that would manufacture authorization evidence.
+ALTER TABLE event_operation_task_override
+  ADD COLUMN IF NOT EXISTS dependency_snapshot JSONB;
+
+CREATE OR REPLACE FUNCTION event_operation_dependency_snapshot(target_activity_id BIGINT)
+RETURNS JSONB LANGUAGE sql VOLATILE AS $$
+  SELECT COALESCE(jsonb_agg(jsonb_build_array(id, depends_on_activity_id) ORDER BY id), '[]'::jsonb)
+  FROM event_logistics_dependency WHERE activity_id = target_activity_id
+$$;
+
 CREATE OR REPLACE FUNCTION event_operation_reject_history_mutation()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -645,6 +656,7 @@ BEGIN
     WHERE override_record.activity_id = NEW.id
       AND override_record.activity_version = OLD.version
       AND override_record.override_kind = 'blocked_completion'
+      AND override_record.dependency_snapshot = event_operation_dependency_snapshot(NEW.id)
   ) THEN
     RAISE EXCEPTION 'activity % has incomplete dependencies', NEW.id USING ERRCODE = '23514';
   END IF;
@@ -709,6 +721,28 @@ ALTER TABLE event_operation_task_write_fence
 ALTER TABLE event_operation_task_write_fence
   ADD CONSTRAINT event_operation_task_write_fence_event_id_fkey
   FOREIGN KEY (event_id) REFERENCES social_event(id) ON DELETE CASCADE;
+
+-- Serialize approval capture with graph writers. VOLATILE snapshot reads see
+-- commits made while waiting for the fence at READ COMMITTED; stale stronger
+-- isolation snapshots abort on the fence write instead of approving old edges.
+CREATE OR REPLACE FUNCTION event_operation_capture_override_graph()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE target_event_id BIGINT;
+BEGIN
+  SELECT event_id INTO target_event_id FROM event_logistics_activity WHERE id = NEW.activity_id;
+  IF target_event_id IS NOT NULL THEN
+    INSERT INTO event_operation_task_write_fence(event_id) VALUES (target_event_id)
+      ON CONFLICT (event_id) DO UPDATE
+        SET revision = event_operation_task_write_fence.revision + 1;
+  END IF;
+  NEW.dependency_snapshot := event_operation_dependency_snapshot(NEW.activity_id);
+  RETURN NEW;
+END
+$$;
+DROP TRIGGER IF EXISTS event_operation_override_graph_capture ON event_operation_task_override;
+CREATE TRIGGER event_operation_override_graph_capture
+  BEFORE INSERT ON event_operation_task_override
+  FOR EACH ROW EXECUTE FUNCTION event_operation_capture_override_graph();
 
 -- Shared by the legacy HTTP delete transaction and the direct row-delete guard.
 -- Acquire the same write fence as policy/edge mutations before inspecting them.
@@ -818,6 +852,7 @@ BEGIN
       WHERE override_record.activity_id = activity.id
         AND override_record.activity_version = activity.version - 1
         AND override_record.override_kind = 'blocked_completion'
+        AND override_record.dependency_snapshot = event_operation_dependency_snapshot(activity.id)
     ) LIMIT 1;
   IF FOUND THEN
     RAISE EXCEPTION 'completed task % has incomplete dependencies', invalid_activity_id
