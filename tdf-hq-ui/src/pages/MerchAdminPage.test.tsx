@@ -215,7 +215,7 @@ describe('merch settlement administration', () => {
     const view = await renderPage();
     try {
       expect(view.container.textContent).toContain('Aprobar solo la solicitud');
-      expect(view.container.textContent).toContain('este flujo no ha movido dinero');
+      expect(view.container.textContent).toContain('Consulta la evidencia original del reembolso');
       expect(view.container.textContent).toContain('Evidencia de solo lectura');
       expect(view.container.textContent).toContain('Consulta');
       expect(view.container.textContent).toContain('Requiere respuesta');
