@@ -1,5 +1,24 @@
 import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
+import { localApiFixturePattern } from './helpers/local-api-fixture.mjs';
+
+test.use({ serviceWorkers: 'block' });
+
+test.beforeEach(async ({ context, baseURL }) => {
+  const origin = new URL(baseURL).origin;
+  // Page-specific fictional API fixtures run first. Unhandled API requests and
+  // foreign assets must never fall through to live services or Vite's HTML fallback.
+  await context.route(localApiFixturePattern(baseURL), route => {
+    const request = route.request();
+    if (new URL(request.url()).origin !== origin
+      || ['fetch', 'xhr'].includes(request.resourceType())) return route.abort('blockedbyclient');
+    return route.continue();
+  });
+  await context.routeWebSocket('**/*', socket => {
+    if (new URL(socket.url()).origin === origin.replace('http:', 'ws:')) socket.connectToServer();
+    else socket.close();
+  });
+});
 
 const event = {
   id: '42',
@@ -155,7 +174,8 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
 
   await expect(page).toHaveURL(/\/login\?.*signup=1.*redirect=%2Feventos%2F42/);
   const signup = page.getByRole('dialog', { name: /crear cuenta/i });
-  await expect(signup.getByRole('button', { name: 'Ya tengo una cuenta' })).toBeVisible();
+  await expect(signup.getByRole('button', { name: 'Cancelar', exact: true })).toBeVisible();
+  await expect(signup.getByRole('button', { name: 'Crear e ingresar', exact: true })).toBeDisabled();
   await signup.getByLabel('Nombre').fill('Persona');
   await signup.getByLabel('Apellido').fill('Ficticia');
   await signup.locator('input[name="email"]').fill('rsvp.persona@example.test');
@@ -169,7 +189,7 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await expect(page.getByRole('button', { name: 'Voy' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('section[aria-labelledby="event-rsvp-title-42"]')).toHaveAttribute('aria-busy', 'false');
   await expectNoSeriousAxeViolations(page, testInfo, 'event-rsvp-axe.json');
-  await page.screenshot({ path: 'docs/social-events/evidence/web-rsvp-event.png', fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('web-rsvp-event.png'), fullPage: true });
 
   await page.getByRole('button', { name: 'Copiar enlace' }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('/eventos/42');
@@ -179,7 +199,7 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await expect(page.getByText('Va a')).toBeVisible();
   await expect(page.getByText(event.title)).toBeVisible();
   await expectNoSeriousAxeViolations(page, testInfo, 'event-rsvp-profile-axe.json');
-  await page.screenshot({ path: 'docs/social-events/evidence/web-rsvp-profile.png', fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('web-rsvp-profile.png'), fullPage: true });
 
   await page.goto('/eventos/42');
   await page.getByRole('button', { name: 'No iré' }).click();
@@ -206,4 +226,19 @@ test('private events do not enumerate and cancelled public events disable RSVP a
   await expect(page.getByText('Los eventos cancelados no aceptan nuevos RSVPs.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Voy' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Compartir' })).toBeDisabled();
+});
+
+test('RSVP fixtures block unconfigured APIs and foreign module-shaped requests', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Fixture isolation runs once.');
+  const api = await mockRsvpApi(page);
+  await page.goto('/eventos/42');
+  await expect(page.getByRole('heading', { name: event.title })).toBeVisible();
+  const blocked = await page.evaluate(async () => Promise.all([
+    '/unconfigured-rsvp-test-api',
+    'https://example.invalid/src/foreign-module.js',
+  ].map(async url => {
+    try { await fetch(url); return false; } catch { return true; }
+  })));
+  expect(blocked).toEqual([true, true]);
+  expect(api.getState().upsertCount).toBe(0);
 });
