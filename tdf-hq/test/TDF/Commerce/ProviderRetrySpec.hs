@@ -58,6 +58,7 @@ import qualified TDF.Commerce.ProviderEventStore as Event
 import qualified TDF.Commerce.ProviderEventWorker as EventWorker
 import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
 import qualified TDF.Commerce.RefundSafetySpec as RefundSafety
+import qualified TDF.Commerce.RefundRecoverySpec as RefundRecovery
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
 import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer)
 import qualified TDF.Server.PaymentAvailability as Availability
@@ -375,6 +376,7 @@ spec = do
   notificationMinimizationSpec
   notificationIdentitySpec
   RefundSafety.spec
+  RefundRecovery.spec
   configured <- runIO (lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL")
   case configured of
     Nothing -> pure ()
@@ -392,6 +394,8 @@ spec = do
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
         RefundSafety.databaseSpec captureFixture
+        RefundRecovery.databaseSpec
+          (captureFixtureForDomain "mixing_mastering" "capture" Checkout.AttemptProcessing)
         it "serializes different keys and permits only one active attempt" $ \pool -> do
           creation <- newCheckout pool
           results <- concurrently
@@ -2315,8 +2319,13 @@ captureFixture = captureFixtureWithStage Checkout.AttemptProcessing
 
 captureFixtureWithStage
   :: Checkout.PaymentAttemptStage -> ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment
-captureFixtureWithStage stage pool provider = do
-  seed <- newCheckoutForDomain "service_booking" pool
+captureFixtureWithStage = captureFixtureForDomain "service_booking" "payment"
+
+captureFixtureForDomain
+  :: Text -> Text -> Checkout.PaymentAttemptStage -> ConnectionPool
+  -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment
+captureFixtureForDomain domain resourceType stage pool provider = do
+  seed <- newCheckoutForDomain domain pool
   let creation = seed { Checkout.pacProvider = provider }
       method = case provider of
         Checkout.ProviderPayPal -> MethodPayPalWallet
@@ -2328,7 +2337,7 @@ captureFixtureWithStage stage pool provider = do
   _ <- runSqlPool (Checkout.bindProviderResource Checkout.ProviderBindingCreation
     { Checkout.pbcAttempt = attempt, Checkout.pbcCheckout = Checkout.pacCheckout creation
     , Checkout.pbcProvider = provider, Checkout.pbcEnvironment = Checkout.CheckoutSandbox
-    , Checkout.pbcMerchantRef = Checkout.pacMerchantRef creation, Checkout.pbcResourceType = "payment"
+    , Checkout.pbcMerchantRef = Checkout.pacMerchantRef creation, Checkout.pbcResourceType = resourceType
     , Checkout.pbcProviderResource = resource, Checkout.pbcResourcePath = Nothing
     , Checkout.pbcOrderReference = checkoutId, Checkout.pbcAmountMinor = 12515
     , Checkout.pbcCurrency = "USD", Checkout.pbcStage = stage
@@ -2337,7 +2346,7 @@ captureFixtureWithStage stage pool provider = do
   pure Checkout.VerifiedPayment
     { Checkout.vpAttempt = attempt, Checkout.vpCheckout = Checkout.pacCheckout creation
     , Checkout.vpProvider = provider, Checkout.vpEnvironment = Checkout.CheckoutSandbox
-    , Checkout.vpMerchantRef = Checkout.pacMerchantRef creation, Checkout.vpResourceType = "payment"
+    , Checkout.vpMerchantRef = Checkout.pacMerchantRef creation, Checkout.vpResourceType = resourceType
     , Checkout.vpProviderResource = resource, Checkout.vpProviderResourcePath = Nothing
     , Checkout.vpOrderReference = checkoutId, Checkout.vpProviderReference = checkoutId
     , Checkout.vpAmountMinor = 12515, Checkout.vpCurrency = "USD"

@@ -48,4 +48,8 @@ type ServiceStorefrontAdminAPI =
   :<|> "admin" :> "services" :> "storefront" :> "orders" :> Capture "orderId" Text :> "refunds" :> Get '[JSON] [ServiceStorefrontRefundDTO]
   :<|> "admin" :> "services" :> "storefront" :> "orders" :> Capture "orderId" Text :> "refunds" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] ServiceStorefrontRefundCreate :> Post '[JSON] ServiceStorefrontRefundDTO
   :<|> "admin" :> "services" :> "storefront" :> "refunds" :> Capture "refundId" Text :> "approve" :> Post '[JSON] ServiceStorefrontRefundDTO
+  :<|> "admin" :> "services" :> "storefront" :> "refunds" :> Capture "refundId" Text
+         :> "reconcile" :> Get '[JSON] ServiceStorefrontRefundRecoveryDTO
+  :<|> "admin" :> "services" :> "storefront" :> "refunds" :> Capture "refundId" Text
+         :> "reconcile" :> Post '[JSON] ServiceStorefrontRefundRecoveryDTO
   :<|> "admin" :> "services" :> "storefront" :> "orders" :> Capture "orderId" Text :> "reconcile" :> Post '[JSON] ServiceStorefrontReconciliationDTO
