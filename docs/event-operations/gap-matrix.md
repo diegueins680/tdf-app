@@ -129,3 +129,11 @@ browser cases validate light/dark review, safe initial focus, exact retry and a
 known low-contrast negative control. Full axe node diagnostics are retained.
 This does not establish the hosted failure's root cause or close complete a11y,
 native-mobile, catalog governance or end-to-end event-operations requirements.
+
+PR 31 adds a private, disabled-by-default canonical preparation-task completion
+command after bounded formal verification. It requires current task authority,
+revision, completed dependencies and current A/R, reuses the receipt/audit ledger,
+and preserves history through failures and down/up. [Verification](pr-31-task-completion-command.md)
+covers database decisions, real races, expiry, revocation and the complete schema.
+EO-026–028 remain partial: there is no completion HTTP/UI surface, approval/evidence
+workflow, override, reopening or live-event command in this increment.

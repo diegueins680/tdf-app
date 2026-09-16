@@ -217,3 +217,12 @@ and [PR 26 evidence](pr-26-raci-web-editor.md) delimit the finite checks and syn
 evidence. No names, consent, timed reassignment, durable offline recovery, native mobile or
 notification claim; no production flags change. Next dependencies include those workflows,
 full-stack browser verification and resolving existing hosted integration failures.
+
+After the real RACI browser and web compatibility/accessibility increments (PRs
+27–30), `feat/event-task-completion-command` resumes phase 4 with a private guarded
+completion primitive for opted-in preparation tasks. The new bounded model and
+seven mutations precede SQL; the command reuses all existing task identities,
+authorization, write fences, versions and immutable evidence. See [PR 31](pr-31-task-completion-command.md).
+Next: session-fenced completion HTTP/client contracts, then scoped review/readiness
+and explicit completion UX. Approval/evidence, override, reopening and live-event
+effects remain distinct contracts; none may be inferred from this preparation command.
