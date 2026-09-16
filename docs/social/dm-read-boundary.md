@@ -161,3 +161,14 @@ rebuild or cache invalidation. No new infrastructure or production experiment.
 
 See the global [handoff](handoff.md) for the retained automatic-provider deployment
 exception. This change does not resolve or conceal that earlier exception.
+
+## Hosted fixture readiness repair
+
+The initial child PR #391 model job passed the models/read refinement, then failed
+before complete-schema loading with `terminating connection due to administrator
+command`. The fixture's socket readiness check could see PostgreSQL's temporary
+initialization server. The [official image entrypoint](https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh)
+(accessed 2026-09-15; update date unavailable) explicitly starts that server without
+TCP and shuts it down before the final server. The harness now waits for TCP and
+asserts readiness after its bounded wait, matching the other social fixtures. No
+assertion, migration or timeout was weakened. Hosted rerun remains separately tracked.

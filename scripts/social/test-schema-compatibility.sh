@@ -18,10 +18,13 @@ TDF_SOCIAL_SCHEMA_CONTAINER="tdf-social-full-schema-$$"
 trap 'docker rm -f "$TDF_SOCIAL_SCHEMA_CONTAINER" >/dev/null 2>&1 || true' EXIT
 docker run --rm -d --name "$TDF_SOCIAL_SCHEMA_CONTAINER" -e POSTGRES_PASSWORD=synthetic-only \
   -e POSTGRES_DB=social_schema pgvector/pgvector:pg17 >/dev/null
+# The image starts a temporary socket-only server during initialization.
+# Wait for TCP so its shutdown cannot interrupt the first fixture query.
 for attempt in $(seq 1 30); do
-  if docker exec "$TDF_SOCIAL_SCHEMA_CONTAINER" pg_isready -U postgres -d social_schema >/dev/null 2>&1; then break; fi
+  if docker exec "$TDF_SOCIAL_SCHEMA_CONTAINER" pg_isready -h 127.0.0.1 -U postgres -d social_schema >/dev/null 2>&1; then break; fi
   sleep 1
 done
+docker exec "$TDF_SOCIAL_SCHEMA_CONTAINER" pg_isready -h 127.0.0.1 -U postgres -d social_schema
 psql_schema() { docker exec -i "$TDF_SOCIAL_SCHEMA_CONTAINER" psql -X -v ON_ERROR_STOP=1 -U postgres -d social_schema "$@"; }
 fi
 psql_schema -Atc 'SELECT version();' 
