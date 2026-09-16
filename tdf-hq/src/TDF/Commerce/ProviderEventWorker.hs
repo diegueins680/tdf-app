@@ -11,7 +11,7 @@ module TDF.Commerce.ProviderEventWorker
   ) where
 
 import           Control.Concurrent (forkIO, threadDelay)
-import           Control.Exception.Safe (displayException, tryAny)
+import           Control.Exception.Safe (tryAny)
 import           Control.Monad (foldM, forever, void)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Text (Text)
@@ -49,10 +49,8 @@ startProviderEventWorker :: Env -> IO ()
 startProviderEventWorker env = do
   rawKey <- lookupEnv "COMMERCE_EVENT_ENCRYPTION_KEY"
   case validateEncryptionKey (T.pack <$> rawKey) of
-    Left message ->
-      hPutStrLn stderr
-        ("{\"component\":\"provider-event-worker\",\"level\":\"warning\",\"message\":\""
-          <> redactLogValue (T.unpack message) <> "\"}")
+    Left _ -> void $ tryAny $ hPutStrLn stderr
+      "{\"component\":\"provider-event-worker\",\"level\":\"warning\",\"message\":\"worker disabled: COMMERCE_EVENT_ENCRYPTION_KEY is missing or invalid\"}"
     Right encryptionKey -> void (forkIO (workerLoop env encryptionKey))
 
 workerLoop :: Env -> Text -> IO ()
@@ -67,13 +65,13 @@ providerEventWorkerIterationWith
 providerEventWorkerIterationWith tick logError logInfo = do
   result <- tryAny tick
   case result of
-    Left err ->
-      logError
-        ("{\"component\":\"provider-event-worker\",\"level\":\"error\",\"message\":\"tick failed\",\"error\":\""
-          <> redactLogValue (displayException err) <> "\"}")
+    -- Exception text can contain credentials, SQL parameters or provider payloads.
+    -- Diagnostics must neither render it nor repeat a tick when its sink fails.
+    Left _ -> void $ tryAny $ logError
+      "{\"component\":\"provider-event-worker\",\"level\":\"error\",\"message\":\"tick failed\"}"
     Right stats
       | stats /= emptyStats ->
-          logInfo
+          void $ tryAny $ logInfo
             ("{\"component\":\"provider-event-worker\",\"level\":\"info\",\"claimed\":"
               <> show (pewClaimed stats)
               <> ",\"processed\":" <> show (pewProcessed stats)
@@ -266,10 +264,3 @@ validateEncryptionKey mRawKey = do
       && T.all (\character -> character >= '!' && character <= '~') key
     then Right key
     else Left "worker disabled: COMMERCE_EVENT_ENCRYPTION_KEY is invalid"
-
-redactLogValue :: String -> String
-redactLogValue = take 500 . map replaceUnsafe
-  where
-    replaceUnsafe character
-      | character `elem` ['\n', '\r', '\t', '"'] = ' '
-      | otherwise = character

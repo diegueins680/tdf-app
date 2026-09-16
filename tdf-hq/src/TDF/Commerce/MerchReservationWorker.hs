@@ -8,7 +8,7 @@ module TDF.Commerce.MerchReservationWorker
   ) where
 
 import           Control.Concurrent (forkIO, threadDelay)
-import           Control.Exception.Safe (displayException, tryAny)
+import           Control.Exception.Safe (tryAny)
 import           Control.Monad (forever, void)
 import           Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool)
 import           System.IO (hPutStrLn, stderr)
@@ -55,20 +55,12 @@ merchReservationWorkerIterationWith
 merchReservationWorkerIterationWith tick logError logInfo = do
   result <- tryAny tick
   case result of
-    Left err ->
-      logError
-        ("{\"component\":\"merch-reservation-worker\",\"level\":\"error\",\"message\":\"tick failed\",\"error\":\""
-          <> redactLogValue (displayException err) <> "\"}")
+    -- Database exceptions are untrusted diagnostics, not safe log fields.
+    Left _ -> void $ tryAny $ logError
+      "{\"component\":\"merch-reservation-worker\",\"level\":\"error\",\"message\":\"tick failed\"}"
     Right released
       | released > 0 ->
-          logInfo
+          void $ tryAny $ logInfo
             ("{\"component\":\"merch-reservation-worker\",\"level\":\"info\",\"expiredCheckouts\":"
               <> show released <> "}")
       | otherwise -> pure ()
-
-redactLogValue :: String -> String
-redactLogValue = take 500 . map replaceUnsafe
-  where
-    replaceUnsafe character
-      | character `elem` ['\n', '\r', '\t', '"'] = ' '
-      | otherwise = character
