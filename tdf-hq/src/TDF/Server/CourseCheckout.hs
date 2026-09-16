@@ -1093,11 +1093,8 @@ confirmPublicCourseDatafastStatus rawSlug rawRegistrationId mLookupToken rawReso
             then runDB $ Checkout.recordPaymentProcessing
               (cpcCheckout context) attempt Checkout.ProviderDatafast
               (coursePaymentCorrelationId context Checkout.ProviderDatafast "status") now
-            else runDB $ PaymentRuntime.recordProviderPaymentFailure
+            else runDB $ Checkout.recordPaymentFailure
               (cpcCheckout context) attempt Checkout.ProviderDatafast resultCode
-              (ServiceStorefront.validateDatafastSuccessfulPayment
-                orderReference (fromIntegral (cpcDueNowMinor context))
-                (cpcCurrency context) providerStatus)
               (coursePaymentCorrelationId context Checkout.ProviderDatafast "status") now
       loadCourseCheckoutDTO (cpcRegistrationKey context) Nothing
 
@@ -1237,11 +1234,8 @@ capturePublicCoursePaypalOrder rawSlug rawRegistrationId mLookupToken request = 
         "PENDING" -> runDB $ Checkout.recordPaymentProcessing
           (cpcCheckout context) attempt Checkout.ProviderPayPal
           (coursePaymentCorrelationId context Checkout.ProviderPayPal "capture") now
-        providerStatus -> runDB $ PaymentRuntime.recordProviderPaymentFailure
+        providerStatus -> runDB $ Checkout.recordPaymentFailure
           (cpcCheckout context) attempt Checkout.ProviderPayPal
           ("paypal_" <> T.toLower providerStatus)
-          (ServiceStorefront.validatePaypalSuccessfulCapture
-            orderReference (fromIntegral (cpcDueNowMinor context))
-            (cpcCurrency context) merchantRef outcome)
           (coursePaymentCorrelationId context Checkout.ProviderPayPal "capture") now
       loadCourseCheckoutDTO (cpcRegistrationKey context) Nothing

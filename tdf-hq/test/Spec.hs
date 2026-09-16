@@ -2135,17 +2135,6 @@ main = hspec $ do
                 PaymentAvailability.bankTransferInstructionsReady flow True False `shouldBe` True
                 PaymentAvailability.bankTransferInstructionsReady flow False False `shouldBe` False
 
-    describe "authoritative provider declines" $ do
-        it "recognizes explicit no-charge responses without treating outages or mismatches as declines" $ do
-            PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderPayPal "paypal_declined" `shouldBe` True
-            PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderDatafast "800.100.151" `shouldBe` True
-            PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderDatafast "800.100.153" `shouldBe` True
-            PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderDatafast "800.100.155" `shouldBe` True
-            forM_ ["paypal_failed", "paypal_capture_request", "provider_binding_mismatch", "UNKNOWN"] $ \code ->
-                PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderPayPal code `shouldBe` False
-            forM_ ["900.100.300", "900.100.400", "800.100.190", "000.200.000"] $ \code ->
-                PaymentRuntimeStore.providerConfirmsNoCharge CheckoutStore.ProviderDatafast code `shouldBe` False
-
     describe "marketplace contact checkout boundary" $ do
         it "retains checkout preparation without selecting a payment rail or changing payment state" $ do
             source <- readFile "src/TDF/Server.hs"

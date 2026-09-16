@@ -520,9 +520,8 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
                   oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
                   Checkout.OperationCapture (sdfEntityId dfEnv) "capture"
                 liftIO $ flip runSqlPool envPool $ do
-                  PaymentRuntime.recordProviderPaymentFailure checkout attempt Checkout.ProviderDatafast
-                    resultCode
-                    (validateDatafastSuccessfulPayment (toPathPiece oid) totalCents currency paymentStatus)
+                  Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast
+                    ("datafast_" <> resultCode)
                     (paymentCorrelationId oid "datafast" "status") now
                   update oid
                     [ ME.ServiceStorefrontOrderStatus =. "payment_failed"
@@ -746,11 +745,8 @@ capturePaypalHandler mLookupToken ServiceStorefrontPaypalCaptureReq{..} = do
                 pure (Right ())
             _ -> do
               liftIO $ flip runSqlPool envPool $ do
-                PaymentRuntime.recordProviderPaymentFailure checkout attempt Checkout.ProviderPayPal
+                Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
                   ("paypal_" <> T.toLower (spcoStatus captureOutcome))
-                  (validatePaypalSuccessfulCapture (toPathPiece oid)
-                    (ME.serviceStorefrontOrderPriceUsdCents order)
-                    (ME.serviceStorefrontOrderCurrency order) merchantRef captureOutcome)
                   (paymentCorrelationId oid "paypal" "capture") now
                 update oid
                   [ ME.ServiceStorefrontOrderStatus =. "payment_failed"

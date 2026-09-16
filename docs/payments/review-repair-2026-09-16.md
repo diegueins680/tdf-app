@@ -37,19 +37,22 @@ and historical orders are not rewritten or deleted.
 
 ## Additional review boundaries
 
-An authenticated, bound decline may now retire its unpaid canonical intent and
-all related create/capture attempts in the same transaction. The checkout lock
-serializes this with fallback creation; replay cannot change a newer provider's
-checkout status, duplicate transition history, or restart the declined provider.
-Only PayPal `DECLINED` and Datafast `800.100.151`, `800.100.153`, `800.100.155`
-are classified as confirmed no-charge outcomes. These are explicit decline codes
-documented in [PayPal capture status](https://developer.paypal.com/sdk/orders/v2/definitions/capture_status/)
-and the [OPPWA result-code reference](https://docs.oppwa.com/sites/default/files/eposyaml/payments_api.yaml).
-Unknown codes, request/authentication errors, timeouts, missing or mismatched
-amount/currency/order/merchant bindings remain blocked pending reconciliation.
-Authorized/captured money cannot be retired by this path. This does not infer
-that every provider error means no charge and does not rewrite historical failures.
-The existing positive-only synchronization trigger remains unchanged.
+The no-charge fallback finding remains **blocked**, not fixed. A local prototype
+retired intents on selected decline codes, but review found that a transaction
+decline is not sufficient evidence that the enclosing hosted resource is terminal.
+That prototype was withdrawn before any parent-branch push. The existing
+positive-only synchronization trigger and fail-closed active-intent guard remain.
+
+Required evidence: the configured Datafast/PayPal merchant integration must identify
+an authenticated terminal resource outcome (or confirmed cancellation/expiry),
+bind it to the immutable checkout and prove that no authorization, capture, pending
+attempt or later hosted retry can charge it. The current status parsers lack that
+resource-finality contract. Do not resolve the review or merge this PR until it is
+implemented and qualified with bound callback/replay tests. No secret value is
+needed in chat; provider documentation and a sanitized sandbox trace are sufficient.
+The [PayPal failure guide](https://developer.paypal.com/api/handle-payment-failures/)
+explicitly permits restarting some declined flows; a decline string alone is not
+proof of irreversibility. No live provider qualification was performed here.
 
 `MERCH_BANK_TRANSFER_INSTRUCTIONS` now enables only merchandise routes; other
 flows require `COMMERCE_BANK_TRANSFER_INSTRUCTIONS`. Subscription discovery adds
@@ -61,9 +64,7 @@ by environment as well as type/source/currency. The additive `cacEnvironment`
 contract and generated web/mobile clients mirror `cpiEnvironment`; legacy UI
 responses remain visibly unknown, never implicitly production.
 
-The PostgreSQL runtime audit now additionally applies the real canonical forward
-migrations to a second disposable database and tests declines, ambiguous failures,
-binding mismatches, fallback, retired-provider replay, and late-decline replay.
-It uses synthetic sandbox account metadata only, never live credentials or
-production account activation. No new schema migration or destructive rollback
-is needed; retain existing evidence and prefer a forward application fix.
+The PostgreSQL runtime audit remains mandatory in `quality:backend`; the CI-policy
+regression checks that it cannot silently omit its matching tests. No new schema
+migration or destructive rollback is needed for the completed environment/routing
+fixes; retain existing evidence and prefer a forward application fix.
