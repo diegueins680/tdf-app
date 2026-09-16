@@ -6,6 +6,7 @@
 
 module TDF.API where
 
+import qualified TDF.API.Chat as Chat
 import TDF.Social.API (SocialV2API)
 import           Control.Applicative ((<|>))
 import           Servant
@@ -162,17 +163,7 @@ type SocialAPI =
   :<|> "suggestions" :> Get '[JSON] [SuggestedFriendDTO]
   :<|> SocialV2API
 
-type ChatAPI =
-       "chat" :> "threads" :> Get '[JSON] [ChatThreadDTO]
-  :<|> "chat" :> "threads" :> "dm" :> Capture "otherPartyId" Int64 :> Post '[JSON] ChatThreadDTO
-  :<|> "chat" :> "threads" :> Capture "threadId" Int64 :> "messages"
-         :> QueryParam "limit" Int
-         :> QueryParam "beforeId" Int64
-         :> QueryParam "afterId" Int64
-         :> Get '[JSON] [ChatMessageDTO]
-  :<|> "chat" :> "threads" :> Capture "threadId" Int64 :> "messages"
-         :> ReqBody '[JSON] ChatSendMessageRequest
-         :> Post '[JSON] ChatMessageDTO
+type ChatAPI = Chat.ChatAPI
 
 type ChatKitSessionAPI =
        "chatkit" :> "sessions" :> ReqBody '[JSON] ChatKitSessionRequest :> Post '[JSON] ChatKitSessionResponse

@@ -6,6 +6,7 @@ on:
       - 'scripts/social/**'
       - 'tdf-hq/sql/*social_v2*'
       - 'tdf-hq/src/TDF/Social/**'
+      - 'tdf-hq/src/TDF/API/Chat.hs'
       - 'tdf-hq-ui/src/features/social/**'
       - 'tdf-hq-ui/src/api/socialV2*'
       - 'tdf-hq-ui/src/pages/SocialPage.tsx'
@@ -53,6 +54,20 @@ jobs:
           java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/dm-trace-states -dump dot,actionlabels /tmp/dm-traces.dot -config formal/social/LegacyDm.cfg formal/social/LegacyDm.tla
           python3 scripts/social/generate-dm-cases.py /tmp/dm-traces.dot /tmp/dm-model-cases.sql
           diff -u scripts/social/dm-model-cases.sql /tmp/dm-model-cases.sql
+      - name: DM read authorization, progress and cursor counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/dm-read-model-results
+        run: bash scripts/social/check-dm-reads-model.sh
+      - name: Regenerate checked DM read outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/dm-read-states -dump dot,actionlabels /tmp/dm-read-traces.dot -config formal/social/DmReadTraces.cfg formal/social/DmReads.tla
+          python3 scripts/social/generate-dm-read-cases.py /tmp/dm-read-traces.dot /tmp/dm-read-model-cases.sql
+          diff -u scripts/social/dm-read-model-cases.sql /tmp/dm-read-model-cases.sql
+      - name: PostgreSQL refinement of DM read observations
+        env:
+          TDF_SOCIAL_CHAT_SQL_ONLY: '1'
+        run: bash scripts/social/test-http.sh
       - name: Legacy DM migration and block/send races
         run: bash scripts/social/test-dm-writes.sh
       - name: Regenerate checked consent transitions
@@ -72,6 +87,7 @@ jobs:
             /tmp/social-model-results/*.txt
             /tmp/session-model-results/*.txt
             /tmp/dm-model-results/*.txt
+            /tmp/dm-read-model-results/*.txt
   social-client:
     runs-on: ubuntu-latest
     timeout-minutes: 15

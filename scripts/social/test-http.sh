@@ -41,6 +41,11 @@ CREATE TABLE api_token(id bigint PRIMARY KEY,token text,party_id bigint,label te
 INSERT INTO api_token SELECT n,'synthetic-'||n,n,NULL,true FROM generate_series(1,5) n;
 INSERT INTO api_token VALUES(6,'synthetic-alt',1,NULL,true);
 CREATE TABLE social_session_effect(id integer PRIMARY KEY);
+CREATE TABLE party_follow(id bigserial PRIMARY KEY,follower_party_id bigint,following_party_id bigint,via_nfc boolean NOT NULL DEFAULT false,created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(follower_party_id,following_party_id));
+CREATE TABLE chat_thread(id bigserial PRIMARY KEY,dm_party_a bigint NOT NULL REFERENCES party(id),dm_party_b bigint NOT NULL REFERENCES party(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(dm_party_a,dm_party_b));
+CREATE TABLE chat_message(id bigserial PRIMARY KEY,thread_id bigint NOT NULL REFERENCES chat_thread(id),sender_party_id bigint NOT NULL REFERENCES party(id),body text NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
+INSERT INTO chat_thread(dm_party_a,dm_party_b) VALUES(1,2),(2,3);
+INSERT INTO chat_message(thread_id,sender_party_id,body) VALUES(1,1,'model first'),(1,2,'model cursor'),(2,2,'foreign secret');
 CREATE TABLE party_security_role(id uuid,party_id bigint,role_id uuid,granted_by bigint,approved_by bigint,
   approval_mode text,emergency_reason text,source_revision_id uuid,source_policy_id uuid,active boolean,
   created_at timestamptz,revoked_at timestamptz,version integer);
@@ -53,6 +58,26 @@ SQL
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/fixture.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/dm-read-refinement.sql"
+# psql \ir needs a real local path in Docker too, so concatenate the control and
+# generated cases instead of relying on the container seeing the checkout.
+TDF_SOCIAL_READ_NEGATIVE=$(mktemp)
+if { sed '/^\\ir /,$d' "$TDF_SOCIAL_ROOT/scripts/social/dm-read-negative.sql";
+     cat "$TDF_SOCIAL_ROOT/scripts/social/dm-read-model-cases.sql"; echo 'ROLLBACK;'; } |
+   psql_http > "$TDF_SOCIAL_READ_NEGATIVE" 2>&1; then
+  echo 'FAIL: unsafe membership-only read unexpectedly passed generated cases' >&2
+  exit 1
+fi
+grep 'DmReads observed case .* mismatch' "$TDF_SOCIAL_READ_NEGATIVE"
+echo 'PASS: generated cases reject the deliberately unsafe read projection'
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/dm-read-model-cases.sql"
+echo 'PASS: 1440 checked model outcomes refine thread preview/message/cursor policy on PostgreSQL'
+if [ "${TDF_SOCIAL_CHAT_SQL_ONLY:-0}" = 1 ]; then
+  echo 'SQL-only mode: HTTP tests were not run'
+  exit 0
+fi
 if [ -z "${TDF_SOCIAL_HTTP_CONNECTION:-}" ]; then
   TDF_SOCIAL_HTTP_CONNECTION="host=127.0.0.1 port=$TDF_SOCIAL_PORT user=postgres password=synthetic-only dbname=social_http connect_timeout=5"
 fi
