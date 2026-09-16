@@ -68,6 +68,12 @@ there is no new native admin screen.
 
 ## 1. Configuration and activation
 
+For the merged Datafast/PayPal completion requirements and hosted-method status
+lookup gates, follow [ADR 0126](../adr/0126-checkout-completion-capability-gates.md)
+and the [integrated-stack evidence](stack-integration-2026-09-15.md). A create-only
+capability is insufficient for a checkout that needs verified capture or query.
+Keep original-attempt recovery available; hiding a method never proves no charge.
+
 1. Identify the exact legal merchant, provider account, environment, USD settlement account and contracted capabilities.
 2. Store provider credentials only in the environment's secret manager. Never put values in `fly.toml`, `.env` examples, issue/PR text, logs, screenshots or the database.
 3. Register provider redirect, return and webhook URLs for the same environment. Production URLs must never target a sandbox account and vice versa.

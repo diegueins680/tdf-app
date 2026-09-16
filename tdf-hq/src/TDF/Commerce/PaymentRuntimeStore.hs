@@ -13,6 +13,7 @@ module TDF.Commerce.PaymentRuntimeStore
   , beginPaymentAttemptForMethod
   , canonicalPaymentMethodForProvider
   , operationCapabilities
+  , providerOperationCapabilities
   , productFlowForDomain
   ) where
 
@@ -189,8 +190,8 @@ validateCanonicalRoute creation paymentMethod = do
               , prAmountMinor = Checkout.pacAmountMinor creation
               , prMethod = paymentMethod
               , prFlow = flow
-              , prRequiredCapabilities = operationCapabilities
-                  flow (Checkout.pacOperation creation)
+              , prRequiredCapabilities = providerOperationCapabilities
+                  (Checkout.pacProvider creation) flow (Checkout.pacOperation creation)
               }
             selected = Checkout.pacProvider creation
         pure $ if any ((== selected) . routeProvider) (routePayments activations request)
@@ -198,6 +199,22 @@ validateCanonicalRoute creation paymentMethod = do
           else Left "Payment provider is not verified for this method, operation and environment"
     [] -> pure (Left "Canonical checkout was not found")
     _ -> pure (Left "Canonical checkout lookup was ambiguous")
+
+-- Datafast's historical "capture" attempt records the result of server-side
+-- verification of an automatic debit. It does not call a separate capture API.
+-- Keep the persisted operation/idempotency identity, while requiring the actual
+-- one-time and verification capabilities. Other providers retain capture gates.
+providerOperationCapabilities
+  :: Checkout.PaymentProvider
+  -> ProductFlow
+  -> Checkout.PaymentOperation
+  -> [PaymentCapability]
+providerOperationCapabilities provider flow operation =
+  case (provider, operation) of
+    (Checkout.ProviderDatafast, Checkout.OperationCapture) ->
+      [CapabilityOneTime, CapabilityServerVerification]
+        <> filter (/= CapabilityCapture) (operationCapabilities flow operation)
+    _ -> operationCapabilities flow operation
 
 operationCapabilities
   :: ProductFlow

@@ -176,13 +176,20 @@ describe('LoginPage Google signup consent flow', () => {
       expect(existingAccountButton).not.toBeNull();
       expect(googleLoginRequestMock).not.toHaveBeenCalled();
 
-      await act(async () => {
-        existingAccountButton?.click();
-        await flushPromises();
-      });
-      await waitFor(() => {
+      // Complete the real Dialog exit transition deterministically instead of
+      // racing its timer against waitFor's wall-clock deadline on a busy host.
+      jest.useFakeTimers();
+      try {
+        await act(async () => {
+          existingAccountButton?.click();
+        });
+        await act(async () => {
+          await jest.runOnlyPendingTimersAsync();
+        });
         expect(document.querySelector('[role="dialog"]')).toBeNull();
-      });
+      } finally {
+        jest.useRealTimers();
+      }
     } finally {
       await cleanup();
     }

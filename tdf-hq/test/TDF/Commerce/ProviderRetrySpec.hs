@@ -52,12 +52,14 @@ import qualified TDF.Commerce.ProviderAdapter.Http as ProviderHttp
 import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhone
 import qualified TDF.Commerce.ProviderAdapter.PlaceToPay as PlaceToPay
 import           TDF.Commerce.ProviderCapabilities (PaymentMethod(..), ProviderOutcomeCertainty(..))
+import qualified TDF.Commerce.ProviderCapabilities as Capabilities
 import qualified TDF.Commerce.ProviderExecutionStore as Execution
 import qualified TDF.Commerce.ProviderEventStore as Event
 import qualified TDF.Commerce.ProviderEventWorker as EventWorker
 import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
 import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer)
+import qualified TDF.Server.PaymentAvailability as Availability
 import qualified TDF.Server.ServiceStorefront as Storefront
 
 -- In-memory HTTP connection fixtures. These exercise the real HTTP executor,
@@ -351,6 +353,21 @@ withProviderWire reader action = do
 
 spec :: Spec
 spec = do
+  describe "complete checkout capability policy" $
+    it "requires the finishing operation and preserves extra restrictions idempotently" $ do
+      forM_ [MethodCard, MethodBankRedirect, MethodDeunaQr, MethodPayPhoneWallet] $ \method -> do
+        let request = (completionRequest method)
+              { Capabilities.prRequiredCapabilities = [Capabilities.CapabilityPartialRefund] }
+            normalized = Capabilities.requireCheckoutCompletion request
+        Capabilities.prRequiredCapabilities normalized `shouldBe`
+          [Capabilities.CapabilityPartialRefund, Capabilities.CapabilityOneTime,
+           Capabilities.CapabilityServerVerification]
+        Capabilities.requireCheckoutCompletion normalized `shouldBe` normalized
+      Capabilities.prRequiredCapabilities (Capabilities.requireCheckoutCompletion
+        (completionRequest MethodPayPalWallet)) `shouldBe`
+        [Capabilities.CapabilityOneTime, Capabilities.CapabilityCapture]
+      Capabilities.prRequiredCapabilities (Capabilities.requireCheckoutCompletion
+        (completionRequest MethodManualBankTransfer)) `shouldBe` [Capabilities.CapabilityOneTime]
   reconciliationReportValidationSpec
   providerQueryReportValidationSpec
   providerTransportSpec
@@ -371,6 +388,7 @@ spec = do
         closedCheckoutEvidenceSpec
         captureReplaySpec
         manualCaptureReplaySpec
+        completionCapabilityIntegrationSpec
         it "serializes different keys and permits only one active attempt" $ \pool -> do
           creation <- newCheckout pool
           results <- concurrently
@@ -2852,6 +2870,144 @@ replayHandler pool creation request = do
 assertHttpError :: Int -> Either ServerError PaymentSessionDTO -> Expectation
 assertHttpError status = either ((`shouldBe` status) . errHTTPCode)
   (const (expectationFailure "Expected payment recovery to fail closed"))
+
+-- Exercise the upstream completion-capability repair against the later durable
+-- intent/replay implementation. All configuration is synthetic; no HTTP occurs.
+completionCapabilityIntegrationSpec :: SpecWith ConnectionPool
+completionCapabilityIntegrationSpec = describe "complete checkout capability integration" $ do
+  it "continues Datafast debit verification without inventing a separate capture capability" $ \pool -> do
+    (creation, origin) <- completionOrigin pool Checkout.ProviderDatafast
+    capabilityCount <- runSqlPool (rawSql
+      "SELECT COUNT(*) FROM commerce_provider_capability capability\
+      \ JOIN commerce_provider_account account ON account.id=capability.provider_account_id\
+      \ WHERE account.provider='datafast' AND account.environment='sandbox'\
+      \ AND capability.capability='capture'" []) pool :: IO [Single Int64]
+    capabilityCount `shouldBe` [Single 0]
+    let capture = creation { Checkout.pacOperation = Checkout.OperationCapture
+          , Checkout.pacIdempotencyKey = Checkout.pacIdempotencyKey creation <> "-verify" }
+        start value = runSqlPool (Runtime.beginPaymentAttempt value) pool
+    confirmed <- start capture >>= requireRight
+    originalIntent <- intentFor pool origin
+    intentFor pool confirmed `shouldReturn` originalIntent
+    start capture `shouldReturn` Right confirmed
+    start capture { Checkout.pacIdempotencyKey = Checkout.pacIdempotencyKey capture <> "-other" }
+      >>= (`shouldSatisfy` isLeft)
+    assertCounts pool creation 2 1
+
+  forM_ [(Checkout.ProviderDatafast, MethodCard, "server_verification"),
+         (Checkout.ProviderPayPal, MethodPayPalWallet, "capture")] $ \(provider, method, capability) -> do
+    it ("rejects an unqualified continuation without orphaning the original " <> show provider) $ \pool -> do
+      (creation, origin) <- completionOrigin pool provider
+      originalIntent <- intentFor pool origin
+      let capture = creation { Checkout.pacOperation = Checkout.OperationCapture
+            , Checkout.pacIdempotencyKey = Checkout.pacIdempotencyKey creation <> "-capture" }
+      withDocumentedCapability pool provider method capability $ do
+        runSqlPool (Runtime.beginPaymentAttempt capture) pool >>= (`shouldSatisfy` isLeft)
+        intentFor pool origin `shouldReturn` originalIntent
+        assertCounts pool creation 1 1
+      continued <- runSqlPool (Runtime.beginPaymentAttempt capture) pool >>= requireRight
+      intentFor pool continued `shouldReturn` originalIntent
+      assertCounts pool creation 2 1
+
+    it ("requires completion evidence even with an empty public capability request for " <> show provider) $ \pool ->
+      withCompletionEnvironment $ do
+        let request = completionRequest method
+            includes request' = elem provider <$> completionRoutes pool request'
+        includes request `shouldReturn` True
+        withDocumentedCapability pool provider method capability $
+          includes request `shouldReturn` False
+        includes request `shouldReturn` True
+        includes request { Capabilities.prEnvironment = Checkout.CheckoutProduction } `shouldReturn` False
+        let credential = if provider == Checkout.ProviderDatafast
+              then "DATAFAST_BEARER_TOKEN" else "PAYPAL_CLIENT_SECRET"
+        setEnv credential ""
+        includes request `shouldReturn` False
+
+  it "retains every marketplace completion gate at the database-backed public boundary" $ \pool ->
+    withCompletionEnvironment $ do
+      let request = (completionRequest MethodPayPalWallet)
+            { Capabilities.prFlow = Capabilities.FlowMarketplace }
+          offered = elem Checkout.ProviderPayPal <$> completionRoutes pool request
+      offered `shouldReturn` True
+      forM_ ["connected_accounts", "split_settlement", "seller_payouts"] $ \capability ->
+        withDocumentedCapability pool Checkout.ProviderPayPal MethodPayPalWallet capability $
+          offered `shouldReturn` False
+      offered `shouldReturn` True
+
+  forM_ [(Checkout.ProviderPlaceToPay, MethodBankRedirect),
+         (Checkout.ProviderPlaceToPay, MethodDeunaQr),
+         (Checkout.ProviderPayPhone, MethodPayPhoneWallet)] $ \(provider, method) ->
+    it ("requires verified status lookup for query-backed method " <> show method) $ \pool ->
+      withNotificationEnvironment $ do
+        setEnv "PLACETOPAY_BANK_PAYMENT_METHODS" "synthetic_bank"
+        setEnv "PLACETOPAY_DEUNA_PAYMENT_METHODS" "synthetic_deuna"
+        let offered = elem provider <$> completionRoutes pool (completionRequest method)
+        offered `shouldReturn` True
+        withDocumentedCapability pool provider method "server_verification" $
+          offered `shouldReturn` False
+        offered `shouldReturn` True
+
+completionRequest :: PaymentMethod -> Capabilities.PaymentRouteRequest
+completionRequest method = Capabilities.PaymentRouteRequest
+  { Capabilities.prEnvironment = Checkout.CheckoutSandbox
+  , Capabilities.prBuyerCountry = "EC", Capabilities.prCurrency = "USD"
+  , Capabilities.prAmountMinor = 12515, Capabilities.prMethod = method
+  , Capabilities.prFlow = Capabilities.FlowEventTicket
+  , Capabilities.prRequiredCapabilities = []
+  }
+
+completionRoutes :: ConnectionPool -> Capabilities.PaymentRouteRequest -> IO [Checkout.PaymentProvider]
+completionRoutes pool request = do
+  result <- runHandler (runReaderT (Availability.loadRuntimeReadyRoutes request) (queryEnv pool))
+  map Capabilities.routeProvider <$> either (const (fail "Synthetic availability request failed")) pure result
+
+completionOrigin :: ConnectionPool -> Checkout.PaymentProvider
+  -> IO (Checkout.PaymentAttemptCreation, Checkout.PaymentAttemptReference)
+completionOrigin pool provider = do
+  seed <- newCheckout pool
+  let creation = seed { Checkout.pacProvider = provider }
+  origin <- runSqlPool (Runtime.beginPaymentAttempt creation) pool >>= requireRight
+  now <- getCurrentTime
+  _ <- runSqlPool (Checkout.bindProviderResource Checkout.ProviderBindingCreation
+    { Checkout.pbcAttempt = origin, Checkout.pbcCheckout = Checkout.pacCheckout creation
+    , Checkout.pbcProvider = provider, Checkout.pbcEnvironment = Checkout.CheckoutSandbox
+    , Checkout.pbcMerchantRef = Checkout.pacMerchantRef creation
+    , Checkout.pbcResourceType = if provider == Checkout.ProviderDatafast then "checkout" else "order"
+    , Checkout.pbcProviderResource = "synthetic-" <> Checkout.paymentAttemptReferenceId origin
+    , Checkout.pbcResourcePath = Nothing
+    , Checkout.pbcOrderReference = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+    , Checkout.pbcAmountMinor = Checkout.pacAmountMinor creation, Checkout.pbcCurrency = "USD"
+    , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
+    , Checkout.pbcOccurredAt = now, Checkout.pbcCorrelationId = "synthetic-completion-integration"
+    }) pool >>= requireRight
+  pure (creation, origin)
+
+withDocumentedCapability :: ConnectionPool -> Checkout.PaymentProvider -> PaymentMethod -> Text -> IO a -> IO a
+withDocumentedCapability pool provider method capability action = bracket
+  (change "documented") (const (change "sandbox_verified")) (const action)
+  where
+    change status = runSqlPool (rawExecute
+      "UPDATE commerce_provider_capability capability SET verification_status=?\
+      \ FROM commerce_provider_account account WHERE account.id=capability.provider_account_id\
+      \ AND account.provider=? AND account.environment='sandbox'\
+      \ AND capability.payment_method=? AND capability.capability=?"
+      [ PersistText status, PersistText (Checkout.paymentProviderText provider)
+      , PersistText (Capabilities.paymentMethodText method), PersistText capability ]) pool
+
+withCompletionEnvironment :: IO a -> IO a
+withCompletionEnvironment action = bracket
+  (forM values $ \(name, _) -> (,) name <$> lookupEnv name)
+  (mapM_ (\(name, value) -> maybe (unsetEnv name) (setEnv name) value)) $ \_ -> do
+    forM_ values (uncurry setEnv)
+    action
+  where
+    values =
+      [("DATAFAST_ENV", "sandbox"), ("DATAFAST_ENTITY_ID", "synthetic-entity")
+      , ("DATAFAST_BEARER_TOKEN", "synthetic-token"), ("DATAFAST_BASE_URL", "https://test.oppwa.com")
+      , ("DATAFAST_TEST_MODE", "EXTERNAL"), ("PAYPAL_ENV", "sandbox")
+      , ("PAYPAL_MERCHANT_ID", "synthetic-merchant"), ("PAYPAL_CLIENT_ID", "synthetic-client")
+      , ("PAYPAL_CLIENT_SECRET", "synthetic-secret"), ("PAYPAL_WEBHOOK_ID", "synthetic-webhook")
+      , ("COMMERCE_EVENT_ENCRYPTION_KEY", T.unpack recoveryEncryptionKey)]
 
 openDatabase :: String -> IO ConnectionPool
 openDatabase url = do

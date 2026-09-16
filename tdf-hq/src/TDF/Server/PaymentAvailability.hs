@@ -75,7 +75,7 @@ loadRuntimeReadyRoutes request = do
   activations <- liftIO $ flip runSqlPool envPool $
     loadProviderActivations (prEnvironment request)
   filterM (runtimeReady (prEnvironment request))
-    (routePayments activations request)
+    (routePayments activations (requireCheckoutCompletion request))
 
 requiredCapabilities :: ProductFlow -> [PaymentCapability]
 requiredCapabilities flow =
