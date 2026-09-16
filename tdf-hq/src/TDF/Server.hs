@@ -4077,12 +4077,14 @@ accessRequestsServer user =
 
 loadFeatureAccessRequestDTO :: Entity ME.FeatureAccessRequest -> AppM FeatureAccessRequestDTO
 loadFeatureAccessRequestDTO (Entity requestId requestValue) = do
+  requester <- runDB $ get (ME.featureAccessRequestRequesterPartyId requestValue)
   historyRows <- runDB $ selectList
     [ME.FeatureAccessRequestHistoryRequestId ==. requestId]
     [Asc ME.FeatureAccessRequestHistoryCreatedAt]
   pure FeatureAccessRequestDTO
     { farId = fromSqlKey requestId
     , farRequesterPartyId = fromSqlKey (ME.featureAccessRequestRequesterPartyId requestValue)
+    , farRequesterName = normalizeOptionalInput (M.partyDisplayName <$> requester)
     , farFeatureId = ME.featureAccessRequestFeatureId requestValue
     , farAction = ME.featureAccessRequestAction requestValue
     , farRoleContext = decodeAccessContext (ME.featureAccessRequestRoleContext requestValue)
@@ -4242,6 +4244,9 @@ notifyEligibleFeatureReviewers
   -> UTCTime
   -> SqlPersistT IO ()
 notifyEligibleFeatureReviewers requester feature actionName requestId now = do
+  requesterParty <- get (auPartyId requester)
+  let requesterName = fromMaybe "Un usuario sin nombre"
+        (normalizeOptionalInput (M.partyDisplayName <$> requesterParty))
   reviewerPartyIds <- Set.toList . Set.fromList . concat <$>
     traverse selectCanonicalPartyIdsByRole [Admin, Manager, StudioManager]
   forM_ reviewerPartyIds $ \reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do
@@ -4253,7 +4258,8 @@ notifyEligibleFeatureReviewers requester feature actionName requestId now = do
         { notificationRecipientPartyId = reviewerPartyId
         , notificationNotifType = "access_request_review"
         , notificationTitle = "Nueva solicitud de acceso"
-        , notificationBody = "Hay una solicitud compatible con tu ámbito de revisión."
+        , notificationBody = requesterName
+            <> " solicitó acceso. La solicitud está disponible para revisión."
         , notificationTargetType = Just "feature_access_request"
         , notificationTargetId = Just (fromIntegral (fromSqlKey requestId))
         , notificationIsRead = False
