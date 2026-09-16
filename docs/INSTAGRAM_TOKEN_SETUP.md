@@ -1,178 +1,170 @@
-# Instagram Token Refresh Automation
+# Instagram Login lifecycle validation
 
-## Overview
+## Why the implementation changed
 
-This automation handles Instagram access token lifecycle:
-- **Initial setup**: Exchange short-lived token for long-lived token
-- **Periodic refresh**: Refresh token before expiration (every 30 days)
-- **Health checks**: Monitor token status and alert on issues
+Meta Support [case 1978991836117141](https://developers.facebook.com/support/bugs/1978991836117141/) confirms that Facebook Graph `/debug_token` does not reliably support Instagram Login tokens and that no equivalent documented read-only introspection API exists. Changing the parent Facebook credentials is not a fix.
 
-## Architecture
+The supported [Business Login lifecycle](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login) exchanges a one-use authorization code with the Instagram app ID/secret, then exchanges the resulting short-lived token for a long-lived token. Meta returns its lifetime as `expires_in`. Refresh requires a valid long-lived token at least 24 hours old and the basic permission. This implementation records that evidence when the provider supplies it; it never infers an issuance date from a legacy secret's update time.
 
+## Evidence and trust boundary
+
+The checker requires all of:
+1. An authenticated encrypted checkpoint bound to this repository and Instagram app.
+2. A token fingerprint matching the checkpoint's credential.
+3. Ownership provenance from a successful authorization-code exchange using the configured app ID and secret.
+4. A provider-returned positive, bounded lifetime and consistent issuance/expiration arithmetic. Expiry is measured from request start; minimum refresh age is measured from response receipt so network latency cannot make a young token eligible early.
+5. Any previously supplied data-access deadline remaining valid.
+6. Live `/v26.0/me?fields=user_id` access for the same Instagram account.
+
+OAuth code exchange must return the basic permission and an app-scoped user ID.
+The short token's `/me?fields=id,user_id` response must bind that grant ID to
+`id` and the explicitly pinned professional account to `user_id`. Meta's
+[Get Started field definitions](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/get-started)
+distinguish these namespaces; they must not be compared directly. Both IDs are
+preserved in authenticated authorization evidence. Permission names in the
+checkpoint are the grant-time evidence, not a claim that every scope has been
+exercised now. Missing provider data-access metadata is recorded as absent, never
+fabricated as a deadline or claimed to be never-expiring. Live access checks
+detect revocation; a known data-access deadline is preserved across refresh and
+never silently extended or dropped.
+
+Provider `user_id` values may be JSON integer literals beyond JavaScript's safe
+integer range. Node 22's source-aware JSON reviver retains their exact digits;
+converting an already parsed number to a string is unsafe. Fractional, negative
+and exponent-form identifiers are rejected. Numeric lifetimes remain numeric and
+retain their separate strict validation.
+
+An existing raw `INSTAGRAM_ACCESS_TOKEN`, a legacy plaintext state file, a working `/me` response, or a manually authored approval record cannot bootstrap this evidence.
+
+## Configuration
+
+Repository Actions secrets:
+
+| Name | Scope/purpose |
+| --- | --- |
+| `INSTAGRAM_APP_ID` | Existing Instagram Login child application ID. |
+| `INSTAGRAM_APP_SECRET` | Existing matching Instagram secret; authenticates exchange and derives the checkpoint encryption key. |
+| `INSTAGRAM_AUTHORIZATION_CODE` | Fresh one-use code from the approved login flow, used only by the setup step. Never put it in dispatch inputs, command-line arguments, logs or PR text. |
+| `SLACK_WEBHOOK_URL` | Optional failure notification; absence does not mask failure. |
+
+Repository Actions variables:
+
+| Name | Purpose |
+| --- | --- |
+| `INSTAGRAM_REDIRECT_URI` | Exact registered HTTPS callback used for the authorization request; only needed during setup. |
+| `INSTAGRAM_USER_ID` | Intended Instagram professional account ID (`/me.user_id`), explicitly checked during bootstrap and subsequent checks; not the OAuth grant's app-scoped ID. |
+
+No Facebook inspector credential, Fly credential, GitHub secret-write token, or production deployment permission is passed to this workflow. The GitHub token has only contents/read and actions/read. The encryption context is `GITHUB_REPOSITORY` (or explicit `INSTAGRAM_LIFECYCLE_CONTEXT=owner/repo` for local use).
+
+## Approved bootstrap
+
+### Verified repository configuration (2026-09-15)
+
+The attached Meta developer console for parent app `1098715965613487` lists
+`https://tdf-app.pages.dev/oauth/instagram/callback` in the Instagram Business
+Login OAuth redirect allowlist and in its generated authorization link. The
+Instagram child app is `1206294904899273` (TDF Bot-IG). The intended account is
+`tdf.records.label`; the earlier successful live account verification recorded
+Instagram user ID `17841445628242005`. Bootstrap still validates that ID against
+the new provider grant; this record is not a substitute for that validation.
+
+Do **not** use the normal production application's login/exchange flow to obtain
+CI-only state. `useInstagramCallback` automatically submits codes after a matching
+session-state check, and `ServerInstagramOAuth` persists connected-account tokens.
+Using this registered URI for an isolated bootstrap requires a secure callback
+receiver/interceptor that validates its own unpredictable OAuth state and prevents
+the callback request from reaching the production application. Confirm that
+interception before requesting authorization; fail closed if it is unavailable.
+The callback registration was inspected without changing or saving Meta settings.
+The subsequent operator-only bootstrap used a separate attached-browser tab,
+bypassed service workers, and intercepted every request to the callback's origin
+at the request stage. A harmless probe verified a locally fulfilled response
+before authorization. The actual callback was also fulfilled locally, its fresh
+256-bit OAuth state was checked, and the one-use code was transferred directly to
+the Actions secret through process input, without logging or disk storage. Only
+that helper-owned tab was closed. This verifies the isolated receiver, not the
+success of any later provider exchange; workflow results must establish that.
+
+1. Verify the intended Instagram app/account and a registered callback that does **not** automatically write production credentials. Do not change production callback behavior as an incidental CI fix.
+2. Complete the approved Business Login authorization flow. Use and validate OAuth state at its callback. Store only the returned code in the repository secret through a secure operator interface; do not copy a callback URL containing the code into an issue or chat.
+3. Configure the callback URI and account ID variables. Code exchange validates the configured app ID/secret, callback and account. A consumed/expired code fails; it is not automatically retried.
+4. Dispatch the existing workflow on the reviewed branch:
+
+```sh
+gh workflow run refresh-instagram-token.yml --repo diegueins680/tdf-app --ref REVIEWED_BRANCH -f action=setup
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  GitHub Actions │────▶│  Token Script    │────▶│   Fly.io App    │
-│  (Scheduled)    │     │  (Node.js)       │     │  (tdf-hq)       │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-                               │
-                               ▼
-                        ┌──────────────────┐
-                        │  Meta Graph API  │
-                        │  (Instagram)     │
-                        └──────────────────┘
+
+The workflow exchanges the code, exchanges the short-lived token, verifies the resulting account, and uploads **only AES-256-GCM authenticated ciphertext** as `instagram-lifecycle-v1/state.enc.json`. It does not update the legacy repository token or any runtime secret and performs no deployment. After success, remove the consumed authorization-code secret through the authorized secret-management interface.
+
+Missing configuration or unavailable user consent is a real bootstrap blocker, not a successful skip. Mock tests demonstrate program behavior, not successful provider provisioning.
+
+## Read-only checks and approved refresh
+
+```sh
+gh workflow run refresh-instagram-token.yml --repo diegueins680/tdf-app --ref REVIEWED_BRANCH -f action=check
+gh workflow run refresh-instagram-token.yml --repo diegueins680/tdf-app --ref REVIEWED_BRANCH -f action=refresh
 ```
 
-## Setup Instructions
+`check` downloads/decrypts an eligible checkpoint, validates evidence and checks live account access. It makes no refresh, state, repository-secret or runtime writes. The existing schedule remains read-only (the cron selects the 1st and, when present, 31st at 03:00 UTC, not an exact 30-day interval).
 
-### 1. Store Secrets
+`refresh` is explicit credential maintenance. It first verifies the existing evidence/live account and the 24-hour minimum age, obtains the new provider lifetime, verifies the returned account and persists a new encrypted checkpoint. The previous known data-access deadline and original OAuth ownership provenance are retained. Neither action deploys or updates Fly. Operators must run approved refresh before expiration; the workflow warns within seven days of its effective deadline and fails after expiration.
 
-Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+## Persistence and recovery
 
-| Secret | Value | Required |
-|--------|-------|----------|
-| `INSTAGRAM_ACCESS_TOKEN` | Current token (short or long-lived) | ✅ Yes |
-| `INSTAGRAM_APP_SECRET` | Instagram App Secret from Meta Dashboard | ✅ Yes |
-| `INSTAGRAM_APP_ID` | App ID for the Meta app that issued the access token | ✅ Yes |
-| `FACEBOOK_APP_ID` | Parent Meta app ID used to authenticate the Facebook debugger | ✅ For checks |
-| `FACEBOOK_APP_SECRET` | Matching parent Meta app secret, distinct from the Instagram secret | ✅ For checks |
-| `FLY_APP_NAME` | Fly.io app name (default: tdf-hq) | ❌ Optional |
-| `FLY_API_TOKEN` | Fly.io API token for deployments | ✅ Yes |
-| `SLACK_WEBHOOK_URL` | Slack webhook for failure alerts | ❌ Optional |
+- Encryption uses a random 96-bit nonce with AES-256-GCM and a domain-separated HKDF-SHA256 key derived from the existing Instagram app secret. Repository/app identifiers are authenticated context. Token, fingerprint and evidence remain inside the ciphertext.
+- Writes use a new private temporary file, fsync and atomic rename; plaintext token/state is never written to disk by this lifecycle. Local default `.instagram-lifecycle-state.enc.json` is ignored by Git.
+- An encrypted artifact has 90-day retention, longer than the accepted maximum token lifetime. A successful check does not re-upload or extend retention.
+- State discovery examines setup/refresh runs before artifacts. Only this workflow, this repository and a producing commit equal to or ancestral to the evaluated commit are eligible. Unmerged sibling-branch state cannot become main's credential state.
+- The newest eligible producer must have succeeded and retain exactly one unexpired checkpoint. Failed/canceled producers, deleted/expired artifacts, authentication errors and corrupt state fail closed instead of resurrecting an older token.
+- Concurrency is serialized without canceling in-flight credential maintenance. Upload failure remains workflow failure. A rerun of a consumed setup code is not a recovery procedure.
+- If persistence fails after a provider mutation, retain the failure evidence and use a new approved authorization bootstrap; do not fabricate a receipt or extend old expiry. Rotating the app secret invalidates existing ciphertext and requires a planned bootstrap.
+- Merging a reviewed producer commit preserves its ancestry, allowing main to consume its authenticated checkpoint. Squash/rebase changes ancestry and therefore requires a new approved bootstrap. No ancestry exception is provided.
+- Reverting code does not undo a token exchange. Production credentials remain untouched by this workflow. A later runtime promotion requires a separate reviewed deployment/secret-management operation.
 
-### 2. Initial Token Exchange
+## Local validation
 
-Run the setup command to exchange your short-lived token for a long-lived token:
+```sh
+npm run test:instagram-token-workflows
+npm run quality:repo
+```
+
+Local CLI commands remain `--check`, `--setup`, and `--refresh`. Supply configuration through a secure environment, never argument values. `INSTAGRAM_LIFECYCLE_STATE_FILE` selects input ciphertext; `INSTAGRAM_LIFECYCLE_OUTPUT_FILE` selects the output ciphertext for setup/refresh. With no override, both use the ignored local default. The CLI's interface is preserved, but legacy raw-token adoption and implicit Fly updates are intentionally rejected/removed.
+
+Tests cover provider response validation, OAuth ownership/account binding, tampering/context mismatch, expiry/data-deadline enforcement, retries/redaction, read-only checks, refresh age, atomic persistence and newest-checkpoint failure handling. They retain the independent Facebook messaging invalid-token regression. No test uses real credentials.
+
+## Messaging token checks (separate workflow)
+
+`Check Messaging Token` manages `INSTAGRAM_MESSAGING_TOKEN` and
+`FACEBOOK_MESSAGING_TOKEN`, not the Instagram Login lifecycle checkpoint above. Its manual
+`action=check` is read-only:
 
 ```bash
-# Set environment variables
-export INSTAGRAM_ACCESS_TOKEN="your-short-lived-token"
-export INSTAGRAM_APP_ID="your-app-id"
-export INSTAGRAM_APP_SECRET="your-app-secret"
-export FACEBOOK_APP_ID="your-parent-meta-app-id"
-export FACEBOOK_APP_SECRET="your-parent-meta-app-secret"
-
-# Run setup
-node scripts/refresh-instagram-token.mjs --setup
+node scripts/check-messaging-token.mjs --check
+gh workflow run check-messaging-token.yml \
+  --repo diegueins680/tdf-app --ref REVIEWED_REF_WITH_READ_ONLY_CHECK -f action=check
 ```
 
-This will:
-1. Exchange the short-lived token for a 60-day long-lived token
-2. Update the Fly.io secret
-3. Restart the app
-4. Save token state locally
+Replace the ref placeholder only with a reviewed revision containing this fix.
+This read-only change was merged into main as `6f67081a73e66e422f331cb31c455a78977a400e`.
+Do not use older revisions: their manual `check` action runs credential
+maintenance and their CLI silently ignores the flag.
 
-### 3. GitHub Actions Automation
+Both tokens must pass the existing health checks without needing maintenance.
+Missing, invalid, expired, soon-expiring tokens or failed provider checks return
+a nonzero status; read-only mode never exchanges tokens, retrieves replacement
+Page tokens, or calls Fly. In Actions, this step receives only the messaging
+tokens and Meta inspector credentials; Fly credentials and CLI installation are
+limited to maintenance. Failure notifications retain their existing behavior.
 
-The workflow runs automatically every 30 days. You can also trigger it manually:
+The hourly schedule and explicit `action=refresh` retain the existing
+refresh-when-needed behavior, including final verification and failure exits.
+They invoke `node scripts/check-messaging-token.mjs` without arguments, which can
+exchange tokens and update both Fly messaging secrets. Manual `refresh` is not
+an unconditional rotation and requires separate production-maintenance approval.
+Unknown CLI arguments and workflow actions fail instead of falling through to
+maintenance. Do not pass token values as arguments or paste them into logs.
 
-```bash
-# Via GitHub UI
-# Actions → Refresh Instagram Token → Run workflow
-
-# Via GitHub CLI
-gh workflow run refresh-instagram-token.yml \
-  --repo diegueins680/tdf-app \
-  --ref main \
-  -f action=check
-```
-
-The `check` action only validates the configured token. The `setup` and `refresh`
-actions update the Fly.io secret and restart the application, so run them only as
-an approved credential-maintenance operation.
-
-### 4. Manual Commands
-
-```bash
-# Check token status
-node scripts/refresh-instagram-token.mjs --check
-
-# Refresh token now
-node scripts/refresh-instagram-token.mjs --refresh
-
-# Setup (exchange for long-lived)
-node scripts/refresh-instagram-token.mjs --setup
-```
-
-## Token Lifecycle
-
-```
-Short-lived Token (1 hour)
-    │
-    ▼
-Exchange ──────────────────▶ Long-lived Token (60 days)
-    │                              │
-    │                              │
-    │                    Refresh after 30 days
-    │                              │
-    │                              ▼
-    │                    New Long-lived Token (60 days)
-    │                              │
-    └──────────────────────────────┘
-         (Repeat every 30 days)
-```
-
-## Monitoring
-
-The script provides detailed logging:
-- Token validity status
-- Days until expiration
-- Scope permissions
-- Refresh history
-
-Check the GitHub Actions logs for automated runs, or run locally with `--check`.
-
-## Troubleshooting
-
-### "Token expired" errors
-- Run `node scripts/refresh-instagram-token.mjs --refresh`
-- Or trigger the GitHub Actions workflow manually
-
-### "Invalid token" errors
-- Verify `INSTAGRAM_ACCESS_TOKEN` is set correctly
-- Check that the Instagram account hasn't been disconnected
-- Re-run setup: `node scripts/refresh-instagram-token.mjs --setup`
-
-### "Error validating application" / API code 190
-- The non-mutating check first verifies Instagram account access with the documented [Instagram Login `/me` request](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/get-started), then validates token metadata. An expired or revoked Instagram token now fails before app authentication can obscure the cause. A successful account request does not bypass metadata validation.
-- If the first request reports an expired session, obtain a replacement token through the approved Instagram login process; app-ID changes or retries cannot renew an expired token. Never disclose tokens in logs or issues.
-- Ensure the repository-level Actions secret `INSTAGRAM_APP_ID` is configured; the workflow intentionally has no hard-coded fallback
-- Verify that `INSTAGRAM_APP_ID` and `INSTAGRAM_APP_SECRET` belong to the same Meta app
-- The [Facebook token debugger](https://developers.facebook.com/docs/graph-api/reference/debug_token/) requires an app access token for the associated Meta application. The checker uses `FACEBOOK_APP_ID`/`FACEBOOK_APP_SECRET` for that inspector, while retaining the Instagram child ID/secret for Instagram Login and token exchange. For TDF, these are the parent **TDF Bot** and child **TDF Bot-IG** respectively; do not overwrite one pair with the other.
-- A successful debugger response must identify the configured Instagram app and include an authoritative expiration. Expired token or data-access deadlines fail, even if `is_valid` is true. Missing expiry is not treated as a never-expiring token.
-- Verify that `INSTAGRAM_ACCESS_TOKEN` was issued for that app and has not been revoked
-- Replace the affected repository secrets through GitHub's secret settings; never paste their values into logs or issues
-
-### "The session has been invalidated"
-
-This response from the Instagram account request means the stored token has been
-invalidated, for example by a password change or a Meta security action. A retry,
-app-ID change, or refresh of that invalidated token cannot restore the session.
-An authorized account owner must reauthorize the Instagram professional account
-through its configured Instagram Login integration and securely replace the
-repository's `INSTAGRAM_ACCESS_TOKEN`. Do not substitute a parent Facebook app's
-credentials for the Instagram integration's credentials.
-
-Run `Refresh Instagram Token` with `action=check` on the correction branch after
-the replacement. Both account access and token-metadata validation must pass.
-Only then follow the normal approved deployment process to update any runtime
-consumer. Rolling back application code does not restore an invalidated token.
-- Run the workflow with `action=check` and confirm the `Check/Refresh Token` step succeeds before authorizing `setup` or `refresh`
-
-### "Failed to update Fly secret" errors
-- Verify `FLY_API_TOKEN` is valid
-- Check Fly CLI is installed: `flyctl version`
-- Ensure you have access to the app: `flyctl apps list`
-
-## Security Notes
-
-- Tokens and token prefixes are never logged
-- Token state file (`.instagram-token-state.json`) is gitignored
-- All secrets are stored in GitHub Secrets or Fly.io secrets
-- The script uses HTTPS for all API calls
-- Meta authentication errors fail closed and are not retried as transient outages
-
-## Files
-
-- `scripts/refresh-instagram-token.mjs` - Main automation script
-- `.github/workflows/refresh-instagram-token.yml` - GitHub Actions workflow
-- `.instagram-token-state.json` - Local token state (auto-generated, gitignored)
+No schema migration or application deployment is needed for this change.
+Reverting it restores the old, potentially mutating manual `check` behavior;
+stop using manual checks on a reverted revision. Reverting code does not undo
+any separately authorized credential update.
