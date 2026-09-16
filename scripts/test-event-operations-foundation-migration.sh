@@ -92,6 +92,35 @@ if psql_exec -c "DELETE FROM event_operation_raci_assignment WHERE activity_id=1
 fi
 
 psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (100,101);' >/dev/null
+# Match the handler's single transaction: the old graph permits completion,
+# then replacement introduces an incomplete prerequisite. The failed insertion
+# must roll back both the activity/version and the relation deletion.
+psql_exec -c "BEGIN;
+  INSERT INTO event_logistics_activity(id,event_id,status,version)
+    VALUES (150,10,'planned',1),(151,10,'completed',1);
+  INSERT INTO event_operation_task_policy(activity_id,requires_accountability)
+    VALUES (150,false);
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id)
+    VALUES (150,151);
+  COMMIT;" >/dev/null
+if psql_exec -c "BEGIN;
+  UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=150 AND version=1;
+  DELETE FROM event_logistics_dependency WHERE activity_id=150;
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (150,101);
+  COMMIT;" >/dev/null 2>&1; then
+  echo 'expected replacement with an incomplete prerequisite to reject completion' >&2
+  exit 1
+fi
+test "$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=150;")" = 'planned:1'
+test "$(psql_exec -qAt -c 'SELECT depends_on_activity_id FROM event_logistics_dependency WHERE activity_id=150;')" = '151'
+# A valid replacement still commits the requested version and graph together.
+psql_exec -c "BEGIN;
+  UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=150 AND version=1;
+  DELETE FROM event_logistics_dependency WHERE activity_id=150;
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (150,151);
+  COMMIT;" >/dev/null
+test "$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=150;")" = 'completed:2'
+
 if psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (101,100);' >/dev/null 2>&1; then
   echo "expected circular task dependency to be rejected" >&2
   exit 1
@@ -118,7 +147,17 @@ if psql_exec -c "UPDATE event_logistics_activity SET status='completed',version=
 fi
 
 psql_exec -c "INSERT INTO event_operation_task_override(activity_id,activity_version,override_kind,reason,policy_reference,authorized_by_party_id) VALUES (100,1,'blocked_completion','Emergency venue access','event-ops-emergency-v1',1);" >/dev/null
-psql_exec -c "UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=100;" >/dev/null
+retained_dependency_id=$(psql_exec -qAt -c 'SELECT id FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101;')
+# The handler applies a set difference, not DELETE+INSERT for unchanged edges.
+psql_exec -c "BEGIN;
+  UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=100 AND version=1;
+  DELETE FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id NOT IN (101);
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id)
+    SELECT 100,101 WHERE NOT EXISTS (
+      SELECT 1 FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101
+    );
+  COMMIT;" >/dev/null
+test "$(psql_exec -qAt -c 'SELECT id FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101;')" = "$retained_dependency_id"
 
 # A historical override cannot authorize a newly inserted or retargeted edge.
 for edge_sql in \
@@ -131,6 +170,19 @@ for edge_sql in \
 done
 psql_exec -c 'UPDATE event_logistics_dependency SET depends_on_activity_id=101 WHERE activity_id=100 AND depends_on_activity_id=101;' >/dev/null
 test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_task_override WHERE activity_id=100;')" = 1
+# Overrides remain version-bound: this fix must not silently reuse an older
+# authorization for a later command. With a fresh authorization, a later edit
+# preserving the same graph succeeds without recreating its edges.
+if psql_exec -c 'UPDATE event_logistics_activity SET version=3 WHERE id=100 AND version=2;' >/dev/null 2>&1; then
+  echo 'expected a later version to require its own blocked-completion authorization' >&2
+  exit 1
+fi
+psql_exec -c "BEGIN;
+  INSERT INTO event_operation_task_override(activity_id,activity_version,override_kind,reason,policy_reference,authorized_by_party_id)
+    VALUES (100,2,'blocked_completion','Authorized follow-up edit','event-ops-emergency-v1',1);
+  UPDATE event_logistics_activity SET version=3 WHERE id=100 AND version=2;
+  COMMIT;" >/dev/null
+test "$(psql_exec -qAt -c 'SELECT id FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101;')" = "$retained_dependency_id"
 
 psql_exec -c "INSERT INTO event_operation_audit_event(event_id,actor_party_id,actor_reference,operation_code,resource_kind,resource_id,outcome,reason,correlation_id) VALUES (10,1,'party:1','task.override','task','100','override','Emergency venue access','test:override');" >/dev/null
 if psql_exec -c "UPDATE event_operation_audit_event SET operation_code='tampered';" >/dev/null 2>&1; then

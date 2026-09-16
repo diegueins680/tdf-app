@@ -84,3 +84,40 @@ All three observed writer races passed under READ COMMITTED, REPEATABLE READ and
 SERIALIZABLE; the second transaction waited on a real lock before its failure.
 The gate connection is confined to the disposable test container and is terminated
 only to release that fixture's synchronization lock. No application DB is touched.
+
+## Follow-up: atomic logistics writes
+
+Activity creation/update and assignment/dependency replacement now share one
+`runSqlPool` transaction. A deferred graph or accountability rejection rolls back
+the activity status, optimistic version and all relation changes together. A stale
+version updates zero rows and does not replace relations. Travel verification still
+runs only after the activity transaction succeeds.
+
+The PostgreSQL foundation regression replaces a completed prerequisite with an
+incomplete one while completing a task. It requires rejection with the old status,
+version and graph preserved, then verifies a valid replacement commits. The full
+foundation suite passed locally, including concurrency, rollback and reapplication.
+This SQL regression exercises the database transaction boundary, not the HTTP route.
+
+No new schema or data migration is introduced. Existing checks and optimistic
+concurrency semantics remain intact. Roll back application code only with awareness
+that the earlier handler can partially commit rejected requests; a forward repair
+is preferred. No production data was changed during verification.
+
+## Follow-up: recipient replies and retained dependency edges
+
+The web invitation helper omits `invitationMessage` when no message was supplied,
+so accepting/declining does not attempt to clear an organizer-owned field. Explicit
+message changes remain subject to the existing server authorization guard.
+
+Dependency replacement now applies the requested set difference. Unchanged edges
+keep their IDs and creation timestamps; only removed edges are deleted and only
+new edges are inserted. This preserves a valid blocked-completion override for an
+existing graph without admitting a new blocked edge. A real database helper test
+checks identity, provenance, deduplication and isolation from other activities;
+the PostgreSQL suite exercises override completion with a retained edge.
+
+Overrides remain bound to the exact activity version. A later version-changing
+edit while prerequisites remain incomplete still requires fresh authorization;
+the repair deliberately does not extend an old override to future commands. The
+regression verifies both rejection without that authorization and success with it.

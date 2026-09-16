@@ -30,7 +30,11 @@ Regression commands: `npm test --workspace=tdf-hq-ui -- --runTestsByPath
 src/api/socialEvents.test.ts` and `stack test --fast`. The optional real-PostgreSQL
 case uses `TDF_EVENT_RELATIONS_DATABASE_URL` with the foundation fixture/migration
 and `test/integration/event_relations_fixture.sql` in a disposable database. It
-calls the same Haskell replacement function used by create/update, verifies a
+calls the same Haskell dependency replacement function used by create/update, verifies a
 valid blocked-completion override preserves the original edge ID, and verifies
 a newly acquired incomplete edge raises 23514 and rolls back. This bounded test
 does not claim full HTTP authorization or permission for later activity versions.
+
+Consolidation retains concurrent fa7c2e43 (including main and its SQLite regression)
+and adds the PostgreSQL call through that narrower dependency helper. No shared
+commit was rebased or replaced.

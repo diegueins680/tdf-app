@@ -9,7 +9,7 @@ import Database.Persist.Sql (Single(..), rawExecute, rawSql, runSqlPool, toSqlKe
 import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.DB (makePool)
-import TDF.Server.SocialEventsHandlers (replaceLogisticsActivityRelations)
+import TDF.Server.SocialEventsHandlers (replaceLogisticsActivityDependencies)
 
 spec :: Spec
 spec = do
@@ -28,14 +28,14 @@ spec = do
           "SELECT id FROM event_logistics_dependency WHERE activity_id=100" []
         flip runSqlPool pool $ do
           rawExecute "UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=100 AND version=1" []
-          replaceLogisticsActivityRelations (toSqlKey 100) [] [toSqlKey 101] now
+          replaceLogisticsActivityDependencies (toSqlKey 100) [toSqlKey 101] now
         -- A relation-only replay must keep the same stored edge, too.
-        runSqlPool (replaceLogisticsActivityRelations (toSqlKey 100) [] [toSqlKey 101] now) pool
+        runSqlPool (replaceLogisticsActivityDependencies (toSqlKey 100) [toSqlKey 101] now) pool
         after <- flip runSqlPool pool $ rawSql
           "SELECT id FROM event_logistics_dependency WHERE activity_id=100" []
         (after :: [Single Int64]) `shouldBe` before
         denied <- try $ runSqlPool
-          (replaceLogisticsActivityRelations (toSqlKey 100) [] [toSqlKey 101,toSqlKey 103] now) pool
+          (replaceLogisticsActivityDependencies (toSqlKey 100) [toSqlKey 101,toSqlKey 103] now) pool
         case (denied :: Either SomeException ()) of
           Left err -> show err `shouldContain` "23514"
           Right _ -> expectationFailure "A historical override cannot authorize a new incomplete edge"
