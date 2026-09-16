@@ -728,13 +728,12 @@
       "reviewed": true
     },
     {
-      "id": "1467b26fe9075c13f2f7",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "id": "91952765f2d528c2a6c6",
+      "classification": "governed-reference-data",
+      "disposition": "typed-consumer-of-persisted-constraint",
+      "specializedModel": "event_rsvp.status and event_rsvp_status_check",
+      "risk": "Case drift can split attendance counts or emit invalid RSVP payloads.",
+      "justification": "SocialRsvpStatus uses the three lowercase values persisted by event_rsvp_status_check and normalized by RsvpCreateDTO. It is a typed reference-data consumer, not event lifecycle policy or a second RSVP catalog; extensions require coordinated database and client review.",
       "reviewed": true
     },
     {
@@ -768,13 +767,12 @@
       "reviewed": true
     },
     {
-      "id": "2245e57c3a5e6500548e",
+      "id": "74f76e178df15df54768",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+      "risk": "Editable dispatch could redirect authenticated RSVP operations or expose profile feeds.",
+      "justification": "SocialEventsAPI contains 66 callable methods. The old rsvp method is replaced by self-scoped read, summary, upsert, deletion and two feed functions. These keys dispatch canonical endpoints, not administrator-selectable business values.",
       "reviewed": true
     },
     {
@@ -4148,13 +4146,12 @@
       "reviewed": true
     },
     {
-      "id": "e56ffb099089c4e7309f",
+      "id": "c7c31a11cdb3859ae4bb",
       "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
+      "disposition": "typed-consumer-of-persisted-registry",
       "specializedModel": "security_role, party_security_role, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "risk": "Treating an OpenAPI enum as a grant can expand privileges or allow unknown roles.",
+      "justification": "The 31-value OpenAPI Role enum adds Agency, matching TDF.Models serialization. It describes a security registry consumer, not permission to self-assign roles; contextual authorization and persisted assignments remain authoritative. This review does not establish full registry cutover.",
       "reviewed": true
     },
     {
@@ -6218,13 +6215,12 @@
       "reviewed": true
     },
     {
-      "id": "3916642c4d54d32e3205",
+      "id": "0eb0488703525594608c",
       "classification": "security-system-registry",
       "disposition": "persisted-registry-with-deny-by-default-code-mirror",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition, workflow_default_state, workflow_state_capability",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Persisted workflow-state capability rows own assignments. Code recognizes only the two executable behavior boundaries, startup rejects unknown enabled capabilities, and missing rows deny access by default.",
+      "specializedModel": "workflow_definition, workflow_state, workflow_state_capability",
+      "risk": "Conflating public listing, ticket purchase and RSVP can permit actions in an ineligible state.",
+      "justification": "recognizedSocialEventCapabilityCodes names three executable boundaries: public-listable, ticket-purchase and rsvp. Assignments remain workflow_state_capability rows queried with active workflow/state and enabled checks. Adding codes requires reviewed handlers, not business-label editing.",
       "reviewed": true
     },
     {
@@ -6448,13 +6444,12 @@
       "reviewed": true
     },
     {
-      "id": "dbd19df5feca0af20a2c",
+      "id": "068d6f3f0c164631ab35",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+      "risk": "Dynamic API methods could bypass self-scoping or confuse public and authenticated reads.",
+      "justification": "The mobile Events object contains 29 callable transport functions, including new public detail and RSVP read, summary, delete and feed methods. Keys dispatch existing routes; they are implementation mechanics, not event types, attendance states or a mobile-owned catalog.",
       "reviewed": true
     },
     {
@@ -8638,13 +8633,12 @@
       "reviewed": true
     },
     {
-      "id": "3f00137f715a55f77dc3",
-      "classification": "governed-reference-data",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing reference constants could break parsing, transport, or implementation dispatch.",
-      "justification": "These reference constants form closed unions used for validation and dispatch mechanics and are not governed business catalog data.",
+      "id": "2a1f5ad58ef7b8fc4bf3",
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-request-field-allowlist",
+      "specializedModel": "EventUpdateDTO strict parser and authenticated event update handler",
+      "risk": "Confusing accepted JSON keys with writable authority can allow mass assignment of projection or ownership fields.",
+      "justification": "eventUpdateAllowedKeys includes eventRsvpEligible among 26 accepted DTO keys. This is a strict unknown-field parser boundary, not business reference data. Acceptance of projection fields does not authorize mutation; the authenticated handler separately decides which fields can be persisted.",
       "reviewed": true
     },
     {
@@ -8678,13 +8672,12 @@
       "reviewed": true
     },
     {
-      "id": "b98598fcc3a39ba88a8d",
+      "id": "ffb84e8fd3972fd0730d",
       "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
+      "disposition": "generated-consumer-pending-governance-cutover",
       "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "The generated mobile feature registry mirrors the reviewed navigation and permission contract; persisted assignments remain authoritative and backend capabilities remain exhaustive.",
+      "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+      "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
       "reviewed": true
     },
     {
@@ -9248,13 +9241,12 @@
       "reviewed": true
     },
     {
-      "id": "3b37706d3daff89e8890",
+      "id": "34d5f2f94d1a165783ba",
       "classification": "dynamic-business-catalog",
-      "disposition": "consumer-update",
+      "disposition": "consumer-update-required",
       "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
-      "priority": "P3-consumer",
-      "risk": "A governed onboarding intent could become unreachable or route to the wrong product surface.",
-      "justification": "This switch maps governed onboarding intent identifiers to fixed client routes and must reject unknown values safely.",
+      "risk": "Local routing and completion hints can diverge from governed intent or authoritative account progress.",
+      "justification": "The six intent switch labels only changed order at fingerprint level. Current routing uses local role/module hints and falls back to MOBILE_LANDING_ROUTE; unlike historical code, this file stores progress locally. Retain business-catalog classification and require authoritative consumer alignment; this is not approval of end-to-end onboarding correctness.",
       "reviewed": true
     },
     {
@@ -9678,13 +9670,12 @@
       "reviewed": true
     },
     {
-      "id": "1af20293af1230e9fbb9",
+      "id": "7578a30aa3cc5aa23870",
       "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the migration list could break deployment execution or skip the Party selector compatibility repair.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+      "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
       "reviewed": true
     },
     {

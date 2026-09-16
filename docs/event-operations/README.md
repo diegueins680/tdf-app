@@ -1,5 +1,7 @@
 # Event operations specification index
 
+- [Stale catalog reconciliation contract](catalog-stale-reconciliation-contract.md)
+- [Draft PR 36: traceable stale catalog reconciliation](pr-36-catalog-stale-reconciliation.md)
 - [Scoped catalog review contract](catalog-review-contract.md)
 - [Draft PR 35: individual event-operations catalog decisions](pr-35-event-catalog-review.md)
 - [RACI paint readiness contract](raci-review-paint-contract.md)
