@@ -364,3 +364,39 @@ remains in progress, including backend and persona browser jobs. See the
 UI/mobile jobs are not passing tests. Await the final full-run result and inspect
 any failed-job logs without weakening assertions; record completion here to avoid
 cancelling implementation CI with documentation pushes.
+
+
+### #402 final full CI and #409 explicit legacy writes — 2026-09-16
+
+[Full CI35122347920](https://github.com/diegueins680/tdf-app/actions/runs/35122347920)
+completed **success** at `8b2d1557a5e72e0346af1fd43dc7cf36033da067`, including backend
+build/tests, social session/model HTTP fixtures, artist-merch runtime, complete-schema
+automatic migrations and public-booking HTTP conflict checks. Browser, migration,
+quality and contract jobs also passed. The UI/mobile/API-contract-test jobs were
+skipped, not passed. [Final actual run JSON](evidence/relationship-ci/final-full-ci.json)
+supersedes the earlier pending snapshots without changing implementation branches.
+
+[Draft #409](https://github.com/diegueins680/tdf-app/pull/409) depends on #402.
+Exact source: `7e601607f60b2987e502c4a14db821bbf37df296`.
+[Review packet](https://github.com/diegueins680/tdf-app/blob/7e601607f60b2987e502c4a14db821bbf37df296/docs/social/legacy-write-boundary.md)
+records the repaired friend POST/DELETE and vCard writes, a shared locked current-token
+transaction, and retirement with non-cacheable 410 after canonical enforcement. It
+preserves historical timestamps/NFC metadata and never invents canonical consent.
+Local checks passed: TLC 4,320 distinct states and three specific counterexamples;
+288 generated real HTTP observations; **417 HTTP examples**, **2,542 Stack examples**,
+zero failures; PostgreSQL 17 complete-schema/reapply/pause and catalog audit. Guard-only
+synthetic p95 was 8.06ms at degree 0 and 12.22ms at degree 10,004 against a predeclared
+50ms threshold, excluding bearer/mutation/HTTP. Failed development attempts and
+exact source/log hashes are preserved. Hosted checks are **running**, not yet passed:
+[actual initial snapshot](evidence/legacy-write-ci/initial-checks.json).
+
+**Next repair:** `Server.fanFollowArtist` auto-follows every fan-club member in both
+directions and emits artist-follower notifications. This side effect remains outside
+#409, creates unwanted historical graph edges and unbounded work, and blocks activation.
+Preserve the artist FanFollow subscription, model membership/notification authority and
+retire implicit member-to-member follows without converting old rows into consent.
+Canonical DM policy already prevents these legacy edges from granting accepted-connection
+rights. Old-client cutover, search/media/notifications, delegation, lifecycle/moderation,
+legacy list pagination and native journeys remain incomplete. All PRs remain unmerged;
+no production flag activation or deployment command occurred. Earlier automatic provider
+deployment exceptions remain unresolved and still need owner target/removal verification.
