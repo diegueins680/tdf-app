@@ -21,6 +21,7 @@ import Data.Int (Int64)
 import Data.List (isInfixOf, nub)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isNothing)
+import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.Encoding as TE
@@ -54,6 +55,7 @@ import TDF.API.Feedback
 import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
+import qualified TDF.API.CommerceOperations as CommerceOperationsAPI
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.API.Inventory as Inventory
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
@@ -148,6 +150,7 @@ import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.PaymentAvailability as PaymentAvailabilityServer
@@ -155,6 +158,7 @@ import qualified TDF.Server.ProviderExecution as ProviderExecutionServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
+import qualified TDF.Server.PaymentAuditSpec as PaymentAuditSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -981,6 +985,7 @@ main = hspec $ do
             Merch.validateCheckoutText "recipient.name" 80 "Paola\nAdmin" `shouldSatisfy` isLeft
 
     MerchRuntimeSpec.spec
+    PaymentAuditSpec.spec
 
     describe "contextual reputation formula v1" $ do
         it "uses deterministic ROC weights that total exactly 100" $ do
@@ -2092,9 +2097,94 @@ main = hspec $ do
             Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
               `shouldBe` False
 
+    describe "manual transfer instruction scope" $ do
+        it "does not use merch-only instructions to qualify other product flows" $
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Nothing),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic merch instructions")] $ do
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowMerchandise
+                  `shouldReturn` True
+                mapM PaymentAvailability.manualTransferInstructionsConfigured
+                  [ ProviderCapabilities.FlowBooking, ProviderCapabilities.FlowProfessionalService
+                  , ProviderCapabilities.FlowCourse, ProviderCapabilities.FlowEventTicket
+                  , ProviderCapabilities.FlowDigitalProduct, ProviderCapabilities.FlowSubscription
+                  , ProviderCapabilities.FlowMarketplace ] `shouldReturn` replicate 7 False
+        it "allows generic instructions and rejects empty configuration" $ do
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic generic instructions"),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Nothing)] $
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowBooking
+                  `shouldReturn` True
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "  "),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Just "  ")] $
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowMerchandise
+                  `shouldReturn` False
+
+    describe "operator payment intent summaries" $ do
+        it "runs the real overview query without mixing environments and aggregates within each environment" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                summaries <- runSqlPool (do
+                    rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY, environment TEXT NOT NULL)" []
+                    rawExecute "CREATE TABLE commerce_payment_intent (checkout_id TEXT, status TEXT, currency TEXT, amount_minor BIGINT, authorized_minor BIGINT, captured_minor BIGINT, refunded_minor BIGINT)" []
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('sandbox-one','sandbox'),('sandbox-two','sandbox'),('production-one','production')" []
+                    rawExecute "INSERT INTO commerce_payment_intent VALUES ('sandbox-one','captured','USD',5000,5000,5000,500),('sandbox-two','captured','USD',2000,2000,2000,0),('production-one','captured','USD',9000,9000,9000,100)" []
+                    CommerceOperationsServer.loadPaymentIntentSummaries) pool
+                map (\summary ->
+                    ( CommerceOperationsAPI.cpiEnvironment summary
+                    , CommerceOperationsAPI.cpiStatus summary
+                    , CommerceOperationsAPI.cpiCurrency summary
+                    , CommerceOperationsAPI.cpiCount summary
+                    , CommerceOperationsAPI.cpiAmountMinor summary
+                    , CommerceOperationsAPI.cpiAuthorizedMinor summary
+                    , CommerceOperationsAPI.cpiCapturedMinor summary
+                    , CommerceOperationsAPI.cpiRefundedMinor summary
+                    )) summaries `shouldBe`
+                      [ ("production", "captured", "USD", 1, 9000, 9000, 9000, 100)
+                      , ("sandbox", "captured", "USD", 2, 7000, 7000, 7000, 500)
+                      ]
+
+        it "aggregates amount components only within the checkout environment" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                summaries <- runSqlPool (do
+                    rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY, environment TEXT NOT NULL)" []
+                    rawExecute "CREATE TABLE commerce_payment_intent (id TEXT PRIMARY KEY, checkout_id TEXT)" []
+                    rawExecute "CREATE TABLE commerce_payment_amount_component (payment_intent_id TEXT, component_type TEXT, source TEXT, currency TEXT, amount_minor BIGINT)" []
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('s','sandbox'),('p','production')" []
+                    rawExecute "INSERT INTO commerce_payment_intent VALUES ('si','s'),('pi','p')" []
+                    rawExecute "INSERT INTO commerce_payment_amount_component VALUES ('si','tax','tax_document','USD',100),('si','tax','tax_document','USD',200),('pi','tax','tax_document','USD',900)" []
+                    CommerceOperationsServer.loadAmountComponentSummaries) pool
+                summaries `shouldBe`
+                    [ CommerceOperationsAPI.CommerceAmountComponentSummaryDTO "production" "tax" "tax_document" "USD" 1 900
+                    , CommerceOperationsAPI.CommerceAmountComponentSummaryDTO "sandbox" "tax" "tax_document" "USD" 2 300
+                    ]
+
+    describe "manual transfer runtime configuration" $ do
+        it "uses merchandise instructions only for merchandise and general instructions for all flows" $
+            forM_ [minBound .. maxBound] $ \flow -> do
+                PaymentAvailability.bankTransferInstructionsReady flow False True
+                    `shouldBe` (flow == ProviderCapabilities.FlowMerchandise)
+                PaymentAvailability.bankTransferInstructionsReady flow True False `shouldBe` True
+                PaymentAvailability.bankTransferInstructionsReady flow False False `shouldBe` False
+
+    describe "marketplace contact checkout boundary" $ do
+        it "retains checkout preparation without selecting a payment rail or changing payment state" $ do
+            source <- readFile "src/TDF/Server.hs"
+            let handler = unlines . takeWhile (/= "prepareMarketplaceSaleCheckout")
+                        . dropWhile (/= "checkoutCart rawId mIdempotency payload = do")
+                        $ lines source
+            handler `shouldContain` "prepareMarketplaceSaleCheckout \"contact\""
+            handler `shouldContain` "loadMarketplaceOrderWithLookup context"
+            handler `shouldContain` "when (msccCreated context)"
+            handler `shouldNotContain` "beginPaymentAttempt"
+            handler `shouldNotContain` "recordManualPaymentSelection"
+            handler `shouldNotContain` "MarketplaceOrderPaymentProvider"
+            handler `shouldNotContain` "MarketplaceOrderStatus"
+
     describe "provider-neutral payment routing" $ do
         let active provider = ProviderCapabilities.ProviderActivation
               { ProviderCapabilities.paProvider = provider
+              , ProviderCapabilities.paMerchantRef = Just "merchant-test"
               , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
               , ProviderCapabilities.paFeatureEnabled = True
               , ProviderCapabilities.paCredentialsValidated = True
@@ -2308,6 +2398,28 @@ main = hspec $ do
               CheckoutStore.OperationCapture
               `shouldBe` [ProviderCapabilities.CapabilityCapture]
 
+        it "rejects creating or authorizing payments without verified completion capabilities" $ do
+            forM_
+              [ (CheckoutStore.ProviderDatafast, ProviderCapabilities.MethodCard, ProviderCapabilities.CapabilityServerVerification, [CheckoutStore.OperationCreate])
+              , (CheckoutStore.ProviderPayPal, ProviderCapabilities.MethodPayPalWallet, ProviderCapabilities.CapabilityCapture, [CheckoutStore.OperationCreate, CheckoutStore.OperationAuthorize])
+              ] $ \(provider, method, completion, operations) ->
+              forM_ operations $ \operation -> do
+                let verified = active provider
+                    incomplete = verified
+                      { ProviderCapabilities.paVerifiedMethodCapabilities =
+                          filter ((/= completion) . snd)
+                            (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                      }
+                    request = cardRequest
+                      { ProviderCapabilities.prMethod = method
+                      , ProviderCapabilities.prRequiredCapabilities =
+                          PaymentRuntimeStore.providerOperationCapabilities provider
+                            ProviderCapabilities.FlowBooking operation
+                      }
+                ProviderCapabilities.routePayments [incomplete] request `shouldBe` []
+                map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [verified] request) `shouldBe` [provider]
+
         it "routes Datafast confirmation only with verified one-time and server capabilities" $ do
             let request = cardRequest
                   { ProviderCapabilities.prFlow = ProviderCapabilities.FlowProfessionalService
@@ -2352,6 +2464,27 @@ main = hspec $ do
               (ProviderCapabilities.routePayments [verified] request)
               `shouldBe` [CheckoutStore.ProviderPayPal]
 
+        it "requires recurring and completion evidence for public subscription routes" $ do
+            forM_
+              [ (CheckoutStore.ProviderDatafast, ProviderCapabilities.MethodCard, ProviderCapabilities.CapabilityServerVerification)
+              , (CheckoutStore.ProviderPayPal, ProviderCapabilities.MethodPayPalWallet, ProviderCapabilities.CapabilityCapture)
+              ] $ \(provider, method, completion) -> do
+                let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                      { ProviderCapabilities.prFlow = ProviderCapabilities.FlowSubscription
+                      , ProviderCapabilities.prMethod = method
+                      , ProviderCapabilities.prRequiredCapabilities = []
+                      }
+                    verified = active provider
+                    without capability = verified
+                      { ProviderCapabilities.paVerifiedMethodCapabilities =
+                          filter ((/= capability) . snd)
+                            (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                      }
+                map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [verified] request) `shouldBe` [provider]
+                forM_ [ProviderCapabilities.CapabilityRecurring, completion, ProviderCapabilities.CapabilityOneTime] $ \capability ->
+                  ProviderCapabilities.routePayments [without capability] request `shouldBe` []
+
         it "preserves caller and marketplace restrictions when qualifying complete checkout" $ do
             let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
                   { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
@@ -2377,6 +2510,28 @@ main = hspec $ do
               , ProviderCapabilities.CapabilitySellerPayouts
               ] $ \capability ->
                 ProviderCapabilities.routePayments [missing capability] request `shouldBe` []
+
+        it "requires recurring verification in addition to completion for subscriptions" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowSubscription
+                  , ProviderCapabilities.prRequiredCapabilities = []
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                oneTimeOnly = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= ProviderCapabilities.CapabilityRecurring) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            ProviderCapabilities.prRequiredCapabilities request `shouldMatchList`
+                [ ProviderCapabilities.CapabilityOneTime
+                , ProviderCapabilities.CapabilityRecurring
+                , ProviderCapabilities.CapabilityCapture
+                ]
+            ProviderCapabilities.routePayments [oneTimeOnly] request `shouldBe` []
+            map ProviderCapabilities.routeProvider
+                (ProviderCapabilities.routePayments [verified] request)
+                `shouldBe` [CheckoutStore.ProviderPayPal]
 
         it "derives routing policy from the immutable checkout domain" $ do
             PaymentRuntimeStore.productFlowForDomain "event_ticket_order"
@@ -2765,6 +2920,7 @@ main = hspec $ do
         it "advertises only adapter-backed methods and operations" $ do
             let activePayPhone = ProviderCapabilities.ProviderActivation
                   { ProviderCapabilities.paProvider = CheckoutStore.ProviderPayPhone
+                  , ProviderCapabilities.paMerchantRef = Just "merchant-test"
                   , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
                   , ProviderCapabilities.paFeatureEnabled = True
                   , ProviderCapabilities.paCredentialsValidated = True

@@ -69,7 +69,8 @@ for migration in \
   2026-09-11_manual_bank_provider_activation \
   2026-09-11_provider_capability_catalog \
   2026-09-13_provider_execution_runtime \
-  2026-09-15_provider_query_recovery; do
+  2026-09-15_provider_query_recovery \
+  2026-09-16_payment_intent_refund_sync; do
   psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
 done

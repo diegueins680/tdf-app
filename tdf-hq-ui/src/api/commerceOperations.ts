@@ -71,6 +71,7 @@ export interface CommerceProviderAccount {
 }
 
 export interface CommercePaymentIntentSummary {
+  cpiEnvironment?: 'sandbox' | 'production';
   cpiStatus: string;
   cpiCurrency: string;
   cpiCount: number;
@@ -81,6 +82,7 @@ export interface CommercePaymentIntentSummary {
 }
 
 export interface CommerceAmountComponentSummary {
+  cacEnvironment?: string;
   cacComponentType: string;
   cacSource: string;
   cacCurrency: string;
