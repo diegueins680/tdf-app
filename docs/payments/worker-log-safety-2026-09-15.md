@@ -240,5 +240,14 @@ the #392 documentation cleanup. No new mobile PR or gitlink change.
 5. `90156e57c36e034ec97b26d7b88cf4023a9d6284`: reuse #392 without rewriting it.
 
 Subsequent commits contain inventory and evidence/runbook documentation only.
-Remote delivery is recorded once independently verified; no provider transaction,
-staging deployment or production mutation occurred.
+`0c795b1b6c97e1267eb6363b8be495249e0136b6` records the final inventory;
+`5e83368cc9248d310a29d7c8e013bd3835cb9acb` records evidence and runbooks.
+
+At **2026-09-16 03:52 UTC**, `git ls-remote` and GitHub metadata independently
+confirmed pushed head `5e83368cc9248d310a29d7c8e013bd3835cb9acb` on
+`codex/payment-worker-log-safety-20260915` and OPEN draft
+[#393](https://github.com/diegueins680/tdf-app/pull/393), based on #389's branch.
+CI was in progress, with no failed check reported at that read; it is not claimed
+green. This delivery note is a subsequent documentation-only commit. The worktree
+was clean and runtime/test files matched `9e28364fa`. No provider transaction,
+qualified staging deployment, production mutation or GitHub PR merge occurred.
