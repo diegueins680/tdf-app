@@ -92,6 +92,35 @@ if psql_exec -c "DELETE FROM event_operation_raci_assignment WHERE activity_id=1
 fi
 
 psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (100,101);' >/dev/null
+# Match the handler's single transaction: the old graph permits completion,
+# then replacement introduces an incomplete prerequisite. The failed insertion
+# must roll back both the activity/version and the relation deletion.
+psql_exec -c "BEGIN;
+  INSERT INTO event_logistics_activity(id,event_id,status,version)
+    VALUES (150,10,'planned',1),(151,10,'completed',1);
+  INSERT INTO event_operation_task_policy(activity_id,requires_accountability)
+    VALUES (150,false);
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id)
+    VALUES (150,151);
+  COMMIT;" >/dev/null
+if psql_exec -c "BEGIN;
+  UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=150 AND version=1;
+  DELETE FROM event_logistics_dependency WHERE activity_id=150;
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (150,101);
+  COMMIT;" >/dev/null 2>&1; then
+  echo 'expected replacement with an incomplete prerequisite to reject completion' >&2
+  exit 1
+fi
+test "$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=150;")" = 'planned:1'
+test "$(psql_exec -qAt -c 'SELECT depends_on_activity_id FROM event_logistics_dependency WHERE activity_id=150;')" = '151'
+# A valid replacement still commits the requested version and graph together.
+psql_exec -c "BEGIN;
+  UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=150 AND version=1;
+  DELETE FROM event_logistics_dependency WHERE activity_id=150;
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (150,151);
+  COMMIT;" >/dev/null
+test "$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=150;")" = 'completed:2'
+
 if psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (101,100);' >/dev/null 2>&1; then
   echo "expected circular task dependency to be rejected" >&2
   exit 1
