@@ -92,3 +92,11 @@ current-session canonical eligibility, explicit empty exit, validated terminal r
 safe recovery and named loading states. See [PR 17 results](pr-17-fanhub-onboarding.md).
 This updates the incremental checkpoint, not the audited baseline classification above;
 shared hub follow/profile mutation fences, club consent and complete event UX remain gaps.
+
+PR 27 closes a narrow RACI integration evidence gap: the existing web editor now has automated
+desktop/phone journeys through production session/auth/event handlers and disposable PostgreSQL,
+including committed-response loss/exact replay, stale revision, session revocation, forged writes
+and scoped privacy. See [verified results and limitations](pr-27-raci-real-browser.md).
+This does not reclassify whole requirements as complete: full production-schema/middleware browser
+journeys, native mobile, durable offline recovery, invitations/consent, payments and final hosted
+CI remain separate gaps. No production migration, feature or provider was activated.
