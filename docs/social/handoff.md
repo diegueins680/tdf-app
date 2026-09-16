@@ -414,3 +414,51 @@ still has backend and persona browser work running; Safe Install is also pending
 reported at this snapshot, but this is not a completed full CI result. Record its
 final result here; do not push evidence-only changes to the implementation branch
 while that run is active. The next repair remains fan-club fanout and notifications.
+
+
+### #409 final CI and #415 fan subscriptions — 2026-09-16
+
+Parent [full CI35129595035](https://github.com/diegueins680/tdf-app/actions/runs/35129595035)
+completed **success** at `7e601607f60b2987e502c4a14db821bbf37df296`; the backend,
+browser, migrations, repository quality and contracts passed. Skipped jobs are
+not passing checks. [Final run JSON](evidence/legacy-write-ci/final-full-ci.json)
+supersedes the earlier pending snapshots.
+
+[Draft #415](https://github.com/diegueins680/tdf-app/pull/415) depends on #409, with
+source `daf6c5a680b81928c2e2c66df98063328e6d5e9c`.
+[Exact-source review packet](https://github.com/diegueins680/tdf-app/blob/daf6c5a680b81928c2e2c66df98063328e6d5e9c/docs/social/fan-effects-boundary.md)
+contains the subscription/effect separation, current-session serialization and
+corrected member-profile empty state. Local results: TLC **12,738 distinct states**,
+four detected counterexamples, **708 generated observations**, **1,141 HTTP examples**
+and **2,542 backend examples**, zero failures. Native PostgreSQL 16.10 complete-schema
+apply/reapply/pause, UI app typecheck/lint, 11 selector tests and catalog audit passed.
+Local Docker PG17 failed environmentally (read-only filesystem); it is not a passed
+PG17 check. Synthetic repaired-handler p95 was 49.22/50.05ms at 100/10,000 members,
+within declared 100/250ms thresholds; no production performance claim.
+
+Hosted [social35144567539](https://github.com/diegueins680/tdf-app/actions/runs/35144567539)
+and [full35144567540](https://github.com/diegueins680/tdf-app/actions/runs/35144567540)
+are pending in the [initial snapshot](evidence/fan-effects-ci/initial-checks.json).
+Record later results here without restarting implementation CI for evidence-only edits.
+The whole social task remains incomplete; all PRs remain unmerged, no deployment
+command or production activation occurred. Earlier automatic provider deployment
+exceptions still need owner review/removal. See [next integration inventory](fan-integration-next.md).
+
+
+### #415 hosted social verification passed
+
+At exact source `daf6c5a680b81928c2e2c66df98063328e6d5e9c`, both jobs in
+[social CI35144567539](https://github.com/diegueins680/tdf-app/actions/runs/35144567539)
+completed **success**: model/PostgreSQL (including regeneration, controls and complete
+schema) and social client/browser. [Actual final social run](evidence/fan-effects-ci/social-current.json).
+Hosted PostgreSQL qualification supersedes the local Docker limitation for that CI
+fixture; the local Docker failure remains recorded. This does not establish a new
+member-profile browser journey or native runtime coverage.
+
+[Full CI35144567540](https://github.com/diegueins680/tdf-app/actions/runs/35144567540)
+is still running: repository quality and API contracts passed; backend, UI, persona
+browser and migration work remain pending in the [snapshot](evidence/fan-effects-ci/full-current.json).
+Skipped mobile/API-contract-test jobs are not passes. The 708 generated HTTP cases
+run in the backend job; do not claim their hosted execution from the SQL-only social
+job. They passed locally as part of the 1,141-example run. Continue monitoring the
+full run and preserve its actual final result here without changing #415's head.
