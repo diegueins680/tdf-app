@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { EventOperations, type EventOperationTask } from '../api/eventOperations';
 import { getActiveSession, useSession } from '../session/SessionContext';
 import { parseEventTaskId } from '../utils/eventTaskRoutes';
+import EventRaciEditor from '../components/events/EventRaciEditor';
 
 export default function EventTaskPage({ eventId, activityId }: { eventId: string; activityId: string | null }) {
   const { t } = useTranslation();
@@ -12,6 +13,7 @@ export default function EventTaskPage({ eventId, activityId }: { eventId: string
   const event = parseEventTaskId(eventId);
   const activity = parseEventTaskId(activityId);
   const [reload, setReload] = useState(0);
+  const [commandLock, setCommandLock] = useState({ generation: -1, locked: false });
   const context = useRef({ session, loading, eventId, activityId, reload, generation: 0 });
   const previous = context.current;
   const generation = previous.generation + Number(previous.session !== session || previous.loading !== loading
@@ -37,12 +39,13 @@ export default function EventTaskPage({ eventId, activityId }: { eventId: string
   const failed = current && receipt.failed;
   const valid = event !== null && activity !== null;
   const pending = loading || (valid && !!session && !task && !failed);
+  const locked = commandLock.generation === generation && commandLock.locked;
 
   return <Stack spacing={3} component="section" aria-labelledby="event-task-title">
     <Typography id="event-task-title" component="h1" variant="h4">{t('eventTask.title')}</Typography>
     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-      <Button component={RouterLink} to="/social/eventos">{t('eventTask.back')}</Button>
-      {valid && session && <Button variant="outlined" disabled={pending} onClick={() => setReload(value => value + 1)}>
+      <Button component={RouterLink} to="/social/eventos" disabled={locked}>{t('eventTask.back')}</Button>
+      {valid && session && <Button variant="outlined" disabled={pending || locked} onClick={() => setReload(value => value + 1)}>
         {t(failed ? 'eventTask.retry' : 'eventTask.refresh')}
       </Button>}
     </Stack>
@@ -70,6 +73,9 @@ export default function EventTaskPage({ eventId, activityId }: { eventId: string
                     </TableRow>)}</TableBody>
                   </Table></TableContainer>}
                 <Typography variant="body2" color="text.secondary">{t('eventTask.readOnly')}</Typography>
+                <EventRaciEditor key={generation} eventId={task.eventId} activityId={task.activityId} session={session}
+                  onLock={value => setCommandLock({ generation, locked: value })}
+                  onRefresh={() => setReload(value => value + 1)} />
               </Stack>}
   </Stack>;
 }

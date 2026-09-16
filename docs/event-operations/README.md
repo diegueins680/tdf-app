@@ -54,6 +54,8 @@
 - [Draft PR 24: authenticated RACI API and typed client](pr-24-raci-reassignment-api.md)
 - [RACI editor context contract](raci-editor-context-contract.md)
 - [Draft PR 25: authorized, paginated RACI editor context](pr-25-raci-editor-context.md)
+- [RACI web editor contract](raci-web-editor-contract.md)
+- [Draft PR 26: scoped RACI web editor](pr-26-raci-web-editor.md)
 - [Draft PR 18: verify exact reservation-model regeneration](pr-18-pluscal-integrity.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)
 - [Formal models](../../formal/event-operations/README.md)

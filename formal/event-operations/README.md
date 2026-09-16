@@ -51,6 +51,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `RaciWebEditor.cfg` | Three context generations, two revisions, eligible/ineligible context, one reviewed body/key, two attempts, valid/invalid receipt; no fairness | PASS; 154 generated, 120 distinct states, depth 9 |
+| `RaciWebEditorConsent/Context/Flight/Retry/Receipt.cfg` | Remove confirmation, context, single-flight, exact-retry or receipt-validation guard | Expected exit 12 with ExplicitConfirmation / CurrentEditor / OneFlight / SameRetry / ValidatedSuccess; all five detected |
 | `RaciEditorContext.cfg` | One reader/writer, manage/read/no grant, matching/foreign target, eligible/ineligible candidate, two revisions, clock 0–2; no fairness | PASS; 3,724 generated, 1,584 distinct states, depth 9 |
 | `RaciEditorContextEarly/Candidate/Mixed.cfg` | Use pre-wait authority, expose ineligible candidate or omit metadata fence | Expected exit 12 with `PrivateOptions`, `EligibleOptions`, `CoherentContext`; all three detected |
 | `CommandBoundary.cfg` | One command, four shape/target validity combinations, validation and commit/abort phases; no fairness | PASS; 14 generated/distinct states, depth 4 |
@@ -106,6 +108,12 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Coverage
 
+- `RaciWebEditor.tla`: explicit reviewed intent, current-context dispatch/receipt, one in-flight
+  operation, same-command retry and validated success. Existing scoped Alloy relations apply
+  unchanged. Page replacement, source filtering, error classification and accessibility require
+  executable contracts; see [the editor contract](../../docs/event-operations/raci-web-editor-contract.md).
+  The PR 26 full rerun passed 23 positive configurations, 53 negative controls, 13 PlusCal tests,
+  2 SAT scenarios and 13 UNSAT assertions before editor feature code was written.
 - `RaciEditorContext.tla`: current manager-only options, candidate eligibility and metadata
   coherence. The SQL context is advisory: pagination, intervals, source eligibility and
   lifecycle readiness additionally require executable tests; no editing or liveness claim.
@@ -247,3 +255,8 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
     it was not accepted as a business counterexample. Parenthesizing all three latch RHS
     expressions corrected the specification without weakening invariants. The complete rerun
     passed; Early/Candidate/Mixed mutations then produced the required named invariant failures.
+11. Initial `RaciWebEditor` runs rejected ambiguous `=<<` tokenization and a mixed integer/string
+    visible-generation sentinel. Spaces before tuple literals and a tuple-wrapped visible
+    generation fixed the specification. Those parser/evaluation errors were not accepted as
+    invariant counterexamples. A separate sandbox RMI denial required an approved unsandboxed
+    rerun. The complete corrected suite passed; no safety assertion was weakened or omitted.
