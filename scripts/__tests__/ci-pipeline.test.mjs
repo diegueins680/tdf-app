@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +11,75 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');
 }
+
+async function runBackendQualityFixture(context, stackExit = 0, auditExit = 0) {
+  const fixture = await mkdtemp(path.join(tmpdir(), 'tdf-backend-quality-order-'));
+  context.after(() => rm(fixture, { recursive: true, force: true }));
+  await mkdir(path.join(fixture, 'scripts'));
+  await mkdir(path.join(fixture, 'tdf-hq'));
+  await mkdir(path.join(fixture, 'bin'));
+  await writeFile(path.join(fixture, 'tdf-hq/stack.yaml'), '');
+  await copyFile(path.join(root, 'scripts/quality-backend.sh'), path.join(fixture, 'scripts/quality-backend.sh'));
+  const log = path.join(fixture, 'calls');
+  await writeFile(log, '');
+  await writeFile(path.join(fixture, 'bin/stack'), `#!/bin/sh
+set -eu
+echo stack >> "$QUALITY_TEST_LOG"
+if [ "\${TDF_PAYMENT_AUDIT_DATABASE_URL+x}" = x ]; then
+  echo 'Payment audit enabled before fixture initialization' >&2
+  exit 42
+fi
+exit "$QUALITY_TEST_STACK_EXIT"
+`, { mode: 0o755 });
+  await writeFile(path.join(fixture, 'scripts/test-payment-audit-runtime.sh'), `#!/bin/sh
+set -eu
+test "$TDF_PAYMENT_AUDIT_DATABASE_URL" = 'postgresql://localhost/tdf_payment_audit_test'
+echo audit >> "$QUALITY_TEST_LOG"
+exit "$QUALITY_TEST_AUDIT_EXIT"
+`);
+  const result = spawnSync('bash', [path.join(fixture, 'scripts/quality-backend.sh')], {
+    encoding: 'utf8',
+    env: {
+      PATH: `${path.join(fixture, 'bin')}:${process.env.PATH}`,
+      REQUIRE_STACK: '1',
+      STACK_ROOT: path.join(fixture, 'stack-root'),
+      TDF_PAYMENT_AUDIT_DATABASE_URL: 'postgresql://localhost/tdf_payment_audit_test',
+      QUALITY_TEST_LOG: log,
+      QUALITY_TEST_STACK_EXIT: String(stackExit),
+      QUALITY_TEST_AUDIT_EXIT: String(auditExit),
+    },
+  });
+  assert.ifError(result.error);
+  return { ...result, calls: await readFile(log, 'utf8') };
+}
+
+test('backend quality enables PostgreSQL audit only in the fixture-owning runner', async (context) => {
+  const result = await runBackendQualityFixture(context);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.calls, 'stack\naudit\n');
+});
+
+test('backend quality still fails on the initial Stack test failure', async (context) => {
+  const result = await runBackendQualityFixture(context, 7);
+  assert.equal(result.status, 7, result.stderr);
+  assert.equal(result.calls, 'stack\n');
+});
+
+test('backend quality still fails on the mandatory PostgreSQL audit failure', async (context) => {
+  const result = await runBackendQualityFixture(context, 0, 9);
+  assert.equal(result.status, 9, result.stderr);
+  assert.equal(result.calls, 'stack\naudit\n');
+});
+
+test('CI scopes the service password to database creation, not configuration unit tests', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const start = workflow.indexOf('      - name: Build and test backend once');
+  assert.notEqual(start, -1);
+  const step = workflow.slice(start, workflow.indexOf('\n      - name:', start + 1));
+  assert.doesNotMatch(step, /^\s+PGPASSWORD:/m);
+  assert.match(step, /PGPASSWORD=postgres createdb -h postgres -U postgres tdf_payment_audit_test/);
+  assert.match(step, /TDF_PAYMENT_AUDIT_DATABASE_URL: postgresql:\/\/postgres:postgres@postgres:5432\/tdf_payment_audit_test/);
+});
 
 test('CI splits component checks and preserves Stack build caches', async () => {
   const workflow = await source('.github/workflows/ci.yml');

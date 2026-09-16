@@ -26,6 +26,9 @@ fi
 
 (
   cd "$BACKEND_DIR"
+  # The PostgreSQL audit runner loads its fixture after this build/test pass.
+  # Keep its URL in the parent for that mandatory runner, not the early suite.
+  unset TDF_PAYMENT_AUDIT_DATABASE_URL
   STACK_ROOT="$STACK_ROOT_DIR" stack "${build_args[@]}"
 )
 

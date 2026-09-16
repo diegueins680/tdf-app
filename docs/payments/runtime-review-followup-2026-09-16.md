@@ -4,6 +4,22 @@
 
 GitHub Actions job104857160527 completed the Stack suite, then failed at `test-payment-audit-runtime.sh: 7: docker: not found`. The backend container already has PostgreSQL clients and a service. CI now creates a dedicated `tdf_payment_audit_test` database and passes its URL to the runner. The runner requires that exact database name and an empty public schema, then applies the fixture transactionally. Without a configured URL, local runs retain the owned Docker fixture. The service-mode test disables Docker for the child runner, executes all three PostgreSQL examples and verifies populated/wrong-name databases are refused.
 
+The initial Stack build/test subshell must not inherit `TDF_PAYMENT_AUDIT_DATABASE_URL`:
+`PaymentAuditSpec` uses its presence to enable the PostgreSQL examples, but their
+fixture is not loaded until the subsequent mandatory runtime runner. The parent
+retains the URL so that runner initializes the fixture and executes the same three
+examples with `--fail-on=empty`. Orchestration regressions cover this ordering and
+verify that failures from either Stack or the runtime runner remain fatal. This
+changes test setup only; no production schema, credentials, or deployment change
+is required, and no payment assertion is removed.
+
+The service password is scoped to `createdb`, rather than exported to the entire
+build/test step: an inherited `PGPASSWORD` conflicts with the isolated `DB_PASS`
+fixtures used by configuration tests. The audit runner authenticates using its
+dedicated URL. Hosted run `35123867242` confirmed both setup defects (three missing
+table failures and six configuration-fixture conflicts); the aggregate quality
+failure was downstream. A workflow regression guards the password scope.
+
 ## Financial summary clarity
 
 Every settlement, refund, dispute, seller-balance, payout and reconciliation heading now includes its environment. The regression uses identical provider/currency/status across sandbox and production in all six families. Existing intent, component and commission environment labels remain.
