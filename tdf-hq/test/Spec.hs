@@ -150,6 +150,7 @@ import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
+import qualified TDF.Server.PaymentAuditSpec as PaymentAuditSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -976,6 +977,7 @@ main = hspec $ do
             Merch.validateCheckoutText "recipient.name" 80 "Paola\nAdmin" `shouldSatisfy` isLeft
 
     MerchRuntimeSpec.spec
+    PaymentAuditSpec.spec
 
     describe "contextual reputation formula v1" $ do
         it "uses deterministic ROC weights that total exactly 100" $ do
@@ -2277,6 +2279,29 @@ main = hspec $ do
               ProviderCapabilities.FlowBooking
               CheckoutStore.OperationCapture
               `shouldBe` [ProviderCapabilities.CapabilityCapture]
+
+        it "requires completion capabilities at provider creation, including direct clients" $ do
+            forM_
+              [ (CheckoutStore.ProviderDatafast, ProviderCapabilities.MethodCard,
+                    ProviderCapabilities.CapabilityServerVerification)
+              , (CheckoutStore.ProviderPayPal, ProviderCapabilities.MethodPayPalWallet,
+                    ProviderCapabilities.CapabilityCapture)
+              ] $ \(provider, method, completion) -> do
+                let request = cardRequest
+                      { ProviderCapabilities.prMethod = method
+                      , ProviderCapabilities.prRequiredCapabilities =
+                          PaymentRuntimeStore.providerOperationCapabilities provider
+                            ProviderCapabilities.FlowProfessionalService CheckoutStore.OperationCreate
+                      }
+                    verified = active provider
+                    incomplete = verified
+                      { ProviderCapabilities.paVerifiedMethodCapabilities =
+                          filter ((/= completion) . snd)
+                            (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                      }
+                ProviderCapabilities.routePayments [incomplete] request `shouldBe` []
+                map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [verified] request) `shouldBe` [provider]
 
         it "routes Datafast confirmation only with verified one-time and server capabilities" $ do
             let request = cardRequest

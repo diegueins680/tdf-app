@@ -60,7 +60,8 @@ instance ToJSON CommerceProviderCapabilityDTO
 instance FromJSON CommerceProviderCapabilityDTO
 
 data CommercePaymentIntentSummaryDTO = CommercePaymentIntentSummaryDTO
-  { cpiStatus          :: Text
+  { cpiEnvironment     :: Text
+  , cpiStatus          :: Text
   , cpiCurrency        :: Text
   , cpiCount           :: Int64
   , cpiAmountMinor     :: Int64

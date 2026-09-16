@@ -112,6 +112,10 @@ providerOperationCapabilities
   -> [PaymentCapability]
 providerOperationCapabilities provider flow operation =
   case (provider, operation) of
+    (Checkout.ProviderDatafast, Checkout.OperationCreate) ->
+      [CapabilityServerVerification] <> operationCapabilities flow operation
+    (Checkout.ProviderPayPal, Checkout.OperationCreate) ->
+      [CapabilityCapture] <> operationCapabilities flow operation
     (Checkout.ProviderDatafast, Checkout.OperationCapture) ->
       [CapabilityOneTime, CapabilityServerVerification]
         <> filter (/= CapabilityCapture) (operationCapabilities flow operation)

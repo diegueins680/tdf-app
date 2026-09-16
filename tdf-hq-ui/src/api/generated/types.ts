@@ -8564,6 +8564,8 @@ export interface components {
             cpaCapabilities: components["schemas"]["CommerceProviderCapability"][];
         };
         CommercePaymentIntentSummary: {
+            /** @enum {string} */
+            cpiEnvironment: "sandbox" | "production";
             cpiStatus: string;
             cpiCurrency: string;
             /** Format: int64 */

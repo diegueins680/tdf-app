@@ -16340,41 +16340,10 @@ data MarketplaceSaleCheckoutContext = MarketplaceSaleCheckoutContext
 
 checkoutCart :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
 checkoutCart rawId mIdempotency payload = do
-  context <- prepareMarketplaceSaleCheckout "bank_transfer" rawId mIdempotency payload
-  now <- liftIO getCurrentTime
-  Env{ envPool } <- ask
-  providerEnabled <- liftIO $ flip runSqlPool envPool $
-    Checkout.providerEnabledForEnvironment
-      (msccEnvironment context) Checkout.ProviderBankTransfer
-  unless providerEnabled $
-    throwError err503
-      { errBody = "Bank transfer checkout is disabled in this environment" }
-  attemptResult <- liftIO $ flip runSqlPool envPool $
-    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
-        { Checkout.pacCheckout = msccCheckout context
-        , Checkout.pacProvider = Checkout.ProviderBankTransfer
-        , Checkout.pacEnvironment = msccEnvironment context
-        , Checkout.pacOperation = Checkout.OperationManualVerify
-        , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
-        , Checkout.pacCurrency = msccCurrency context
-        , Checkout.pacMerchantRef = "tdf-marketplace-manual"
-        , Checkout.pacIdempotencyKey = msccIdempotencyKey context
-        , Checkout.pacCreatedAt = now
-        , Checkout.pacCorrelationId = "marketplace-manual:" <> toPathPiece (msccOrderKey context)
-        }
-  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
-  liftIO $ flip runSqlPool envPool $ do
-    Checkout.recordManualPaymentSelection
-      (msccCheckout context)
-      attempt
-      Checkout.ProviderBankTransfer
-      ("marketplace-manual:" <> toPathPiece (msccOrderKey context))
-      now
-    update (msccOrderKey context)
-      [ ME.MarketplaceOrderStatus =. "awaiting_manual_confirmation"
-      , ME.MarketplaceOrderPaymentProvider =. Just "bank_transfer"
-      , ME.MarketplaceOrderUpdatedAt =. now
-      ]
+  -- Contact coordination creates an unpaid request, not a bank-transfer
+  -- payment selection. It must remain available without online/custody capability
+  -- approval and must not create a payment intent, attempt, evidence or receipt.
+  context <- prepareMarketplaceSaleCheckout "contact" rawId mIdempotency payload
   orderDto <- loadMarketplaceOrderWithLookup context
   when (msccCreated context) $ sendMarketplaceOrderCreatedEmail orderDto
   pure orderDto
@@ -16487,7 +16456,7 @@ ensureMarketplacePaymentRailAvailable rawProvider context = do
   let provider = T.toLower (T.strip rawProvider)
       checkoutId = Checkout.checkoutReferenceId (msccCheckout context)
   conflicts <- runDB $ case provider of
-    "bank_transfer" -> rawSql
+    candidate | candidate `elem` ["bank_transfer", "contact"] -> rawSql
       "SELECT 1::bigint FROM commerce_payment_attempt\
       \ WHERE checkout_id = ?::uuid\
       \ AND provider IN ('datafast','paypal','stripe')\
@@ -16498,8 +16467,8 @@ ensureMarketplacePaymentRailAvailable rawProvider context = do
     _ -> pure []
   unless (null (conflicts :: [Single Int64])) $
     throwError err409
-      { errBody = if provider == "bank_transfer"
-          then "An online payment is awaiting customer action or processing; verify it before selecting bank transfer"
+      { errBody = if provider `elem` ["bank_transfer", "contact"]
+          then "An online payment is awaiting customer action or processing; verify it before requesting manual coordination"
           else "Manual payment evidence is under review; resolve it before starting an online payment"
       }
   where
