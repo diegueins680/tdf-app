@@ -64,6 +64,7 @@ psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql"
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/dm-read-refinement.sql"
 # psql \ir needs a real local path in Docker too, so concatenate the control and
 # generated cases instead of relying on the container seeing the checkout.

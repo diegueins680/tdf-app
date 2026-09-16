@@ -39,6 +39,7 @@ psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundar
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql"
+psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/scripts/social/schema-compatibility.sql"
 # Legacy writes after migration survive pause/reapply; reads still enforce block.
 psql_schema -c "INSERT INTO party_follow(follower_party_id,following_party_id,via_nfc,created_at) VALUES(900000001,900000002,true,now());"
@@ -49,9 +50,12 @@ psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundar
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql"
 psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql"
+psql_schema < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql"
 psql_schema <<'SQL'
 DO $$ BEGIN
   ASSERT NOT (SELECT enabled FROM social_v2_runtime);
+  ASSERT NOT social_v2_lock_legacy_write(900000001,900000002);
+  ASSERT NOT social_v2_lock_legacy_write(900000001,900000003);
   ASSERT NOT EXISTS(SELECT 1 FROM social_v2_relationship_rows(900000001,'following') WHERE following_id=900000002);
   ASSERT NOT EXISTS(SELECT 1 FROM social_v2_legacy_suggestions(900000001));
   ASSERT (SELECT count(*) FROM party_follow WHERE follower_party_id=900000001 AND following_party_id=900000002)=1;

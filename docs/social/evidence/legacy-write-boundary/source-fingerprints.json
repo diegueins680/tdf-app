@@ -1,0 +1,22 @@
+{
+  ".github/workflows/social-verification.yml": "fff6471cceffd8a261103d6e50d662e843e7c02655971fa0a3af6238a29e6316",
+  "formal/social/LegacyWrites.cfg": "a4e57ceda201ef84e4f6f630aff0e3ce21d2f1a1c23cadd23eb587fe64c23b96",
+  "formal/social/LegacyWrites.tla": "e774c8dda50a345fb2cfc3206b56c789c7515a016c184408222544584b08fc91",
+  "formal/social/LegacyWritesLocks.cfg": "c4f68d34b655e94ffb210f5ba7f44258c8b41074c59c1786fd5c5e5ccb5766bd",
+  "formal/social/LegacyWritesPair.cfg": "70475b0c9525e31c9c02129874ce7bea5c8eeca39f23fbce261f75ad95cdbf7b",
+  "formal/social/LegacyWritesPause.cfg": "7ec2afe05da2292839eb191f0a91f2cc3b14de09627353ba4c354dbb3446b65a",
+  "scripts/social/HttpSpec.hs": "04d580b7894239f88d3c5516cb5b2a786af723dca6a3837db1f4852a4b11af9d",
+  "scripts/social/LegacyWriteBenchmark.hs": "cdfc38ec837a3830eaa9d48f98999faebeeb8d00491efb82e26c62ef25fabd83",
+  "scripts/social/LegacyWriteModelCases.hs": "284661de7677ca2edbe0aa4021fa49052a9e3ba261cd3401a415f58a22d5e84d",
+  "scripts/social/LegacyWriteSpec.hs": "0b756928ab9e06ec4b131fd05ed65055ab3dc5ba347e9b20186359d19f9927f0",
+  "scripts/social/check-legacy-writes-model.sh": "86ef8cedd23af77311a02a3d221f1019860146c1a9e6efa2e9997736c8afdfd3",
+  "scripts/social/generate-legacy-write-cases.py": "847086f99e2aff850b77630588889edc786c5a37633e6ed039d7e69093a9c768",
+  "scripts/social/test-http.sh": "e960a8c3c3fe6e3f9df88f465c23f99ceee8327645464f40ec70afc34c80bf20",
+  "scripts/social/test-schema-compatibility.sh": "c1be04b8ef539e5a30b1ed4077a4979441f7fe45a2b6c720f3f4808c2c7c97cf",
+  "tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql": "b2730a6269ade87f9b2368e9e14ee8f9ae11ee10755444af63ae37e24f1cee2f",
+  "tdf-hq/src/TDF/API.hs": "1ad7e074571e36b9cfd98b1eaf877eb711ed204ea018ccb094ff76251836d5a3",
+  "tdf-hq/src/TDF/API/SocialRelationships.hs": "9ea909370a55c985f2b7e5fdf5a62eaea4a3b77438e52fd3371e2299afbc54dd",
+  "tdf-hq/src/TDF/Server.hs": "74920e6a97966cf0e9eb07549ab6898e968ed558c88db0073679588e5d3d1259",
+  "tdf-hq/src/TDF/Social/RelationshipWrites.hs": "fbe2ab38e7a2730ed13ad065859dffe186646a35d04ff99268597a0ac0fcec7c",
+  "tdf-hq/tdf-hq.cabal": "6c90922e8d4c1518bbda43ade87241244074c94ebc9277b6d88eef8cfcdc7085"
+}

@@ -283,3 +283,25 @@ PostgreSQL observations, backend compilation/tests, schema compatibility and
 synthetic list measurements ran locally; exact results and limits are in the packet.
 Legacy writers/response DTOs, client cutover and remaining identity surfaces still
 block rollout. No production gates were enabled and no deployment command issued.
+
+
+## Explicit legacy relationship writes — 2026-09-16
+
+[Legacy write boundary](legacy-write-boundary.md), dependent on #402 at `8b2d1557a`,
+repairs POST friend, DELETE friend and vCard exchange with one session/retirement
+transaction. Preserves preactivation DTOs; governed operations return 410 without
+changing historical rows or canonical consent. Model: 4,320 distinct states, three
+specific counterexamples, 288 generated HTTP observations. Final local verification:
+417 HTTP examples and 2,542 backend tests, zero failures; PostgreSQL 17 complete
+schema apply/reapply/pause, catalog audit and the predeclared guard benchmark passed.
+Exact logs, fingerprints, failed development runs and limits are in the packet.
+
+**Next integration blocker:** `fanFollowArtist` automatically creates reciprocal
+PartyFollow edges with every existing fan-club member and emits notifications.
+This PR does not repair that side effect. It cannot grant canonical consent or DM
+rights, but still creates unwanted historical graph edges and unbounded work.
+Repair it before activation, along with client cutover and previously listed
+search/media/notification/delegation/moderation gaps. Do not label all relationship
+writers complete. Parent #402 backend CI remains pending in the recorded snapshot.
+No production flag was activated and no deployment command issued; the earlier
+Vercel/Cloudflare provider exception still requires owner review/removal.
