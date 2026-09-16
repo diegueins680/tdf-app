@@ -48,8 +48,8 @@ additive and can be retained across a UI pause; there is no destructive rollback
   every privacy assertion, with the subsequent complete run passing. No CI assertion
   was removed. The final child-worktree run, including the lint-only assertion syntax repair,
   passed all 28 tests.
-- Focused lint and unchanged catalog audit passed (exit 0). Application typecheck
-  remains pending until its log finishes.
+- Focused lint, unchanged catalog audit and repository application typecheck
+  (`npm run typecheck --workspace tdf-hq-ui`) passed, exit 0.
 - An additional `tsc -p tsconfig.json` run (including all test files) failed with 134
   diagnostic output lines in unchanged test files, none in these changed files.
   This is an observed failed extra check, not a baseline execution or a passing gate.

@@ -9,3 +9,6 @@ exit 0 (parent worktree containing identical UI source and initialized mobile gi
 
 node_modules/.bin/tsc --noEmit -p tdf-hq-ui/tsconfig.json
 exit 2; extra test-inclusive check failed, not the application typecheck
+
+npm run typecheck --workspace tdf-hq-ui
+exit 0 (identical application source in parent worktree)
