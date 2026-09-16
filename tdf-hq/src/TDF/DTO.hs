@@ -1183,6 +1183,7 @@ instance ToJSON FeatureAccessRequestHistoryDTO where
 data FeatureAccessRequestDTO = FeatureAccessRequestDTO
   { farId               :: Int64
   , farRequesterPartyId :: Int64
+  , farRequesterName    :: Maybe Text
   , farFeatureId        :: Text
   , farAction           :: Text
   , farRoleContext      :: [Text]

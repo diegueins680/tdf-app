@@ -4,19 +4,26 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-import type { CreateFeatureAccessRequest, FeatureAccessRequestDTO } from '../api/accessRequests';
+import type {
+  CreateFeatureAccessRequest,
+  FeatureAccessRequestDTO,
+  FeatureAccessRequestStatus,
+} from '../api/accessRequests';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const createMock = jest.fn<(payload: CreateFeatureAccessRequest) => Promise<FeatureAccessRequestDTO>>();
+const listReviewMock = jest.fn<
+  (status: FeatureAccessRequestStatus) => Promise<FeatureAccessRequestDTO[]>
+>();
 const captureMock = jest.fn();
 
 jest.unstable_mockModule('../api/accessRequests', () => ({
   AccessRequests: {
     listMine: jest.fn(),
     create: (payload: CreateFeatureAccessRequest) => createMock(payload),
-    listReview: jest.fn(),
+    listReview: (status: FeatureAccessRequestStatus) => listReviewMock(status),
     decide: jest.fn(),
     cancel: jest.fn(),
   },
@@ -49,13 +56,14 @@ jest.unstable_mockModule('react-i18next', () => ({
   useTranslation: () => ({ i18n: { language: 'es', resolvedLanguage: 'es' } }),
 }));
 
-const { NewAccessRequestPage } = await import('./AccessRequestsPage');
+const { AccessRequestReviewPage, NewAccessRequestPage } = await import('./AccessRequestsPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 const buildRequest = (): FeatureAccessRequestDTO => ({
   id: 7,
   requesterPartyId: 42,
+  requesterName: 'Ana María Torres',
   featureId: 'label.ddex.inbox',
   action: 'import',
   roleContext: ['ReadOnly'],
@@ -101,9 +109,43 @@ async function renderPage(path: string) {
   };
 }
 
+async function renderReviewPage() {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  let root: Root | null = createRoot(container);
+  await act(async () => {
+    root?.render(
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <AccessRequestReviewPage />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+    await flushPromises();
+  });
+  await act(async () => {
+    await flushPromises();
+    await flushPromises();
+  });
+  return {
+    container,
+    cleanup: async () => {
+      await act(async () => {
+        root?.unmount();
+        await flushPromises();
+      });
+      root = null;
+      queryClient.clear();
+      container.remove();
+    },
+  };
+}
+
 describe('internal access request flow', () => {
   beforeEach(() => {
     createMock.mockReset();
+    listReviewMock.mockReset();
     captureMock.mockReset();
   });
 
@@ -151,6 +193,37 @@ describe('internal access request flow', () => {
       expect(createMock).not.toHaveBeenCalled();
     } finally {
       await technicalView.cleanup();
+    }
+  });
+
+  it.each<FeatureAccessRequestStatus>(['pending', 'approved', 'rejected', 'cancelled', 'expired'])(
+    'shows the requester name on %s review cards without opening history',
+    async (status) => {
+      listReviewMock.mockResolvedValue([{ ...buildRequest(), status }]);
+      const view = await renderReviewPage();
+      try {
+        expect(view.container.textContent).toContain('Solicitante: Ana María Torres');
+      } finally {
+        await view.cleanup();
+      }
+    },
+  );
+
+  it.each([null, '', '   ', undefined])('handles unavailable requester names (%s)', async (requesterName) => {
+    const request = buildRequest();
+    if (requesterName === undefined) {
+      // Older API versions do not yet return this field.
+      Reflect.deleteProperty(request, 'requesterName');
+    } else {
+      request.requesterName = requesterName;
+    }
+    listReviewMock.mockResolvedValue([request]);
+    const view = await renderReviewPage();
+    try {
+      expect(view.container.textContent).toContain('Solicitante: Nombre no disponible');
+      expect(view.container.textContent).not.toContain('Solicitante: 42');
+    } finally {
+      await view.cleanup();
     }
   });
 
