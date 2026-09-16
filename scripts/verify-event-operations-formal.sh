@@ -97,6 +97,12 @@ expect_counterexample TaskRevisionReadEarly.cfg NoExpiredDisclosure task-revisio
 run_tlc RaciReassignment.tla RaciReassignment.cfg raci-reassignment
 run_tlc CommandBoundary.tla CommandBoundary.cfg command-boundary
 run_tlc RaciEditorContext.tla RaciEditorContext.cfg raci-editor-context
+run_tlc RaciWebEditor.tla RaciWebEditor.cfg raci-web-editor
+expect_counterexample RaciWebEditorConsent.cfg ExplicitConfirmation raci-web-consent RaciWebEditor.tla
+expect_counterexample RaciWebEditorContext.cfg CurrentEditor raci-web-context RaciWebEditor.tla
+expect_counterexample RaciWebEditorFlight.cfg OneFlight raci-web-flight RaciWebEditor.tla
+expect_counterexample RaciWebEditorRetry.cfg SameRetry raci-web-retry RaciWebEditor.tla
+expect_counterexample RaciWebEditorReceipt.cfg ValidatedSuccess raci-web-receipt RaciWebEditor.tla
 expect_counterexample RaciEditorContextEarly.cfg PrivateOptions raci-context-early RaciEditorContext.tla
 expect_counterexample RaciEditorContextCandidate.cfg EligibleOptions raci-context-candidate RaciEditorContext.tla
 expect_counterexample RaciEditorContextMixed.cfg CoherentContext raci-context-mixed RaciEditorContext.tla

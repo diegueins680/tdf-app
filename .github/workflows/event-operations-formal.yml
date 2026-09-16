@@ -54,6 +54,9 @@ on:
       - "tdf-hq/tdf-hq.cabal"
       - "tdf-hq/docs/openapi/api.yaml"
       - "tdf-hq-ui/src/api/eventOperations.ts"
+      - "tdf-hq-ui/src/components/events/EventRaciEditor.tsx"
+      - "tdf-hq-ui/src/pages/EventTaskPage*"
+      - "scripts/__tests__/event-raci-web-editor.test.mjs"
       - "tdf-hq-ui/src/api/generated/types.ts"
       - "tdf-hq/test/integration/event_operations_foundation_fixture.sql"
       - "tdf-hq/test/integration/event_operations_replay_assertions.sql"
@@ -120,6 +123,9 @@ on:
       - "tdf-hq/tdf-hq.cabal"
       - "tdf-hq/docs/openapi/api.yaml"
       - "tdf-hq-ui/src/api/eventOperations.ts"
+      - "tdf-hq-ui/src/components/events/EventRaciEditor.tsx"
+      - "tdf-hq-ui/src/pages/EventTaskPage*"
+      - "scripts/__tests__/event-raci-web-editor.test.mjs"
       - "tdf-hq-ui/src/api/generated/types.ts"
       - "tdf-hq/test/integration/event_operations_foundation_fixture.sql"
       - "tdf-hq/test/integration/event_operations_replay_assertions.sql"
@@ -174,6 +180,9 @@ jobs:
           TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
           ALLOY_JAR: ${{ runner.temp }}/tdf-formal-tools/alloy-6.2.0.jar
         run: npm run verify:event-operations:formal
+
+      - name: Verify editor guard and isolated browser configuration
+        run: node --test scripts/__tests__/event-raci-web-editor.test.mjs
 
   postgres-foundation:
     runs-on: ubuntu-latest

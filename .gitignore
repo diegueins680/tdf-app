@@ -71,6 +71,7 @@ artifacts/persona-playwright/
 artifacts/artist-follow-playwright/
 artifacts/fanhub-playwright/
 artifacts/event-task-playwright/
+artifacts/event-raci-playwright/
 
 # Temporary files
 tmp/

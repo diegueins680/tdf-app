@@ -207,3 +207,13 @@ revision is advisory and cannot replace command-time checks. See [the contract](
 and [PR 25 evidence](pr-25-raci-editor-context.md). Next: the scoped web selector, deliberate
 confirmation and explicit stale/conflict handling; no UI, native mobile or production activation
 is included here. Naming/consent policies must not be inferred from access eligibility.
+
+The twenty-sixth branch, `feat/event-raci-web-editor`, adds the editor inside the existing
+task subview, using PR 25 context and the existing idempotent command. Page changes discard
+old options; review freezes a justified single-pair request; explicit confirmation is single-flight.
+Initial conflicts require a new read/review, while uncertain results retain the exact key/body
+for explicit retry. Session/navigation generations discard old receipts. [The contract](raci-web-editor-contract.md)
+and [PR 26 evidence](pr-26-raci-web-editor.md) delimit the finite checks and synthetic browser
+evidence. No names, consent, timed reassignment, durable offline recovery, native mobile or
+notification claim; no production flags change. Next dependencies include those workflows,
+full-stack browser verification and resolving existing hosted integration failures.
