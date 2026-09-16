@@ -309,3 +309,46 @@ parent/candidate diagnostics match byte-for-byte (134 lines); evidence commit
 `029dd5382` in #394. Application-only typecheck and focused client tests passed.
 Prior automatic provider deployment exceptions remain unresolved; no deployment
 command was issued in this continuation.
+
+## Completed parent CI — 2026-09-16
+
+- #390 [full CI35052835558](https://github.com/diegueins680/tdf-app/actions/runs/35052835558)
+  completed **success** at `44a1c7bededf0ba4b54068d482667ac24299f8e4`, including
+  backend build/tests and runtime/session, merch, schema and booking checks.
+- #397 [full CI35056386064](https://github.com/diegueins680/tdf-app/actions/runs/35056386064)
+  completed **success** at `7c452efcbc7b45e797b7ebd590dfffccf0fc9751` after one
+  failed-job rerun. The initial Chromium desktop rejected-login test hit its
+  30-second deadline waiting for a mocked error alert (45 passed, 10 skipped,
+  one failed). UI/e2e/package/CI inputs are unchanged from the passing #390 parent.
+  No assertions, timeout settings or code were changed to obtain the rerun result.
+  This demonstrates an intermittent run outcome, not a diagnosed root cause.
+  The [first failure](evidence/completed-parent-ci/profile-browser-first-failure.txt)
+  and [final run](evidence/completed-parent-ci/profile-rerun-final.json) are retained.
+- #397 [social CI35056386037](https://github.com/diegueins680/tdf-app/actions/runs/35056386037)
+  completed both model/PostgreSQL and social-client jobs successfully at that head.
+  Scoped-out UI/mobile jobs in full CI remain **skipped**, not passes.
+
+These results supersede earlier pending snapshots, without qualifying unimplemented
+platform scope or authorizing deployment. All dependent PRs remain unmerged.
+
+## Published relationship-read delivery — 2026-09-16
+
+[Draft #402](https://github.com/diegueins680/tdf-app/pull/402), dependent on #397,
+head `8b2d1557a5e72e0346af1fd43dc7cf36033da067`, implements legacy followers,
+following and friends GET authorization plus retirement of inferred suggestions
+once canonical enforcement starts. [Review packet](https://github.com/diegueins680/tdf-app/blob/8b2d1557a5e72e0346af1fd43dc7cf36033da067/docs/social/relationship-read-boundary.md)
+contains 24,192-state TLC results, three negative controls, 8,064 generated SQL
+observations, two expected SQL failures, 116 passing real bearer HTTP examples,
+2,542 passing Stack examples, complete-schema/pause tests, source fingerprints and
+synthetic degree-100/10,004 performance. Catalog audit and SQL volatility/UTC checks
+passed. Hosted CI for this new head is pending; parent success does not qualify it.
+
+Next implementation boundary: `socialAddFriend` and `vcardExchange` manufacture
+reciprocal legacy follows and return names without canonical policy; removal also
+needs a defined compatibility effect on canonical consent. Model the writer and
+retry/block/accept boundary before changing behavior. Preserve historical meaning
+and do not backfill accepted consent from legacy reciprocal rows. Broader client
+cutover, search/media/notification privacy, delegation and lifecycle/moderation
+remain incomplete; unpaginated legacy arrays still require a scale migration.
+No production flag activation, merge or deployment command occurred. The prior
+provider-triggered deployment exception still requires target/removal verification.
