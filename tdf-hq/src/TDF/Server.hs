@@ -12,6 +12,7 @@
 module TDF.Server where
 
 import qualified TDF.Social.Chat as SocialChat
+import qualified TDF.Social.FanEffects as FanEffects
 import qualified TDF.Social.RelationshipReads as SocialReads
 import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
@@ -8098,103 +8099,10 @@ fanListFollows user = do
     pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
 
 fanFollowArtist :: AuthedUser -> Int64 -> AppM FanFollowDTO
-fanFollowArtist user artistId = do
-  requireFanAccess user
-  when (artistId <= 0) $ throwBadRequest "Invalid artist id"
-  let artistKey = toSqlKey artistId :: PartyId
-      fanKey    = auPartyId user
-  when (artistKey == fanKey) $
-    throwBadRequest "No puedes seguirte a ti mismo"
-  targetKey <- runDB (resolveFanFollowArtistTarget artistId) >>= either throwError pure
-  Env pool _ <- ask
-  mDto <- liftIO $ flip runSqlPool pool $ do
-    now <- liftIO getCurrentTime
-    insertedFollow <- insertUnique FanFollow
-      { fanFollowFanPartyId    = fanKey
-      , fanFollowArtistPartyId = targetKey
-      , fanFollowCreatedAt     = now
-      }
-    when (isJust insertedFollow) $ do
-      recordEngagementEvent
-        (Just fanKey)
-        (Just targetKey)
-        "artist"
-        (Just (fromIntegral (fromSqlKey targetKey)))
-        "follow"
-        Nothing
-        now
-      createArtistFollowerNotification fanKey targetKey now
-    -- Auto-follow club members
-    mClub <- getBy (UniqueFanClubArtist targetKey)
-    case mClub of
-      Nothing -> pure ()
-      Just (Entity cid _) -> do
-        -- Get existing member profiles (excluding self)
-        existingProfiles <- selectList
-          [ M.FanClubMemberProfileClubId ==. cid
-          , M.FanClubMemberProfilePartyId !=. fanKey
-          ] []
-        let existingMemberIds = map (fanClubMemberProfilePartyId . entityVal) existingProfiles
-        -- Create member profile for new fan if not exists
-        mExistingProfile <- getBy (UniqueFanClubMemberProfile fanKey cid)
-        case mExistingProfile of
-          Just _ -> pure ()
-          Nothing -> do
-            mFanProfile <- getBy (UniqueFanProfile fanKey)
-            let avatarUrl = case mFanProfile of
-                  Just (Entity _ fp) -> fanProfileAvatarUrl fp
-                  Nothing -> Nothing
-            insert_ FanClubMemberProfile
-              { fanClubMemberProfilePartyId = fanKey
-              , fanClubMemberProfileClubId = cid
-              , fanClubMemberProfileHandle = Nothing
-              , fanClubMemberProfileBio = Nothing
-              , fanClubMemberProfileAvatarUrl = avatarUrl
-              , fanClubMemberProfileJoinedAt = now
-              }
-        -- Auto-follow: new fan follows existing members
-        forM_ existingMemberIds $ \memberId ->
-          void $ insertUnique PartyFollow
-            { partyFollowFollowerPartyId = fanKey
-            , partyFollowFollowingPartyId = memberId
-            , partyFollowViaNfc = False
-            , partyFollowCreatedAt = now
-            }
-        -- Auto-follow: existing members follow new fan
-        forM_ existingMemberIds $ \memberId ->
-          void $ insertUnique PartyFollow
-            { partyFollowFollowerPartyId = memberId
-            , partyFollowFollowingPartyId = fanKey
-            , partyFollowViaNfc = False
-            , partyFollowCreatedAt = now
-            }
-    loadFanFollowDTO fanKey targetKey
-  maybe (throwError err404) pure mDto
+fanFollowArtist = FanEffects.followArtist
 
 fanUnfollowArtist :: AuthedUser -> Int64 -> AppM NoContent
-fanUnfollowArtist user artistId = do
-  requireFanAccess user
-  when (artistId <= 0) $ throwBadRequest "Invalid artist id"
-  let artistKey = toSqlKey artistId :: PartyId
-  when (artistKey == auPartyId user) $
-    throwBadRequest "No puedes dejar de seguirte a ti mismo"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    existingFollow <- getBy (UniqueFanFollow (auPartyId user) artistKey)
-    case existingFollow of
-      Nothing -> pure ()
-      Just _ -> do
-        now <- liftIO getCurrentTime
-        deleteBy (UniqueFanFollow (auPartyId user) artistKey)
-        recordEngagementEvent
-          (Just (auPartyId user))
-          (Just artistKey)
-          "artist"
-          (Just (fromIntegral (fromSqlKey artistKey)))
-          "unfollow"
-          Nothing
-          now
-  pure NoContent
+fanUnfollowArtist = FanEffects.unfollowArtist
 
 recordEngagementEvent
   :: Maybe PartyId
@@ -8214,21 +8122,6 @@ recordEngagementEvent actorPartyId targetArtistId entityType entityId eventType 
     , engagementEventEventType = eventType
     , engagementEventMetadata = metadata
     , engagementEventCreatedAt = createdAt
-    }
-
-createArtistFollowerNotification :: PartyId -> PartyId -> UTCTime -> SqlPersistT IO ()
-createArtistFollowerNotification fanKey artistKey now = do
-  mFan <- get fanKey
-  let fanName = maybe "Un fan" M.partyDisplayName mFan
-  insert_ Notification
-    { notificationRecipientPartyId = artistKey
-    , notificationNotifType = "artist_liked"
-    , notificationTitle = "Nuevo fan"
-    , notificationBody = fanName <> " empezó a seguir tu perfil."
-    , notificationTargetType = Just "artist"
-    , notificationTargetId = Just (fromIntegral (fromSqlKey artistKey))
-    , notificationIsRead = False
-    , notificationCreatedAt = now
     }
 
 resolveFanFollowArtistTarget :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
@@ -8536,11 +8429,7 @@ socialGetProfile _ partyId = do
   maybe (throwError err404) pure mProfile
 
 requireFanAccess :: AuthedUser -> AppM ()
-requireFanAccess user@AuthedUser{..} = do
-  unless (Fan `elem` auRoles || Customer `elem` auRoles) $
-    throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Fan access required") }
-  unless (hasCoherentAuthScope user) $
-    throwError err403 { errBody = "Fan access requires coherent role grants" }
+requireFanAccess = FanEffects.requireFanAccess
 
 requireArtistAccess :: AuthedUser -> AppM ()
 requireArtistAccess user@AuthedUser{..} = do

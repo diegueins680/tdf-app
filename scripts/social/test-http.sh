@@ -65,6 +65,7 @@ psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql"
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/dm-read-refinement.sql"
 # psql \ir needs a real local path in Docker too, so concatenate the control and
 # generated cases instead of relying on the container seeing the checkout.
@@ -112,6 +113,7 @@ fi
 if [ -z "${TDF_SOCIAL_HTTP_CONNECTION:-}" ]; then
   TDF_SOCIAL_HTTP_CONNECTION="host=127.0.0.1 port=$TDF_SOCIAL_PORT user=postgres password=synthetic-only dbname=social_http connect_timeout=5"
 fi
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/fan-effects-fixture.sql"
 export TDF_SOCIAL_HTTP_DB="$TDF_SOCIAL_HTTP_CONNECTION"
 cd "$TDF_SOCIAL_ROOT"
 TDF_SOCIAL_HTTP_BUILD=${TDF_SOCIAL_HTTP_BUILD:-$(mktemp -d)}

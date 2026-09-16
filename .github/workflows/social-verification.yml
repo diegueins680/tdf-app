@@ -7,6 +7,7 @@ on:
       - 'tdf-hq/sql/*social_v2*'
       - 'tdf-hq/src/TDF/Social/**'
       - 'tdf-hq/src/TDF/API/Chat.hs'
+      - 'tdf-hq/src/TDF/API/FanFollowing.hs'
       - 'tdf-hq/src/TDF/API/SocialProfiles.hs'
       - 'tdf-hq/src/TDF/API/SocialRelationships.hs'
       - 'tdf-hq-ui/src/features/social/**'
@@ -96,6 +97,16 @@ jobs:
           java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/legacy-write-states -dump dot,actionlabels /tmp/legacy-write-traces.dot -config formal/social/LegacyWrites.cfg formal/social/LegacyWrites.tla
           python3 scripts/social/generate-legacy-write-cases.py /tmp/legacy-write-traces.dot /tmp/LegacyWriteModelCases.hs
           diff -u scripts/social/LegacyWriteModelCases.hs /tmp/LegacyWriteModelCases.hs
+      - name: Fan effect retirement, current authority, retries and counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/fan-effects-model-results
+        run: bash scripts/social/check-fan-effects-model.sh
+      - name: Regenerate observed fan effect outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/fan-effects-states -dump dot,actionlabels /tmp/fan-effects-traces.dot -config formal/social/FanEffects.cfg formal/social/FanEffects.tla
+          python3 scripts/social/generate-fan-effects-cases.py /tmp/fan-effects-traces.dot /tmp/FanEffectsModelCases.hs
+          diff -u scripts/social/FanEffectsModelCases.hs /tmp/FanEffectsModelCases.hs
       - name: PostgreSQL refinement of DM read observations
         env:
           TDF_SOCIAL_CHAT_SQL_ONLY: '1'
@@ -123,6 +134,7 @@ jobs:
             /tmp/profile-read-model-results/*.txt
             /tmp/relationship-read-model-results/*.txt
             /tmp/legacy-write-model-results/*.txt
+            /tmp/fan-effects-model-results/*.txt
   social-client:
     runs-on: ubuntu-latest
     timeout-minutes: 15
