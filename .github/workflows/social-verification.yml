@@ -10,6 +10,9 @@ on:
       - 'tdf-hq-ui/src/features/social/**'
       - 'tdf-hq-ui/src/api/socialV2*'
       - 'tdf-hq-ui/src/pages/SocialPage.tsx'
+      - 'tdf-hq-ui/src/pages/ChatPage*'
+      - 'tdf-hq-ui/src/hooks/useChatUnreadCount.ts'
+      - 'tdf-hq-ui/src/utils/chatReadState*'
       - 'tdf-hq/docs/openapi/social-v2.yaml'
       - '.github/workflows/social-verification.yml'
   workflow_dispatch:
@@ -108,7 +111,7 @@ jobs:
       - name: Focused social contract and component tests
         env:
           NODE_OPTIONS: --experimental-vm-modules
-        run: node_modules/.bin/jest --config tdf-hq-ui/jest.config.cjs --runInBand tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx tdf-hq-ui/src/api/socialV2.test.ts tdf-hq-ui/src/api/social.test.ts
+        run: node_modules/.bin/jest --config tdf-hq-ui/jest.config.cjs --runInBand tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx tdf-hq-ui/src/api/socialV2.test.ts tdf-hq-ui/src/api/social.test.ts tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx tdf-hq-ui/src/utils/chatReadState.test.ts tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts
       - name: Verify generated additive contract
         run: |
           node_modules/.bin/openapi-typescript tdf-hq/docs/openapi/social-v2.yaml --output /tmp/social-v2.ts
