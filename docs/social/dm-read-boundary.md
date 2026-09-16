@@ -177,3 +177,10 @@ initialization server. The [official image entrypoint](https://github.com/docker
 TCP and shuts it down before the final server. The harness now waits for TCP and
 asserts readiness after its bounded wait, matching the other social fixtures. No
 assertion, migration or timeout was weakened. Hosted rerun remains separately tracked.
+
+### Completed client baseline comparison
+
+The supplemental test-inclusive TypeScript command exited 2 on both the parent web
+tree (44a1c7bed) and the chat-cache candidate. All 134 diagnostic lines are
+byte-identical; these failures predate #391. The application typecheck and focused
+client tests passed independently. See [comparison evidence](evidence/chat-client-baseline/comparison.txt).
