@@ -321,8 +321,17 @@ export function runtimeEnvBlockers(rows, options = {}) {
       && typeof contextualReputationEnabled !== 'boolean') {
     throw new Error('contextualReputationEnabled must be a boolean.');
   }
+  const { eventDiscoveryEnabled, eventDiscoveryAutoPublish } = options;
+  if (eventDiscoveryEnabled !== undefined && typeof eventDiscoveryEnabled !== 'boolean') {
+    throw new Error('eventDiscoveryEnabled must be a boolean.');
+  }
+  if (eventDiscoveryAutoPublish !== undefined && typeof eventDiscoveryAutoPublish !== 'boolean') {
+    throw new Error('eventDiscoveryAutoPublish must be a boolean.');
+  }
   const expectedRuntimeEnv = {
     ...stagedRuntimeEnv,
+    ...(eventDiscoveryEnabled === undefined ? {} : { EVENT_DISCOVERY_ENABLED: String(eventDiscoveryEnabled) }),
+    ...(eventDiscoveryAutoPublish === undefined ? {} : { EVENT_DISCOVERY_AUTO_PUBLISH: String(eventDiscoveryAutoPublish) }),
     ...(contextualReputationEnabled === undefined
       ? {}
       : { CONTEXTUAL_REPUTATION_ENABLED: String(contextualReputationEnabled) }),
@@ -344,6 +353,29 @@ export function runtimeEnvBlockers(rows, options = {}) {
         : JSON.stringify(values[name]);
       return `Machine ${machineId} effective ${name} is ${actual}; expected ${expected}.`;
     }));
+}
+
+export function captureEventDiscoveryGates(rows) {
+  const capture = (name) => {
+    const values = new Set(rows.map(({ values: runtime }) => runtime[name]));
+    if (values.size !== 1 || !['true', 'false'].includes([...values][0])) {
+      throw new Error(`Every production Machine must report the same boolean ${name} value.`);
+    }
+    return [...values][0] === 'true';
+  };
+  return {
+    eventDiscoveryEnabled: capture('EVENT_DISCOVERY_ENABLED'),
+    eventDiscoveryAutoPublish: capture('EVENT_DISCOVERY_AUTO_PUBLISH'),
+  };
+}
+
+async function unchangedEventDiscoveryGates(context, machine) {
+  const current = captureEventDiscoveryGates(await readEffectiveRuntimeEnv(context.app, [machine]));
+  if (current.eventDiscoveryEnabled !== context.eventDiscoveryGates.eventDiscoveryEnabled
+      || current.eventDiscoveryAutoPublish !== context.eventDiscoveryGates.eventDiscoveryAutoPublish) {
+    throw new Error(`Machine ${machine.id} discovery gates changed after preflight; refusing to overwrite them.`);
+  }
+  return current;
 }
 
 export function captureContextualReputationGate(rows) {
@@ -451,9 +483,12 @@ async function remotePreflight(context) {
   const machines = await readMachines(context.app);
   const runtimeEnv = await readEffectiveRuntimeEnv(context.app, machines);
   const contextualReputationEnabled = captureContextualReputationGate(runtimeEnv);
+  const eventDiscoveryGates = captureEventDiscoveryGates(runtimeEnv);
+  context.eventDiscoveryGates = eventDiscoveryGates;
   const publicReputationProjectionEnabled = capturePublicReputationProjectionGate(runtimeEnv);
   const secrets = await readSecretNames(context.app);
   const blockers = runtimeEnvBlockers(runtimeEnv, {
+    ...eventDiscoveryGates,
     allowUnavailableAutomaticRunner: true,
     allowUnavailableReputationWorker: true,
   });
@@ -498,6 +533,7 @@ async function remotePreflight(context) {
     runtimeEnv,
     contextualReputationEnabled,
     publicReputationProjectionEnabled,
+    eventDiscoveryGates,
     ticketmasterConfigured: secrets.has('TICKETMASTER_API_KEY'),
     databasePreflight: stdout.trim().split('\n').slice(-3),
     securityEmergencyReadiness,
@@ -619,6 +655,7 @@ async function rollbackMachine(context, machine) {
   const sha = previousSha(machine);
   if (!image || !sha) throw new Error(`Cannot construct rollback for Machine ${machine.id}.`);
   const contextualReputationEnabled = capturedContextualReputationGate(machine);
+  const eventDiscoveryGates = captureEventDiscoveryGates([{ values: machine.releaseSnapshot?.runtimeEnv ?? {} }]);
   const projectionGate = await currentPublicReputationProjectionGate(context, machine);
   // Keep rollback on the same deploy lane as rollout. `flyctl machine update`
   // duplicates Docker Hub digest references as repo@digest@digest before the API call.
@@ -627,6 +664,7 @@ async function rollbackMachine(context, machine) {
     image,
     sha,
     contextualReputationEnabled,
+    ...eventDiscoveryGates,
     publicReputationProjectionEnabled: projectionGate,
     onlyMachine: machine.id,
   }));
@@ -637,7 +675,7 @@ async function rollbackMachine(context, machine) {
   }
   const envBlockers = runtimeEnvBlockers(
     await readEffectiveRuntimeEnv(context.app, [restored]),
-    { contextualReputationEnabled },
+    { contextualReputationEnabled, ...eventDiscoveryGates },
   );
   if (envBlockers.length > 0) {
     throw new Error(`Machine ${machine.id} rollback environment is unsafe: ${envBlockers.join(' ')}`);
@@ -676,7 +714,7 @@ async function verifyTargetMachine(context, machineId) {
   if (!context.acceptableImageDigests.has(machine.image_ref?.digest)) {
     throw new Error(`Machine ${machineId} is running unexpected image digest ${machine.image_ref?.digest}.`);
   }
-  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, [machine]));
+  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, [machine]), context.eventDiscoveryGates);
   if (envBlockers.length > 0) {
     throw new Error(`Machine ${machineId} runtime environment is unsafe: ${envBlockers.join(' ')}`);
   }
@@ -686,7 +724,7 @@ async function verifyTargetMachine(context, machineId) {
 async function verifyFleet(context, originalMachines) {
   const current = await readMachines(context.app);
   assertExactMachineSet(current, originalMachines);
-  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, current));
+  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, current), context.eventDiscoveryGates);
   if (envBlockers.length > 0) {
     throw new Error(`Fleet runtime environment is unsafe:\n- ${envBlockers.join('\n- ')}`);
   }
@@ -871,14 +909,16 @@ async function executeRelease(context) {
     await heartbeatReleaseLease(context, leaseToken);
 
     await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
-    touchedMachines.add(canary.id);
     const canaryProjectionGate = await currentPublicReputationProjectionGate(context, canary);
+    const canaryDiscoveryGates = await unchangedEventDiscoveryGates(context, canary);
+    touchedMachines.add(canary.id);
     await run(buildMachineDeployArgs({
       app: context.app,
       image: context.resolvedImage,
       sha: context.sha,
       contextualReputationEnabled: false,
       publicReputationProjectionEnabled: canaryProjectionGate,
+      ...canaryDiscoveryGates,
       onlyMachine: canary.id,
     }));
     try {
@@ -892,14 +932,16 @@ async function executeRelease(context) {
     for (const machine of remaining) {
       await heartbeatReleaseLease(context, leaseToken);
       await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
-      touchedMachines.add(machine.id);
       const projectionGate = await currentPublicReputationProjectionGate(context, machine);
+      const discoveryGates = await unchangedEventDiscoveryGates(context, machine);
+      touchedMachines.add(machine.id);
       await run(buildMachineDeployArgs({
         app: context.app,
         image: context.resolvedImage,
         sha: context.sha,
         contextualReputationEnabled: false,
         publicReputationProjectionEnabled: projectionGate,
+        ...discoveryGates,
         onlyMachine: machine.id,
       }));
       report.rollout.push(await verifyTargetMachine(context, machine.id));

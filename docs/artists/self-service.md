@@ -28,3 +28,7 @@ accounts, and rollback after a failed profile write. It also verifies migration
 reapplication and rollback. Web coverage is in `ArtistOnboardingPage.test.tsx`,
 `loginRouting.test.ts`, and `featureRegistry.test.ts`; mobile routing coverage is
 in `onboardingIntent.test.ts` and `featureRegistry.test.ts`.
+
+The release preflight captures the existing event-discovery flags and requires
+fleet agreement. Rollout and rollback preserve those flags, and a change after
+preflight blocks the rollout instead of overwriting an active feature.

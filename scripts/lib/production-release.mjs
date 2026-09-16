@@ -2257,12 +2257,17 @@ export function buildMachineDeployArgs({
   excludeMachine,
   contextualReputationEnabled = false,
   publicReputationProjectionEnabled = false,
+  eventDiscoveryEnabled = false,
+  eventDiscoveryAutoPublish = false,
 }) {
   if (typeof contextualReputationEnabled !== 'boolean') {
     throw new Error('contextualReputationEnabled must be a boolean.');
   }
   if (typeof publicReputationProjectionEnabled !== 'boolean') {
     throw new Error('publicReputationProjectionEnabled must be a boolean.');
+  }
+  if (typeof eventDiscoveryEnabled !== 'boolean' || typeof eventDiscoveryAutoPublish !== 'boolean') {
+    throw new Error('Event discovery gates must be booleans.');
   }
   const args = [
     'flyctl', 'deploy', '.',
@@ -2278,8 +2283,8 @@ export function buildMachineDeployArgs({
     '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
     '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
-    '--env', 'EVENT_DISCOVERY_ENABLED=false',
-    '--env', 'EVENT_DISCOVERY_AUTO_PUBLISH=false',
+    '--env', `EVENT_DISCOVERY_ENABLED=${eventDiscoveryEnabled}`,
+    '--env', `EVENT_DISCOVERY_AUTO_PUBLISH=${eventDiscoveryAutoPublish}`,
     '--strategy', 'rolling',
     '--max-unavailable', '1',
     '--wait-timeout', '10m',
@@ -2297,6 +2302,8 @@ export function buildReleaseSteps(options = {}) {
   const sha = normalizeFullSha(options.sha);
   const contextualReputationEnabled = false;
   const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
+  const eventDiscoveryEnabled = options.eventDiscoveryEnabled ?? false;
+  const eventDiscoveryAutoPublish = options.eventDiscoveryAutoPublish ?? false;
   const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
   const descriptiveOnly = options.dryRun === true && options.execute !== true;
   const selectedCanary = options.canaryMachineId ?? options.canaryMachine;
@@ -2347,6 +2354,8 @@ export function buildReleaseSteps(options = {}) {
       sha: previousSha,
       contextualReputationEnabled: previousContextualReputationEnabled,
       publicReputationProjectionEnabled,
+      eventDiscoveryEnabled,
+      eventDiscoveryAutoPublish,
       onlyMachine: canary,
     }),
   };
@@ -2356,7 +2365,7 @@ export function buildReleaseSteps(options = {}) {
       id: `deploy-remaining-${index + 1}`,
       machineId,
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: machineId }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, eventDiscoveryEnabled, eventDiscoveryAutoPublish, onlyMachine: machineId }),
     },
     { id: `smoke-remaining-${index + 1}`, machineId, mutating: false },
   ]);
@@ -2369,7 +2378,7 @@ export function buildReleaseSteps(options = {}) {
     {
       id: 'deploy-canary',
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: canary }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, eventDiscoveryEnabled, eventDiscoveryAutoPublish, onlyMachine: canary }),
     },
     { id: 'smoke-canary', mutating: false, onFailure: [rollbackCanary] },
     ...remainingSteps,
