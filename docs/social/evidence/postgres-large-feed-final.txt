@@ -1,0 +1,298 @@
+be828cdab89101c82c8a7a1308f28d61ba3c3519793dc4f84b53cbb068356033 tdf-hq/sql/2026-09-14_social_v2_foundation.sql
+ea1d941af3fc9fb92f419f52214a632618858c6949e86d1006c4b829944d0b0a tdf-hq/sql/2026-09-14_social_v2_pause.sql
+e5bb2face01092b2081c98f5c0b6c295f5a05c09615a48a3fd43f868a1bad041 tdf-hq/sql/2026-09-14_social_v2_read_models.sql
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+INSERT 0 0
+CREATE TABLE
+NOTICE:  relation "social_v2_preference" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_pair" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_command" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+UPDATE 1
+DO
+DO
+BEGIN
+UPDATE 1
+COMMIT
+DO
+BEGIN
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+INSERT 0 0
+NOTICE:  relation "social_v2_preference" already exists, skipping
+CREATE TABLE
+CREATE TABLE
+NOTICE:  relation "social_v2_pair" already exists, skipping
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+NOTICE:  relation "social_v2_command" already exists, skipping
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+BEGIN
+NOTICE:  column "publication_position" of relation "social_v2_runtime" already exists, skipping
+NOTICE:  relation "social_v2_publication" already exists, skipping
+ALTER TABLE
+CREATE TABLE
+NOTICE:  relation "social_v2_club_artist" already exists, skipping
+CREATE INDEX
+CREATE INDEX
+NOTICE:  relation "social_v2_officer_actor" already exists, skipping
+NOTICE:  relation "social_v2_visible_post_club" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+DO
+UPDATE 1
+ social_v2_publish_batch
+-------------------------
+                       4
+(1 row)
+
+DO
+UPDATE 1
+INSERT 0 1
+ social_v2_publish_batch
+-------------------------
+                       1
+(1 row)
+
+DO
+DELETE 1
+DO
+DELETE 1
+DO
+INSERT 0 1
+                    social_v2_preferences
+-------------------------------------------------------------
+ {"revision": 1, "discoverable": true, "personalized": true}
+(1 row)
+
+DO
+DO
+DO
+                  ?column?
+--------------------------------------------
+ PASS: 29 TLC-generated consent transitions
+(1 row)
+
+Timing is on.
+INSERT 0 110000
+Time: 999.648 ms
+INSERT 0 110000
+Time: 22180.554 ms (00:22.181)
+INSERT 0 10000
+Time: 2484.280 ms (00:02.484)
+INSERT 0 10000
+Time: 5067.422 ms (00:05.067)
+INSERT 0 90000
+Time: 55875.839 ms (00:55.876)
+ANALYZE
+Time: 1216.924 ms (00:01.217)
+SET
+Time: 3.707 ms
+      ?column?      |                                         version
+--------------------+------------------------------------------------------------------------------------------
+ PostgreSQL version | PostgreSQL 16.13 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+(1 row)
+
+Time: 10.343 ms
+     ?column?     |   d   | count
+------------------+-------+--------
+ synthetic degree |     1 | 100004
+ synthetic degree |     2 |      1
+ synthetic degree | 10000 |      1
+ synthetic degree | 90000 |      1
+(4 rows)
+
+Time: 2682.311 ms (00:02.682)
+      ?column?      | pg_total_relation_size
+--------------------+------------------------
+ pair storage bytes |               14819328
+(1 row)
+
+Time: 28.927 ms
+                                       QUERY PLAN
+-----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=182.214..182.214 rows=1 loops=1)
+   Buffers: shared hit=1647
+ Planning Time: 0.034 ms
+ Execution Time: 240.586 ms
+(4 rows)
+
+Time: 264.842 ms
+                                       QUERY PLAN
+-----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=212.929..212.931 rows=1 loops=1)
+   Buffers: shared hit=1501
+ Planning Time: 1.167 ms
+ Execution Time: 213.385 ms
+(4 rows)
+
+Time: 220.487 ms
+                                      QUERY PLAN
+---------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=34.702..34.703 rows=1 loops=1)
+   Buffers: shared hit=282
+ Planning Time: 0.051 ms
+ Execution Time: 34.728 ms
+(4 rows)
+
+Time: 36.691 ms
+SET
+Time: 1.078 ms
+CREATE TABLE
+Time: 34.930 ms
+DO
+Time: 3770.933 ms (00:03.771)
+      kind       | samples | p50_ms | p95_ms  | within_200ms
+-----------------+---------+--------+---------+--------------
+ discover hub    |      20 | 78.209 | 194.169 | t
+ discover sparse |      20 | 82.146 | 128.345 | t
+ following empty |      20 |  2.530 |  21.185 | t
+(3 rows)
+
+Time: 82.686 ms
+INSERT 0 1
+Time: 18.440 ms
+INSERT 0 1
+Time: 17.228 ms
+INSERT 0 50000
+Time: 16183.184 ms (00:16.183)
+DO
+Time: 13710.869 ms (00:13.711)
+ANALYZE
+Time: 908.610 ms
+SET
+Time: 0.240 ms
+                                      QUERY PLAN
+---------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=97.869..97.891 rows=1 loops=1)
+   Buffers: shared hit=60772
+ Planning Time: 0.101 ms
+ Execution Time: 97.953 ms
+(4 rows)
+
+Time: 99.451 ms
+                                       QUERY PLAN
+-----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=241.516..241.517 rows=1 loops=1)
+   Buffers: shared hit=150675
+ Planning Time: 0.064 ms
+ Execution Time: 241.535 ms
+(4 rows)
+
+Time: 242.968 ms
+DO
+Time: 4374.264 ms (00:04.374)
+            kind            | samples | p50_ms  | p95_ms  | within_200ms
+----------------------------+---------+---------+---------+--------------
+ discover hub               |      20 |  78.209 | 194.169 | t
+ discover sparse            |      20 |  82.146 | 128.345 | t
+ following empty            |      20 |   2.530 |  21.185 | t
+ following empty 50k posts  |      20 | 133.788 | 185.770 | t
+ following sparse 50k posts |      20 |  66.616 | 102.321 | t
+(5 rows)
+
+Time: 1.516 ms
+PASS: feed ordering, eligibility, edits, deletion, backdated publish, revocation, discovery opt-out/exclusions
+PASS: additive reapply, denied defaults, consent, retry, block race, preferences, closure, pause preserves new writes

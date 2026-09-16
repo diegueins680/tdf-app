@@ -1,0 +1,18 @@
+✔ CI splits component checks and preserves Stack build caches (39.377735ms)
+✔ persona browser journeys are artifacted and gate aggregate quality (51.353762ms)
+✔ backend quality compiles, tests and exports the binary in one Stack pass (18.63025ms)
+✔ backend quality exercises public booking concurrency with its tested binary (144.101354ms)
+✔ change detection includes deleted paths (8.891185ms)
+✔ backend image packages the tested artifact instead of recompiling Haskell (25.370164ms)
+✔ automatic migration integration matches the persisted production locale (12.823526ms)
+✔ backend image receives deterministic, non-empty release metadata (10.187053ms)
+✔ source Dockerfile introduces changing release metadata after compilation (13.157627ms)
+✔ affected active workflow actions use Node 24 majors (60.683377ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1138.346724

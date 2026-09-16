@@ -1926,6 +1926,7 @@ socialEventUser partyId =
         { auPartyId = toSqlKey partyId
         , auRoles = [Fan]
         , auModules = modulesForRoles [Fan]
+        , auApiTokenId = Nothing
         }
 
 strictAdminSocialEventUser :: Int64 -> AuthedUser
@@ -1934,6 +1935,7 @@ strictAdminSocialEventUser partyId =
         { auPartyId = toSqlKey partyId
         , auRoles = [Admin]
         , auModules = modulesForRoles [Admin]
+        , auApiTokenId = Nothing
         }
 
 socialEventStartFixture :: UTCTime

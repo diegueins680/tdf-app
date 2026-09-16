@@ -1,0 +1,68 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 14 and seed 5971389391001692337 with 1 worker on 16 cores with 4096MB heap and 64MB offheap memory [pid: 12064] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 17.0.12 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-social-20260914/formal/social/Feed.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Feed
+Starting... (2026-09-15 10:23:46)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-15 10:23:46.
+Error: Invariant StablePagination is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ seen = {}
+/\ duplicate = FALSE
+/\ started = FALSE
+/\ published = {}
+/\ eligible = {}
+/\ cursor = 6
+/\ highWater = 0
+
+State 2: <Publish line 8, col 12 to line 11, col 71 of module Feed>
+/\ seen = {}
+/\ duplicate = FALSE
+/\ started = FALSE
+/\ published = {1}
+/\ eligible = {1}
+/\ cursor = 6
+/\ highWater = 0
+
+State 3: <Publish line 8, col 12 to line 11, col 71 of module Feed>
+/\ seen = {}
+/\ duplicate = FALSE
+/\ started = FALSE
+/\ published = {1, 2}
+/\ eligible = {1, 2}
+/\ cursor = 6
+/\ highWater = 0
+
+State 4: <Start line 14, col 10 to line 16, col 70 of module Feed>
+/\ seen = {}
+/\ duplicate = FALSE
+/\ started = TRUE
+/\ published = {1, 2}
+/\ eligible = {1, 2}
+/\ cursor = 6
+/\ highWater = 2
+
+State 5: <Page line 18, col 9 to line 23, col 64 of module Feed>
+/\ seen = {1}
+/\ duplicate = FALSE
+/\ started = TRUE
+/\ published = {1, 2}
+/\ eligible = {1, 2}
+/\ cursor = 1
+/\ highWater = 2
+
+25 states generated, 23 distinct states found, 13 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 3 (minimum is 0, the maximum 5 and the 95th percentile is 5).
+Finished in 01s at (2026-09-15 10:23:46)
