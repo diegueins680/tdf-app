@@ -194,7 +194,7 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
       { Refund.rcAmountMinor = 6515, Refund.rcIdempotencyKey = "synthetic-second-partial" }
     forM_ [first, second] $ \record -> claim pool record >>= requireRight
       >>= ((`shouldBe` True) . snd)
-    let complete record = runSqlPool (Refund.recordVerifiedRefund Refund.VerifiedRefund
+    let completePartial record = runSqlPool (Refund.recordVerifiedRefund Refund.VerifiedRefund
           { Refund.vrRefund = Refund.rrReference record
           , Refund.vrProviderRefund =
               "synthetic-" <> Refund.refundReferenceId (Refund.rrReference record)
@@ -202,8 +202,8 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
           , Refund.vrOccurredAt = Refund.rcCreatedAt creation
           , Refund.vrCorrelationId = "synthetic-partial-completion"
           }) pool
-    concurrent [complete first, complete second] `shouldReturn` [Right True, Right True]
-    concurrent [complete first, complete second] `shouldReturn` [Right False, Right False]
+    concurrent [completePartial first, completePartial second] `shouldReturn` [Right True, Right True]
+    concurrent [completePartial first, completePartial second] `shouldReturn` [Right False, Right False]
     rows <- runSqlPool (rawSql
       "SELECT status,refunded_minor FROM commerce_checkout_session WHERE id=?::uuid"
       [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
@@ -251,7 +251,7 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
     -- The invalid integer cast runs AFTER real completion in the same transaction.
     -- No temporary trigger or weakened financial constraint is needed.
     result <- try (runSqlPool (do
-      verified <- Refund.recordVerifiedRefund (completion record "synthetic-atomic-refund"
+      verified <- Refund.recordVerifiedRefund (verifiedCompletion record "synthetic-atomic-refund"
         "synthetic-atomic")
       _ <- rawSql "SELECT 'synthetic-rollback'::bigint" []
         :: SqlPersistT IO [Single Int64]
@@ -307,10 +307,10 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
     claim pool record = runSqlPool (Refund.approveRefundForProcessing
       (Refund.rrReference record) 2 (Refund.rrCreatedAt record)) pool
     complete pool record providerRef correlation =
-      runSqlPool (Refund.recordVerifiedRefund (completion record providerRef correlation)) pool
+      runSqlPool (Refund.recordVerifiedRefund (verifiedCompletion record providerRef correlation)) pool
 
-completion :: Refund.RefundRecord -> Text -> Text -> Refund.VerifiedRefund
-completion record providerRef correlation = Refund.VerifiedRefund
+verifiedCompletion :: Refund.RefundRecord -> Text -> Text -> Refund.VerifiedRefund
+verifiedCompletion record providerRef correlation = Refund.VerifiedRefund
   { Refund.vrRefund = Refund.rrReference record, Refund.vrProviderRefund = providerRef
   , Refund.vrAmountMinor = Refund.rrAmountMinor record, Refund.vrCurrency = Refund.rrCurrency record
   , Refund.vrOccurredAt = Refund.rrCreatedAt record, Refund.vrCorrelationId = correlation
@@ -334,7 +334,7 @@ assertIntentBalance pool creation status refunded historyCount = do
   rows <- runSqlPool (rawSql
     "SELECT intent.status,intent.refunded_minor,\
     \ (SELECT COUNT(*) FROM commerce_payment_state_history history\
-    \ WHERE history.payment_intent_id=intent.id AND history.event_type='refund_verified')\
+    \ WHERE history.payment_intent_id=intent.id AND history.event_type LIKE 'PaymentRefundVerified %')\
     \ FROM commerce_payment_intent intent WHERE intent.checkout_id=?::uuid"
     [PersistText (Checkout.checkoutReferenceId (Refund.rcCheckout creation))]) pool
     :: IO [(Single Text, Single Int64, Single Int64)]
