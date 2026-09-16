@@ -10,6 +10,14 @@ async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');
 }
 
+test('UI quality keeps the lazy-validation regression and production artifact gate', async () => {
+  const quality = await source('scripts/quality-ui.sh');
+  assert.match(quality, /node --test "\$ROOT\/scripts\/__tests__\/ui-validation-bundle\.test\.mjs"/);
+  assert.match(quality, /run_npm run build --workspace=tdf-hq-ui/);
+  const ui = JSON.parse(await source('tdf-hq-ui/package.json'));
+  assert.match(ui.scripts.build, /node scripts\/check-initial-bundle\.mjs/);
+});
+
 test('backend CI retains event operations HTTP and runner-safety checks', async () => {
   const workflow = await source('.github/workflows/ci.yml');
   const backendJob = workflow.split('  backend-quality:')[1].split('\n  quality:')[0];

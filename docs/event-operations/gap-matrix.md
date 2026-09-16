@@ -109,3 +109,14 @@ three isolated synthetic browser tests, typecheck/lint and unchanged bounded for
 This does not close hiring/messaging delivery or real signup. The 179 unreviewed catalog
 candidates/nine stale decisions, external checks and pending hosted backend/browser jobs
 remain separately identified gaps, not green checks inferred from local results.
+
+PR 29 resolves the inherited initial JavaScript budget failure by keeping Zod with
+its lazy route consumers, without removing validators or raising limits.
+[Verified evidence](pr-29-lazy-validation-bundle.md): canonical `quality:ui` passed
+lint/typecheck, 210 suites / 2,132 tests and the production artifact gate (411,212
+bytes gzip, five preloads); seven artifact regressions, 13 CI-wiring checks and
+12 production-built desktop/phone browser checks also passed. A fresh remote read
+confirms parent #398's real RACI/PostgreSQL browser job passed; its old UI failure
+is not retroactively green. Catalog governance (179 unreviewed / nine stale),
+external provider checks, native mobile and the broader event operations gaps
+remain open. No production or real-money action was performed.
