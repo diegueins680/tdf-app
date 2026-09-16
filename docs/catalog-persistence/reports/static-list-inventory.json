@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-16T04:28:16.683Z",
+  "generatedAt": "2026-09-16T16:20:08.072Z",
   "repositoryRoot": ".",
   "filesScanned": 1433,
   "candidateCount": 1135,
@@ -31100,7 +31100,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 513,
+      "consumerCount": 514,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -38562,7 +38562,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 513,
+      "consumerCount": 514,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -41746,7 +41746,7 @@
       "lines": [
         141
       ],
-      "consumerCount": 55,
+      "consumerCount": 56,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -41786,6 +41786,7 @@
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
@@ -45803,7 +45804,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 513,
+      "consumerCount": 514,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -46091,7 +46092,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 513,
+      "consumerCount": 514,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -47330,7 +47331,7 @@
       "lines": [
         138
       ],
-      "consumerCount": 513,
+      "consumerCount": 514,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -55080,7 +55081,7 @@
       "lines": [
         88
       ],
-      "consumerCount": 261,
+      "consumerCount": 263,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -79234,7 +79235,7 @@
       "lines": [
         872
       ],
-      "consumerCount": 55,
+      "consumerCount": 56,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -79269,6 +79270,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
@@ -80446,7 +80448,7 @@
       "lines": [
         135
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -80473,6 +80475,7 @@
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -80765,7 +80768,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -80792,6 +80795,7 @@
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -82301,7 +82305,7 @@
       "lines": [
         133
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -82328,6 +82332,7 @@
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -83059,7 +83064,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -83086,6 +83091,7 @@
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -84272,7 +84278,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -84299,6 +84305,7 @@
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -84822,7 +84829,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -84849,6 +84856,7 @@
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -86736,7 +86744,7 @@
       "lines": [
         62
       ],
-      "consumerCount": 59,
+      "consumerCount": 60,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -86779,6 +86787,7 @@
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
@@ -92582,7 +92591,7 @@
       "lines": [
         664
       ],
-      "consumerCount": 61,
+      "consumerCount": 62,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -92609,6 +92618,7 @@
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/src/TDF/Operations/Worker.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -98114,7 +98124,7 @@
       "lines": [
         124
       ],
-      "consumerCount": 60,
+      "consumerCount": 61,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -98159,6 +98169,7 @@
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
       "webConsumers": [
@@ -98412,7 +98423,7 @@
       "lines": [
         176
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -98439,6 +98450,7 @@
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -108768,7 +108780,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 513,
+      "consumerCount": 514,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -116145,7 +116157,7 @@
       "lines": [
         118
       ],
-      "consumerCount": 261,
+      "consumerCount": 263,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",

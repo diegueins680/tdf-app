@@ -1,5 +1,11 @@
 # TDF payment platform: Ecuador market decision, implementation audit, and activation record
 
+The 2026-09-16 accounting continuation makes new verified refund completions
+atomic with the original canonical intent and protects its integer arithmetic;
+see [ADR 0129](../adr/0129-atomic-canonical-refund-accounting.md) and
+[the verification record](refund-accounting-2026-09-16.md). It does not implement
+provider GET recovery, historical backfill, or activate/qualify any provider.
+
 **Market verification date:** 2026-09-14 (America/Guayaquil)
 **Implementation update:** 2026-09-14; current PlaceToPay and PayPhone execution sources were rechecked on that date
 
