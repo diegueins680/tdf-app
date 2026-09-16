@@ -7,6 +7,11 @@ import Data.Aeson (encode, object, (.=))
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 import Data.Int (Int64)
+import Data.Either (isLeft)
+import Data.Time (getCurrentTime)
+import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.PaymentRuntimeStore as Runtime
+import TDF.Commerce.ProviderCapabilities (PaymentMethod(..))
 import Data.Text (Text)
 import qualified Data.Text.Encoding as TE
 import Database.Persist (PersistValue(..))
@@ -85,3 +90,19 @@ spec = do
         rows <- runSqlPool loadAmountComponentSummaries pool
         [(cacEnvironment x,cacCount x,cacAmountMinor x) | x <- rows]
           `shouldBe` [("production",1,700),("sandbox",2,700)]
+      it "binds verified route approval to the configured merchant before creating an attempt" $ do
+        pool <- makePool (BS.pack url)
+        now <- getCurrentTime
+        flip runSqlPool pool $ do
+          rawExecute "INSERT INTO commerce_checkout_session VALUES ('a5400000-0000-4000-8000-000000000004','service_booking','awaiting_payment','sandbox')" []
+          rawExecute "INSERT INTO commerce_provider_account VALUES ('a5400000-0000-4000-8000-000000000005','paypal','sandbox',true,'validated','approved','commerce.provider.paypal','merchant-A')" []
+          rawExecute "INSERT INTO commerce_provider_capability VALUES ('a5400000-0000-4000-8000-000000000005','paypal_wallet','one_time','sandbox_verified'),('a5400000-0000-4000-8000-000000000005','paypal_wallet','capture','sandbox_verified')" []
+        let request merchant = Checkout.PaymentAttemptCreation
+              (Checkout.CheckoutReference "a5400000-0000-4000-8000-000000000004")
+              Checkout.ProviderPayPal Checkout.CheckoutSandbox Checkout.OperationCreate
+              2500 "USD" merchant "merchant-audit" now "merchant-audit"
+            validate merchant = runSqlPool (Runtime.validateCanonicalRoute (request merchant) MethodPayPalWallet) pool
+        validate "merchant-A" `shouldReturn` Right ()
+        forM_ ["merchant-B", "", "merchant-A "] $ \merchant -> validate merchant >>= (`shouldSatisfy` isLeft)
+        flip runSqlPool pool $ rawExecute "UPDATE commerce_provider_account SET merchant_account_ref=NULL" []
+        validate "merchant-A" >>= (`shouldSatisfy` isLeft)

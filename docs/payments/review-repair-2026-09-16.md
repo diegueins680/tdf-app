@@ -9,7 +9,7 @@ database. Local runs retain owned disposable containers. The CI policy tests
 exercise both ownership outcomes rather than skipping database regressions.
 
 All six financial summary families now show their environment in the heading.
-The focused operator UI suite passes nine tests, including otherwise identical
+The integrated operator UI suite passes ten tests, including otherwise identical
 sandbox/production cards. Every currently registered migration introduction was
 verified as an ancestor after integrating the concurrent branch history; no
 unrelated commit was substituted to bypass release ancestry validation.
@@ -67,7 +67,9 @@ is not a substitute for the actual-handler test. The concurrent repair's
 denial, and the real overview query in disposable PostgreSQL. `quality:backend`
 now runs it after building the test binary, so CI cannot silently omit those cases.
 
-No schema migration, credential change or provider configuration is required.
+The contact/routing and environment-label fixes need no additional schema,
+credential change or provider configuration. The refund synchronization described
+above separately requires its additive migration.
 Deploy backend and generated clients together. An application rollback would
 restore the identified defects; prefer a forward fix. Existing payment evidence
 and historical orders are not rewritten or deleted.

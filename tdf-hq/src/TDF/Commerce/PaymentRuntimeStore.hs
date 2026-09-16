@@ -13,10 +13,12 @@ module TDF.Commerce.PaymentRuntimeStore
   , canonicalPaymentMethodForProvider
   , operationCapabilities
   , providerOperationCapabilities
+  , validateCanonicalRoute
   , productFlowForDomain
   ) where
 
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql
   ( Single(..), SqlPersistT, rawSql, transactionSave, transactionUndo )
@@ -24,7 +26,7 @@ import           Database.Persist.Sql
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentIntentStore as Intent
 import           TDF.Commerce.ProviderCapabilities
-  ( PaymentCapability(..), PaymentMethod(..), PaymentRoute(..)
+  ( ProviderActivation(..), PaymentCapability(..), PaymentMethod(..), PaymentRoute(..)
   , PaymentRouteRequest(..), ProductFlow(..), routePayments )
 import           TDF.Commerce.ProviderCapabilityStore (loadProviderActivations)
 
@@ -84,7 +86,10 @@ validateCanonicalRoute creation paymentMethod = do
       Nothing -> pure (Left "Checkout domain is not eligible for canonical payment routing")
       Just flow -> do
         activations <- loadProviderActivations (Checkout.pacEnvironment creation)
-        let request = PaymentRouteRequest
+        let matchingAccounts = filter
+              (\activation -> paMerchantRef activation == Just (Checkout.pacMerchantRef creation)
+                && not (T.null (T.strip (Checkout.pacMerchantRef creation)))) activations
+            request = PaymentRouteRequest
               { prEnvironment = Checkout.pacEnvironment creation
               , prBuyerCountry = "ZZ"
               , prCurrency = Checkout.pacCurrency creation
@@ -95,9 +100,9 @@ validateCanonicalRoute creation paymentMethod = do
                   (Checkout.pacProvider creation) flow (Checkout.pacOperation creation)
               }
             selected = Checkout.pacProvider creation
-        pure $ if any ((== selected) . routeProvider) (routePayments activations request)
+        pure $ if any ((== selected) . routeProvider) (routePayments matchingAccounts request)
           then Right ()
-          else Left "Payment provider is not verified for this method, operation and environment"
+          else Left "Payment provider is not verified for this merchant, method, operation and environment"
     [] -> pure (Left "Canonical checkout was not found")
     _ -> pure (Left "Canonical checkout lookup was ambiguous")
 
