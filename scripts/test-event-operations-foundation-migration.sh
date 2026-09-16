@@ -40,6 +40,24 @@ apply_sql() {
 
 apply_sql "$fixture_sql"
 
+# Legacy corruption must abort the whole installation, without deleting edges
+# or leaving newly created foundation tables behind. These rows are test-owned.
+assert_legacy_graph_rejected() {
+  psql_exec -c "$1" >/dev/null
+  legacy_edges=$(psql_exec -qAt -c 'SELECT array_agg(ROW(id,activity_id,depends_on_activity_id)::text ORDER BY id) FROM event_logistics_dependency;')
+  if graph_result=$(docker exec -i "$test_container" psql -X -v ON_ERROR_STOP=1 -v VERBOSITY=verbose -U postgres -d "$test_database" < "$up_migration" 2>&1); then
+    echo 'expected legacy dependency graph rejection' >&2
+    exit 1
+  fi
+  case "$graph_result" in *23514*"$2"*) ;; *) echo 'unexpected legacy graph failure' >&2; exit 1;; esac
+  test "$(psql_exec -qAt -c "SELECT to_regclass('event_operation_task_policy') IS NULL;")" = t
+  test "$(psql_exec -qAt -c 'SELECT array_agg(ROW(id,activity_id,depends_on_activity_id)::text ORDER BY id) FROM event_logistics_dependency;')" = "$legacy_edges"
+  psql_exec -c 'DELETE FROM event_logistics_dependency;' >/dev/null
+}
+assert_legacy_graph_rejected 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (100,101),(101,103),(103,100);' 'graph contains a cycle'
+assert_legacy_graph_rejected 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (100,100);' 'graph contains a cycle'
+assert_legacy_graph_rejected 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (100,102);' 'must remain within one event'
+
 apply_sql "$up_migration"
 # Rehearse upgrading an already installed restrictive fence FK.
 psql_exec -c 'ALTER TABLE event_operation_task_write_fence DROP CONSTRAINT event_operation_task_write_fence_event_id_fkey; ALTER TABLE event_operation_task_write_fence ADD CONSTRAINT event_operation_task_write_fence_event_id_fkey FOREIGN KEY(event_id) REFERENCES social_event(id) ON DELETE RESTRICT;' >/dev/null
@@ -106,6 +124,32 @@ if psql_exec -c "DELETE FROM event_operation_raci_assignment WHERE activity_id=1
 fi
 
 psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (100,101);' >/dev/null
+# The HTTP deletion guard runs before incoming edges are removed. Protecting
+# task 100 also protects its prerequisite 101, whose own policy is absent.
+protected_task_before=$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=100;")
+if delete_result=$(psql_exec -v VERBOSITY=verbose -c "BEGIN;
+  SELECT event_operation_assert_task_deletable(101);
+  DELETE FROM event_logistics_dependency WHERE activity_id=101 OR depends_on_activity_id=101;
+  DELETE FROM event_logistics_activity WHERE id=101;
+  COMMIT;" 2>&1); then
+  echo 'expected protected prerequisite deletion to fail before graph cleanup' >&2
+  exit 1
+fi
+case "$delete_result" in *23514*audited\ archival*) ;; *) echo "unexpected prerequisite guard error: $delete_result" >&2; exit 1;; esac
+test "$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=100;")" = "$protected_task_before"
+test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_logistics_dependency WHERE activity_id=100 AND depends_on_activity_id=101;')" = 1
+test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_logistics_activity WHERE id=101;')" = 1
+if delete_result=$(psql_exec -v VERBOSITY=verbose -c 'DELETE FROM event_logistics_activity WHERE id=101;' 2>&1); then
+  echo 'expected direct protected prerequisite deletion to fail' >&2
+  exit 1
+fi
+case "$delete_result" in *23514*audited\ archival*) ;; *) echo "unexpected direct deletion error: $delete_result" >&2; exit 1;; esac
+# Unprotected legacy activity deletion remains available.
+psql_exec -c "BEGIN;
+  INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (159,10,'planned',1);
+  SELECT event_operation_assert_task_deletable(159);
+  DELETE FROM event_logistics_activity WHERE id=159;
+  COMMIT;" >/dev/null
 # Match the handler's single transaction: the old graph permits completion,
 # then replacement introduces an incomplete prerequisite. The failed insertion
 # must roll back both the activity/version and the relation deletion.
@@ -342,6 +386,9 @@ fi
 assert_history_truncate_denied
 
 apply_sql "$rollback_migration"
+# The new HTTP guard uses this same activation predicate, so rollback restores
+# legacy behavior even though its additive SQL helper remains for reapplication.
+test "$(psql_exec -qAt -c "SELECT to_regprocedure('event_operation_assert_task_deletable(bigint)') IS NOT NULL AND EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'event_logistics_activity'::regclass AND tgname = 'event_operation_00_task_lock' AND tgenabled <> 'D');")" = f
 assert_history_truncate_denied
 assert_unprotected_event_deletion 21 210
 preserved_audit=$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_audit_event;')

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-16T16:17:52.993Z",
+  "generatedAt": "2026-09-16T16:43:06.621Z",
   "repositoryRoot": ".",
-  "filesScanned": 1400,
+  "filesScanned": 1402,
   "candidateCount": 1123,
   "byClassification": {
     "dynamic-business-catalog": 735,
@@ -105770,7 +105770,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 53,
+      "consumerCount": 54,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -105828,6 +105828,7 @@
         "scripts/audit-feature-registry.mjs",
         "scripts/generate-feature-audit-reports.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
+        "scripts/lib/postgres-test-database.sh",
         "scripts/prepare-studio-audit-draft.mjs",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-unified-checkout-migration.sh"

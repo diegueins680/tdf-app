@@ -3692,14 +3692,14 @@ socialEventsServer user =
                     | not (hasStrictAdminAccess user || isEventManager currentPartyId eventRow) ->
                         pure (Left err403{errBody = "Only the event organizer can create invitations"})
                     | otherwise -> Right <$> insert EventInvitation
-                            { eventInvitationEventId = eventKey
-                            , eventInvitationFromPartyId = Just fromParty
-                            , eventInvitationToPartyId = Just toParty
-                            , eventInvitationStatus = Just statusVal
-                            , eventInvitationMessage = invitationMessage dto
-                            , eventInvitationCreatedAt = now
-                            , eventInvitationUpdatedAt = now
-                            }
+                        { eventInvitationEventId = eventKey
+                        , eventInvitationFromPartyId = Just fromParty
+                        , eventInvitationToPartyId = Just toParty
+                        , eventInvitationStatus = Just statusVal
+                        , eventInvitationMessage = invitationMessage dto
+                        , eventInvitationCreatedAt = now
+                        , eventInvitationUpdatedAt = now
+                        }
             ) envPool
         key <- either throwError pure result
         pure
@@ -6592,6 +6592,17 @@ socialEventsServer user =
         activityKey <- parseKeyOr400 "logistics activity" activityIdStr
         _ <- requireLogisticsActivity envPool eventKey activityKey
         liftIO $ runSqlPool (do
+            -- Opt-in foundation guards must inspect incoming edges before this
+            -- legacy cleanup removes them. Keep its event fence through commit.
+            backendName <- T.toCaseFold <$> getRDBMS
+            when ("postgres" `T.isInfixOf` backendName) $ do
+                installed <- (rawSql
+                    "SELECT to_regprocedure('event_operation_assert_task_deletable(bigint)') IS NOT NULL AND EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'event_logistics_activity'::regclass AND tgname = 'event_operation_00_task_lock' AND tgenabled <> 'D')"
+                    [] :: SqlPersistT IO [Single Bool])
+                when (installed == [Single True]) $ do
+                    _ <- (rawSql "SELECT event_operation_assert_task_deletable(?) IS NULL"
+                        [toPersistValue activityKey] :: SqlPersistT IO [Single Bool])
+                    pure ()
             deleteWhere [EventLogisticsAlertDeliveryActivityId ==. activityKey]
             deleteWhere [EventRouteVerificationActivityId ==. activityKey]
             deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]

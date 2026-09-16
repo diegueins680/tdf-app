@@ -655,6 +655,37 @@ CREATE TRIGGER event_operation_task_completion_guard
 LOCK TABLE event_logistics_activity, event_logistics_dependency,
   event_operation_task_policy, event_operation_raci_assignment IN SHARE ROW EXCLUSIVE MODE;
 
+-- Row triggers cannot validate pre-existing legacy edges. Inspect the entire
+-- locked graph, including tasks which have not opted into completion policies.
+-- UNION deduplicates reachable pairs so corrupt cycles terminate the scan.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM event_logistics_dependency dependency
+    LEFT JOIN event_logistics_activity activity ON activity.id = dependency.activity_id
+    LEFT JOIN event_logistics_activity prerequisite ON prerequisite.id = dependency.depends_on_activity_id
+    WHERE activity.event_id IS NULL OR prerequisite.event_id IS NULL
+      OR activity.event_id <> prerequisite.event_id
+  ) THEN
+    RAISE EXCEPTION 'existing event logistics dependencies must remain within one event'
+      USING ERRCODE = '23514';
+  END IF;
+  IF EXISTS (
+    WITH RECURSIVE reachable(activity_id, prerequisite_id) AS (
+      SELECT activity_id, depends_on_activity_id FROM event_logistics_dependency
+      UNION
+      SELECT reachable.activity_id, dependency.depends_on_activity_id
+      FROM reachable
+      JOIN event_logistics_dependency dependency ON dependency.activity_id = reachable.prerequisite_id
+    )
+    SELECT 1 FROM reachable WHERE activity_id = prerequisite_id
+  ) THEN
+    RAISE EXCEPTION 'existing event logistics dependency graph contains a cycle'
+      USING ERRCODE = '23514';
+  END IF;
+END
+$$;
+
 -- A write, not just an advisory lock: stale RR/SERIALIZABLE snapshots must abort.
 CREATE TABLE IF NOT EXISTS event_operation_task_write_fence (
   event_id BIGINT PRIMARY KEY REFERENCES social_event(id) ON DELETE CASCADE,
@@ -668,6 +699,30 @@ ALTER TABLE event_operation_task_write_fence
   ADD CONSTRAINT event_operation_task_write_fence_event_id_fkey
   FOREIGN KEY (event_id) REFERENCES social_event(id) ON DELETE CASCADE;
 
+-- Shared by the legacy HTTP delete transaction and the direct row-delete guard.
+-- Acquire the same write fence as policy/edge mutations before inspecting them.
+CREATE OR REPLACE FUNCTION event_operation_assert_task_deletable(target_activity_id BIGINT)
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE target_event_id BIGINT;
+BEGIN
+  SELECT event_id INTO target_event_id FROM event_logistics_activity WHERE id = target_activity_id;
+  IF target_event_id IS NOT NULL THEN
+    INSERT INTO event_operation_task_write_fence(event_id) VALUES (target_event_id)
+      ON CONFLICT (event_id) DO UPDATE
+        SET revision = event_operation_task_write_fence.revision + 1;
+  END IF;
+  IF EXISTS (SELECT 1 FROM event_operation_task_policy WHERE activity_id = target_activity_id)
+    OR EXISTS (
+      SELECT 1 FROM event_logistics_dependency dependency
+      JOIN event_operation_task_policy policy ON policy.activity_id = dependency.activity_id
+      WHERE dependency.depends_on_activity_id = target_activity_id
+    ) THEN
+    RAISE EXCEPTION 'protected tasks and their prerequisites require an audited archival workflow'
+      USING ERRCODE = '23514';
+  END IF;
+END
+$$;
+
 CREATE OR REPLACE FUNCTION event_operation_task_write_lock()
 RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
@@ -678,10 +733,8 @@ BEGIN
     IF TG_OP = 'UPDATE' AND (NEW.id <> OLD.id OR NEW.event_id <> OLD.event_id) THEN
       RAISE EXCEPTION 'task identity and event are immutable' USING ERRCODE = '23514';
     END IF;
-    IF TG_OP = 'DELETE' AND EXISTS (
-      SELECT 1 FROM event_operation_task_policy WHERE activity_id = OLD.id
-    ) THEN
-      RAISE EXCEPTION 'protected tasks require an audited archival workflow' USING ERRCODE = '23514';
+    IF TG_OP = 'DELETE' THEN
+      PERFORM event_operation_assert_task_deletable(OLD.id);
     END IF;
     target_event_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.event_id ELSE NEW.event_id END;
   ELSE

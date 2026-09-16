@@ -1,5 +1,18 @@
 # Invitation and lifecycle review repair
 
+## Legacy graph installation validation (2026-09-16)
+
+The foundation migration now validates every existing dependency under the same
+table locks used to install its write fences. Cross-event edges, self-links and
+multi-node cycles abort the migration with SQLSTATE 23514, including tasks with
+no opt-in completion policy. The recursive scan uses UNION to terminate on cycles.
+No legacy rows are deleted or silently repaired. The full disposable PostgreSQL
+migration suite passed, including three corrupt-input installation rollbacks,
+preservation of the input graph, apply/reapply, concurrency and rollback checks.
+An incompatible installation requires an explicitly reviewed data repair before
+retrying; do not disable constraints or mark the migration applied. No production
+migration, activation or deployment was performed.
+
 Invitation updates now lock the event and invitation, re-read the current owner,
 recipient and status, validate the command, and write in one transaction.
 PostgreSQL uses event-then-invitation row locks; SQLite obtains its write lock
