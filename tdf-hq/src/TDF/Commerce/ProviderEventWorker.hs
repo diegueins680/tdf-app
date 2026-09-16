@@ -5,6 +5,7 @@
 module TDF.Commerce.ProviderEventWorker
   ( ProviderEventWorkerStats(..)
   , providerEventWorkerTick
+  , providerEventWorkerIterationWith
   , startProviderEventWorker
   , validateStoredPaypalEvent
   ) where
@@ -56,15 +57,23 @@ startProviderEventWorker env = do
 
 workerLoop :: Env -> Text -> IO ()
 workerLoop env encryptionKey = forever $ do
-  result <- tryAny (providerEventWorkerTick env encryptionKey)
+  providerEventWorkerIterationWith (providerEventWorkerTick env encryptionKey)
+    (hPutStrLn stderr) putStrLn
+  threadDelay (5 * 1000000)
+
+-- The loop and tests share this single-iteration exception/logging boundary.
+providerEventWorkerIterationWith
+  :: IO ProviderEventWorkerStats -> (String -> IO ()) -> (String -> IO ()) -> IO ()
+providerEventWorkerIterationWith tick logError logInfo = do
+  result <- tryAny tick
   case result of
     Left err ->
-      hPutStrLn stderr
+      logError
         ("{\"component\":\"provider-event-worker\",\"level\":\"error\",\"message\":\"tick failed\",\"error\":\""
           <> redactLogValue (displayException err) <> "\"}")
     Right stats
       | stats /= emptyStats ->
-          putStrLn
+          logInfo
             ("{\"component\":\"provider-event-worker\",\"level\":\"info\",\"claimed\":"
               <> show (pewClaimed stats)
               <> ",\"processed\":" <> show (pewProcessed stats)
@@ -72,7 +81,6 @@ workerLoop env encryptionKey = forever $ do
               <> ",\"retried\":" <> show (pewRetried stats)
               <> ",\"deadLettered\":" <> show (pewDeadLettered stats) <> "}")
       | otherwise -> pure ()
-  threadDelay (5 * 1000000)
 
 providerEventWorkerTick :: Env -> Text -> IO ProviderEventWorkerStats
 providerEventWorkerTick env@Env{envPool} encryptionKey = do

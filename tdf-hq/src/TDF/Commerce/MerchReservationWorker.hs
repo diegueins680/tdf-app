@@ -3,6 +3,7 @@
 
 module TDF.Commerce.MerchReservationWorker
   ( merchReservationWorkerTick
+  , merchReservationWorkerIterationWith
   , startMerchReservationWorker
   ) where
 
@@ -44,19 +45,26 @@ startMerchReservationWorker env = void (forkIO (workerLoop env))
 
 workerLoop :: Env -> IO ()
 workerLoop env = forever $ do
-  result <- tryAny (merchReservationWorkerTick env)
+  merchReservationWorkerIterationWith (merchReservationWorkerTick env)
+    (hPutStrLn stderr) putStrLn
+  threadDelay (30 * 1000000)
+
+-- Keep expiry work separate from diagnostics and preserve one tick per interval.
+merchReservationWorkerIterationWith
+  :: IO Int -> (String -> IO ()) -> (String -> IO ()) -> IO ()
+merchReservationWorkerIterationWith tick logError logInfo = do
+  result <- tryAny tick
   case result of
     Left err ->
-      hPutStrLn stderr
+      logError
         ("{\"component\":\"merch-reservation-worker\",\"level\":\"error\",\"message\":\"tick failed\",\"error\":\""
           <> redactLogValue (displayException err) <> "\"}")
     Right released
       | released > 0 ->
-          putStrLn
+          logInfo
             ("{\"component\":\"merch-reservation-worker\",\"level\":\"info\",\"expiredCheckouts\":"
               <> show released <> "}")
       | otherwise -> pure ()
-  threadDelay (30 * 1000000)
 
 redactLogValue :: String -> String
 redactLogValue = take 500 . map replaceUnsafe
