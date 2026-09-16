@@ -157,6 +157,22 @@ if psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_a
   exit 1
 fi
 
+# The legacy handler must commit activity CAS and relation replacement together.
+psql_exec -c "BEGIN;
+  INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (140,10,'planned',1);
+  INSERT INTO event_operation_task_policy(activity_id,requires_accountability) VALUES (140,false);
+  COMMIT;" >/dev/null
+if psql_exec -c "BEGIN;
+  UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=140 AND version=1;
+  DELETE FROM event_logistics_dependency WHERE activity_id=140;
+  INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (140,101);
+  COMMIT;" >/dev/null 2>&1; then
+  echo 'expected protected completion and new blocked relation to roll back together' >&2
+  exit 1
+fi
+test "$(psql_exec -qAt -c "SELECT status || ':' || version FROM event_logistics_activity WHERE id=140;")" = planned:1
+test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_logistics_dependency WHERE activity_id=140;')" = 0
+
 # Time passing cannot keep expired accountability valid. Retirement is explicit,
 # attributed and transactional with replacement; expiry never invents an actor.
 psql_exec -c "

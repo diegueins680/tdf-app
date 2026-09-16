@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-15T19:34:37.589Z",
+  "generatedAt": "2026-09-16T03:11:37.338Z",
   "repositoryRoot": ".",
   "filesScanned": 1395,
   "candidateCount": 1122,
@@ -11151,7 +11151,7 @@
       "lines": [
         434
       ],
-      "consumerCount": 50,
+      "consumerCount": 51,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
         "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql",
@@ -11159,6 +11159,7 @@
         "tdf-hq/src/TDF/Artists/Promotion.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/Spec.hs"
       ],
       "webConsumers": [
