@@ -50,6 +50,22 @@ spec = describe "refund-safety money invariants" $ do
       (State.PaymentLifecycle State.PaymentPartiallyRefunded maxBound maxBound maxBound 1)
       (State.PaymentRefundVerified maxBound) `shouldSatisfy` isLeft
 
+  it "matches the Integer refund oracle for every generated Int64 balance" $
+    QC.forAll (QC.choose (1, maxBound) :: QC.Gen Int64) $ \captured ->
+      QC.forAll (QC.choose (0, captured - 1)) $ \refunded ->
+        QC.forAll (QC.choose (1, maxBound) :: QC.Gen Int64) $ \requested ->
+          let start = if refunded == 0 then State.PaymentCaptured else State.PaymentPartiallyRefunded
+              lifecycle = State.PaymentLifecycle start captured captured captured refunded
+              total = toInteger refunded + toInteger requested
+              actual = State.transitionPayment lifecycle (State.PaymentRefundVerified requested)
+          in if total > toInteger captured
+               then QC.property (isLeft actual)
+               else actual QC.=== Right lifecycle
+                 { State.paymentState = if total == toInteger captured
+                     then State.PaymentRefunded else State.PaymentPartiallyRefunded
+                 , State.paymentRefundedMinor = fromInteger total
+                 }
+
 databaseSpec
   :: (ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment)
   -> SpecWith ConnectionPool
