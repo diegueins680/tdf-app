@@ -2410,6 +2410,27 @@ main = hspec $ do
               (ProviderCapabilities.routePayments [verified] request)
               `shouldBe` [CheckoutStore.ProviderPayPal]
 
+        it "requires recurring and completion evidence for public subscription routes" $ do
+            forM_
+              [ (CheckoutStore.ProviderDatafast, ProviderCapabilities.MethodCard, ProviderCapabilities.CapabilityServerVerification)
+              , (CheckoutStore.ProviderPayPal, ProviderCapabilities.MethodPayPalWallet, ProviderCapabilities.CapabilityCapture)
+              ] $ \(provider, method, completion) -> do
+                let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                      { ProviderCapabilities.prFlow = ProviderCapabilities.FlowSubscription
+                      , ProviderCapabilities.prMethod = method
+                      , ProviderCapabilities.prRequiredCapabilities = []
+                      }
+                    verified = active provider
+                    without capability = verified
+                      { ProviderCapabilities.paVerifiedMethodCapabilities =
+                          filter ((/= capability) . snd)
+                            (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                      }
+                map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [verified] request) `shouldBe` [provider]
+                forM_ [ProviderCapabilities.CapabilityRecurring, completion, ProviderCapabilities.CapabilityOneTime] $ \capability ->
+                  ProviderCapabilities.routePayments [without capability] request `shouldBe` []
+
         it "preserves caller and marketplace restrictions when qualifying complete checkout" $ do
             let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
                   { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet

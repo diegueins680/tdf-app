@@ -199,7 +199,7 @@ export default function CommerceProviderEventsPage() {
                   && account.cpaContractStatus === 'approved'
                   && account.cpaCredentialStatus === 'validated';
                 const capabilities = account.cpaCapabilities
-                  .filter((capability) => capability.cpcVerificationStatus.endsWith('_verified'));
+                  .filter((capability) => capability.cpcVerificationStatus === `${account.cpaEnvironment}_verified`);
                 return (
                   <Card key={`${account.cpaEnvironment}:${account.cpaProvider}`} variant="outlined" data-testid="commerce-provider-readiness-card">
                     <CardContent>

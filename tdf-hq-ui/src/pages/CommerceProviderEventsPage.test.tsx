@@ -274,6 +274,29 @@ describe('CommerceProviderEventsPage', () => {
     container.remove();
   });
 
+  it('shows only capability evidence verified for each account environment', async () => {
+    const overview = buildOverview();
+    const capability = overview.cpoProviderAccounts[0]!.cpaCapabilities[0]!;
+    overview.cpoProviderAccounts[1]!.cpaCapabilities = [
+      { ...capability, cpcCapability: 'capture', cpcVerificationStatus: 'sandbox_verified' },
+      { ...capability, cpcCapability: 'recurring', cpcVerificationStatus: 'production_verified' },
+    ];
+    overview.cpoProviderAccounts[0]!.cpaCapabilities.push(
+      { ...capability, cpcCapability: 'tokenization', cpcVerificationStatus: 'production_verified' },
+    );
+    getPaymentOverviewMock.mockResolvedValue(overview);
+    await act(async () => { await queryClient.invalidateQueries(); });
+    await waitFor(() => {
+      const cards = container.querySelectorAll('[data-testid="commerce-provider-readiness-card"]');
+      expect(cards[0]?.textContent).toContain('card/one_time');
+      expect(cards[0]?.textContent).not.toContain('card/tokenization');
+      expect(cards[0]?.textContent).not.toContain('card/recurring');
+      expect(cards[1]?.textContent).toContain('card/recurring');
+      expect(cards[1]?.textContent).not.toContain('card/capture');
+      expect(cards[1]?.textContent).not.toContain('card/one_time');
+    });
+  });
+
   it('labels canonical totals by environment and marks legacy responses as unknown', async () => {
     const overview = buildOverview();
     const summary = overview.cpoPaymentIntents[0]!;

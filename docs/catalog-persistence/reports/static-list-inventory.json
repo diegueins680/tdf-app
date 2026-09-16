@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-16T04:44:57.599Z",
+  "generatedAt": "2026-09-16T15:07:25.993Z",
   "repositoryRoot": ".",
   "filesScanned": 1407,
   "candidateCount": 1117,
@@ -32156,7 +32156,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "cpoPaymentIntents",
-      "line": 282,
+      "line": 305,
       "values": [
         "{cpiEnvironment=production, cpiCapturedMinor=7000}",
         "{cpiEnvironment=sandbox}",
@@ -32165,7 +32165,7 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        282
+        305
       ],
       "consumerCount": 7,
       "backendConsumers": [
@@ -71276,7 +71276,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 66,
+      "consumerCount": 67,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -71319,6 +71319,7 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
+        "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.test.ts",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts"
@@ -97374,12 +97375,14 @@
       "lines": [
         347
       ],
-      "consumerCount": 3,
+      "consumerCount": 4,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs"
       ],
-      "webConsumers": [],
+      "webConsumers": [
+        "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx"
+      ],
       "mobileConsumers": [],
       "automationConsumers": [
         "scripts/catalog-list-audit.mjs"
