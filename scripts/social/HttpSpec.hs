@@ -24,6 +24,8 @@ import TDF.Social.Server (socialV2Server)
 import SessionSpec (sessionSpec)
 import ChatSpec (chatSpec)
 import ProfileSpec (profileSpec)
+import RelationshipReadSpec (relationshipReadSpec)
+import RelationshipReadBenchmark (benchmarkRelationshipReads)
 import ProfileBenchmark (benchmarkProfiles)
 import SessionBenchmark (benchmarkSession)
 
@@ -106,6 +108,8 @@ main = do
       sessionSpec env
       chatSpec env
       profileSpec env
+      relationshipReadSpec env
 
   benchmarkSession env
   benchmarkProfiles env
+  benchmarkRelationshipReads env

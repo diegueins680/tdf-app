@@ -33,6 +33,8 @@ executable tdf-hq-exe
     TDF.API.Chat
     TDF.API.SocialProfiles
     TDF.Social.Profiles
+    TDF.API.SocialRelationships
+    TDF.Social.RelationshipReads
     TDF.Social.Chat
     TDF.Social.Session
     TDF.API.Calendar
@@ -288,6 +290,8 @@ test-suite tdf-hq-test
     TDF.API.Chat
     TDF.API.SocialProfiles
     TDF.Social.Profiles
+    TDF.API.SocialRelationships
+    TDF.Social.RelationshipReads
     TDF.Social.Chat
     TDF.Social.Session
     TDF.API.Calendar

@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-16",
+  "base": "7c452efcbc7b45e797b7ebd590dfffccf0fc9751",
+  "tlc": {
+    "distribution": "1.7.2",
+    "generated": 76624,
+    "distinct": 24192,
+    "depth": 13,
+    "positive_exit": 0,
+    "specific_negative_controls": 3,
+    "generated_cases": 8064
+  },
+  "sql_negative_case_ids": {
+    "policy": 229,
+    "counts": 272
+  },
+  "verification": {
+    "sql_refinement_exit": 0,
+    "http_examples": 116,
+    "http_failures": 0,
+    "http_exit": 0,
+    "stack_examples": 2542,
+    "stack_failures": 0,
+    "stack_exit": 0,
+    "catalog_exit": 0,
+    "complete_schema_pg17_exit": 0,
+    "benchmark_first_fixture_exit": 1,
+    "benchmark_final_exit": 0
+  },
+  "hosted_ci": "not run for this branch yet",
+  "production_activation": false,
+  "deployment_command_issued": false
+}

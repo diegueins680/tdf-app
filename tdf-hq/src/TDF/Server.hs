@@ -12,6 +12,7 @@
 module TDF.Server where
 
 import qualified TDF.Social.Chat as SocialChat
+import qualified TDF.Social.RelationshipReads as SocialReads
 import qualified TDF.Social.Profiles as SocialProfiles
 import TDF.Social.Server (socialV2Server)
 import           Control.Applicative ((<|>))
@@ -3059,15 +3060,15 @@ artistSecureServer user =
 
 socialServer :: AuthedUser -> ServerT SocialAPI AppM
 socialServer user =
-       socialListFollowers user
-  :<|> socialListFollowing user
+       SocialReads.relationshipList user "followers" (socialListFollowers user)
+  :<|> SocialReads.relationshipList user "following" (socialListFollowing user)
   :<|> vcardExchange user
-  :<|> socialListFriends user
+  :<|> SocialReads.relationshipList user "friends" (socialListFriends user)
   :<|> socialAddFriend user
   :<|> socialRemoveFriend user
   :<|> SocialProfiles.profileList user (socialListProfiles user)
   :<|> SocialProfiles.profileGet user (socialGetProfile user)
-  :<|> socialListSuggestedFriends user
+  :<|> SocialReads.suggestions user (socialListSuggestedFriends user)
   :<|> socialV2Server user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
