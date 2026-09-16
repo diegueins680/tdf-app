@@ -352,3 +352,15 @@ cutover, search/media/notification privacy, delegation and lifecycle/moderation
 remain incomplete; unpaginated legacy arrays still require a scale migration.
 No production flag activation, merge or deployment command occurred. The prior
 provider-triggered deployment exception still requires target/removal verification.
+
+### #402 initial hosted verification
+
+At head `8b2d1557a5e72e0346af1fd43dc7cf36033da067`, both jobs in
+[social CI35122347901](https://github.com/diegueins680/tdf-app/actions/runs/35122347901)
+passed: models/PostgreSQL and social client. The catalog audit also passed.
+[Full CI35122347920](https://github.com/diegueins680/tdf-app/actions/runs/35122347920)
+remains in progress, including backend and persona browser jobs. See the
+[actual status snapshot](evidence/relationship-ci/initial-checks.json). Its skipped
+UI/mobile jobs are not passing tests. Await the final full-run result and inspect
+any failed-job logs without weakening assertions; record completion here to avoid
+cancelling implementation CI with documentation pushes.
