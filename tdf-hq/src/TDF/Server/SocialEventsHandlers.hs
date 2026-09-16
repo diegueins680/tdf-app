@@ -3670,10 +3670,6 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
-        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        unless (hasStrictAdminAccess user || isEventManager currentPartyId eventRow) $
-            throwError err403{errBody = "Only the event organizer can create invitations"}
         toParty <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
         fromParty <-
             either
@@ -3683,11 +3679,19 @@ socialEventsServer user =
         statusVal <- either throwError pure (validateInvitationStatusInput (invitationStatus dto))
         when (statusVal /= "pending") $
             throwError err400{errBody = "New invitations must have pending status"}
-        key <-
-            liftIO $
-                runSqlPool
-                    ( insert
-                        EventInvitation
+        result <- liftIO $ runSqlPool (do
+            -- Serialize authority changes and insertion on the same event row.
+            -- SQLite needs a write lock before reading its current authority.
+            backendName <- T.toCaseFold <$> getRDBMS
+            when ("sqlite" `T.isInfixOf` backendName) $
+                rawExecute "UPDATE social_event SET id = id WHERE id = ?" [toPersistValue eventKey]
+            mEvent <- lockSocialEventForMutation eventKey
+            case mEvent of
+                Nothing -> pure (Left err404{errBody = "Event not found"})
+                Just (Entity _ eventRow)
+                    | not (hasStrictAdminAccess user || isEventManager currentPartyId eventRow) ->
+                        pure (Left err403{errBody = "Only the event organizer can create invitations"})
+                    | otherwise -> Right <$> insert EventInvitation
                             { eventInvitationEventId = eventKey
                             , eventInvitationFromPartyId = Just fromParty
                             , eventInvitationToPartyId = Just toParty
@@ -3696,8 +3700,8 @@ socialEventsServer user =
                             , eventInvitationCreatedAt = now
                             , eventInvitationUpdatedAt = now
                             }
-                    )
-                    envPool
+            ) envPool
+        key <- either throwError pure result
         pure
             InvitationDTO
                 { invitationId = Just (renderKeyText key)

@@ -121,3 +121,19 @@ Overrides remain bound to the exact activity version. A later version-changing
 edit while prerequisites remain incomplete still requires fresh authorization;
 the repair deliberately does not extend an old override to future commands. The
 regression verifies both rejection without that authorization and success with it.
+# Invitation creation authority
+
+Creation now locks and revalidates the event organizer inside the same transaction
+that inserts the invitation. PostgreSQL uses the existing event-row lock; SQLite
+acquires its write lock before reading current authority. Validation of sender,
+recipient and pending-only creation remains intact. Losing ownership while the
+request waits cannot authorize a stale invitation.
+
+The real PostgreSQL invitation regression now waits for a concurrent ownership
+clear, verifies creation blocks on the row lock, commits that clear, and requires
+403 with no new invitation. `quality:backend` runs the existing concurrency runner
+against its freshly built test binary, avoiding a second compile and failing if
+no matching tests are found. No schema or permission relaxation is introduced.
+The concurrent repair's actual dependency-helper test is also mandatory in
+`quality:backend` through `scripts/test-event-relations-runtime.sh`, using the
+foundation migration and an independently disposable PostgreSQL fixture.

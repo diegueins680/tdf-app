@@ -1675,6 +1675,41 @@ spec = describe "social event handler helpers" $ do
                     fmap eventInvitationStatus stored `shouldBe` Just (Just "pending"))
                 `finally` void (tryPutMVar release ())
 
+            -- A former organizer must wait for the event lock and then be
+            -- denied using the committed authority, not its pre-lock snapshot.
+            ownerLocked <- newEmptyMVar
+            ownerRelease <- newEmptyMVar
+            let transferOwner = runSqlPool (do
+                    rawExecute "UPDATE social_event SET organizer_party_id = NULL WHERE id = ?"
+                        [toPersistValue eventKey]
+                    liftIO (putMVar ownerLocked ())
+                    liftIO (takeMVar ownerRelease)) pool
+                createStale = runHandler $ runReaderT
+                    (socialEventInvitationCreateHandlerFor (socialEventUser 1) "43"
+                        (invitationCreatePayload Nothing)) env
+                awaitEventLock :: Int -> IO ()
+                awaitEventLock 0 = expectationFailure "Invitation creation did not wait on the event lock"
+                awaitEventLock attempts = do
+                    rows <- runSqlPool (rawSql "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%social_event%'" [] :: SqlPersistT IO [Single Int64]) pool
+                    case rows of
+                        [Single n] | n > 0 -> pure ()
+                        _ -> threadDelay 10000 >> awaitEventLock (attempts - 1)
+            beforeCount <- runSqlPool (count [EventInvitationEventId ==. eventKey]) pool
+            withAsync transferOwner $ \owner ->
+                (do
+                    takeMVar ownerLocked
+                    withAsync createStale $ \creator -> do
+                        awaitEventLock 500
+                        putMVar ownerRelease ()
+                        wait owner
+                        result <- wait creator
+                        case result of
+                            Left err -> errHTTPCode err `shouldBe` 403
+                            Right value -> expectationFailure ("Former organizer created an invitation: " <> show value)
+                    afterCount <- runSqlPool (count [EventInvitationEventId ==. eventKey]) pool
+                    afterCount `shouldBe` beforeCount)
+                `finally` void (tryPutMVar ownerRelease ())
+
     it "revalidates invitation recipients and terminal status at the update boundary" $ do
         now <- getCurrentTime
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
