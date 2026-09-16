@@ -38,6 +38,12 @@ never started. A concurrent runner also exits nonzero instead of executing the
 same batch twice. Fly's rolling strategy and `max_unavailable = 1` preserve one
 serving Machine while the candidate starts.
 
+The schema verifier requires all four provider webhook/refund gates to exist.
+It accepts either configured state for PayPal webhook intake, which was enabled
+by the approved live rollout. It does not enable intake or alter any gate.
+PayPal refunds and Datafast webhook/refund capabilities must remain disabled.
+This keeps subsequent releases and restarts compatible with the approved state.
+
 ## Adding a migration
 
 Applied migration files are byte-for-byte immutable. Never edit an applied SQL

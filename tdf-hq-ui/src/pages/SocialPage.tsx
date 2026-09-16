@@ -1,3 +1,4 @@
+import SocialWorkspace from '../features/social/SocialWorkspace';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -53,6 +54,13 @@ const parsePositivePartyId = (value: string): number | null => {
 };
 
 export default function SocialPage() {
+  const { session } = useSession();
+  return import.meta.env.VITE_SOCIAL_V2_ENABLED === 'true'
+    ? <SocialWorkspace key={session?.partyId ?? 'anonymous'} />
+    : <LegacySocialPage key={session?.partyId ?? 'anonymous'} />;
+}
+
+function LegacySocialPage() {
   useDocumentTitle('Social');
   const qc = useQueryClient();
   const { session } = useSession();
@@ -78,14 +86,17 @@ export default function SocialPage() {
   );
 
   useEffect(() => {
+    let cancelled = false;
+    setShareQr(null);
     setShareQrError(null);
-    try {
-      const url = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(sharePayload)}`;
-      setShareQr(url);
-    } catch (err) {
-      console.error('No se pudo generar el QR de vCard', err);
-      setShareQrError('No pudimos generar el QR.');
-    }
+    void import('qrcode').then(({ toDataURL }) =>
+      toDataURL(sharePayload, { width: 240, margin: 2 }),
+    ).then((url) => {
+      if (!cancelled) setShareQr(url);
+    }).catch(() => {
+      if (!cancelled) setShareQrError('No pudimos generar el QR.');
+    });
+    return () => { cancelled = true; };
   }, [sharePayload]);
 
   const parsedPayload = useMemo(() => {
@@ -119,23 +130,23 @@ export default function SocialPage() {
   }, [session?.partyId]);
 
   const followersQuery = useQuery({
-    queryKey: ['social-followers'],
+    queryKey: ['social-followers', session?.partyId],
     queryFn: SocialAPI.listFollowers,
   });
   const followingQuery = useQuery({
-    queryKey: ['social-following'],
+    queryKey: ['social-following', session?.partyId],
     queryFn: SocialAPI.listFollowing,
   });
   const friendsQuery = useQuery({
-    queryKey: ['social-friends'],
+    queryKey: ['social-friends', session?.partyId],
     queryFn: SocialAPI.listFriends,
   });
   const suggestionsQuery = useQuery({
-    queryKey: ['social-suggestions'],
+    queryKey: ['social-suggestions', session?.partyId],
     queryFn: SocialAPI.listSuggestions,
   });
   const myProfileQuery = useQuery({
-    queryKey: ['fan-profile', 'social-share'],
+    queryKey: ['fan-profile', 'social-share', session?.partyId],
     queryFn: Fans.getProfile,
     enabled: Boolean(session?.partyId),
     staleTime: 5 * 60 * 1000,
@@ -161,7 +172,7 @@ export default function SocialPage() {
   ]);
 
   const profilesQuery = useQuery({
-    queryKey: ['social-profiles', profileIds],
+    queryKey: ['social-profiles', session?.partyId, profileIds],
     queryFn: () => SocialAPI.listProfiles(profileIds),
     enabled: profileIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -186,10 +197,10 @@ export default function SocialPage() {
   }, [myProfileQuery.data?.fpDisplayName, session?.displayName, session?.username]);
 
   const invalidateAll = () => {
-    void qc.invalidateQueries({ queryKey: ['social-followers'] });
-    void qc.invalidateQueries({ queryKey: ['social-following'] });
-    void qc.invalidateQueries({ queryKey: ['social-friends'] });
-    void qc.invalidateQueries({ queryKey: ['social-suggestions'] });
+    void qc.invalidateQueries({ queryKey: ['social-followers', session?.partyId] });
+    void qc.invalidateQueries({ queryKey: ['social-following', session?.partyId] });
+    void qc.invalidateQueries({ queryKey: ['social-friends', session?.partyId] });
+    void qc.invalidateQueries({ queryKey: ['social-suggestions', session?.partyId] });
   };
 
   const addMutation = useMutation<void, Error, number | undefined, {
@@ -209,24 +220,24 @@ export default function SocialPage() {
         (typeof targetId === 'number' && Number.isSafeInteger(targetId) && targetId > 0 ? targetId : null)
         ?? null;
       if (numeric === null) return { previousFriends: undefined, previousFollowing: undefined, previousSuggestions: undefined };
-      await qc.cancelQueries({ queryKey: ['social-friends'] });
-      await qc.cancelQueries({ queryKey: ['social-following'] });
-      await qc.cancelQueries({ queryKey: ['social-suggestions'] });
-      const previousFriends = qc.getQueryData<PartyFollowDTO[]>(['social-friends']);
-      const previousFollowing = qc.getQueryData<PartyFollowDTO[]>(['social-following']);
-      const previousSuggestions = qc.getQueryData<{ sfPartyId: number; sfMutualCount: number }[]>(['social-suggestions']);
+      await qc.cancelQueries({ queryKey: ['social-friends', session?.partyId] });
+      await qc.cancelQueries({ queryKey: ['social-following', session?.partyId] });
+      await qc.cancelQueries({ queryKey: ['social-suggestions', session?.partyId] });
+      const previousFriends = qc.getQueryData<PartyFollowDTO[]>(['social-friends', session?.partyId]);
+      const previousFollowing = qc.getQueryData<PartyFollowDTO[]>(['social-following', session?.partyId]);
+      const previousSuggestions = qc.getQueryData<{ sfPartyId: number; sfMutualCount: number }[]>(['social-suggestions', session?.partyId]);
       const now = new Date().toISOString();
       const myId = session?.partyId ?? 0;
-      qc.setQueryData<PartyFollowDTO[]>(['social-friends'], (old) => [
+      qc.setQueryData<PartyFollowDTO[]>(['social-friends', session?.partyId], (old) => [
         ...(old ?? []),
         { pfFollowerId: myId, pfFollowingId: numeric, pfViaNfc: false, pfStartedAt: now },
       ]);
-      qc.setQueryData<PartyFollowDTO[]>(['social-following'], (old) => [
+      qc.setQueryData<PartyFollowDTO[]>(['social-following', session?.partyId], (old) => [
         ...(old ?? []),
         { pfFollowerId: myId, pfFollowingId: numeric, pfViaNfc: false, pfStartedAt: now },
       ]);
       qc.setQueryData<{ sfPartyId: number; sfMutualCount: number }[]>(
-        ['social-suggestions'],
+        ['social-suggestions', session?.partyId],
         (old) => (old ?? []).filter((s) => s.sfPartyId !== numeric),
       );
       return { previousFriends, previousFollowing, previousSuggestions };
@@ -236,9 +247,9 @@ export default function SocialPage() {
       setFeedback({ kind: 'success', message: 'Listo, conexión agregada.' });
     },
     onError: (err, _targetId, context) => {
-      if (context?.previousFriends !== undefined) qc.setQueryData(['social-friends'], context.previousFriends);
-      if (context?.previousFollowing !== undefined) qc.setQueryData(['social-following'], context.previousFollowing);
-      if (context?.previousSuggestions !== undefined) qc.setQueryData(['social-suggestions'], context.previousSuggestions);
+      if (context?.previousFriends !== undefined) qc.setQueryData(['social-friends', session?.partyId], context.previousFriends);
+      if (context?.previousFollowing !== undefined) qc.setQueryData(['social-following', session?.partyId], context.previousFollowing);
+      if (context?.previousSuggestions !== undefined) qc.setQueryData(['social-suggestions', session?.partyId], context.previousSuggestions);
       setFeedback({ kind: 'error', message: err.message });
     },
     onSettled: () => {
@@ -249,19 +260,19 @@ export default function SocialPage() {
   const removeMutation = useMutation({
     mutationFn: (targetId: number) => SocialAPI.removeFriend(targetId),
     onMutate: async (targetId) => {
-      await qc.cancelQueries({ queryKey: ['social-friends'] });
-      await qc.cancelQueries({ queryKey: ['social-following'] });
-      await qc.cancelQueries({ queryKey: ['social-followers'] });
-      const previousFriends = qc.getQueryData<PartyFollowDTO[]>(['social-friends']);
-      const previousFollowing = qc.getQueryData<PartyFollowDTO[]>(['social-following']);
-      const previousFollowers = qc.getQueryData<PartyFollowDTO[]>(['social-followers']);
-      qc.setQueryData<PartyFollowDTO[]>(['social-friends'], (old) =>
+      await qc.cancelQueries({ queryKey: ['social-friends', session?.partyId] });
+      await qc.cancelQueries({ queryKey: ['social-following', session?.partyId] });
+      await qc.cancelQueries({ queryKey: ['social-followers', session?.partyId] });
+      const previousFriends = qc.getQueryData<PartyFollowDTO[]>(['social-friends', session?.partyId]);
+      const previousFollowing = qc.getQueryData<PartyFollowDTO[]>(['social-following', session?.partyId]);
+      const previousFollowers = qc.getQueryData<PartyFollowDTO[]>(['social-followers', session?.partyId]);
+      qc.setQueryData<PartyFollowDTO[]>(['social-friends', session?.partyId], (old) =>
         (old ?? []).filter((f) => f.pfFollowerId !== targetId && f.pfFollowingId !== targetId),
       );
-      qc.setQueryData<PartyFollowDTO[]>(['social-following'], (old) =>
+      qc.setQueryData<PartyFollowDTO[]>(['social-following', session?.partyId], (old) =>
         (old ?? []).filter((f) => f.pfFollowingId !== targetId),
       );
-      qc.setQueryData<PartyFollowDTO[]>(['social-followers'], (old) =>
+      qc.setQueryData<PartyFollowDTO[]>(['social-followers', session?.partyId], (old) =>
         (old ?? []).filter((f) => f.pfFollowerId !== targetId),
       );
       return { previousFriends, previousFollowing, previousFollowers };
@@ -270,9 +281,9 @@ export default function SocialPage() {
       setFeedback({ kind: 'success', message: 'Actualizamos tus conexiones.' });
     },
     onError: (err: Error, _targetId, context) => {
-      if (context?.previousFriends !== undefined) qc.setQueryData(['social-friends'], context.previousFriends);
-      if (context?.previousFollowing !== undefined) qc.setQueryData(['social-following'], context.previousFollowing);
-      if (context?.previousFollowers !== undefined) qc.setQueryData(['social-followers'], context.previousFollowers);
+      if (context?.previousFriends !== undefined) qc.setQueryData(['social-friends', session?.partyId], context.previousFriends);
+      if (context?.previousFollowing !== undefined) qc.setQueryData(['social-following', session?.partyId], context.previousFollowing);
+      if (context?.previousFollowers !== undefined) qc.setQueryData(['social-followers', session?.partyId], context.previousFollowers);
       setFeedback({ kind: 'error', message: err.message });
     },
     onSettled: () => {

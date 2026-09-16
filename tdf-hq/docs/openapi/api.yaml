@@ -9,6 +9,16 @@ servers:
     description: Development server
 
 paths:
+  /social/v2/me:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1me
+  /social/v2/relationships/{partyId}:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1relationships~1{partyId}
+  /social/v2/preferences:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1preferences
+  /social/v2/following:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1following
+  /social/v2/discover:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1discover
   /social/followers:
     get:
       tags: [Social]

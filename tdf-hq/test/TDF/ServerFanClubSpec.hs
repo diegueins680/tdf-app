@@ -507,4 +507,5 @@ fanClubUser =
     { auPartyId = toSqlKey 99
     , auRoles = [Fan, Customer]
     , auModules = modulesForRoles [Fan, Customer]
+    , auApiTokenId = Nothing
     }

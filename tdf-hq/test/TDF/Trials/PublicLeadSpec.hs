@@ -3371,6 +3371,7 @@ adminUser =
       { auPartyId = toSqlKey 999
       , auRoles = roles
       , auModules = modulesForRoles roles
+      , auApiTokenId = Nothing
       }
 
 runPublicTrialRequestHandler

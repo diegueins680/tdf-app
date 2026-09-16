@@ -1,0 +1,12 @@
+/Users/diegosaa/GitHub/tdf-app-social-20260914/tdf-hq/tdf-hq.cabal was modified manually. Ignoring /Users/diegosaa/GitHub/tdf-app-social-20260914/tdf-hq/package.yaml in favor of the Cabal file.
+If you want to use the package.yaml file instead of the Cabal file,
+then please delete the Cabal file.
+
+social command trust boundary
+  round-trips operation, expected revision and request identity [✔]
+  rejects caller-supplied acting identity [✔]
+  rejects a fractional revision [✔]
+  preserves independent discoverability and personalization settings [✔]
+
+Finished in 0.0068 seconds
+4 examples, 0 failures

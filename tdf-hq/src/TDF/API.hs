@@ -6,6 +6,7 @@
 
 module TDF.API where
 
+import TDF.Social.API (SocialV2API)
 import           Control.Applicative ((<|>))
 import           Servant
 import           Database.Persist          (Entity)
@@ -159,6 +160,7 @@ type SocialAPI =
   :<|> "profiles" :> QueryParams "partyId" Int64 :> Get '[JSON] [SocialPartyProfileDTO]
   :<|> "profiles" :> Capture "partyId" Int64 :> Get '[JSON] SocialPartyProfileDTO
   :<|> "suggestions" :> Get '[JSON] [SuggestedFriendDTO]
+  :<|> SocialV2API
 
 type ChatAPI =
        "chat" :> "threads" :> Get '[JSON] [ChatThreadDTO]

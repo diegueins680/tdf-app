@@ -1,0 +1,11 @@
+{
+  "scope": "Local component with synthetic session/API fixtures; not authenticated E2E",
+  "checks": [
+    "default Following",
+    "keyboard tabs",
+    "explicit acceptance",
+    "390px overflow"
+  ],
+  "errors": [],
+  "accessibilityViolations": []
+}

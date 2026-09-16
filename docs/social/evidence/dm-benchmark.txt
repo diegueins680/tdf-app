@@ -1,0 +1,309 @@
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+CREATE FUNCTION
+CREATE TABLE
+CREATE FUNCTION
+ dm_measure
+------------
+
+(1 row)
+
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+UPDATE 0
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE TRIGGER
+COMMIT
+BEGIN
+NOTICE:  column "activated_once" of relation "social_v2_runtime" already exists, skipping
+ALTER TABLE
+UPDATE 0
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE TRIGGER
+COMMIT
+ dm_measure
+------------
+
+(1 row)
+
+BEGIN
+UPDATE 1
+INSERT 0 0
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 0
+INSERT 0 1
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 0
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 0
+INSERT 0 1
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 0
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 0
+INSERT 0 1
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 0
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+DO
+ROLLBACK
+PASS: 27 generated observed INSERT outcomes
+DO
+UPDATE 1
+UPDATE 1
+DO
+UPDATE 1
+                                                                         social_v2_mutate
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"muted": false, "blocked": false, "partyId": 2, "incoming": false, "revision": 1, "connected": false, "dismissed": false, "following": false, "requested": true}
+(1 row)
+
+                                                                        social_v2_mutate
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"muted": false, "blocked": false, "partyId": 1, "incoming": true, "revision": 2, "connected": true, "dismissed": false, "following": false, "requested": true}
+(1 row)
+
+ dm_measure
+------------
+
+(1 row)
+
+  label   | samples | p50_ms | p95_ms
+----------+---------+--------+--------
+ active   |      50 |  1.301 |  1.615
+ before   |      50 |  0.052 |   0.11
+ inactive |      50 |  0.487 |  0.903
+(3 rows)
+
+DO
+DO
+BEGIN
+UPDATE 1
+DO
+ROLLBACK
+BEGIN
+UPDATE 1
+DO
+ROLLBACK
+BEGIN
+ social_v2_close
+------------------
+ {"closed": true}
+(1 row)
+
+DO
+ROLLBACK
+BEGIN
+DO
+ROLLBACK
+BEGIN
+DO
+ROLLBACK
+                                                                         social_v2_mutate
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"muted": false, "blocked": true, "partyId": 2, "incoming": false, "revision": 3, "connected": false, "dismissed": false, "following": false, "requested": false}
+(1 row)
+
+DO
+                                                                          social_v2_mutate
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"muted": false, "blocked": false, "partyId": 2, "incoming": false, "revision": 4, "connected": false, "dismissed": false, "following": false, "requested": false}
+(1 row)
+
+DO
+CREATE TABLE
+INSERT 0 1
+BEGIN
+UPDATE 1
+COMMIT
+BEGIN
+NOTICE:  column "activated_once" of relation "social_v2_runtime" already exists, skipping
+ALTER TABLE
+UPDATE 0
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE TRIGGER
+COMMIT
+DO
+PASS: inactive compatibility, persistent activation, consent, both directions, participant/lifecycle denials, edit/upsert protection, both real block/send race orders, preserved-write pause and reapply

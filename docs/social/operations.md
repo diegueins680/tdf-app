@@ -1,6 +1,7 @@
 # Rollout and useful-outcome measurement
 
-All new behavior defaults off. No deployment or activation is part of this work.
+All new behavior defaults off. Deployment and activation were excluded from the
+authorized scope; an automatic-provider exception is recorded below.
 Before rollout: verify schema, authorized legacy/client compatibility, both flags,
 rollback with post-migration writes, all denied paths, media access and CI. Rehearse
 on synthetic or approved non-production data only. Never source production envs.
@@ -26,3 +27,44 @@ exposure, notification opt-outs, error/p95 latency, recommendation repeat rate,
 exposure share for top 1% vs smaller relevant artists, and cold-start coverage.
 Use existing analytics consent and retention policies; do not add contact imports,
 sensitive-trait inference, hidden transactions or private graph explanations.
+
+## Provider preview behavior observed
+
+Opening #355/#356 automatically triggered the repository's Vercel/Cloudflare
+integrations; these are provider attempts, not deployment commands issued here.
+Their result must be read from actual checks. Subsequent commits use the
+Cloudflare-specific `[CF-Pages-Skip]` prefix and branch-scoped Vercel
+`git.deploymentEnabled` exclusions for `feat/social-*` (root and UI project roots).
+GitHub verification remains enabled. Provider docs accessed 2026-09-14:
+[Cloudflare skip builds](https://developers.cloudflare.com/pages/configuration/git-integration/github-integration/),
+[Vercel Git configuration](https://vercel.com/docs/project-configuration/git-configuration)
+(updated 2026-08-25). Do not use general `[skip ci]` or disable correctness checks.
+
+## Read-only reconciliation
+
+Run `psql -X -v ON_ERROR_STOP=1 -f scripts/social/reconcile.sql` using a reviewed
+non-production or separately authorized operator connection. It reports only
+aggregate violations/backlog and labels connected-pair stock as a proxy. Investigate
+any block/closure/orphan/order violation before continuing a rollout. Drain missing
+publication references through the serialized batch function; never renumber
+existing positions or clear block/consent tombstones as a repair. The script is
+exercised in the private verification fixture; it is not production monitoring.
+
+## Deployment exception requiring owner action
+
+A later check for audit PR #355 reported **Vercel SUCCESS** at
+https://vercel.com/diego-saas-projects/tdf-app-tdf-hq-ui/8Pin2SvYAQ6UHGkpfZG2XbVPZSLP .
+This was an automatic provider integration, not a deployment command issued here.
+Its target could not be independently inspected: the existing CLI login returned
+HTTP 403. Removal is blocked by provider access. Inspect that deployment in the
+provider console, confirm its target, and remove the unintended review preview.
+Do not infer that the earlier failed provider checks describe this later result.
+Preview suppression was added to the refreshed audit branch and inherited by the
+remaining dependency stack. New production social flags were not activated.
+
+A later independently authored audit commit also has **Cloudflare Pages SUCCESS**
+at [deployment 77e2d52f](https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/77e2d52f-3869-47fb-bdd5-893667baada2),
+recorded in `evidence/current-pr-355.json`. Its target has not been inspected or
+removed by this task. The owner should inspect that target as well; the Vercel 403
+was not a Cloudflare authorization test. Our subsequent PR commits carry the
+Cloudflare-specific skip prefix, but independently authored audit commits did not.

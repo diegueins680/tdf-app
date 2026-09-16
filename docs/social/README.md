@@ -1,7 +1,10 @@
 # Social refactor — review workspace (2026-09-14)
 
 **Delivery is in progress. No rollout, merge, or production activation is authorized by this packet.**
-Baseline: `17a33eca11d585d84435af85340beece9b51d14e` (remote main verified).
+Original baseline: `17a33eca11d585d84435af85340beece9b51d14e` (remote main verified).
+The reviewed dependency now includes main `73edd77a36c8dcc73e5217303c62376ae684853b`.
+See the [handoff and acceptance status](handoff.md) for actual PRs, evidence,
+remaining work and the automatic-provider deployment exception.
 Use [audit](audit.md), [decisions](research.md), [policy](policy.md), and
 [verification](verification.md) together. Passing bounded models are not a proof of the application.
 
