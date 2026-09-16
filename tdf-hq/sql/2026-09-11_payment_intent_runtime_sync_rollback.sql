@@ -7,4 +7,7 @@ DROP TRIGGER IF EXISTS trg_commerce_sync_payment_intent_from_attempt
   ON commerce_payment_attempt;
 DROP FUNCTION IF EXISTS commerce_sync_payment_intent_from_attempt();
 
+DROP TRIGGER IF EXISTS trg_commerce_sync_payment_intent_from_refund ON commerce_refund;
+DROP FUNCTION IF EXISTS commerce_sync_payment_intent_from_refund();
+
 COMMIT;

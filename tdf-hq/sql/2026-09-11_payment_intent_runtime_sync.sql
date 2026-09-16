@@ -94,4 +94,58 @@ CREATE TRIGGER trg_commerce_sync_payment_intent_from_attempt
   FOR EACH ROW
   EXECUTE FUNCTION commerce_sync_payment_intent_from_attempt();
 
+-- Verified refund completion is a positive provider fact, unlike a transport
+-- failure. Synchronize in the same transaction, exactly once per refund row.
+CREATE OR REPLACE FUNCTION commerce_sync_payment_intent_from_refund()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  target_intent_id UUID;
+  prior_status TEXT;
+  next_status TEXT;
+BEGIN
+  IF NEW.status <> 'succeeded' OR OLD.status = 'succeeded' THEN RETURN NEW; END IF;
+  SELECT payment_intent_id INTO target_intent_id
+    FROM commerce_payment_attempt WHERE id = NEW.payment_attempt_id;
+  IF target_intent_id IS NULL THEN RETURN NEW; END IF;
+  SELECT status INTO prior_status FROM commerce_payment_intent
+    WHERE id = target_intent_id FOR UPDATE;
+  IF OLD.status <> 'processing' OR NEW.provider_refund_id IS NULL OR NEW.completed_at IS NULL
+    OR prior_status NOT IN ('captured', 'partially_captured', 'partially_refunded')
+    OR NOT EXISTS (
+      SELECT 1 FROM commerce_payment_attempt attempt
+      JOIN commerce_checkout_session checkout ON checkout.id = attempt.checkout_id
+      WHERE attempt.id = NEW.payment_attempt_id AND attempt.status = 'succeeded'
+        AND attempt.checkout_id = NEW.checkout_id AND attempt.provider = NEW.provider
+        AND attempt.environment = NEW.environment AND checkout.environment = NEW.environment
+        AND attempt.merchant_account_ref = NEW.merchant_account_ref
+        AND attempt.currency = NEW.currency
+    ) THEN
+    RAISE EXCEPTION 'Verified refund does not match its canonical payment binding' USING ERRCODE = '23514';
+  END IF;
+  UPDATE commerce_payment_intent
+    SET refunded_minor = refunded_minor + NEW.amount_minor,
+        status = CASE WHEN refunded_minor + NEW.amount_minor = captured_minor
+          THEN 'refunded' ELSE 'partially_refunded' END,
+        updated_at = NEW.updated_at
+    WHERE id = target_intent_id AND checkout_id = NEW.checkout_id
+      AND provider = NEW.provider AND currency = NEW.currency
+      AND NEW.amount_minor > 0 AND NEW.amount_minor <= captured_minor - refunded_minor
+    RETURNING status INTO next_status;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Verified refund exceeds or mismatches canonical captured balance' USING ERRCODE = '23514';
+  END IF;
+  INSERT INTO commerce_payment_state_history (
+    payment_intent_id, from_status, to_status, event_type, actor_type, correlation_id, occurred_at
+  ) VALUES (
+    target_intent_id, prior_status, next_status, 'refund_completion_verified', 'provider',
+    'refund:' || NEW.id::text, NEW.completed_at
+  );
+  RETURN NEW;
+END
+$$;
+DROP TRIGGER IF EXISTS trg_commerce_sync_payment_intent_from_refund ON commerce_refund;
+CREATE TRIGGER trg_commerce_sync_payment_intent_from_refund
+  AFTER UPDATE OF status ON commerce_refund FOR EACH ROW
+  EXECUTE FUNCTION commerce_sync_payment_intent_from_refund();
+
 COMMIT;

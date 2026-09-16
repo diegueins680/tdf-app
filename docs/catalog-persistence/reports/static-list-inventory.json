@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-16T15:07:25.993Z",
+  "generatedAt": "2026-09-16T16:41:00.529Z",
   "repositoryRoot": ".",
   "filesScanned": 1407,
   "candidateCount": 1117,
@@ -17701,7 +17701,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 363,
+      "consumerCount": 364,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -17749,10 +17749,10 @@
         "tdf-hq/sql/2026-09-07_catalog_slug_alias_integrity_revalidation.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
         "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql",
-        "tdf-hq/src/TDF/API.hs"
+        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/App.tsx",
@@ -20367,7 +20367,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 363,
+      "consumerCount": 364,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -20415,10 +20415,10 @@
         "tdf-hq/sql/2026-09-07_catalog_slug_alias_integrity_revalidation.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
         "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql",
-        "tdf-hq/src/TDF/API.hs"
+        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/App.tsx",
@@ -23727,7 +23727,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 356,
+      "consumerCount": 357,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -23775,10 +23775,10 @@
         "tdf-hq/sql/2026-09-07_catalog_slug_alias_integrity_revalidation.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
         "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql",
-        "tdf-hq/src/TDF/API.hs"
+        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/App.tsx",
@@ -32156,7 +32156,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "cpoPaymentIntents",
-      "line": 305,
+      "line": 325,
       "values": [
         "{cpiEnvironment=production, cpiCapturedMinor=7000}",
         "{cpiEnvironment=sandbox}",
@@ -32165,7 +32165,7 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        305
+        325
       ],
       "consumerCount": 7,
       "backendConsumers": [
@@ -44580,7 +44580,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 43,
+      "consumerCount": 44,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -44596,6 +44596,7 @@
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -49546,7 +49547,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 363,
+      "consumerCount": 364,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -49594,10 +49595,10 @@
         "tdf-hq/sql/2026-09-07_catalog_slug_alias_integrity_revalidation.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
         "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql",
-        "tdf-hq/src/TDF/API.hs"
+        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/App.tsx",
@@ -54882,7 +54883,7 @@
         1082,
         1184
       ],
-      "consumerCount": 171,
+      "consumerCount": 172,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -55029,6 +55030,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-payment-audit-runtime.sh",
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-phase0-migration.sh",
@@ -55325,7 +55327,7 @@
       "lines": [
         5454
       ],
-      "consumerCount": 212,
+      "consumerCount": 213,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -55482,6 +55484,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-payment-audit-runtime.sh",
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
@@ -55490,8 +55493,7 @@
         "scripts/test-social-event-optional-end-migration.sh",
         "scripts/test-studio-internship-audit-migration.sh",
         "scripts/test-unified-checkout-migration.sh",
-        "scripts/test-user-experiment-assignment-migration.sh",
-        "scripts/test-user-onboarding-progress-migration.sh"
+        "scripts/test-user-experiment-assignment-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/deploy-stripe-ticketing.sh",
@@ -56975,7 +56977,7 @@
       "lines": [
         8212
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -56992,6 +56994,7 @@
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -63228,7 +63231,7 @@
       "lines": [
         43
       ],
-      "consumerCount": 39,
+      "consumerCount": 40,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -63241,6 +63244,7 @@
         "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -74134,7 +74138,7 @@
       "lines": [
         277
       ],
-      "consumerCount": 75,
+      "consumerCount": 76,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -74213,6 +74217,7 @@
         "scripts/test-feature-migrations.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-payment-audit-runtime.sh",
         "scripts/test-social-event-optional-end-migration.sh",
         "scripts/test-unified-checkout-migration.sh",
         "scripts/test-user-experiment-assignment-migration.sh",
@@ -82734,7 +82739,7 @@
       "lines": [
         60
       ],
-      "consumerCount": 52,
+      "consumerCount": 53,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -82750,6 +82755,7 @@
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -87416,7 +87422,7 @@
       "lines": [
         206
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -87543,6 +87549,7 @@
         "scripts/test-feature-migrations.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-payment-audit-runtime.sh",
         "scripts/test-social-event-optional-end-migration.sh",
         "scripts/test-unified-checkout-migration.sh",
         "scripts/test-user-experiment-assignment-migration.sh",
@@ -107647,7 +107654,7 @@
       "lines": [
         26
       ],
-      "consumerCount": 50,
+      "consumerCount": 51,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -107663,6 +107670,7 @@
         "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -113446,7 +113454,7 @@
       "lines": [
         104
       ],
-      "consumerCount": 50,
+      "consumerCount": 51,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -113462,6 +113470,7 @@
         "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -113546,7 +113555,7 @@
       "lines": [
         120
       ],
-      "consumerCount": 59,
+      "consumerCount": 60,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -113565,6 +113574,7 @@
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -113913,7 +113923,7 @@
       "lines": [
         382
       ],
-      "consumerCount": 38,
+      "consumerCount": 39,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -113927,6 +113937,7 @@
         "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+        "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",

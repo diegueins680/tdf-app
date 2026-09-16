@@ -208,7 +208,12 @@ jobs:
             stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Build and test backend once
-        run: bash scripts/quality-backend.sh
+        env:
+          PGPASSWORD: postgres
+          TDF_PAYMENT_AUDIT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_payment_audit_test
+        run: |
+          createdb -h postgres -U postgres tdf_payment_audit_test
+          bash scripts/quality-backend.sh
 
       - name: Verify authenticated artist merch HTTP runtime
         env:
