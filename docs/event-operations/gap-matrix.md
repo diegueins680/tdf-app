@@ -144,3 +144,11 @@ fence and a strict pre-commit receipt decoder, with additive OpenAPI/web declara
 rollback, concurrent replay and post-authentication revocation. Completion API is
 implemented behind the existing flag; web helper/UI, mobile/offline and richer task
 approval/evidence/lifecycle remain missing. EO-026–028 therefore remain partial.
+
+PR 33 implements the web completion helper with strict input/receipt validation,
+captured request binding, exact integer revision arithmetic and no automatic retry.
+[Evidence](pr-33-task-completion-client.md) includes the new bounded model with four
+negative controls and synthetic-fetch transport tests. EO-026–028 remain partial:
+readiness/review UI, approvals/evidence, override/reopening, mobile and offline are
+not implemented by this increment. Parent #410 has hosted completion-PostgreSQL,
+persona-E2E and catalog-audit failures; no full-CI or real completion-browser claim.

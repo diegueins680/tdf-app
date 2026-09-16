@@ -104,6 +104,11 @@ expect_counterexample TaskRevisionReadMixed.cfg CoherentRevisionRead task-revisi
 expect_counterexample TaskRevisionReadEarly.cfg NoExpiredDisclosure task-revision-read-early TaskRevisionRead.tla
 run_tlc RaciReassignment.tla RaciReassignment.cfg raci-reassignment
 run_tlc CommandBoundary.tla CommandBoundary.cfg command-boundary
+run_tlc TaskCompletionClient.tla TaskCompletionClient.cfg task-completion-client
+expect_counterexample TaskCompletionClientCapture.cfg OriginalRequestSent completion-client-capture TaskCompletionClient.tla
+expect_counterexample TaskCompletionClientShape.cfg ValidatedReceipt completion-client-shape TaskCompletionClient.tla
+expect_counterexample TaskCompletionClientBinding.cfg ValidatedReceipt completion-client-binding TaskCompletionClient.tla
+expect_counterexample TaskCompletionClientRetry.cfg SingleDispatch completion-client-retry TaskCompletionClient.tla
 run_tlc RaciEditorContext.tla RaciEditorContext.cfg raci-editor-context
 run_tlc RaciWebEditor.tla RaciWebEditor.cfg raci-web-editor
 expect_counterexample RaciWebEditorConsent.cfg ExplicitConfirmation raci-web-consent RaciWebEditor.tla

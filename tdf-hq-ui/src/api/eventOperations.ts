@@ -11,6 +11,8 @@ export type EventOperationTaskWithRevision = components['schemas']['EventOperati
 export type EventRaciReassignmentCommand = components['schemas']['EventRaciReassignmentCommand'];
 export type EventRaciReassignmentOutcome = components['schemas']['EventRaciReassignmentOutcome'];
 export type EventRaciEditorContext = components['schemas']['EventRaciEditorContext'];
+export type EventTaskCompletionCommand = components['schemas']['EventTaskCompletionCommand'];
+export type EventTaskCompletionOutcome = components['schemas']['EventTaskCompletionOutcome'];
 
 const safeInteger = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const taskSchema: z.ZodType<EventOperationTask> = z.object({
@@ -54,6 +56,14 @@ const raciCommandSchema: z.ZodType<EventRaciReassignmentCommand> = z.object({
   fromPartyId: safeInteger, toPartyId: safeInteger,
   reason: commandText(2000), correlationId: commandText(200),
 }).strict().refine(value => value.fromPartyId !== value.toPartyId);
+const completionCommandSchema: z.ZodType<EventTaskCompletionCommand> = z.object({
+  expectedRevision: revisionSchema, reason: commandText(2000), correlationId: commandText(200),
+}).strict();
+const completionOutcomeSchema: z.ZodType<EventTaskCompletionOutcome> = z.object({
+  eventId: safeInteger, activityId: safeInteger, commandId: commandKeySchema,
+  status: z.literal('completed'), activityVersion: z.number().int().min(2).max(2147483647),
+  aggregateRevision: revisionSchema, replayed: z.boolean(),
+}).strict();
 const raciOutcomeSchema: z.ZodType<EventRaciReassignmentOutcome> = z.object({
   eventId: safeInteger, activityId: safeInteger, commandId: commandKeySchema,
   role: raciRoleSchema, fromPartyId: safeInteger, toPartyId: safeInteger,
@@ -89,6 +99,29 @@ const eventPath = (eventId: number) =>
   `/event-operations/events/${encodeURIComponent(String(eventId))}`;
 
 export const EventOperations = {
+  completeTask: (eventId: number, activityId: number, commandId: string, command: EventTaskCompletionCommand,
+    context?: { apiToken?: string; signal?: AbortSignal }): Promise<EventTaskCompletionOutcome> => {
+    const path = `${taskPath(eventId, activityId)}/complete`;
+    const request = completionCommandSchema.safeParse(command);
+    if (!commandKeySchema.safeParse(commandId).success || !request.success) {
+      throw new Error('La solicitud de finalización no es válida.');
+    }
+    // Zod's fresh scalar object keeps in-flight binding independent of caller edits.
+    const captured = request.data;
+    return post<unknown>(path, captured, {
+      cache: 'no-store', headers: { 'Idempotency-Key': commandId,
+        ...(context?.apiToken ? { Authorization: `Bearer ${context.apiToken}` } : {}) },
+      ...(context?.signal ? { signal: context.signal } : {}),
+    }).then(raw => {
+      const result = completionOutcomeSchema.safeParse(raw);
+      if (!result.success || result.data.eventId !== eventId || result.data.activityId !== activityId
+        || result.data.commandId.toLowerCase() !== commandId.toLowerCase()
+        || BigInt(result.data.aggregateRevision) !== BigInt(captured.expectedRevision) + 1n) {
+        throw new Error('La respuesta de finalización no es válida. Conserva la solicitud original para verificarla.');
+      }
+      return result.data;
+    });
+  },
   raciEditorContext: (eventId: number, activityId: number, afterPartyId = 0,
     context?: { apiToken?: string; signal?: AbortSignal }): Promise<EventRaciEditorContext> => {
     const path = `${taskPath(eventId, activityId)}/raci/context`;

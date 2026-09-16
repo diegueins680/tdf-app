@@ -232,3 +232,10 @@ validation and additive OpenAPI/generated web declarations ([evidence](pr-32-tas
 Next dependent increment: explicit request-capturing web client with target/revision
 validation, then scoped completion review/readiness UX. No UI should infer write
 authority from task visibility, cached RACI or a revision token.
+
+PR 33 adds only the request-capturing completion client, strict receipt binding and
+single-dispatch transport, after its new finite model and four negative controls
+passed ([contract](task-completion-client-contract.md), [evidence](pr-33-task-completion-client.md)).
+Next: resolve inherited hosted verification failures and specify scoped completion
+readiness/review before adding any UI control. The helper is not a capability,
+offline queue, consent flow or guarantee that a rejected response rolled back.

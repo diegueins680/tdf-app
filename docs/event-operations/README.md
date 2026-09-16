@@ -1,5 +1,7 @@
 # Event operations specification index
 
+- [Captured completion client contract](task-completion-client-contract.md)
+- [Draft PR 33: validated task completion client](pr-33-task-completion-client.md)
 - [Authenticated completion contract](task-completion-api-contract.md)
 - [Draft PR 32: authenticated preparation-task completion API](pr-32-task-completion-api.md)
 
