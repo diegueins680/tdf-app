@@ -274,3 +274,38 @@ distinction. The initial child model job failed on PostgreSQL container startup,
 not a formal invariant; the retained failure and readiness repair are documented.
 No missing high-degree DM benchmark, native journey, migration rollout lock duration
 or outstanding overall criterion is marked passed by these focused results.
+
+## Verified profile continuation — 2026-09-15
+
+[Draft #397](https://github.com/diegueins680/tdf-app/pull/397), base #390, implements
+both profile read boundaries. Implementation `7706258a9e8ecbe0b99b4fd23903df606848ad03`;
+final model/evidence head `7c452efcbc7b45e797b7ebd590dfffccf0fc9751`. No merge or
+new production activation. Local results: TLC 5,760 distinct states and three
+intended counterexamples; 2,880 generated PostgreSQL outcomes; 104 HTTP examples;
+2,542 Stack examples; complete-schema PG17 migration/reapply/pause; catalog audit;
+all passed. Synthetic protected SQL p95 12.11–43.76ms passed the declared 50ms
+threshold after the scalar version failed at 76.33ms. No production-scale claim.
+
+[Social CI](https://github.com/diegueins680/tdf-app/actions/runs/35056386037) and
+[full CI](https://github.com/diegueins680/tdf-app/actions/runs/35056386064) are running
+at the final profile head; the [snapshot](evidence/profile-ci/initial-final-head-checks.json)
+is not a completed result. #390 full CI35052835558 still reports its backend
+build/test step in progress, so it too remains unqualified remotely. Do not cancel
+these runs by pushing evidence changes to their implementation branches. Inspect
+the final statuses/logs and append exact-SHA results in this verification branch.
+
+Remaining implementation work is **incomplete**, not an unavailable-tool excuse:
+`socialListFollowers`, `socialListFollowing`, `socialListFriends` still load legacy
+edges/names without canonical exclusion; `socialListSuggestedFriends` traverses
+unbounded second-degree edges and exposes counts before privacy filtering. Those
+are the next bounded compatibility repair. Legacy add-friend/vCard writers can
+manufacture mutual follows and need a consent-preserving compatibility design,
+though canonical DM no longer accepts those edges as consent. Broader search,
+notifications/media, entity delegation, moderation/lifecycle integration, native
+journeys and outcome instrumentation remain unfinished. Rollout stays blocked.
+
+The supplemental test-inclusive web TypeScript failure is confirmed pre-existing:
+parent/candidate diagnostics match byte-for-byte (134 lines); evidence commit
+`029dd5382` in #394. Application-only typecheck and focused client tests passed.
+Prior automatic provider deployment exceptions remain unresolved; no deployment
+command was issued in this continuation.
