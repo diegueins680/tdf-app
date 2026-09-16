@@ -22,3 +22,6 @@ booking, releases, event and media authorities. No graph service is proposed.
 
 Legacy chat enforcement: [write boundary](dm-write-boundary.md),
 [read/API boundary](dm-read-boundary.md), and [session authority](session-boundary.md).
+
+Explicit legacy relationship APIs: [write retirement and transaction boundary](legacy-write-boundary.md).
+Fan-club auto-follow remains a separate activation blocker recorded there.

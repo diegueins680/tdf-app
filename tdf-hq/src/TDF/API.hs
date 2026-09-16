@@ -7,7 +7,7 @@
 module TDF.API where
 
 import qualified TDF.API.Chat as Chat
-import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI)
+import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
 import TDF.API.SocialProfiles (ProfileListAPI, ProfileGetAPI)
 import TDF.Social.API (SocialV2API)
 import           Control.Applicative ((<|>))
@@ -156,10 +156,10 @@ type PartyAPI =
 type SocialAPI =
        FollowersAPI
   :<|> FollowingAPI
-  :<|> "vcard-exchange" :> ReqBody '[JSON] VCardExchangeRequest :> Post '[JSON] [PartyFollowDTO]
+  :<|> VCardAPI
   :<|> FriendsAPI
-  :<|> "friends" :> Capture "partyId" Int64 :> Post '[JSON] [PartyFollowDTO]
-  :<|> "friends" :> Capture "partyId" Int64 :> Delete '[JSON] NoContent
+  :<|> AddFriendAPI
+  :<|> RemoveFriendAPI
   :<|> ProfileListAPI
   :<|> ProfileGetAPI
   :<|> SuggestionsAPI

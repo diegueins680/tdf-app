@@ -13,6 +13,7 @@ module TDF.Server where
 
 import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.Social.RelationshipReads as SocialReads
+import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
 import TDF.Social.Server (socialV2Server)
 import           Control.Applicative ((<|>))
@@ -8492,78 +8493,13 @@ socialListSuggestedFriends user = do
           ]
 
 socialAddFriend :: AuthedUser -> Int64 -> AppM [PartyFollowDTO]
-socialAddFriend user targetId = do
-  let followerKey = auPartyId user
-  targetKey <- runDB (resolveSocialTargetPartyId targetId) >>= either throwError pure
-  when (followerKey == targetKey) $
-    throwBadRequest "No puedes agregarte como amigo"
-  now <- liftIO getCurrentTime
-  runDB $ do
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = followerKey
-      , partyFollowFollowingPartyId = targetKey
-      , partyFollowViaNfc           = False
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. False ]
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = targetKey
-      , partyFollowFollowingPartyId = followerKey
-      , partyFollowViaNfc           = False
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. False ]
-    rows <- selectList
-      [ PartyFollowFollowerPartyId ==. followerKey
-      , PartyFollowFollowingPartyId ==. targetKey
-      ] []
-    partyFollowEntitiesToDTO rows
+socialAddFriend = SocialWrites.addFriend
 
 socialRemoveFriend :: AuthedUser -> Int64 -> AppM NoContent
-socialRemoveFriend user targetId = do
-  when (targetId <= 0) $ throwBadRequest "Invalid party id"
-  let followerKey = auPartyId user
-      targetKey   = toSqlKey targetId :: PartyId
-  when (followerKey == targetKey) $
-    throwBadRequest "No puedes eliminarte como amigo"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    deleteBy (UniquePartyFollow followerKey targetKey)
-    deleteBy (UniquePartyFollow targetKey followerKey)
-  pure NoContent
+socialRemoveFriend = SocialWrites.removeFriend
 
 vcardExchange :: AuthedUser -> VCardExchangeRequest -> AppM [PartyFollowDTO]
-vcardExchange user VCardExchangeRequest{..} = do
-  let followerKey = auPartyId user
-  targetKey <- runDB (resolveSocialTargetPartyId vcerPartyId) >>= either throwError pure
-  when (followerKey == targetKey) $
-    throwBadRequest "No puedes compartir tu vCard contigo mismo"
-  now <- liftIO getCurrentTime
-  runDB $ do
-    -- Create mutual follows; mark as NFC-sourced.
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = followerKey
-      , partyFollowFollowingPartyId = targetKey
-      , partyFollowViaNfc           = True
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. True ]
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = targetKey
-      , partyFollowFollowingPartyId = followerKey
-      , partyFollowViaNfc           = True
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. True ]
-    rowsAB <- selectList
-      [ PartyFollowFollowerPartyId ==. followerKey
-      , PartyFollowFollowingPartyId ==. targetKey
-      ] [Desc PartyFollowCreatedAt]
-    rowsBA <- selectList
-      [ PartyFollowFollowerPartyId ==. targetKey
-      , PartyFollowFollowingPartyId ==. followerKey
-      ] [Desc PartyFollowCreatedAt]
-    partyFollowEntitiesToDTO (rowsAB ++ rowsBA)
+vcardExchange = SocialWrites.exchangeVCard
 
 resolveSocialTargetPartyId :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
 resolveSocialTargetPartyId rawPartyId =

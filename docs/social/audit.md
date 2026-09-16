@@ -86,3 +86,22 @@ The historical mutual-follow list is retained as history, not accepted connectio
 consent. [Evidence, policy and migration packet](relationship-read-boundary.md).
 Legacy friend/vCard mutations and their returned identity DTOs remain the next
 unrepaired boundary. Unpaginated historical lists remain a scaling limitation.
+
+
+## Follow-up finding: fan-club fanout — 2026-09-16
+
+A source search for all `PartyFollow` writes found `Server.fanFollowArtist` beside
+the three explicit friend/vCard operations. The artist-follow transaction creates
+FanClubMemberProfile and calls `insertUnique PartyFollow` in **both directions** for
+all existing club members; it also creates artist-follower notifications. Neither
+shared membership nor an artist follow constitutes those members' consent. This is
+historical graph fanout, distinct from the canonical V2 pair table and from
+`chatOpenThread`, which only reads legacy mutual edges in its compatibility stage.
+
+**Repair, next priority / rollout blocker:** qualify membership and notification
+policy and retire automatic member-to-member follows at cutover while preserving
+FanFollow artist subscription and established artist notification contracts. Bound
+work for large clubs; test privacy, token revocation, stale membership and retry
+behavior. Do not backfill these edges as canonical consent or delete history in a
+reversible migration. The [explicit legacy-write adapter](legacy-write-boundary.md)
+does not cover this side effect; no whole-platform completion is claimed.

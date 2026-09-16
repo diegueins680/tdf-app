@@ -86,6 +86,16 @@ jobs:
           java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/relationship-read-states -dump dot,actionlabels /tmp/relationship-read-traces.dot -config formal/social/RelationshipReads.cfg formal/social/RelationshipReads.tla
           python3 scripts/social/generate-relationship-read-cases.py /tmp/relationship-read-traces.dot /tmp/relationship-read-model-cases.sql
           diff -u scripts/social/relationship-read-model-cases.sql /tmp/relationship-read-model-cases.sql
+      - name: Legacy write locks, retirement, progress and counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/legacy-write-model-results
+        run: bash scripts/social/check-legacy-writes-model.sh
+      - name: Regenerate observed legacy write effects
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/legacy-write-states -dump dot,actionlabels /tmp/legacy-write-traces.dot -config formal/social/LegacyWrites.cfg formal/social/LegacyWrites.tla
+          python3 scripts/social/generate-legacy-write-cases.py /tmp/legacy-write-traces.dot /tmp/LegacyWriteModelCases.hs
+          diff -u scripts/social/LegacyWriteModelCases.hs /tmp/LegacyWriteModelCases.hs
       - name: PostgreSQL refinement of DM read observations
         env:
           TDF_SOCIAL_CHAT_SQL_ONLY: '1'
@@ -112,6 +122,7 @@ jobs:
             /tmp/dm-read-model-results/*.txt
             /tmp/profile-read-model-results/*.txt
             /tmp/relationship-read-model-results/*.txt
+            /tmp/legacy-write-model-results/*.txt
   social-client:
     runs-on: ubuntu-latest
     timeout-minutes: 15
