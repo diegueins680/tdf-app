@@ -43,6 +43,8 @@ import           TDF.Commerce.CheckoutStore
   , checkoutEnvironmentText
   , paymentProviderText
   )
+import qualified TDF.Commerce.PaymentIntentStore as Intent
+import           TDF.Commerce.StateMachine (PaymentEvent(..))
 
 newtype RefundReference = RefundReference
   { refundReferenceId :: Text
@@ -339,7 +341,7 @@ recordRefundFailure refundRef failureCode now =
 recordVerifiedRefund
   :: VerifiedRefund
   -> SqlPersistT IO (Either Text Bool)
-recordVerifiedRefund VerifiedRefund{..}
+recordVerifiedRefund verified@VerifiedRefund{..}
   | not (validProviderReference vrProviderRefund) =
       pure (Left "Verified provider refund ID is invalid")
   | vrAmountMinor <= 0 = pure (Left "Verified refund amount must be positive")
@@ -360,32 +362,97 @@ recordVerifiedRefund VerifiedRefund{..}
           | maybe False (/= vrProviderRefund) (rrProviderRefundId record) ->
               pure (Left "Provider refund ID conflicts with existing evidence")
           | otherwise -> do
-              rawExecute
-                "UPDATE commerce_refund SET status = 'succeeded', provider_refund_id = ?,\
-                \ failure_code = NULL, failure_summary = NULL, completed_at = ?, updated_at = ?\
-                \ WHERE id = ?::uuid"
-                [ PersistText vrProviderRefund
-                , PersistUTCTime vrOccurredAt
-                , PersistUTCTime vrOccurredAt
-                , PersistText (refundReferenceId vrRefund)
-                ]
-              rawExecute
-                "UPDATE commerce_checkout_session\
-                \ SET refunded_minor = refunded_minor + ?,\
-                \ status = CASE WHEN refunded_minor + ? = paid_minor\
-                \   THEN 'refunded' ELSE 'partially_refunded' END,\
-                \ updated_at = ? WHERE id = ?::uuid"
-                [ PersistInt64 vrAmountMinor
-                , PersistInt64 vrAmountMinor
-                , PersistUTCTime vrOccurredAt
-                , PersistText (checkoutReferenceId (rrCheckout record))
-                ]
-              postRefundLedger record vrProviderRefund vrOccurredAt vrCorrelationId
-              ensureCreditNote record vrProviderRefund vrOccurredAt
-              insertRefundAudit record vrOccurredAt vrCorrelationId
-              pure (Right True)
+              canonical <- advanceCanonicalRefund record verified
+              case canonical of
+                Left problem -> pure (Left problem)
+                Right () -> do
+                  -- No recoverable Left follows the intent mutation. SQL failures
+                  -- must escape and roll back the entire caller-owned transaction.
+                  rawExecute
+                    "UPDATE commerce_refund SET status = 'succeeded', provider_refund_id = ?,\
+                    \ failure_code = NULL, failure_summary = NULL, completed_at = ?, updated_at = ?\
+                    \ WHERE id = ?::uuid"
+                    [ PersistText vrProviderRefund
+                    , PersistUTCTime vrOccurredAt
+                    , PersistUTCTime vrOccurredAt
+                    , PersistText (refundReferenceId vrRefund)
+                    ]
+                  rawExecute
+                    "UPDATE commerce_checkout_session\
+                    \ SET refunded_minor = refunded_minor + ?,\
+                    \ status = CASE WHEN refunded_minor + ? = paid_minor\
+                    \   THEN 'refunded' ELSE 'partially_refunded' END,\
+                    \ updated_at = ? WHERE id = ?::uuid"
+                    [ PersistInt64 vrAmountMinor
+                    , PersistInt64 vrAmountMinor
+                    , PersistUTCTime vrOccurredAt
+                    , PersistText (checkoutReferenceId (rrCheckout record))
+                    ]
+                  postRefundLedger record vrProviderRefund vrOccurredAt vrCorrelationId
+                  ensureCreditNote record vrProviderRefund vrOccurredAt
+                  insertRefundAudit record vrOccurredAt vrCorrelationId
+                  pure (Right True)
         [] -> pure (Left "Refund was not found")
         _ -> pure (Left "Refund lookup was ambiguous")
+
+-- Lock the checkout before its intent, matching capture's financial lock order.
+-- Exact aggregate checks deliberately refuse historical projection drift: a
+-- verified new refund is not authority to reinterpret older refunds or disputes.
+-- Legacy NULL intent links stay NULL; explicit backfill belongs to a separate review.
+advanceCanonicalRefund :: RefundRecord -> VerifiedRefund -> SqlPersistT IO (Either Text ())
+advanceCanonicalRefund record VerifiedRefund{..} = do
+  bindings <- rawSql
+    "SELECT attempt.payment_intent_id::text,checkout.paid_minor,checkout.refunded_minor\
+    \ FROM commerce_checkout_session checkout\
+    \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=checkout.id\
+    \ WHERE checkout.id=?::uuid AND attempt.id=?::uuid AND attempt.status='succeeded'\
+    \ AND attempt.provider=? AND attempt.environment=? AND attempt.merchant_account_ref=?\
+    \ AND attempt.currency=? AND checkout.currency=attempt.currency\
+    \ AND checkout.environment=attempt.environment\
+    \ AND checkout.status IN ('paid','partially_refunded')\
+    \ FOR UPDATE OF checkout,attempt"
+    [ PersistText (checkoutReferenceId (rrCheckout record))
+    , PersistText (paymentAttemptReferenceId (rrPaymentAttempt record))
+    , PersistText (rrProvider record), PersistText (rrEnvironment record)
+    , PersistText (rrMerchantRef record), PersistText (rrCurrency record)
+    ] :: SqlPersistT IO [(Single (Maybe Text), Single Int64, Single Int64)]
+  case bindings of
+    [(Single intentId, Single paid, Single refunded)] -> do
+      -- Use a fresh READ COMMITTED statement after acquiring the lock. A scalar
+      -- subquery in the waiting lock statement can retain the pre-wait snapshot.
+      totals <- rawSql
+        "SELECT COALESCE(SUM(amount_minor),0)=? FROM commerce_refund\
+        \ WHERE checkout_id=?::uuid AND status='succeeded'"
+        [PersistInt64 refunded, PersistText (checkoutReferenceId (rrCheckout record))]
+        :: SqlPersistT IO [Single Bool]
+      if totals /= [Single True]
+        then pure (Left "Refund checkout totals require reconciliation")
+        else case validateRefundAmount paid refunded 0 vrAmountMinor (rrCurrency record) vrCurrency of
+          Left problem -> pure (Left problem)
+          Right () -> case intentId of
+            Nothing -> pure (Right ())
+            Just value -> advance value
+    _ -> pure (Left "Refund checkout evidence requires reconciliation")
+  where
+    advance intentId = do
+      matching <- rawSql
+        "SELECT intent.id::text FROM commerce_payment_intent intent\
+        \ JOIN commerce_payment_attempt attempt ON attempt.payment_intent_id=intent.id\
+        \ WHERE intent.id=?::uuid AND attempt.id=?::uuid\
+        \ AND intent.checkout_id=attempt.checkout_id AND intent.provider=attempt.provider\
+        \ AND intent.amount_minor=attempt.amount_minor AND intent.currency=attempt.currency\
+        \ AND intent.captured_minor=attempt.amount_minor\
+        \ AND intent.refunded_minor=(SELECT COALESCE(SUM(amount_minor),0)\
+        \ FROM commerce_refund WHERE payment_attempt_id=attempt.id AND status='succeeded')\
+        \ FOR UPDATE OF intent"
+        [ PersistText intentId
+        , PersistText (paymentAttemptReferenceId (rrPaymentAttempt record))
+        ] :: SqlPersistT IO [Single Text]
+      case matching of
+        [_] -> fmap (fmap (const ())) $ Intent.transitionPaymentIntent
+          (Intent.PaymentIntentReference intentId) (PaymentRefundVerified vrAmountMinor)
+          "provider" vrCorrelationId vrOccurredAt
+        _ -> pure (Left "Refund canonical intent evidence requires reconciliation")
 
 loadRefund
   :: RefundReference

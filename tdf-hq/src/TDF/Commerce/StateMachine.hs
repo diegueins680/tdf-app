@@ -256,7 +256,9 @@ voidAuthorization lifecycle amount
 refund :: PaymentLifecycle -> Int64 -> Either Text PaymentLifecycle
 refund lifecycle amount
   | amount <= 0 = Left "Refund amount must be positive"
-  | newRefunded > paymentCapturedMinor lifecycle = Left "Refund exceeds the captured balance"
+  | paymentRefundedMinor lifecycle < 0 = Left "Stored refunded balance must not be negative"
+  | toInteger (paymentRefundedMinor lifecycle) + toInteger amount
+      > toInteger (paymentCapturedMinor lifecycle) = Left "Refund exceeds the captured balance"
   | otherwise = Right lifecycle
       { paymentState = if newRefunded == paymentCapturedMinor lifecycle
           then PaymentRefunded
