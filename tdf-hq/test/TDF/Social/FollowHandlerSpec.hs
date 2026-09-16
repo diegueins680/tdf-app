@@ -5,7 +5,7 @@ module TDF.Social.FollowHandlerSpec (spec) where
 import Control.Concurrent (newEmptyMVar, putMVar, takeMVar, threadDelay, tryPutMVar)
 import Control.Concurrent.Async (wait, withAsync)
 import Control.Exception (finally)
-import Control.Monad (void)
+import Control.Monad (forM_, void)
 import qualified Data.ByteString.Char8 as BS8
 import Database.Persist.Postgresql (createPostgresqlPool)
 import System.Environment (lookupEnv)
@@ -1674,6 +1674,47 @@ spec = describe "social event handler helpers" $ do
                     fmap eventInvitationToPartyId stored `shouldBe` Just (Just "3")
                     fmap eventInvitationStatus stored `shouldBe` Just (Just "pending"))
                 `finally` void (tryPutMVar release ())
+            -- The same event lock must cover creation authority through insert,
+            -- for both transfer and removal of the organizer.
+            forM_ [Just "3", Nothing] $ \nextOrganizer -> do
+                runSqlPool (rawExecute "UPDATE social_event SET organizer_party_id = '1' WHERE id = 43" []) pool
+                before <- runSqlPool (count [EventInvitationEventId ==. eventKey]) pool
+                ownerLocked <- newEmptyMVar
+                releaseOwner <- newEmptyMVar
+                let changeOwner = runSqlPool (do
+                        rawExecute "UPDATE social_event SET organizer_party_id = ? WHERE id = 43"
+                            [toPersistValue (nextOrganizer :: Maybe T.Text)]
+                        liftIO (putMVar ownerLocked ())
+                        liftIO (takeMVar releaseOwner)) pool
+                    create = runHandler $ runReaderT
+                        (socialEventInvitationCreateHandlerFor (socialEventUser 1) "43"
+                            (invitationCreatePayload Nothing)) env
+                    awaitEventLock :: Int -> IO ()
+                    awaitEventLock 0 = expectationFailure "Invitation creator did not wait on event authority lock"
+                    awaitEventLock attempts = do
+                        rows <- runSqlPool (rawSql "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%social_event%'" [] :: SqlPersistT IO [Single Int64]) pool
+                        case rows of
+                            [Single n] | n > 0 -> pure ()
+                            _ -> threadDelay 10000 >> awaitEventLock (attempts - 1)
+                withAsync changeOwner $ \owner ->
+                    (do
+                        takeMVar ownerLocked
+                        withAsync create $ \creator -> do
+                            awaitEventLock 500
+                            putMVar releaseOwner ()
+                            wait owner
+                            result <- wait creator
+                            case result of
+                                Left err -> errHTTPCode err `shouldBe` 403
+                                Right value -> expectationFailure ("Former organizer created invitation: " <> show value)
+                        after <- runSqlPool (count [EventInvitationEventId ==. eventKey]) pool
+                        after `shouldBe` before)
+                    `finally` void (tryPutMVar releaseOwner ())
+            runSqlPool (rawExecute "UPDATE social_event SET organizer_party_id = '1' WHERE id = 43" []) pool
+            accepted <- runHandler $ runReaderT
+                (socialEventInvitationCreateHandlerFor (socialEventUser 1) "43"
+                    (invitationCreatePayload Nothing)) env
+            fmap invitationStatus accepted `shouldBe` Right (Just "pending")
 
     it "revalidates invitation recipients and terminal status at the update boundary" $ do
         now <- getCurrentTime

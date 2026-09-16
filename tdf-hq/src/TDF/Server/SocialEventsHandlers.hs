@@ -3670,10 +3670,6 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
-        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        unless (hasStrictAdminAccess user || isEventManager currentPartyId eventRow) $
-            throwError err403{errBody = "Only the event organizer can create invitations"}
         toParty <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
         fromParty <-
             either
@@ -3683,21 +3679,27 @@ socialEventsServer user =
         statusVal <- either throwError pure (validateInvitationStatusInput (invitationStatus dto))
         when (statusVal /= "pending") $
             throwError err400{errBody = "New invitations must have pending status"}
-        key <-
-            liftIO $
-                runSqlPool
-                    ( insert
-                        EventInvitation
-                            { eventInvitationEventId = eventKey
-                            , eventInvitationFromPartyId = Just fromParty
-                            , eventInvitationToPartyId = Just toParty
-                            , eventInvitationStatus = Just statusVal
-                            , eventInvitationMessage = invitationMessage dto
-                            , eventInvitationCreatedAt = now
-                            , eventInvitationUpdatedAt = now
-                            }
-                    )
-                    envPool
+        result <- liftIO $ runSqlPool (do
+            backendName <- T.toCaseFold <$> getRDBMS
+            when ("sqlite" `T.isInfixOf` backendName) $
+                rawExecute "UPDATE social_event SET id = id WHERE id = ?" [toPersistValue eventKey]
+            mEvent <- lockSocialEventForMutation eventKey
+            case mEvent of
+                Nothing -> pure (Left err404{errBody = "Event not found"})
+                Just (Entity _ eventRow)
+                    | not (hasStrictAdminAccess user || isEventManager currentPartyId eventRow) ->
+                        pure (Left err403{errBody = "Only the event organizer can create invitations"})
+                    | otherwise -> Right <$> insert EventInvitation
+                        { eventInvitationEventId = eventKey
+                        , eventInvitationFromPartyId = Just fromParty
+                        , eventInvitationToPartyId = Just toParty
+                        , eventInvitationStatus = Just statusVal
+                        , eventInvitationMessage = invitationMessage dto
+                        , eventInvitationCreatedAt = now
+                        , eventInvitationUpdatedAt = now
+                        }
+            ) envPool
+        key <- either throwError pure result
         pure
             InvitationDTO
                 { invitationId = Just (renderKeyText key)
@@ -6588,6 +6590,17 @@ socialEventsServer user =
         activityKey <- parseKeyOr400 "logistics activity" activityIdStr
         _ <- requireLogisticsActivity envPool eventKey activityKey
         liftIO $ runSqlPool (do
+            -- Opt-in foundation guards must inspect incoming edges before this
+            -- legacy cleanup removes them. Keep its event fence through commit.
+            backendName <- T.toCaseFold <$> getRDBMS
+            when ("postgres" `T.isInfixOf` backendName) $ do
+                installed <- (rawSql
+                    "SELECT to_regprocedure('event_operation_assert_task_deletable(bigint)') IS NOT NULL AND EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'event_logistics_activity'::regclass AND tgname = 'event_operation_00_task_lock' AND tgenabled <> 'D')"
+                    [] :: SqlPersistT IO [Single Bool])
+                when (installed == [Single True]) $ do
+                    _ <- (rawSql "SELECT event_operation_assert_task_deletable(?) IS NULL"
+                        [toPersistValue activityKey] :: SqlPersistT IO [Single Bool])
+                    pure ()
             deleteWhere [EventLogisticsAlertDeliveryActivityId ==. activityKey]
             deleteWhere [EventRouteVerificationActivityId ==. activityKey]
             deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
