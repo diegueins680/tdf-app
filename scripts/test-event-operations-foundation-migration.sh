@@ -43,7 +43,21 @@ apply_sql "$fixture_sql"
 apply_sql "$up_migration"
 # Rehearse upgrading an already installed restrictive fence FK.
 psql_exec -c 'ALTER TABLE event_operation_task_write_fence DROP CONSTRAINT event_operation_task_write_fence_event_id_fkey; ALTER TABLE event_operation_task_write_fence ADD CONSTRAINT event_operation_task_write_fence_event_id_fkey FOREIGN KEY(event_id) REFERENCES social_event(id) ON DELETE RESTRICT;' >/dev/null
+# Rehearse upgrading the old accepted/revoked exclusivity check too.
+psql_exec -c 'ALTER TABLE event_invitation_security DROP CONSTRAINT event_invitation_security_terminal_check; ALTER TABLE event_invitation_security ADD CONSTRAINT event_invitation_security_terminal_check CHECK (consumed_at IS NULL OR revoked_at IS NULL);' >/dev/null
 apply_sql "$up_migration"
+assert_history_truncate_denied() {
+  for history_table in event_operation_revision event_operation_command_receipt event_operation_audit_event event_operation_transition event_operation_task_override; do
+    history_count=$(psql_exec -qAt -c "SELECT count(*) FROM $history_table;")
+    if truncate_result=$(psql_exec -v VERBOSITY=verbose -c "TRUNCATE $history_table CASCADE;" 2>&1); then
+      echo "expected TRUNCATE rejection for $history_table" >&2
+      exit 1
+    fi
+    case "$truncate_result" in *55000*append-only*) ;; *) echo 'unexpected TRUNCATE failure' >&2; exit 1;; esac
+    test "$(psql_exec -qAt -c "SELECT count(*) FROM $history_table;")" = "$history_count"
+  done
+}
+assert_history_truncate_denied
 assert_unprotected_event_deletion() {
   psql_exec -c "BEGIN;
     INSERT INTO social_event(id) VALUES ($1);
@@ -318,7 +332,17 @@ test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_raci_assignment 
   echo "Observed concurrent RACI removal passed at $isolation"
 done
 
+# Accepted tokens may subsequently be revoked without erasing consumption.
+psql_exec -c "UPDATE event_invitation_security SET consumed_at=clock_timestamp() WHERE event_invitation_id=50; UPDATE event_invitation_security SET revoked_at=clock_timestamp() WHERE event_invitation_id=50;" >/dev/null
+test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_invitation_security WHERE event_invitation_id=50 AND consumed_at IS NOT NULL AND revoked_at >= consumed_at;')" = 1
+if psql_exec -c "UPDATE event_invitation_security SET revoked_at=consumed_at-interval '1 second' WHERE event_invitation_id=50;" >/dev/null 2>&1; then
+  echo 'expected revocation before consumption to be rejected' >&2
+  exit 1
+fi
+assert_history_truncate_denied
+
 apply_sql "$rollback_migration"
+assert_history_truncate_denied
 assert_unprotected_event_deletion 21 210
 preserved_audit=$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_audit_event;')
 test "$preserved_audit" = "1"
@@ -331,4 +355,6 @@ if psql_exec -c 'INSERT INTO event_logistics_dependency(activity_id,depends_on_a
   exit 1
 fi
 
+assert_history_truncate_denied
+test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_invitation_security WHERE event_invitation_id=50 AND consumed_at IS NOT NULL AND revoked_at >= consumed_at;')" = 1
 echo "Event operations foundation migration passed apply, idempotency, lifecycle mapping, ownership issue, timezone, RACI, sequential/concurrent DAG, completion override/post-completion dependency, expiry/attributed replacement, observed concurrent RACI removal, invitation token, immutable audit, rollback, and reapply checks."

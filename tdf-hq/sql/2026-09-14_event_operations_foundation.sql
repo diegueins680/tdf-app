@@ -372,10 +372,19 @@ CREATE TABLE IF NOT EXISTS event_invitation_security (
   CONSTRAINT event_invitation_security_scopes_check CHECK (cardinality(invited_scopes) > 0),
   CONSTRAINT event_invitation_security_expiry_check CHECK (expires_at > created_at),
   CONSTRAINT event_invitation_security_terminal_check CHECK (
-    consumed_at IS NULL OR revoked_at IS NULL
+    consumed_at IS NULL OR revoked_at IS NULL OR revoked_at >= consumed_at
   ),
   CONSTRAINT event_invitation_security_version_check CHECK (status_version > 0)
 );
+
+-- Acceptance history survives a later revocation. Upgrade installations whose
+-- earlier mutually-exclusive terminal check rejected this documented lifecycle.
+ALTER TABLE event_invitation_security
+  DROP CONSTRAINT IF EXISTS event_invitation_security_terminal_check;
+ALTER TABLE event_invitation_security
+  ADD CONSTRAINT event_invitation_security_terminal_check CHECK (
+    consumed_at IS NULL OR revoked_at IS NULL OR revoked_at >= consumed_at
+  );
 
 CREATE TABLE IF NOT EXISTS event_operation_task_policy (
   activity_id BIGINT PRIMARY KEY REFERENCES event_logistics_activity(id) ON DELETE CASCADE,
@@ -464,6 +473,21 @@ DROP TRIGGER IF EXISTS event_operation_task_override_immutable ON event_operatio
 CREATE TRIGGER event_operation_task_override_immutable
   BEFORE UPDATE OR DELETE ON event_operation_task_override
   FOR EACH ROW EXECUTE FUNCTION event_operation_reject_history_mutation();
+
+-- Row triggers do not fire for TRUNCATE, including on empty history tables.
+DO $$
+DECLARE history_table TEXT;
+BEGIN
+  FOREACH history_table IN ARRAY ARRAY[
+    'event_operation_revision', 'event_operation_command_receipt',
+    'event_operation_audit_event', 'event_operation_transition',
+    'event_operation_task_override'
+  ] LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS event_operation_history_no_truncate ON %I', history_table);
+    EXECUTE format('CREATE TRIGGER event_operation_history_no_truncate BEFORE TRUNCATE ON %I FOR EACH STATEMENT EXECUTE FUNCTION event_operation_reject_history_mutation()', history_table);
+  END LOOP;
+END
+$$;
 
 CREATE OR REPLACE FUNCTION event_operation_validate_raci()
 RETURNS trigger LANGUAGE plpgsql AS $$
