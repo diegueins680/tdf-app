@@ -16,6 +16,7 @@ for fixture in \
   tdf-hq/sql/2026-09-15_event_task_revisioned_read.sql \
   tdf-hq/sql/2026-09-15_event_raci_reassignment.sql \
   tdf-hq/sql/2026-09-15_event_raci_editor_context.sql \
+  tdf-hq/sql/2026-09-16_event_task_completion.sql \
   tdf-hq/test/integration/event_operations_http_fixture.sql; do
   psql -X -v ON_ERROR_STOP=1 -f "$repo_root/$fixture" >/dev/null
 done

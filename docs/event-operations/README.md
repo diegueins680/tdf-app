@@ -1,5 +1,8 @@
 # Event operations specification index
 
+- [Authenticated completion contract](task-completion-api-contract.md)
+- [Draft PR 32: authenticated preparation-task completion API](pr-32-task-completion-api.md)
+
 - [Repository audit](repository-audit-2026-09-14.md)
 - [Gap matrix](gap-matrix.md)
 - [Glossary](glossary.md)

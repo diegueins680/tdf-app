@@ -17,6 +17,20 @@ import TDF.EventOperations.Types
 
 spec :: Spec
 spec = describe "event operations executable API contracts" $ do
+  it "accepts only exact completion fields, retaining text and BIGINT precision" $ do
+    let base = object ["expectedRevision" .= ("9223372036854775806" :: T.Text),
+          "reason" .= (" razón " :: T.Text), "correlationId" .= ("correlation" :: T.Text)]
+        patch key value = case base of Object fields -> Object (KM.insert key value fields); _ -> Null
+        decodeCommand value = eitherDecode (encode value) :: Either String EventTaskCompletionCommand
+        invalid = [patch "actorPartyId" (Number 1), patch "override" (Bool True),
+          patch "expectedRevision" (Number 4), patch "expectedRevision" (String "04"),
+          patch "expectedRevision" (String "9223372036854775808"), patch "reason" Null,
+          patch "reason" (String "\t"), patch "reason" (String (T.replicate 2001 "x")),
+          patch "correlationId" Null, patch "correlationId" (String " "),
+          patch "correlationId" (String (T.replicate 201 "x")), object []]
+    fmap toJSON (decodeCommand base) `shouldBe` Right base
+    map decodeCommand invalid `shouldSatisfy` all (either (const True) (const False))
+
   it "accepts only strict RACI command fields and preserves exact request identity" $ do
     let base = object ["expectedRevision" .= ("4" :: T.Text), "role" .= ("responsible" :: T.Text),
           "fromPartyId" .= (2 :: Int), "toPartyId" .= (3 :: Int), "reason" .= (" reason " :: T.Text),
@@ -99,5 +113,7 @@ spec = describe "event operations executable API contracts" $ do
       , "transition_invalid"
       , "transition_effects_not_ready"
       , "separation_of_duties"
-      ] `shouldBe` replicate 5 409
+      , "dependencies_not_ready"
+      , "accountability_not_ready"
+      ] `shouldBe` replicate 7 409
     statusFor "invalid_database_response" `shouldBe` 500

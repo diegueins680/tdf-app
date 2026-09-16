@@ -9,6 +9,54 @@ servers:
     description: Development server
 
 paths:
+  /event-operations/events/{eventId}/tasks/{activityId}/complete:
+    post:
+      tags: [Event operations]
+      operationId: completeEventOperationTask
+      summary: Complete an opted-in preparation task with current RACI and completed dependencies
+      description: >-
+        Only draft/planning events and planned/confirmed tasks with both policy guards.
+        Requires current owner or scoped task.manage authority; exact historical replay
+        requires current read authority. Revalidates the bound session and SQL receipt
+        inside the transaction before commit. Result aggregateRevision is exactly the
+        original expectedRevision plus one, also on replay. No actor, time, hash or
+        override can be supplied. No approver/evidence, live-event or notification flow
+        is implied. No automatic rebase or retry with a new key after network ambiguity.
+        Requires separately reviewed SQL/feature activation; disabled by default.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        - name: activityId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventTaskCompletionCommand' }
+      responses:
+        '200':
+          description: Committed or exactly replayed original completion receipt
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: ['private, no-store'] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventTaskCompletionOutcome' }
+        '400': { description: 'Invalid capture, UUID, strict fields or constraints' }
+        '401': { description: 'Missing, invalid or no-longer-current session' }
+        '403': { description: Current reader lacks task mutation authority }
+        '404': { description: Feature disabled or opaque absent/foreign/unreadable task }
+        '409': { description: 'Version/key conflict, unsupported task/event/policy, current RACI or prerequisites not ready' }
+        '503': { description: 'Sanitized persistence, commit or receipt-validation failure; no success implied' }
   /event-operations/events/{eventId}/tasks/{activityId}/raci/context:
     get:
       tags: [Event operations]
@@ -7471,6 +7519,26 @@ components:
         Canonical ASCII decimal string in 1..9223372036854775807 (signed BIGINT maximum).
         Runtime decoders enforce the exact upper bound in addition to the pattern.
         Never convert to a JavaScript number. Not an authorization or readiness certificate.
+    EventTaskCompletionCommand:
+      type: object
+      additionalProperties: false
+      required: [expectedRevision, reason, correlationId]
+      properties:
+        expectedRevision: { $ref: '#/components/schemas/EventTaskAggregateRevision' }
+        reason: { type: string, minLength: 1, maxLength: 2000, description: Nonblank; preserved without normalization. }
+        correlationId: { type: string, minLength: 1, maxLength: 200, description: Nonblank; bound to the idempotent request. }
+    EventTaskCompletionOutcome:
+      type: object
+      additionalProperties: false
+      required: [eventId, activityId, commandId, status, activityVersion, aggregateRevision, replayed]
+      properties:
+        eventId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        activityId: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        commandId: { type: string, format: uuid }
+        status: { type: string, enum: [completed] }
+        activityVersion: { type: integer, format: int32, minimum: 2, maximum: 2147483647 }
+        aggregateRevision: { $ref: '#/components/schemas/EventTaskAggregateRevision' }
+        replayed: { type: boolean }
     EventRaciEditorContext:
       type: object
       additionalProperties: false
@@ -7652,6 +7720,7 @@ components:
             - assignee_unavailable
             - assignment_conflict
             - accountability_not_ready
+            - dependencies_not_ready
             - separation_of_duties
             - event_operations_unavailable
             - invalid_database_response

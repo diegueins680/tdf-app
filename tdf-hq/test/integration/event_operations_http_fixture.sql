@@ -1,4 +1,6 @@
 -- Canonical auth-query tables for an isolated subrouter test, not a production migration.
+-- The reduced foundation lacks this real canonical activity column used by completion.
+ALTER TABLE event_logistics_activity ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
 CREATE TABLE api_token (
  id BIGSERIAL PRIMARY KEY, token TEXT NOT NULL UNIQUE, party_id BIGINT NOT NULL REFERENCES party(id),
  label TEXT, active BOOLEAN NOT NULL

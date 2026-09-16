@@ -19,6 +19,9 @@ module TDF.EventOperations.Types
   , EventRaciReassignmentOutcomeDTO(..)
   , EventRaciEditorContextDTO(..)
   , validRaciReassignmentCommand
+  , EventTaskCompletionCommand(..)
+  , EventTaskCompletionOutcomeDTO(..)
+  , validTaskCompletionCommand
   , aggregateRevisionInteger
   , raciRoleText
   , isSafePositiveInteger
@@ -259,6 +262,37 @@ instance FromJSON EventOperationTaskWithRevisionDTO where
 aggregateRevisionInteger :: EventTaskAggregateRevision -> Integer
 aggregateRevisionInteger (EventTaskAggregateRevision raw) =
   T.foldl' (\n c -> n * 10 + toInteger (fromEnum c - fromEnum '0')) 0 raw
+
+data EventTaskCompletionCommand = EventTaskCompletionCommand
+  { etcpExpectedRevision :: EventTaskAggregateRevision
+  , etcpReason :: Text
+  , etcpCorrelationId :: Text
+  } deriving (Eq, Generic, Show)
+instance ToJSON EventTaskCompletionCommand where
+  toJSON = genericToJSON (prefixedJsonOptions 4)
+instance FromJSON EventTaskCompletionCommand where
+  parseJSON raw = do
+    command <- genericParseJSON (prefixedJsonOptions 4) raw
+    if validTaskCompletionCommand command then pure command else fail "invalid completion command"
+
+validTaskCompletionCommand :: EventTaskCompletionCommand -> Bool
+validTaskCompletionCommand command =
+  validText 2000 (etcpReason command) && validText 200 (etcpCorrelationId command)
+  where validText limit raw = not (T.null (T.strip raw)) && T.length raw <= limit
+
+data EventTaskCompletionOutcomeDTO = EventTaskCompletionOutcomeDTO
+  { etcoEventId :: Int64
+  , etcoActivityId :: Int64
+  , etcoCommandId :: UUID
+  , etcoStatus :: EventTaskStatus
+  , etcoActivityVersion :: Int64
+  , etcoAggregateRevision :: EventTaskAggregateRevision
+  , etcoReplayed :: Bool
+  } deriving (Eq, Generic, Show)
+instance ToJSON EventTaskCompletionOutcomeDTO where
+  toJSON = genericToJSON (prefixedJsonOptions 4)
+instance FromJSON EventTaskCompletionOutcomeDTO where
+  parseJSON = genericParseJSON (prefixedJsonOptions 4)
 
 data EventRaciReassignmentCommand = EventRaciReassignmentCommand
   { ercExpectedRevision :: EventTaskAggregateRevision

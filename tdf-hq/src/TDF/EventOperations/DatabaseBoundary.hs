@@ -16,6 +16,8 @@ module TDF.EventOperations.DatabaseBoundary
   , reassignRaci
   , decodeRaciEditorContextRows
   , loadRaciEditorContext
+  , decodeTaskCompletionRows
+  , completeTask
   ) where
 
 import Control.Exception
@@ -122,6 +124,40 @@ loadTaskWithRevision eventId activityId actorPartyId = do
   rows <- rawSql "SELECT event_operation_read_task_with_revision(?, ?, ?)::text"
     [PersistInt64 eventId, PersistInt64 activityId, PersistInt64 actorPartyId]
   either (liftIO . throwIO) pure (decodeTaskWithRevisionRows eventId activityId rows)
+
+decodeTaskCompletionRows :: Int64 -> Int64 -> UUID.UUID -> EventTaskCompletionCommand
+  -> [Single (Maybe Text)]
+  -> Either SnapshotDecodeError (Either Text EventTaskCompletionOutcomeDTO)
+decodeTaskCompletionRows eventId activityId commandId command [Single (Just raw)] =
+  case eitherDecodeStrict' (TE.encodeUtf8 raw) of
+    Right value@(Object fields) -> case KM.toList fields of
+      [("error", String code)] | code `elem` allowedErrors -> Right (Left code)
+      _ -> case fromJSON value of
+        Success result | validTaskCompletionCommand command
+          && all isSafePositiveInteger [eventId, activityId]
+          && etcoEventId result == eventId && etcoActivityId result == activityId
+          && etcoCommandId result == commandId && etcoStatus result == TaskCompleted
+          && etcoActivityVersion result >= 2 && etcoActivityVersion result <= 2147483647
+          && aggregateRevisionInteger (etcoAggregateRevision result)
+             == aggregateRevisionInteger (etcpExpectedRevision command) + 1 -> Right (Right result)
+        _ -> Left SnapshotDecodeError
+    _ -> Left SnapshotDecodeError
+  where
+    allowedErrors = ["invalid_request", "feature_disabled", "not_found", "forbidden",
+      "version_conflict", "idempotency_conflict", "operation_not_ready",
+      "accountability_not_ready", "dependencies_not_ready"]
+decodeTaskCompletionRows _ _ _ _ _ = Left SnapshotDecodeError
+
+-- Receipt validation must throw inside the session transaction, before COMMIT.
+completeTask :: Int64 -> Int64 -> Int64 -> UUID.UUID -> EventTaskCompletionCommand
+  -> SqlPersistT IO (Either Text EventTaskCompletionOutcomeDTO)
+completeTask eventId activityId actorPartyId commandId command = do
+  rows <- rawSql "SELECT event_operation_complete_task(?, ?, ?, ?::uuid, ?::bigint, ?, ?)::text"
+    [PersistInt64 eventId, PersistInt64 activityId, PersistInt64 actorPartyId,
+     PersistText (UUID.toText commandId),
+     PersistText (T.pack (show (aggregateRevisionInteger (etcpExpectedRevision command)))),
+     PersistText (etcpReason command), PersistText (etcpCorrelationId command)]
+  either (liftIO . throwIO) pure (decodeTaskCompletionRows eventId activityId commandId command rows)
 
 decodeRaciReassignmentRows :: Int64 -> Int64 -> UUID.UUID -> EventRaciReassignmentCommand
   -> [Single (Maybe Text)]

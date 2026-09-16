@@ -30,7 +30,7 @@ import TDF.DB (Env(..))
 import TDF.EventOperations.API (EventOperationsAPI)
 import TDF.EventOperations.DatabaseBoundary
   ( databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, reassignRaci,
-    loadRaciEditorContext, tryDatabaseAction )
+    loadRaciEditorContext, completeTask, tryDatabaseAction )
 import qualified TDF.EventOperations.Types as EventOps
 
 type EventOperationsM = ReaderT Env Handler
@@ -43,6 +43,24 @@ eventOperationsServer user eventId =
   :<|> getEventTaskWithRevision user eventId
   :<|> reassignEventTaskRaci user eventId
   :<|> getRaciEditorContext user eventId
+  :<|> completeEventTask user eventId
+
+completeEventTask :: AuthedUser -> Int64 -> Int64 -> UUID.UUID
+  -> EventOps.EventTaskCompletionCommand
+  -> EventOperationsM (Headers '[Header "Cache-Control" Text] EventOps.EventTaskCompletionOutcomeDTO)
+completeEventTask user eventId activityId commandId command =
+  action `catchError` (\failure -> throwError failure
+    { errHeaders = ("Cache-Control", "private, no-store") : errHeaders failure })
+  where
+    action = do
+      unless (all EventOps.isSafePositiveInteger [eventId, activityId]
+        && EventOps.validTaskCompletionCommand command) $
+        throwError (eventOperationDomainError "invalid_request")
+      requireEventOperationsEnabled
+      result <- runEventOperationsSessionDb user $
+        completeTask eventId activityId (fromSqlKey (auPartyId user)) commandId command
+      outcome <- either (throwError . eventOperationDomainError) pure result
+      pure (addHeader ("private, no-store" :: Text) outcome)
 
 getRaciEditorContext :: AuthedUser -> Int64 -> Int64 -> Maybe Int64
   -> EventOperationsM (Headers '[Header "Cache-Control" Text] EventOps.EventRaciEditorContextDTO)
@@ -209,5 +227,6 @@ eventOperationDomainError errorCode =
     statusFor "assignee_unavailable" = err409
     statusFor "assignment_conflict" = err409
     statusFor "accountability_not_ready" = err409
+    statusFor "dependencies_not_ready" = err409
     statusFor "separation_of_duties" = err409
     statusFor _ = err500

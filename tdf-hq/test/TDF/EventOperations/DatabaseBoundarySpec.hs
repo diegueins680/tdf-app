@@ -23,6 +23,47 @@ import TDF.EventOperations.Types
 
 spec :: Spec
 spec = describe "event operations database privacy boundary" $ do
+  it "binds a completion receipt to target, command, completed status and exact next revision" $ do
+    let result = completionResult "5"
+        decodeRows = decodeTaskCompletionRows 10 100 UUID.nil (completionCommand "4")
+    decodeRows [taskRow (toJSON result)] `shouldBe` Right (Right result)
+    decodeRows [taskRow (toJSON result { etcoReplayed=True })]
+      `shouldBe` Right (Right result { etcoReplayed=True })
+    forM_ [result { etcoEventId=11 }, result { etcoActivityId=101 },
+      result { etcoCommandId=UUID.fromWords 1 0 0 0 }, result { etcoStatus=TaskPlanned },
+      result { etcoActivityVersion=1 }, result { etcoActivityVersion=2147483648 },
+      result { etcoAggregateRevision=revision "6" }] $ \bad ->
+        decodeRows [taskRow (toJSON bad)] `shouldBe` Left SnapshotDecodeError
+    decodeTaskCompletionRows 0 100 UUID.nil (completionCommand "4") [taskRow (toJSON result)]
+      `shouldBe` Left SnapshotDecodeError
+
+  it "rejects malformed completion receipts, unknown errors, extra fields and row cardinality" $ do
+    let decodeRows = decodeTaskCompletionRows 10 100 UUID.nil (completionCommand "4")
+        base = toJSON (completionResult "5")
+        patch key value = case base of Object fields -> Object (KM.insert key value fields); _ -> Null
+    forM_ [[], [Single Nothing], [taskRow base,taskRow base], [Single (Just "not JSON")]] $ \rows ->
+      decodeRows rows `shouldBe` Left SnapshotDecodeError
+    forM_ [Null, object [], object ["error" .= ("private diagnostic" :: Text)],
+      object ["error" .= ("forbidden" :: Text), "private" .= True], patch "private" (Bool True),
+      patch "replayed" Null, patch "aggregateRevision" (Number 5), patch "activityVersion" (Number 2.5)]
+      $ \raw -> decodeRows [taskRow raw] `shouldBe` Left SnapshotDecodeError
+    forM_ ["invalid_request", "feature_disabled", "not_found", "forbidden", "version_conflict",
+      "idempotency_conflict", "operation_not_ready", "accountability_not_ready", "dependencies_not_ready"]
+      $ \code -> decodeRows [taskRow (object ["error" .= (code :: Text)])] `shouldBe` Right (Left code)
+
+  it "checks generated completion revisions with exact arithmetic up to signed BIGINT max" $
+    forAll (choose (1, 9223372036854775806 :: Integer)) $ \n ->
+      let result = completionResult (T.pack (show (n+1)))
+      in decodeTaskCompletionRows 10 100 UUID.nil (completionCommand (T.pack (show n)))
+        [taskRow (toJSON result)] == Right (Right result)
+
+  it "handles maximal completion revision and never wraps an overflowing expected revision" $ do
+    let result = completionResult "9223372036854775807"
+    decodeTaskCompletionRows 10 100 UUID.nil (completionCommand "9223372036854775806")
+      [taskRow (toJSON result)] `shouldBe` Right (Right result)
+    decodeTaskCompletionRows 10 100 UUID.nil (completionCommand "9223372036854775807")
+      [taskRow (toJSON result)] `shouldBe` Left SnapshotDecodeError
+
   it "validates private editor context flags, strict pages and exact target" $ do
     let result = EventRaciEditorContextDTO 10 100 (revision "4") True True
           [EventRaciAssignmentDTO 1 RaciAccountable] [1,2,3] Nothing
@@ -201,6 +242,11 @@ taskRow = Single . Just . TE.decodeUtf8 . BL.toStrict . encode
 
 revision :: Text -> EventTaskAggregateRevision
 revision raw = maybe (error "invalid test revision") id (parseEventTaskAggregateRevision raw)
+completionCommand :: Text -> EventTaskCompletionCommand
+completionCommand raw = EventTaskCompletionCommand (revision raw) "test" "test"
+completionResult :: Text -> EventTaskCompletionOutcomeDTO
+completionResult raw = EventTaskCompletionOutcomeDTO 10 100 UUID.nil TaskCompleted 2 (revision raw) False
+
 raciCommand :: Text -> EventRaciReassignmentCommand
 raciCommand raw = EventRaciReassignmentCommand (revision raw) RaciResponsible 2 3 "test" "test"
 raciResult :: Text -> EventRaciReassignmentOutcomeDTO
