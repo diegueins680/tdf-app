@@ -11517,6 +11517,8 @@ export interface components {
              * @description Internal subject identifier; clients must not expose it unnecessarily.
              */
             requesterPartyId: number;
+            /** @description Requester's display name, or null when unavailable. Visible only to the requester and authorized reviewers. */
+            requesterName: string | null;
             featureId: string;
             action: string;
             roleContext: string[];
