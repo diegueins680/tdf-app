@@ -5,6 +5,8 @@ buyer, inventory and idempotency validation and sends the order email only on
 creation. It does not create a payment attempt, select bank transfer or overwrite
 an existing order's payment state on replay. Coordinating an order is not evidence
 of payment; settlement still requires an independently qualified payment flow.
+An active online payment prevents switching to contact coordination until its
+outcome is resolved, preserving the concurrent repair's payment-state guard.
 
 The canonical attempt boundary now requires Datafast server verification and
 PayPal capture capability before creating or authorizing a payment. Availability
@@ -16,12 +18,17 @@ Operator payment-intent totals join their owning checkout and group by environme
 status and currency. `cpiEnvironment` is an additive API field, reflected in the
 OpenAPI contract, generated clients and independent UI cards. Consumers must not
 sum sandbox and production cards together.
+Legacy responses without the new field are labeled as an unreported environment,
+never silently assumed to be production.
 
 Regression coverage includes routing without completion capabilities, a source
 boundary check for the contact handler, the actual overview query against an
 isolated SQLite fixture, PostgreSQL environment grouping, and UI
 cards with matching currency/status in different environments. The source check
-is not a substitute for a live HTTP checkout test.
+is not a substitute for the actual-handler test. The concurrent repair's
+`test-payment-audit-runtime.sh` exercises sale/rental contact replays, pending-online
+denial, and the real overview query in disposable PostgreSQL. `quality:backend`
+now runs it after building the test binary, so CI cannot silently omit those cases.
 
 No schema migration, credential change or provider configuration is required.
 Deploy backend and generated clients together. An application rollback would

@@ -152,6 +152,7 @@ import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
+import qualified TDF.Server.PaymentAuditSpec as PaymentAuditSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -978,6 +979,7 @@ main = hspec $ do
             Merch.validateCheckoutText "recipient.name" 80 "Paola\nAdmin" `shouldSatisfy` isLeft
 
     MerchRuntimeSpec.spec
+    PaymentAuditSpec.spec
 
     describe "contextual reputation formula v1" $ do
         it "uses deterministic ROC weights that total exactly 100" $ do

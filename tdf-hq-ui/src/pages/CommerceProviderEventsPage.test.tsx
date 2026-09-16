@@ -274,6 +274,24 @@ describe('CommerceProviderEventsPage', () => {
     container.remove();
   });
 
+  it('labels canonical totals by environment and marks legacy responses as unknown', async () => {
+    const overview = buildOverview();
+    const summary = overview.cpoPaymentIntents[0]!;
+    queryClient.setQueryData(['commerce-payment-overview'], overview);
+    expect(container.textContent).toContain('sandbox · captured');
+    getPaymentOverviewMock.mockResolvedValue({ ...overview, cpoPaymentIntents: [
+      { ...summary, cpiEnvironment: 'production', cpiCapturedMinor: 7000 },
+      { ...summary, cpiEnvironment: 'sandbox' },
+      { ...summary, cpiEnvironment: undefined, cpiStatus: 'created' },
+    ] });
+    await act(async () => { await queryClient.invalidateQueries(); });
+    await waitFor(() => {
+      expect(container.textContent).toContain('production · captured');
+      expect(container.textContent).toContain('sandbox · captured');
+      expect(container.textContent).toContain('Entorno no informado · created');
+    });
+  });
+
   it('shows redacted evidence and offers replay only for dead-letter records', () => {
     expect(container.textContent).toContain('Preparación de proveedores');
     expect(container.textContent).toContain('datafast');
