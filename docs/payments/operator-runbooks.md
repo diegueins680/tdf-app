@@ -189,6 +189,16 @@ automatic held-refund resolution. Drain older refund handlers before rollout;
 disable affected refund commands before any rollback to the previous binary.
 See [test evidence and limits](refund-execution-safety-2026-09-16.md).
 
+New verified completions now advance the original canonical intent, its state
+history and the existing refund/checkout/ledger/credit-note records atomically;
+see [ADR 0129](../adr/0129-atomic-canonical-refund-accounting.md) and
+[verification](refund-accounting-2026-09-16.md). Historical aggregate drift or a
+dispute keeps completion held for review. A conflict is not permission to reissue
+the provider request. Existing succeeded refunds and unbound legacy intents are
+not backfilled by replay. Compare checkout and per-attempt succeeded-refund sums
+before rollout; preserve any discrepancy and escalate it for evidence-backed
+resolution. The provider GET recovery command remains unimplemented.
+
 ## 7. Dispute and chargeback
 
 1. Ingest or manually register the provider dispute ID, kind, amount, currency, reason and due date.
