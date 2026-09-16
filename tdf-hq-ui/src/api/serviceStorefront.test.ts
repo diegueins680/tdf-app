@@ -3,6 +3,30 @@ import type {
   ServiceStorefrontOrderCreate,
   ServiceStorefrontOrderDTO,
 } from './serviceStorefront';
+import { jest } from '@jest/globals';
+
+const get = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const post = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+jest.unstable_mockModule('./client', () => ({ get, post, put: jest.fn() }));
+const { ServiceStorefront } = await import('./serviceStorefront');
+
+describe('ServiceStorefront refund recovery requests', () => {
+  beforeEach(() => jest.clearAllMocks());
+  it('reads readiness without initiating a provider lookup', async () => {
+    get.mockResolvedValue({ ssrrAmountMinor: '9223372036854775807' });
+    expect(await ServiceStorefront.readRefundRecovery('synthetic/id'))
+      .toEqual({ ssrrAmountMinor: '9223372036854775807' });
+    expect(get).toHaveBeenCalledWith('/admin/services/storefront/refunds/synthetic%2Fid/reconcile');
+    expect(post).not.toHaveBeenCalled();
+  });
+  it('uses the explicit reconcile command, never the approve endpoint', async () => {
+    post.mockResolvedValue({ ssrrOutcome: 'held' });
+    await ServiceStorefront.reconcileRefund('synthetic/id');
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post).toHaveBeenCalledWith('/admin/services/storefront/refunds/synthetic%2Fid/reconcile', {});
+    expect(get).not.toHaveBeenCalled();
+  });
+});
 
 describe('ServiceStorefront types', () => {
   it('should define valid package DTO shape', () => {

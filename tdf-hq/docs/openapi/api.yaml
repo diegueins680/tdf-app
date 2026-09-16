@@ -5409,6 +5409,51 @@ paths:
         '409': { description: Invalid state or provider evidence mismatch }
         '501': { description: Refund capability is disabled for this environment }
         '502': { description: PayPal request failed; refund remains processing or failed }
+  /admin/services/storefront/refunds/{refundId}/reconcile:
+    parameters:
+      - name: refundId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Admin, Service storefront]
+      summary: Read local held-refund status and query readiness
+      description: Strict Admin only. Does not contact the provider. Supports known PayPal refund IDs for the mixing/mastering storefront only. Missing configuration or qualification never enables the action.
+      operationId: adminGetServiceRefundRecovery
+      responses:
+        '200':
+          description: Local refund evidence and exact-environment readiness
+          headers:
+            Cache-Control: { schema: { type: string, enum: [no-store] } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRefundRecovery' }
+        '403': { description: Strict Admin required }
+        '404': { description: Refund not found }
+        '409': { description: Known refund or original capture binding unavailable; manual review required }
+        '503': { description: Readiness could not be verified }
+    post:
+      tags: [Admin, Service storefront]
+      summary: Query a held refund without issuing another refund
+      description: Requires the exact environment flag, process switch, qualified merchant account, and verified capabilities. Uses only GET for the known refund resource (OAuth token acquisition is separate). Validates original capture, refund ID, amount and currency. Exact completion may atomically update local financial records. All other outcomes remain held. Concurrent operators share a query quota. A timeout or HTTP error is never proof of no refund. Do not retry by submitting a new refund.
+      operationId: adminReconcileServiceRefund
+      responses:
+        '200':
+          description: Completed, already completed by a concurrent observation, or still held
+          headers:
+            Cache-Control: { schema: { type: string, enum: [no-store] } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRefundRecovery' }
+        '403': { description: Strict Admin required }
+        '404': { description: Refund not found }
+        '409': { description: Binding, state, or accounting conflict; funds remain held for review }
+        '429':
+          description: Shared provider query limit reached
+          headers:
+            Retry-After: { schema: { type: string }, description: Seconds before another query may be attempted }
+        '502': { description: Provider evidence could not be verified; funds remain reserved }
+        '503': { description: Reconciliation unavailable or authority changed; no financial completion applied }
   /admin/services/storefront/orders/{orderId}/reconcile:
     parameters:
       - $ref: '#/components/parameters/ServiceStorefrontOrderId'
@@ -9121,6 +9166,19 @@ components:
         ssrfApprovedBy: { type: integer, format: int64, nullable: true }
         ssrfCreatedAt: { type: string, format: date-time }
         ssrfCompletedAt: { type: string, format: date-time, nullable: true }
+    ServiceStorefrontRefundRecovery:
+      type: object
+      additionalProperties: false
+      required: [ssrrRefundId, ssrrEnvironment, ssrrStatus, ssrrAmountMinor, ssrrCurrency, ssrrCanQuery, ssrrOutcome, ssrrCheckedAt]
+      properties:
+        ssrrRefundId: { type: string, format: uuid }
+        ssrrEnvironment: { type: string, enum: [sandbox, production] }
+        ssrrStatus: { type: string, enum: [requested, approved, processing, succeeded, failed, cancelled] }
+        ssrrAmountMinor: { type: string, pattern: '^[1-9][0-9]{0,18}$', description: Positive exact Int64 minor units; never parse through floating point }
+        ssrrCurrency: { type: string, enum: [USD] }
+        ssrrCanQuery: { type: boolean, description: Query readiness, not refund execution permission or proof of money movement }
+        ssrrOutcome: { type: string, enum: [not_queried, held, completed, already_completed] }
+        ssrrCheckedAt: { type: string, format: date-time, nullable: true }
     ServiceStorefrontReconciliation:
       type: object
       required: [ssrecOrderId, ssrecProvider, ssrecProviderReference, ssrecExpectedAmount, ssrecActualAmount, ssrecCurrency, ssrecMatched, ssrecCheckedAt]

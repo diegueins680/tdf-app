@@ -26,6 +26,7 @@ import ReplayOutlinedIcon from '@mui/icons-material/ReplayOutlined';
 import PageShell, { EmptyState } from '../components/PageShell';
 import ProviderQueryRecoveryPanel from '../components/payments/ProviderQueryRecoveryPanel';
 import ReconciliationEvidencePanel from '../components/payments/ReconciliationEvidencePanel';
+import HeldRefundRecoveryPanel from '../components/payments/HeldRefundRecoveryPanel';
 import {
   CommerceOperations,
   type CommercePaymentOverview,
@@ -190,6 +191,7 @@ export default function CommerceProviderEventsPage() {
         <Alert severity="info">{copy.warning}</Alert>
         <ProviderQueryRecoveryPanel />
         <ReconciliationEvidencePanel />
+        <HeldRefundRecoveryPanel />
         {overviewQuery.isError && <Alert severity="error">{copy.overviewError}</Alert>}
         {overviewQuery.data && (
           <Stack spacing={2}>
