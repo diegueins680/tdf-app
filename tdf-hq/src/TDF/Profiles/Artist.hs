@@ -94,6 +94,14 @@ activateOwnArtistProfile partyId now = do
               , ME.featureAccessRequestHistoryNote = note
               , ME.featureAccessRequestHistoryCreatedAt = now
               }
+            insert_ AuditLog
+              { auditLogActorId = Just partyId
+              , auditLogEntity = "feature_access_request"
+              , auditLogEntityId = T.pack (show (fromSqlKey key))
+              , auditLogAction = "access_request_automatically_approved"
+              , auditLogDiff = Just "{\"featureId\":\"artist.onboarding\",\"action\":\"create\",\"status\":\"approved\"}"
+              , auditLogCreatedAt = now
+              }
           pure (Right profile)
 
 cleanOptionalText :: Maybe Text -> Maybe Text

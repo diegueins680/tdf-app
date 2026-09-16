@@ -261,3 +261,13 @@ INSERT INTO user_credential(party_id,username,password_hash,active) VALUES (9,'a
 INSERT INTO security_role(id,code,name_es,name_en,workflow_state_id,system_role)
 VALUES ('46b20fb1-80ae-4f19-9d8f-ee5d72529501','admin','Admin','Admin','00000000-0000-4000-8000-000000000215',true);
 INSERT INTO party_security_role(party_id,role_id) VALUES (9,'46b20fb1-80ae-4f19-9d8f-ee5d72529501');
+
+CREATE TABLE audit_log (
+  id bigserial PRIMARY KEY,
+  actor_id bigint REFERENCES party(id),
+  entity text NOT NULL,
+  entity_id text NOT NULL,
+  action text NOT NULL,
+  diff text,
+  created_at timestamptz NOT NULL
+);

@@ -36,12 +36,16 @@ spec = describe "artist-self-service-postgresql" $ do
         counts pool 1 `shouldReturn` [1,1,1]
         status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE requester_party_id=1" []) pool
         status `shouldBe` [Single ("approved" :: Text)]
+        audits <- runSqlPool (rawSql "SELECT count(*) FROM audit_log a JOIN feature_access_requests r ON a.entity_id=r.id::text WHERE a.actor_id=1 AND r.requester_party_id=1 AND a.entity='feature_access_request' AND a.action='access_request_automatically_approved' AND a.diff::jsonb=jsonb_build_object('featureId','artist.onboarding','action','create','status','approved')" []) pool
+        audits `shouldBe` [Single (1 :: Int64)]
         roles <- runSqlPool (rawSql "SELECT r.code FROM party_security_role p JOIN security_role r ON r.id=p.role_id WHERE p.party_id=1 AND p.active" []) pool
         roles `shouldBe` [Single ("artist" :: Text)]
       it "preserves existing content and does not duplicate profiles, grants or audit on retry" $ \pool -> do
         runSqlPool (rawExecute "UPDATE artist_profile SET bio='Keep my biography' WHERE artist_party_id=1" []) pool
         result <- activate pool 1
         fmap apBio result `shouldBe` Right (Just "Keep my biography")
+        audits <- runSqlPool (rawSql "SELECT count(*) FROM audit_log WHERE actor_id=1" []) pool
+        audits `shouldBe` [Single (1 :: Int64)]
         counts pool 1 `shouldReturn` [1,1,1]
       it "serializes simultaneous activations of the same account" $ \pool -> do
         boxes <- forM [1..4 :: Int] $ \_ -> do
