@@ -71,6 +71,6 @@ passed both model/PostgreSQL and social-client jobs after the readiness repair.
 UI quality, persona journeys, repository quality, contracts, production migrations
 and the aggregate gate. Backend/mobile/migration-test jobs were skipped by this
 UI-only diff and are not counted as passes; backend verification belongs to #390.
-Build-image and catalog jobs also passed. Exact check snapshot:
+The build check and catalog job also passed. Exact check snapshot:
 `evidence/chat-client-isolation/ci-8b7daf9c8.json`. Later evidence-only commits
 should not be mistaken for new implementation checks.
