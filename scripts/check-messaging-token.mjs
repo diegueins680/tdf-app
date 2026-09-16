@@ -4,6 +4,7 @@
  *
  * Checks if Instagram/Facebook messaging tokens are valid and not expiring soon.
  * Exchanges short-lived tokens for long-lived (60-day) tokens when needed.
+ * Pass --check for read-only validation; no arguments retain automatic maintenance.
  *
  * Environment variables:
  *   FACEBOOK_APP_ID       - Meta App ID
@@ -194,45 +195,76 @@ async function refreshTokenFlow(currentToken) {
   }
 }
 
-async function main() {
+// Reject unsupported CLI input before either validation or credential mutation.
+export function parseReadOnly(args) {
+  if (args.length === 0) return false;
+  if (args.length === 1 && args[0] === '--check') return true;
+  throw new Error('Usage: check-messaging-token.mjs [--check]');
+}
+
+/**
+ * Return a process exit code. Read-only execution may inspect token health but
+ * must never call refresh; default execution retains refresh-when-needed.
+ * check/refresh dependencies make that side-effect boundary directly testable.
+ */
+export async function runMessagingTokenMaintenance({
+  readOnly = false,
+  instagramToken = IG_TOKEN,
+  facebookToken = FB_TOKEN,
+  check = checkToken,
+  refresh = refreshTokenFlow,
+} = {}) {
   console.log('=== Messaging Token Health Check ===\n');
 
   // Check both tokens (they're usually the same)
-  const igCheck = await checkToken(IG_TOKEN, 'Instagram Messaging Token');
-  const fbCheck = await checkToken(FB_TOKEN, 'Facebook Messaging Token');
+  const igCheck = await check(instagramToken, 'Instagram Messaging Token');
+  const fbCheck = await check(facebookToken, 'Facebook Messaging Token');
 
   const needsRefresh = !igCheck.ok || igCheck.expiringSoon || !fbCheck.ok || fbCheck.expiringSoon;
 
   if (needsRefresh) {
+    // Fail before reaching any token exchange, Page-token lookup, or Fly update.
+    // An expiring token is not a successful read-only maintenance check.
+    if (readOnly) {
+      error('Read-only check failed: token maintenance is required; no credentials were changed.');
+      return 1;
+    }
     log('\n⚠️ Token needs refresh');
 
-    if (!IG_TOKEN) {
+    if (!instagramToken) {
       error('No token to refresh. Set INSTAGRAM_MESSAGING_TOKEN first.');
-      process.exit(1);
+      return 1;
     }
 
     try {
-      const newToken = await refreshTokenFlow(IG_TOKEN);
+      const newToken = await refresh(instagramToken);
       log('\n✅ Refresh complete!');
 
       // Final verification
-      const finalCheck = await checkToken(newToken, 'Refreshed Token');
+      const finalCheck = await check(newToken, 'Refreshed Token');
       if (!finalCheck.ok) {
         error('Final verification failed');
-        process.exit(1);
+        return 1;
       }
     } catch (err) {
       error(`Refresh failed: ${err.message}`);
-      process.exit(1);
+      return 1;
     }
   } else {
     log('\n✅ All tokens are healthy. No action needed.');
   }
+  return 0;
+}
+
+export async function runMessagingTokenCli(args, options = {}) {
+  return runMessagingTokenMaintenance({ ...options, readOnly: parseReadOnly(args) });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch(err => {
+  runMessagingTokenCli(process.argv.slice(2)).then(code => {
+    process.exitCode = code;
+  }).catch(err => {
     error(err.message);
-    process.exit(1);
+    process.exitCode = 1;
   });
 }
