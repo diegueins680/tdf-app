@@ -88,6 +88,14 @@ expect_counterexample() {
 }
 expect_counterexample TaskCommitEarlyValidation.cfg NoBlockedCompletion early-validation
 expect_counterexample TaskCommitWriteSkew.cfg NoOrphanResponsibilities write-skew
+run_tlc TaskCompletion.tla TaskCompletion.cfg task-completion
+expect_counterexample TaskCompletionAuthority.cfg CurrentAuthority task-completion-authority TaskCompletion.tla
+expect_counterexample TaskCompletionVersion.cfg NoStaleCompletion task-completion-version TaskCompletion.tla
+expect_counterexample TaskCompletionDependencies.cfg NoBlockedCompletion task-completion-dependencies TaskCompletion.tla
+expect_counterexample TaskCompletionRaci.cfg CurrentAccountability task-completion-raci TaskCompletion.tla
+expect_counterexample TaskCompletionLifecycle.cfg ValidLifecycle task-completion-lifecycle TaskCompletion.tla
+expect_counterexample TaskCompletionReplay.cfg ExactRetry task-completion-replay TaskCompletion.tla
+expect_counterexample TaskCompletionAudit.cfg AuditCoupled task-completion-audit TaskCompletion.tla
 run_tlc TaskRevision.tla TaskRevision.cfg task-revision
 expect_counterexample TaskRevisionRaci.cfg NoStaleCommit task-revision-raci TaskRevision.tla
 expect_counterexample TaskRevisionEarly.cfg NoStaleCommit task-revision-early TaskRevision.tla

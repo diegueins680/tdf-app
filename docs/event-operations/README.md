@@ -55,6 +55,8 @@
 - [RACI editor context contract](raci-editor-context-contract.md)
 - [Draft PR 25: authorized, paginated RACI editor context](pr-25-raci-editor-context.md)
 - [RACI web editor contract](raci-web-editor-contract.md)
+- [Planning-task completion contract](task-completion-contract.md)
+- [Draft PR 31: private guarded task completion](pr-31-task-completion-command.md)
 - [Draft PR 26: scoped RACI web editor](pr-26-raci-web-editor.md)
 - [Draft PR 18: verify exact reservation-model regeneration](pr-18-pluscal-integrity.md)
 - [Verified GitHub delivery checkpoint](github-delivery-2026-09-14.md)

@@ -15,6 +15,9 @@ on:
       - "scripts/test-event-operations-foundation-migration.sh"
       - "scripts/test-event-operations-api-migration.sh"
       - "scripts/test-event-task-commit-migration.sh"
+      - "scripts/test-event-task-completion-migration.sh"
+      - "scripts/__tests__/event-task-completion-runner.test.mjs"
+      - "tdf-hq/test/integration/event_task_completion_*.sql"
       - "scripts/test-event-task-read-migration.sh"
       - "scripts/test-event-task-revision-migration.sh"
       - "scripts/test-event-task-revisioned-read-migration.sh"
@@ -84,6 +87,9 @@ on:
       - "scripts/test-event-operations-foundation-migration.sh"
       - "scripts/test-event-operations-api-migration.sh"
       - "scripts/test-event-task-commit-migration.sh"
+      - "scripts/test-event-task-completion-migration.sh"
+      - "scripts/__tests__/event-task-completion-runner.test.mjs"
+      - "tdf-hq/test/integration/event_task_completion_*.sql"
       - "scripts/test-event-task-read-migration.sh"
       - "scripts/test-event-task-revision-migration.sh"
       - "scripts/test-event-task-revisioned-read-migration.sh"
@@ -269,6 +275,19 @@ jobs:
         run: node --test scripts/__tests__/event-raci-editor-context-runner.test.mjs
       - name: Verify editor context scope, pagination, rollback and concurrent readers
         run: sh scripts/test-event-raci-editor-context-migration.sh
+
+  postgres-task-completion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Verify completion runner isolation and formal gates
+        run: node --test scripts/__tests__/event-task-completion-runner.test.mjs
+      - name: Verify completion guards, rollback and concurrent writers
+        run: sh scripts/test-event-task-completion-migration.sh
 
   postgres-complete-schema:
     runs-on: ubuntu-latest

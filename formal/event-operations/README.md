@@ -47,10 +47,12 @@ generated `UNCHANGED` lists. Explicit width 120 emits those lists without wrappi
 the committed file exactly, with no algorithm or expression changes. The checker is a
 reproducibility boundary, not proof of translator correctness or SQL refinement.
 
-## Bounds and results (2026-09-14–15)
+## Bounds and results (2026-09-14–16)
 
 | Model/configuration | Finite scope or assumptions | Result |
 |---|---|---|
+| `TaskCompletion.cfg` | Two attempts, one task, two keys, one intervening edit, prerequisite/lifecycle booleans, three grants, clock 0–3, distinct RACI/grant expiries; no fairness | PASS; 944,014 generated, 231,576 distinct states, depth 14 |
+| `TaskCompletionAuthority/Version/Dependencies/Raci/Lifecycle/Replay/Audit.cfg` | Remove fresh authority, revision, dependency, current RACI, lifecycle, replay or audit guard | All seven expected exit 12 with their named invariant failures |
 | `RaciWebEditor.cfg` | Three context generations, two revisions, eligible/ineligible context, one reviewed body/key, two attempts, valid/invalid receipt; no fairness | PASS; 154 generated, 120 distinct states, depth 9 |
 | `RaciWebEditorConsent/Context/Flight/Retry/Receipt.cfg` | Remove confirmation, context, single-flight, exact-retry or receipt-validation guard | Expected exit 12 with ExplicitConfirmation / CurrentEditor / OneFlight / SameRetry / ValidatedSuccess; all five detected |
 | `RaciEditorContext.cfg` | One reader/writer, manage/read/no grant, matching/foreign target, eligible/ineligible candidate, two revisions, clock 0–2; no fairness | PASS; 3,724 generated, 1,584 distinct states, depth 9 |
@@ -107,6 +109,14 @@ it is not reported as a pass. The checked configuration was reduced to two comma
 all lifecycle states, actors, transition targets, guards, and authority rules.
 
 ## Coverage
+
+- `TaskCompletion.tla`: completion-time scoped authority, dependency/RACI readiness,
+  supported lifecycle, exact replay and coupled audit under a serialized task write.
+  See [the private completion contract](../../docs/event-operations/task-completion-contract.md).
+  On 2026-09-16 the full suite passed 24 positive TLC configurations, 60 negative
+  controls, 13 PlusCal tests, 2 SAT scenarios and 13 UNSAT assertions before feature
+  SQL. SQL refinement, receipt hashing, multi-task namespaces and real concurrency
+  additionally require the linked executable evidence; no unbounded proof claim.
 
 - `RaciWebEditor.tla`: explicit reviewed intent, current-context dispatch/receipt, one in-flight
   operation, same-command retry and validated success. Existing scoped Alloy relations apply
