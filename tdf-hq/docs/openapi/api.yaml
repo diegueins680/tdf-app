@@ -5420,6 +5420,7 @@ paths:
       summary: Read local held-refund status and query readiness
       description: Strict Admin only. Does not contact the provider. Supports known PayPal refund IDs for the mixing/mastering storefront only. Missing configuration or qualification never enables the action.
       operationId: adminGetServiceRefundRecovery
+      security: [{ bearerAuth: [] }]
       responses:
         '200':
           description: Local refund evidence and exact-environment readiness
@@ -5428,6 +5429,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ServiceStorefrontRefundRecovery' }
+        '400': { description: Invalid refund UUID }
+        '401': { description: Authentication required }
         '403': { description: Strict Admin required }
         '404': { description: Refund not found }
         '409': { description: Known refund or original capture binding unavailable; manual review required }
@@ -5437,6 +5440,7 @@ paths:
       summary: Query a held refund without issuing another refund
       description: Requires the exact environment flag, process switch, qualified merchant account, and verified capabilities. Uses only GET for the known refund resource (OAuth token acquisition is separate). Validates original capture, refund ID, amount and currency. Exact completion may atomically update local financial records. All other outcomes remain held. Concurrent operators share a query quota. A timeout or HTTP error is never proof of no refund. Do not retry by submitting a new refund.
       operationId: adminReconcileServiceRefund
+      security: [{ bearerAuth: [] }]
       responses:
         '200':
           description: Completed, already completed by a concurrent observation, or still held
@@ -5445,6 +5449,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ServiceStorefrontRefundRecovery' }
+        '400': { description: Invalid refund UUID }
+        '401': { description: Authentication required }
         '403': { description: Strict Admin required }
         '404': { description: Refund not found }
         '409': { description: Binding, state, or accounting conflict; funds remain held for review }

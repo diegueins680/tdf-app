@@ -21777,6 +21777,20 @@ export interface operations {
                     "application/json": components["schemas"]["ServiceStorefrontRefundRecovery"];
                 };
             };
+            /** @description Invalid refund UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Strict Admin required */
             403: {
                 headers: {
@@ -21827,6 +21841,20 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ServiceStorefrontRefundRecovery"];
                 };
+            };
+            /** @description Invalid refund UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Strict Admin required */
             403: {

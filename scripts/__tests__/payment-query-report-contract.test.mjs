@@ -8,6 +8,32 @@ const api = YAML.parse(read('tdf-hq/docs/openapi/api.yaml'));
 const route = api.paths['/admin/commerce/provider-queries'];
 const schemas = api.components.schemas;
 
+test('held-refund readiness and explicit query commands require auth and forbid cached evidence', () => {
+  const refund = api.paths['/admin/services/storefront/refunds/{refundId}/reconcile'];
+  assert.equal(refund.parameters[0].schema.format, 'uuid');
+  for (const method of ['get', 'post']) {
+    assert.deepEqual(refund[method].security, [{ bearerAuth: [] }]);
+    assert.deepEqual(refund[method].responses['200'].headers['Cache-Control'].schema.enum, ['no-store']);
+    for (const code of ['400', '401', '403', '404', '409', '503']) assert.ok(refund[method].responses[code]);
+    assert.equal(refund[method].requestBody, undefined);
+  }
+  assert.ok(refund.post.responses['429'].headers['Retry-After']);
+  assert.ok(refund.post.responses['502']);
+});
+
+test('held-refund projection carries exact money and no external IDs or provider payload', () => {
+  const refund = schemas.ServiceStorefrontRefundRecovery;
+  assert.deepEqual(refund.required.slice().sort(), Object.keys(refund.properties).sort());
+  assert.equal(refund.properties.ssrrAmountMinor.type, 'string');
+  const pattern = new RegExp(refund.properties.ssrrAmountMinor.pattern);
+  assert.ok(pattern.test('9223372036854775807'));
+  assert.ok(!pattern.test('1.5'));
+  assert.ok(!pattern.test('0'));
+  for (const field of Object.keys(refund.properties)) {
+    assert.doesNotMatch(field, /payload|token|merchant|secret|email|providerResource|redirect|capture/i);
+  }
+});
+
 test('query report is a protected, bounded, non-cacheable GET-only contract', () => {
   assert.deepEqual(Object.keys(route), ['get']);
   assert.deepEqual(route.get.security, [{ bearerAuth: [] }]);
