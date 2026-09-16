@@ -400,3 +400,17 @@ rights. Old-client cutover, search/media/notifications, delegation, lifecycle/mo
 legacy list pagination and native journeys remain incomplete. All PRs remain unmerged;
 no production flag activation or deployment command occurred. Earlier automatic provider
 deployment exceptions remain unresolved and still need owner target/removal verification.
+
+
+### #409 initial hosted results
+
+At `7e601607f60b2987e502c4a14db821bbf37df296`, both jobs in
+[social CI35129594549](https://github.com/diegueins680/tdf-app/actions/runs/35129594549)
+passed: model/PostgreSQL and social client. Catalog authority, repository quality,
+migration tests and API contract jobs also passed. The full
+[CI35129595035](https://github.com/diegueins680/tdf-app/actions/runs/35129595035)
+still has backend and persona browser work running; Safe Install is also pending.
+[Actual snapshot](evidence/legacy-write-ci/current-checks.json). No failures were
+reported at this snapshot, but this is not a completed full CI result. Record its
+final result here; do not push evidence-only changes to the implementation branch
+while that run is active. The next repair remains fan-club fanout and notifications.
