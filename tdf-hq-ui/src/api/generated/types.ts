@@ -9384,6 +9384,24 @@ export interface components {
             /** @description True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence. */
             newlyCompleted: boolean;
         };
+        ExperimentAssignment: {
+            experimentId: string;
+            experimentVersion: number;
+            experimentEnabled: boolean;
+            experimentEligible: boolean;
+            variant: string;
+            /** Format: date-time */
+            assignedAt: string | null;
+            /** Format: date-time */
+            eligibleUntil: string | null;
+            /** Format: date-time */
+            exposedAt: string | null;
+            newlyAssigned: boolean;
+        };
+        ExperimentExposureResult: {
+            assignment: components["schemas"]["ExperimentAssignment"];
+            newlyExposed: boolean;
+        };
         SessionResponse: {
             username: string;
             displayName: string;

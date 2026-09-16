@@ -10060,6 +10060,42 @@ components:
         newlyCompleted:
           type: boolean
           description: True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence.
+    ExperimentAssignment:
+      type: object
+      required: [experimentId, experimentVersion, experimentEnabled, experimentEligible, variant, assignedAt, eligibleUntil, exposedAt, newlyAssigned]
+      properties:
+        experimentId:
+          type: string
+        experimentVersion:
+          type: integer
+        experimentEnabled:
+          type: boolean
+        experimentEligible:
+          type: boolean
+        variant:
+          type: string
+        assignedAt:
+          type: string
+          format: date-time
+          nullable: true
+        eligibleUntil:
+          type: string
+          format: date-time
+          nullable: true
+        exposedAt:
+          type: string
+          format: date-time
+          nullable: true
+        newlyAssigned:
+          type: boolean
+    ExperimentExposureResult:
+      type: object
+      required: [assignment, newlyExposed]
+      properties:
+        assignment:
+          $ref: '#/components/schemas/ExperimentAssignment'
+        newlyExposed:
+          type: boolean
     SessionResponse:
       type: object
       required: [username, displayName, partyId, roles, modules, featureFlags, preferences]

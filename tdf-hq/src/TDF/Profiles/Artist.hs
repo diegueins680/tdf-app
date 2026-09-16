@@ -38,7 +38,7 @@ import qualified Data.UUID                 as UUID
 import           Database.Persist
 import           Database.Persist.Sql      (SqlPersistT, fromSqlKey, rawSql)
 
-import           TDF.Catalog.Security (applySecurityRoleAssignmentPolicy)
+import           TDF.Catalog.Security (applySecurityRoleAssignmentPolicy, hasCanonicalPartyRole)
 import qualified TDF.Catalog.Models        as Catalog
 import           TDF.DTO                   ( ArtistProfileDTO(..)
                                            , ArtistProfileUpsert(..)
@@ -57,9 +57,14 @@ activateOwnArtistProfile partyId now = do
   if credentials /= 1
     then pure (Left "Artist activation requires one active user account")
     else do
-      result <- applySecurityRoleAssignmentPolicy
-        "artist.self-service.artist" partyId False (Just partyId)
-        "artist-self-service" ("artist-self-service:" <> T.pack (show (fromSqlKey partyId))) now
+      -- Administrators already have profile access. Adding a mixed Artist role
+      -- would remove their strict administrative scope after session refresh.
+      isAdmin <- hasCanonicalPartyRole partyId Admin
+      result <- if isAdmin
+        then pure (Right Admin)
+        else applySecurityRoleAssignmentPolicy
+          "artist.self-service.artist" partyId False (Just partyId)
+          "artist-self-service" ("artist-self-service:" <> T.pack (show (fromSqlKey partyId))) now
       case result of
         Left message -> pure (Left message)
         Right _ -> do

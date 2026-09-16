@@ -575,7 +575,7 @@
       "reviewed": true
     },
     {
-      "id": "cb53e40989f2a862d6b1",
+      "id": "82e377af11c96be6a75a",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -583,17 +583,14 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 102,
-        "consumerCount": 33,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
+        "valueCount": 103
       }
     },
     {
@@ -13231,27 +13228,26 @@
       "reviewed": true
     },
     {
-      "id": "82e3ab110124708c621c",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
-      "priority": "P1-cross-platform",
-      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
-      "justification": "Onboarding intents are cross-client product choices whose identifiers, labels, order, and availability require one governed source.",
-      "reviewed": true
-    },
-    {
-      "id": "29021a526fad50de4bf4",
+      "id": "12abca4fa517da75ad03",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
       "priority": "P1-cross-platform",
       "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
       "justification": "Onboarding intent labels and ordering are user-visible cross-client product data and must follow the governed intent registry.",
-      "reviewed": true
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+        "line": 76,
+        "kind": "array",
+        "name": "ONBOARDING_INTENT_OPTIONS",
+        "valueCount": 6
+      }
     },
     {
-      "id": "34d5f2f94d1a165783ba",
+      "id": "3b37706d3daff89e8890",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "onboarding_intent, onboarding_first_value, user_onboarding_progress",
@@ -13259,28 +13255,14 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
       "evidence": {
         "file": "tdf-mobile/src/lib/onboardingIntent.ts",
-        "line": 118,
+        "line": 391,
         "kind": "switch-cases",
         "name": "intent",
-        "valueCount": 6,
-        "consumerCount": 243,
-        "exactDuplicateIds": [
-          "dc2478eb86deaac6aed4",
-          "9ebf2e096eeddbecfa52",
-          "05cf100aa2fff2a7c8ad",
-          "3022d9364dbbe18e8bbb",
-          "82e3ab110124708c621c"
-        ],
-        "similarCandidateIds": [
-          "dc2478eb86deaac6aed4",
-          "9ebf2e096eeddbecfa52",
-          "05cf100aa2fff2a7c8ad",
-          "3022d9364dbbe18e8bbb"
-        ]
+        "valueCount": 6
       }
     },
     {
@@ -13445,6 +13427,82 @@
         "consumerCount": 0,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "baf5675444c0fb967e29",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could weaken activation regression coverage.",
+      "justification": "Synthetic test fixture assertions mirror the persisted role and access-request schema; these values are not a production source of selectable grants or request states.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "line": 35,
+        "kind": "array",
+        "name": "roles",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "77d089b6170fb69c6781",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could weaken activation regression coverage.",
+      "justification": "Synthetic test fixture assertions mirror the persisted role and access-request schema; these values are not a production source of selectable grants or request states.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-hq/test/integration/artist_self_service_fixture.sql",
+        "line": 212,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "58c33690f95b3e972ad9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could weaken activation regression coverage.",
+      "justification": "Synthetic test fixture assertions mirror the persisted role and access-request schema; these values are not a production source of selectable grants or request states.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-hq/test/integration/artist_self_service_fixture.sql",
+        "line": 214,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 17
+      }
+    },
+    {
+      "id": "2ba2e67d7a36352dcf50",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-mobile/app/merch/preferences.tsx",
+        "line": 13,
+        "kind": "literal-union",
+        "name": "SubjectKind",
+        "valueCount": 2
       }
     }
   ]

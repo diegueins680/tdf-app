@@ -255,3 +255,9 @@ COMMIT;
 -- DROP TABLE IF EXISTS feature_access_request_history;
 -- DROP TABLE IF EXISTS feature_access_requests;
 -- COMMIT;
+
+INSERT INTO party(id,display_name,is_org,created_at) VALUES (9,'Administrator',false,now());
+INSERT INTO user_credential(party_id,username,password_hash,active) VALUES (9,'administrator','not-a-login-hash',true);
+INSERT INTO security_role(id,code,name_es,name_en,workflow_state_id,system_role)
+VALUES ('46b20fb1-80ae-4f19-9d8f-ee5d72529501','admin','Admin','Admin','00000000-0000-4000-8000-000000000215',true);
+INSERT INTO party_security_role(party_id,role_id) VALUES (9,'46b20fb1-80ae-4f19-9d8f-ee5d72529501');

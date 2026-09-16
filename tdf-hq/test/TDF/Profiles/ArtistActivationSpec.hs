@@ -74,6 +74,11 @@ spec = describe "artist-self-service-postgresql" $ do
         activate pool 8 >>= (`shouldSatisfy` isLeft)
         counts pool 5 `shouldReturn` [0,0,0]
         counts pool 8 `shouldReturn` [0,0,0]
+      it "preserves an administrator's strict role scope" $ \pool -> do
+        activate pool 9 >>= (`shouldSatisfy` isRight)
+        counts pool 9 `shouldReturn` [1,1,0]
+        roles <- runSqlPool (rawSql "SELECT r.code FROM party_security_role p JOIN security_role r ON r.id=p.role_id WHERE p.party_id=9 AND p.active" []) pool
+        roles `shouldBe` [Single ("admin" :: Text)]
       it "rolls back the role and audit if profile creation fails" $ \pool -> do
         runSqlPool (rawExecute "CREATE FUNCTION fail_test_profile() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.artist_party_id=7 THEN RAISE EXCEPTION 'injected profile write failure'; END IF; RETURN NEW; END $$" []) pool
         runSqlPool (rawExecute "CREATE TRIGGER fail_profile BEFORE INSERT ON artist_profile FOR EACH ROW EXECUTE FUNCTION fail_test_profile()" []) pool

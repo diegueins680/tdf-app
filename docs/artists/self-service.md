@@ -13,6 +13,8 @@ editor. Mobile self-creation uses the same server transaction and refreshes the
 session after saving. Older clients posting an artist access request receive an
 approved result immediately; other feature requests retain manual review.
 Existing links to the artist access-request form open profile creation instead.
+Administrators retain their existing profile access without adding a mixed Artist
+role that would remove their strict administrative scope.
 
 Deployment requires `2026-09-16_artist_self_service` through the registered
 production migration lane, followed by the backend and web/mobile updates. The

@@ -18,4 +18,4 @@ test "$(psql -X -At -d "$test_database" -c "SELECT count(*) FROM security_role_a
 psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$migration" >/dev/null
 export TDF_ARTIST_SELF_SERVICE_TEST_DB="host=$PGHOST dbname=$test_database"
 cd "$repo_root/tdf-hq"
-stack test tdf-hq:test:tdf-hq-test --fast --jobs 1 --test-arguments='--match artist-self-service-postgresql'
+stack test tdf-hq:test:tdf-hq-test --jobs 1 --test-arguments='--match artist-self-service-postgresql'
