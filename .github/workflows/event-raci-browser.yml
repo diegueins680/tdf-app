@@ -1,0 +1,77 @@
+name: Event RACI real browser integration
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/event-raci-browser.yml'
+      - 'scripts/*event-raci-browser*'
+      - 'scripts/__tests__/event-raci-browser-runner.test.mjs'
+      - 'playwright.event-raci-browser.config.mjs'
+      - 'playwright.config.mjs'
+      - 'e2e/integration/**'
+      - 'e2e/web/helpers/local-api-fixture.mjs'
+      - 'tdf-hq/src/**'
+      - 'tdf-hq/test/EventRaciBrowserMain.hs'
+      - 'tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs'
+      - 'tdf-hq/test/integration/event*fixture.sql'
+      - 'tdf-hq/sql/**'
+      - 'tdf-hq/stack.yaml*'
+      - 'tdf-hq/tdf-hq.cabal'
+      - 'tdf-hq-ui/src/**'
+      - 'tdf-hq-ui/vite.config.ts'
+      - 'package*.json'
+      - 'tdf-hq-ui/package.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: event-raci-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  real-raci-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      STACK_ROOT: ${{ github.workspace }}/.stack-root-browser
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Set up Stack only
+        uses: haskell-actions/setup@6037f33647c3f17758a2356c80fc4a53d7e0685d # v2
+        with:
+          enable-stack: true
+          stack-no-global: true
+          cabal-update: false
+      - name: Native dependencies
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev pkg-config
+      - uses: actions/cache@v6
+        with:
+          path: |
+            .stack-root-browser
+            tdf-hq/.stack-work
+          key: raci-browser-stack-v1-${{ runner.os }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+      - name: Install locked UI and browser dependencies
+        run: |
+          npm ci
+          ./node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify runner isolation
+        run: node --test scripts/__tests__/event-raci-browser-runner.test.mjs
+      - name: Build canonical backend and generated package metadata
+        working-directory: tdf-hq
+        run: stack build tdf-hq:exe:tdf-hq-exe
+      - name: Real session, event API, PostgreSQL and browser journeys
+        run: sh scripts/test-event-raci-browser.sh
+      - name: Retain test-only evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: event-raci-real-browser
+          path: artifacts/event-raci-browser/
+          if-no-files-found: ignore
+          retention-days: 7
