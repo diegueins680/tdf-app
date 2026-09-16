@@ -12,6 +12,7 @@
 module TDF.Server where
 
 import qualified TDF.Social.Chat as SocialChat
+import qualified TDF.Social.Profiles as SocialProfiles
 import TDF.Social.Server (socialV2Server)
 import           Control.Applicative ((<|>))
 import           Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
@@ -3064,8 +3065,8 @@ socialServer user =
   :<|> socialListFriends user
   :<|> socialAddFriend user
   :<|> socialRemoveFriend user
-  :<|> socialListProfiles user
-  :<|> socialGetProfile user
+  :<|> SocialProfiles.profileList user (socialListProfiles user)
+  :<|> SocialProfiles.profileGet user (socialGetProfile user)
   :<|> socialListSuggestedFriends user
   :<|> socialV2Server user
 
@@ -8588,15 +8589,7 @@ maxSocialProfilePartyIds :: Int
 maxSocialProfilePartyIds = 100
 
 validateSocialProfilePartyIds :: [Int64] -> Either ServerError [Int64]
-validateSocialProfilePartyIds rawPartyIds
-  | any (<= 0) rawPartyIds =
-      Left err400 { errBody = "partyId query must contain only positive integers" }
-  | length rawPartyIds > maxSocialProfilePartyIds =
-      Left err400 { errBody = "partyId query supports at most 100 ids" }
-  | length rawPartyIds /= length (nub rawPartyIds) =
-      Left err400 { errBody = "partyId query must not contain duplicate ids" }
-  | otherwise =
-      Right rawPartyIds
+validateSocialProfilePartyIds = SocialProfiles.validateProfileIds
 
 socialGetProfile :: AuthedUser -> Int64 -> AppM SocialPartyProfileDTO
 socialGetProfile _ partyId = do

@@ -69,3 +69,11 @@ The baseline authentication inventory above remains historical. The new
 revalidates it transactionally for `/social/v2`; legacy handlers and delegated
 entity contexts still need integration. The observed old-handler revocation bypass
 and generated model-to-PostgreSQL checks are recorded in that packet.
+
+## Profile-read continuation — 2026-09-15
+
+| Capability | Evidence | Response and acceptance |
+|---|---|---|
+| Legacy single/batch social profiles | `Server.socialListProfiles`/`socialGetProfile` discard actor; Party/FanProfile join returns names/avatar/bio/city; batch limit 100; clients use existing social API. No job/cache required by server. | **Repair:** same DTO/URLs, current-token adapter and authoritative block/closure filtering. Model-derived SQL cases, profile HTTP tests and complete-schema reapply; see [packet](profile-read-boundary.md). |
+| Profile discovery preference | `social_v2_preference.discoverable`; existing profile fields have no private audience attribute | **Reuse:** exclude from recommendations where required; direct profile lookup is not newly private. Model negative control rejects that conflation. |
+| Other identity surfaces | Followers/friends/suggestions and public media/reference paths retain legacy behavior | **Defer this PR; overall activation blocked.** Inventory next cross-surface repairs, preserve adjacent booking/purchase authority. |

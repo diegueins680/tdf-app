@@ -23,6 +23,8 @@ import TDF.Social.API (SocialV2API)
 import TDF.Social.Server (socialV2Server)
 import SessionSpec (sessionSpec)
 import ChatSpec (chatSpec)
+import ProfileSpec (profileSpec)
+import ProfileBenchmark (benchmarkProfiles)
 import SessionBenchmark (benchmarkSession)
 
 type ProtectedSocial = AuthProtect "bearer-token" :> SocialV2API
@@ -103,5 +105,7 @@ main = do
 
       sessionSpec env
       chatSpec env
+      profileSpec env
 
   benchmarkSession env
+  benchmarkProfiles env

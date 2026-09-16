@@ -7,6 +7,7 @@
 module TDF.API where
 
 import qualified TDF.API.Chat as Chat
+import TDF.API.SocialProfiles (ProfileListAPI, ProfileGetAPI)
 import TDF.Social.API (SocialV2API)
 import           Control.Applicative ((<|>))
 import           Servant
@@ -158,8 +159,8 @@ type SocialAPI =
   :<|> "friends" :> Get '[JSON] [PartyFollowDTO]
   :<|> "friends" :> Capture "partyId" Int64 :> Post '[JSON] [PartyFollowDTO]
   :<|> "friends" :> Capture "partyId" Int64 :> Delete '[JSON] NoContent
-  :<|> "profiles" :> QueryParams "partyId" Int64 :> Get '[JSON] [SocialPartyProfileDTO]
-  :<|> "profiles" :> Capture "partyId" Int64 :> Get '[JSON] SocialPartyProfileDTO
+  :<|> ProfileListAPI
+  :<|> ProfileGetAPI
   :<|> "suggestions" :> Get '[JSON] [SuggestedFriendDTO]
   :<|> SocialV2API
 
