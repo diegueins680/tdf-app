@@ -1,8 +1,17 @@
 name: Refresh Instagram Token
+run-name: "Instagram lifecycle: ${{ inputs.action || 'check' }}"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: instagram-token-lifecycle
+  cancel-in-progress: false
 
 on:
   schedule:
-    # Run every 30 days at 3 AM UTC
+    # Existing schedule: read-only checks on the 1st and (when present) 31st.
     - cron: '0 3 */30 * *'
   workflow_dispatch:
     inputs:
@@ -33,32 +42,61 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: '22'
 
-      - name: Install Fly CLI
-        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Resolve latest lifecycle checkpoint
+        if: inputs.action != 'setup'
+        id: lifecycle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/instagram-lifecycle-artifact.mjs
+
+      - name: Download encrypted lifecycle checkpoint
+        if: inputs.action != 'setup'
+        uses: actions/download-artifact@v8
+        with:
+          name: instagram-lifecycle-v1
+          run-id: ${{ steps.lifecycle.outputs.run-id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/instagram-lifecycle/input
+
+      - name: Bootstrap from approved OAuth authorization
+        if: inputs.action == 'setup'
+        env:
+          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID }}
+          INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
+          INSTAGRAM_AUTHORIZATION_CODE: ${{ secrets.INSTAGRAM_AUTHORIZATION_CODE }}
+          INSTAGRAM_REDIRECT_URI: ${{ vars.INSTAGRAM_REDIRECT_URI }}
+          INSTAGRAM_USER_ID: ${{ vars.INSTAGRAM_USER_ID }}
+          INSTAGRAM_LIFECYCLE_OUTPUT_FILE: ${{ runner.temp }}/instagram-lifecycle/output/state.enc.json
+        run: node scripts/refresh-instagram-token.mjs --setup
 
       - name: Check/Refresh Token
+        if: inputs.action != 'setup'
         env:
-          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          ACTION: ${{ inputs.action || 'check' }}
           INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
-          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
-          FACEBOOK_APP_SECRET: ${{ secrets.FACEBOOK_APP_SECRET }}
           INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID }}
-          FLY_APP_NAME: ${{ secrets.FLY_APP_NAME || 'tdf-hq' }}
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          INSTAGRAM_USER_ID: ${{ vars.INSTAGRAM_USER_ID }}
+          INSTAGRAM_LIFECYCLE_STATE_FILE: ${{ runner.temp }}/instagram-lifecycle/input/state.enc.json
+          INSTAGRAM_LIFECYCLE_OUTPUT_FILE: ${{ runner.temp }}/instagram-lifecycle/output/state.enc.json
         run: |
-          if [ "${{ github.event.inputs.action }}" = "setup" ]; then
-            node scripts/refresh-instagram-token.mjs --setup
-          elif [ "${{ github.event.inputs.action }}" = "refresh" ]; then
-            node scripts/refresh-instagram-token.mjs --refresh
-          else
-            node scripts/refresh-instagram-token.mjs --check
-          fi
+          node scripts/refresh-instagram-token.mjs "--$ACTION"
+
+      - name: Persist authenticated encrypted lifecycle checkpoint
+        if: inputs.action == 'setup' || inputs.action == 'refresh'
+        uses: actions/upload-artifact@v7
+        with:
+          name: instagram-lifecycle-v1
+          path: ${{ runner.temp }}/instagram-lifecycle/output/state.enc.json
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Notify on Failure
         if: failure() && steps.notification-config.outputs.enabled == 'true'

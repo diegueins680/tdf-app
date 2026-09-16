@@ -1,0 +1,107 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 27 and seed 5073369093070292120 with 1 worker on 16 cores with 4096MB heap and 64MB offheap memory [pid: 68733] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 17.0.12 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-social-20260914/formal/social/Relationships.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Relationships
+Starting... (2026-09-14 22:24:54)
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-14 22:24:54.
+Error: Invariant AuthoritativeDenial is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ blocked = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ terminal = {}
+/\ version = 0
+/\ consent = {}
+/\ cacheVersion = 0
+/\ cacheConsent = {}
+/\ leaked = FALSE
+/\ delivered = {}
+/\ members = {a, b}
+
+State 2: <Request line 15, col 15 to line 18, col 71 of module Relationships>
+/\ pending = {}
+/\ blocked = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ terminal = {}
+/\ version = 1
+/\ consent = {a}
+/\ cacheVersion = 0
+/\ cacheConsent = {}
+/\ leaked = FALSE
+/\ delivered = {}
+/\ members = {a, b}
+
+State 3: <Request line 15, col 15 to line 18, col 71 of module Relationships>
+/\ pending = {}
+/\ blocked = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ terminal = {}
+/\ version = 2
+/\ consent = {a, b}
+/\ cacheVersion = 0
+/\ cacheConsent = {}
+/\ leaked = FALSE
+/\ delivered = {}
+/\ members = {a, b}
+
+State 4: <Refresh line 45, col 12 to line 47, col 54 of module Relationships>
+/\ pending = {}
+/\ blocked = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ terminal = {}
+/\ version = 2
+/\ consent = {a, b}
+/\ cacheVersion = 2
+/\ cacheConsent = {a, b}
+/\ leaked = FALSE
+/\ delivered = {}
+/\ members = {a, b}
+
+State 5: <Block line 23, col 13 to line 27, col 55 of module Relationships>
+/\ pending = {}
+/\ blocked = {a}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ terminal = {}
+/\ version = 3
+/\ consent = {}
+/\ cacheVersion = 2
+/\ cacheConsent = {a, b}
+/\ leaked = FALSE
+/\ delivered = {}
+/\ members = {a, b}
+
+State 6: <Read line 48, col 9 to line 51, col 71 of module Relationships>
+/\ pending = {}
+/\ blocked = {a}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ terminal = {}
+/\ version = 3
+/\ consent = {}
+/\ cacheVersion = 2
+/\ cacheConsent = {a, b}
+/\ leaked = TRUE
+/\ delivered = {}
+/\ members = {a, b}
+
+2238 states generated, 843 distinct states found, 466 states left on queue.
+The depth of the complete state graph search is 6.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 10 and the 95th percentile is 8).
+Finished in 04s at (2026-09-14 22:24:55)
