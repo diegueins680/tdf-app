@@ -3,11 +3,12 @@
 
 module TDF.Commerce.MerchReservationWorker
   ( merchReservationWorkerTick
+  , merchReservationWorkerIterationWith
   , startMerchReservationWorker
   ) where
 
 import           Control.Concurrent (forkIO, threadDelay)
-import           Control.Exception.Safe (displayException, tryAny)
+import           Control.Exception.Safe (tryAny)
 import           Control.Monad (forever, void)
 import           Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool)
 import           System.IO (hPutStrLn, stderr)
@@ -44,23 +45,23 @@ startMerchReservationWorker env = void (forkIO (workerLoop env))
 
 workerLoop :: Env -> IO ()
 workerLoop env = forever $ do
-  result <- tryAny (merchReservationWorkerTick env)
+  merchReservationWorkerIterationWith (merchReservationWorkerTick env)
+    (hPutStrLn stderr) putStrLn
+  threadDelay (30 * 1000000)
+
+-- Keep expiry work separate from diagnostics and preserve one tick per interval.
+merchReservationWorkerIterationWith
+  :: IO Int -> (String -> IO ()) -> (String -> IO ()) -> IO ()
+merchReservationWorkerIterationWith tick logError logInfo = do
+  result <- tryAny tick
   case result of
-    Left err ->
-      hPutStrLn stderr
-        ("{\"component\":\"merch-reservation-worker\",\"level\":\"error\",\"message\":\"tick failed\",\"error\":\""
-          <> redactLogValue (displayException err) <> "\"}")
+    -- Database exceptions are untrusted diagnostics, not safe log fields.
+    Left _ -> void $ tryAny $ logError
+      ("{\"component\":\"merch-reservation-worker\",\"level\":\"error\","
+        <> "\"message\":\"tick failed\"}")
     Right released
       | released > 0 ->
-          putStrLn
+          void $ tryAny $ logInfo
             ("{\"component\":\"merch-reservation-worker\",\"level\":\"info\",\"expiredCheckouts\":"
               <> show released <> "}")
       | otherwise -> pure ()
-  threadDelay (30 * 1000000)
-
-redactLogValue :: String -> String
-redactLogValue = take 500 . map replaceUnsafe
-  where
-    replaceUnsafe character
-      | character `elem` ['\n', '\r', '\t', '"'] = ' '
-      | otherwise = character

@@ -127,6 +127,14 @@ Screenshots and mocks may support UX review but cannot be recorded as provider s
 
 ## 4. Deployment and rollback
 
+For fixed worker failure diagnostics and behavior when log output is unavailable,
+see [ADR 0127](../adr/0127-payment-worker-diagnostic-boundaries.md) and
+[verification](worker-log-safety-2026-09-15.md). Alert on component/level/message;
+the two old raw `error` fields are intentionally removed. Do not re-enable
+exception/payload logging. Investigate through authorized queue and reconciliation
+views, and monitor log delivery and queue age separately. A failed log must not
+trigger an immediate repeat of the payment or expiry action.
+
 Pre-deploy:
 
 - repository and generated-client checks pass;

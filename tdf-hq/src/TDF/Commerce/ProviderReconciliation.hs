@@ -13,6 +13,7 @@ module TDF.Commerce.ProviderReconciliation
   , applyQueryResult
   , startProviderQueryWorker
   , providerQueryWorkerTickWith
+  , providerQueryWorkerIterationWith
   ) where
 
 import           Control.Concurrent (forkIO, threadDelay)
@@ -158,13 +159,21 @@ startProviderQueryWorker :: Env -> IO ()
 startProviderQueryWorker env = do
   enabled <- queryWorkerEnabled
   when enabled $ void $ forkIO $ forever $ do
-    outcome <- tryAny (providerQueryWorkerTickWith
-      (executeAdapterRequest sharedProviderManager) env)
-    case outcome of
-      Left _ -> hPutStrLn stderr
-        "{\"component\":\"provider-query-worker\",\"level\":\"error\",\"message\":\"tick failed; lease recovery required\"}"
-      Right _ -> pure ()
+    providerQueryWorkerIterationWith
+      (providerQueryWorkerTickWith (executeAdapterRequest sharedProviderManager) env)
+      (hPutStrLn stderr)
     threadDelay (5 * 1000000)
+
+providerQueryWorkerIterationWith :: IO Int -> (String -> IO ()) -> IO ()
+providerQueryWorkerIterationWith tick logError = do
+  outcome <- tryAny tick
+  case outcome of
+    -- A failed diagnostic must not end lease recovery or repeat provider work.
+    -- tryAny deliberately preserves asynchronous cancellation at both boundaries.
+    Left _ -> void $ tryAny $ logError
+      ("{\"component\":\"provider-query-worker\",\"level\":\"error\","
+        <> "\"message\":\"tick failed; lease recovery required\"}")
+    Right _ -> pure ()
 
 queryWorkerEnabled :: IO Bool
 queryWorkerEnabled = (== Just "true") <$> lookupEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED"

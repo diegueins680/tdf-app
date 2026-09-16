@@ -130,6 +130,7 @@ import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.ProviderCapabilities as ProviderCapabilities
 import qualified TDF.Commerce.ProviderExecutionStore as ProviderExecutionStore
 import qualified TDF.Commerce.ProviderRetrySpec as ProviderRetrySpec
+import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntimeStore
 import qualified TDF.Commerce.ProviderAdapter as ProviderAdapter
 import qualified TDF.Commerce.ProviderAdapter.Http as ProviderAdapterHttp
@@ -17246,6 +17247,7 @@ main = hspec $ do
 
     APITypesSpec.spec
     ProviderRetrySpec.spec
+    WorkerLoggingSpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
     CatalogRecordsSpec.spec
