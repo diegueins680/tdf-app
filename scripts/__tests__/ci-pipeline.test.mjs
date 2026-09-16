@@ -2,9 +2,34 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+test('PostgreSQL runner uses the CI service and deletes only its newly created test database', () => {
+  const script = `
+    . "$1"
+    createdb() { test "$PGPASSWORD" = "$TDF_TEST_POSTGRES_PASSWORD"; echo "createdb $*"; return "$CREATE_RESULT"; }
+    psql() { echo "psql $*"; }
+    dropdb() { echo "dropdb $*"; }
+    docker() { echo unexpected-docker; exit 97; }
+    tdf_test_db_init tdf_owned_test
+    tdf_test_db_cleanup
+  `;
+  const invoke = (createResult) => spawnSync('sh', ['-eu', '-c', script, 'runner', path.join(root, 'scripts/lib/postgres-test-database.sh')], {
+    encoding: 'utf8',
+    env: { PATH: process.env.PATH, GITHUB_ACTIONS: 'true', TDF_TEST_POSTGRES_HOST: 'postgres', TDF_TEST_POSTGRES_PASSWORD: 'synthetic-test-only', CREATE_RESULT: createResult },
+  });
+  const owned = invoke('0');
+  assert.equal(owned.status, 0, owned.stderr);
+  assert.match(owned.stdout, /createdb -h postgres -U postgres tdf_owned_test/);
+  assert.equal((owned.stdout.match(/dropdb/g) ?? []).length, 1);
+  assert.doesNotMatch(owned.stdout, /unexpected-docker/);
+  const existing = invoke('17');
+  assert.equal(existing.status, 17);
+  assert.doesNotMatch(existing.stdout, /dropdb|unexpected-docker/);
+});
 
 async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');
@@ -12,6 +37,9 @@ async function source(relativePath) {
 
 test('CI splits component checks and preserves Stack build caches', async () => {
   const workflow = await source('.github/workflows/ci.yml');
+  // General config tests must not inherit the runtime fixture's libpq password.
+  assert.doesNotMatch(workflow, /^      PGPASSWORD:/m);
+  assert.match(workflow, /^      TDF_TEST_POSTGRES_PASSWORD: postgres$/m);
   for (const job of ['repo-quality:', 'ui-quality:', 'mobile-quality:', 'backend-quality:', 'quality:']) {
     assert.match(workflow, new RegExp(`^  ${job}`, 'm'));
   }
@@ -63,6 +91,17 @@ test('backend quality compiles, tests and exports the binary in one Stack pass',
   assert.match(script, /build_args=\(--no-terminal test tdf-hq\)/);
   assert.equal((script.match(/stack "\$\{build_args\[@\]\}"/g) ?? []).length, 1);
   assert.doesNotMatch(script, /stack --no-terminal test/);
+});
+
+test('backend quality requires real invitation and dependency PostgreSQL regressions', async () => {
+  const quality = await source('scripts/quality-backend.sh');
+  for (const runner of ['test-invitation-update-concurrency.sh', 'test-event-relations-runtime.sh']) {
+    assert.ok(quality.includes(`scripts/${runner}`));
+    const script = await source(`scripts/${runner}`);
+    assert.match(script, /--fail-on=empty/);
+    assert.match(script, /test -x "\$test_binary"/);
+    assert.doesNotMatch(script, /stack test/);
+  }
 });
 
 test('backend quality exercises public booking concurrency with its tested binary', async () => {

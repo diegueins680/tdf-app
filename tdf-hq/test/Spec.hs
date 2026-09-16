@@ -21,6 +21,7 @@ import Data.Int (Int64)
 import Data.List (isInfixOf, nub)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isNothing)
+import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.Encoding as TE
@@ -184,6 +185,7 @@ import TDF.Models.SocialEventsModels
     ( EventBudgetLine (..),
       EventFinanceEntry (..),
       EventInvitationId,
+      EventLogisticsDependency (..),
       EventTicket (..),
       EventTicketOrder (..),
       EventTicketTier (..),
@@ -422,6 +424,7 @@ import TDF.Server.SocialSync
       validateSocialSyncMediaUrls )
 import TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
+    replaceLogisticsActivityDependencies,
     normalizeBudgetLineType,
     normalizeFinanceDirection,
     normalizeFinanceEntryStatus,
@@ -578,6 +581,7 @@ import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
+import qualified TDF.Server.EventRelationsSpec as EventRelationsSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 import qualified TDF.Trials.DTO as TrialsDTO
@@ -2670,6 +2674,29 @@ main = hspec $ do
             normalizeCountryCode "ZZ" `shouldBe` Nothing
             normalizeTimeZone "Europe/Berlin" `shouldBe` Just "Europe/Berlin"
             normalizeTimeZone "../etc/passwd" `shouldBe` Nothing
+
+    describe "event logistics dependency replacement" $ do
+        it "preserves unchanged edge identity and provenance while applying only the requested delta" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                let oldTime = UTCTime (fromGregorian 2026 9 14) 0
+                    now = addUTCTime 60 oldTime
+                dependencies <- runSqlPool (do
+                    rawExecute "CREATE TABLE event_logistics_dependency (id INTEGER PRIMARY KEY, activity_id INTEGER NOT NULL, depends_on_activity_id INTEGER NOT NULL, created_at TIMESTAMP NOT NULL, UNIQUE(activity_id,depends_on_activity_id))" []
+                    insertKey (toSqlKey 1) (EventLogisticsDependency (toSqlKey 100) (toSqlKey 101) oldTime)
+                    insertKey (toSqlKey 2) (EventLogisticsDependency (toSqlKey 100) (toSqlKey 102) oldTime)
+                    insertKey (toSqlKey 3) (EventLogisticsDependency (toSqlKey 200) (toSqlKey 201) oldTime)
+                    replaceLogisticsActivityDependencies (toSqlKey 100)
+                        [toSqlKey 101, toSqlKey 103, toSqlKey 103] now
+                    selectList [] []) pool
+                map (\(Entity _ dependency) ->
+                    ( fromSqlKey (eventLogisticsDependencyActivityId dependency)
+                    , fromSqlKey (eventLogisticsDependencyDependsOnActivityId dependency)
+                    , eventLogisticsDependencyCreatedAt dependency
+                    )) dependencies `shouldMatchList`
+                      [(100, 101, oldTime), (100, 103, now), (200, 201, oldTime)]
+                [fromSqlKey key | Entity key dependency <- dependencies,
+                    eventLogisticsDependencyDependsOnActivityId dependency == toSqlKey 101]
+                    `shouldBe` [1]
 
     describe "event logistics route parsing" $ do
         it "parses Google durations including fractional seconds" $ do
@@ -16915,6 +16942,7 @@ main = hspec $ do
     ServerFanClubSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
+    EventRelationsSpec.spec
     PublicLeadSpec.spec
     WhatsAppHistorySpec.spec
 

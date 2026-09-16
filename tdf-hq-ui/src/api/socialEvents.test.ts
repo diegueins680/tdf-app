@@ -180,7 +180,7 @@ describe('SocialEventsAPI', () => {
     );
   });
 
-  it('respondInvitation updates with the canonical matched invitation id', async () => {
+  it('respondInvitation sends a status-only reply without clearing the organizer message', async () => {
     getMock.mockResolvedValueOnce([
       {
         invitationId: '12',
@@ -192,11 +192,19 @@ describe('SocialEventsAPI', () => {
 
     expect(putMock).toHaveBeenCalledWith(
       '/social-events/events/7/invitations/12',
-      expect.objectContaining({
+      {
         invitationToPartyId: '99',
         invitationStatus: 'Accepted',
-      }),
+      },
     );
+  });
+
+  it.each(['Accepted', 'Declined'])('omits message edits for a status-only %s response', async (status) => {
+    getMock.mockResolvedValueOnce([{ invitationId: '12', invitationToPartyId: '99' }]);
+    await SocialEventsAPI.respondInvitation('7', '12', status);
+    expect(putMock).toHaveBeenCalledWith('/social-events/events/7/invitations/12', {
+      invitationToPartyId: '99', invitationStatus: status,
+    });
   });
 
   it('respondInvitation throws when invitation is not found', async () => {

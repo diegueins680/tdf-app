@@ -29,6 +29,9 @@ fi
   STACK_ROOT="$STACK_ROOT_DIR" stack "${build_args[@]}"
 )
 
+STACK_ROOT="$STACK_ROOT_DIR" bash "$ROOT/scripts/test-invitation-update-concurrency.sh"
+STACK_ROOT="$STACK_ROOT_DIR" sh "$ROOT/scripts/test-event-relations-runtime.sh"
+
 if [ -n "${BACKEND_BINARY_OUT:-}" ]; then
   copied_binary="$(dirname "$BACKEND_BINARY_OUT")/tdf-hq-exe"
   test -s "$copied_binary"
