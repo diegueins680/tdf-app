@@ -37,6 +37,9 @@ data RefundRecoveryView = RefundRecoveryView
   , rrvCheckedAt :: Maybe UTCTime
   }
 
+instance Show RefundRecoveryView where
+  show _ = "RefundRecoveryView(<redacted>)"
+
 type Target = (Refund.RefundRecord, RefundQueryBinding)
 
 -- Configuration returns only readiness, never credentials. The HTTP callback

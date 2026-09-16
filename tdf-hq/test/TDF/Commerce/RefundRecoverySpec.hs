@@ -77,12 +77,11 @@ spec = describe "held-refund query adapter" $ do
 
   forM_ ["../other", "R?capture=other", "R/other", "R#fragment", "R\nvalue", ""] $ \ref ->
     it ("rejects unsafe refund identifiers before credentials for " <> show ref) $
-      buildRefundQuery "synthetic-token" exampleBinding { rqbRefundId = ref }
-        `shouldSatisfy` either (const True) (const False)
+      isLeft (buildRefundQuery "synthetic-token" exampleBinding { rqbRefundId = ref })
+        `shouldBe` True
 
   it "rejects a header-shaped token" $
-    buildRefundQuery "synthetic\r\nInjected: value" exampleBinding
-      `shouldSatisfy` either (const True) (const False)
+    isLeft (buildRefundQuery "synthetic\r\nInjected: value" exampleBinding) `shouldBe` True
 
   it "round-trips every generated positive Int64 minor amount without rounding" $
     QC.forAll (QC.choose (1, maxBound) :: QC.Gen Int64) $ \minor ->
