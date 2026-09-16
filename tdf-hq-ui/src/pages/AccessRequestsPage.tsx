@@ -83,6 +83,8 @@ const copy = {
     back: 'Volver a mis solicitudes',
     reviewTitle: 'Revisar solicitudes de acceso',
     requestReference: 'Solicitud',
+    requester: 'Solicitante',
+    unnamedRequester: 'Nombre no disponible',
     currentContext: 'Contexto al solicitar',
     reviewerNote: 'Nota del revisor',
     approve: 'Aprobar para provisión',
@@ -120,6 +122,8 @@ const copy = {
     back: 'Back to my requests',
     reviewTitle: 'Review access requests',
     requestReference: 'Request',
+    requester: 'Requested by',
+    unnamedRequester: 'Name unavailable',
     currentContext: 'Context when requested',
     reviewerNote: 'Reviewer note',
     approve: 'Approve for provisioning',
@@ -149,6 +153,11 @@ function formatDate(value: string, locale: 'es' | 'en') {
 function requestTitle(request: FeatureAccessRequestDTO, locale: 'es' | 'en') {
   const feature = getFeatureById(request.featureId);
   return feature ? featureLabel(feature, locale) : locale === 'en' ? 'Unavailable feature' : 'Función no disponible';
+}
+
+function requesterName(request: FeatureAccessRequestDTO, locale: 'es' | 'en') {
+  const name = request.requesterName?.trim() ?? '';
+  return name.length > 0 ? name : copy[locale].unnamedRequester;
 }
 
 function History({ request }: { request: FeatureAccessRequestDTO }) {
@@ -215,6 +224,7 @@ export default function AccessRequestsPage() {
               <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={2}>
                 <Box>
                   <Typography variant="h6" component="h2">{requestTitle(request, locale)}</Typography>
+                  <Typography variant="body2">{text.requester}: {requesterName(request, locale)}</Typography>
                   <Typography variant="body2">{text.action}: {request.action}</Typography>
                   <Typography variant="caption" color="text.secondary">
                     {text.requested}: {formatDate(request.requestedAt, locale)}
@@ -367,6 +377,7 @@ function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO; 
       <CardContent>
         <Typography variant="h6" component="h2">{requestTitle(request, locale)}</Typography>
         <Typography>{text.requestReference}: #{request.id}</Typography>
+        <Typography>{text.requester}: {requesterName(request, locale)}</Typography>
         <Typography>{text.action}: {request.action}</Typography>
         <Typography color="text.secondary">{text.currentContext}: {context.join(', ') || '—'}</Typography>
         {request.justification ? <Alert severity="info" sx={{ mt: 2 }}>{request.justification}</Alert> : null}

@@ -13641,6 +13641,7 @@ components:
       required:
         - id
         - requesterPartyId
+        - requesterName
         - featureId
         - action
         - roleContext
@@ -13658,6 +13659,10 @@ components:
           type: integer
           format: int64
           description: Internal subject identifier; clients must not expose it unnecessarily.
+        requesterName:
+          type: string
+          nullable: true
+          description: Requester's display name, or null when unavailable. Visible only to the requester and authorized reviewers.
         featureId:
           type: string
         action:
