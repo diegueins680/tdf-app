@@ -63,7 +63,7 @@ it('prevents double submission while the original query is unresolved', async ()
   const button = screen.getByRole('button', { name: 'Check original refund' });
   fireEvent.click(button); fireEvent.click(button);
   expect(queryMock).toHaveBeenCalledTimes(1);
-  expect(screen.getByRole('textbox')).toBeDisabled();
+  expect(screen.getByRole('textbox').hasAttribute('disabled')).toBe(true);
   expect(screen.queryByText('Amount: USD 125.15')).toBeNull();
   finish(record({ ssrrStatus: 'succeeded', ssrrOutcome: 'completed', ssrrCanQuery: false,
     ssrrCheckedAt: '2026-09-16T16:00:00Z' }));
