@@ -1,0 +1,2 @@
+✨ openapi-typescript 7.10.1
+🚀 tdf-hq/docs/openapi/api.yaml → tdf-mobile/src/api/generated/types.ts [5.2s]

@@ -1,0 +1,291 @@
+be828cdab89101c82c8a7a1308f28d61ba3c3519793dc4f84b53cbb068356033 tdf-hq/sql/2026-09-14_social_v2_foundation.sql
+ea1d941af3fc9fb92f419f52214a632618858c6949e86d1006c4b829944d0b0a tdf-hq/sql/2026-09-14_social_v2_pause.sql
+beb721e8e9d6a0893eb71b15097379d959778cc988265edeef409fcbff65ced1 tdf-hq/sql/2026-09-14_social_v2_read_models.sql
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+INSERT 0 0
+NOTICE:  relation "social_v2_preference" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_pair" already exists, skipping
+CREATE TABLE
+CREATE INDEX
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_command" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+UPDATE 1
+DO
+DO
+BEGIN
+UPDATE 1
+COMMIT
+DO
+BEGIN
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+INSERT 0 0
+CREATE TABLE
+NOTICE:  relation "social_v2_preference" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_pair" already exists, skipping
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_command" already exists, skipping
+CREATE TABLE
+CREATE INDEX
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+BEGIN
+NOTICE:  column "publication_position" of relation "social_v2_runtime" already exists, skipping
+ALTER TABLE
+CREATE TABLE
+NOTICE:  relation "social_v2_publication" already exists, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+UPDATE 1
+ social_v2_publish_batch
+-------------------------
+                       4
+(1 row)
+
+DO
+UPDATE 1
+INSERT 0 1
+ social_v2_publish_batch
+-------------------------
+                       1
+(1 row)
+
+DO
+DELETE 1
+DO
+DELETE 1
+DO
+INSERT 0 1
+                    social_v2_preferences
+-------------------------------------------------------------
+ {"revision": 1, "discoverable": true, "personalized": true}
+(1 row)
+
+DO
+DO
+DO
+                  ?column?
+--------------------------------------------
+ PASS: 29 TLC-generated consent transitions
+(1 row)
+
+Timing is on.
+INSERT 0 110000
+Time: 7024.826 ms (00:07.025)
+INSERT 0 110000
+Time: 29369.347 ms (00:29.369)
+INSERT 0 10000
+Time: 2806.879 ms (00:02.807)
+INSERT 0 10000
+Time: 5068.810 ms (00:05.069)
+INSERT 0 90000
+Time: 40244.701 ms (00:40.245)
+ANALYZE
+Time: 3882.032 ms (00:03.882)
+SET
+Time: 1.341 ms
+      ?column?      |                                         version
+--------------------+------------------------------------------------------------------------------------------
+ PostgreSQL version | PostgreSQL 16.13 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+(1 row)
+
+Time: 9.184 ms
+     ?column?     |   d   | count
+------------------+-------+--------
+ synthetic degree |     1 | 100004
+ synthetic degree |     2 |      1
+ synthetic degree | 10000 |      1
+ synthetic degree | 90000 |      1
+(4 rows)
+
+Time: 3016.180 ms (00:03.016)
+      ?column?      | pg_total_relation_size
+--------------------+------------------------
+ pair storage bytes |               14819328
+(1 row)
+
+Time: 7.786 ms
+                                       QUERY PLAN
+-----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=156.804..156.805 rows=1 loops=1)
+   Buffers: shared hit=1641
+ Planning Time: 0.056 ms
+ Execution Time: 162.555 ms
+(4 rows)
+
+Time: 177.010 ms
+                                       QUERY PLAN
+-----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=141.628..141.630 rows=1 loops=1)
+   Buffers: shared hit=1501
+ Planning Time: 0.037 ms
+ Execution Time: 141.658 ms
+(4 rows)
+
+Time: 146.729 ms
+                                      QUERY PLAN
+---------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=66.081..66.082 rows=1 loops=1)
+   Buffers: shared hit=395
+ Planning Time: 0.052 ms
+ Execution Time: 66.113 ms
+(4 rows)
+
+Time: 67.749 ms
+SET
+Time: 1.515 ms
+CREATE TABLE
+Time: 32.088 ms
+DO
+Time: 5538.879 ms (00:05.539)
+      kind       | samples | p50_ms  | p95_ms  | within_200ms
+-----------------+---------+---------+---------+--------------
+ discover hub    |      20 | 106.505 | 180.068 | t
+ discover sparse |      20 | 111.035 | 173.312 | t
+ following empty |      20 |  29.831 |  72.456 | t
+(3 rows)
+
+Time: 23.869 ms
+INSERT 0 1
+Time: 5.836 ms
+INSERT 0 1
+Time: 4.608 ms
+INSERT 0 50000
+Time: 9540.792 ms (00:09.541)
+DO
+Time: 18285.372 ms (00:18.285)
+ANALYZE
+Time: 1055.443 ms (00:01.055)
+SET
+Time: 0.374 ms
+ERROR:  canceling statement due to statement timeout
+CONTEXT:  SQL function "social_v2_allowed" statement 1
+SQL statement "WITH eligible AS (
+    SELECT s.position,s.published_at,p.id,p.title,p.content,p.created_at,
+      p.fan_party_id AS author_id,a.display_name,c.artist_party_id
+    FROM social_v2_publication s JOIN fan_club_post p ON p.id=s.post_id
+      JOIN fan_club c ON c.id=p.club_id JOIN party a ON a.id=p.fan_party_id
+    WHERE (before_position IS NULL OR s.position<before_position)
+      AND NOT p.is_hidden AND p.parent_id IS NULL
+      AND social_v2_allowed(actor,p.fan_party_id) AND social_v2_allowed(actor,c.artist_party_id)
+      -- Membership is checked in its authoritative source on EVERY page.
+      AND (c.artist_party_id=actor OR EXISTS (SELECT 1 FROM fan_follow f
+             WHERE f.fan_party_id=actor AND f.artist_party_id=c.artist_party_id)
+           OR EXISTS (SELECT 1 FROM fan_club_officer o
+             WHERE o.club_id=c.id AND o.fan_party_id=actor))
+      -- Subscribe to an artist's club or explicitly follow its author.
+      AND (EXISTS (SELECT 1 FROM fan_follow f
+             WHERE f.fan_party_id=actor AND f.artist_party_id=c.artist_party_id)
+           OR EXISTS (SELECT 1 FROM social_v2_pair r
+             WHERE r.party_a=least(actor,p.fan_party_id) AND r.party_b=greatest(actor,p.fan_party_id)
+               AND CASE WHEN actor=r.party_a THEN r.follow_a ELSE r.follow_b END))
+      AND NOT EXISTS (SELECT 1 FROM social_v2_pair r
+        WHERE ((r.party_a=least(actor,p.fan_party_id) AND r.party_b=greatest(actor,p.fan_party_id))
+            OR (r.party_a=least(actor,c.artist_party_id) AND r.party_b=greatest(actor,c.artist_party_id)))
+          AND CASE WHEN actor=r.party_a THEN r.mute_a ELSE r.mute_b END)
+    ORDER BY s.position DESC LIMIT page_size+1
+  ), page AS (SELECT * FROM eligible ORDER BY position DESC LIMIT page_size)
+  SELECT jsonb_build_object('items',coalesce((SELECT jsonb_agg(jsonb_build_object(
+    'postId',id,'position',position::text,'publishedAt',published_at,'createdAt',created_at,
+    'title',title,'content',content,'authorId',author_id,'authorName',display_name,
+    'artistId',artist_party_id) ORDER BY position DESC) FROM page),'[]'::jsonb),
+    'nextCursor',CASE WHEN (SELECT count(*) FROM eligible)>page_size
+      THEN (SELECT min(position)::text FROM page) ELSE NULL END)"
+PL/pgSQL function social_v2_feed(bigint,bigint,integer) line 11 at SQL statement
+Time: 30032.155 ms (00:30.032)

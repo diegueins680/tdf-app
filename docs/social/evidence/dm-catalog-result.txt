@@ -1,0 +1,4 @@
+Command: node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /private/tmp/social-dm-catalog-final.json
+Observed exit: 0
+Candidates: 1111
+No unreviewed or stale candidates. Gate unchanged.

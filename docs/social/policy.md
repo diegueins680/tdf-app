@@ -9,8 +9,10 @@ authoritative for their resources. Do not collapse social artist IDs into PartyI
 Band membership, catalog grants and resource ownership remain separate authorities.
 A managed entity cannot be used to bypass a principal block; support for this
 requires retaining both principal and acting entity at the authorization boundary.
-The existing AuthedUser type loses credential identity: this is a cutover blocker,
-not permission to infer the missing authority from the graph.
+The account-only pilot now retains and revalidates API token identity at the
+[session boundary](session-boundary.md). Separate credential/session provenance,
+delegated entity authority and global-role revocation remain cutover work; never
+infer missing authority from graph proximity.
 
 | Edge | Direction/cardinality | Owner and lifecycle | Rights |
 |---|---|---|---|

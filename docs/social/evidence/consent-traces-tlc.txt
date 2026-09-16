@@ -1,0 +1,27 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 10 and seed -9188480502615818482 with 1 worker on 16 cores with 4096MB heap and 64MB offheap memory [pid: 91088] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 17.0.12 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-social-20260914/formal/social/ConsentTraces.tla
+Parsing file /Users/diegosaa/GitHub/tdf-app-social-20260914/formal/social/Relationships.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Relationships
+Semantic processing of module ConsentTraces
+Starting... (2026-09-14 22:35:51)
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-14 22:35:56.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 6.9E-17
+72 states generated, 32 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 4 and the 95th percentile is 4).
+Finished in 15s at (2026-09-14 22:35:57)

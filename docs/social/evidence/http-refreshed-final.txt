@@ -1,0 +1,171 @@
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+CREATE TABLE
+INSERT 0 5
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+/Users/diegosaa/GitHub/tdf-app-social-20260914/tdf-hq/tdf-hq.cabal was modified manually. Ignoring /Users/diegosaa/GitHub/tdf-app-social-20260914/tdf-hq/package.yaml in favor of the Cabal file.
+If you want to use the package.yaml file instead of the Cabal file,
+then please delete the Cabal file.
+[13 of 14] Compiling Main             ( scripts/social/HttpSpec.hs, /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tmp.mgq3mnPebJ/Main.o ) [Source file changed]
+scripts/social/HttpSpec.hs:36:13: warning: [GHC-20125] [-Wmissing-fields]
+    • Fields of ‘AppConfig’ not initialised:
+        dbHost :: String
+        dbPort :: String
+        dbUser :: String
+        dbPass :: String
+        dbName :: String
+        dbConnUrl :: Maybe String
+        dbSslMode :: Maybe String
+        appPort :: Int
+        resetDb :: Bool
+        seedDatabase :: Bool
+        runMigrations :: Bool
+        seedTriggerToken :: Maybe Data.Text.Internal.Text
+        appBaseUrl :: Maybe Data.Text.Internal.Text
+        assetsBaseUrl :: Maybe Data.Text.Internal.Text
+        assetsRootDir :: FilePath
+        courseDefaultSlug :: Data.Text.Internal.Text
+        courseDefaultMapUrl :: Maybe Data.Text.Internal.Text
+        courseDefaultInstructorAvatar :: Maybe Data.Text.Internal.Text
+        openAiApiKey :: Maybe Data.Text.Internal.Text
+        openAiModel :: Data.Text.Internal.Text
+        openAiEmbedModel :: Data.Text.Internal.Text
+        chatKitWorkflowId :: Maybe Data.Text.Internal.Text
+        chatKitApiBase :: Data.Text.Internal.Text
+        ragTopK :: Int
+        ragChunkWords :: Int
+        ragChunkOverlap :: Int
+        ragAvailabilityDays :: Int
+        ragAvailabilityPerResource :: Int
+        ragRefreshHours :: Int
+        ragEmbedBatchSize :: Int
+        emailConfig :: Maybe TDF.Config.EmailConfig
+        googleClientId :: Maybe Data.Text.Internal.Text
+        facebookAppId :: Maybe Data.Text.Internal.Text
+        facebookAppSecret :: Maybe Data.Text.Internal.Text
+        facebookGraphBase :: Data.Text.Internal.Text
+        facebookMessagingToken :: Maybe Data.Text.Internal.Text
+        facebookMessagingPageId :: Maybe Data.Text.Internal.Text
+        facebookMessagingApiBase :: Data.Text.Internal.Text
+        instagramAppToken :: Maybe Data.Text.Internal.Text
+        instagramGraphBase :: Data.Text.Internal.Text
+        instagramMessagingToken :: Maybe Data.Text.Internal.Text
+        instagramMessagingAccountId :: Maybe Data.Text.Internal.Text
+        instagramMessagingApiBase :: Data.Text.Internal.Text
+        instagramVerifyToken :: Maybe Data.Text.Internal.Text
+        sessionCookieDomain :: Maybe Data.Text.Internal.Text
+        sessionCookiePath :: Data.Text.Internal.Text
+        sessionCookieSecure :: Bool
+        sessionCookieSameSite :: Data.Text.Internal.Text
+        sessionCookieMaxAgeSeconds :: Maybe Int
+        stripeSecretKey :: Maybe Data.Text.Internal.Text
+        stripePublishableKey :: Maybe Data.Text.Internal.Text
+        stripeWebhookSecret :: Maybe Data.Text.Internal.Text
+        contextualReputationEnabled :: Bool
+        publicReputationProjectionEnabled :: Bool
+        eventDiscoveryEnabled :: Bool
+        eventDiscoveryAutoPublish :: Bool
+        eventDiscoveryPilotLimit :: Int
+        ticketmasterApiKey :: Maybe Data.Text.Internal.Text
+        ticketmasterApiBase :: Data.Text.Internal.Text
+        eventDiscoveryLookaheadDays :: Int
+        eventDiscoveryMaxPagesPerCity :: Int
+        eventDiscoveryHourLocal :: Int
+        eventDiscoveryCountryCode :: Maybe Data.Text.Internal.Text
+        googleRoutesApiKey :: Maybe Data.Text.Internal.Text
+        googleRoutesApiBase :: Data.Text.Internal.Text
+        eventLogisticsRecheckEnabled :: Bool
+        artistEnrichmentEnabled :: Bool
+        artistEnrichmentAutoPublish :: Bool
+        artistEnrichmentHourLocal :: Int
+        artistEnrichmentBatchSize :: Int
+        artistEnrichmentStaleDays :: Int
+        defaultCurrency :: Data.Text.Internal.Text
+        supportedCurrencies :: [Data.Text.Internal.Text]
+        defaultTimezone :: Data.Text.Internal.Text
+        supportedLocales :: [Data.Text.Internal.Text]
+        defaultLocale :: Data.Text.Internal.Text
+        enableGdprCompliance :: Bool
+    • In the expression:
+        AppConfig {sessionCookieName = "social-fixture"}
+      In an equation for ‘cfg’:
+          cfg = AppConfig {sessionCookieName = "social-fixture"}
+      In a stmt of a 'do' block:
+        let cfg = AppConfig {sessionCookieName = "social-fixture"}
+            env = Env pool cfg
+            sql statement = runSqlPool (rawExecute statement []) pool
+   |
+36 |   let cfg = AppConfig {sessionCookieName = "social-fixture"}
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[14 of 14] Linking /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tmp.mgq3mnPebJ/social-http-spec [Objects changed]
+ld: warning: -U option is redundant when using -undefined dynamic_lookup
+ld: warning: ignoring duplicate libraries: '-lm'
+
+requires real bearer authentication even when the process gate is closed [✔]
+requires both process and database gates [✔]
+derives the actor from the token and rejects identity injection [✔]
+withdraws only the caller's consent and leaves the other intent intact [✔]
+denies blocked reads and stale acceptance but preserves the owner's unblock control [✔]
+serves an authorized Following page and rejects malformed cursors and page sizes [✔]
+rechecks authoritative membership on the next HTTP request [✔]
+denies inactive tokens and organization identities [✔]
+
+Finished in 0.2528 seconds
+8 examples, 0 failures

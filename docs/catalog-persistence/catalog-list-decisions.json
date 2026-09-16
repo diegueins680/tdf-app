@@ -10,25 +10,6 @@
   },
   "decisions": [
     {
-      "id": "9d18084547600ae29ff6",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing these result-field names would break the exhaustive no-credential-mutation invariant test.",
-      "justification": "Individually reviewed: ok and expiringSoon are boolean result-field keys from checkToken, used only by a 16-state unit-test fixture. They are not artist identities, selectable business values, or an independent persisted catalog. The test enumerates both tokens' validity and expiry flags and requires zero refresh calls in every read-only state.",
-      "reviewed": true,
-      "reviewMethod": "individual-source-review",
-      "reviewBatch": "messaging-readonly-2026-09-15",
-      "evidence": {
-        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
-        "line": 80,
-        "kind": "object-registry",
-        "name": "instagram",
-        "valueCount": 2
-      }
-    },
-    {
       "id": "c3d1e41b543e7cbdaf00",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -605,39 +586,6 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
       "reviewed": true
-    },
-    {
-      "id": "32da0d0a99da215fc4fa",
-      "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "provider_oauth_permission_fixture",
-      "priority": "P0-security",
-      "risk": "A fixture that invents permissions could falsely validate the OAuth ownership bootstrap.",
-      "justification": "Individually reviewed test-only mirrors of Meta's documented instagram_business_basic and instagram_business_manage_messages scope names. They are provider grant-response fixtures, not selectable application privileges or an independent business catalog; the basic grant is required by the lifecycle validator.",
-      "reviewed": true,
-      "reviewMethod": "source-and-provider-contract-review",
-      "reviewBatch": "instagram-lifecycle-2026-09-15",
-      "evidence": {
-        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
-        "name": "permissions",
-        "source": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login"
-      }
-    },
-    {
-      "id": "c3522bcc8fa29b9d5c1f",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Incorrect fixture fields could stop exercising the authorization-code exchange contract.",
-      "justification": "Individually reviewed setupOptions is a test-only object containing a visibly fictional authorization code and an example.test callback URI. Its code and redirectUri keys are function arguments, not a business catalog; they exercise exact app/callback binding without real credentials.",
-      "reviewed": true,
-      "reviewMethod": "source-contract-review",
-      "reviewBatch": "instagram-lifecycle-2026-09-15",
-      "evidence": {
-        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
-        "name": "setupOptions"
-      }
     },
     {
       "id": "86fcd97588e8b1c4bd10",
@@ -13404,6 +13352,78 @@
       "reviewed": true
     },
     {
+      "id": "a70974a1cf51644e6038",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing wire keys or dispatch codes without versioned server compatibility breaks authorization and clients.",
+      "justification": "Keys of a synthetic API response fixture are a versioned wire shape, not editable business reference data.",
+      "reviewed": true
+    },
+    {
+      "id": "7b92aacf2fc26768a779",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing wire keys or dispatch codes without versioned server compatibility breaks authorization and clients.",
+      "justification": "Versioned social mutation operation codes select modeled permission transitions. Administrative catalog editing must not invent new commands or authorization paths; changes require a reviewed server/model/client contract change.",
+      "reviewed": true
+    },
+    {
+      "id": "9d18084547600ae29ff6",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these result-field names would break the exhaustive no-credential-mutation invariant test.",
+      "justification": "Individually reviewed: ok and expiringSoon are boolean result-field keys from checkToken, used only by a 16-state unit-test fixture. They are not artist identities, selectable business values, or an independent persisted catalog. The test enumerates both tokens' validity and expiry flags and requires zero refresh calls in every read-only state.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "messaging-readonly-2026-09-15",
+      "evidence": {
+        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "line": 80,
+        "kind": "object-registry",
+        "name": "instagram",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "32da0d0a99da215fc4fa",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "provider_oauth_permission_fixture",
+      "priority": "P0-security",
+      "risk": "A fixture that invents permissions could falsely validate the OAuth ownership bootstrap.",
+      "justification": "Individually reviewed test-only mirrors of Meta's documented instagram_business_basic and instagram_business_manage_messages scope names. They are provider grant-response fixtures, not selectable application privileges or an independent business catalog; the basic grant is required by the lifecycle validator.",
+      "reviewed": true,
+      "reviewMethod": "source-and-provider-contract-review",
+      "reviewBatch": "instagram-lifecycle-2026-09-15",
+      "evidence": {
+        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "name": "permissions",
+        "source": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login"
+      }
+    },
+    {
+      "id": "c3522bcc8fa29b9d5c1f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Incorrect fixture fields could stop exercising the authorization-code exchange contract.",
+      "justification": "Individually reviewed setupOptions is a test-only object containing a visibly fictional authorization code and an example.test callback URI. Its code and redirectUri keys are function arguments, not a business catalog; they exercise exact app/callback binding without real credentials.",
+      "reviewed": true,
+      "reviewMethod": "source-contract-review",
+      "reviewBatch": "instagram-lifecycle-2026-09-15",
+      "evidence": {
+        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "name": "setupOptions"
+      }
+    },
+    {
       "id": "578a6926f6b1b91c0ae7",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -13725,6 +13745,16 @@
         "formal": "formal/event-operations",
         "validation": "scripts/test-event-operations-foundation-migration.sh"
       }
+    },
+    {
+      "id": "533cedc090436d948533",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing or dynamically supplying this selector could break the transaction locking discipline used for current-session authorization.",
+      "justification": "SessionAccess selects PostgreSQL shared versus exclusive row locking for an internal Haskell transaction helper. ReadSession and WriteSession are implementation modes, not business choices, roles, permissions, or a user-editable catalog. The token/party/domain authorities remain in the database.",
+      "reviewed": true
     }
   ]
 }

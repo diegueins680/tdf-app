@@ -23,3 +23,27 @@ reports, latency, opt-outs and exposure concentration as guardrails. Those are
 product hypotheses, not research-demonstrated gains for TDF. A post-release study
 must distinguish a social click/lead proxy from a completed booking or paid sale.
 No experiments or new services are provisioned in this task.
+
+### Read-boundary refinement (accessed 2026-09-15)
+
+[PostgreSQL 16 function volatility](https://www.postgresql.org/docs/16/xfunc-volatility.html)
+(versioned official documentation; page update date unavailable) specifies that
+STABLE functions use the calling query's snapshot; VOLATILE functions obtain new
+snapshots for their internal queries. TDF inference: mark read-only social functions
+STABLE so a sequence of policy/response SELECTs shares the model's single read
+boundary. Reject IMMUTABLE for database-backed policy because cached plans could
+retain an obsolete value. Mutations remain VOLATILE. Validation: PostgreSQL fixture
+asserts function classification and exercises revocation between calls; this does
+not prove arbitrary application code follows the same transaction discipline.
+
+### Session revocation refinement (accessed 2026-09-15)
+
+| Problem | Primary evidence; publication/update | Selected / rejected alternatives | Expected benefit and validation |
+|---|---|---|---|
+| Token revoked after authentication | [PostgreSQL 16 explicit locks](https://www.postgresql.org/docs/16/explicit-locking.html), versioned official docs, update unavailable | TDF inference: retain internal token ID; account/credential/token row locks and current token checks in the domain transaction. Reject auth-time-only checks or a process cache as current authority. | Observed old-handler 200 after revocation becomes 401; bounded model, 64 generated outcomes, real lock races, paired overhead benchmark. See [session boundary](session-boundary.md) for assumptions and actual results. |
+
+### Legacy messaging compatibility (accessed 2026-09-15)
+
+| Problem | Primary evidence; publication/update | Selected / rejected alternatives | Expected benefit and validation |
+|---|---|---|---|
+| Older DM writers bypass new pair policy; pausing loses enforcement | [PostgreSQL 16 triggers](https://www.postgresql.org/docs/16/trigger-definition.html) and [isolation](https://www.postgresql.org/docs/16/transaction-iso.html), official versioned docs, update unavailable | TDF inference: additive existing-table write trigger, ordered current-authority checks and retained activation memory. Reject flag-off legacy fallback and relying only on a new endpoint. Require READ COMMITTED explicitly. | Real old-INSERT counterexample; 27 checked-model outcomes; block/send races; complete-schema pause preserves messages; fixture INSERT overhead. Legacy readers and HTTP error mapping remain blockers. See [DM write boundary](dm-write-boundary.md). |
