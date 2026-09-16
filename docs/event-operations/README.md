@@ -1,5 +1,7 @@
 # Event operations specification index
 
+- [Scoped catalog review contract](catalog-review-contract.md)
+- [Draft PR 35: individual event-operations catalog decisions](pr-35-event-catalog-review.md)
 - [RACI paint readiness contract](raci-review-paint-contract.md)
 - [Draft PR 34: measured RACI review paint readiness](pr-34-raci-review-paint.md)
 - [Captured completion client contract](task-completion-client-contract.md)
