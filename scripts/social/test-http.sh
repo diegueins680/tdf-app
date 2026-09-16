@@ -63,6 +63,7 @@ psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql"
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/dm-read-refinement.sql"
 # psql \ir needs a real local path in Docker too, so concatenate the control and
 # generated cases instead of relying on the container seeing the checkout.
@@ -89,6 +90,20 @@ grep 'ProfileReads observed case .* mismatch' "$TDF_SOCIAL_PROFILE_NEGATIVE"
 echo 'PASS: generated cases reject the deliberately unsafe profile policy'
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/profile-read-model-cases.sql"
 echo 'PASS: checked profile outcomes refine PostgreSQL policy, ordering and payload'
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-refinement.sql"
+for control in policy counts; do
+  TDF_SOCIAL_RELATIONSHIP_NEGATIVE=$(mktemp)
+  if { cat "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-negative-$control.sql";
+       cat "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-model-cases.sql"; echo 'ROLLBACK;'; } |
+     psql_http > "$TDF_SOCIAL_RELATIONSHIP_NEGATIVE" 2>&1; then
+    echo "FAIL: unsafe relationship $control unexpectedly passed generated cases" >&2
+    exit 1
+  fi
+  grep 'RelationshipReads observed case .* mismatch' "$TDF_SOCIAL_RELATIONSHIP_NEGATIVE"
+  echo "PASS: observed cases reject deliberately unsafe relationship $control"
+done
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-model-cases.sql"
+echo 'PASS: checked relationship outcomes refine PostgreSQL rows, deletion and counts'
 if [ "${TDF_SOCIAL_CHAT_SQL_ONLY:-0}" = 1 ]; then
   echo 'SQL-only mode: HTTP tests were not run'
   exit 0

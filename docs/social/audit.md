@@ -77,3 +77,12 @@ and generated model-to-PostgreSQL checks are recorded in that packet.
 | Legacy single/batch social profiles | `Server.socialListProfiles`/`socialGetProfile` discard actor; Party/FanProfile join returns names/avatar/bio/city; batch limit 100; clients use existing social API. No job/cache required by server. | **Repair:** same DTO/URLs, current-token adapter and authoritative block/closure filtering. Model-derived SQL cases, profile HTTP tests and complete-schema reapply; see [packet](profile-read-boundary.md). |
 | Profile discovery preference | `social_v2_preference.discoverable`; existing profile fields have no private audience attribute | **Reuse:** exclude from recommendations where required; direct profile lookup is not newly private. Model negative control rejects that conflation. |
 | Other identity surfaces | Followers/friends/suggestions and public media/reference paths retain legacy behavior | **Defer this PR; overall activation blocked.** Inventory next cross-surface repairs, preserve adjacent booking/purchase authority. |
+
+## Legacy relationship reads — 2026-09-16
+
+Followers/following/friends GET adapters now share canonical profile eligibility;
+legacy two-hop suggestion counts retire after authoritative enforcement state exists.
+The historical mutual-follow list is retained as history, not accepted connection
+consent. [Evidence, policy and migration packet](relationship-read-boundary.md).
+Legacy friend/vCard mutations and their returned identity DTOs remain the next
+unrepaired boundary. Unpaginated historical lists remain a scaling limitation.
