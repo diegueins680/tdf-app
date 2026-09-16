@@ -8581,6 +8581,8 @@ export interface components {
         };
         CommerceAmountComponentSummary: {
             /** @enum {string} */
+            cacEnvironment: "sandbox" | "production";
+            /** @enum {string} */
             cacComponentType: "subtotal" | "discount" | "tax" | "customer_fee" | "provider_fee" | "platform_commission" | "seller_payable" | "withholding" | "refund" | "chargeback" | "fx_adjustment";
             /** @enum {string} */
             cacSource: "quote" | "provider_estimate" | "provider_actual" | "tax_document" | "manual_adjustment";

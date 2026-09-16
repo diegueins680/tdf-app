@@ -17,3 +17,5 @@ CREATE TABLE marketplace_rental_event(id uuid, order_id uuid, to_status text, cr
 CREATE TABLE commerce_payment_intent(checkout_id uuid, status text, currency text, amount_minor bigint, authorized_minor bigint, captured_minor bigint, refunded_minor bigint);
 CREATE TABLE revenue_feature_flag(flag_key text, environment text, enabled boolean);
 INSERT INTO revenue_feature_flag VALUES ('commerce.provider.bank_transfer','sandbox',false);
+ALTER TABLE commerce_payment_intent ADD COLUMN id uuid DEFAULT gen_random_uuid();
+CREATE TABLE commerce_payment_amount_component(payment_intent_id uuid, component_type text, source text, currency text, amount_minor bigint);

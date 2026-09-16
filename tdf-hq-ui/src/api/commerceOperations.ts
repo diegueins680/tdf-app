@@ -62,6 +62,7 @@ export interface CommercePaymentIntentSummary {
 }
 
 export interface CommerceAmountComponentSummary {
+  cacEnvironment?: string;
   cacComponentType: string;
   cacSource: string;
   cacCurrency: string;

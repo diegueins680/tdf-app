@@ -147,6 +147,7 @@ import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
@@ -2087,6 +2088,30 @@ main = hspec $ do
               `shouldBe` True
             Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
               `shouldBe` False
+
+    describe "manual transfer instruction scope" $ do
+        it "does not use merch-only instructions to qualify other product flows" $
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Nothing),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic merch instructions")] $ do
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowMerchandise
+                  `shouldReturn` True
+                mapM PaymentAvailability.manualTransferInstructionsConfigured
+                  [ ProviderCapabilities.FlowBooking, ProviderCapabilities.FlowProfessionalService
+                  , ProviderCapabilities.FlowCourse, ProviderCapabilities.FlowEventTicket
+                  , ProviderCapabilities.FlowDigitalProduct, ProviderCapabilities.FlowSubscription
+                  , ProviderCapabilities.FlowMarketplace ] `shouldReturn` replicate 7 False
+        it "allows generic instructions and rejects empty configuration" $ do
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic generic instructions"),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Nothing)] $
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowBooking
+                  `shouldReturn` True
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "  "),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Just "  ")] $
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowMerchandise
+                  `shouldReturn` False
 
     describe "operator payment intent summaries" $ do
         it "runs the real overview query without mixing environments and aggregates within each environment" $

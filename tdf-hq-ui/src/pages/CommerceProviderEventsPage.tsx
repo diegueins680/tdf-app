@@ -264,9 +264,9 @@ export default function CommerceProviderEventsPage() {
             <Typography variant="h6">{copy.financialBreakdown}</Typography>
             <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' } }}>
               {overviewQuery.data.cpoAmountComponents.map((item) => (
-                <Card key={`${item.cacCurrency}:${item.cacComponentType}:${item.cacSource}`} variant="outlined">
+                <Card key={`${item.cacEnvironment ?? "unknown"}:${item.cacCurrency}:${item.cacComponentType}:${item.cacSource}`} variant="outlined">
                   <CardContent>
-                    <Typography variant="subtitle2">{item.cacComponentType} · {item.cacCount} {copy.records}</Typography>
+                    <Typography variant="subtitle2">{item.cacEnvironment ?? copy.unknownEnvironment} · {item.cacComponentType} · {item.cacCount} {copy.records}</Typography>
                     <Typography variant="body2">{copy.amount}: {formatMinor(item.cacAmountMinor, item.cacCurrency, locale)}</Typography>
                     <Typography variant="caption" color="text.secondary">{copy.source}: {item.cacSource}</Typography>
                   </CardContent>

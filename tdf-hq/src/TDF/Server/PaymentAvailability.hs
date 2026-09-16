@@ -8,6 +8,7 @@ module TDF.Server.PaymentAvailability
   ( ProductFlow(..)
   , availableImplementedPaymentMethods
   , loadRuntimeReadyRoutes
+  , manualTransferInstructionsConfigured
   ) where
 
 import           Control.Monad (filterM)
@@ -68,7 +69,7 @@ loadRuntimeReadyRoutes request = do
   Env{..} <- ask
   activations <- liftIO $ flip runSqlPool envPool $
     loadProviderActivations (prEnvironment request)
-  filterM (runtimeReady (prEnvironment request))
+  filterM (runtimeReady (prEnvironment request) (prFlow request))
     (routePayments activations (requireCheckoutCompletion request))
 
 requiredCapabilities :: ProductFlow -> [PaymentCapability]
@@ -82,8 +83,8 @@ requiredCapabilities flow =
         ]
       else []
 
-runtimeReady :: Checkout.CheckoutEnvironment -> PaymentRoute -> AppM Bool
-runtimeReady environment route = case routeProvider route of
+runtimeReady :: Checkout.CheckoutEnvironment -> ProductFlow -> PaymentRoute -> AppM Bool
+runtimeReady environment flow route = case routeProvider route of
   Checkout.ProviderDatafast ->
     ((== environment) . ServiceStorefront.sdfEnvironment
       <$> ServiceStorefront.loadServiceDatafastEnv)
@@ -97,9 +98,7 @@ runtimeReady environment route = case routeProvider route of
     inboxKey <- liftIO (minimumEnvLength 32 "COMMERCE_EVENT_ENCRYPTION_KEY")
     pure (configured && webhookId && inboxKey)
   Checkout.ProviderBankTransfer ->
-    liftIO $ (||)
-      <$> nonEmptyEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
-      <*> nonEmptyEnv "MERCH_BANK_TRANSFER_INSTRUCTIONS"
+    liftIO (manualTransferInstructionsConfigured flow)
   -- These adapters currently have contract tests but no end-to-end shared
   -- executor and public return flow. Keep them unavailable even if an operator
   -- accidentally changes account metadata.
@@ -109,6 +108,14 @@ runtimeReady environment route = case routeProvider route of
   Checkout.ProviderCash -> pure False
   Checkout.ProviderPos -> pure False
   Checkout.ProviderCardano -> pure False
+
+manualTransferInstructionsConfigured :: ProductFlow -> IO Bool
+manualTransferInstructionsConfigured flow = do
+  generic <- nonEmptyEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
+  if generic then pure True
+    else if flow == FlowMerchandise
+      then nonEmptyEnv "MERCH_BANK_TRANSFER_INSTRUCTIONS"
+      else pure False
 
 routeLabel :: PaymentRoute -> Maybe Text
 routeLabel route = case (routeProvider route, routeMethod route) of
