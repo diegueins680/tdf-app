@@ -100,7 +100,19 @@ test "$issue_rows" = "1"
 transition_rows=$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_lifecycle_transition_policy WHERE active;')
 test "$transition_rows" = "28"
 
-psql_exec -c "INSERT INTO event_operation_session(event_id,name,attendance_mode,timezone,starts_at,ends_at) VALUES (10,'Doors','physical','America/Guayaquil','2026-09-14T18:00:00Z','2026-09-14T19:00:00Z');" >/dev/null
+psql_exec -c "
+  INSERT INTO event_operation_revision(id,event_id,version,snapshot,content_sha256,authored_by_party_id)
+  VALUES ('20000000-0000-4000-8000-000000000010',10,1,'{}',decode(repeat('00',32),'hex'),1),
+         ('20000000-0000-4000-8000-000000000011',11,1,'{}',decode(repeat('11',32),'hex'),1);
+  INSERT INTO event_operation_session(event_id,name,attendance_mode,timezone,starts_at,ends_at)
+  VALUES (10,'Doors','physical','America/Guayaquil','2026-09-14T18:00:00Z','2026-09-14T19:00:00Z');
+  UPDATE event_operation_session SET revision_id='20000000-0000-4000-8000-000000000010' WHERE name='Doors';
+" >/dev/null
+if revision_error=$(psql_exec -v VERBOSITY=verbose -c "UPDATE event_operation_session SET revision_id='20000000-0000-4000-8000-000000000011' WHERE name='Doors';" 2>&1); then
+  echo 'Cross-event session revision was accepted' >&2; exit 1
+fi
+case "$revision_error" in *23503*event_operation_session_event_revision_fkey*) ;; *) echo 'Unexpected session revision failure' >&2; exit 1;; esac
+test "$(psql_exec -qAt -c "SELECT revision_id FROM event_operation_session WHERE name='Doors';")" = '20000000-0000-4000-8000-000000000010'
 if psql_exec -c "INSERT INTO event_operation_session(event_id,name,attendance_mode,timezone,starts_at,ends_at) VALUES (10,'Bad zone','virtual','Mars/Olympus','2026-09-14T18:00:00Z','2026-09-14T19:00:00Z');" >/dev/null 2>&1; then
   echo "expected unknown timezone to be rejected" >&2
   exit 1

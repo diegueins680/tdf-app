@@ -1,5 +1,22 @@
 # Invitation and lifecycle review repair
 
+## CI fixture isolation and same-event revisions (2026-09-16)
+
+CI run 35124909858 failed six configuration tests because job-wide `PGPASSWORD`
+conflicted with their explicit `DB_PASS` values. The fixture now uses
+`TDF_TEST_POSTGRES_PASSWORD`; only the isolated PostgreSQL runner exports it as
+`PGPASSWORD`. The shared runner policy tests cover this boundary. Reproducing the
+old environment gives six failures; the corrected environment passes all 109
+configuration examples without changing configuration validation.
+
+A composite `(event_id, revision_id)` foreign key now ensures a session's revision
+belongs to its event. Nullable revisions remain supported. Installation validates
+existing rows and aborts on incompatible data rather than rewriting history. The
+full PostgreSQL foundation suite passes, including same-event success, cross-event
+SQLSTATE 23503 rejection and unchanged state after rejection. The documented
+preserve-data rollback retains the relational tables and their integrity constraints;
+it does not make cross-event references valid. No production migration was run.
+
 ## Legacy graph installation validation (2026-09-16)
 
 The foundation migration now validates every existing dependency under the same

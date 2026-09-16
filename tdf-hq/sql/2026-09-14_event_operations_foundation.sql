@@ -341,6 +341,17 @@ CREATE TABLE IF NOT EXISTS event_operation_session (
 CREATE INDEX IF NOT EXISTS event_operation_session_event_time_idx
   ON event_operation_session (event_id, starts_at, ends_at);
 
+-- Separate foreign keys do not prove that a revision belongs to this event.
+-- Revalidate existing opt-in installations as well as enforcing new writes.
+CREATE UNIQUE INDEX IF NOT EXISTS event_operation_revision_event_id_unique
+  ON event_operation_revision(event_id, id);
+ALTER TABLE event_operation_session
+  DROP CONSTRAINT IF EXISTS event_operation_session_event_revision_fkey;
+ALTER TABLE event_operation_session
+  ADD CONSTRAINT event_operation_session_event_revision_fkey
+  FOREIGN KEY (event_id, revision_id) REFERENCES event_operation_revision(event_id, id)
+  ON DELETE RESTRICT;
+
 CREATE OR REPLACE FUNCTION event_operation_validate_timezone()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
