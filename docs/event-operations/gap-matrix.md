@@ -100,3 +100,12 @@ and scoped privacy. See [verified results and limitations](pr-27-raci-real-brows
 This does not reclassify whole requirements as complete: full production-schema/middleware browser
 journeys, native mobile, durable offline recovery, invitations/consent, payments and final hosted
 CI remain separate gaps. No production migration, feature or provider was activated.
+
+PR 28 resolves inherited directory/RSVP compatibility failures without changing server
+authority: the signup test now checks actual controls, the directory suite mocks the
+explicit RSVP domain, and existing target-bound contact continuation is restored while
+retaining the current feed. [Evidence](pr-28-ci-test-contracts.md): 43 focused unit tests,
+three isolated synthetic browser tests, typecheck/lint and unchanged bounded formal checks.
+This does not close hiring/messaging delivery or real signup. The 179 unreviewed catalog
+candidates/nine stale decisions, external checks and pending hosted backend/browser jobs
+remain separately identified gaps, not green checks inferred from local results.

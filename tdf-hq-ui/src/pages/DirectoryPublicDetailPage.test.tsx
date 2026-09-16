@@ -9,6 +9,7 @@ import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 const profileMock = jest.fn<(slug: string) => Promise<Record<string, unknown>>>();
 const profileReviewsMock = jest.fn(async () => ({ items: [], nextCursor: null }));
 const reviewEligibilityMock = jest.fn(async () => []);
+const directoryRsvpFeedMock = jest.fn(async () => ({ feedItems: [], feedNextCursor: null }));
 let sessionMock: {
   username: string;
   displayName: string;
@@ -31,6 +32,11 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
+// Keep the real feed component while isolating its explicit domain API boundary.
+// Do not invent successful low-level transport methods merely to satisfy imports.
+jest.unstable_mockModule('../api/socialEvents', () => ({
+  SocialEventsAPI: { listDirectoryProfileRsvpFeed: directoryRsvpFeedMock },
+}));
 jest.unstable_mockModule('../api/client', () => ({ API_BASE_URL: 'https://tdf-hq.example.test' }));
 
 const { default: DirectoryPublicDetailPage } = await import('./DirectoryPublicDetailPage');
@@ -76,14 +82,17 @@ function renderPage(initialEntry: string) {
 
 describe('DirectoryPublicDetailPage contact continuity', () => {
   beforeEach(() => {
+    jest.spyOn(navigator, 'language', 'get').mockReturnValue('es-EC');
     sessionMock = null;
     profileMock.mockReset().mockResolvedValue(profile);
     profileReviewsMock.mockReset().mockResolvedValue({ items: [], nextCursor: null });
     reviewEligibilityMock.mockReset().mockResolvedValue([]);
+    directoryRsvpFeedMock.mockReset().mockResolvedValue({ feedItems: [], feedNextCursor: null });
   });
 
   afterEach(() => {
     cleanup();
+    jest.restoreAllMocks();
   });
 
   it('gives profile, review, and eligibility loading states distinct accessible names', async () => {
@@ -120,6 +129,7 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     );
     expect(profileMock).toHaveBeenCalledWith('ana');
     expect(reviewEligibilityMock).not.toHaveBeenCalled();
+    expect(directoryRsvpFeedMock).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());
     await expectNoSeriousAccessibilityViolations(view.container);
     view.queryClient.clear();
@@ -164,6 +174,33 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     expect(screen.getByRole('link', { name: 'Contactar desde uno de mis perfiles' }).getAttribute('href')).toBe(
       '/mis-clasificados?contact=profile-17&contextKind=profile',
     );
+    expect(await screen.findByText('Todavía no hay actividad de RSVP visible.')).toBeTruthy();
+    expect(directoryRsvpFeedMock).toHaveBeenCalledWith('ana', undefined, 20);
+    view.queryClient.clear();
+  });
+
+  it('does not resume contact or read account activity for a guest with forged resume parameters', async () => {
+    const view = renderPage('/directorio/ana?resume=contact&profileId=profile-17');
+
+    expect(await screen.findByRole('link', { name: 'Ingresar para contactar' })).toBeTruthy();
+    expect(screen.queryByText('Continúa tu contacto con Ana Sintética')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Revisar y escribir mensaje' })).toBeNull();
+    expect(directoryRsvpFeedMock).not.toHaveBeenCalled();
+    expect(reviewEligibilityMock).not.toHaveBeenCalled();
+    view.queryClient.clear();
+  });
+
+  it('offers the same explicit target-bound continuation in English', async () => {
+    jest.spyOn(navigator, 'language', 'get').mockReturnValue('en-US');
+    sessionMock = { username: 'ana-fan', displayName: 'Ana Fan', roles: ['customer'], modules: [], partyId: 42 };
+    const view = renderPage('/directorio/ana?resume=contact&profileId=profile-17');
+
+    expect(await screen.findByText('Continue your contact with Ana Sintética')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Review and write a message' }).getAttribute('href')).toBe(
+      '/mis-clasificados?contact=profile-17&contextKind=profile',
+    );
+    expect(screen.getByRole('link', { name: 'Not now' }).getAttribute('href')).toBe('/directorio/ana');
+    expect(screen.getByText('Nothing will be sent automatically.', { exact: false })).toBeTruthy();
     view.queryClient.clear();
   });
 
