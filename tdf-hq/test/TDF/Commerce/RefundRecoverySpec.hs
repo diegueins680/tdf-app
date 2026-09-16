@@ -3,8 +3,9 @@
 module TDF.Commerce.RefundRecoverySpec (spec, databaseSpec) where
 
 import Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar)
-import Control.Exception (throwIO)
+import Control.Exception (bracket_, throwIO)
 import Control.Monad (forM, forM_)
+import Control.Monad.Reader (runReaderT)
 import Data.Aeson ((.=), Value)
 import qualified Data.Aeson as A
 import qualified Data.Aeson.KeyMap as KM
@@ -16,7 +17,8 @@ import qualified Data.Text as T
 import Data.UUID (toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (PersistValue(..))
-import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool)
+import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool, toSqlKey)
+import Servant (ServerError, errHTTPCode, errBody, runHandler, (:<|>)(..))
 import Test.Hspec
 import qualified Test.QuickCheck as QC
 
@@ -26,9 +28,28 @@ import qualified TDF.Commerce.ProviderAdapter.Http as Http
 import TDF.Commerce.ProviderAdapter.PayPalRefund
 import TDF.Commerce.RefundReconciliation
 import qualified TDF.Commerce.RefundStore as Refund
+import TDF.Auth (AuthedUser(..))
+import TDF.DB (Env(..))
+import TDF.Models (RoleEnum(..))
+import qualified TDF.Server.ServiceStorefront as Storefront
+import TDF.API.ServiceStorefront (ServiceRefundRecoveryResponse)
 
 spec :: Spec
 spec = describe "held-refund query adapter" $ do
+  it "rejects non-strict admins before parsing references or accessing configuration/database" $
+    forM_ [[], [Customer], [Fan], [Accounting], [Webmaster], [StudioManager],
+      [Admin, Webmaster], [Admin, Manager]] $ \roles ->
+        forM_ [False, True] $ \remote -> do
+          result <- handler roles remote "synthetic-private-id"
+          either errHTTPCode (const 200) result `shouldBe` 403
+          show (either errBody (const "") result) `shouldNotContain` "synthetic-private-id"
+
+  it "validates both strict-admin endpoint references before accessing configuration/database" $
+    forM_ [False, True] $ \remote -> do
+      result <- handler [Admin] remote "synthetic-private-id"
+      either errHTTPCode (const 200) result `shouldBe` 400
+      show (either errBody (const "") result) `shouldNotContain` "synthetic-private-id"
+
   forM_ [Checkout.CheckoutSandbox, Checkout.CheckoutProduction] $ \environment ->
     it ("builds only an allowlisted GET with a redacted token for " <> show environment) $ do
       request <- requireRight (buildRefundQuery "synthetic-access-token"
@@ -95,6 +116,19 @@ databaseSpec
   :: (ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment)
   -> SpecWith ConnectionPool
 databaseSpec captureFixture = after resetAuthority $ describe "held-refund authoritative query" $ do
+  it "refuses unknown refund IDs without a provider lookup" $ \pool -> do
+    ref <- Refund.RefundReference . toText <$> nextRandom
+    result <- reconcileKnownRefund pool ref 3 (const (pure True))
+      (\_ -> fail "Unknown refund must not contact a provider")
+    result `shouldSatisfy` either (== RefundRecoveryNotFound) (const False)
+
+  it "does not discover or execute a refund when the original external ID is unknown" $ \pool -> do
+    record <- fixtureWithKnownId False pool
+    result <- run pool record (const (pure True))
+      (\_ -> fail "Unknown external refund ID must not contact a provider")
+    result `shouldSatisfy` either (== RefundRecoveryConflict) (const False)
+    snapshot pool record `shouldReturn` [Single "processing:0:0:0:0:0"]
+
   it "reads readiness without provider contact or financial/audit mutations" $ \pool -> do
     record <- fixture pool
     before <- snapshot pool record
@@ -191,9 +225,22 @@ databaseSpec captureFixture = after resetAuthority $ describe "held-refund autho
     result `shouldSatisfy` either (== RefundRecoveryConflict) (const False)
     snapshot pool record `shouldReturn` [Single "processing:0:0:0:0:2"]
 
+  it "rolls back all completion writes when the final audit cannot commit" $ \pool -> do
+    record <- fixture pool
+    let install = rawExecute "ALTER TABLE commerce_checkout_audit_event\
+          \ ADD CONSTRAINT synthetic_held_refund_completion_failure\
+          \ CHECK(event_type <> 'refund_query' OR metadata->>'outcome' <> 'completed') NOT VALID" []
+        remove = rawExecute "ALTER TABLE commerce_checkout_audit_event\
+          \ DROP CONSTRAINT synthetic_held_refund_completion_failure" []
+    bracket_ (runSqlPool install pool) (runSqlPool remove pool) $ do
+      result <- run pool record (const (pure True)) (const (pure (Right RefundQueryCompleted)))
+      result `shouldSatisfy` either (== RefundRecoveryUnavailable) (const False)
+      snapshot pool record `shouldReturn` [Single "processing:0:0:0:0:1"]
+
   where
     run pool record = reconcileKnownRefund pool (Refund.rrReference record) 3
-    fixture pool = do
+    fixture = fixtureWithKnownId True
+    fixtureWithKnownId known pool = do
       resetAuthority pool
       payment <- captureFixture pool Checkout.ProviderPayPal
       lineId <- toText <$> nextRandom
@@ -214,8 +261,8 @@ databaseSpec captureFixture = after resetAuthority $ describe "held-refund autho
         }) pool >>= requireRight
       _ <- runSqlPool (Refund.approveRefundForProcessing (Refund.rrReference record) 2
         (Refund.rrCreatedAt record)) pool >>= requireRight
-      runSqlPool (Refund.recordRefundPending (Refund.rrReference record) (providerId record)
-        (Refund.rrCreatedAt record)) pool `shouldReturn` Right ()
+      if known then runSqlPool (Refund.recordRefundPending (Refund.rrReference record) (providerId record)
+        (Refund.rrCreatedAt record)) pool `shouldReturn` Right () else pure ()
       runSqlPool (do
         rawExecute "INSERT INTO revenue_feature_flag(flag_key,enabled,environment,reason)\
           \ VALUES ('checkout.paypal.refund_reconciliation',true,'sandbox','synthetic fixture')\
@@ -302,6 +349,15 @@ setField _ _ value = value
 
 requireRight :: Show e => Either e a -> IO a
 requireRight = either (fail . show) pure
+
+-- Invoke the actual Servant handlers; no HTTP server, token, pool or provider.
+handler :: [RoleEnum] -> Bool -> Text -> IO (Either ServerError ServiceRefundRecoveryResponse)
+handler roles remote ref = do
+  let user = AuthedUser (toSqlKey 1) roles mempty
+      _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> inspect :<|> query :<|> _ =
+        Storefront.serviceStorefrontAdminServer user
+  runHandler (runReaderT ((if remote then query else inspect) ref)
+    (Env (error "Refund boundary accessed database") (error "Refund boundary accessed configuration")))
 
 concurrent :: [IO a] -> IO [a]
 concurrent actions = do

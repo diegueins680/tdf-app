@@ -49,7 +49,9 @@ type ServiceStorefrontAdminAPI =
   :<|> "admin" :> "services" :> "storefront" :> "orders" :> Capture "orderId" Text :> "refunds" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] ServiceStorefrontRefundCreate :> Post '[JSON] ServiceStorefrontRefundDTO
   :<|> "admin" :> "services" :> "storefront" :> "refunds" :> Capture "refundId" Text :> "approve" :> Post '[JSON] ServiceStorefrontRefundDTO
   :<|> "admin" :> "services" :> "storefront" :> "refunds" :> Capture "refundId" Text
-         :> "reconcile" :> Get '[JSON] ServiceStorefrontRefundRecoveryDTO
+         :> "reconcile" :> Get '[JSON] ServiceRefundRecoveryResponse
   :<|> "admin" :> "services" :> "storefront" :> "refunds" :> Capture "refundId" Text
-         :> "reconcile" :> Post '[JSON] ServiceStorefrontRefundRecoveryDTO
+         :> "reconcile" :> Post '[JSON] ServiceRefundRecoveryResponse
   :<|> "admin" :> "services" :> "storefront" :> "orders" :> Capture "orderId" Text :> "reconcile" :> Post '[JSON] ServiceStorefrontReconciliationDTO
+
+type ServiceRefundRecoveryResponse = Headers '[Header "Cache-Control" Text] ServiceStorefrontRefundRecoveryDTO

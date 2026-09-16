@@ -48,12 +48,12 @@ readRefundRecovery
   :: ConnectionPool -> Refund.RefundReference -> (RefundQueryBinding -> IO Bool)
   -> IO (Either RefundRecoveryError RefundRecoveryView)
 readRefundRecovery pool ref configured = safely $ do
-  target <- runSqlPool (loadTarget ref) pool
+  target <- runBounded (loadTarget ref) pool
   case target of
     Left problem -> pure (Left problem)
     Right (record, binding) -> do
       configReady <- configured binding
-      ready <- runSqlPool (queryReady binding) pool
+      ready <- runBounded (queryReady binding) pool
       pure (Right (RefundRecoveryView record
         (Refund.rrStatus record == "processing" && configReady && ready) "not_queried" Nothing))
 
@@ -65,21 +65,21 @@ reconcileKnownRefund
 reconcileKnownRefund pool ref actor configured query
   | actor <= 0 = pure (Left RefundRecoveryUnavailable)
   | otherwise = safely $ do
-      initial <- runSqlPool (loadTarget ref) pool
+      initial <- runBounded (loadTarget ref) pool
       case initial of
         Left problem -> pure (Left problem)
         Right (_, binding) -> do
           ready <- configured binding
           if not ready then pure (Left RefundRecoveryUnavailable) else do
             correlation <- ("refund-query:" <>) . toText <$> nextRandom
-            prepared <- runSqlPool (prepare binding correlation) pool
+            prepared <- runBounded (prepare binding correlation) pool
             case prepared of
               Left problem -> pure (Left problem)
               Right target -> do
                 response <- tryAny (query binding)
                 stillConfigured <- configured binding
                 now <- getCurrentTime
-                runSqlPool (apply target correlation stillConfigured now
+                runBounded (apply target correlation stillConfigured now
                   (either (const (Left RefundRecoveryQueryFailed)) id response)) pool
   where
     prepare binding correlation = do
@@ -156,7 +156,7 @@ loadTarget ref = do
         \ AND binding.resource_type='capture' AND binding.provider='paypal'\
         \ AND binding.provider=attempt.provider AND binding.environment=attempt.environment\
         \ AND binding.merchant_account_ref=attempt.merchant_account_ref\
-        \ AND binding.checkout_id=checkout.id AND binding.amount_minor=attempt.amount_minor\
+        \ AND binding.amount_minor=attempt.amount_minor\
         \ AND binding.currency=attempt.currency AND checkout.currency=attempt.currency\
         \ AND checkout.environment=attempt.environment\
         \ AND attempt.provider=? AND attempt.environment=? AND attempt.merchant_account_ref=?\
@@ -232,3 +232,9 @@ parseEnvironment _ = Nothing
 
 safely :: IO (Either RefundRecoveryError a) -> IO (Either RefundRecoveryError a)
 safely action = either (const (Left RefundRecoveryUnavailable)) id <$> tryAny action
+
+runBounded :: SqlPersistT IO a -> ConnectionPool -> IO a
+runBounded action = runSqlPool $ do
+  rawExecute "SET LOCAL statement_timeout='3000ms'" []
+  rawExecute "SET LOCAL lock_timeout='3000ms'" []
+  action

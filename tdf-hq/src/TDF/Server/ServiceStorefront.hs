@@ -128,8 +128,8 @@ serviceStorefrontAdminServer user =
   :<|> (\orderId idempotency request ->
           requireAccess *> requestServiceRefundHandler user orderId idempotency request)
   :<|> (\refundId -> requireAccess *> approveServiceRefundHandler user refundId)
-  :<|> (\refundId -> requireAccess *> serviceRefundRecoveryHandler user False refundId)
-  :<|> (\refundId -> requireAccess *> serviceRefundRecoveryHandler user True refundId)
+  :<|> (\refundId -> requireAccess *> (addHeader "no-store" <$> serviceRefundRecoveryHandler user False refundId))
+  :<|> (\refundId -> requireAccess *> (addHeader "no-store" <$> serviceRefundRecoveryHandler user True refundId))
   :<|> (\orderId -> requireAccess *> reconcileServiceOrderHandler orderId)
   where
     requireAccess = unless (hasStrictAdminAccess user) $
