@@ -16340,41 +16340,10 @@ data MarketplaceSaleCheckoutContext = MarketplaceSaleCheckoutContext
 
 checkoutCart :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
 checkoutCart rawId mIdempotency payload = do
-  context <- prepareMarketplaceSaleCheckout "bank_transfer" rawId mIdempotency payload
-  now <- liftIO getCurrentTime
-  Env{ envPool } <- ask
-  providerEnabled <- liftIO $ flip runSqlPool envPool $
-    Checkout.providerEnabledForEnvironment
-      (msccEnvironment context) Checkout.ProviderBankTransfer
-  unless providerEnabled $
-    throwError err503
-      { errBody = "Bank transfer checkout is disabled in this environment" }
-  attemptResult <- liftIO $ flip runSqlPool envPool $
-    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
-        { Checkout.pacCheckout = msccCheckout context
-        , Checkout.pacProvider = Checkout.ProviderBankTransfer
-        , Checkout.pacEnvironment = msccEnvironment context
-        , Checkout.pacOperation = Checkout.OperationManualVerify
-        , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
-        , Checkout.pacCurrency = msccCurrency context
-        , Checkout.pacMerchantRef = "tdf-marketplace-manual"
-        , Checkout.pacIdempotencyKey = msccIdempotencyKey context
-        , Checkout.pacCreatedAt = now
-        , Checkout.pacCorrelationId = "marketplace-manual:" <> toPathPiece (msccOrderKey context)
-        }
-  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
-  liftIO $ flip runSqlPool envPool $ do
-    Checkout.recordManualPaymentSelection
-      (msccCheckout context)
-      attempt
-      Checkout.ProviderBankTransfer
-      ("marketplace-manual:" <> toPathPiece (msccOrderKey context))
-      now
-    update (msccOrderKey context)
-      [ ME.MarketplaceOrderStatus =. "awaiting_manual_confirmation"
-      , ME.MarketplaceOrderPaymentProvider =. Just "bank_transfer"
-      , ME.MarketplaceOrderUpdatedAt =. now
-      ]
+  -- This endpoint requests coordination by email/WhatsApp, not a payment.
+  -- Keep inventory, buyer validation and idempotency, but do not select a rail
+  -- or mutate payment state (including on replay of an existing order).
+  context <- prepareMarketplaceSaleCheckout "contact" rawId mIdempotency payload
   orderDto <- loadMarketplaceOrderWithLookup context
   when (msccCreated context) $ sendMarketplaceOrderCreatedEmail orderDto
   pure orderDto

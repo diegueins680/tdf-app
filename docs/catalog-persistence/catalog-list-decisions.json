@@ -10,6 +10,25 @@
   },
   "decisions": [
     {
+      "id": "c73be29f87642961645e",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_payment_intent joined to commerce_checkout_session",
+      "priority": "P3-consumer",
+      "risk": "Combining sandbox and production fixtures could conceal incorrect financial aggregation or duplicate UI keys.",
+      "justification": "Individually reviewed both test records: the sandbox captured USD intent totals 5000 minor units and the production captured USD intent totals 9000. These are synthetic API response fixtures that intentionally share status and currency while differing in checkout environment. They verify separate operator cards and do not define provider activation, persisted balances or a selectable business catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "payment-environment-isolation-2026-09-16",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
+        "line": 112,
+        "kind": "array",
+        "name": "cpoPaymentIntents",
+        "valueCount": 2
+      }
+    },
+    {
       "id": "9d18084547600ae29ff6",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -607,14 +626,37 @@
       "reviewed": true
     },
     {
-      "id": "465def35066189c2212f",
+      "id": "32da0d0a99da215fc4fa",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "provider_oauth_permission_fixture",
+      "priority": "P0-security",
+      "risk": "A fixture that invents permissions could falsely validate the OAuth ownership bootstrap.",
+      "justification": "Individually reviewed test-only mirrors of Meta's documented instagram_business_basic and instagram_business_manage_messages scope names. They are provider grant-response fixtures, not selectable application privileges or an independent business catalog; the basic grant is required by the lifecycle validator.",
+      "reviewed": true,
+      "reviewMethod": "source-and-provider-contract-review",
+      "reviewBatch": "instagram-lifecycle-2026-09-15",
+      "evidence": {
+        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "name": "permissions",
+        "source": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login"
+      }
+    },
+    {
+      "id": "c3522bcc8fa29b9d5c1f",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
+      "risk": "Incorrect fixture fields could stop exercising the authorization-code exchange contract.",
+      "justification": "Individually reviewed setupOptions is a test-only object containing a visibly fictional authorization code and an example.test callback URI. Its code and redirectUri keys are function arguments, not a business catalog; they exercise exact app/callback binding without real credentials.",
+      "reviewed": true,
+      "reviewMethod": "source-contract-review",
+      "reviewBatch": "instagram-lifecycle-2026-09-15",
+      "evidence": {
+        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "name": "setupOptions"
+      }
     },
     {
       "id": "86fcd97588e8b1c4bd10",

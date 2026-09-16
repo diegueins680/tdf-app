@@ -163,6 +163,34 @@ psql_exec -c "
   WHERE id='$attempt_id';
 " >/dev/null
 
+# A production intent with the same status/currency must not be combined with
+# sandbox money in the operator overview. Roll back this independent fixture.
+overview_totals=$(psql_exec -qAt -c "BEGIN;
+  INSERT INTO commerce_checkout_session(
+    id, domain_type, domain_order_id, status, environment, currency,
+    subtotal_minor, total_minor, customer_email, lookup_token_hash,
+    idempotency_key, expires_at
+  ) VALUES (
+    '30000000-0000-4000-8000-000000000001', 'marketplace_sale', 'overview-production',
+    'awaiting_payment', 'production', 'USD', 9000, 9000,
+    'overview@example.test', 'overview-lookup', 'overview-checkout', NOW() + interval '30 minutes'
+  );
+  INSERT INTO commerce_payment_intent(
+    checkout_id, status, capture_method, provider, payment_method,
+    amount_minor, currency, idempotency_key
+  ) VALUES (
+    '30000000-0000-4000-8000-000000000001', 'processing', 'manual',
+    'placetopay', 'card', 9000, 'USD', 'overview-intent'
+  );
+  SELECT checkout.environment || ':' || intent.status || ':' || intent.currency || ':' || SUM(intent.amount_minor)
+  FROM commerce_payment_intent intent
+  JOIN commerce_checkout_session checkout ON checkout.id = intent.checkout_id
+  GROUP BY checkout.environment, intent.status, intent.currency
+  ORDER BY checkout.environment, intent.currency, intent.status;
+  ROLLBACK;")
+assert_equal "$overview_totals" 'production:processing:USD:9000
+sandbox:processing:USD:10000' 'Operator intent totals remain environment-scoped'
+
 if psql_exec -c "UPDATE commerce_payment_attempt SET payment_intent_id='20000000-0000-4000-8000-000000000099' WHERE id='$attempt_id';" >/dev/null 2>&1; then
   echo "Payment attempt accepted a nonexistent canonical intent" >&2
   exit 1

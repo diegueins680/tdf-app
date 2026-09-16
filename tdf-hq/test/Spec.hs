@@ -21,6 +21,7 @@ import Data.Int (Int64)
 import Data.List (isInfixOf, nub)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isNothing)
+import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.Encoding as TE
@@ -54,6 +55,7 @@ import TDF.API.Feedback
 import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
+import qualified TDF.API.CommerceOperations as CommerceOperationsAPI
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.API.Inventory as Inventory
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
@@ -2084,6 +2086,43 @@ main = hspec $ do
             Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
               `shouldBe` False
 
+    describe "operator payment intent summaries" $ do
+        it "runs the real overview query without mixing environments and aggregates within each environment" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                summaries <- runSqlPool (do
+                    rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY, environment TEXT NOT NULL)" []
+                    rawExecute "CREATE TABLE commerce_payment_intent (checkout_id TEXT, status TEXT, currency TEXT, amount_minor BIGINT, authorized_minor BIGINT, captured_minor BIGINT, refunded_minor BIGINT)" []
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('sandbox-one','sandbox'),('sandbox-two','sandbox'),('production-one','production')" []
+                    rawExecute "INSERT INTO commerce_payment_intent VALUES ('sandbox-one','captured','USD',5000,5000,5000,500),('sandbox-two','captured','USD',2000,2000,2000,0),('production-one','captured','USD',9000,9000,9000,100)" []
+                    CommerceOperationsServer.loadPaymentIntentSummaries) pool
+                map (\summary ->
+                    ( CommerceOperationsAPI.cpiEnvironment summary
+                    , CommerceOperationsAPI.cpiStatus summary
+                    , CommerceOperationsAPI.cpiCurrency summary
+                    , CommerceOperationsAPI.cpiCount summary
+                    , CommerceOperationsAPI.cpiAmountMinor summary
+                    , CommerceOperationsAPI.cpiAuthorizedMinor summary
+                    , CommerceOperationsAPI.cpiCapturedMinor summary
+                    , CommerceOperationsAPI.cpiRefundedMinor summary
+                    )) summaries `shouldBe`
+                      [ ("production", "captured", "USD", 1, 9000, 9000, 9000, 100)
+                      , ("sandbox", "captured", "USD", 2, 7000, 7000, 7000, 500)
+                      ]
+
+    describe "marketplace contact checkout boundary" $ do
+        it "retains checkout preparation without selecting a payment rail or changing payment state" $ do
+            source <- readFile "src/TDF/Server.hs"
+            let handler = unlines . takeWhile (/= "prepareMarketplaceSaleCheckout")
+                        . dropWhile (/= "checkoutCart rawId mIdempotency payload = do")
+                        $ lines source
+            handler `shouldContain` "prepareMarketplaceSaleCheckout \"contact\""
+            handler `shouldContain` "loadMarketplaceOrderWithLookup context"
+            handler `shouldContain` "when (msccCreated context)"
+            handler `shouldNotContain` "beginPaymentAttempt"
+            handler `shouldNotContain` "recordManualPaymentSelection"
+            handler `shouldNotContain` "MarketplaceOrderPaymentProvider"
+            handler `shouldNotContain` "MarketplaceOrderStatus"
+
     describe "provider-neutral payment routing" $ do
         let active provider = ProviderCapabilities.ProviderActivation
               { ProviderCapabilities.paProvider = provider
@@ -2277,6 +2316,28 @@ main = hspec $ do
               ProviderCapabilities.FlowBooking
               CheckoutStore.OperationCapture
               `shouldBe` [ProviderCapabilities.CapabilityCapture]
+
+        it "rejects creating or authorizing payments without verified completion capabilities" $ do
+            forM_
+              [ (CheckoutStore.ProviderDatafast, ProviderCapabilities.MethodCard, ProviderCapabilities.CapabilityServerVerification, [CheckoutStore.OperationCreate])
+              , (CheckoutStore.ProviderPayPal, ProviderCapabilities.MethodPayPalWallet, ProviderCapabilities.CapabilityCapture, [CheckoutStore.OperationCreate, CheckoutStore.OperationAuthorize])
+              ] $ \(provider, method, completion, operations) ->
+              forM_ operations $ \operation -> do
+                let verified = active provider
+                    incomplete = verified
+                      { ProviderCapabilities.paVerifiedMethodCapabilities =
+                          filter ((/= completion) . snd)
+                            (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                      }
+                    request = cardRequest
+                      { ProviderCapabilities.prMethod = method
+                      , ProviderCapabilities.prRequiredCapabilities =
+                          PaymentRuntimeStore.providerOperationCapabilities provider
+                            ProviderCapabilities.FlowBooking operation
+                      }
+                ProviderCapabilities.routePayments [incomplete] request `shouldBe` []
+                map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [verified] request) `shouldBe` [provider]
 
         it "routes Datafast confirmation only with verified one-time and server capabilities" $ do
             let request = cardRequest

@@ -110,6 +110,7 @@ const buildOverview = (): CommercePaymentOverview => ({
     },
   ],
   cpoPaymentIntents: [{
+    cpiEnvironment: 'sandbox',
     cpiStatus: 'captured',
     cpiCurrency: 'USD',
     cpiCount: 2,
@@ -117,6 +118,15 @@ const buildOverview = (): CommercePaymentOverview => ({
     cpiAuthorizedMinor: 5000,
     cpiCapturedMinor: 5000,
     cpiRefundedMinor: 500,
+  }, {
+    cpiEnvironment: 'production',
+    cpiStatus: 'captured',
+    cpiCurrency: 'USD',
+    cpiCount: 1,
+    cpiAmountMinor: 9000,
+    cpiAuthorizedMinor: 9000,
+    cpiCapturedMinor: 9000,
+    cpiRefundedMinor: 0,
   }],
   cpoAmountComponents: [{
     cacComponentType: 'tax',
@@ -281,6 +291,17 @@ describe('CommerceProviderEventsPage', () => {
     const replayButtons = Array.from(container.querySelectorAll('button'))
       .filter((button) => button.textContent?.includes('Reintentar evento'));
     expect(replayButtons).toHaveLength(1);
+  });
+
+  it('keeps sandbox and production totals separate for the same currency and status', () => {
+    const cards = container.querySelectorAll('[data-testid="commerce-payment-intent-summary"]');
+    expect(cards).toHaveLength(2);
+    expect(cards[0]?.textContent).toContain('sandbox');
+    expect(cards[0]?.textContent).toContain('50');
+    expect(cards[0]?.textContent).not.toContain('production');
+    expect(cards[1]?.textContent).toContain('production');
+    expect(cards[1]?.textContent).toContain('90');
+    expect(cards[1]?.textContent).not.toContain('sandbox');
   });
 
   it('requires a remediation reason before the replay action is enabled', async () => {

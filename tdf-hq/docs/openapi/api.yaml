@@ -8942,8 +8942,9 @@ components:
     CommercePaymentIntentSummary:
       type: object
       additionalProperties: false
-      required: [cpiStatus, cpiCurrency, cpiCount, cpiAmountMinor, cpiAuthorizedMinor, cpiCapturedMinor, cpiRefundedMinor]
+      required: [cpiEnvironment, cpiStatus, cpiCurrency, cpiCount, cpiAmountMinor, cpiAuthorizedMinor, cpiCapturedMinor, cpiRefundedMinor]
       properties:
+        cpiEnvironment: { type: string, enum: [sandbox, production] }
         cpiStatus: { type: string }
         cpiCurrency: { type: string, minLength: 3, maxLength: 3 }
         cpiCount: { type: integer, format: int64, minimum: 0 }

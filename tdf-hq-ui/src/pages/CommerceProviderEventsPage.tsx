@@ -229,8 +229,9 @@ export default function CommerceProviderEventsPage() {
               : (
                 <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' } }}>
                   {overviewQuery.data.cpoPaymentIntents.map((summary) => (
-                    <Card key={`${summary.cpiCurrency}:${summary.cpiStatus}`} variant="outlined">
+                    <Card key={`${summary.cpiEnvironment}:${summary.cpiCurrency}:${summary.cpiStatus}`} variant="outlined" data-testid="commerce-payment-intent-summary">
                       <CardContent>
+                        <Typography variant="overline">{summary.cpiEnvironment}</Typography>
                         <Typography variant="subtitle2">{summary.cpiStatus} · {summary.cpiCount} {copy.records}</Typography>
                         <Typography variant="body2">{copy.captured}: {formatMinor(summary.cpiCapturedMinor, summary.cpiCurrency, locale)}</Typography>
                         <Typography variant="body2">{copy.refunded}: {formatMinor(summary.cpiRefundedMinor, summary.cpiCurrency, locale)}</Typography>

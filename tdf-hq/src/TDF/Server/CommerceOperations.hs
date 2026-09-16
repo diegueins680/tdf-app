@@ -3,6 +3,7 @@
 
 module TDF.Server.CommerceOperations
   ( commerceOperationsServer
+  , loadPaymentIntentSummaries
   , validateProviderEventReplayReason
   ) where
 
@@ -127,16 +128,21 @@ loadPaymentIntentSummaries
   :: SqlPersistT IO [CommercePaymentIntentSummaryDTO]
 loadPaymentIntentSummaries = do
   rows <- rawSql
-    "SELECT status, currency, COUNT(*)::bigint, COALESCE(SUM(amount_minor), 0)::bigint,\
-    \ COALESCE(SUM(authorized_minor), 0)::bigint, COALESCE(SUM(captured_minor), 0)::bigint,\
-    \ COALESCE(SUM(refunded_minor), 0)::bigint\
-    \ FROM commerce_payment_intent GROUP BY status, currency ORDER BY currency, status"
+    "SELECT checkout.environment, intent.status, intent.currency, CAST(COUNT(*) AS bigint),\
+    \ CAST(COALESCE(SUM(intent.amount_minor), 0) AS bigint),\
+    \ CAST(COALESCE(SUM(intent.authorized_minor), 0) AS bigint),\
+    \ CAST(COALESCE(SUM(intent.captured_minor), 0) AS bigint),\
+    \ CAST(COALESCE(SUM(intent.refunded_minor), 0) AS bigint)\
+    \ FROM commerce_payment_intent intent\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = intent.checkout_id\
+    \ GROUP BY checkout.environment, intent.status, intent.currency\
+    \ ORDER BY checkout.environment, intent.currency, intent.status"
     [] :: SqlPersistT IO
-      [(Single Text, Single Text, Single Int64, Single Int64, Single Int64,
+      [(Single Text, Single Text, Single Text, Single Int64, Single Int64, Single Int64,
         Single Int64, Single Int64)]
   pure
-    [ CommercePaymentIntentSummaryDTO status currency count amount authorized captured refunded
-    | ( Single status, Single currency, Single count, Single amount
+    [ CommercePaymentIntentSummaryDTO environment status currency count amount authorized captured refunded
+    | ( Single environment, Single status, Single currency, Single count, Single amount
       , Single authorized, Single captured, Single refunded
       ) <- rows
     ]
