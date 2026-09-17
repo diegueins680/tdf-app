@@ -333,7 +333,9 @@
     {
       "id": "2026-08-24_studio_audit_historical_failure_gate",
       "path": "tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql",
-      "compatibleAppliedChecksums": ["77a5614724738789d870e7ed5afb3e50b6df19936fd6440b5a3735db3a6285bb"],
+      "compatibleAppliedChecksums": [
+        "77a5614724738789d870e7ed5afb3e50b6df19936fd6440b5a3735db3a6285bb"
+      ],
       "introducedBy": "f0ea79a2304202c0bb8c55dcc4c91f5b57aeb4ab"
     },
     {
@@ -414,7 +416,9 @@
     {
       "id": "2026-09-08_notification_notif_type_not_null_repair",
       "path": "tdf-hq/sql/2026-09-08_notification_notif_type_not_null_repair.sql",
-      "compatibleAppliedChecksums": ["7942288682d50a655dd81f072b0ccd91d262d070b493cacad2602565e8e42347"],
+      "compatibleAppliedChecksums": [
+        "7942288682d50a655dd81f072b0ccd91d262d070b493cacad2602565e8e42347"
+      ],
       "introducedBy": "d5ecbf3f97f62940c7d66537e5b9a1141c45128c"
     },
     {
@@ -526,6 +530,11 @@
       "id": "2026-09-10_payment_attempt_intent_binding",
       "path": "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
       "introducedBy": "709036630fcad32102b67a34996c4da73bc4d128"
+    },
+    {
+      "id": "2026-09-17_directory_event_privacy_composition",
+      "path": "tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql",
+      "introducedBy": "9ddd014b9d6a897d15608d9d23f4445c4c7118eb"
     },
     {
       "id": "2026-09-16_artist_self_service",
