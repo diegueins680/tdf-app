@@ -13833,6 +13833,16 @@
       "risk": "Changing this synthetic session DTO fixture can stop session-boundary regression tests from representing the application contract.",
       "justification": "Reviewed 2026-09-17: FanHubPage.audit.test.tsx sessionMock contains fixed SessionUser property names (username, displayName, roles, modules, partyId). It is test input, not a selectable role catalog, grant authority or persisted business list. Production role/permission definitions are unchanged.",
       "reviewed": true
+    },
+    {
+      "id": "9ef025df7bc271d12dfa",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture property drift would weaken current-session regression coverage.",
+      "justification": "Reviewed 2026-09-17: ArtistClaimPanel.test.tsx session has the fixed SessionUser contract keys partyId and apiToken. Values are synthetic; it is not a role/grant or user-selectable catalog.",
+      "reviewed": true
     }
   ]
 }

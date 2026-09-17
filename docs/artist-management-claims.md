@@ -31,3 +31,11 @@ claim denial, matching approved management, revocation, and unchanged Party,
 credential and follower identities. It is also wired into the existing directory
 migration test. Local execution used the complete schema and all 104 artist-branch
 registered migrations, in a private cluster; this SQL fixture is not an HTTP test.
+
+Continuation 2026-09-17: UX-260917-013 fences claim acknowledgements and own-profile
+activation by the current session generation, including renewed credentials for
+the same Party. Optional browser storage failure falls back to an in-memory
+confirmed session. A refreshed session must contain the persisted Artist role
+before opening the editor. The verified management review contract remains intact.
+Two new activation tests failed before the repair; 15 activation/claim tests pass
+afterward. This is component conformance, not a production activation or SMTP test.

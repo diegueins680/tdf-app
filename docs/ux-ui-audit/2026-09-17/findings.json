@@ -192,5 +192,29 @@
     "acceptanceCriteria": "FH-01 through FH-06 in fanhub-onboarding.md; no automatic completion, firstValue fabrication or stale session update; single pending command per generation; accessible retry and conditional liveness.",
     "verificationMethod": "TLC safety/conditional liveness with five negative controls; component/API conformance; 14 isolated browser cases across five profiles; actual backend/native scope remains separate.",
     "releaseStatus": "Implemented locally: 212 suites/2031 tests, typecheck/lint, 14 browser cases and formal runner pass; no merge or deployment."
+  },
+  {
+    "id": "UX-260917-013",
+    "kind": "confirmed",
+    "title": "Artist activation loses persisted success with denied storage and accepts stale same-account responses",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "artist activation and verified existing-artist management",
+    "roles": "authenticated Customer and Artist",
+    "surface": "ArtistOnboardingPage and ArtistClaimPanel",
+    "evidence": "Two new component regressions failed on published 2813737f6: denied sessionStorage prevents editor navigation; same-account credential rotation accepts an old session result. Original seven tests still passed.",
+    "userImpact": "A created profile appears failed; old asynchronous results can overwrite the current session or confirm an old claim.",
+    "rootCause": "Optional browser storage is read without a guard and session authority checks only partyId.",
+    "proposedChange": "Fence operations by current session object/generation and component lifetime, preserve single-flight behavior, require confirmed Artist authority, and fall back to memory when storage is denied. Remount claim panel by opaque session generation.",
+    "dependencies": [
+      "root PR #406"
+    ],
+    "acceptanceCriteria": "No old-session result applies after rotation/account change/unmount; no browser storage requirement for a confirmed activation; claims remain pending verified review; no identity transfer.",
+    "verificationMethod": "Two activation regressions failed before repair (7 preexisting passed); malformed claim receipt also failed before validation. Final 18/18 component tests pass. Current event formal runner passed safety/liveness/negative controls and Alloy; CurrentContext/SingleFlight/TerminalOnly map to session identity, flight guard and validated receipts. Model bounds and assumptions remain those of fanhub-onboarding.md; does not prove artist database or authorization.",
+    "status": "implemented",
+    "implementationStatus": "local repair after published integration 2813737f6",
+    "verificationStatus": "18 focused tests, typecheck and lint passed; catalog classified new synthetic fixture; exact-head CI pending",
+    "mergeStatus": "pending",
+    "releaseStatus": "not deployed"
   }
 ]

@@ -3,7 +3,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import BoltIcon from '@mui/icons-material/Bolt';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useSearchParams, useNavigate } from 'react-router-dom';
 import { useSession, getActiveSession, SESSION_STORAGE_KEY } from '../session/SessionContext';
 import { parsePositiveSafeInt } from '../utils/ids';
@@ -32,26 +32,52 @@ const buildArtistLoginLink = (claimArtistId: number | null) => {
 export default function ArtistOnboardingPage() {
   const { session, login } = useSession();
   const navigate = useNavigate();
+  const mounted = useRef(true);
+  const flight = useRef<typeof session>(null);
+  const context = useRef({ session, generation: 0 });
+  if (context.current.session !== session) {
+    context.current = { session, generation: context.current.generation + 1 };
+  }
+  const isCurrent = () => mounted.current && context.current.session === session
+    && getActiveSession() === session;
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  useEffect(() => {
+    setActivating(false);
+    setActivationError(null);
+  }, [session]);
   const [activating, setActivating] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
 
   const activateProfile = async () => {
-    if (!session?.partyId || activating || claimArtistId !== null) return;
+    if (!session?.partyId || flight.current === session || !isCurrent() || claimArtistId !== null) return;
+    flight.current = session;
     const partyId = session.partyId;
     setActivating(true);
     setActivationError(null);
     try {
       await Fans.activateMyArtistProfile();
+      if (!isCurrent()) return;
       const refreshed = await get<SessionResponseDTO>('/session');
-      if (getActiveSession()?.partyId !== partyId || refreshed.partyId !== partyId) return;
+      if (!isCurrent()) return;
+      if (refreshed?.partyId !== partyId || !refreshed.roles?.includes('Artist')) {
+        throw new Error('No pudimos confirmar tu acceso de artista. Inténtalo de nuevo.');
+      }
+      let remember = false;
+      try { remember = !window.sessionStorage.getItem(SESSION_STORAGE_KEY); } catch {
+        // Browser persistence is optional; keep this confirmed session in memory.
+      }
       login({ ...refreshed, apiToken: session.apiToken }, {
-        remember: !window.sessionStorage.getItem(SESSION_STORAGE_KEY),
+        remember,
       });
       navigate('/mi-artista');
     } catch (error) {
-      setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Inténtalo de nuevo.');
+      if (isCurrent()) setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Inténtalo de nuevo.');
     } finally {
-      setActivating(false);
+      if (flight.current === session) flight.current = null;
+      if (isCurrent()) setActivating(false);
     }
   };
   const [searchParams] = useSearchParams();
@@ -121,7 +147,7 @@ export default function ArtistOnboardingPage() {
         </Box>
 
         {session?.partyId && claimArtistId !== null && (
-          <ArtistClaimPanel key={`${session.partyId}:${claimArtistId}`}
+          <ArtistClaimPanel key={`${context.current.generation}:${session.partyId}:${claimArtistId}`}
             artistId={claimArtistId} accountPartyId={session.partyId} />
         )}
 

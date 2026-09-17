@@ -1,5 +1,5 @@
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { Directory } from '../api/directory';
 import { getActiveSession } from '../session/SessionContext';
@@ -18,23 +18,26 @@ export default function ArtistClaimPanel({ artistId, accountPartyId }: {
   const [submitted, setSubmitted] = useState(false);
   const request = useRef<{ evidence: string; key: string } | null>(null);
   const active = useRef(true);
+  const authority = useRef(getActiveSession()).current;
+  const isCurrent = useCallback(() => active.current && getActiveSession() === authority
+    && authority?.partyId === accountPartyId, [authority, accountPartyId]);
   const sending = useRef(false);
 
   useEffect(() => {
     active.current = true;
     let cancelled = false;
     void Directory.profileByParty(artistId).then((value) => {
-      if (!cancelled && getActiveSession()?.partyId === accountPartyId) setProfile(value);
+      if (!cancelled && isCurrent()) setProfile(value);
     }).catch(() => {
-      if (!cancelled) setError('No encontramos un perfil público disponible para reclamar. Tu sesión sigue activa.');
+      if (!cancelled && isCurrent()) setError('No encontramos un perfil público disponible para reclamar. Tu sesión sigue activa.');
     }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; active.current = false; };
-  }, [artistId, accountPartyId]);
+  }, [artistId, accountPartyId, isCurrent]);
 
   const submit = async () => {
     const description = evidence.trim();
     if (!profile || sending.current || submitted || description.length < 20
-      || description.length > 2000 || getActiveSession()?.partyId !== accountPartyId) return;
+      || description.length > 2000 || !isCurrent()) return;
     sending.current = true;
     setSubmitting(true);
     setError(null);
@@ -42,14 +45,20 @@ export default function ArtistClaimPanel({ artistId, accountPartyId }: {
       if (request.current?.evidence !== description) {
         request.current = { evidence: description, key: crypto.randomUUID() };
       }
-      await Directory.claim({
+      const receipt = await Directory.claim({
         profileId: profile.id,
         claimType: 'administration',
         evidence: [{ description }],
       }, request.current.key);
-      if (active.current && getActiveSession()?.partyId === accountPartyId) setSubmitted(true);
+      if (typeof receipt?.['id'] !== 'string' || !receipt['id']
+        || receipt['profileId'] !== profile.id || receipt['claimType'] !== 'administration'
+        || typeof receipt['status'] !== 'string' || !receipt['status']
+        || typeof receipt['submittedAt'] !== 'string' || !Number.isFinite(Date.parse(receipt['submittedAt']))) {
+        throw new Error('Unconfirmed claim receipt');
+      }
+      if (isCurrent()) setSubmitted(true);
     } catch {
-      if (active.current && getActiveSession()?.partyId === accountPartyId) {
+      if (active.current && isCurrent()) {
         setError('No pudimos confirmar el envío. Puedes reintentar sin cerrar tu sesión.');
       }
     } finally {
@@ -69,7 +78,7 @@ export default function ArtistClaimPanel({ artistId, accountPartyId }: {
       {error && <Alert severity="error">{error}</Alert>}
       {submitted ? (
         <Alert severity="success">
-          Solicitud enviada para revisión. Todavía no se ha concedido acceso.
+          Solicitud registrada para revisión. El acceso requiere una aprobación verificada.
           Después de la aprobación, el perfil aparecerá en Mis perfiles y clasificados.
         </Alert>
       ) : profile && (

@@ -100,3 +100,47 @@ it('preserves a guest claim through both signup and login', () => {
   expect(logout).not.toHaveBeenCalled();
   expect(activate).not.toHaveBeenCalled();
 });
+
+afterEach(() => jest.restoreAllMocks());
+
+it('opens the persisted artist profile when optional session storage is inaccessible', async () => {
+  show();
+  jest.spyOn(window, 'sessionStorage', 'get').mockImplementation(() => { throw new DOMException('denied', 'SecurityError'); });
+  fireEvent.click(screen.getByRole('button', { name: 'Crear mi perfil de artista' }));
+  await screen.findByText('Editor de artista');
+  expect(login).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: false });
+});
+
+it('rejects a stale activation result after credential rotation in the same account', async () => {
+  session = { ...session!, apiToken: 'synthetic-old' };
+  get.mockImplementation(async () => {
+    session = { ...session!, apiToken: 'synthetic-new' };
+    return { partyId: 42, roles: ['Artist'] };
+  });
+  show();
+  fireEvent.click(screen.getByRole('button', { name: 'Crear mi perfil de artista' }));
+  await waitFor(() => expect(get).toHaveBeenCalled());
+  expect(login).not.toHaveBeenCalled();
+  expect(screen.queryByText('Editor de artista')).not.toBeInTheDocument();
+});
+
+it('requires the persisted Artist role before opening the editor', async () => {
+  get.mockResolvedValue({ ...session!, roles: ['Customer'] });
+  show();
+  fireEvent.click(screen.getByRole('button', { name: 'Crear mi perfil de artista' }));
+  await screen.findByText(/No pudimos confirmar tu acceso de artista/);
+  expect(login).not.toHaveBeenCalled();
+  expect(screen.queryByText('Editor de artista')).not.toBeInTheDocument();
+});
+
+it('coalesces duplicate activation commands in the same turn', async () => {
+  let finish!: (value: unknown) => void;
+  activate.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  show();
+  const button = screen.getByRole('button', { name: 'Crear mi perfil de artista' });
+  fireEvent.click(button);
+  fireEvent.click(button);
+  expect(activate).toHaveBeenCalledTimes(1);
+  finish({ apArtistId: 42 });
+  await screen.findByText('Editor de artista');
+});
