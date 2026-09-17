@@ -1,0 +1,134 @@
+tdf-hq-ui/src/__tests__/analytics.test.ts(157,33): error TS4111: Property 'token' comes from an index signature, so it must be accessed with ['token'].
+tdf-hq-ui/src/__tests__/MarketplaceOrderTrackingPage.test.tsx(53,3): error TS2322: Type 'string' is not assignable to type '"approved" | "rejected" | "under_review" | "awaiting_evidence" | "submitted" | "requires_reconciliation" | null | undefined'.
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(37,30): error TS2345: Argument of type '{ progress: { eligible: boolean; firstValue: string; }; newlyCompleted: boolean; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(38,30): error TS2345: Argument of type '{ progress: { eligible: boolean; firstValue: string; }; newlyCompleted: boolean; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(40,40): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(41,40): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(51,50): error TS2345: Argument of type 'Error' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(53,40): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(54,40): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(62,57): error TS2345: Argument of type 'Error' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(65,7): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(72,55): error TS2345: Argument of type '{ progress: { eligible: boolean; firstValue: string; }; newlyCompleted: boolean; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(77,7): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(91,50): error TS2345: Argument of type '{ progress: { eligible: boolean; firstValue: string; }; newlyCompleted: boolean; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(97,7): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(115,43): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(131,7): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(146,7): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(151,7): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/analytics/onboardingProgress.test.ts(156,7): error TS2345: Argument of type '{ capture: Mock<UnknownFunction>; }' is not assignable to parameter of type 'AnalyticsClient'.
+  Type '{ capture: Mock<UnknownFunction>; }' is missing the following properties from type 'AnalyticsClient': ready, identify, reset, page
+tdf-hq-ui/src/api/directory.test.ts(23,31): error TS2345: Argument of type '{}' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/directory.test.ts(32,32): error TS2345: Argument of type '{}' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/directory.test.ts(49,32): error TS2345: Argument of type '{}' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/directory.test.ts(70,31): error TS2345: Argument of type '{}' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/directory.test.ts(71,32): error TS2345: Argument of type '{}' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/directory.test.ts(88,32): error TS2345: Argument of type '{}' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/fans.test.ts(172,38): error TS2345: Argument of type '{ apuArtistId: number; apuDisplayName: string; }' is not assignable to parameter of type 'ArtistProfileUpsert'.
+  Property 'apuGenreIds' is missing in type '{ apuArtistId: number; apuDisplayName: string; }' but required in type 'ArtistProfileUpsert'.
+tdf-hq-ui/src/api/merch.test.ts(65,36): error TS2345: Argument of type '{ id: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/merch.test.ts(81,36): error TS2345: Argument of type '{ id: string; commercialStatus: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/merch.test.ts(93,35): error TS2345: Argument of type '{ orderId: string; buyerLinked: boolean; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/merch.test.ts(112,37): error TS2345: Argument of type '{ id: string; stockOnHand: number; version: number; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/merch.test.ts(127,33): error TS2345: Argument of type '{ id: string; status: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/merch.test.ts(138,36): error TS2345: Argument of type '{ id: string; status: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/merch.test.ts(139,37): error TS2345: Argument of type '{ id: string; status: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/merch.test.ts(140,35): error TS2345: Argument of type 'never[]' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/merch.test.ts(165,40): error TS2345: Argument of type '{ id: string; status: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/partySelector.test.ts(13,35): error TS2345: Argument of type '{ items: never[]; nextCursor: null; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/partySelector.test.ts(31,35): error TS2345: Argument of type '{ items: never[]; nextCursor: null; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/queryValidation.test.ts(47,7): error TS2345: Argument of type 'ArrayBuffer' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/reviews.test.ts(17,31): error TS2345: Argument of type '{ summary: { targetKind: string; targetId: string; average: null; count: number; }; items: never[]; nextCursor: null; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/reviews.test.ts(29,31): error TS2345: Argument of type '"<!doctype html>"' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/reviews.test.ts(37,31): error TS2345: Argument of type 'never[]' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/reviews.test.ts(38,32): error TS2345: Argument of type '{}' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/api/services.test.ts(47,42): error TS2532: Object is possibly 'undefined'.
+tdf-hq-ui/src/components/ReactionBar.test.tsx(42,29): error TS2558: Expected 0-1 type arguments, but got 2.
+tdf-hq-ui/src/components/ReactionBar.test.tsx(43,58): error TS2322: Type 'Mock<void>' is not assignable to type '(reactionTypeId: string) => void'.
+  Types of parameters 'args' and 'reactionTypeId' are incompatible.
+    Type '[reactionTypeId: string]' is not assignable to type 'never'.
+tdf-hq-ui/src/components/RefundManagementPanel.test.tsx(88,5): error TS2684: The 'this' context of type '((v: any) => void) | undefined' is not assignable to method's 'this' of type '(this: HTMLInputElement | HTMLTextAreaElement, args_0: string) => void'.
+  Type 'undefined' is not assignable to type '(this: HTMLInputElement | HTMLTextAreaElement, args_0: string) => void'.
+tdf-hq-ui/src/components/RefundManagementPanel.test.tsx(88,5): error TS18048: 'valueDescriptor.set' is possibly 'undefined'.
+tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.test.ts(57,62): error TS2532: Object is possibly 'undefined'.
+tdf-hq-ui/src/components/reputation/ContextualRankingPrototype.test.ts(29,105): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(role: ByRoleMatcher, options?: ByRoleOptions | undefined): HTMLElement[]', gave the following error.
+    Object literal may only specify known properties, and 'exact' does not exist in type 'ByRoleOptions'.
+  Overload 2 of 2, '(role: ByRoleMatcher, options?: ByRoleOptions | undefined): HTMLElement[]', gave the following error.
+    Object literal may only specify known properties, and 'exact' does not exist in type 'ByRoleOptions'.
+tdf-hq-ui/src/components/reviews/ExperienceReviews.test.tsx(30,11): error TS2322: Type '{ id: string; body: string; author: { name: string; avatarUrl: null; }; targetKind?: "event" | "marketplace_listing" | "service_offering" | "service_package" | undefined; targetId?: string | undefined; ... 4 more ...; sourceKind?: "marketplace_order" | ... 3 more ... | undefined; }' is not assignable to type '{ id: string; targetKind: "event" | "marketplace_listing" | "service_offering" | "service_package"; targetId: string; rating: number; body?: string | null | undefined; status: "hidden" | "published" | "removed"; createdAt: string; verified: true; sourceKind: "marketplace_order" | ... 2 more ... | "service_storefront...'.
+  Types of property 'targetKind' are incompatible.
+    Type '"event" | "marketplace_listing" | "service_offering" | "service_package" | undefined' is not assignable to type '"event" | "marketplace_listing" | "service_offering" | "service_package"'.
+      Type 'undefined' is not assignable to type '"event" | "marketplace_listing" | "service_offering" | "service_package"'.
+tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx(55,29): error TS2339: Property 'value' does not exist on type 'HTMLElement'.
+tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx(64,65): error TS2339: Property 'value' does not exist on type 'HTMLElement'.
+tdf-hq-ui/src/features/featureRegistry.test.ts(115,45): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+tdf-hq-ui/src/features/featureRegistry.test.ts(115,82): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx(49,5): error TS2322: Type 'Mock<UnknownFunction>' is not assignable to type '() => void | Promise<void>'.
+  Type 'unknown' is not assignable to type 'void | Promise<void>'.
+tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx(116,7): error TS2322: Type 'Mock<UnknownFunction>' is not assignable to type '() => void | Promise<void>'.
+  Type 'unknown' is not assignable to type 'void | Promise<void>'.
+tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts(119,66): error TS2322: Type 'Mock<UnknownFunction>' is not assignable to type '(event: Event) => boolean'.
+  Type 'unknown' is not assignable to type 'boolean'.
+tdf-hq-ui/src/pages/CmsAdminPage.test.tsx(66,3): error TS2739: Type '{ id: string; workflowId: string; workflowCode: string; code: string; name: string; nameEs: string; nameEn: string; sortOrder: number; terminal: false; active: true; version: number; }' is missing the following properties from type '{ id: string; workflowId: string; workflowCode: string; code: string; name: string; nameEs: string; nameEn: string; sortOrder: number; terminal: boolean; active: boolean; initialContexts: string[]; capabilities: string[]; transitions: { ...; }[]; version: number; }': initialContexts, capabilities, transitions
+tdf-hq-ui/src/pages/CmsAdminPage.test.tsx(67,3): error TS2739: Type '{ id: string; workflowId: string; workflowCode: string; code: string; name: string; nameEs: string; nameEn: string; sortOrder: number; terminal: true; active: true; version: number; }' is missing the following properties from type '{ id: string; workflowId: string; workflowCode: string; code: string; name: string; nameEs: string; nameEn: string; sortOrder: number; terminal: boolean; active: boolean; initialContexts: string[]; capabilities: string[]; transitions: { ...; }[]; version: number; }': initialContexts, capabilities, transitions
+tdf-hq-ui/src/pages/CmsAdminPage.test.tsx(68,3): error TS2739: Type '{ id: string; workflowId: string; workflowCode: string; code: string; name: string; nameEs: string; nameEn: string; sortOrder: number; terminal: false; active: true; version: number; }' is missing the following properties from type '{ id: string; workflowId: string; workflowCode: string; code: string; name: string; nameEs: string; nameEn: string; sortOrder: number; terminal: boolean; active: boolean; initialContexts: string[]; capabilities: string[]; transitions: { ...; }[]; version: number; }': initialContexts, capabilities, transitions
+tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts(91,53): error TS2345: Argument of type '{ eventId: string; eventOrganizerPartyId?: string | null; eventTitle: string; eventDescription?: string | null; eventStart: string; eventEnd?: string | null; eventTimezone?: string | null; ... 16 more ...; eventArtists: SocialArtistDTO[]; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts(96,30): error TS2345: Argument of type '{ elmPartyId: string; elmRole: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts(97,30): error TS2345: Argument of type 'Error' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts(100,7): error TS2322: Type 'Mock<UnknownFunction>' is not assignable to type '(payload: SocialEventDTO) => Promise<SocialEventDTO>'.
+  Type 'unknown' is not assignable to type 'Promise<SocialEventDTO>'.
+tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts(101,7): error TS2322: Type 'Mock<UnknownFunction>' is not assignable to type '(eventId: string, collaborator: EventCollaboratorDraft) => Promise<EventLogisticsMemberDTO>'.
+  Type 'unknown' is not assignable to type 'Promise<EventLogisticsMemberDTO>'.
+tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx(30,5): error TS2684: The 'this' context of type '((v: any) => void) | undefined' is not assignable to method's 'this' of type '(this: HTMLInputElement, args_0: string) => void'.
+  Type 'undefined' is not assignable to type '(this: HTMLInputElement, args_0: string) => void'.
+tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx(30,5): error TS18048: 'valueDescriptor.set' is possibly 'undefined'.
+tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx(117,34): error TS2345: Argument of type '{ items: { id: string; type: string; slug: string; title: string; summary: string; imageUrl: null; location: { city: string; countryCode: string; precision: string; }; sponsored: boolean; score: number; }[]; sponsoredItems: never[]; facets: { ...; }; }' is not assignable to parameter of type '{ items: ({ id: string; type: string; slug: string; title: string; summary: string; imageUrl: string; location: { city: string; countryCode: string; precision: string; }; sponsored: boolean; score: number; } | { ...; })[]; sponsoredItems: never[]; facets: { ...; }; }'.
+  The types of 'facets.entityTypes' are incompatible between these types.
+    Property 'profile' is missing in type '{ event: number; }' but required in type '{ profile: number; }'.
+tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx(119,31): error TS2322: Type '{ targetKind: string; targetId: string; createdAt: string; result: null; }' is not assignable to type 'never'.
+tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx(157,34): error TS2345: Argument of type '{ items: { id: string; type: string; slug: string; title: string; summary: string; imageUrl: null; location: { city: string; countryCode: string; precision: string; }; sponsored: boolean; score: number; }[]; sponsoredItems: never[]; facets: { ...; }; }' is not assignable to parameter of type '{ items: ({ id: string; type: string; slug: string; title: string; summary: string; imageUrl: string; location: { city: string; countryCode: string; precision: string; }; sponsored: boolean; score: number; } | { ...; })[]; sponsoredItems: never[]; facets: { ...; }; }'.
+  The types of 'facets.entityTypes' are incompatible between these types.
+    Property 'profile' is missing in type '{ event: number; }' but required in type '{ profile: number; }'.
+tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx(160,27): error TS2322: Type '{ targetKind: string; targetId: string; createdAt: string; result: null; }' is not assignable to type 'never'.
+tdf-hq-ui/src/pages/DomoVenuePage.test.tsx(36,38): error TS2345: Argument of type 'never[]' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/pages/DomoVenuePage.test.tsx(37,41): error TS2345: Argument of type '{ checkoutAvailable: boolean; unavailableReason: string; rateCardVersion: null; currency: null; eventTypes: never[]; maximumGuests: null; maximumDurationHours: null; maximumSetupHours: null; quoteHoldMinutes: null; timezone: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/pages/DomoVenuePage.test.tsx(75,41): error TS2345: Argument of type '{ checkoutAvailable: boolean; unavailableReason: null; rateCardVersion: string; currency: string; eventTypes: string[]; maximumGuests: number; maximumDurationHours: number; maximumSetupHours: number; quoteHoldMinutes: number; timezone: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/pages/DomoVenuePage.test.tsx(87,39): error TS2345: Argument of type 'Error' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/pages/DomoVenuePage.test.tsx(102,38): error TS2345: Argument of type '{ scId: string; scCode: string; scName: string; scActive: boolean; }[]' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/pages/DomoVenuePage.test.tsx(109,30): error TS2345: Argument of type 'Error' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/pages/DomoVenuePage.test.tsx(110,30): error TS2345: Argument of type '{ bookingId: number; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts(32,56): error TS2345: Argument of type 'Error' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts(38,7): error TS2345: Argument of type 'Mock<UnknownFunction>' is not assignable to parameter of type 'PersistOnboardingIntent'.
+  Type 'unknown' is not assignable to type 'Promise<unknown>'.
+tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts(102,51): error TS2345: Argument of type 'Mock<UnknownFunction>' is not assignable to parameter of type 'PersistOnboardingIntent'.
+  Type 'unknown' is not assignable to type 'Promise<unknown>'.
+tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts(116,7): error TS2345: Argument of type 'Mock<UnknownFunction>' is not assignable to parameter of type 'PersistOnboardingIntent'.
+  Type 'unknown' is not assignable to type 'Promise<unknown>'.
+tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts(123,7): error TS2345: Argument of type 'Mock<UnknownFunction>' is not assignable to parameter of type 'PersistOnboardingIntent'.
+  Type 'unknown' is not assignable to type 'Promise<unknown>'.
+tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx(20,74): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx(53,48): error TS2345: Argument of type '{ apiToken: string; username: string; displayName: string; partyId: number; roles: string[]; modules: never[]; featureFlags: never[]; preferences: { locale: string; currency: string; timeZone: string; }; }' is not assignable to parameter of type 'SessionUser'.
+  Types of property 'preferences' are incompatible.
+    Type '{ locale: string; currency: string; timeZone: string; }' is missing the following properties from type '{ localeId: string; readonly locale: string; currencyId: string; readonly currency: string; timezone: string; countryId?: string | null | undefined; readonly countryCode?: string | null | undefined; showEventRsvpsOnProfile: boolean; }': localeId, currencyId, timezone, showEventRsvpsOnProfile
+tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx(69,51): error TS2345: Argument of type '{ username: string; displayName: string; partyId: number; roles: string[]; modules: never[]; featureFlags: never[]; preferences: { locale: string; currency: string; timeZone: string; }; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx(70,59): error TS2345: Argument of type '{ newlyCompleted: boolean; progress: { eligible: boolean; completedAt: string; firstValue: string; }; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx(104,51): error TS2345: Argument of type '{ username: string; displayName: string; partyId: number; roles: string[]; modules: never[]; featureFlags: never[]; preferences: { locale: string; currency: string; timeZone: string; }; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx(109,30): error TS2345: Argument of type '{ newlyCompleted: boolean; progress: { eligible: boolean; completedAt: null; firstValue: null; }; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/theme/AppThemeProvider.test.tsx(54,43): error TS2345: Argument of type '{ catalogs: { catalog: { code: string; }; items: { id: string; code: string; name: string; active: boolean; workflowState: string; }[]; defaults: { entityId: string; scopeKind: string; scopeId: string; version: number; }[]; }[]; revision: number; locale: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/theme/AppThemeProvider.test.tsx(156,43): error TS2345: Argument of type '{ catalogs: { catalog: { code: string; }; items: { id: string; code: string; name: string; active: boolean; workflowState: string; }[]; defaults: { entityId: string; scopeKind: string; scopeId: string; version: number; }[]; }[]; revision: number; locale: string; }' is not assignable to parameter of type 'never'.
+tdf-hq-ui/src/theme/AppThemeProvider.test.tsx(192,43): error TS2345: Argument of type '{}' is not assignable to parameter of type 'never'.

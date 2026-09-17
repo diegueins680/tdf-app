@@ -11,6 +11,11 @@
 
 module TDF.Server where
 
+import qualified TDF.Social.Chat as SocialChat
+import qualified TDF.Social.FanEffects as FanEffects
+import qualified TDF.Social.RelationshipReads as SocialReads
+import qualified TDF.Social.RelationshipWrites as SocialWrites
+import qualified TDF.Social.Profiles as SocialProfiles
 import TDF.Social.Server (socialV2Server)
 import           Control.Applicative ((<|>))
 import           Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
@@ -3057,19 +3062,19 @@ artistSecureServer user =
 
 socialServer :: AuthedUser -> ServerT SocialAPI AppM
 socialServer user =
-       socialListFollowers user
-  :<|> socialListFollowing user
+       SocialReads.relationshipList user "followers" (socialListFollowers user)
+  :<|> SocialReads.relationshipList user "following" (socialListFollowing user)
   :<|> vcardExchange user
-  :<|> socialListFriends user
+  :<|> SocialReads.relationshipList user "friends" (socialListFriends user)
   :<|> socialAddFriend user
   :<|> socialRemoveFriend user
-  :<|> socialListProfiles user
-  :<|> socialGetProfile user
-  :<|> socialListSuggestedFriends user
+  :<|> SocialProfiles.profileList user (socialListProfiles user)
+  :<|> SocialProfiles.profileGet user (socialGetProfile user)
+  :<|> SocialReads.suggestions user (socialListSuggestedFriends user)
   :<|> socialV2Server user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
-chatServer user =
+chatServer user = SocialChat.chatPolicyServer user $
        chatListThreads user
   :<|> chatGetOrCreateDM user
   :<|> chatListMessages user
@@ -8100,103 +8105,10 @@ fanListFollows user = do
     pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
 
 fanFollowArtist :: AuthedUser -> Int64 -> AppM FanFollowDTO
-fanFollowArtist user artistId = do
-  requireFanAccess user
-  when (artistId <= 0) $ throwBadRequest "Invalid artist id"
-  let artistKey = toSqlKey artistId :: PartyId
-      fanKey    = auPartyId user
-  when (artistKey == fanKey) $
-    throwBadRequest "No puedes seguirte a ti mismo"
-  targetKey <- runDB (resolveFanFollowArtistTarget artistId) >>= either throwError pure
-  Env pool _ <- ask
-  mDto <- liftIO $ flip runSqlPool pool $ do
-    now <- liftIO getCurrentTime
-    insertedFollow <- insertUnique FanFollow
-      { fanFollowFanPartyId    = fanKey
-      , fanFollowArtistPartyId = targetKey
-      , fanFollowCreatedAt     = now
-      }
-    when (isJust insertedFollow) $ do
-      recordEngagementEvent
-        (Just fanKey)
-        (Just targetKey)
-        "artist"
-        (Just (fromIntegral (fromSqlKey targetKey)))
-        "follow"
-        Nothing
-        now
-      createArtistFollowerNotification fanKey targetKey now
-    -- Auto-follow club members
-    mClub <- getBy (UniqueFanClubArtist targetKey)
-    case mClub of
-      Nothing -> pure ()
-      Just (Entity cid _) -> do
-        -- Get existing member profiles (excluding self)
-        existingProfiles <- selectList
-          [ M.FanClubMemberProfileClubId ==. cid
-          , M.FanClubMemberProfilePartyId !=. fanKey
-          ] []
-        let existingMemberIds = map (fanClubMemberProfilePartyId . entityVal) existingProfiles
-        -- Create member profile for new fan if not exists
-        mExistingProfile <- getBy (UniqueFanClubMemberProfile fanKey cid)
-        case mExistingProfile of
-          Just _ -> pure ()
-          Nothing -> do
-            mFanProfile <- getBy (UniqueFanProfile fanKey)
-            let avatarUrl = case mFanProfile of
-                  Just (Entity _ fp) -> fanProfileAvatarUrl fp
-                  Nothing -> Nothing
-            insert_ FanClubMemberProfile
-              { fanClubMemberProfilePartyId = fanKey
-              , fanClubMemberProfileClubId = cid
-              , fanClubMemberProfileHandle = Nothing
-              , fanClubMemberProfileBio = Nothing
-              , fanClubMemberProfileAvatarUrl = avatarUrl
-              , fanClubMemberProfileJoinedAt = now
-              }
-        -- Auto-follow: new fan follows existing members
-        forM_ existingMemberIds $ \memberId ->
-          void $ insertUnique PartyFollow
-            { partyFollowFollowerPartyId = fanKey
-            , partyFollowFollowingPartyId = memberId
-            , partyFollowViaNfc = False
-            , partyFollowCreatedAt = now
-            }
-        -- Auto-follow: existing members follow new fan
-        forM_ existingMemberIds $ \memberId ->
-          void $ insertUnique PartyFollow
-            { partyFollowFollowerPartyId = memberId
-            , partyFollowFollowingPartyId = fanKey
-            , partyFollowViaNfc = False
-            , partyFollowCreatedAt = now
-            }
-    loadFanFollowDTO fanKey targetKey
-  maybe (throwError err404) pure mDto
+fanFollowArtist = FanEffects.followArtist
 
 fanUnfollowArtist :: AuthedUser -> Int64 -> AppM NoContent
-fanUnfollowArtist user artistId = do
-  requireFanAccess user
-  when (artistId <= 0) $ throwBadRequest "Invalid artist id"
-  let artistKey = toSqlKey artistId :: PartyId
-  when (artistKey == auPartyId user) $
-    throwBadRequest "No puedes dejar de seguirte a ti mismo"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    existingFollow <- getBy (UniqueFanFollow (auPartyId user) artistKey)
-    case existingFollow of
-      Nothing -> pure ()
-      Just _ -> do
-        now <- liftIO getCurrentTime
-        deleteBy (UniqueFanFollow (auPartyId user) artistKey)
-        recordEngagementEvent
-          (Just (auPartyId user))
-          (Just artistKey)
-          "artist"
-          (Just (fromIntegral (fromSqlKey artistKey)))
-          "unfollow"
-          Nothing
-          now
-  pure NoContent
+fanUnfollowArtist = FanEffects.unfollowArtist
 
 recordEngagementEvent
   :: Maybe PartyId
@@ -8216,21 +8128,6 @@ recordEngagementEvent actorPartyId targetArtistId entityType entityId eventType 
     , engagementEventEventType = eventType
     , engagementEventMetadata = metadata
     , engagementEventCreatedAt = createdAt
-    }
-
-createArtistFollowerNotification :: PartyId -> PartyId -> UTCTime -> SqlPersistT IO ()
-createArtistFollowerNotification fanKey artistKey now = do
-  mFan <- get fanKey
-  let fanName = maybe "Un fan" M.partyDisplayName mFan
-  insert_ Notification
-    { notificationRecipientPartyId = artistKey
-    , notificationNotifType = "artist_liked"
-    , notificationTitle = "Nuevo fan"
-    , notificationBody = fanName <> " empezó a seguir tu perfil."
-    , notificationTargetType = Just "artist"
-    , notificationTargetId = Just (fromIntegral (fromSqlKey artistKey))
-    , notificationIsRead = False
-    , notificationCreatedAt = now
     }
 
 resolveFanFollowArtistTarget :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
@@ -8495,78 +8392,13 @@ socialListSuggestedFriends user = do
           ]
 
 socialAddFriend :: AuthedUser -> Int64 -> AppM [PartyFollowDTO]
-socialAddFriend user targetId = do
-  let followerKey = auPartyId user
-  targetKey <- runDB (resolveSocialTargetPartyId targetId) >>= either throwError pure
-  when (followerKey == targetKey) $
-    throwBadRequest "No puedes agregarte como amigo"
-  now <- liftIO getCurrentTime
-  runDB $ do
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = followerKey
-      , partyFollowFollowingPartyId = targetKey
-      , partyFollowViaNfc           = False
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. False ]
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = targetKey
-      , partyFollowFollowingPartyId = followerKey
-      , partyFollowViaNfc           = False
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. False ]
-    rows <- selectList
-      [ PartyFollowFollowerPartyId ==. followerKey
-      , PartyFollowFollowingPartyId ==. targetKey
-      ] []
-    partyFollowEntitiesToDTO rows
+socialAddFriend = SocialWrites.addFriend
 
 socialRemoveFriend :: AuthedUser -> Int64 -> AppM NoContent
-socialRemoveFriend user targetId = do
-  when (targetId <= 0) $ throwBadRequest "Invalid party id"
-  let followerKey = auPartyId user
-      targetKey   = toSqlKey targetId :: PartyId
-  when (followerKey == targetKey) $
-    throwBadRequest "No puedes eliminarte como amigo"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    deleteBy (UniquePartyFollow followerKey targetKey)
-    deleteBy (UniquePartyFollow targetKey followerKey)
-  pure NoContent
+socialRemoveFriend = SocialWrites.removeFriend
 
 vcardExchange :: AuthedUser -> VCardExchangeRequest -> AppM [PartyFollowDTO]
-vcardExchange user VCardExchangeRequest{..} = do
-  let followerKey = auPartyId user
-  targetKey <- runDB (resolveSocialTargetPartyId vcerPartyId) >>= either throwError pure
-  when (followerKey == targetKey) $
-    throwBadRequest "No puedes compartir tu vCard contigo mismo"
-  now <- liftIO getCurrentTime
-  runDB $ do
-    -- Create mutual follows; mark as NFC-sourced.
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = followerKey
-      , partyFollowFollowingPartyId = targetKey
-      , partyFollowViaNfc           = True
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. True ]
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = targetKey
-      , partyFollowFollowingPartyId = followerKey
-      , partyFollowViaNfc           = True
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. True ]
-    rowsAB <- selectList
-      [ PartyFollowFollowerPartyId ==. followerKey
-      , PartyFollowFollowingPartyId ==. targetKey
-      ] [Desc PartyFollowCreatedAt]
-    rowsBA <- selectList
-      [ PartyFollowFollowerPartyId ==. targetKey
-      , PartyFollowFollowingPartyId ==. followerKey
-      ] [Desc PartyFollowCreatedAt]
-    partyFollowEntitiesToDTO (rowsAB ++ rowsBA)
+vcardExchange = SocialWrites.exchangeVCard
 
 resolveSocialTargetPartyId :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
 resolveSocialTargetPartyId rawPartyId =
@@ -8593,15 +8425,7 @@ maxSocialProfilePartyIds :: Int
 maxSocialProfilePartyIds = 100
 
 validateSocialProfilePartyIds :: [Int64] -> Either ServerError [Int64]
-validateSocialProfilePartyIds rawPartyIds
-  | any (<= 0) rawPartyIds =
-      Left err400 { errBody = "partyId query must contain only positive integers" }
-  | length rawPartyIds > maxSocialProfilePartyIds =
-      Left err400 { errBody = "partyId query supports at most 100 ids" }
-  | length rawPartyIds /= length (nub rawPartyIds) =
-      Left err400 { errBody = "partyId query must not contain duplicate ids" }
-  | otherwise =
-      Right rawPartyIds
+validateSocialProfilePartyIds = SocialProfiles.validateProfileIds
 
 socialGetProfile :: AuthedUser -> Int64 -> AppM SocialPartyProfileDTO
 socialGetProfile _ partyId = do
@@ -8611,11 +8435,7 @@ socialGetProfile _ partyId = do
   maybe (throwError err404) pure mProfile
 
 requireFanAccess :: AuthedUser -> AppM ()
-requireFanAccess user@AuthedUser{..} = do
-  unless (Fan `elem` auRoles || Customer `elem` auRoles) $
-    throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Fan access required") }
-  unless (hasCoherentAuthScope user) $
-    throwError err403 { errBody = "Fan access requires coherent role grants" }
+requireFanAccess = FanEffects.requireFanAccess
 
 requireArtistAccess :: AuthedUser -> AppM ()
 requireArtistAccess user@AuthedUser{..} = do
@@ -12401,29 +12221,10 @@ validateChatMessageListLookup
   -> Maybe Int64
   -> Maybe Int64
   -> Either ServerError (Int64, Maybe Int64, Maybe Int64)
-validateChatMessageListLookup threadId mBeforeId mAfterId = do
-  threadIdValid <- validatePositiveIdField "threadId" threadId
-  beforeIdValid <- validateOptionalPositiveIdField "beforeId" mBeforeId
-  afterIdValid <- validateOptionalPositiveIdField "afterId" mAfterId
-  when (isJust beforeIdValid && isJust afterIdValid) $
-    Left err400 { errBody = "Use either beforeId or afterId" }
-  pure (threadIdValid, beforeIdValid, afterIdValid)
+validateChatMessageListLookup = SocialChat.validateLookup
 
 validateChatSendMessageBody :: Text -> Either ServerError Text
-validateChatSendMessageBody rawBody
-  | T.null body =
-      Left err400 { errBody = "Mensaje vacío" }
-  | T.length body > 5000 =
-      Left err400 { errBody = "Mensaje demasiado largo (max 5000 caracteres)" }
-  | T.any isUnsupportedChatMessageChar body =
-      Left err400 { errBody = "message must not contain control or formatting characters" }
-  | otherwise =
-      Right body
-  where
-    body = T.strip rawBody
-    isUnsupportedChatMessageChar ch =
-      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
-        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+validateChatSendMessageBody = SocialChat.validateBody
 
 validateBookingListFilters :: Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> Either ServerError (Maybe Int64, Maybe Int64, Maybe Int64)
 validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do

@@ -521,8 +521,8 @@ export default function FanClubMemberProfilePage() {
           {!profilesQuery.data || profilesQuery.data.length === 0 ? (
             <EmptyState
               icon={<PhotoLibraryIcon fontSize="large" />}
-              title="Sin miembros"
-              description="Aún no hay miembros en este club de fans."
+              title="Sin perfiles de miembros"
+              description="Todavía no hay perfiles de miembros disponibles en este club."
             />
           ) : (
             <MemberCardsGrid members={profilesQuery.data} artistId={artistIdNum} loading={profilesQuery.isFetching} />
@@ -534,11 +534,25 @@ export default function FanClubMemberProfilePage() {
 
   if (!profile) {
     return (
-      <EmptyState
-        icon={<PhotoLibraryIcon fontSize="large" />}
-        title="Miembro no encontrado"
-        description="Este miembro no pertenece al club de fans."
-      />
+      <PageShell title="Perfil de miembro">
+        <Stack spacing={3}>
+          <Button
+            component={RouterLink}
+            to={`/fans/clubs/${artistIdNum}`}
+            startIcon={<ArrowBackIcon />}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            Volver al club
+          </Button>
+          <EmptyState
+            icon={<PhotoLibraryIcon fontSize="large" />}
+            title={isMe ? 'Aún no tienes un perfil de miembro' : 'Perfil no disponible'}
+            description={isMe
+              ? 'Seguir al artista y compartir un perfil en su club son acciones distintas.'
+              : 'No pudimos encontrar un perfil de miembro disponible.'}
+          />
+        </Stack>
+      </PageShell>
     );
   }
 
