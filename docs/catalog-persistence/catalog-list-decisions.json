@@ -556,7 +556,7 @@
       "reviewed": true
     },
     {
-      "id": "cb53e40989f2a862d6b1",
+      "id": "a950e16c3a9f40f18fa3",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -565,14 +565,14 @@
       "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "directory-privacy-repair-2026-09-17",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 102,
-        "consumerCount": 33,
+        "valueCount": 103,
+        "consumerCount": 36,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }

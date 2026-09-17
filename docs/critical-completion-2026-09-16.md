@@ -108,3 +108,51 @@ configuration was changed. Machine proxy probes timed out and used the release
 tool's public fallback; public health/version independently passed. Plan mode
 passed. The release must preserve enabled discovery, using its supported guarded
 maintenance window or reviewed preservation tooling, before mutation is allowed.
+
+## Release dependency discovered on 2026-09-17 (C04)
+
+C04 is P1 and required for C01–C03: the production ledger had already applied
+`2026-09-09_music_directory_suppressed_event_privacy`, but had not applied
+`2026-09-07_directory_event_visibility_and_favorite_evidence`. Applying the
+missing older migration overwrote the tombstone predicate; replaying the later
+migration instead drops metadata privacy. A fresh database alone cannot detect
+this update-order interaction. The guarded release rejected the resulting view
+before changing either API image. All 102 migrations had committed; the release
+lease was released. A read-only count found zero currently exposed suppressed
+events, which is not proof that the weakened boundary is safe.
+
+The maintenance restoration restarted the old image and revealed another
+compatibility dependency: the new RSVP migration enables four `rsvp` lifecycle
+capabilities which the old binary rejects. Both machines temporarily failed to
+serve the initialized application. Recovery reapplied the previously deployed
+privacy migration after checking its exact ledger checksum, then disabled only
+those four newly added capabilities. Original images, discovery flags and
+PayPal intake were preserved. `/health` subsequently returned database/status OK.
+
+The forward migration composes both predicates, keeps existing migration bytes
+immutable, and preserves source rows and stale cached documents. The release
+schema gate now requires both boundaries. The automatic production-schema test
+reproduces each overwritten view, requires rejection, applies the repair twice,
+and checks public events, private metadata, suppressed imports, dependent venue
+and cached search projections with rollback-only synthetic data. Local PostgreSQL
+passed all 103 migrations, both repair orders and backend boot/restart idempotence.
+
+Deployment acceptance: reviewed merged revision; 103 ledger entries; both privacy
+predicates present; no ineligible public rows; both machines healthy on the exact
+new digest; invitation/logistics read-only smoke. Keep the four RSVP capabilities
+disabled while any old binary can be restarted. Restore their original enabled
+state only after both machines run the compatible revision, and verify it. A
+rollback to `954e995` must disable these four capabilities first; never delete
+migration ledger rows, weaken schema checks or restore a less private view.
+
+Recovery also restored the old `ck_commerce_refund_provider` definition: the
+previous image compares its exact SQL definition during startup and rejects the
+new provider values even while those providers are disabled. The transaction
+validated the narrower constraint against all existing rows; no refund records
+were changed. Both replicas subsequently returned health OK, with the old
+revision confirmed. Before deploying the new binary, pause discovery while the
+old-compatible schema is still present, then restore the already-reviewed
+canonical constraint (including `placetopay` and `payphone`) for the new schema
+gate. If a rollout fails, restore the old constraint before restarting the old
+image. This is a schema compatibility step, not provider activation. PayPal
+intake stays enabled; refund and Datafast gates stay disabled.
