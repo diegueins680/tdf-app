@@ -90,6 +90,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionRequest,
       leadCompletionConsumedToken )
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
+import qualified TDF.StartupResponseSpec as StartupResponseSpec
 import TDF.Reputation (Confidence (..), confidenceFor, normalizeManualWeights, publicScore, rankOrderCentroid)
 import TDF.Reputation.Worker
     ( ReputationWorkerSettings (..), parseReputationWorkerSettings )
@@ -818,6 +819,7 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    StartupResponseSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
             commercialStoreScore initialCommercialFormula 4
