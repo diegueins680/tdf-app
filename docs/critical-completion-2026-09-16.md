@@ -144,3 +144,15 @@ disabled while any old binary can be restarted. Restore their original enabled
 state only after both machines run the compatible revision, and verify it. A
 rollback to `954e995` must disable these four capabilities first; never delete
 migration ledger rows, weaken schema checks or restore a less private view.
+
+Recovery also restored the old `ck_commerce_refund_provider` definition: the
+previous image compares its exact SQL definition during startup and rejects the
+new provider values even while those providers are disabled. The transaction
+validated the narrower constraint against all existing rows; no refund records
+were changed. Both replicas subsequently returned health OK, with the old
+revision confirmed. Before deploying the new binary, pause discovery while the
+old-compatible schema is still present, then restore the already-reviewed
+canonical constraint (including `placetopay` and `payphone`) for the new schema
+gate. If a rollout fails, restore the old constraint before restarting the old
+image. This is a schema compatibility step, not provider activation. PayPal
+intake stays enabled; refund and Datafast gates stay disabled.
