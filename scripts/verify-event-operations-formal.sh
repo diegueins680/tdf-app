@@ -69,8 +69,8 @@ run_tlc EventLifecycle.tla EventLifecycleBoundaries.cfg event-lifecycle-boundari
 
 # Negative controls must fail the named property, not merely fail to execute.
 run_negative_tlc() {
-  local config="$1" slug="$2" expected="$3" status=0
-  run_tlc EventLifecycle.tla "${config}" "${slug}" > "${run_root}/${slug}.log" 2>&1 || status=$?
+  local config="$1" slug="$2" expected="$3" module="${4:-EventLifecycle.tla}" status=0
+  run_tlc "${module}" "${config}" "${slug}" > "${run_root}/${slug}.log" 2>&1 || status=$?
   cat "${run_root}/${slug}.log"
   if [[ "${status}" -eq 0 ]] || ! grep -Fq "${expected}" "${run_root}/${slug}.log"; then
     echo "Negative control ${slug} did not detect ${expected}." >&2
@@ -86,6 +86,13 @@ run_tlc InvitationSafety.tla InvitationSafety.cfg invitation
 run_tlc TaskRaci.tla TaskRaci.cfg task-raci
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
 run_tlc OperationalLiveness.tla OperationalLiveness.cfg operational-liveness
+run_tlc FanHubOnboarding.tla FanHubOnboarding.cfg fanhub-onboarding
+run_tlc FanHubOnboarding.tla FanHubOnboardingLiveness.cfg fanhub-liveness
+run_negative_tlc FanHubOnboardingUnfair.cfg fanhub-unfair 'Temporal properties were violated' FanHubOnboarding.tla
+run_negative_tlc FanHubOnboardingConsent.cfg fanhub-consent 'Invariant ConsentOnly is violated' FanHubOnboarding.tla
+run_negative_tlc FanHubOnboardingContext.cfg fanhub-context 'Invariant CurrentContext is violated' FanHubOnboarding.tla
+run_negative_tlc FanHubOnboardingFlight.cfg fanhub-flight 'Invariant SingleFlight is violated' FanHubOnboarding.tla
+run_negative_tlc FanHubOnboardingTerminal.cfg fanhub-terminal 'Invariant TerminalOnly is violated' FanHubOnboarding.tla
 
 scenario_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
   -c 0 -s sat4j -t none -o "${run_root}/alloy-scenario" EventStructure.als 2>&1)"
