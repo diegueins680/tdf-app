@@ -1,0 +1,227 @@
+127.0.0.1:5432 - accepting connections
+PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+102
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+UPDATE 0
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE TRIGGER
+COMMIT
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+CREATE FUNCTION
+CREATE FUNCTION
+COMMIT
+BEGIN
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+COMMIT
+BEGIN
+CREATE FUNCTION
+REVOKE
+COMMIT
+INSERT 0 3
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+DO
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+ social_v2_publish_batch
+-------------------------
+                       2
+(1 row)
+
+DO
+SELECT 1
+UPDATE 1
+INSERT 0 1
+ social_v2_publish_batch
+-------------------------
+                       1
+(1 row)
+
+ social_v2_publish_batch
+-------------------------
+                       0
+(1 row)
+
+DO
+UPDATE 1
+INSERT 0 1
+BEGIN
+UPDATE 1
+COMMIT
+BEGIN
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+INSERT 0 0
+CREATE TABLE
+NOTICE:  relation "social_v2_preference" already exists, skipping
+NOTICE:  relation "social_v2_pair" already exists, skipping
+CREATE TABLE
+CREATE INDEX
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_command" already exists, skipping
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+CREATE INDEX
+CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+NOTICE:  column "publication_position" of relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_publication" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_club_artist" already exists, skipping
+NOTICE:  relation "social_v2_officer_actor" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_visible_post_club" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+BEGIN
+NOTICE:  column "activated_once" of relation "social_v2_runtime" already exists, skipping
+ALTER TABLE
+UPDATE 0
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE TRIGGER
+COMMIT
+BEGIN
+CREATE INDEX
+NOTICE:  relation "social_v2_chat_last_message" already exists, skipping
+NOTICE:  relation "social_v2_chat_actor_a" already exists, skipping
+CREATE INDEX
+CREATE INDEX
+NOTICE:  relation "social_v2_chat_actor_b" already exists, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+CREATE FUNCTION
+CREATE FUNCTION
+COMMIT
+BEGIN
+NOTICE:  relation "social_v2_legacy_follow_incoming" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+COMMIT
+BEGIN
+CREATE FUNCTION
+REVOKE
+COMMIT
+DO
+BEGIN
+                 measure                 | violations
+-----------------------------------------+------------
+ blocked pairs retaining consent/follows |          0
+ closed accounts retaining active edges  |          0
+ orphan relationship endpoints           |          0
+ publication order above counter         |          0
+(4 rows)
+
+ pending_publications
+----------------------
+                    0
+(1 row)
+
+ connected_pair_stock
+----------------------
+                    0
+(1 row)
+
+COMMIT
+PASS: complete schema fixture, registered migrations, additive reapply, resumable publication, legacy source writes and pause preserve new data
+Fixture logs: /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tmp.JgKZ5TymwU (private database cleanup runs on exit)

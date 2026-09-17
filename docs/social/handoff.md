@@ -242,3 +242,81 @@ and production activation remain blocked. No new message store or consent backfi
 
 The earlier Vercel/Cloudflare deployment exceptions remain unresolved. No deployment
 command or new production flag activation was issued during this continuation.
+
+## Legacy DM read/API follow-up — 2026-09-15
+
+[Read/API boundary](dm-read-boundary.md) extends #386 to existing thread previews,
+message history, thread opening and send error mapping. It preserves DTOs and adds
+shared server policy rather than exposing a second client contract. The bounded
+DmReads model passed 9,648 distinct states and three specific negative controls;
+1,440 generated observations passed on private PostgreSQL, and a membership-only
+unsafe control failed at case 36. Complete-schema apply/reapply and pause passed.
+The actual bearer HTTP suite passed **93 examples, zero failures**. Final backend
+build and hosted CI results are pending until recorded at their actual source version. Do not infer them from earlier PR checks.
+
+This reduces the legacy-DM blocker only. Old readers must be drained before any
+activation; profile/search/media/notifications, organization authority, moderation,
+message retry semantics, thread pagination, native/full-app journeys and product
+instrumentation remain incomplete. The historical deployment exception above still
+applies. No production flag or deployment is authorized by these tests.
+
+## Profile read continuation — 2026-09-15
+
+[Profile read boundary](profile-read-boundary.md) repairs both legacy profile APIs
+without changing their DTOs or turning Discover opt-out into profile privacy. It
+builds on #390 (`44a1c7bed`). #391 contains parallel chat client cache isolation;
+#394 records completed DM build/client baseline evidence. Broader legacy identity
+surfaces, delegation and rollout remain incomplete. See the new packet for exact
+local results, failed experiments, migration/pause steps and acceptance statuses.
+
+Published profile delivery: [draft #397](https://github.com/diegueins680/tdf-app/pull/397),
+implementation `7706258a9e8ecbe0b99b4fd23903df606848ad03`, dependent on #390.
+The follow-up model-only commit isolates the pause-memory negative control and
+reproduces unchanged SQL expectations. Local Stack/HTTP/model/schema/performance
+checks passed; hosted checks are running. All PRs remain unmerged.
+
+## Relationship read continuation — 2026-09-16
+
+[Relationship read boundary](relationship-read-boundary.md) implements the next
+four GET adapters, dependent on #397 at `7c452efcb`. Model checking, generated
+PostgreSQL observations, backend compilation/tests, schema compatibility and
+synthetic list measurements ran locally; exact results and limits are in the packet.
+Legacy writers/response DTOs, client cutover and remaining identity surfaces still
+block rollout. No production gates were enabled and no deployment command issued.
+
+
+## Explicit legacy relationship writes — 2026-09-16
+
+[Legacy write boundary](legacy-write-boundary.md), dependent on #402 at `8b2d1557a`,
+repairs POST friend, DELETE friend and vCard exchange with one session/retirement
+transaction. Preserves preactivation DTOs; governed operations return 410 without
+changing historical rows or canonical consent. Model: 4,320 distinct states, three
+specific counterexamples, 288 generated HTTP observations. Final local verification:
+417 HTTP examples and 2,542 backend tests, zero failures; PostgreSQL 17 complete
+schema apply/reapply/pause, catalog audit and the predeclared guard benchmark passed.
+Exact logs, fingerprints, failed development runs and limits are in the packet.
+
+**Next integration blocker:** `fanFollowArtist` automatically creates reciprocal
+PartyFollow edges with every existing fan-club member and emits notifications.
+This PR does not repair that side effect. It cannot grant canonical consent or DM
+rights, but still creates unwanted historical graph edges and unbounded work.
+Repair it before activation, along with client cutover and previously listed
+search/media/notification/delegation/moderation gaps. Do not label all relationship
+writers complete. Parent #402 backend CI remains pending in the recorded snapshot.
+No production flag was activated and no deployment command issued; the earlier
+Vercel/Cloudflare provider exception still requires owner review/removal.
+
+
+## Fan subscription continuation — 2026-09-16
+
+[Fan-effects boundary](fan-effects-boundary.md) implements the next dependent slice
+after #409. Following an artist keeps its subscription, while automatic member
+profiles, reciprocal member follows and new named notifications retire after
+canonical enforcement. Follow/unfollow share current-session and account locks.
+Actual local results: 12,738 TLC states, four detected counterexamples, 1,141 HTTP
+examples, 2,542 backend tests, native PostgreSQL 16 complete-schema reapply/pause,
+11 selector tests, UI typecheck/lint and bounded handler benchmark passed.
+Hosted qualification is pending; local Docker PG17 failed environmentally.
+Parent #409 full CI35129595035 completed successfully. Historical notification
+serving/counts, fan-follow GET, explicit profile publication/privacy and previously
+listed rollout blockers remain open. No deployment/activation is authorized.

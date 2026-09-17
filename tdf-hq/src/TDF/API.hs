@@ -6,6 +6,10 @@
 
 module TDF.API where
 
+import qualified TDF.API.Chat as Chat
+import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
+import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
+import TDF.API.SocialProfiles (ProfileListAPI, ProfileGetAPI)
 import TDF.Social.API (SocialV2API)
 import           Control.Applicative ((<|>))
 import           Servant
@@ -151,28 +155,18 @@ type PartyAPI =
       )
 
 type SocialAPI =
-       "followers" :> Get '[JSON] [PartyFollowDTO]
-  :<|> "following" :> Get '[JSON] [PartyFollowDTO]
-  :<|> "vcard-exchange" :> ReqBody '[JSON] VCardExchangeRequest :> Post '[JSON] [PartyFollowDTO]
-  :<|> "friends" :> Get '[JSON] [PartyFollowDTO]
-  :<|> "friends" :> Capture "partyId" Int64 :> Post '[JSON] [PartyFollowDTO]
-  :<|> "friends" :> Capture "partyId" Int64 :> Delete '[JSON] NoContent
-  :<|> "profiles" :> QueryParams "partyId" Int64 :> Get '[JSON] [SocialPartyProfileDTO]
-  :<|> "profiles" :> Capture "partyId" Int64 :> Get '[JSON] SocialPartyProfileDTO
-  :<|> "suggestions" :> Get '[JSON] [SuggestedFriendDTO]
+       FollowersAPI
+  :<|> FollowingAPI
+  :<|> VCardAPI
+  :<|> FriendsAPI
+  :<|> AddFriendAPI
+  :<|> RemoveFriendAPI
+  :<|> ProfileListAPI
+  :<|> ProfileGetAPI
+  :<|> SuggestionsAPI
   :<|> SocialV2API
 
-type ChatAPI =
-       "chat" :> "threads" :> Get '[JSON] [ChatThreadDTO]
-  :<|> "chat" :> "threads" :> "dm" :> Capture "otherPartyId" Int64 :> Post '[JSON] ChatThreadDTO
-  :<|> "chat" :> "threads" :> Capture "threadId" Int64 :> "messages"
-         :> QueryParam "limit" Int
-         :> QueryParam "beforeId" Int64
-         :> QueryParam "afterId" Int64
-         :> Get '[JSON] [ChatMessageDTO]
-  :<|> "chat" :> "threads" :> Capture "threadId" Int64 :> "messages"
-         :> ReqBody '[JSON] ChatSendMessageRequest
-         :> Post '[JSON] ChatMessageDTO
+type ChatAPI = Chat.ChatAPI
 
 type ChatKitSessionAPI =
        "chatkit" :> "sessions" :> ReqBody '[JSON] ChatKitSessionRequest :> Post '[JSON] ChatKitSessionResponse
@@ -471,8 +465,8 @@ type FanSecureAPI =
          )
   :<|> "me" :> "follows" :>
          ( Get '[JSON] [FanFollowDTO]
-      :<|> Capture "artistId" Int64 :> Post '[JSON] FanFollowDTO
-      :<|> Capture "artistId" Int64 :> Delete '[JSON] NoContent
+      :<|> FollowArtistAPI
+      :<|> UnfollowArtistAPI
          )
   :<|> "me" :> "artist-profile" :>
          ( Get '[JSON] ArtistProfileDTO
