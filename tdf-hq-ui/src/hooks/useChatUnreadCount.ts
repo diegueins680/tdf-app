@@ -10,10 +10,10 @@ export function useChatUnreadCount(opts: { enabled?: boolean } = {}) {
   const enabled = (opts.enabled ?? true) && Boolean(session?.partyId);
   const [readVersion, setReadVersion] = useState(0);
 
-  useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1)), []);
+  useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1), session?.partyId ?? 0), [session?.partyId]);
 
   const threadsQuery = useQuery({
-    queryKey: ['chat-threads'],
+    queryKey: ['chat-threads', session?.partyId ?? null],
     queryFn: ChatAPI.listThreads,
     enabled,
     staleTime: 10_000,
@@ -22,10 +22,10 @@ export function useChatUnreadCount(opts: { enabled?: boolean } = {}) {
 
   const unreadCount = useMemo(() => {
     void readVersion;
-    const threads = threadsQuery.data ?? [];
-    const map = loadChatReadMap();
+    const threads = enabled && !threadsQuery.isError ? threadsQuery.data ?? [] : [];
+    const map = loadChatReadMap(session?.partyId ?? 0);
     return countUnreadThreads(threads, map);
-  }, [readVersion, threadsQuery.data]);
+  }, [enabled, session?.partyId, readVersion, threadsQuery.data, threadsQuery.isError]);
 
   return { unreadCount, threadsQuery };
 }

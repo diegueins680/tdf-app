@@ -1,0 +1,26 @@
+Full local log SHA-256: 656cb0d1d2a0b78714c26b9c0c85057fd79af0fe43b44b37debf3ec5b5d0b853
+Excerpt (last 24 lines):
+  rejects blank, header-shaped, or path-shaped send credentials [✔]
+TDF.WhatsApp.Client outbound payload normalization
+  normalizes recipient phones and message bodies before Graph request construction [✔]
+  rejects malformed recipients and text bodies before provider fallback handling [✔]
+recordIncomingWhatsAppMessage
+  allocates safe distinct fallback external ids for malformed inbound ids [✔]
+  does not overwrite immutable inbound content on duplicate webhook delivery [✔]
+  leaves party ownership unset when phone-only lookup matches multiple parties [✔]
+applyWhatsAppDeliveryUpdate
+  sanitizes provider status tokens before persisting delivery fallback updates [✔]
+  rejects malformed delivery external ids before status lookup [✔]
+recordOutgoingWhatsAppMessage
+  records blank provider message ids as failed while allocating a safe fallback id [✔]
+  does not echo malformed recipient text into generated fallback external ids [✔]
+  allocates distinct fallback external ids for repeated blank-id sends at the same timestamp [✔]
+  applies reply outcomes only to incoming reply targets when linked by message id [✔]
+
+Finished in 8.1662 seconds
+2542 examples, 0 failures
+
+
+
+tdf-hq> Test suite tdf-hq-test passed
+Completed 2 action(s).

@@ -1,0 +1,76 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 122 and seed -3333014739154346182 with 1 worker on 16 cores with 4096MB heap and 64MB offheap memory [pid: 92214] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 17.0.12 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-social-relationships-20260915/formal/social/RelationshipReads.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module RelationshipReads
+Starting... (2026-09-15 23:47:10)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Finished computing initial states: 16 distinct states generated at 2026-09-15 23:47:10.
+Error: Invariant RowsAuthorized is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ live = {a, b, c}
+/\ blocked = FALSE
+/\ done = FALSE
+/\ observed = [ rows |-> {},
+  expected |-> {},
+  count |-> 0,
+  expectedCount |-> 0,
+  legacy |-> TRUE ]
+/\ closed = {}
+/\ original = {<<b, a>>, <<b, c>>}
+/\ route = "followers"
+/\ edges = {<<b, a>>, <<b, c>>}
+/\ pairExists = FALSE
+/\ enabled = FALSE
+/\ activated = FALSE
+
+State 2: <Next line 49, col 9 to line 50, col 77 of module RelationshipReads>
+/\ live = {a, b, c}
+/\ blocked = FALSE
+/\ done = FALSE
+/\ observed = [ rows |-> {},
+  expected |-> {},
+  count |-> 0,
+  expectedCount |-> 0,
+  legacy |-> TRUE ]
+/\ closed = {}
+/\ original = {<<b, a>>, <<b, c>>}
+/\ route = "followers"
+/\ edges = {<<b, c>>}
+/\ pairExists = FALSE
+/\ enabled = FALSE
+/\ activated = FALSE
+
+State 3: <Next line 49, col 9 to line 50, col 77 of module RelationshipReads>
+/\ live = {a, b, c}
+/\ blocked = FALSE
+/\ done = TRUE
+/\ observed = [ rows |-> {<<b, a>>},
+  expected |-> {},
+  count |-> 0,
+  expectedCount |-> 0,
+  legacy |-> TRUE ]
+/\ closed = {}
+/\ original = {<<b, a>>, <<b, c>>}
+/\ route = "followers"
+/\ edges = {<<b, c>>}
+/\ pairExists = FALSE
+/\ enabled = FALSE
+/\ activated = FALSE
+
+365 states generated, 288 distinct states found, 235 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 5 (minimum is 0, the maximum 10 and the 95th percentile is 10).
+Finished in 01s at (2026-09-15 23:47:10)

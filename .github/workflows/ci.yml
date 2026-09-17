@@ -200,6 +200,8 @@ jobs:
         with:
           path: .stack-root
           key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+          restore-keys: |
+            stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Restore incremental backend objects
         uses: actions/cache@v6
@@ -211,6 +213,13 @@ jobs:
 
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
+
+      - name: Verify artist self-service transactions and migration
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: ./scripts/test-artist-self-service.sh
 
       - name: Verify social session revocation and model-derived HTTP fixtures
         env:

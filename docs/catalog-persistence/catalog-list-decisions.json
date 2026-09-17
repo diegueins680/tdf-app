@@ -556,28 +556,6 @@
       "reviewed": true
     },
     {
-      "id": "a950e16c3a9f40f18fa3",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "directory-privacy-repair-2026-09-17",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 103,
-        "consumerCount": 36,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
-      }
-    },
-    {
       "id": "3391a96825357d78f794",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -11394,16 +11372,6 @@
       "reviewed": true
     },
     {
-      "id": "26a352668341118b54ee",
-      "classification": "security-system-registry",
-      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
-      "specializedModel": "security_role, party_security_role, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
-      "reviewed": true
-    },
-    {
       "id": "b5216d6797a7d21e7a6d",
       "classification": "security-system-registry",
       "disposition": "persisted-registry-with-deny-by-default-code-mirror",
@@ -12697,28 +12665,6 @@
       "reviewed": true
     },
     {
-      "id": "ffb84e8fd3972fd0730d",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
-      "evidence": {
-        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-        "line": 55,
-        "kind": "array",
-        "name": "mobileFeatureRegistry",
-        "valueCount": 144,
-        "consumerCount": 5,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
-      }
-    },
-    {
       "id": "bc76ab356eb625beab02",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -13177,59 +13123,6 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "The values are keys of an internal state/error object rather than selectable business data.",
       "reviewed": true
-    },
-    {
-      "id": "82e3ab110124708c621c",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
-      "priority": "P1-cross-platform",
-      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
-      "justification": "Onboarding intents are cross-client product choices whose identifiers, labels, order, and availability require one governed source.",
-      "reviewed": true
-    },
-    {
-      "id": "29021a526fad50de4bf4",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
-      "priority": "P1-cross-platform",
-      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
-      "justification": "Onboarding intent labels and ordering are user-visible cross-client product data and must follow the governed intent registry.",
-      "reviewed": true
-    },
-    {
-      "id": "34d5f2f94d1a165783ba",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "onboarding_intent, onboarding_first_value, user_onboarding_progress",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
-      "evidence": {
-        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
-        "line": 118,
-        "kind": "switch-cases",
-        "name": "intent",
-        "valueCount": 6,
-        "consumerCount": 243,
-        "exactDuplicateIds": [
-          "dc2478eb86deaac6aed4",
-          "9ebf2e096eeddbecfa52",
-          "05cf100aa2fff2a7c8ad",
-          "3022d9364dbbe18e8bbb",
-          "82e3ab110124708c621c"
-        ],
-        "similarCandidateIds": [
-          "dc2478eb86deaac6aed4",
-          "9ebf2e096eeddbecfa52",
-          "05cf100aa2fff2a7c8ad",
-          "3022d9364dbbe18e8bbb"
-        ]
-      }
     },
     {
       "id": "1ecf8fb9acdcad27089e",
@@ -13757,6 +13650,171 @@
       "reviewed": true
     },
     {
+      "id": "0886e6835c7f5c533d9c",
+      "classification": "security-system-registry",
+      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Only recognized technical policy bindings are retained in code. The persisted artist self-service policy grants only Artist for the authenticated owner, with an immutable audit and without reactivating revoked assignments.",
+      "reviewed": true
+    },
+    {
+      "id": "a2dd2dd3b764375d3eb1",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true,
+      "reviewMethod": "deterministic-policy-v3",
+      "reviewBatch": "ci-recovery-2026-09-12",
+      "evidence": {
+        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "line": 55,
+        "kind": "array",
+        "name": "mobileFeatureRegistry",
+        "valueCount": 155,
+        "consumerCount": 5,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "12abca4fa517da75ad03",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P1-cross-platform",
+      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
+      "justification": "Onboarding intent labels and ordering are user-visible cross-client product data and must follow the governed intent registry.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+        "line": 76,
+        "kind": "array",
+        "name": "ONBOARDING_INTENT_OPTIONS",
+        "valueCount": 6
+      }
+    },
+    {
+      "id": "3b37706d3daff89e8890",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_first_value, user_onboarding_progress",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+        "line": 391,
+        "kind": "switch-cases",
+        "name": "intent",
+        "valueCount": 6
+      }
+    },
+    {
+      "id": "baf5675444c0fb967e29",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could weaken activation regression coverage.",
+      "justification": "Synthetic test fixture assertions mirror the persisted role and access-request schema; these values are not a production source of selectable grants or request states.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "line": 35,
+        "kind": "array",
+        "name": "roles",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "77d089b6170fb69c6781",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could weaken activation regression coverage.",
+      "justification": "Synthetic test fixture assertions mirror the persisted role and access-request schema; these values are not a production source of selectable grants or request states.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-hq/test/integration/artist_self_service_fixture.sql",
+        "line": 212,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "58c33690f95b3e972ad9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could weaken activation regression coverage.",
+      "justification": "Synthetic test fixture assertions mirror the persisted role and access-request schema; these values are not a production source of selectable grants or request states.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-hq/test/integration/artist_self_service_fixture.sql",
+        "line": 214,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 17
+      }
+    },
+    {
+      "id": "2ba2e67d7a36352dcf50",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-mobile/app/merch/preferences.tsx",
+        "line": 13,
+        "kind": "literal-union",
+        "name": "SubjectKind",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "cedbc4f84ceef2965f77",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Ordered migration identifiers and script paths remain deployment execution mechanics, with applied revisions persisted in the ledger. This manifest preserves all 103 main entries unchanged and adds the independently reviewed artist policy after them. Directory privacy view composition and artist policy touch independent objects; both are retained with unchanged SQL. All 104 introduction SHAs are ancestors containing their registered path.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-directory-integration-2026-09-17",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 104
+      }
+    },
+    {
       "id": "fe6d3a8c69b509b7d179",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -13764,6 +13822,26 @@
       "priority": "P3-retain",
       "risk": "Removing either fixture omits anonymous or zero-grant authenticated access from the audit; neither fixture grants application permissions.",
       "justification": "The inventory script constructs synthetic anonymous and authenticated-no-grant sessions to evaluate existing client policy. These are audit inputs, not selectable business roles or an authorization source. Actual roles and module grants are read from implementation; runtime database authorization remains separately required.",
+      "reviewed": true
+    },
+    {
+      "id": "032010c2e0452a17c57c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this synthetic session DTO fixture can stop session-boundary regression tests from representing the application contract.",
+      "justification": "Reviewed 2026-09-17: FanHubPage.audit.test.tsx sessionMock contains fixed SessionUser property names (username, displayName, roles, modules, partyId). It is test input, not a selectable role catalog, grant authority or persisted business list. Production role/permission definitions are unchanged.",
+      "reviewed": true
+    },
+    {
+      "id": "9ef025df7bc271d12dfa",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture property drift would weaken current-session regression coverage.",
+      "justification": "Reviewed 2026-09-17: ArtistClaimPanel.test.tsx session has the fixed SessionUser contract keys partyId and apiToken. Values are synthetic; it is not a role/grant or user-selectable catalog.",
       "reviewed": true
     }
   ]

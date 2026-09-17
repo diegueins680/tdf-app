@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module TDF.Social.Session (SessionAccess(..), withSocialSession) where
+module TDF.Social.Session (SessionAccess(..), withSocialSession, withCurrentSession) where
 
 import Data.Int (Int64)
 import Database.Persist (PersistValue(..), get)
@@ -18,7 +18,19 @@ data SessionAccess = ReadSession | WriteSession (Maybe PartyId)
 withSocialSession
   :: SessionAccess -> AuthedUser -> SqlPersistT IO a
   -> SqlPersistT IO (Either ServerError a)
-withSocialSession access user action = case auApiTokenId user of
+withSocialSession access user action = do
+  checked <- withCurrentSession access user $ do
+    live <- rawSql "SELECT social_v2_live(?)" [PersistInt64 (fromSqlKey (auPartyId user))]
+      :: SqlPersistT IO [Single Bool]
+    if live == [Single True] then Right <$> action else pure (Left err404)
+  pure (checked >>= id)
+
+-- Current bearer authority only. Callers must independently enforce domain
+-- eligibility; in particular this never authorizes an organization delegation.
+withCurrentSession
+  :: SessionAccess -> AuthedUser -> SqlPersistT IO a
+  -> SqlPersistT IO (Either ServerError a)
+withCurrentSession access user action = case auApiTokenId user of
   Nothing -> pure (Left err401)
   Just tokenKey -> do
     let actor = auPartyId user
@@ -38,7 +50,5 @@ withSocialSession access user action = case auApiTokenId user of
         | apiTokenActive token
         , apiTokenPartyId token == actor
         , isAuthenticatableApiTokenLabel (apiTokenLabel token) -> do
-            live <- rawSql "SELECT social_v2_live(?)" [PersistInt64 (fromSqlKey actor)]
-              :: SqlPersistT IO [Single Bool]
-            if live == [Single True] then Right <$> action else pure (Left err404)
+            Right <$> action
       _ -> pure (Left err401)

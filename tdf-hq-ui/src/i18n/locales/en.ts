@@ -1,6 +1,18 @@
 import authEntry from './authEntry.en';
 const en = {
   authEntry,
+  fanHubOnboarding: {
+    title: 'First steps',
+    managerTitle: 'Useful now',
+    loading: 'Loading first steps',
+    artistLoading: 'Loading artist profile',
+    catalogLoading: 'Loading artist catalog',
+    close: 'Close first steps',
+    retry: 'Retry',
+    saving: 'Saving your exit from first steps…',
+    loadError: 'We could not load your first steps. We will not show information from another account; check your connection and try again.',
+    saveError: 'We could not save your exit from first steps. You can retry without losing your progress.',
+  },
   Parties: 'Parties',
   Bookings: 'Bookings',
   Kanban: 'Pipelines',

@@ -1,0 +1,57 @@
+{
+  "http-and-benchmark.txt": {
+    "source": "/private/tmp/social-legacy-writes-http-final.txt",
+    "sha256": "e8926ebb9dd3150ac893a2d2332db4c4ca3ad9c811a80531f43d68ecbefa876b",
+    "bytes": 29849
+  },
+  "schema.txt": {
+    "source": "/private/tmp/social-legacy-writes-schema.txt",
+    "sha256": "c01d73982b5cad610b165203871591719148d3f76073cf31597d8b51a18c02cf",
+    "bytes": 4374
+  },
+  "catalog.txt": {
+    "source": "/private/tmp/social-legacy-writes-catalog-final.txt",
+    "sha256": "897d777fc328fce63c99a5436064e4faab8c7472aa1f42090a66f4407f2f586a",
+    "bytes": 204
+  },
+  "model-dump.txt": {
+    "source": "/private/tmp/social-legacy-writes-traces.txt",
+    "sha256": "8d659a2e0b71c2a1372ab353e8399986e90e6be5f0c180bdde5df154a9f054f1",
+    "bytes": 2457
+  },
+  "initial-model-construction-failure.txt": {
+    "source": "/private/tmp/social-legacy-writes-model/LegacyWrites.txt",
+    "sha256": "b5a3604de4764995105c64c2d5fc68cca534383a2004c59235d040716b169e55",
+    "bytes": 3566
+  },
+  "initial-stack-failure.txt": {
+    "source": "/private/tmp/social-legacy-writes-stack.txt",
+    "sha256": "0ffaad4b0e409d590a65b55a0f894271e60ce6463656a17104e659d4fdbdc287",
+    "bytes": 3953
+  },
+  "stack-summary.txt": {
+    "source": "/private/tmp/social-legacy-writes-stack-final.txt",
+    "sha256": "62a893707a39c8660445f45d4692de64a28822220b3bc0d525cfbec6da68a825",
+    "bytes": 1825605
+  },
+  "LegacyWritesLocks.txt": {
+    "source": "/private/tmp/social-legacy-writes-model-corrected/LegacyWritesLocks.txt",
+    "sha256": "c763a3ff1552c5081f958df0cf777273a9c59cb30ad4bfa35692ed789cf2a022",
+    "bytes": 3788
+  },
+  "LegacyWrites.txt": {
+    "source": "/private/tmp/social-legacy-writes-model-corrected/LegacyWrites.txt",
+    "sha256": "060df5ff7d70a9a5e5e972eea8a83a733adc2635affe60fbff1861ddeee2879f",
+    "bytes": 2129
+  },
+  "LegacyWritesPair.txt": {
+    "source": "/private/tmp/social-legacy-writes-model-corrected/LegacyWritesPair.txt",
+    "sha256": "9c4191308950b700b873191ab95481ef3983e4465a8e85b898e3152064179238",
+    "bytes": 3782
+  },
+  "LegacyWritesPause.txt": {
+    "source": "/private/tmp/social-legacy-writes-model-corrected/LegacyWritesPause.txt",
+    "sha256": "e581f6169ca0a4d35a63bec11bf8df2f58488c5e36a86b42e862c2ad2d28f4b3",
+    "bytes": 4148
+  }
+}

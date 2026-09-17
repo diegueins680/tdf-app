@@ -6,9 +6,16 @@ on:
       - 'scripts/social/**'
       - 'tdf-hq/sql/*social_v2*'
       - 'tdf-hq/src/TDF/Social/**'
+      - 'tdf-hq/src/TDF/API/Chat.hs'
+      - 'tdf-hq/src/TDF/API/FanFollowing.hs'
+      - 'tdf-hq/src/TDF/API/SocialProfiles.hs'
+      - 'tdf-hq/src/TDF/API/SocialRelationships.hs'
       - 'tdf-hq-ui/src/features/social/**'
       - 'tdf-hq-ui/src/api/socialV2*'
       - 'tdf-hq-ui/src/pages/SocialPage.tsx'
+      - 'tdf-hq-ui/src/pages/ChatPage*'
+      - 'tdf-hq-ui/src/hooks/useChatUnreadCount.ts'
+      - 'tdf-hq-ui/src/utils/chatReadState*'
       - 'tdf-hq/docs/openapi/social-v2.yaml'
       - '.github/workflows/social-verification.yml'
   workflow_dispatch:
@@ -53,6 +60,60 @@ jobs:
           java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/dm-trace-states -dump dot,actionlabels /tmp/dm-traces.dot -config formal/social/LegacyDm.cfg formal/social/LegacyDm.tla
           python3 scripts/social/generate-dm-cases.py /tmp/dm-traces.dot /tmp/dm-model-cases.sql
           diff -u scripts/social/dm-model-cases.sql /tmp/dm-model-cases.sql
+      - name: DM read authorization, progress and cursor counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/dm-read-model-results
+        run: bash scripts/social/check-dm-reads-model.sh
+      - name: Regenerate checked DM read outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/dm-read-states -dump dot,actionlabels /tmp/dm-read-traces.dot -config formal/social/DmReadTraces.cfg formal/social/DmReads.tla
+          python3 scripts/social/generate-dm-read-cases.py /tmp/dm-read-traces.dot /tmp/dm-read-model-cases.sql
+          diff -u scripts/social/dm-read-model-cases.sql /tmp/dm-read-model-cases.sql
+      - name: Profile read safety, progress and specific counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/profile-read-model-results
+        run: bash scripts/social/check-profile-reads-model.sh
+      - name: Regenerate checked profile read outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/profile-read-states -dump dot,actionlabels /tmp/profile-read-traces.dot -config formal/social/ProfileReads.cfg formal/social/ProfileReads.tla
+          python3 scripts/social/generate-profile-read-cases.py /tmp/profile-read-traces.dot /tmp/profile-read-model-cases.sql
+          diff -u scripts/social/profile-read-model-cases.sql /tmp/profile-read-model-cases.sql
+      - name: Relationship reads and specific unsafe controls
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/relationship-read-model-results
+        run: bash scripts/social/check-relationship-reads-model.sh
+      - name: Regenerate observed relationship projections
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/relationship-read-states -dump dot,actionlabels /tmp/relationship-read-traces.dot -config formal/social/RelationshipReads.cfg formal/social/RelationshipReads.tla
+          python3 scripts/social/generate-relationship-read-cases.py /tmp/relationship-read-traces.dot /tmp/relationship-read-model-cases.sql
+          diff -u scripts/social/relationship-read-model-cases.sql /tmp/relationship-read-model-cases.sql
+      - name: Legacy write locks, retirement, progress and counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/legacy-write-model-results
+        run: bash scripts/social/check-legacy-writes-model.sh
+      - name: Regenerate observed legacy write effects
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/legacy-write-states -dump dot,actionlabels /tmp/legacy-write-traces.dot -config formal/social/LegacyWrites.cfg formal/social/LegacyWrites.tla
+          python3 scripts/social/generate-legacy-write-cases.py /tmp/legacy-write-traces.dot /tmp/LegacyWriteModelCases.hs
+          diff -u scripts/social/LegacyWriteModelCases.hs /tmp/LegacyWriteModelCases.hs
+      - name: Fan effect retirement, current authority, retries and counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/fan-effects-model-results
+        run: bash scripts/social/check-fan-effects-model.sh
+      - name: Regenerate observed fan effect outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/fan-effects-states -dump dot,actionlabels /tmp/fan-effects-traces.dot -config formal/social/FanEffects.cfg formal/social/FanEffects.tla
+          python3 scripts/social/generate-fan-effects-cases.py /tmp/fan-effects-traces.dot /tmp/FanEffectsModelCases.hs
+          diff -u scripts/social/FanEffectsModelCases.hs /tmp/FanEffectsModelCases.hs
+      - name: PostgreSQL refinement of DM read observations
+        env:
+          TDF_SOCIAL_CHAT_SQL_ONLY: '1'
+        run: bash scripts/social/test-http.sh
       - name: Legacy DM migration and block/send races
         run: bash scripts/social/test-dm-writes.sh
       - name: Regenerate checked consent transitions
@@ -72,6 +133,11 @@ jobs:
             /tmp/social-model-results/*.txt
             /tmp/session-model-results/*.txt
             /tmp/dm-model-results/*.txt
+            /tmp/dm-read-model-results/*.txt
+            /tmp/profile-read-model-results/*.txt
+            /tmp/relationship-read-model-results/*.txt
+            /tmp/legacy-write-model-results/*.txt
+            /tmp/fan-effects-model-results/*.txt
   social-client:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -92,7 +158,7 @@ jobs:
       - name: Focused social contract and component tests
         env:
           NODE_OPTIONS: --experimental-vm-modules
-        run: node_modules/.bin/jest --config tdf-hq-ui/jest.config.cjs --runInBand tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx tdf-hq-ui/src/api/socialV2.test.ts tdf-hq-ui/src/api/social.test.ts
+        run: node_modules/.bin/jest --config tdf-hq-ui/jest.config.cjs --runInBand tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx tdf-hq-ui/src/api/socialV2.test.ts tdf-hq-ui/src/api/social.test.ts tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx tdf-hq-ui/src/utils/chatReadState.test.ts tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts
       - name: Verify generated additive contract
         run: |
           node_modules/.bin/openapi-typescript tdf-hq/docs/openapi/social-v2.yaml --output /tmp/social-v2.ts

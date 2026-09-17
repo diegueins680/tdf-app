@@ -37,10 +37,17 @@ CREATE TABLE party(id bigint PRIMARY KEY,display_name text NOT NULL,is_org boole
 CREATE TABLE user_credential(id bigint PRIMARY KEY,party_id bigint REFERENCES party(id),active boolean NOT NULL DEFAULT true);
 INSERT INTO party SELECT n,'Synthetic '||n,false FROM generate_series(1,5) n;
 INSERT INTO user_credential SELECT n,n,true FROM generate_series(1,5) n;
+CREATE TABLE fan_profile(id bigserial PRIMARY KEY,fan_party_id bigint UNIQUE REFERENCES party(id),display_name text,avatar_url text,bio text,city text);
+INSERT INTO fan_profile(fan_party_id,bio) SELECT n,'profile bio '||n FROM generate_series(1,5) n;
 CREATE TABLE api_token(id bigint PRIMARY KEY,token text,party_id bigint,label text,active boolean);
 INSERT INTO api_token SELECT n,'synthetic-'||n,n,NULL,true FROM generate_series(1,5) n;
 INSERT INTO api_token VALUES(6,'synthetic-alt',1,NULL,true);
 CREATE TABLE social_session_effect(id integer PRIMARY KEY);
+CREATE TABLE party_follow(id bigserial PRIMARY KEY,follower_party_id bigint,following_party_id bigint,via_nfc boolean NOT NULL DEFAULT false,created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(follower_party_id,following_party_id));
+CREATE TABLE chat_thread(id bigserial PRIMARY KEY,dm_party_a bigint NOT NULL REFERENCES party(id),dm_party_b bigint NOT NULL REFERENCES party(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(dm_party_a,dm_party_b));
+CREATE TABLE chat_message(id bigserial PRIMARY KEY,thread_id bigint NOT NULL REFERENCES chat_thread(id),sender_party_id bigint NOT NULL REFERENCES party(id),body text NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
+INSERT INTO chat_thread(dm_party_a,dm_party_b) VALUES(1,2),(2,3);
+INSERT INTO chat_message(thread_id,sender_party_id,body) VALUES(1,1,'model first'),(1,2,'model cursor'),(2,2,'foreign secret');
 CREATE TABLE party_security_role(id uuid,party_id bigint,role_id uuid,granted_by bigint,approved_by bigint,
   approval_mode text,emergency_reason text,source_revision_id uuid,source_policy_id uuid,active boolean,
   created_at timestamptz,revoked_at timestamptz,version integer);
@@ -53,9 +60,60 @@ SQL
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/fixture.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
 psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_chat_api.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql"
+psql_http < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql"
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/dm-read-refinement.sql"
+# psql \ir needs a real local path in Docker too, so concatenate the control and
+# generated cases instead of relying on the container seeing the checkout.
+TDF_SOCIAL_READ_NEGATIVE=$(mktemp)
+if { sed '/^\\ir /,$d' "$TDF_SOCIAL_ROOT/scripts/social/dm-read-negative.sql";
+     cat "$TDF_SOCIAL_ROOT/scripts/social/dm-read-model-cases.sql"; echo 'ROLLBACK;'; } |
+   psql_http > "$TDF_SOCIAL_READ_NEGATIVE" 2>&1; then
+  echo 'FAIL: unsafe membership-only read unexpectedly passed generated cases' >&2
+  exit 1
+fi
+grep 'DmReads observed case .* mismatch' "$TDF_SOCIAL_READ_NEGATIVE"
+echo 'PASS: generated cases reject the deliberately unsafe read projection'
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/dm-read-model-cases.sql"
+echo 'PASS: 1440 checked model outcomes refine thread preview/message/cursor policy on PostgreSQL'
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/profile-read-refinement.sql"
+TDF_SOCIAL_PROFILE_NEGATIVE=$(mktemp)
+if { cat "$TDF_SOCIAL_ROOT/scripts/social/profile-read-negative.sql";
+     cat "$TDF_SOCIAL_ROOT/scripts/social/profile-read-model-cases.sql"; echo 'ROLLBACK;'; } |
+   psql_http > "$TDF_SOCIAL_PROFILE_NEGATIVE" 2>&1; then
+  echo 'FAIL: unsafe profile policy unexpectedly passed generated cases' >&2
+  exit 1
+fi
+grep 'ProfileReads observed case .* mismatch' "$TDF_SOCIAL_PROFILE_NEGATIVE"
+echo 'PASS: generated cases reject the deliberately unsafe profile policy'
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/profile-read-model-cases.sql"
+echo 'PASS: checked profile outcomes refine PostgreSQL policy, ordering and payload'
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-refinement.sql"
+for control in policy counts; do
+  TDF_SOCIAL_RELATIONSHIP_NEGATIVE=$(mktemp)
+  if { cat "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-negative-$control.sql";
+       cat "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-model-cases.sql"; echo 'ROLLBACK;'; } |
+     psql_http > "$TDF_SOCIAL_RELATIONSHIP_NEGATIVE" 2>&1; then
+    echo "FAIL: unsafe relationship $control unexpectedly passed generated cases" >&2
+    exit 1
+  fi
+  grep 'RelationshipReads observed case .* mismatch' "$TDF_SOCIAL_RELATIONSHIP_NEGATIVE"
+  echo "PASS: observed cases reject deliberately unsafe relationship $control"
+done
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-model-cases.sql"
+echo 'PASS: checked relationship outcomes refine PostgreSQL rows, deletion and counts'
+if [ "${TDF_SOCIAL_CHAT_SQL_ONLY:-0}" = 1 ]; then
+  echo 'SQL-only mode: HTTP tests were not run'
+  exit 0
+fi
 if [ -z "${TDF_SOCIAL_HTTP_CONNECTION:-}" ]; then
   TDF_SOCIAL_HTTP_CONNECTION="host=127.0.0.1 port=$TDF_SOCIAL_PORT user=postgres password=synthetic-only dbname=social_http connect_timeout=5"
 fi
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/fan-effects-fixture.sql"
 export TDF_SOCIAL_HTTP_DB="$TDF_SOCIAL_HTTP_CONNECTION"
 cd "$TDF_SOCIAL_ROOT"
 TDF_SOCIAL_HTTP_BUILD=${TDF_SOCIAL_HTTP_BUILD:-$(mktemp -d)}
