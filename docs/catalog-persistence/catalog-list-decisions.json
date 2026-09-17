@@ -1361,13 +1361,13 @@
       "reviewed": true
     },
     {
-      "id": "2d43a4c97f70b8e8a5bc",
+      "id": "f9819fa4b81bdd8f3f21",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "navigation_item",
       "priority": "P3-retain",
       "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data.",
+      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
       "reviewed": true
     },
     {
