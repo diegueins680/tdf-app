@@ -45,7 +45,12 @@ function isThemeModePreference(value: unknown): value is ThemeModePreference {
 
 export function readStoredMode(): StoredThemeSelection {
   if (typeof window === 'undefined') return { id: null, code: 'system' };
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+  let stored: string | null;
+  try {
+    stored = window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return { id: null, code: 'system' };
+  }
   if (isThemeModePreference(stored)) return { id: null, code: stored };
   if (stored) {
     try {
@@ -134,7 +139,11 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
+    } catch {
+      // Theme changes still work in memory when persistence is unavailable.
+    }
   }, [selection]);
 
   useEffect(() => {
