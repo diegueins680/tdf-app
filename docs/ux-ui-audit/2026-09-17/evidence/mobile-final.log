@@ -1,0 +1,86 @@
+
+> tdf-mobile@1.0.1 test
+> jest --runInBand --silent
+
+PASS __tests__/AuthScreen.test.tsx (6.291 s)
+PASS __tests__/EventDetailMoments.test.tsx
+PASS __tests__/FirstRunProvider.test.tsx
+PASS __tests__/TicketCheckout.test.tsx
+PASS __tests__/NewUserOnboardingGate.test.tsx
+PASS __tests__/AuthProvider.test.tsx
+PASS __tests__/CreateEvent.test.tsx
+PASS __tests__/EventDetailLiveBroadcastLifecycle.test.tsx
+PASS __tests__/ExperimentProvider.test.tsx
+PASS __tests__/ArtistDetail.test.tsx
+PASS __tests__/UserSettingsProvider.test.tsx
+PASS __tests__/UserProfileRsvpActivity.test.tsx
+PASS __tests__/MerchOrderReviewScreen.test.tsx
+PASS __tests__/SocialScreen.test.tsx
+PASS __tests__/OnboardingScreen.test.tsx
+PASS __tests__/OperationsScreen.test.tsx
+PASS __tests__/MerchStoreReputation.test.tsx
+PASS __tests__/momentReactionFirstValue.test.ts
+PASS __tests__/VCardScreen.test.tsx
+PASS __tests__/AccessRequestFirstValue.test.tsx
+PASS __tests__/PartySelector.test.tsx
+PASS __tests__/TicketPurchaseCard.test.tsx
+PASS __tests__/DirectoryManage.test.tsx
+PASS __tests__/Parties.test.tsx
+PASS __tests__/EventCardTickets.test.tsx
+PASS __tests__/featureRegistry.test.ts
+PASS __tests__/onboardingIntent.test.ts
+PASS __tests__/savedEvents.test.ts
+PASS src/lib/eventSharing.test.ts
+PASS __tests__/socialApiUpdateMerge.test.ts
+PASS __tests__/DeepLinks.test.ts
+PASS __tests__/ThemeProvider.test.tsx
+PASS __tests__/usePartyOwnership.test.tsx
+PASS __tests__/firstRunFlags.test.ts
+PASS __tests__/eventMomentsRepository.test.ts
+PASS __tests__/firstValueCompletion.test.ts
+PASS src/lib/serviceCatalogSnapshot.test.ts
+PASS __tests__/apiClient.test.ts
+PASS __tests__/merchDeepLinks.test.ts
+PASS __tests__/eventMoments.test.ts
+PASS src/lib/identity.test.ts
+PASS __tests__/liveBroadcastsRepository.test.ts
+PASS __tests__/onboardingApi.test.ts
+PASS __tests__/authConfig.test.ts
+PASS __tests__/socialApiMapperSanitization.test.ts
+PASS __tests__/merchReputationApi.test.ts
+PASS src/lib/routeParams.test.ts
+PASS src/lib/isoDate.test.ts
+PASS src/lib/eventRsvpIntent.test.ts
+PASS __tests__/socialVCard.test.ts
+PASS __tests__/pipelinesApi.test.ts
+PASS src/features/directory/profileForm.test.ts
+PASS __tests__/partiesApi.test.ts
+PASS __tests__/catalogAdmin.test.ts
+PASS __tests__/tickets.test.ts
+PASS __tests__/catalogSnapshot.test.ts
+PASS __tests__/operationsApi.test.ts
+PASS __tests__/ticketCheckoutIdempotency.test.ts
+PASS __tests__/socialApiListFilters.test.ts
+PASS __tests__/artistsApiGetByParty.test.ts
+PASS __tests__/liveBroadcasts.test.ts
+PASS __tests__/PartyIdentityCopy.test.ts
+PASS src/lib/catalogSnapshot.test.ts
+PASS __tests__/preferencesApi.test.ts
+PASS __tests__/recordsApi.test.ts
+PASS __tests__/directoryApi.test.ts
+PASS __tests__/recordsSnapshot.test.ts
+PASS __tests__/PartySelectorTelemetry.test.ts
+PASS __tests__/catalogsApi.test.ts
+PASS __tests__/Analytics.test.ts
+PASS src/features/directory/classifiedForm.test.ts
+PASS __tests__/momentMedia.test.ts
+PASS __tests__/mobileSurface.test.ts
+PASS src/api/catalogs.test.ts
+PASS src/lib/rsvp.test.ts
+PASS __tests__/passwordPolicy.test.ts
+PASS __tests__/partySelectorApi.test.ts
+
+Test Suites: 77 passed, 77 total
+Tests:       457 passed, 457 total
+Snapshots:   0 total
+Time:        25.553 s, estimated 33 s

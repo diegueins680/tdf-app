@@ -1,0 +1,325 @@
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+CREATE TABLE
+INSERT 0 5
+CREATE TABLE
+INSERT 0 5
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 2
+INSERT 0 3
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+UPDATE 0
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE TRIGGER
+COMMIT
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+CREATE FUNCTION
+CREATE FUNCTION
+COMMIT
+CREATE FUNCTION
+ALTER FUNCTION
+ERROR:  DmReads observed case 36 mismatch
+PASS: generated cases reject the deliberately unsafe read projection
+DO
+PASS: 1440 checked model outcomes refine thread preview/message/cursor policy on PostgreSQL
+CREATE FUNCTION
+ERROR:  ProfileReads observed case 51 mismatch
+PASS: generated cases reject the deliberately unsafe profile policy
+DO
+PASS: checked profile outcomes refine PostgreSQL policy, ordering and payload
+/Users/diegosaa/GitHub/tdf-app-social-profiles-20260915/tdf-hq/tdf-hq.cabal was modified manually. Ignoring /Users/diegosaa/GitHub/tdf-app-social-profiles-20260915/tdf-hq/package.yaml in favor of the Cabal file.
+If you want to use the package.yaml file instead of the Cabal file,
+then please delete the Cabal file.
+[24 of 27] Compiling ProfileBenchmark ( scripts/social/ProfileBenchmark.hs, /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tmp.mgq3mnPebJ/ProfileBenchmark.o )
+[26 of 27] Compiling Main             ( scripts/social/HttpSpec.hs, /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tmp.mgq3mnPebJ/Main.o ) [Source file changed]
+scripts/social/HttpSpec.hs:41:13: warning: [GHC-20125] [-Wmissing-fields]
+    • Fields of ‘AppConfig’ not initialised:
+        dbHost :: String
+        dbPort :: String
+        dbUser :: String
+        dbPass :: String
+        dbName :: String
+        dbConnUrl :: Maybe String
+        dbSslMode :: Maybe String
+        appPort :: Int
+        resetDb :: Bool
+        seedDatabase :: Bool
+        runMigrations :: Bool
+        seedTriggerToken :: Maybe Data.Text.Internal.Text
+        appBaseUrl :: Maybe Data.Text.Internal.Text
+        assetsBaseUrl :: Maybe Data.Text.Internal.Text
+        assetsRootDir :: FilePath
+        courseDefaultSlug :: Data.Text.Internal.Text
+        courseDefaultMapUrl :: Maybe Data.Text.Internal.Text
+        courseDefaultInstructorAvatar :: Maybe Data.Text.Internal.Text
+        openAiApiKey :: Maybe Data.Text.Internal.Text
+        openAiModel :: Data.Text.Internal.Text
+        openAiEmbedModel :: Data.Text.Internal.Text
+        chatKitWorkflowId :: Maybe Data.Text.Internal.Text
+        chatKitApiBase :: Data.Text.Internal.Text
+        ragTopK :: Int
+        ragChunkWords :: Int
+        ragChunkOverlap :: Int
+        ragAvailabilityDays :: Int
+        ragAvailabilityPerResource :: Int
+        ragRefreshHours :: Int
+        ragEmbedBatchSize :: Int
+        emailConfig :: Maybe TDF.Config.EmailConfig
+        googleClientId :: Maybe Data.Text.Internal.Text
+        facebookAppId :: Maybe Data.Text.Internal.Text
+        facebookAppSecret :: Maybe Data.Text.Internal.Text
+        facebookGraphBase :: Data.Text.Internal.Text
+        facebookMessagingToken :: Maybe Data.Text.Internal.Text
+        facebookMessagingPageId :: Maybe Data.Text.Internal.Text
+        facebookMessagingApiBase :: Data.Text.Internal.Text
+        instagramAppToken :: Maybe Data.Text.Internal.Text
+        instagramGraphBase :: Data.Text.Internal.Text
+        instagramMessagingToken :: Maybe Data.Text.Internal.Text
+        instagramMessagingAccountId :: Maybe Data.Text.Internal.Text
+        instagramMessagingApiBase :: Data.Text.Internal.Text
+        instagramVerifyToken :: Maybe Data.Text.Internal.Text
+        sessionCookieDomain :: Maybe Data.Text.Internal.Text
+        sessionCookiePath :: Data.Text.Internal.Text
+        sessionCookieSecure :: Bool
+        sessionCookieSameSite :: Data.Text.Internal.Text
+        sessionCookieMaxAgeSeconds :: Maybe Int
+        stripeSecretKey :: Maybe Data.Text.Internal.Text
+        stripePublishableKey :: Maybe Data.Text.Internal.Text
+        stripeWebhookSecret :: Maybe Data.Text.Internal.Text
+        contextualReputationEnabled :: Bool
+        publicReputationProjectionEnabled :: Bool
+        eventDiscoveryEnabled :: Bool
+        eventDiscoveryAutoPublish :: Bool
+        eventDiscoveryPilotLimit :: Int
+        ticketmasterApiKey :: Maybe Data.Text.Internal.Text
+        ticketmasterApiBase :: Data.Text.Internal.Text
+        eventDiscoveryLookaheadDays :: Int
+        eventDiscoveryMaxPagesPerCity :: Int
+        eventDiscoveryHourLocal :: Int
+        eventDiscoveryCountryCode :: Maybe Data.Text.Internal.Text
+        googleRoutesApiKey :: Maybe Data.Text.Internal.Text
+        googleRoutesApiBase :: Data.Text.Internal.Text
+        eventLogisticsRecheckEnabled :: Bool
+        artistEnrichmentEnabled :: Bool
+        artistEnrichmentAutoPublish :: Bool
+        artistEnrichmentHourLocal :: Int
+        artistEnrichmentBatchSize :: Int
+        artistEnrichmentStaleDays :: Int
+        defaultCurrency :: Data.Text.Internal.Text
+        supportedCurrencies :: [Data.Text.Internal.Text]
+        defaultTimezone :: Data.Text.Internal.Text
+        supportedLocales :: [Data.Text.Internal.Text]
+        defaultLocale :: Data.Text.Internal.Text
+        enableGdprCompliance :: Bool
+    • In the expression:
+        AppConfig {sessionCookieName = "social-fixture"}
+      In an equation for ‘cfg’:
+          cfg = AppConfig {sessionCookieName = "social-fixture"}
+      In a stmt of a 'do' block:
+        let cfg = AppConfig {sessionCookieName = "social-fixture"}
+            env = Env pool cfg
+            sql statement = runSqlPool (rawExecute statement []) pool
+   |
+41 |   let cfg = AppConfig {sessionCookieName = "social-fixture"}
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[27 of 27] Linking /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tmp.mgq3mnPebJ/social-http-spec [Objects changed]
+ld: warning: -U option is redundant when using -undefined dynamic_lookup
+ld: warning: ignoring duplicate libraries: '-lm'
+
+requires real bearer authentication even when the process gate is closed [✔]
+requires both process and database gates [✔]
+derives the actor from the token and rejects identity injection [✔]
+withdraws only the caller's consent and leaves the other intent intact [✔]
+denies blocked reads and stale acceptance but preserves the owner's unblock control [✔]
+serves an authorized Following page and rejects malformed cursors and page sizes [✔]
+rechecks authoritative membership on the next HTTP request [✔]
+denies inactive tokens and organization identities [✔]
+session authority on real PostgreSQL
+  refines checked model Read case 1 [✔]
+  refines checked model Read case 2 [✔]
+  refines checked model Read case 3 [✔]
+  refines checked model Read case 4 [✔]
+  refines checked model Read case 5 [✔]
+  refines checked model Read case 6 [✔]
+  refines checked model Read case 7 [✔]
+  refines checked model Read case 8 [✔]
+  refines checked model Read case 9 [✔]
+  refines checked model Read case 10 [✔]
+  refines checked model Read case 11 [✔]
+  refines checked model Read case 12 [✔]
+  refines checked model Read case 13 [✔]
+  refines checked model Read case 14 [✔]
+  refines checked model Read case 15 [✔]
+  refines checked model Read case 16 [✔]
+  refines checked model Read case 17 [✔]
+  refines checked model Read case 18 [✔]
+  refines checked model Read case 19 [✔]
+  refines checked model Read case 20 [✔]
+  refines checked model Read case 21 [✔]
+  refines checked model Read case 22 [✔]
+  refines checked model Read case 23 [✔]
+  refines checked model Read case 24 [✔]
+  refines checked model Read case 25 [✔]
+  refines checked model Read case 26 [✔]
+  refines checked model Read case 27 [✔]
+  refines checked model Read case 28 [✔]
+  refines checked model Read case 29 [✔]
+  refines checked model Read case 30 [✔]
+  refines checked model Read case 31 [✔]
+  refines checked model Read case 32 [✔]
+  refines checked model Read case 33 [✔]
+  refines checked model Read case 34 [✔]
+  refines checked model Read case 35 [✔]
+  refines checked model Read case 36 [✔]
+  refines checked model Read case 37 [✔]
+  refines checked model Read case 38 [✔]
+  refines checked model Read case 39 [✔]
+  refines checked model Read case 40 [✔]
+  refines checked model Read case 41 [✔]
+  refines checked model Read case 42 [✔]
+  refines checked model Read case 43 [✔]
+  refines checked model Read case 44 [✔]
+  refines checked model Read case 45 [✔]
+  refines checked model Read case 46 [✔]
+  refines checked model Read case 47 [✔]
+  refines checked model Read case 48 [✔]
+  refines checked model Read case 49 [✔]
+  refines checked model Read case 50 [✔]
+  refines checked model Read case 51 [✔]
+  refines checked model Read case 52 [✔]
+  refines checked model Read case 53 [✔]
+  refines checked model Read case 54 [✔]
+  refines checked model Read case 55 [✔]
+  refines checked model Read case 56 [✔]
+  refines checked model Read case 57 [✔]
+  refines checked model Read case 58 [✔]
+  refines checked model Read case 59 [✔]
+  refines checked model Read case 60 [✔]
+  refines checked model Read case 61 [✔]
+  refines checked model Read case 62 [✔]
+  refines checked model Read case 63 [✔]
+  refines checked model Read case 64 [✔]
+  denies both handler reads and writes after their captured token is revoked [✔]
+  revalidates reset-only purpose using the same Unicode-aware rule as authentication [✔]
+  denies a token whose owner changed after authentication [✔]
+  denies a deleted token even though its account remains active [✔]
+  denies a socially closed account with an otherwise active token [✔]
+  rejects synthetic actors with no captured token identity [✔]
+  serializes a write that wins the race before token revocation [✔]
+  denies a write waiting behind a committed token revocation [✔]
+  allows simultaneous shared reads while revocation waits for the held read [✔]
+  keeps password-reset credential-before-token locking free of inversion [✔]
+legacy chat adapter with actual bearer HTTP and PostgreSQL
+  keeps existing DTOs and returns only a participant's eligible thread and preview [✔]
+  filters blocked previews and history while the process and database feature flags are paused [✔]
+  does not let administrator context bypass a canonical block or participant check [✔]
+  checks authorization before distinguishing any cursor or returning names/bodies [✔]
+  preserves message ordering, scoped cursors and deterministic page boundaries [✔]
+  rechecks history and previews after credential revocation, closure and disconnect [✔]
+  requires real bearer auth and denies captured-token revocation on both reads and sends [✔]
+  creates one normalized thread under retries and sends only as the authenticated participant [✔]
+  does not auto-consent from manufactured mutual follows after activation [✔]
+  fails closed if a required migration function is missing after activation [✔]
+  maps only known database denial codes and hides SQL details [✔]
+profile reads with real bearer HTTP and PostgreSQL
+  keeps all five DTO fields and Unicode name fallback without requiring a connection [✔]
+  filters the entire blocked profile while preserving requested batch order [✔]
+  uses the same not-found response for absent and denied profiles, including administrators [✔]
+  retains block enforcement while both feature flags are paused [✔]
+  does not treat mute, non-discoverability or absent connection as direct profile privacy [✔]
+  rechecks target credential, closure and actor closure before returning fields [✔]
+  requires real bearer auth and rechecks a captured token even for an empty batch [✔]
+  bounds and validates identifiers before serving rows [✔]
+  excludes organization identities within the activated account-only pilot [✔]
+  fails closed on a partial migration without relying on activation or existing pairs [✔]
+  preserves never-activated legacy visibility until canonical authority applies [✔]
+
+Finished in 2.7236 seconds
+104 examples, 0 failures
+PROFILE SQL: parties=10005 degree=0 batch=1 warmups=5 alternating-pairs=40
+reference p50/p95 ms: (0.999905,1.595967)
+protected p50/p95 ms: (2.152275,3.127418)
+PROFILE SQL: parties=10005 degree=0 batch=100 warmups=5 alternating-pairs=40
+reference p50/p95 ms: (4.81022,5.648787)
+protected p50/p95 ms: (61.560794,76.330162)
+social-http-spec: user error (Protected profile warm p95 exceeds declared 50ms fixture threshold)

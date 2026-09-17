@@ -1,0 +1,1923 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-ux-ui-20260917/playwright.config.mjs",
+    "rootDir": "/private/tmp/tdf-ux-ui-20260917/e2e/web",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-ux-ui-20260917/artifacts/persona-playwright/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/private/tmp/tdf-ux-ui-20260917/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-ux-ui-20260917/artifacts/persona-playwright/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-ux-ui-20260917/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-ux-ui-20260917/artifacts/persona-playwright/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-tablet",
+        "name": "chromium-tablet",
+        "testDir": "/private/tmp/tdf-ux-ui-20260917/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-ux-ui-20260917/artifacts/persona-playwright/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox-critical",
+        "name": "firefox-critical",
+        "testDir": "/private/tmp/tdf-ux-ui-20260917/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-ux-ui-20260917/artifacts/persona-playwright/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit-critical",
+        "name": "webkit-critical",
+        "testDir": "/private/tmp/tdf-ux-ui-20260917/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "artifacts/persona-playwright/results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "artifacts/persona-playwright/html",
+          "open": "never"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run build:e2e --workspace=tdf-hq-ui && npm run preview:e2e --workspace=tdf-hq-ui",
+      "url": "http://127.0.0.1:4173/inicio",
+      "reuseExistingServer": true,
+      "timeout": 300000
+    }
+  },
+  "suites": [
+    {
+      "title": "persona-public.spec.mjs",
+      "file": "persona-public.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3710,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:22:51.477Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-33d79e0459c86d691d48",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3105,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:22:55.632Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-6f3b00e6f109ae2f728b",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2386,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:22:58.756Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-9a7ac07874cc583f85ba",
+          "file": "persona-public.spec.mjs",
+          "line": 243,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-AUTH registers a fictional user through the UI",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2990,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:01.161Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-b650e289454b76841921",
+          "file": "persona-public.spec.mjs",
+          "line": 265,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-AUTH keeps signup labels readable in light theme",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5783,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:04.176Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-476a0652e924a3bea7e0",
+          "file": "persona-public.spec.mjs",
+          "line": 299,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-AUTH reports a reset transport failure instead of false success",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1810,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:09.984Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-bd440442668742187067",
+          "file": "persona-public.spec.mjs",
+          "line": 308,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-DISCOVERY completes public city discovery and preserves search state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2734,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:11.813Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-175e5d5a7e110968611f",
+          "file": "persona-public.spec.mjs",
+          "line": 320,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-DISCOVERY reflows at an effective 320 CSS pixel viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "Phone-specific zoom inspection.",
+                  "location": {
+                    "file": "/private/tmp/tdf-ux-ui-20260917/e2e/web/persona-public.spec.mjs",
+                    "line": 339,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 340,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:14.568Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Phone-specific zoom inspection.",
+                      "location": {
+                        "file": "/private/tmp/tdf-ux-ui-20260917/e2e/web/persona-public.spec.mjs",
+                        "line": 339,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-423c0868dcca12f6b8d7",
+          "file": "persona-public.spec.mjs",
+          "line": 338,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuance",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2152,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:14.928Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-2ac4a46abd9b327d42db",
+          "file": "persona-public.spec.mjs",
+          "line": 350,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-DOMO retries one truthful manual request in Ecuador time",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12082,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:17.098Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    },
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    },
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    },
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-5f8e1d3d41885c0233c5",
+          "file": "persona-public.spec.mjs",
+          "line": 384,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3068,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:29.199Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-a921463df4e93652326b",
+          "file": "persona-public.spec.mjs",
+          "line": 543,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1806,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:32.286Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-b090069fa67402018635",
+          "file": "persona-public.spec.mjs",
+          "line": 646,
+          "column": 1
+        },
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4810,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:36.232Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-1f0058e2b7503a9c418e",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5618,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:41.345Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-648f9b934c7af9ddbfdc",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2725,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:46.994Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-6466c841c56a16b2f9b0",
+          "file": "persona-public.spec.mjs",
+          "line": 243,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-AUTH registers a fictional user through the UI",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2963,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:49.743Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-b3f2eba8d634a1a15dbc",
+          "file": "persona-public.spec.mjs",
+          "line": 265,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-AUTH keeps signup labels readable in light theme",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One desktop theme check is sufficient.",
+                  "location": {
+                    "file": "/private/tmp/tdf-ux-ui-20260917/e2e/web/persona-public.spec.mjs",
+                    "line": 300,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 491,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:52.731Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One desktop theme check is sufficient.",
+                      "location": {
+                        "file": "/private/tmp/tdf-ux-ui-20260917/e2e/web/persona-public.spec.mjs",
+                        "line": 300,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-367d1833ddab262482c5",
+          "file": "persona-public.spec.mjs",
+          "line": 299,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-AUTH reports a reset transport failure instead of false success",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2373,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:53.244Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-75d11557468eace2d0e7",
+          "file": "persona-public.spec.mjs",
+          "line": 308,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-DISCOVERY completes public city discovery and preserves search state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3115,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:55.638Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-4e51337c181b0bcafba4",
+          "file": "persona-public.spec.mjs",
+          "line": 320,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-DISCOVERY reflows at an effective 320 CSS pixel viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3205,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:23:58.777Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-d15caee37dec23079076",
+          "file": "persona-public.spec.mjs",
+          "line": 338,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuance",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2934,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:02.010Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-69c649a418c9410d07dc",
+          "file": "persona-public.spec.mjs",
+          "line": 350,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-DOMO retries one truthful manual request in Ecuador time",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10608,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:05.035Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    },
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-943eca95c7230641edf5",
+          "file": "persona-public.spec.mjs",
+          "line": 384,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5096,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:15.677Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-dfd281b0c41f41810fdd",
+          "file": "persona-public.spec.mjs",
+          "line": 543,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3485,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:20.799Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-1c478c0d21e1a19cbb95",
+          "file": "persona-public.spec.mjs",
+          "line": 646,
+          "column": 1
+        },
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5709,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:27.556Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-952cf4eb3c6412ba1167",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5543,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:33.573Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-dec54d5bac4ee1f5fe85",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3394,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:39.140Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-857d18efb86d3aec7ab7",
+          "file": "persona-public.spec.mjs",
+          "line": 243,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-AUTH registers a fictional user through the UI",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3414,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:42.558Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-0cd0e9fdc16b520b10cb",
+          "file": "persona-public.spec.mjs",
+          "line": 265,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-AUTH keeps signup labels readable in light theme",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One desktop theme check is sufficient.",
+                  "location": {
+                    "file": "/private/tmp/tdf-ux-ui-20260917/e2e/web/persona-public.spec.mjs",
+                    "line": 300,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 551,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:45.998Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One desktop theme check is sufficient.",
+                      "location": {
+                        "file": "/private/tmp/tdf-ux-ui-20260917/e2e/web/persona-public.spec.mjs",
+                        "line": 300,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-31e3d0d757a96c0a7b01",
+          "file": "persona-public.spec.mjs",
+          "line": 299,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-AUTH reports a reset transport failure instead of false success",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2717,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:46.566Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-5178c3e2647d62db74d3",
+          "file": "persona-public.spec.mjs",
+          "line": 308,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-DISCOVERY completes public city discovery and preserves search state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3453,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:49.304Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-968fe1961db07f498267",
+          "file": "persona-public.spec.mjs",
+          "line": 320,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-DISCOVERY reflows at an effective 320 CSS pixel viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "Phone-specific zoom inspection.",
+                  "location": {
+                    "file": "/private/tmp/tdf-ux-ui-20260917/e2e/web/persona-public.spec.mjs",
+                    "line": 339,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 512,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:52.775Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Phone-specific zoom inspection.",
+                      "location": {
+                        "file": "/private/tmp/tdf-ux-ui-20260917/e2e/web/persona-public.spec.mjs",
+                        "line": 339,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-a6839e65a3fc820ae4d5",
+          "file": "persona-public.spec.mjs",
+          "line": 338,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuance",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2320,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:53.305Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-bfa6780f1e24a21cd606",
+          "file": "persona-public.spec.mjs",
+          "line": 350,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-DOMO retries one truthful manual request in Ecuador time",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9070,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:24:55.646Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-c75f2bdb5b649d558b7f",
+          "file": "persona-public.spec.mjs",
+          "line": 384,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4516,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:25:04.744Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-a7d29efbae4711ee2816",
+          "file": "persona-public.spec.mjs",
+          "line": 543,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3232,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:25:09.286Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-5fe8c975c69d2b2974a0",
+          "file": "persona-public.spec.mjs",
+          "line": 646,
+          "column": 1
+        },
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-critical",
+              "projectName": "firefox-critical",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7961,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:25:15.447Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-4b28e1a7a13dc755d4be",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-critical",
+              "projectName": "firefox-critical",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4237,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:25:25.137Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-1273e4d94ba2a3ab111d",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-critical",
+              "projectName": "firefox-critical",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3901,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:25:29.397Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-26a1d84cd6a9b1740812",
+          "file": "persona-public.spec.mjs",
+          "line": 243,
+          "column": 1
+        },
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "webkit-critical",
+              "projectName": "webkit-critical",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7214,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:25:36.564Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-32b82ad00f27f0630e71",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "webkit-critical",
+              "projectName": "webkit-critical",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5357,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:25:44.227Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-9a110414f7e3d102e567",
+          "file": "persona-public.spec.mjs",
+          "line": 217,
+          "column": 3
+        },
+        {
+          "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "webkit-critical",
+              "projectName": "webkit-critical",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4750,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T15:25:49.610Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-b793263193827b81aefb",
+          "file": "persona-public.spec.mjs",
+          "line": 243,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T15:22:23.478Z",
+    "duration": 211076.796,
+    "expected": 38,
+    "skipped": 4,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

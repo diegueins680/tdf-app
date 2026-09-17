@@ -1,0 +1,117 @@
+[
+  {
+    "file": "after-persona-public--critical-P-2988d-owser-storage-denies-access-chromium-desktop.png",
+    "bytes": 511137,
+    "sha256": "be0553e6c35a4ca481bad426c4866502ff4b99d883a8ff2c50a3d638a8ac3ad9"
+  },
+  {
+    "file": "after-persona-public--critical-P-2988d-owser-storage-denies-access-chromium-phone.png",
+    "bytes": 935292,
+    "sha256": "9426fb19f59ed6b73c0509127a23f8fd65e93375725785c6743b2742b7474333"
+  },
+  {
+    "file": "after-persona-public--critical-P-2988d-owser-storage-denies-access-chromium-tablet.png",
+    "bytes": 1341878,
+    "sha256": "f5ad2b5557cccb57221664b9c1729a95fa0b7bbaca3780b4f1b240d66bfcdac9"
+  },
+  {
+    "file": "after-persona-public--critical-P-2988d-owser-storage-denies-access-firefox-critical.png",
+    "bytes": 337542,
+    "sha256": "053705bc76272f96cffe0a262f6e2c832e47a8050a1119ab6f5912c762822f16"
+  },
+  {
+    "file": "after-persona-public--critical-P-2988d-owser-storage-denies-access-webkit-critical.png",
+    "bytes": 3671543,
+    "sha256": "125379db1b8e8a3a549f38d5c32111044664ec12477e1bba8de016e44a0be01c"
+  },
+  {
+    "file": "after-persona-public--critical-P-84c5b-r-storage-denies-operations-chromium-desktop.png",
+    "bytes": 511137,
+    "sha256": "be0553e6c35a4ca481bad426c4866502ff4b99d883a8ff2c50a3d638a8ac3ad9"
+  },
+  {
+    "file": "after-persona-public--critical-P-84c5b-r-storage-denies-operations-chromium-phone.png",
+    "bytes": 935292,
+    "sha256": "9426fb19f59ed6b73c0509127a23f8fd65e93375725785c6743b2742b7474333"
+  },
+  {
+    "file": "after-persona-public--critical-P-84c5b-r-storage-denies-operations-chromium-tablet.png",
+    "bytes": 1341878,
+    "sha256": "f5ad2b5557cccb57221664b9c1729a95fa0b7bbaca3780b4f1b240d66bfcdac9"
+  },
+  {
+    "file": "after-persona-public--critical-P-84c5b-r-storage-denies-operations-firefox-critical.png",
+    "bytes": 337542,
+    "sha256": "053705bc76272f96cffe0a262f6e2c832e47a8050a1119ab6f5912c762822f16"
+  },
+  {
+    "file": "after-persona-public--critical-P-84c5b-r-storage-denies-operations-webkit-critical.png",
+    "bytes": 3671543,
+    "sha256": "125379db1b8e8a3a549f38d5c32111044664ec12477e1bba8de016e44a0be01c"
+  },
+  {
+    "file": "before-persona-public--critical-P-2988d-owser-storage-denies-access-chromium-desktop.png",
+    "bytes": 4254,
+    "sha256": "3878570f4a62a0d65f57cf1754e0269e56ec797f4e36e26b44c172eb6e800401"
+  },
+  {
+    "file": "before-persona-public--critical-P-84c5b-r-storage-denies-operations-chromium-desktop.png",
+    "bytes": 4254,
+    "sha256": "3878570f4a62a0d65f57cf1754e0269e56ec797f4e36e26b44c172eb6e800401"
+  },
+  {
+    "file": "browser-baseline.log",
+    "bytes": 8697,
+    "sha256": "0bb2afb04ad6c8ae82b20ee17e74f553d366ef7edc3acda6f709a8a7f268726d"
+  },
+  {
+    "file": "browser-final.json",
+    "bytes": 62091,
+    "sha256": "376773406a6bff8426518f55e60364b7f70fd051be2885afc5bfd64f38112216"
+  },
+  {
+    "file": "browser-final.log",
+    "bytes": 10339,
+    "sha256": "294d5bbf0a484b5a20179c04c280858d7c2cfb60736385e982679752f44241c4"
+  },
+  {
+    "file": "event-models.log",
+    "bytes": 20850,
+    "sha256": "f91c3795cb5716ef48ff37af3f89a338659dec8d94cfda677e4e6887443298fb"
+  },
+  {
+    "file": "mobile-final.log",
+    "bytes": 3228,
+    "sha256": "aa0d49424982e21473045739ec15724de240da9fd205e1981dafc71d7895a67b"
+  },
+  {
+    "file": "mobile-main-unit.log",
+    "bytes": 3218,
+    "sha256": "ffc470cf0f0bb44591afa96ea630ce5efd386f24f0ef3d18542387277399d6d7"
+  },
+  {
+    "file": "mobile-navigation.log",
+    "bytes": 253,
+    "sha256": "ae97e51c43f2bc89cde0d6679708825690608637e7ebdf6517f16d4eddf99a70"
+  },
+  {
+    "file": "social-models.log",
+    "bytes": 858,
+    "sha256": "f537e86cd477aec9432a07ce26250ef7120d18bab1b370f9007481a7b2b6c94d"
+  },
+  {
+    "file": "storage-before.log",
+    "bytes": 10171,
+    "sha256": "91a012582fb1a14d3d46e166ed1b86d5dc351290cc6989414637cba61f8301ea"
+  },
+  {
+    "file": "web-unit-baseline.log",
+    "bytes": 1024018,
+    "sha256": "60bd2e4e91a414ec1d48d611ad9c57b8dfeab2e91281fcc39d8b5c95d211c8f2"
+  },
+  {
+    "file": "web-unit-final.log",
+    "bytes": 1009361,
+    "sha256": "17289b7538d2cd623dc468f046b749688f60d08ee190e46749c3825868d7e69f"
+  }
+]

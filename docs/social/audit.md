@@ -69,3 +69,66 @@ The baseline authentication inventory above remains historical. The new
 revalidates it transactionally for `/social/v2`; legacy handlers and delegated
 entity contexts still need integration. The observed old-handler revocation bypass
 and generated model-to-PostgreSQL checks are recorded in that packet.
+
+## Profile-read continuation — 2026-09-15
+
+| Capability | Evidence | Response and acceptance |
+|---|---|---|
+| Legacy single/batch social profiles | `Server.socialListProfiles`/`socialGetProfile` discard actor; Party/FanProfile join returns names/avatar/bio/city; batch limit 100; clients use existing social API. No job/cache required by server. | **Repair:** same DTO/URLs, current-token adapter and authoritative block/closure filtering. Model-derived SQL cases, profile HTTP tests and complete-schema reapply; see [packet](profile-read-boundary.md). |
+| Profile discovery preference | `social_v2_preference.discoverable`; existing profile fields have no private audience attribute | **Reuse:** exclude from recommendations where required; direct profile lookup is not newly private. Model negative control rejects that conflation. |
+| Other identity surfaces | Followers/friends/suggestions and public media/reference paths retain legacy behavior | **Defer this PR; overall activation blocked.** Inventory next cross-surface repairs, preserve adjacent booking/purchase authority. |
+
+## Legacy relationship reads — 2026-09-16
+
+Followers/following/friends GET adapters now share canonical profile eligibility;
+legacy two-hop suggestion counts retire after authoritative enforcement state exists.
+The historical mutual-follow list is retained as history, not accepted connection
+consent. [Evidence, policy and migration packet](relationship-read-boundary.md).
+Legacy friend/vCard mutations and their returned identity DTOs remain the next
+unrepaired boundary. Unpaginated historical lists remain a scaling limitation.
+
+
+## Follow-up finding: fan-club fanout — 2026-09-16
+
+A source search for all `PartyFollow` writes found `Server.fanFollowArtist` beside
+the three explicit friend/vCard operations. The artist-follow transaction creates
+FanClubMemberProfile and calls `insertUnique PartyFollow` in **both directions** for
+all existing club members; it also creates artist-follower notifications. Neither
+shared membership nor an artist follow constitutes those members' consent. This is
+historical graph fanout, distinct from the canonical V2 pair table and from
+`chatOpenThread`, which only reads legacy mutual edges in its compatibility stage.
+
+**Repair, next priority / rollout blocker:** qualify membership and notification
+policy and retire automatic member-to-member follows at cutover while preserving
+FanFollow artist subscription and established artist notification contracts. Bound
+work for large clubs; test privacy, token revocation, stale membership and retry
+behavior. Do not backfill these edges as canonical consent or delete history in a
+reversible migration. The [explicit legacy-write adapter](legacy-write-boundary.md)
+does not cover this side effect; no whole-platform completion is claimed.
+
+
+## Fan subscription continuation — 2026-09-16
+
+[Fan-effects boundary](fan-effects-boundary.md) implements the next dependent slice
+after #409. Following an artist keeps its subscription, while automatic member
+profiles, reciprocal member follows and new named notifications retire after
+canonical enforcement. Follow/unfollow share current-session and account locks.
+Actual local results: 12,738 TLC states, four detected counterexamples, 1,141 HTTP
+examples, 2,542 backend tests, native PostgreSQL 16 complete-schema reapply/pause,
+11 selector tests, UI typecheck/lint and bounded handler benchmark passed.
+Hosted qualification is pending; local Docker PG17 failed environmentally.
+Parent #409 full CI35129595035 completed successfully. Historical notification
+serving/counts, fan-follow GET, explicit profile publication/privacy and previously
+listed rollout blockers remain open. No deployment/activation is authorized.
+### Legacy chat continuation — 2026-09-15
+
+PR #390 covers all four existing ChatAPI operations without changing their wire
+DTOs. `TDF.API.Chat` shares the contract with the HTTP fixture; `TDF.Social.Chat`
+centralizes policy selection/session checks/error mapping; the additive chat SQL
+checks eligibility before previews, fields and cursor errors. Eleven new bearer
+HTTP cases plus the existing 82 session/social cases passed. PR #391 scopes the
+existing ChatPage/useChatUnreadCount/read-state helpers by account and withdraws
+stale display data on error. No managed-entity, generic profile, notification or
+media endpoint is implicitly covered by these chat-specific checks. Full-schema
+PostgreSQL 16.10 native and 17.10 Docker fixtures passed; legacy readers remain a
+cutover blocker, while the retained #386 trigger protects legacy writers.

@@ -1,0 +1,31 @@
+Original job 104667625568, run 35056386064, head 7c452efcbc7b45e797b7ebd590dfffccf0fc9751.
+Full downloaded job log SHA-256: 652182d629f40686cce61d6043d10ae8fea3e64659e4b2be9795fc7607457d27
+Relevant excerpt, ANSI escapes removed:
+
+2026-09-16T04:42:46.3846624Z   1) [chromium-desktop] › e2e/web/persona-public.spec.mjs:209:1 › @critical PW-PER-01-AUTH redirects protected URLs and explains rejected login
+2026-09-16T04:42:46.3847583Z
+2026-09-16T04:42:46.3848323Z     Test timeout of 30000ms exceeded.
+2026-09-16T04:42:46.3848696Z
+2026-09-16T04:42:46.3849673Z     Error: expect(locator).toContainText(expected) failed
+2026-09-16T04:42:46.3850380Z
+2026-09-16T04:42:46.3850586Z     Locator: getByRole('alert')
+2026-09-16T04:42:46.3851329Z     Expected substring: "Credenciales inválidas"
+2026-09-16T04:42:46.3851953Z     Error: element(s) not found
+2026-09-16T04:42:46.3852253Z
+2026-09-16T04:42:46.3852397Z     Call log:
+2026-09-16T04:42:46.3852996Z       - Expect "toContainText" with timeout 8000ms
+2026-09-16T04:42:46.3853722Z       - waiting for getByRole('alert')
+2026-09-16T04:42:46.3854083Z
+2026-09-16T04:42:46.3854093Z
+2026-09-16T04:42:46.3854994Z       222 |   await page.getByLabel('Contraseña *').fill('fictional-password-not-a-secret');
+2026-09-16T04:42:46.3856033Z       223 |   await page.getByRole('button', { name: 'Ingresar' }).click();
+2026-09-16T04:42:46.3857321Z     > 224 |   await expect(page.getByRole('alert')).toContainText('Credenciales inválidas');
+2026-09-16T04:42:46.3858168Z           |                                         ^
+2026-09-16T04:42:46.3859041Z       225 |   expect(loginPayload).toMatchObject({ username: 'per-01.elena@persona.test' });
+2026-09-16T04:42:46.3860004Z       226 |   await expectNoSeriousAxeViolations(page, testInfo);
+2026-09-16T04:42:46.3860751Z       227 |   expect(runtime.failedRequests).toEqual([]);
+2026-09-16T04:42:46.3861623Z         at /home/runner/work/tdf-app/tdf-app/e2e/web/persona-public.spec.mjs:224:41
+2026-09-16T04:42:46.3862190Z
+2026-09-16T04:42:46.3862854Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+2026-09-16T04:42:46.3863843Z     artifacts/persona-playwright/test-results/persona-public--critical-P-36a45-and-explains-rejected-login-chromium-desktop/test-failed-1.png
+2026-09-16T04:42:46.3865589Z     ────────────────────────────────────────────────────────────────────────────────────────────────

@@ -13813,6 +13813,16 @@
         "name": "migrations",
         "valueCount": 104
       }
+    },
+    {
+      "id": "fe6d3a8c69b509b7d179",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Removing either fixture omits anonymous or zero-grant authenticated access from the audit; neither fixture grants application permissions.",
+      "justification": "The inventory script constructs synthetic anonymous and authenticated-no-grant sessions to evaluate existing client policy. These are audit inputs, not selectable business roles or an authorization source. Actual roles and module grants are read from implementation; runtime database authorization remains separately required.",
+      "reviewed": true
     }
   ]
 }

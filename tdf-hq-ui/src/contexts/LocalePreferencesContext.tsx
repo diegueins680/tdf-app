@@ -18,12 +18,12 @@ function browserTimezone(): string {
 }
 
 function defaults(): LocalePreferences {
-  const configuredTimezone = import.meta.env.VITE_DEFAULT_TIMEZONE?.trim();
+  const configuredTimezone = import.meta.env?.VITE_DEFAULT_TIMEZONE?.trim();
   return {
     localeId: '',
     locale: normalizeLocale(i18n.language) ?? 'en',
     currencyId: '',
-    currency: (import.meta.env.VITE_DEFAULT_CURRENCY ?? 'USD').toUpperCase(),
+    currency: (import.meta.env?.VITE_DEFAULT_CURRENCY ?? 'USD').toUpperCase(),
     timezone: configuredTimezone && configuredTimezone.length > 0 ? configuredTimezone : browserTimezone(),
     countryId: null,
     countryCode: null,
@@ -136,8 +136,13 @@ export function LocalePreferencesProvider({ children }: { children: ReactNode })
     const normalized = normalizePreferences(next, defaults());
     setPreferences(normalized);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      window.localStorage.setItem(LOCALE_STORAGE_KEY, normalized.locale);
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        window.localStorage.setItem(LOCALE_STORAGE_KEY, normalized.locale);
+      } catch {
+        // Catalog and account preferences remain usable for this visit even
+        // when browser privacy settings deny access to the optional cache.
+      }
     }
     void i18n.changeLanguage(normalized.locale);
   }, []);

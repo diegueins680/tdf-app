@@ -26,8 +26,12 @@ export function normalizeLocale(value: string | null | undefined): SupportedLoca
 
 function initialLocale(): SupportedLocale {
   if (typeof window !== 'undefined') {
-    const stored = normalizeLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
-    if (stored) return stored;
+    try {
+      const stored = normalizeLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
+      if (stored) return stored;
+    } catch {
+      // Language preferences are optional when browser storage is restricted.
+    }
   }
   const envDefault = normalizeLocale(import.meta.env?.VITE_DEFAULT_LOCALE);
   if (envDefault) return envDefault;
@@ -51,7 +55,13 @@ void i18n.use(initReactI18next).init({
 
 i18n.on('languageChanged', (language) => {
   const normalized = normalizeLocale(language) ?? 'en';
-  if (typeof window !== 'undefined') window.localStorage.setItem(LOCALE_STORAGE_KEY, normalized);
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem(LOCALE_STORAGE_KEY, normalized);
+    } catch {
+      // Keep the selected language in memory for this visit.
+    }
+  }
   if (typeof document !== 'undefined') {
     document.documentElement.lang = normalized;
     document.documentElement.dir = 'ltr';
