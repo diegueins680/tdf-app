@@ -108,7 +108,8 @@ TLA2TOOLS_JAR=/private/tmp/tdf-event-ops-tools/tla2tools-1.7.2.jar \
 ALLOY_JAR=/private/tmp/tdf-event-ops-tools/alloy-6.2.0.jar \
 bash scripts/verify-event-operations-formal.sh
 
-TDF_SOCIAL_JAVA="$JAVA_BIN" TLA_JAR="$TLA2TOOLS_JAR" \
+TDF_SOCIAL_JAVA=/private/tmp/tdf-event-ops-java/openjdk@21/21.0.12.1/libexec/openjdk.jdk/Contents/Home/bin/java \
+TLA_JAR=/private/tmp/tdf-event-ops-tools/tla2tools-1.7.2.jar \
 TDF_SOCIAL_RESULTS=/private/tmp/tdf-ux-social-models bash scripts/social/check-models.sh
 ```
 
@@ -179,3 +180,18 @@ merge, despliegue o publicación de esta entrega acreditados en este checkpoint.
 ## Cierre de verificación del primer incremento
 
 Web final: 210 suites / 2.005 pruebas, cero fallos. Navegador final estable: 38 aprobadas y cuatro omisiones, incluyendo denegación de acceso/operaciones de storage en cinco perfiles, axe tras fuentes/animaciones asentadas y capturas revisadas. El primer recorrido falló antes de la corrección. Móvil PR [#89](https://github.com/diegueins680/TDF-mobile/pull/89), commit `74d784ceb366a3200c1f68ceb6082ef0ba9e2b7c`, gates hospedados validate y Datadog SUCCESS. EAS aceptó build de simulador iOS `acce0957-ec70-40a6-8f9e-8192db3b7839`; pendiente, no firmado para tienda ni publicado. Se retiraron únicamente node_modules temporales móviles de esta copia después de pruebas y subida para recuperar espacio; reinstalar con npm ci para repetir gates.
+
+
+## Checkpoint de continuación
+
+- PR web [#421](https://github.com/diegueins680/tdf-app/pull/421): checks aún en curso; el control de listas señaló la nueva pareja de sesiones sintéticas del inventario. Se clasifican como constantes técnicas de auditoría, sin cambiar permisos, umbrales ni exclusiones. El submódulo local candidato difiere del gitlink publicado: sus cuatro decisiones de catálogo nuevas y cuatro antiguas no deben confundirse con el único fallo observado en CI del padre.
+- EAS iOS simulador **FINISHED**, build `acce0957-ec70-40a6-8f9e-8192db3b7839`, fuente `74d784ceb366a3200c1f68ceb6082ef0ba9e2b7c`, versión 1.0.1 (17), canal preview / INTERNAL. [Build y artefacto](https://expo.dev/accounts/cuco.saa/projects/tdf-mobile/builds/acce0957-ec70-40a6-8f9e-8192db3b7839). Es un ejecutable para simulador, no una publicación en tienda. Instalación/recorrido pendientes: el disco local volvió a 555 MB libres; se pidió liberar 10 GB sin tocar copias de trabajo.
+- Dependencias móviles temporales reinstaladas con npm ci. Verificación de repositorio posterior a integrar main aprobada.
+- Producción sigue bajo coordinación pendiente con el otro despliegue confirmado por el usuario. No se realizó ninguna mutación productiva de esta entrega.
+- Segundo incremento en `/private/tmp/tdf-ux-locale-20260917`, rama `fix/auth-locale-20260917`: traducciones de acceso/registro/recuperación y navegación pública, todavía en implementación y sin evidencia de cierre.
+
+### Ampliación de UX-260917-007
+
+El caso anterior de navegador usaba catálogos vacíos: no cubría la aplicación de preferencias después de recibir idiomas/monedas. El componente real se reprodujo con catálogos sintéticos no vacíos y dos fallos `SecurityError` (getter / escritura); tras proteger la caché opcional, ambas pruebas y las dos de normalización pasan. `import.meta.env` se lee opcionalmente para ejecutar el componente fuera de Vite. Los primeros intentos del harness fallaron por un mock incompleto y por env ausente; esos errores no se cuentan como reproducciones del defecto de storage. Comandos: `npm run test --workspace=tdf-hq-ui -- --runTestsByPath src/contexts/LocalePreferencesContext.storage.test.tsx src/contexts/LocalePreferencesContext.test.ts`. Se añadió el escenario de catálogo no vacío al recorrido de navegador: 10/10 aprobados en los cinco perfiles, con axe y conservación del formulario.
+
+El usuario volvió a confirmar que el despliegue paralelo sigue en curso: continuar sólo trabajo independiente. El artefacto iOS se descargó (49 MB, SHA-256 `e61c0ff2b70bf453405b12324f09d4db2f5a0828bbb258fb8a77e1a220a95b5e`), pero todavía no está instalado/ejecutado. El usuario informó limpieza de disco; la relectura local fluctúa entre 404 MB y 1,6 GB libres, no los 10 GB solicitados.
