@@ -41,6 +41,8 @@ export const Directory = {
   taxonomies: (locale = 'es') =>
     get<DirectoryTaxonomies>(`/directory/taxonomies?locale=${encodeURIComponent(locale)}`),
   profile: (slug: string) => get<components['schemas']['PublicDirectoryProfile']>(`/directory/profiles/${encodeURIComponent(slug)}`),
+  profileByParty: (partyId: number) =>
+    get<components['schemas']['PublicDirectoryProfile']>(`/directory/party-profiles/${partyId}`),
   profileReviews: (slug: string, cursor?: string, limit = 20) => {
     const params = new URLSearchParams({ limit: String(limit) });
     append(params, 'cursor', cursor);

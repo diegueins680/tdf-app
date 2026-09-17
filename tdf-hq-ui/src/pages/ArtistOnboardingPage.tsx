@@ -10,6 +10,7 @@ import { parsePositiveSafeInt } from '../utils/ids';
 import { Fans } from '../api/fans';
 import { get } from '../api/client';
 import type { SessionResponseDTO } from '../api/session';
+import ArtistClaimPanel from '../components/ArtistClaimPanel';
 
 const buildArtistSignupLink = (claimArtistId: number | null) => {
   const params = new URLSearchParams();
@@ -29,7 +30,7 @@ const buildArtistLoginLink = (claimArtistId: number | null) => {
 };
 
 export default function ArtistOnboardingPage() {
-  const { session, login, logout } = useSession();
+  const { session, login } = useSession();
   const navigate = useNavigate();
   const [activating, setActivating] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
@@ -59,12 +60,6 @@ export default function ArtistOnboardingPage() {
     const raw = searchParams.get('claimArtistId') ?? searchParams.get('claim');
     return parsePositiveSafeInt(raw);
   }, [searchParams]);
-
-  const continueClaim = () => {
-    if (claimArtistId === null) return;
-    logout();
-    navigate(buildArtistSignupLink(claimArtistId));
-  };
 
   const hasArtistRole = useMemo(() => {
     const roles = session?.roles ?? [];
@@ -126,10 +121,8 @@ export default function ArtistOnboardingPage() {
         </Box>
 
         {session?.partyId && claimArtistId !== null && (
-          <Alert severity="info">
-            Para reclamar este perfil, registra su cuenta con el correo asociado al artista.
-            Al continuar se cerrará tu sesión actual y se conservará el perfil seleccionado.
-          </Alert>
+          <ArtistClaimPanel key={`${session.partyId}:${claimArtistId}`}
+            artistId={claimArtistId} accountPartyId={session.partyId} />
         )}
 
         {session?.partyId && claimArtistId === null && (
@@ -175,9 +168,9 @@ export default function ArtistOnboardingPage() {
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
                   {session?.partyId && claimArtistId !== null ? (
-                    <Button variant="contained" size="large" onClick={continueClaim}>
-                      Cerrar sesión y reclamar perfil
-                    </Button>
+                    <Typography color="text.secondary">
+                      Envía las pruebas en el formulario de administración. No necesitas otra cuenta.
+                    </Typography>
                   ) : session?.partyId ? (
                     <Button variant="contained" size="large" disabled={activating}
                       onClick={() => hasArtistRole ? navigate('/mi-artista') : void activateProfile()}>

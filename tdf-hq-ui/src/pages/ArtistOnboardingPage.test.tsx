@@ -9,6 +9,8 @@ const login = jest.fn();
 const logout = jest.fn();
 const activate = jest.fn<() => Promise<unknown>>();
 const get = jest.fn<() => Promise<unknown>>();
+const profileByParty = jest.fn<() => Promise<unknown>>();
+jest.unstable_mockModule('../api/directory', () => ({ Directory: { profileByParty } }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session, login, logout }),
@@ -36,6 +38,7 @@ beforeEach(() => {
   session = { username: 'artist', displayName: 'Artist', partyId: 42, roles: ['Customer'] };
   activate.mockResolvedValue({ apArtistId: 42 });
   get.mockResolvedValue({ ...session, roles: ['Customer', 'Artist'] });
+  profileByParty.mockResolvedValue({ id: '00000000-0000-4000-8000-000000000077', name: 'Artista importado' });
 });
 
 it('activates a customer profile immediately, refreshes server roles and opens the editor', async () => {
@@ -77,13 +80,14 @@ it('offers signup to guests without activating any profile', () => {
   expect(activate).not.toHaveBeenCalled();
 });
 
-it.each(['Customer', 'Artist'])('preserves the selected claim for an authenticated %s without creating a separate profile', (role) => {
+it.each(['Customer', 'Artist'])('keeps the authenticated %s account and offers reviewed management for the selected artist', async (role) => {
   session = { ...session!, roles: [role] };
   show('/artista/crear?claimArtistId=77');
   expect(screen.queryByRole('button', { name: /Crear mi perfil/ })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión y reclamar perfil' }));
-  expect(logout).toHaveBeenCalledTimes(1);
-  expect(screen.getByTestId('login-destination')).toHaveTextContent('?signup=1&intent=artist_profile&claimArtistId=77');
+  await screen.findByText('Artista importado');
+  expect(screen.getByRole('button', { name: 'Solicitar administración del perfil' })).toBeDisabled();
+  expect(logout).not.toHaveBeenCalled();
+  expect(screen.queryByTestId('login-destination')).not.toBeInTheDocument();
   expect(activate).not.toHaveBeenCalled();
   expect(get).not.toHaveBeenCalled();
 });
