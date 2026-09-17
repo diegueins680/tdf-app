@@ -13765,6 +13765,16 @@
       "risk": "Removing either fixture omits anonymous or zero-grant authenticated access from the audit; neither fixture grants application permissions.",
       "justification": "The inventory script constructs synthetic anonymous and authenticated-no-grant sessions to evaluate existing client policy. These are audit inputs, not selectable business roles or an authorization source. Actual roles and module grants are read from implementation; runtime database authorization remains separately required.",
       "reviewed": true
+    },
+    {
+      "id": "032010c2e0452a17c57c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this synthetic session DTO fixture can stop session-boundary regression tests from representing the application contract.",
+      "justification": "Reviewed 2026-09-17: FanHubPage.audit.test.tsx sessionMock contains fixed SessionUser property names (username, displayName, roles, modules, partyId). It is test input, not a selectable role catalog, grant authority or persisted business list. Production role/permission definitions are unchanged.",
+      "reviewed": true
     }
   ]
 }

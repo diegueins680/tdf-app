@@ -86,3 +86,5 @@ pendiente de CI exacto, revisión independiente y coordinación del despliegue a
 Cerrar esta guía no demuestra primera acción útil ni mejora causal de engagement.
 
 Fuentes primarias consultadas el 2026-09-17: [TanStack Query v5, mutaciones](https://tanstack.com/query/v5/docs/framework/react/guides/mutations) distingue pendiente/error/éxito y advierte sobre orden de resolución; se comprueba la generación del comando antes de aplicar callbacks. [WCAG 2.2, mensajes de estado](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html) sustenta anunciar guardado/errores sin desplazar el foco. Son criterios de implementación, no resultados de investigación de usuarios.
+
+CI del primer commit 5d6e6b750 aprobó el runner formal y la migración de foundation. El control de catálogo detectó una única lista nueva: los nombres de propiedades del fixture SessionUser en FanHubPage.audit.test.tsx. Se revisa como constante técnica de pruebas, sin alterar catálogos de roles ni reducir el control. Las cuatro diferencias móviles observadas sólo en la copia local pertenecen al candidato 74d784c; el gitlink de esta PR conserva 8875119.
