@@ -1,0 +1,17 @@
+Model checking completed. No error has been found.
+Model checking completed. No error has been found.
+Model checking completed. No error has been found.
+Model checking completed. No error has been found.
+Error: Invariant AuthoritativeDenial is violated.
+Error: Invariant OwnConsentOnly is violated.
+Error: Invariant RequestAdmission is violated.
+Error: Invariant StablePagination is violated.
+Error: Invariant ReplayEquality is violated.
+Error: Invariant InactiveActorCannotMutate is violated.
+Error: Invariant DeletedTargetCannotMutate is violated.
+Error: Invariant StaleRelationshipCommandsDenied is violated.
+Error: Invariant DeliveryAuthority is violated.
+Error: Invariant OwnConsentOnly is violated.
+Error: Action property NoConsentResurrection is violated.
+Error: Action property BlockOwnership is violated.
+Evidence: /private/tmp/tdf-ux-social-models
