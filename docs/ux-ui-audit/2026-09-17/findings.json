@@ -170,5 +170,27 @@
     "acceptanceCriteria": "Canonical clients match and actual synthetic activation succeeds without unauthorized grant or lost Google claim",
     "verificationMethod": "schema generation, server tests, authenticated staged journey",
     "releaseStatus": "open; parent pointer intentionally not committed yet"
+  },
+  {
+    "id": "UX-260917-012",
+    "kind": "confirmed",
+    "title": "FanHub hides guidance before persisted completion and accepts stale session replies",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "authenticated onboarding, interruption and return visits",
+    "roles": "customer, returning account, guest and manager tips",
+    "surface": "FanHubPage /fans and /inicio",
+    "evidence": "Source baseline 19d8dc830: optimistic dismissal before POST receipt, party-only context fence, unvalidated receipt, unguarded global dismissal storage. Reused PR #368 conformance cases against current component; see fanhub-onboarding.md.",
+    "userImpact": "Users can see completion before persistence, lose retry guidance or receive previous-session state.",
+    "rootCause": "Presentation state served as completion authority and party ID as session identity.",
+    "proposedChange": "Validate authoritative DTO/terminal receipt, retain guidance with retry, capture credential, fence session generations and coalesce explicit close; keep guest/manager tips ephemeral.",
+    "dependencies": [
+      "backend persistence and permission verification",
+      "independent exact-head review",
+      "deployment handover"
+    ],
+    "acceptanceCriteria": "FH-01 through FH-06 in fanhub-onboarding.md; no automatic completion, firstValue fabrication or stale session update; single pending command per generation; accessible retry and conditional liveness.",
+    "verificationMethod": "TLC safety/conditional liveness with five negative controls; component/API conformance; 14 isolated browser cases across five profiles; actual backend/native scope remains separate.",
+    "releaseStatus": "Implemented locally: 212 suites/2031 tests, typecheck/lint, 14 browser cases and formal runner pass; no merge or deployment."
   }
 ]

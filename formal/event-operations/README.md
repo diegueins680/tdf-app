@@ -63,6 +63,17 @@ The runner requires the exact named failures from all three negative controls.
 
 ## Coverage
 
+- `FanHubOnboarding.tla` (rechecked 2026-09-17): explicit close, terminal receipt,
+  current session generation and one pending completion per generation. Three
+  generations and two request slots: 1,249 generated / 215 distinct states, depth 12.
+  Safety and conditional `RequestsResolve` liveness pass. Four unsafe guard configs
+  must violate their named invariants; the unfair config must violate liveness.
+  `WF_vars(ReturnSlot(slot))` assumes every dispatched request eventually returns
+  success or failure. Indefinitely hung transport is deliberately not certified.
+  [Implementation conformance and evidence](../../docs/ux-ui-audit/2026-09-17/fanhub-onboarding.md)
+  map these transitions to real component and browser tests; this does not prove
+  server persistence, authorization, unlimited sessions or cross-tab revocation.
+
 - `EventLifecycle.tla`: controlled lifecycle transitions, separation of approval/settlement duties,
   visibility coupling, idempotency keys, and append-only audit behavior.
 - `ReservationRace.tla`: PlusCal translation of two concurrent confirmations for one exclusive
