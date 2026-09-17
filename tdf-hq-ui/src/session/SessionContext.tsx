@@ -172,13 +172,21 @@ function readStoredSession(): { session: SessionUser | null; scope: SessionStora
     return { session: null, scope: 'local' };
   }
 
-  const fromSession = readStoredSessionFrom(window.sessionStorage);
+  const readAvailableStorage = (scope: 'sessionStorage' | 'localStorage') => {
+    try {
+      return readStoredSessionFrom(window[scope]);
+    } catch {
+      // Access to the storage object itself can throw in restricted contexts.
+      return null;
+    }
+  };
+  const fromSession = readAvailableStorage('sessionStorage');
   if (fromSession) {
     currentSession = fromSession;
     return { session: fromSession, scope: 'session' };
   }
 
-  const fromLocal = readStoredSessionFrom(window.localStorage);
+  const fromLocal = readAvailableStorage('localStorage');
   currentSession = fromLocal;
   return { session: fromLocal, scope: 'local' };
 }

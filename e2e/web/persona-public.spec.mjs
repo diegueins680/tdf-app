@@ -179,6 +179,13 @@ function observeRuntime(page) {
 }
 
 async function expectNoSeriousAxeViolations(page, testInfo) {
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(document.getAnimations()
+      .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
+      .map(animation => animation.finished.catch(() => undefined)));
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
   await page.addScriptTag({ content: axe.source });
   const violations = await page.evaluate(async () => {
     const result = await globalThis.axe.run(document, {
@@ -205,6 +212,38 @@ async function expectNoSeriousAxeViolations(page, testInfo) {
 test.beforeEach(async ({ page }) => {
   await mockIsolatedPublicApi(page);
 });
+
+for (const denial of ['operations', 'access']) {
+  test(`@critical PW-PER-STORAGE keeps login available when browser storage denies ${denial}`, async ({ page }, testInfo) => {
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.addInitScript((mode) => {
+      const denied = () => { throw new DOMException('Storage denied for isolated test', 'SecurityError'); };
+      if (mode === 'access') {
+        Object.defineProperty(window, 'localStorage', { get: denied });
+        Object.defineProperty(window, 'sessionStorage', { get: denied });
+      } else {
+        Storage.prototype.getItem = denied;
+        Storage.prototype.setItem = denied;
+        Storage.prototype.removeItem = denied;
+      }
+    }, denial);
+    // Nonempty catalogs exercise preference application after the initial render.
+    await page.route('**/catalogs/batch?*', route => route.fulfill({ json: { catalogs: [
+      { catalog: { code: 'locales' }, items: [{ id: 'synthetic-es', code: 'es' }], defaults: [] },
+      { catalog: { code: 'currencies' }, items: [{ id: 'synthetic-usd', code: 'USD' }], defaults: [] },
+    ] } }));
+    await page.goto('/login');
+    await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+    await page.getByLabel('Usuario o correo *').fill('storage@persona.test');
+    await page.getByLabel('Contraseña *').fill('synthetic-password');
+    await page.getByRole('button', { name: 'Cambiar tema' }).click();
+    await expect(page.getByLabel('Usuario o correo *')).toHaveValue('storage@persona.test');
+    await expectNoSeriousAxeViolations(page, testInfo);
+    expect(errors).toEqual([]);
+    await page.screenshot({ path: testInfo.outputPath(`storage-${denial}.png`), fullPage: true });
+  });
+}
 
 test('@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login', async ({ page }, testInfo) => {
   const runtime = observeRuntime(page);
