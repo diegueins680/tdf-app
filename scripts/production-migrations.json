@@ -520,6 +520,11 @@
       "id": "2026-09-10_payment_attempt_intent_binding",
       "path": "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
       "introducedBy": "709036630fcad32102b67a34996c4da73bc4d128"
+    },
+    {
+      "id": "2026-09-17_directory_event_privacy_composition",
+      "path": "tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql",
+      "introducedBy": "9ddd014b9d6a897d15608d9d23f4445c4c7118eb"
     }
   ]
 }
