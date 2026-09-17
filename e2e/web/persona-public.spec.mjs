@@ -228,6 +228,11 @@ for (const denial of ['operations', 'access']) {
         Storage.prototype.removeItem = denied;
       }
     }, denial);
+    // Nonempty catalogs exercise preference application after the initial render.
+    await page.route('**/catalogs/batch?*', route => route.fulfill({ json: { catalogs: [
+      { catalog: { code: 'locales' }, items: [{ id: 'synthetic-es', code: 'es' }], defaults: [] },
+      { catalog: { code: 'currencies' }, items: [{ id: 'synthetic-usd', code: 'USD' }], defaults: [] },
+    ] } }));
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
     await page.getByLabel('Usuario o correo *').fill('storage@persona.test');

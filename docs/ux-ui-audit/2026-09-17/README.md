@@ -189,3 +189,9 @@ Web final: 210 suites / 2.005 pruebas, cero fallos. Navegador final estable: 38 
 - Dependencias móviles temporales reinstaladas con npm ci. Verificación de repositorio posterior a integrar main aprobada.
 - Producción sigue bajo coordinación pendiente con el otro despliegue confirmado por el usuario. No se realizó ninguna mutación productiva de esta entrega.
 - Segundo incremento en `/private/tmp/tdf-ux-locale-20260917`, rama `fix/auth-locale-20260917`: traducciones de acceso/registro/recuperación y navegación pública, todavía en implementación y sin evidencia de cierre.
+
+### Ampliación de UX-260917-007
+
+El caso anterior de navegador usaba catálogos vacíos: no cubría la aplicación de preferencias después de recibir idiomas/monedas. El componente real se reprodujo con catálogos sintéticos no vacíos y dos fallos `SecurityError` (getter / escritura); tras proteger la caché opcional, ambas pruebas y las dos de normalización pasan. `import.meta.env` se lee opcionalmente para ejecutar el componente fuera de Vite. Los primeros intentos del harness fallaron por un mock incompleto y por env ausente; esos errores no se cuentan como reproducciones del defecto de storage. Comandos: `npm run test --workspace=tdf-hq-ui -- --runTestsByPath src/contexts/LocalePreferencesContext.storage.test.tsx src/contexts/LocalePreferencesContext.test.ts`. Se añadió el escenario de catálogo no vacío al recorrido de navegador: 10/10 aprobados en los cinco perfiles, con axe y conservación del formulario.
+
+El usuario volvió a confirmar que el despliegue paralelo sigue en curso: continuar sólo trabajo independiente. El artefacto iOS se descargó (49 MB, SHA-256 `e61c0ff2b70bf453405b12324f09d4db2f5a0828bbb258fb8a77e1a220a95b5e`), pero todavía no está instalado/ejecutado. El usuario informó limpieza de disco; la relectura local fluctúa entre 404 MB y 1,6 GB libres, no los 10 GB solicitados.
