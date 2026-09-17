@@ -1,0 +1,11 @@
+# Acceso bilingüe y recuperación — incremento en validación
+
+Hallazgos UX-260917-006 (parcial), 010 y 011. Español sigue siendo predeterminado; se reutiliza i18next y la preferencia existente. Se traducen acceso/registro/recuperación, nombres accesibles, estados y navegación pública. No se afirma que el resto de módulos, respuestas del backend o documentos legales estén traducidos. Los enlaces legales y la versión de consentimiento no cambian. Se retiran promesas de duración no medidas y jerga de permisos; no se atribuye mejora causal de conversión.
+
+Un enlace incompleto ahora lleva con una acción a solicitar otro enlace, conservando exclusivamente el redirect que acepta readSafeRedirectPath. Antes hacían falta dos acciones (ir a login y abrir recuperación). El fallo de transporte conserva el correo y no declara envío exitoso.
+
+Axe confirmó contraste 2,45:1 de la ayuda de contraseña sobre fondo oscuro en tablet, ES/EN. Se usa el color semántico del tema. Fuente consultada 2026-09-17: [WCAG 2.2](https://www.w3.org/TR/WCAG22/#contrast-minimum); objetivo 4,5:1. [MUI 6 Dialog](https://v6.mui.com/material-ui/api/dialog/) documenta duración/transición; se investiga un cierre intermitente de WebKit sin ampliar timeouts ni relajar assertions.
+
+Evidencia inicial: 9/9 pruebas de componentes con i18next real; typecheck y lint dirigidos pasan. Navegador tras contraste: 8/10 pasan, dos fallos de cierre en WebKit; repetición aislada WebKit 2/2 pasa. Esto no acredita todavía cierre estable. Comandos de desarrollo usados: config temporal playwright.locale.config.mjs (Vite dev, puerto4187); repetir el mismo grep PW-PER-LOCALE sobre el bundle de producción antes de promover. No equivale a medición p75, estudio de usuarios ni cumplimiento WCAG completo.
+
+Rollback: revertir sólo este incremento web; no modifica esquema, permisos ni API. Pruebas de regresión: formularios, consentimiento Google, sesión, rutas seguras, textos públicos y recuperación. Publicación pendiente de gates exactos/revisión y coordinación del despliegue concurrente.

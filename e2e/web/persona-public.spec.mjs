@@ -671,3 +671,41 @@ test('PW-PER-01-MARKETPLACE removes fake notification capture and persistent con
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: testInfo.outputPath('marketplace-truthful-empty-state.png'), fullPage: true });
 });
+
+for (const locale of ['es', 'en']) {
+  test(`@critical PW-PER-LOCALE ${locale} signup and recovery retain language and destination`, async ({ page }, testInfo) => {
+    const en = locale === 'en';
+    await page.addInitScript(language => localStorage.setItem('tdf-hq-ui/locale', language), locale);
+    await page.goto('/login?signup=1&intent=follow_artists&redirect=%2Ffans');
+    await expect(page.locator('html')).toHaveAttribute('lang', locale);
+    const signup = page.getByRole('dialog', { name: en ? 'Create account' : 'Crear cuenta' });
+    await expect(signup).toBeVisible();
+    await expect(signup.getByText(en ? /continue to “follow artists”/ : /continuarás con “seguir artistas”/)).toBeVisible();
+    await expect(signup.getByRole('link', { name: en ? 'account terms' : 'términos de la cuenta', exact: true })).toHaveAttribute('href', '/account/terms.html');
+    await expect(signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true })).toBeDisabled();
+    await signup.getByLabel(en ? 'First name' : 'Nombre').fill('Synthetic');
+    await signup.getByLabel(en ? 'I accept the terms and privacy policy' : 'Acepto los términos y la política de privacidad', { exact: true }).check();
+    await expect(signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true })).toBeEnabled();
+    await expectNoSeriousAxeViolations(page, testInfo);
+    await page.goto('/reset?redirect=%2Ffans');
+    await expect(page.getByRole('heading', { name: en ? 'Incomplete link' : 'Enlace incompleto' })).toBeVisible();
+    const recovery = page.getByRole('link', { name: en ? 'Request a new link' : 'Solicitar nuevo enlace', exact: true });
+    await expect(recovery).toHaveAttribute('href', '/login?redirect=%2Ffans&recover=1');
+    await expectNoSeriousAxeViolations(page, testInfo);
+    await recovery.click();
+    const dialog = page.getByRole('dialog', { name: en ? 'Recover access' : 'Recuperar acceso' });
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(/redirect=%2Ffans&recover=1/);
+    await page.route('**/v1/password-reset', route => route.abort('failed'));
+    const email = dialog.getByLabel(en ? 'Account email' : 'Correo asociado a tu cuenta');
+    await email.fill('locale@persona.test');
+    await email.press('Enter');
+    await expect(dialog.getByRole('alert')).toContainText(en ? 'Check your connection and try again' : 'Revisa tu conexión e inténtalo de nuevo');
+    await expect(email).toHaveValue('locale@persona.test');
+    await expectNoSeriousAxeViolations(page, testInfo);
+    await page.screenshot({ path: testInfo.outputPath(`recovery-${locale}.png`), fullPage: true });
+    await dialog.getByRole('button', { name: en ? 'Close' : 'Cerrar', exact: true }).click();
+    await expect(dialog).not.toBeVisible();
+    await expect(page).toHaveURL(/\/login\?redirect=%2Ffans$/);
+  });
+}

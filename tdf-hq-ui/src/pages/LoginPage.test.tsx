@@ -1,3 +1,4 @@
+import i18n from '../i18n';
 import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
@@ -53,11 +54,7 @@ jest.unstable_mockModule('../utils/logger', () => ({
   logger: { log: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
-jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => (key === 'login.signupDialog.title' ? 'Crear cuenta' : key),
-  }),
-}));
+
 
 const { default: LoginPage, isGoogleSignupConsentRequiredError } = await import('./LoginPage');
 
@@ -108,7 +105,8 @@ describe('LoginPage Google signup consent flow', () => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('es');
     googleCallback = null;
     googleLoginRequestMock.mockReset();
     loginMock.mockReset();

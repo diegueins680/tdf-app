@@ -113,7 +113,7 @@
     "dependencies": [],
     "acceptanceCriteria": "Entire arrival/login/signup/reset/navigation journey follows selected es/en, including errors and screen-reader names.",
     "verificationMethod": "Source inventory plus bilingual browser/native task scripts.",
-    "releaseStatus": "open; no claim of bilingual coverage"
+    "releaseStatus": "Partial implementation in fix/auth-locale-20260917: auth entry, reset and public navigation ES/EN. Wider module copy, API errors and policy documents remain open; native scope separate."
   },
   {
     "id": "UX-260917-007",
@@ -170,5 +170,43 @@
     "acceptanceCriteria": "Canonical clients match and actual synthetic activation succeeds without unauthorized grant or lost Google claim",
     "verificationMethod": "schema generation, server tests, authenticated staged journey",
     "releaseStatus": "open; parent pointer intentionally not committed yet"
+  },
+  {
+    "id": "UX-260917-010",
+    "kind": "confirmed",
+    "title": "Recovery link action returns to login without opening recovery or retaining the destination",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "interrupted account recovery",
+    "roles": "anonymous and expired sessions",
+    "surface": "ResetPasswordPage /reset and LoginPage /login",
+    "evidence": "Both incomplete-link buttons target /login, discarding a validated redirect. Source inspection and new bilingual Playwright journey assert the replacement behavior.",
+    "userImpact": "A user requesting a replacement link must rediscover recovery and loses the original task destination.",
+    "rootCause": "Both CTAs share a literal login path; no recovery query entry.",
+    "proposedChange": "Preserve validated internal redirects and open the recovery dialog via recover=1; remove this flag on close.",
+    "dependencies": [
+      "UX-260917-006"
+    ],
+    "acceptanceCriteria": "Replacement link opens recovery directly; valid destination survives; unsafe targets remain rejected by existing routing validation; closing returns to usable login; failed request retains email with actionable feedback.",
+    "verificationMethod": "PW-PER-LOCALE ES/EN across five browser/device profiles and existing loginRouting tests.",
+    "releaseStatus": "Implemented; eight profiles/cases passed after contrast fix, two WebKit close checks initially intermittent; isolated WebKit rerun passed; final production bundle verification pending."
+  },
+  {
+    "id": "UX-260917-011",
+    "kind": "confirmed",
+    "title": "Password guidance lacks contrast on dark dialog backgrounds",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "signup and password recovery",
+    "roles": "anonymous",
+    "surface": "LoginPage signup helper and ResetPasswordPage helper",
+    "evidence": "Axe tablet ES and EN: #475569 over #12121a, contrast 2.45:1 at 12px; before screenshot evidence/signup-contrast-before.png.",
+    "userImpact": "Password requirements become difficult to read, increasing validation mistakes.",
+    "rootCause": "A dark text override assumes a white input also supplies the helper background; helper is outside the white input.",
+    "proposedChange": "Use the theme text.secondary color for helper text; keep password policy complete and bilingual.",
+    "dependencies": [],
+    "acceptanceCriteria": "Helper text meets 4.5:1 in light/dark themes across desktop/tablet/phone and selected browsers; no weakened axe checks.",
+    "verificationMethod": "Axe plus screenshot inspection; include signup with intent and long ES/EN policy copy.",
+    "releaseStatus": "Implemented; previously failing tablet cases pass; final full verification pending."
   }
 ]

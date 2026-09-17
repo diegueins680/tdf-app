@@ -1,4 +1,6 @@
+import authEntry from './authEntry.es';
 const es = {
+  authEntry,
   Parties: 'Personas',
   Bookings: 'Agenda',
   Kanban: 'Pipelines',
