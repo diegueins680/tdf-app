@@ -10,25 +10,6 @@
   },
   "decisions": [
     {
-      "id": "9d18084547600ae29ff6",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing these result-field names would break the exhaustive no-credential-mutation invariant test.",
-      "justification": "Individually reviewed: ok and expiringSoon are boolean result-field keys from checkToken, used only by a 16-state unit-test fixture. They are not artist identities, selectable business values, or an independent persisted catalog. The test enumerates both tokens' validity and expiry flags and requires zero refresh calls in every read-only state.",
-      "reviewed": true,
-      "reviewMethod": "individual-source-review",
-      "reviewBatch": "messaging-readonly-2026-09-15",
-      "evidence": {
-        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
-        "line": 80,
-        "kind": "object-registry",
-        "name": "instagram",
-        "valueCount": 2
-      }
-    },
-    {
       "id": "c3d1e41b543e7cbdaf00",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -575,25 +556,6 @@
       "reviewed": true
     },
     {
-      "id": "82e377af11c96be6a75a",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "artist-self-service-2026-09-16",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 103
-      }
-    },
-    {
       "id": "3391a96825357d78f794",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -602,39 +564,6 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
       "reviewed": true
-    },
-    {
-      "id": "32da0d0a99da215fc4fa",
-      "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "provider_oauth_permission_fixture",
-      "priority": "P0-security",
-      "risk": "A fixture that invents permissions could falsely validate the OAuth ownership bootstrap.",
-      "justification": "Individually reviewed test-only mirrors of Meta's documented instagram_business_basic and instagram_business_manage_messages scope names. They are provider grant-response fixtures, not selectable application privileges or an independent business catalog; the basic grant is required by the lifecycle validator.",
-      "reviewed": true,
-      "reviewMethod": "source-and-provider-contract-review",
-      "reviewBatch": "instagram-lifecycle-2026-09-15",
-      "evidence": {
-        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
-        "name": "permissions",
-        "source": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login"
-      }
-    },
-    {
-      "id": "c3522bcc8fa29b9d5c1f",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Incorrect fixture fields could stop exercising the authorization-code exchange contract.",
-      "justification": "Individually reviewed setupOptions is a test-only object containing a visibly fictional authorization code and an example.test callback URI. Its code and redirectUri keys are function arguments, not a business catalog; they exercise exact app/callback binding without real credentials.",
-      "reviewed": true,
-      "reviewMethod": "source-contract-review",
-      "reviewBatch": "instagram-lifecycle-2026-09-15",
-      "evidence": {
-        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
-        "name": "setupOptions"
-      }
     },
     {
       "id": "86fcd97588e8b1c4bd10",
@@ -11443,16 +11372,6 @@
       "reviewed": true
     },
     {
-      "id": "0886e6835c7f5c533d9c",
-      "classification": "security-system-registry",
-      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
-      "specializedModel": "security_role, party_security_role, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Only recognized technical policy bindings are retained in code. The persisted artist self-service policy grants only Artist for the authenticated owner, with an immutable audit and without reactivating revoked assignments.",
-      "reviewed": true
-    },
-    {
       "id": "b5216d6797a7d21e7a6d",
       "classification": "security-system-registry",
       "disposition": "persisted-registry-with-deny-by-default-code-mirror",
@@ -12746,28 +12665,6 @@
       "reviewed": true
     },
     {
-      "id": "a2dd2dd3b764375d3eb1",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
-      "evidence": {
-        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-        "line": 55,
-        "kind": "array",
-        "name": "mobileFeatureRegistry",
-        "valueCount": 155,
-        "consumerCount": 5,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
-      }
-    },
-    {
       "id": "bc76ab356eb625beab02",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -13228,44 +13125,6 @@
       "reviewed": true
     },
     {
-      "id": "12abca4fa517da75ad03",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
-      "priority": "P1-cross-platform",
-      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
-      "justification": "Onboarding intent labels and ordering are user-visible cross-client product data and must follow the governed intent registry.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "artist-self-service-2026-09-16",
-      "evidence": {
-        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
-        "line": 76,
-        "kind": "array",
-        "name": "ONBOARDING_INTENT_OPTIONS",
-        "valueCount": 6
-      }
-    },
-    {
-      "id": "3b37706d3daff89e8890",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "onboarding_intent, onboarding_first_value, user_onboarding_progress",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "artist-self-service-2026-09-16",
-      "evidence": {
-        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
-        "line": 391,
-        "kind": "switch-cases",
-        "name": "intent",
-        "valueCount": 6
-      }
-    },
-    {
       "id": "1ecf8fb9acdcad27089e",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -13386,6 +13245,78 @@
       "reviewed": true
     },
     {
+      "id": "a70974a1cf51644e6038",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing wire keys or dispatch codes without versioned server compatibility breaks authorization and clients.",
+      "justification": "Keys of a synthetic API response fixture are a versioned wire shape, not editable business reference data.",
+      "reviewed": true
+    },
+    {
+      "id": "7b92aacf2fc26768a779",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing wire keys or dispatch codes without versioned server compatibility breaks authorization and clients.",
+      "justification": "Versioned social mutation operation codes select modeled permission transitions. Administrative catalog editing must not invent new commands or authorization paths; changes require a reviewed server/model/client contract change.",
+      "reviewed": true
+    },
+    {
+      "id": "9d18084547600ae29ff6",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these result-field names would break the exhaustive no-credential-mutation invariant test.",
+      "justification": "Individually reviewed: ok and expiringSoon are boolean result-field keys from checkToken, used only by a 16-state unit-test fixture. They are not artist identities, selectable business values, or an independent persisted catalog. The test enumerates both tokens' validity and expiry flags and requires zero refresh calls in every read-only state.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "messaging-readonly-2026-09-15",
+      "evidence": {
+        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "line": 80,
+        "kind": "object-registry",
+        "name": "instagram",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "32da0d0a99da215fc4fa",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "provider_oauth_permission_fixture",
+      "priority": "P0-security",
+      "risk": "A fixture that invents permissions could falsely validate the OAuth ownership bootstrap.",
+      "justification": "Individually reviewed test-only mirrors of Meta's documented instagram_business_basic and instagram_business_manage_messages scope names. They are provider grant-response fixtures, not selectable application privileges or an independent business catalog; the basic grant is required by the lifecycle validator.",
+      "reviewed": true,
+      "reviewMethod": "source-and-provider-contract-review",
+      "reviewBatch": "instagram-lifecycle-2026-09-15",
+      "evidence": {
+        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "name": "permissions",
+        "source": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login"
+      }
+    },
+    {
+      "id": "c3522bcc8fa29b9d5c1f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Incorrect fixture fields could stop exercising the authorization-code exchange contract.",
+      "justification": "Individually reviewed setupOptions is a test-only object containing a visibly fictional authorization code and an example.test callback URI. Its code and redirectUri keys are function arguments, not a business catalog; they exercise exact app/callback binding without real credentials.",
+      "reviewed": true,
+      "reviewMethod": "source-contract-review",
+      "reviewBatch": "instagram-lifecycle-2026-09-15",
+      "evidence": {
+        "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "name": "setupOptions"
+      }
+    },
+    {
       "id": "578a6926f6b1b91c0ae7",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -13427,6 +13358,384 @@
         "consumerCount": 0,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "2922d4c2e6bdb97f098e",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_lifecycle_transition_policy, event_operation_event_state",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Canonical lifecycle states are persisted in the event policy/state tables; the CHECK is the schema boundary mirrored by EventLifecycle.tla and must change with the canonical transition policy, never through a client-only list.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 16,
+        "values": [
+          "draft",
+          "planning",
+          "pending_approval",
+          "approved",
+          "published",
+          "staffing",
+          "ready",
+          "in_progress",
+          "completed",
+          "settlement_pending",
+          "settled",
+          "archived",
+          "reprogrammed",
+          "cancelled"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "f573cb9f122158b2cbb7",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_lifecycle_transition_policy.required_authority",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "These authority discriminants select the formal transition authorization predicate. The persisted policy owns the required authority; adding a value requires a reviewed authorization implementation and model refinement.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 27,
+        "values": [
+          "owner",
+          "event_approver",
+          "finance_approver",
+          "records_manager"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "eff124c79568650e3105",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_relationship.relationship_kind",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Ownership and coproduction kinds form the persisted event authorization boundary; they confer distinct scoped authority and cannot be extended as an unvalidated display list.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 139,
+        "values": [
+          "primary_owner",
+          "co_owner",
+          "coproducer"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "2777a364ae6e4c1869fc",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_grant.scope_code",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "The explicit grant capability allowlist limits event, task, booking, contract, finance and audit authority. It is persisted and schema-enforced; InvitationSafety.tla verifies attenuation, and future API consumers must use this authority.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 201,
+        "values": [
+          "event.read",
+          "event.manage",
+          "event.publish",
+          "event.approve",
+          "task.read",
+          "task.manage",
+          "booking.manage",
+          "contract.manage",
+          "finance.read",
+          "finance.approve",
+          "audit.read"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "a0240362e8e900f0696d",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_grant.resource_kind",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Resource kinds are the grant-scope discriminant. The adjacent identity constraint requires an event-wide NULL or an exact resource identifier, preventing cross-resource permission expansion.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 208,
+        "values": [
+          "event",
+          "session",
+          "task",
+          "booking",
+          "contract",
+          "document"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "2ed3195488b358f7b1e3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Immutable command-receipt outcomes are an exhaustive transaction protocol for replay, rejection and conflict; an editable business catalog would make historical command replay ambiguous.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 261,
+        "values": [
+          "accepted",
+          "rejected",
+          "conflict"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "902637e5c6c5636e6ce9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Immutable audit outcomes distinguish accepted, rejected, conflicted and explicitly justified override operations. The adjacent override-reason constraint and audit immutability bind the closed evidence protocol.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 282,
+        "values": [
+          "accepted",
+          "rejected",
+          "conflict",
+          "override"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "1d177c7618f2ff2c378a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_session.attendance_mode",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Attendance mode is persisted on the canonical event session. The schema defines the supported physical/virtual/hybrid modes; future form options must derive from that authority rather than inventing client-only modes.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 331,
+        "values": [
+          "physical",
+          "virtual",
+          "hybrid"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "fb4bd6f8670db424cc73",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_session.visibility",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Visibility is an authorization-sensitive persisted session policy. Public, unlisted, private, internal and role-restricted meanings require matching server predicates and cannot be altered by presentation-only catalog edits.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 335,
+        "values": [
+          "public",
+          "unlisted",
+          "private",
+          "internal",
+          "role_restricted"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "be354ff41d06ef751915",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_raci_assignment.raci_role",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "RACI roles are persisted responsibility/authority assignments. TaskRaci.tla, uniqueness indexes and task-completion guards bind Accountable and Responsible semantics; adding a role requires model and schema review.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 402,
+        "values": [
+          "responsible",
+          "accountable",
+          "consulted",
+          "informed"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "af3dc157ec31ebaa9385",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_task_override.override_kind",
+      "priority": "P1-integrity",
+      "risk": "Divergent client values or unreviewed authority expansion can violate event authorization and historical evidence.",
+      "justification": "Override kinds are the immutable, version-bound safety exception protocol. Every override requires actor, reason and policy reference; this checked registry must stay aligned with completion guards and TaskRaci.tla.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "branch-audit-2026-09-15",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "line": 432,
+        "values": [
+          "blocked_completion",
+          "responsibility_exception"
+        ],
+        "formal": "formal/event-operations",
+        "validation": "scripts/test-event-operations-foundation-migration.sh"
+      }
+    },
+    {
+      "id": "533cedc090436d948533",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing or dynamically supplying this selector could break the transaction locking discipline used for current-session authorization.",
+      "justification": "SessionAccess selects PostgreSQL shared versus exclusive row locking for an internal Haskell transaction helper. ReadSession and WriteSession are implementation modes, not business choices, roles, permissions, or a user-editable catalog. The token/party/domain authorities remain in the database.",
+      "reviewed": true
+    },
+    {
+      "id": "82e377af11c96be6a75a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 103
+      }
+    },
+    {
+      "id": "0886e6835c7f5c533d9c",
+      "classification": "security-system-registry",
+      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Only recognized technical policy bindings are retained in code. The persisted artist self-service policy grants only Artist for the authenticated owner, with an immutable audit and without reactivating revoked assignments.",
+      "reviewed": true
+    },
+    {
+      "id": "a2dd2dd3b764375d3eb1",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true,
+      "reviewMethod": "deterministic-policy-v3",
+      "reviewBatch": "ci-recovery-2026-09-12",
+      "evidence": {
+        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "line": 55,
+        "kind": "array",
+        "name": "mobileFeatureRegistry",
+        "valueCount": 155,
+        "consumerCount": 5,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "12abca4fa517da75ad03",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P1-cross-platform",
+      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
+      "justification": "Onboarding intent labels and ordering are user-visible cross-client product data and must follow the governed intent registry.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+        "line": 76,
+        "kind": "array",
+        "name": "ONBOARDING_INTENT_OPTIONS",
+        "valueCount": 6
+      }
+    },
+    {
+      "id": "3b37706d3daff89e8890",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_first_value, user_onboarding_progress",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-self-service-2026-09-16",
+      "evidence": {
+        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+        "line": 391,
+        "kind": "switch-cases",
+        "name": "intent",
+        "valueCount": 6
       }
     },
     {
@@ -13504,36 +13813,6 @@
         "name": "SubjectKind",
         "valueCount": 2
       }
-    },
-    {
-      "id": "a70974a1cf51644e6038",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing wire keys or dispatch codes without versioned server compatibility breaks authorization and clients.",
-      "justification": "Keys of a synthetic API response fixture are a versioned wire shape, not editable business reference data.",
-      "reviewed": true
-    },
-    {
-      "id": "7b92aacf2fc26768a779",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing wire keys or dispatch codes without versioned server compatibility breaks authorization and clients.",
-      "justification": "Versioned social mutation operation codes select modeled permission transitions. Administrative catalog editing must not invent new commands or authorization paths; changes require a reviewed server/model/client contract change.",
-      "reviewed": true
-    },
-    {
-      "id": "533cedc090436d948533",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing or dynamically supplying this selector could break the transaction locking discipline used for current-session authorization.",
-      "justification": "SessionAccess selects PostgreSQL shared versus exclusive row locking for an internal Haskell transaction helper. ReadSession and WriteSession are implementation modes, not business choices, roles, permissions, or a user-editable catalog. The token/party/domain authorities remain in the database.",
-      "reviewed": true
     }
   ]
 }

@@ -262,6 +262,7 @@ test-suite tdf-hq-test
   hs-source-dirs:    test, src
   main-is:           Spec.hs
   other-modules:
+    TDF.Commerce.WorkerLoggingSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
@@ -417,6 +418,7 @@ test-suite tdf-hq-test
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec
+    TDF.Server.EventRelationsSpec
     TDF.Social.FollowSpec
     TDF.Services
     TDF.Services.InstagramMessaging
@@ -451,9 +453,10 @@ test-suite tdf-hq-test
     TDF.WhatsApp.HistorySpec
     TDF.WhatsApp.Service
     TDF.WhatsApp.Transport
-  ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded
+  ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N2
   default-language:  Haskell2010
   build-depends:
+    async,
       base                 >=4.14 && <5
     , aeson                >=2.0
     , bytestring

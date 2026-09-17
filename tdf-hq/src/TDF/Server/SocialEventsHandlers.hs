@@ -8,6 +8,7 @@
 module TDF.Server.SocialEventsHandlers (
     publicUpcomingEventsServer,
     collectMatchingRows,
+    replaceLogisticsActivityDependencies,
     socialEventsServer,
     stripeWebhookServer,
     validateRsvpPageLimit,
@@ -16,6 +17,7 @@ module TDF.Server.SocialEventsHandlers (
     validateInvitationFromPartyId,
     validateInvitationStatusInput,
     validateInvitationStatusUpdateInput,
+    validateInvitationUpdateAuthorization,
     normalizeInvitationStatus,
     normalizeArtistGenres,
     parseInvitationIdsEither,
@@ -3651,8 +3653,14 @@ socialEventsServer user =
         Env{..} <- ask
         eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
-        rows <- liftIO $ runSqlPool (selectList [EventInvitationEventId ==. eventKey] [Desc EventInvitationCreatedAt]) envPool
+        eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        let canManage = hasStrictAdminAccess user || isEventManager currentPartyId eventRow
+            invitationFilters =
+                [EventInvitationEventId ==. eventKey]
+                    <> if canManage
+                        then []
+                        else [EventInvitationToPartyId ==. Just currentPartyId]
+        rows <- liftIO $ runSqlPool (selectList invitationFilters [Desc EventInvitationCreatedAt]) envPool
         pure $
             map
                 ( \(Entity iid inv) ->
@@ -3674,8 +3682,6 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
-        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
         toParty <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
         fromParty <-
             either
@@ -3683,21 +3689,31 @@ socialEventsServer user =
                 pure
                 (validateInvitationFromPartyId currentPartyId (invitationFromPartyId dto))
         statusVal <- either throwError pure (validateInvitationStatusInput (invitationStatus dto))
-        key <-
-            liftIO $
-                runSqlPool
-                    ( insert
-                        EventInvitation
-                            { eventInvitationEventId = eventKey
-                            , eventInvitationFromPartyId = Just fromParty
-                            , eventInvitationToPartyId = Just toParty
-                            , eventInvitationStatus = Just statusVal
-                            , eventInvitationMessage = invitationMessage dto
-                            , eventInvitationCreatedAt = now
-                            , eventInvitationUpdatedAt = now
-                            }
-                    )
-                    envPool
+        when (statusVal /= "pending") $
+            throwError err400{errBody = "New invitations must have pending status"}
+        result <- liftIO $ runSqlPool (do
+            -- Serialize authority changes and insertion on the same event row.
+            -- SQLite needs a write lock before reading its current authority.
+            backendName <- T.toCaseFold <$> getRDBMS
+            when ("sqlite" `T.isInfixOf` backendName) $
+                rawExecute "UPDATE social_event SET id = id WHERE id = ?" [toPersistValue eventKey]
+            mEvent <- lockSocialEventForMutation eventKey
+            case mEvent of
+                Nothing -> pure (Left err404{errBody = "Event not found"})
+                Just (Entity _ eventRow)
+                    | not (hasStrictAdminAccess user || isEventManager currentPartyId eventRow) ->
+                        pure (Left err403{errBody = "Only the event organizer can create invitations"})
+                    | otherwise -> Right <$> insert EventInvitation
+                        { eventInvitationEventId = eventKey
+                        , eventInvitationFromPartyId = Just fromParty
+                        , eventInvitationToPartyId = Just toParty
+                        , eventInvitationStatus = Just statusVal
+                        , eventInvitationMessage = invitationMessage dto
+                        , eventInvitationCreatedAt = now
+                        , eventInvitationUpdatedAt = now
+                        }
+            ) envPool
+        key <- either throwError pure result
         pure
             InvitationDTO
                 { invitationId = Just (renderKeyText key)
@@ -3715,43 +3731,62 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         (eventKey, invitationKey) <- parseIds eventIdStr invitationIdStr
-        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
-        mExisting <- liftIO $ runSqlPool (get invitationKey) envPool
-        case mExisting of
-            Nothing -> throwError err404{errBody = "Invitation not found"}
-            Just inv -> do
-                let dto = iudInvitation
-                when (eventInvitationEventId inv /= eventKey) $ throwError err400{errBody = "Invitation does not belong to this event"}
-                mStatusVal <- either throwError pure (validateInvitationStatusUpdateInput (invitationStatus dto))
-                let messageVal = applyNullableTextUpdate iudMessageUpdate (eventInvitationMessage inv)
-                    statusUpdates =
-                        maybe [] (\statusVal -> [EventInvitationStatus =. Just statusVal]) mStatusVal
-                    responseStatus = mStatusVal <|> eventInvitationStatus inv
-                toPartyVal <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
-                liftIO $
-                    runSqlPool
-                        ( update
-                            invitationKey
-                            ( statusUpdates
-                                <> [ EventInvitationMessage =. messageVal
-                                   , EventInvitationToPartyId =. Just toPartyVal
-                                   , EventInvitationUpdatedAt =. now
-                                   ]
-                            )
-                        )
-                        envPool
-                pure
-                    InvitationDTO
-                        { invitationId = Just (renderKeyText invitationKey)
-                        , invitationEventId = Just (T.strip eventIdStr)
-                        , invitationFromPartyId = eventInvitationFromPartyId inv
-                        , invitationToPartyId = toPartyVal
-                        , invitationStatus = responseStatus
-                        , invitationMessage = messageVal
-                        , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
-                        , invitationUpdatedAt = Just now
-                        }
+        let dto = iudInvitation
+        mStatusVal <- either throwError pure (validateInvitationStatusUpdateInput (invitationStatus dto))
+        toPartyVal <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
+        result <- liftIO $ runSqlPool (do
+            -- Lock before reading authority or recipient state. PostgreSQL locks
+            -- event then invitation; SQLite acquires its database write lock
+            -- before either read. Both locks live through the authorized update.
+            backendName <- T.toCaseFold <$> getRDBMS
+            when ("sqlite" `T.isInfixOf` backendName) $
+                rawExecute "UPDATE event_invitation SET id = id WHERE id = ?"
+                    [toPersistValue invitationKey]
+            mEvent <- lockSocialEventForMutation eventKey
+            case mEvent of
+                Nothing -> pure (Left err404{errBody = "Event not found"})
+                Just (Entity _ eventRow) -> do
+                    when ("postgres" `T.isInfixOf` backendName) $ do
+                        _ <- (rawSql "SELECT id FROM event_invitation WHERE id = ? FOR UPDATE"
+                            [toPersistValue invitationKey] :: SqlPersistT IO [Single Int64])
+                        pure ()
+                    mExisting <- get invitationKey
+                    case mExisting of
+                        Nothing -> pure (Left err404{errBody = "Invitation not found"})
+                        Just inv
+                            | eventInvitationEventId inv /= eventKey ->
+                                pure (Left err400{errBody = "Invitation does not belong to this event"})
+                            | otherwise ->
+                                case validateInvitationUpdateAuthorization
+                                    (hasStrictAdminAccess user || isEventManager currentPartyId eventRow)
+                                    currentPartyId
+                                    (eventInvitationToPartyId inv)
+                                    (eventInvitationStatus inv)
+                                    toPartyVal
+                                    mStatusVal
+                                    iudMessageUpdate of
+                                    Left authError -> pure (Left authError)
+                                    Right () -> do
+                                        let messageVal = applyNullableTextUpdate iudMessageUpdate (eventInvitationMessage inv)
+                                            statusUpdates = maybe [] (\statusVal -> [EventInvitationStatus =. Just statusVal]) mStatusVal
+                                        update invitationKey
+                                            (statusUpdates <>
+                                                [ EventInvitationMessage =. messageVal
+                                                , EventInvitationToPartyId =. Just toPartyVal
+                                                , EventInvitationUpdatedAt =. now
+                                                ])
+                                        pure $ Right InvitationDTO
+                                            { invitationId = Just (renderKeyText invitationKey)
+                                            , invitationEventId = Just (T.strip eventIdStr)
+                                            , invitationFromPartyId = eventInvitationFromPartyId inv
+                                            , invitationToPartyId = toPartyVal
+                                            , invitationStatus = mStatusVal <|> eventInvitationStatus inv
+                                            , invitationMessage = messageVal
+                                            , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
+                                            , invitationUpdatedAt = Just now
+                                            }
+            ) envPool
+        either throwError pure result
 
     -- Moments
     listMoments :: T.Text -> AppM [EventMomentDTO]
@@ -6486,26 +6521,31 @@ socialEventsServer user =
             then Just . elsDefaultTravelMode <$>
                 loadLogisticsSettings (defaultTimezone envConfig) envPool eventKey
             else pure modeVal
-        key <- liftIO $ runSqlPool (insert EventLogisticsActivity
-            { eventLogisticsActivityEventId = eventKey
-            , eventLogisticsActivityActivityType = typeVal
-            , eventLogisticsActivityTitle = titleVal
-            , eventLogisticsActivityNotes = cleanMaybeText (eacNotes dto)
-            , eventLogisticsActivityStartTime = eacStart dto
-            , eventLogisticsActivityEndTime = endVal
-            , eventLogisticsActivityPlaceId = placeKey
-            , eventLogisticsActivityOriginPlaceId = originKey
-            , eventLogisticsActivityDestinationPlaceId = destinationKey
-            , eventLogisticsActivityTravelMode = modeToStore
-            , eventLogisticsActivityBufferMinutes = bufferVal
-            , eventLogisticsActivityPriority = priorityVal
-            , eventLogisticsActivityStatus = statusVal
-            , eventLogisticsActivityVersion = 1
-            , eventLogisticsActivityCreatedByPartyId = currentPartyId
-            , eventLogisticsActivityCreatedAt = now
-            , eventLogisticsActivityUpdatedAt = now
-            }) envPool
-        replaceLogisticsActivityRelations envPool key (eacAssignments dto) dependencyKeys now
+        -- The activity and its dependency/assignment snapshot are one versioned write.
+        -- Database DAG guards can therefore reject the whole command without leaving
+        -- an activity whose visible relations belong to another state.
+        key <- liftIO $ runSqlPool (do
+            activityKey <- insert EventLogisticsActivity
+                { eventLogisticsActivityEventId = eventKey
+                , eventLogisticsActivityActivityType = typeVal
+                , eventLogisticsActivityTitle = titleVal
+                , eventLogisticsActivityNotes = cleanMaybeText (eacNotes dto)
+                , eventLogisticsActivityStartTime = eacStart dto
+                , eventLogisticsActivityEndTime = endVal
+                , eventLogisticsActivityPlaceId = placeKey
+                , eventLogisticsActivityOriginPlaceId = originKey
+                , eventLogisticsActivityDestinationPlaceId = destinationKey
+                , eventLogisticsActivityTravelMode = modeToStore
+                , eventLogisticsActivityBufferMinutes = bufferVal
+                , eventLogisticsActivityPriority = priorityVal
+                , eventLogisticsActivityStatus = statusVal
+                , eventLogisticsActivityVersion = 1
+                , eventLogisticsActivityCreatedByPartyId = currentPartyId
+                , eventLogisticsActivityCreatedAt = now
+                , eventLogisticsActivityUpdatedAt = now
+                }
+            replaceLogisticsActivityRelations activityKey (eacAssignments dto) dependencyKeys now
+            pure activityKey) envPool
         when (typeVal == "travel") $ void (verifyLogisticsActivityInternal envPool envConfig key Nothing)
         mCreated <- liftIO $ runSqlPool (getEntity key) envPool
         maybe (throwError err500{errBody = "Could not create logistics activity"}) (logisticsActivityEntityToDTO envPool) mCreated
@@ -6526,27 +6566,33 @@ socialEventsServer user =
                 loadLogisticsSettings (defaultTimezone envConfig) envPool eventKey
             else pure modeVal
         now <- liftIO getCurrentTime
-        updatedRows <- liftIO $ runSqlPool (updateWhereCount
-            [ EventLogisticsActivityId ==. activityKey
-            , EventLogisticsActivityVersion ==. expectedVersion
-            ]
-            [ EventLogisticsActivityActivityType =. typeVal
-            , EventLogisticsActivityTitle =. titleVal
-            , EventLogisticsActivityNotes =. cleanMaybeText (eacNotes dto)
-            , EventLogisticsActivityStartTime =. eacStart dto
-            , EventLogisticsActivityEndTime =. endVal
-            , EventLogisticsActivityPlaceId =. placeKey
-            , EventLogisticsActivityOriginPlaceId =. originKey
-            , EventLogisticsActivityDestinationPlaceId =. destinationKey
-            , EventLogisticsActivityTravelMode =. modeToStore
-            , EventLogisticsActivityBufferMinutes =. bufferVal
-            , EventLogisticsActivityPriority =. priorityVal
-            , EventLogisticsActivityStatus =. statusVal
-            , EventLogisticsActivityVersion =. nextVersion
-            , EventLogisticsActivityUpdatedAt =. now
-            ]) envPool
+        -- Keep the optimistic compare-and-swap and relation replacement in the same
+        -- transaction. A concurrent version loss or relation constraint failure
+        -- leaves both the activity row and its prior relations unchanged.
+        updatedRows <- liftIO $ runSqlPool (do
+            rowCount <- updateWhereCount
+                [ EventLogisticsActivityId ==. activityKey
+                , EventLogisticsActivityVersion ==. expectedVersion
+                ]
+                [ EventLogisticsActivityActivityType =. typeVal
+                , EventLogisticsActivityTitle =. titleVal
+                , EventLogisticsActivityNotes =. cleanMaybeText (eacNotes dto)
+                , EventLogisticsActivityStartTime =. eacStart dto
+                , EventLogisticsActivityEndTime =. endVal
+                , EventLogisticsActivityPlaceId =. placeKey
+                , EventLogisticsActivityOriginPlaceId =. originKey
+                , EventLogisticsActivityDestinationPlaceId =. destinationKey
+                , EventLogisticsActivityTravelMode =. modeToStore
+                , EventLogisticsActivityBufferMinutes =. bufferVal
+                , EventLogisticsActivityPriority =. priorityVal
+                , EventLogisticsActivityStatus =. statusVal
+                , EventLogisticsActivityVersion =. nextVersion
+                , EventLogisticsActivityUpdatedAt =. now
+                ]
+            when (rowCount > 0) $
+                replaceLogisticsActivityRelations activityKey (eacAssignments dto) dependencyKeys now
+            pure rowCount) envPool
         when (updatedRows == 0) $ throwError err409{errBody = "This activity was changed by another collaborator. Reload and try again."}
-        replaceLogisticsActivityRelations envPool activityKey (eacAssignments dto) dependencyKeys now
         when (typeVal == "travel") $ void (verifyLogisticsActivityInternal envPool envConfig activityKey Nothing)
         mUpdated <- liftIO $ runSqlPool (getEntity activityKey) envPool
         maybe (throwError err500{errBody = "Could not update logistics activity"}) (logisticsActivityEntityToDTO envPool) mUpdated
@@ -6558,6 +6604,17 @@ socialEventsServer user =
         activityKey <- parseKeyOr400 "logistics activity" activityIdStr
         _ <- requireLogisticsActivity envPool eventKey activityKey
         liftIO $ runSqlPool (do
+            -- Opt-in foundation guards must inspect incoming edges before this
+            -- legacy cleanup removes them. Keep its event fence through commit.
+            backendName <- T.toCaseFold <$> getRDBMS
+            when ("postgres" `T.isInfixOf` backendName) $ do
+                installed <- (rawSql
+                    "SELECT to_regprocedure('event_operation_assert_task_deletable(bigint)') IS NOT NULL AND EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'event_logistics_activity'::regclass AND tgname = 'event_operation_00_task_lock' AND tgenabled <> 'D')"
+                    [] :: SqlPersistT IO [Single Bool])
+                when (installed == [Single True]) $ do
+                    _ <- (rawSql "SELECT event_operation_assert_task_deletable(?) IS NULL"
+                        [toPersistValue activityKey] :: SqlPersistT IO [Single Bool])
+                    pure ()
             deleteWhere [EventLogisticsAlertDeliveryActivityId ==. activityKey]
             deleteWhere [EventRouteVerificationActivityId ==. activityKey]
             deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
@@ -6662,24 +6719,18 @@ socialEventsServer user =
         validateLogisticsAssignments pool (eacAssignments dto)
         pure (typeVal, titleVal, endVal, placeKey, originKey, destinationKey, modeVal, bufferVal, priorityVal, statusVal, dependencyKeys)
 
-    replaceLogisticsActivityRelations :: ConnectionPool -> EventLogisticsActivityId -> [EventLogisticsAssignmentDTO] -> [EventLogisticsActivityId] -> UTCTime -> AppM ()
-    replaceLogisticsActivityRelations pool activityKey assignments dependencyKeys now =
-        liftIO $ runSqlPool (do
-            deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
-            deleteWhere [EventLogisticsDependencyActivityId ==. activityKey]
-            forM_ assignments $ \assignment -> insert_ EventLogisticsAssignment
-                { eventLogisticsAssignmentActivityId = activityKey
-                , eventLogisticsAssignmentPartyId = cleanMaybeText (elaPartyId assignment)
-                , eventLogisticsAssignmentExternalName = cleanMaybeText (elaExternalName assignment)
-                , eventLogisticsAssignmentExternalPhone = cleanMaybeText (elaExternalPhone assignment)
-                , eventLogisticsAssignmentExternalEmail = cleanMaybeText (elaExternalEmail assignment)
-                , eventLogisticsAssignmentCreatedAt = now
-                }
-            forM_ dependencyKeys $ \dependencyKey -> insert_ EventLogisticsDependency
-                { eventLogisticsDependencyActivityId = activityKey
-                , eventLogisticsDependencyDependsOnActivityId = dependencyKey
-                , eventLogisticsDependencyCreatedAt = now
-                }) pool
+    replaceLogisticsActivityRelations :: EventLogisticsActivityId -> [EventLogisticsAssignmentDTO] -> [EventLogisticsActivityId] -> UTCTime -> SqlPersistT IO ()
+    replaceLogisticsActivityRelations activityKey assignments dependencyKeys now = do
+        deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
+        replaceLogisticsActivityDependencies activityKey dependencyKeys now
+        forM_ assignments $ \assignment -> insert_ EventLogisticsAssignment
+            { eventLogisticsAssignmentActivityId = activityKey
+            , eventLogisticsAssignmentPartyId = cleanMaybeText (elaPartyId assignment)
+            , eventLogisticsAssignmentExternalName = cleanMaybeText (elaExternalName assignment)
+            , eventLogisticsAssignmentExternalPhone = cleanMaybeText (elaExternalPhone assignment)
+            , eventLogisticsAssignmentExternalEmail = cleanMaybeText (elaExternalEmail assignment)
+            , eventLogisticsAssignmentCreatedAt = now
+            }
 
     verifyLogisticsActivityInternal :: ConnectionPool -> AppConfig -> EventLogisticsActivityId -> Maybe T.Text -> AppM EventRouteVerificationDTO
     verifyLogisticsActivityInternal pool config activityKey checkpoint = do
@@ -7494,6 +7545,47 @@ validateInvitationStatusUpdateInput (Just rawStatus) =
                     }
         Just _ ->
             Just <$> validateInvitationStatusInput (Just rawStatus)
+
+validateInvitationUpdateAuthorization
+    :: Bool
+    -> T.Text
+    -> Maybe T.Text
+    -> Maybe T.Text
+    -> T.Text
+    -> Maybe T.Text
+    -> NullableFieldUpdate T.Text
+    -> Either ServerError ()
+validateInvitationUpdateAuthorization
+    isManager
+    currentPartyId
+    existingToPartyId
+    existingStatus
+    requestedToPartyId
+    requestedStatus
+    messageUpdate
+        | isManager = Right ()
+        | existingToPartyId /= Just currentPartyId =
+            Left err403{errBody = "Only the event organizer or invited party can update this invitation"}
+        | requestedToPartyId /= currentPartyId =
+            Left err403{errBody = "Invited parties cannot transfer invitations"}
+        | messageUpdate /= FieldMissing =
+            Left err403{errBody = "Invited parties cannot edit invitation messages"}
+        | otherwise =
+            case requestedStatus of
+                Just targetStatus
+                    | allowedRecipientTransition
+                        (normalizeInvitationStatus existingStatus)
+                        targetStatus -> Right ()
+                _ ->
+                    Left
+                        err403
+                            { errBody =
+                                "Invited parties may only accept or decline pending invitations"
+                            }
+  where
+    allowedRecipientTransition currentStatus targetStatus =
+        targetStatus == currentStatus
+            || (currentStatus == "pending" && targetStatus `elem` ["accepted", "declined"])
 
 toggleMomentReactionDb
     :: PartyId
@@ -10108,6 +10200,26 @@ matchesFinanceFilters mDirection mSource mStatus entry =
     directionOk = maybe True (== efeDirection entry) mDirection
     sourceOk = maybe True (== efeSource entry) mSource
     statusOk = maybe True (== efeStatus entry) mStatus
+
+-- Keep retained edges and their provenance intact. Re-inserting an unchanged
+-- edge would falsely classify it as a newly acquired prerequisite in the
+-- deferred completion guard. The caller owns the activity transaction/lock.
+replaceLogisticsActivityDependencies
+    :: EventLogisticsActivityId -> [EventLogisticsActivityId] -> UTCTime -> SqlPersistT IO ()
+replaceLogisticsActivityDependencies activityKey dependencyKeys now = do
+    existing <- selectList [EventLogisticsDependencyActivityId ==. activityKey] []
+    let requested = Set.fromList dependencyKeys
+        previous = Set.fromList
+            (map (eventLogisticsDependencyDependsOnActivityId . entityVal) existing)
+    forM_ existing $ \(Entity dependencyId dependency) ->
+        unless (Set.member (eventLogisticsDependencyDependsOnActivityId dependency) requested) $
+            delete dependencyId
+    forM_ (Set.toList (Set.difference requested previous)) $ \dependencyKey ->
+        insert_ EventLogisticsDependency
+            { eventLogisticsDependencyActivityId = activityKey
+            , eventLogisticsDependencyDependsOnActivityId = dependencyKey
+            , eventLogisticsDependencyCreatedAt = now
+            }
 
 generateUniqueTicketCode :: (MonadIO m) => ReaderT SqlBackend m T.Text
 generateUniqueTicketCode = do

@@ -1,11 +1,20 @@
 # Formal Verification
 
-This repo uses lightweight formal methods where they give practical leverage: explicit invariants at module boundaries, property tests for normalization/authorization/payment logic, and model checks for automation state machines.
+This repo uses two complementary levels of formal work:
+
+- lightweight deterministic model checks and source audits for broad repository feedback; and
+- bounded TLA+/PlusCal and Alloy analysis for high-risk event-operations concurrency,
+  authorization, lifecycle, RACI, contract, and financial gates.
+
+The bounded analyses are not universal proofs. Their exact tool versions, scopes, fairness
+assumptions, results, counterexamples, and limitations are recorded in
+`formal/event-operations/README.md`.
 
 ## Commands
 
 ```bash
 npm run verify:formal
+npm run verify:event-operations:formal
 npm run audit:formal
 npm run audit:formal -- --json
 npm run audit:formal -- --fail-on warning
@@ -14,9 +23,15 @@ npm run test:formal
 
 `npm run quality` runs the formal gate before linting, type-checking, UI tests, mobile checks, and backend tests.
 
+The event-operations command additionally requires `JAVA_BIN` (optional), `TLA2TOOLS_JAR`, and
+`ALLOY_JAR`. CI downloads the checksum-pinned official releases in the dedicated
+`event-operations-formal.yml` workflow.
+
 ## Gate Policy
 
 - `verify:formal` model-checks the continuous-improvement loop and runs the formal audit.
+- `verify:event-operations:formal` runs TLC sequentially, requires a satisfiable Alloy scenario,
+  and rejects any bounded Alloy counterexample.
 - CI fails on `error` or `critical` findings by default.
 - `warning` and `info` findings are advisory debt: visible, sorted by importance, and suitable for follow-up loop work.
 - The formal audit scans tracked active source only. It intentionally skips archives, generated clients, build outputs, mobile native generated folders, and dependency directories.
