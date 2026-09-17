@@ -311,7 +311,7 @@ test('PW-PER-01-AUTH keeps signup labels readable in light theme', async ({ page
 });
 
 test('PW-PER-01-AUTH reports a reset transport failure instead of false success', async ({ page }) => {
-  await page.route('**/v1/password-reset', (route) => route.abort('failed'));
+  await page.route(/\/v1\/password-reset(?:\?.*)?$/, (route) => route.abort('failed'));
   await page.goto('/login');
   await page.getByRole('button', { name: /recuperar acceso/i }).click();
   const recoveryEmail = page.getByLabel('Correo asociado a tu cuenta');
@@ -701,12 +701,19 @@ for (const locale of ['es', 'en']) {
     const dialog = page.getByRole('dialog', { name: en ? 'Recover access' : 'Recuperar acceso' });
     await expect(dialog).toBeVisible();
     await expect(page).toHaveURL(/redirect=%2Ffans&recover=1/);
-    await page.route('**/v1/password-reset', route => route.abort('failed'));
+    let requestedDestination;
+    await page.route(/\/v1\/password-reset(?:\?.*)?$/, route => {
+      requestedDestination = new URL(route.request().url()).searchParams.get('redirect');
+      expect(route.request().postDataJSON()).toEqual({ email: 'locale@persona.test' });
+      return route.abort('failed');
+    });
     const email = dialog.getByLabel(en ? 'Account email' : 'Correo asociado a tu cuenta');
     await email.fill('locale@persona.test');
     await email.press('Enter');
     await expect(dialog.getByRole('alert')).toContainText(en ? 'Check your connection and try again' : 'Revisa tu conexión e inténtalo de nuevo');
     await expect(email).toHaveValue('locale@persona.test');
+    expect(requestedDestination).toBe('/fans');
+    await expect(page.locator('#root')).toHaveAttribute('aria-hidden', 'true');
     await expectNoSeriousAxeViolations(page, testInfo);
     await page.screenshot({ path: testInfo.outputPath(`recovery-${locale}.png`), fullPage: true });
     await dialog.getByRole('button', { name: en ? 'Close' : 'Cerrar', exact: true }).click();

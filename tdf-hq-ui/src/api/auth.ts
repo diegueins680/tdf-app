@@ -2,6 +2,7 @@ import type { components } from './generated/types';
 import { extractErrorDetails } from './errorMessage';
 import { resolveApiBase } from '../config/apiBase';
 import type { OnboardingIntent } from './session';
+import { sanitizeRedirectPath } from '../utils/loginRouting';
 
 const API_BASE = resolveApiBase();
 const SERVICE_STARTING_MESSAGE = 'El servicio está arrancando. Intenta de nuevo en unos segundos.';
@@ -140,8 +141,10 @@ export async function googleLoginRequest(payload: GoogleLoginRequestDTO): Promis
   });
 }
 
-export async function requestPasswordReset(email: string): Promise<void> {
-  const res = await authFetch(`${API_BASE}/v1/password-reset`, {
+export async function requestPasswordReset(email: string, redirect?: string | null): Promise<void> {
+  const destination = sanitizeRedirectPath(redirect);
+  const query = destination ? `?${new URLSearchParams({ redirect: destination }).toString()}` : '';
+  const res = await authFetch(`${API_BASE}/v1/password-reset${query}`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },

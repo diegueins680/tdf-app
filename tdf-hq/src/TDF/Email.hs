@@ -6,6 +6,7 @@ module TDF.Email
   , sendAccountCreatedEmail
   , accountCreatedEmailContent
   , sendPasswordResetEmail
+  , passwordResetLink
   , sendCourseRegistrationEmail
   , sendCoursePaymentReminderEmail
   , sendMarketplaceOrderEmail
@@ -20,7 +21,8 @@ module TDF.Email
   ) where
 
 import           Control.Exception        (SomeException, throwIO, try)
-import           Data.Char                (isAlphaNum)
+import           Data.Char                (isAlphaNum, isControl)
+import           Network.HTTP.Types.URI   (urlEncode)
 import qualified Data.ByteString.Base64.URL  as B64
 import           Data.Maybe              (fromMaybe)
 import           Data.Text                (Text)
@@ -116,17 +118,14 @@ sendPasswordResetEmail
   -> Text   -- ^ recipient email
   -> Text   -- ^ reset token
   -> Maybe Text -- ^ optional app URL
+  -> Maybe Text -- ^ optional local return destination
   -> IO ()
-sendPasswordResetEmail Nothing _ _ _ _ =
+sendPasswordResetEmail Nothing _ _ _ _ _ =
   putStrLn "[Email] SMTP not configured; skipped password-reset email."
-sendPasswordResetEmail (Just cfg) name email token mAppUrl = do
+sendPasswordResetEmail (Just cfg) name email token mAppUrl redirect = do
   let subject   = "Restablecer tu contraseña de TDF Records"
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
-      baseUrl   = resolveAppBase mAppUrl
-      sanitizedBase =
-        let trimmed = T.dropWhileEnd (== '/') baseUrl
-        in if T.null trimmed then baseUrl else trimmed
-      resetLink = sanitizedBase <> "/reset?token=" <> token
+      resetLink = passwordResetLink mAppUrl token redirect
       preheader = "Usa tu token para restablecer la contraseña de tu cuenta."
       bodyLines =
         [ "Recibimos una solicitud para restablecer tu acceso a TDF Records HQ."
@@ -137,6 +136,26 @@ sendPasswordResetEmail (Just cfg) name email token mAppUrl = do
       toAddr = Address (Just name) email
       mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just resetLink)
   sendMailWithLogging cfg toAddr subject mail
+
+-- Keep the trusted configured origin. Encode the destination as data; the web
+-- client revalidates it and checks the recovered account's route permissions.
+passwordResetLink :: Maybe Text -> Text -> Maybe Text -> Text
+passwordResetLink mAppUrl token redirect =
+  T.dropWhileEnd (== '/') (resolveAppBase mAppUrl)
+    <> "/reset?token=" <> encodeQuery token
+    <> maybe "" (\destination -> "&redirect=" <> encodeQuery destination) safeDestination
+  where
+    encodeQuery = TE.decodeUtf8 . urlEncode True . TE.encodeUtf8
+    safeDestination = do
+      raw <- redirect
+      let destination = T.strip raw
+      if not (T.any isControl raw)
+          && T.length destination <= 500
+          && "/" `T.isPrefixOf` destination
+          && not ("//" `T.isPrefixOf` destination)
+          && not (T.any (\c -> c == '\\' || isControl c) destination)
+        then Just destination
+        else Nothing
 
 sendCourseRegistrationEmail
   :: Maybe EmailConfig

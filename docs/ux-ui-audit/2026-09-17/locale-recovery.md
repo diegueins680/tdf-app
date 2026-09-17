@@ -11,3 +11,26 @@ Evidencia inicial: 9/9 pruebas de componentes con i18next real; typecheck y lint
 Rollback: revertir sólo este incremento web; no modifica esquema, permisos ni API. Pruebas de regresión: formularios, consentimiento Google, sesión, rutas seguras, textos públicos y recuperación. Publicación pendiente de gates exactos/revisión y coordinación del despliegue concurrente.
 
 Actualización de verificación: fuente `f36a6391c`, bundle local de producción, `npm run test:e2e:web -- --grep PW-PER-LOCALE`: **10/10 aprobados**, cinco perfiles, 1,6 minutos, sin ampliar timeouts ni cambiar assertions. Log seleccionado en evidence/locale-production-browser.log. La repetición hospedada de CI [35273466427](https://github.com/diegueins680/tdf-app/actions/runs/35273466427) pasó: 66 casos aprobados y 10 omitidos explícitamente, incluyendo los diez de idioma/recuperación. El primer fallo hospedado ocurrió en npm ci/node-datachannel antes de ejecutar pruebas; repetir sólo jobs fallidos resolvió esa instalación. Dos fallos locales previos en WebKit se conservan como evidencia histórica; el pase actual no demuestra ausencia de intermitencia en todas las condiciones. Todos los gates aplicables están SUCCESS; merge/producción retenidos por coordinación.
+
+### Continuación: destino en el correo de recuperación
+
+El hilo https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042084948
+confirmó que conservar `/login?redirect=…` no conservaba ese destino en el correo.
+Se añade un parámetro query opcional `redirect` a `/v1/password-reset`; el cuerpo
+sigue siendo `{email}`. El servidor conserva exclusivamente destinos locales
+acotados y los codifica dentro del enlace generado. La pantalla de reset mantiene
+la validación del destino y los permisos de la nueva sesión. No se concede acceso
+por conocer un enlace ni se cambia la política de tokens. Los clientes antiguos
+siguen funcionando. Desplegar el backend antes del cliente para completar el
+round trip; revertir el cliente es compatible y no requiere revertir datos.
+
+Verificación local en curso: API/rutas/login 30/30; se corrigió una expectativa del
+harness porque URL codifica el fragmento Unicode. La primera corrida de navegador
+pasó 8/10; dos scans Chromium incluyeron el fondo atenuado del modal. Se añadió
+la precondición verificable `#root[aria-hidden=true]` antes de axe, sin excluir reglas
+ni elementos: diagnóstico Chromium 2/2. Se mantiene la corrida inicial; la matriz
+final y compilación Haskell siguen pendientes. No se afirma entrega SMTP real.
+
+Cierre local: matriz de producción 10/10; API/rutas/login 30/30; binario de pruebas
+construido con Stack/GHC 9.10.3: passwordResetLink 5 ejemplos y 100 casos QuickCheck,
+cero fallos. Compilación completa y gates del head publicado siguen pendientes.

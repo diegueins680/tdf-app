@@ -45,14 +45,15 @@ sendAccountCreated svc name email =
     email
     (esAppBase svc)
 
-sendPasswordReset :: EmailService -> Text -> Text -> Text -> IO ()
-sendPasswordReset svc name email token =
+sendPasswordReset :: EmailService -> Text -> Text -> Text -> Maybe Text -> IO ()
+sendPasswordReset svc name email token redirect =
   Email.sendPasswordResetEmail
     (esConfig svc)
     name
     email
     token
     (esAppBase svc)
+    redirect
 
 sendCourseRegistration :: EmailService -> Text -> Text -> Text -> Text -> Text -> IO ()
 sendCourseRegistration svc name email courseTitle landingUrl datesSummary =

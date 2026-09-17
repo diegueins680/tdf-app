@@ -427,7 +427,7 @@ type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] (Sessio
 
 type SignupAPI = ReqBody '[JSON] SignupRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
-type PasswordResetAPI = ReqBody '[JSON] PasswordResetRequest :> Post '[JSON] NoContent
+type PasswordResetAPI = QueryParam "redirect" Text :> ReqBody '[JSON] PasswordResetRequest :> Post '[JSON] NoContent
 
 type PasswordResetConfirmAPI = ReqBody '[JSON] PasswordResetConfirmRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 

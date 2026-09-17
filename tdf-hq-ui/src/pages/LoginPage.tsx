@@ -272,7 +272,7 @@ export default function LoginPage() {
     mutationFn: googleLoginRequest,
   });
   const resetMutation = useMutation({
-    mutationFn: (email: string) => requestPasswordReset(email),
+    mutationFn: (email: string) => requestPasswordReset(email, redirectPath),
   });
   const signupMutation = useMutation({
     mutationFn: signupRequest,

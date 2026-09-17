@@ -483,6 +483,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
+  /v1/password-reset:
+    post:
+      summary: Request an account recovery email
+      operationId: requestPasswordReset
+      security: []
+      parameters:
+        - name: redirect
+          in: query
+          required: false
+          description: Optional local destination, revalidated against the recovered account's permissions. Invalid destinations are ignored.
+          schema:
+            type: string
+            maxLength: 500
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '204':
+          description: Request processed without revealing whether the account exists or email delivery succeeded.
+        '400':
+          description: Invalid request email.
   /login:
     post:
       summary: Login with username or email
