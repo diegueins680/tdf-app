@@ -556,28 +556,6 @@
       "reviewed": true
     },
     {
-      "id": "a950e16c3a9f40f18fa3",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "directory-privacy-repair-2026-09-17",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 103,
-        "consumerCount": 36,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
-      }
-    },
-    {
       "id": "3391a96825357d78f794",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -13672,25 +13650,6 @@
       "reviewed": true
     },
     {
-      "id": "82e377af11c96be6a75a",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "artist-self-service-2026-09-16",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 103
-      }
-    },
-    {
       "id": "0886e6835c7f5c533d9c",
       "classification": "security-system-registry",
       "disposition": "persisted-registry-with-deny-by-default-code-mirror",
@@ -13834,6 +13793,25 @@
         "kind": "literal-union",
         "name": "SubjectKind",
         "valueCount": 2
+      }
+    },
+    {
+      "id": "cedbc4f84ceef2965f77",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Ordered migration identifiers and script paths remain deployment execution mechanics, with applied revisions persisted in the ledger. This manifest preserves all 103 main entries unchanged and adds the independently reviewed artist policy after them. Directory privacy view composition and artist policy touch independent objects; both are retained with unchanged SQL. All 104 introduction SHAs are ancestors containing their registered path.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-directory-integration-2026-09-17",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 104
       }
     }
   ]
