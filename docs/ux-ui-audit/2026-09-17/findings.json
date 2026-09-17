@@ -189,7 +189,7 @@
     ],
     "acceptanceCriteria": "Replacement link opens recovery directly; valid destination survives; unsafe targets remain rejected by existing routing validation; closing returns to usable login; failed request retains email with actionable feedback.",
     "verificationMethod": "PW-PER-LOCALE ES/EN across five browser/device profiles and existing loginRouting tests.",
-    "releaseStatus": "Implemented; eight profiles/cases passed after contrast fix, two WebKit close checks initially intermittent; isolated WebKit rerun passed; final production bundle verification pending."
+    "releaseStatus": "Implemented and locally verified: bilingual production-bundle browser 10/10, hosted CI applicable gates SUCCESS on f36a6391c. Not merged/deployed; independent review and deployment coordination required."
   },
   {
     "id": "UX-260917-011",
@@ -207,6 +207,6 @@
     "dependencies": [],
     "acceptanceCriteria": "Helper text meets 4.5:1 in light/dark themes across desktop/tablet/phone and selected browsers; no weakened axe checks.",
     "verificationMethod": "Axe plus screenshot inspection; include signup with intent and long ES/EN policy copy.",
-    "releaseStatus": "Implemented; previously failing tablet cases pass; final full verification pending."
+    "releaseStatus": "Implemented and locally verified: bilingual production-bundle browser 10/10, hosted CI applicable gates SUCCESS on f36a6391c. Not merged/deployed; independent review and deployment coordination required."
   }
 ]
