@@ -263,6 +263,7 @@ test-suite tdf-hq-test
   hs-source-dirs:    test, src
   main-is:           Spec.hs
   other-modules:
+    TDF.Commerce.WorkerLoggingSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin

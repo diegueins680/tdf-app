@@ -84,6 +84,28 @@ psql "${database_url}" -X -v ON_ERROR_STOP=1 \
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 
+# Both historical orders occurred: late registration can apply an older view
+# after a newer privacy repair is already recorded in the immutable ledger.
+privacy_repair="${repo_root}/tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql"
+for older_view in \
+  2026-09-07_directory_event_visibility_and_favorite_evidence \
+  2026-09-09_music_directory_suppressed_event_privacy; do
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 \
+    -f "${repo_root}/tdf-hq/sql/${older_view}.sql" >/dev/null
+  if node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+    | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null 2>&1; then
+    echo "Schema gate accepted a view missing one privacy boundary: ${older_view}" >&2
+    exit 1
+  fi
+  # A fresh migration entry repairs either ledger history; retries are safe.
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${privacy_repair}" >/dev/null
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${privacy_repair}" >/dev/null
+  node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+    | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 \
+    -f "${repo_root}/tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql" >/dev/null
+done
+
 legacy_rows="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM ddex_partner WHERE cardinality(allowed_versions) <> 0;')"
 test "${legacy_rows}" = "0"
 
