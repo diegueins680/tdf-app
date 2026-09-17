@@ -1,0 +1,43 @@
+Command: stack --stack-yaml tdf-hq/stack.yaml test --fast
+Observed exit: 0
+Full raw local log SHA256: b6cb790e61681475bf4af9f2b11e1cf65ca4badf3478216d6c687a8e5abfbb75
+
+Final output:
+  records blank provider message ids as failed while allocating a safe fallback id [✔]
+  does not echo malformed recipient text into generated fallback external ids [✔]
+  allocates distinct fallback external ids for repeated blank-id sends at the same timestamp [✔]
+  applies reply outcomes only to incoming reply targets when linked by message id [✔]
+
+Finished in 13.0439 seconds
+2542 examples, 0 failures
+
+
+
+tdf-hq> Test suite tdf-hq-test passed
+Completed 2 action(s).
+
+Final Haskell source SHA256:
+b1e939e3902c3a445ff3a9c2a6b3ea484bbccb5bbe42811f7e5eb7bb515fda61  tdf-hq/src/TDF/Social/Chat.hs
+f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f  tdf-hq/src/TDF/Social/Session.hs
+96e8946646e4dc4f45c8733220a5e4df9a169fe34417e61b235fcee8b281c8b5  tdf-hq/src/TDF/API/Chat.hs
+11c2d2024280574b3209f4af0e3dd96febfea0ade9f2164ab8d76967a899140f  tdf-hq/src/TDF/Server.hs
+3a3ffc6c0979713db0ff76ea9af80ac384f50181f54eca8fe297c57ef57000b5  tdf-hq/src/TDF/DTO.hs
+
+Both test and application TDF/Social/Chat.o timestamps were later than the final Chat.hs edit.
+
+Final incremental verification at 44a1c7bededf0ba4b54068d482667ac24299f8e4:
+Command: stack --stack-yaml tdf-hq/stack.yaml test --fast
+Observed exit: 0
+Raw final log SHA256: 70c172c10f7dcd74f3b53e890c90c8b6f0550cffdf7066075048e04fe13028f6
+  records blank provider message ids as failed while allocating a safe fallback id [✔]
+  does not echo malformed recipient text into generated fallback external ids [✔]
+  allocates distinct fallback external ids for repeated blank-id sends at the same timestamp [✔]
+  applies reply outcomes only to incoming reply targets when linked by message id [✔]
+
+Finished in 25.6312 seconds
+2542 examples, 0 failures
+
+
+
+tdf-hq> Test suite tdf-hq-test passed
+Completed 2 action(s).

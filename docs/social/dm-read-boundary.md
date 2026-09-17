@@ -153,7 +153,12 @@ rebuild or cache invalidation. No new infrastructure or production experiment.
 - **Satisfied:** actual bearer HTTP/SQL suite: **93 examples, zero failures**;
   11 new adapter examples plus the 82 existing social/session examples.
   Evidence: `evidence/dm-read-boundary/http.txt`.
-- **Pending:** final full Stack build/tests and current-head CI.
+- **Satisfied:** full local Stack build/test wrapper exited 0, **2,542 examples,
+  zero failures**; source/log hashes in `evidence/dm-read-boundary/backend-result.txt`.
+- **Satisfied:** repaired complete-schema Docker PostgreSQL 17.10 fixture, exit 0.
+- **Satisfied:** [social CI](https://github.com/diegueins680/tdf-app/actions/runs/35052835705)
+  at `44a1c7bededf0ba4b54068d482667ac24299f8e4`; both model/SQL and client jobs passed.
+- **Pending:** full CI at that SHA; earlier/partial check snapshots remain labeled.
 - **Failed/incomplete for overall scope:** profile/search/notification/media policy,
   global-role/delegation lifecycle, message idempotency/polling gap qualification,
   thread pagination, native/full-app journeys and outcome instrumentation.
@@ -172,3 +177,10 @@ initialization server. The [official image entrypoint](https://github.com/docker
 TCP and shuts it down before the final server. The harness now waits for TCP and
 asserts readiness after its bounded wait, matching the other social fixtures. No
 assertion, migration or timeout was weakened. Hosted rerun remains separately tracked.
+
+### Completed client baseline comparison
+
+The supplemental test-inclusive TypeScript command exited 2 on both the parent web
+tree (44a1c7bed) and the chat-cache candidate. All 134 diagnostic lines are
+byte-identical; these failures predate #391. The application typecheck and focused
+client tests passed independently. See [comparison evidence](evidence/chat-client-baseline/comparison.txt).

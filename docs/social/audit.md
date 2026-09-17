@@ -120,3 +120,15 @@ Hosted qualification is pending; local Docker PG17 failed environmentally.
 Parent #409 full CI35129595035 completed successfully. Historical notification
 serving/counts, fan-follow GET, explicit profile publication/privacy and previously
 listed rollout blockers remain open. No deployment/activation is authorized.
+### Legacy chat continuation — 2026-09-15
+
+PR #390 covers all four existing ChatAPI operations without changing their wire
+DTOs. `TDF.API.Chat` shares the contract with the HTTP fixture; `TDF.Social.Chat`
+centralizes policy selection/session checks/error mapping; the additive chat SQL
+checks eligibility before previews, fields and cursor errors. Eleven new bearer
+HTTP cases plus the existing 82 session/social cases passed. PR #391 scopes the
+existing ChatPage/useChatUnreadCount/read-state helpers by account and withdraws
+stale display data on error. No managed-entity, generic profile, notification or
+media endpoint is implicitly covered by these chat-specific checks. Full-schema
+PostgreSQL 16.10 native and 17.10 Docker fixtures passed; legacy readers remain a
+cutover blocker, while the retained #386 trigger protects legacy writers.
