@@ -23,6 +23,7 @@ module TDF.Email
   ) where
 
 import           Control.Exception        (SomeException, throwIO, try)
+import           Control.Monad            (when)
 import           Data.Char                (isAlphaNum, isControl)
 import           Network.HTTP.Types.URI   (urlEncode)
 import qualified Data.ByteString.Base64.URL  as B64
@@ -43,7 +44,8 @@ import qualified Network.Mail.SMTP        as SMTP
 import           System.Entropy           (getEntropy)
 import           System.IO                (stderr)
 
-import           TDF.Config               (EmailConfig(..), defaultAppBase, resolveAppBase)
+import           TDF.Config               (EmailConfig(..), defaultAppBase, resolveAppBase, isUndeliverableRecipient)
+import           TDF.Email.Headers        (prepareOutgoingMail)
 import           TDF.Internationalization (currencyDecimalPlaces, currencyDefinition, formatMoney)
 
 generateTempPassword :: IO Text
@@ -335,6 +337,11 @@ sendTestEmail (Just cfg) name email subject bodyLines mCtaUrl = do
 -- | Send an email and record a small audit trail for admins.
 sendMailWithLogging :: EmailConfig -> Address -> Text -> Mime.Mail -> IO ()
 sendMailWithLogging cfg toAddr _subject mail = do
+  -- Fail before opening SMTP. This list contains only reviewed delivery failures,
+  -- not marketing preferences, which must not suppress essential account mail.
+  when (isUndeliverableRecipient cfg (addressEmail toAddr)) $
+    ioError (userError "Email recipient has a confirmed delivery failure; address review required")
+  (messageId, outgoing) <- prepareOutgoingMail mail
   let host = T.unpack (smtpHost cfg)
       port = fromIntegral (smtpPort cfg)
       user = T.unpack (smtpUsername cfg)
@@ -344,13 +351,12 @@ sendMailWithLogging cfg toAddr _subject mail = do
         | smtpUseTLS cfg                = "STARTTLS"
         | otherwise                     = "PLAIN"
       sendAction
-        | modeLabel == "SMTPS"    = SMTP.sendMailWithLoginTLS' host port user pass mail
-        | modeLabel == "STARTTLS" = SMTP.sendMailWithLoginSTARTTLS' host port user pass mail
-        | otherwise               = SMTP.sendMailWithLogin' host port user pass mail
-      toEmail = T.unpack (addressEmail toAddr)
+        | modeLabel == "SMTPS"    = SMTP.sendMailWithLoginTLS' host port user pass outgoing
+        | modeLabel == "STARTTLS" = SMTP.sendMailWithLoginSTARTTLS' host port user pass outgoing
+        | otherwise               = SMTP.sendMailWithLogin' host port user pass outgoing
   let logLine = T.concat
-        [ "[Email] Sending registration email to "
-        , T.pack toEmail
+        [ "[Email] smtp_attempt message_id="
+        , messageId
         , " via "
         , smtpHost cfg
         , ":"
@@ -364,15 +370,14 @@ sendMailWithLogging cfg toAddr _subject mail = do
   case result of
     Left err -> do
       let errLine = T.concat
-            [ "[Email] Failed to send to "
-            , T.pack toEmail
-            , ": "
-            , T.pack (show (err :: SomeException))
+            [ "[Email] smtp_error delivery=unknown message_id="
+            , messageId
             ]
       BS.hPutStrLn stderr (TE.encodeUtf8 errLine)
-      throwIO err
+      throwIO (err :: SomeException)
     Right () ->
-      BS.putStrLn (TE.encodeUtf8 ("[Email] Sent registration email to " <> T.pack toEmail))
+      -- SMTP acceptance is not evidence of delivery or inbox placement.
+      BS.putStrLn (TE.encodeUtf8 ("[Email] smtp_accepted message_id=" <> messageId))
 
 buildMail :: EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail
 buildMail = buildMailLocalized "es" "Ver detalles"

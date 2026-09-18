@@ -106,6 +106,7 @@ executable tdf-hq-exe
     TDF.DTO.SocialSyncDTO
     TDF.Distribution.StateMachine
     TDF.Email
+    TDF.Email.Headers
     TDF.Handlers.InputList
     TDF.Invoice.SRI
     TDF.Internationalization
@@ -277,6 +278,7 @@ test-suite tdf-hq-test
     TDF.CourseIdentitySpec
     TDF.MarketplaceIdentitySpec
     TDF.Commerce.WorkerLoggingSpec
+    TDF.EmailHeadersSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
@@ -372,6 +374,7 @@ test-suite tdf-hq-test
     TDF.DTO.SocialSyncDTO
     TDF.Distribution.StateMachine
     TDF.Email
+    TDF.Email.Headers
     TDF.Email.Service
     TDF.Handlers.InputList
     TDF.Invoice.SRI
