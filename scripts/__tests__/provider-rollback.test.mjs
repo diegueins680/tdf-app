@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseArgs, recoverReleaseMachines, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
+import { minimumIdentityCommit, parseArgs, recoverReleaseMachines, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
 
 const legacy = '2f01b20b0c2a2e2088570c3dc5deba6197266452';
 const modern = '5c11577a5d31f079b3e070a7810a6b04a48d99f4';
@@ -33,6 +33,39 @@ test('missing Git history and invalid source identifiers fail closed', async () 
 
 test('earlier releases retain their existing rollback behavior', async () => {
   assert.equal(await withCompatibleRollback({ migrations: [] }, legacy, () => 'old-policy', () => assert.fail('no provider floor')), 'old-policy');
+});
+
+test('contact identity releases reject a provider-safe image before any recovery deploy', async () => {
+  const floors = [
+    ['2026-09-18_live_intake_idempotency', '497286e82ca4d6a52cdf2b52e7fa8d65e92e0711'],
+    ['2026-09-18_course_identity_requests', '418c0da63a8a95639866f1e92619e6a00b7640c4'],
+    ['2026-09-18_trial_identity_requests', 'd7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e'],
+    ['2026-09-18_ads_identity_requests', 'd7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e'],
+  ];
+  for (const [id, requiredCommit] of floors) {
+    const target = { migrations: [...context.migrations, { id }] };
+    const candidateAncestry = async (required, candidate) => {
+      assert.equal(required, requiredCommit);
+      return candidate === requiredCommit;
+    };
+    let writes = 0;
+    const mailOnly = 'ab9bbacc9da845b6bfe70ac3fda2ace44f17c918';
+    await assert.rejects(withCompatibleRollback(target, mailOnly, () => { writes++; }, candidateAncestry), /request receipts/);
+    assert.equal(writes, 0);
+    assert.equal(await withCompatibleRollback(target, requiredCommit, () => 'forward recovery', candidateAncestry), 'forward recovery');
+  }
+});
+
+test('combined migration requirements cannot weaken the latest identity recovery floor', () => {
+  const earlier = ['2026-09-18_provider_subject_identity', '2026-09-18_live_intake_idempotency', '2026-09-18_course_identity_requests'];
+  for (let mask = 0; mask < 8; mask++) {
+    const migrations = earlier.filter((_, index) => mask & (1 << index)).map(id => ({ id }));
+    for (const id of ['2026-09-18_trial_identity_requests', '2026-09-18_ads_identity_requests']) {
+      for (const order of [[{ id }, ...migrations], [...migrations, { id }]]) {
+        assert.equal(minimumIdentityCommit({ migrations: order }), 'd7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e');
+      }
+    }
+  }
 });
 
 test('a compatible immutable fallback replaces only an unsafe prior image', async () => {

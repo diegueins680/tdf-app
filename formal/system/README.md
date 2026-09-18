@@ -22,6 +22,7 @@ Historical memory and earlier reports are leads, not evidence of the live baseli
 | SYS-D02 | Formal workflow filters omit `tdf-hq/src`, web/mobile/config paths modeled by its runner; no retained run manifest | Every PR/main change revalidates; fresh source/tool/log identity; failed/incomplete/stale runs never pass | Existing workflow extended, weekly rerun, evidence admission regressions |
 | SYS-D03 | Actual `transitionPayment` accepts wrapped negative capture/refund totals | Positive increment within exact remaining balance; all other increments rejected; safe Int64 update | Accepted embedded ADR-0200 cumulative bounds and ADR 0102 minor units; source-derived solver analysis, actual-module regressions, backend CI and guarded release |
 | SYS-D04 | `ledgerBalances [(USD,maxBound),(USD,maxBound),(USD,2)]` returns True | Exact sum per currency, independent of bounded accumulation overflow | Accepted ADR 0104; Integer accumulation, regression. Helper has no discovered production callers; do not claim this defect corrupted persisted ledger rows |
+| SYS-D05 | During release preparation, actual rollback classification admits mail-only `ab9bbacc9` for the full identity target, despite approved no-adoption/no-replay-loss contracts | Preflight and recovery reject binaries predating applicable identity implementations; require verified forward recovery | Necessary release dependency discovered after initial scope; [identity-recovery.md](identity-recovery.md), actual guard regressions and existing bounded recovery model |
 
 D03/D04 were added during initial implementation inspection because they violate approved monetary
 integrity, not because of a future roadmap feature. PostgreSQL already constrains captured/refunded
@@ -29,6 +30,8 @@ amounts to be nonnegative; D03 can produce a rejected UPDATE/transaction failure
 successful negative persisted balance. No production financial loss or exploit is established.
 No schema change, data cleanup, provider activation, real charge/refund or mobile feature is needed
 for these repairs. Additional confirmed defects require a recorded scope addition.
+SYS-D05 is that recorded addition: deployment of this integrated target would otherwise retain
+an automatic recovery path that violates its already-approved identity contracts.
 
 Call-site qualification: `transitionPayment` is called by the implemented
 `PaymentIntentStore.transitionPaymentIntent` adapter, but no current HTTP/worker caller of that

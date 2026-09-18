@@ -3,6 +3,18 @@
   "scope": "Initial confirmed correction scope; domain requirements and explicit gaps remain in inventory.json and README.md",
   "requirements": [
     {
+      "id": "SYS-RELEASE-001",
+      "statement": "Recovery after deployment must preserve the target's applicable provider and contact identity protections, including retained request receipts and replay behavior.",
+      "authority": "approved",
+      "source": "docs/identity/intake-prevention.md; docs/identity/course-prevention.md; docs/identity/guest-booking-prevention.md; docs/identity/trial-prevention.md",
+      "property": "admit recovery iff candidate includes the required identity implementation; unsafe prior requires verified forward recovery before any release mutation",
+      "contract": "formal/system/identity-recovery.md",
+      "implementation": ["scripts/production-release.mjs"],
+      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted.",
+      "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image release plan/preflight/report",
+      "status": "implemented-awaiting-release-evidence"
+    },
+    {
       "id": "SYS-VERIFY-001",
       "statement": "Checked TLA+ translation must be reproducible byte-for-byte from its PlusCal source using the pinned translator before model results are admitted.",
       "authority": "approved",
