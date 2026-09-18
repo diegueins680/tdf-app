@@ -205,6 +205,12 @@ export default function DirectorySearchPage() {
       : favorites.isError
         ? 'error'
         : 'ready';
+  const refreshFavorites = async (): Promise<boolean> => {
+    const ownerPartyId = session?.partyId;
+    if (ownerPartyId === undefined || !isActiveParty(ownerPartyId)) return false;
+    const result = await favorites.refetch();
+    return result.isSuccess && isActiveParty(ownerPartyId);
+  };
   const updateFavoriteCache = (
     expectedPartyId: number,
     item: DirectorySearchItem,
@@ -387,7 +393,7 @@ export default function DirectorySearchPage() {
           {sponsored.length > 0 && (
             <Box component="section" aria-labelledby="sponsored-heading">
               <Typography id="sponsored-heading" variant="overline">Patrocinados</Typography>
-              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout="list" isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={() => { if (session?.partyId && isActiveParty(session.partyId)) void favorites.refetch(); }} isActiveParty={isActiveParty} />)}</Stack>
+              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout="list" isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={refreshFavorites} isActiveParty={isActiveParty} />)}</Stack>
             </Box>
           )}
 
@@ -408,7 +414,7 @@ export default function DirectorySearchPage() {
           {view === 'map' && items.length > 0 ? <OpenStreetMapResults items={items} /> : null}
           {view !== 'map' && items.length > 0 ? (
             <Box sx={{ display: 'grid', gridTemplateColumns: view === 'grid' ? { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' } : '1fr', gap: 2 }}>
-              {items.map((item) => <ResultCard key={`${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout={view === 'grid' ? 'grid' : 'list'} isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={() => { if (session?.partyId && isActiveParty(session.partyId)) void favorites.refetch(); }} isActiveParty={isActiveParty} />)}
+              {items.map((item) => <ResultCard key={`${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout={view === 'grid' ? 'grid' : 'list'} isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={refreshFavorites} isActiveParty={isActiveParty} />)}
             </Box>
           ) : null}
           {results.hasNextPage && <Button variant="outlined" size="large" onClick={() => { void results.fetchNextPage(); }} disabled={results.isFetchingNextPage} sx={{ alignSelf: 'center' }}>{results.isFetchingNextPage ? 'Cargando…' : 'Ver más resultados'}</Button>}
@@ -434,7 +440,7 @@ function ResultCard({
   isFavorite: boolean;
   favoriteAvailability: 'unauthenticated' | 'loading' | 'error' | 'ready';
   onFavoriteChanged: (partyId: number, item: DirectorySearchItem, saved: boolean) => void;
-  onRefreshFavorites: () => void;
+  onRefreshFavorites: () => Promise<boolean>;
   isActiveParty: (partyId: number) => boolean;
 }) {
   const path = resultPath(item);
@@ -548,7 +554,7 @@ function ResultCard({
           )}
         </CardActions>
         {favorite.isError ? (
-          <Alert severity="error" sx={{ mx: 2, mb: 2 }} action={<Button onClick={onRefreshFavorites}>Consultar guardados</Button>}>
+          <Alert severity="error" sx={{ mx: 2, mb: 2 }} action={<Button onClick={() => { void onRefreshFavorites().then((refreshed) => { if (refreshed && partyId !== undefined && isActiveParty(partyId)) favorite.reset(); }); }}>Consultar guardados</Button>}>
             No pudimos confirmar el cambio de este resultado. Vuelve a consultar tus guardados antes de intentarlo otra vez.
           </Alert>
         ) : null}

@@ -187,11 +187,12 @@ describe('DirectorySearchPage', () => {
     }
   });
 
-  it('offers an authoritative refresh after an ambiguous favorite failure', async () => {
+  it.each([false, true])('offers an authoritative refresh after an ambiguous favorite failure (refresh fails first: %s)', async (failRefreshFirst) => {
     sessionFixture = { partyId: 42 };
     searchMock.mockResolvedValue(eventSearchResponse);
     addFavoriteMock.mockRejectedValueOnce(new Error('Connection interrupted after dispatch'));
     favoritesMock.mockResolvedValueOnce([]).mockResolvedValue([{ targetKind: 'event', targetId: '42', createdAt: '', result: null }]);
+    if (failRefreshFirst) favoritesMock.mockRejectedValueOnce(new Error('Synthetic refresh unavailable'));
     const container = document.createElement('div'); document.body.appendChild(container);
     const root = createRoot(container);
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -208,7 +209,13 @@ describe('DirectorySearchPage', () => {
       });
       expect(container.textContent).not.toContain('Tu cuenta no cambió');
       fireEvent.click(refresh);
+      if (failRefreshFirst) {
+        await waitFor(() => expect(container.textContent).toContain('No pudimos consultar tus guardados'));
+        expect(container.textContent).toContain('No pudimos confirmar el cambio');
+        fireEvent.click(refresh);
+      }
       await waitFor(() => expect(container.querySelector('[aria-label="Quitar Synthetic Event de tus guardados"]')?.getAttribute('aria-pressed')).toBe('true'));
+      await waitFor(() => expect(container.textContent).not.toContain('No pudimos confirmar el cambio'));
       expect(addFavoriteMock).toHaveBeenCalledTimes(1);
       expect(captureFirstValueOnceMock).not.toHaveBeenCalled();
     } finally {

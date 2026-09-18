@@ -68,3 +68,14 @@ No migration, API or mobile contract change. Merge requires independent review a
 applicable checks. Cloudflare publication and actual production acceptance remain pending.
 The broader English directory content and other not-yet-executed directory failure states
 remain explicit coverage work; this increment does not claim to complete them.
+
+## Review follow-up: close the recovered error state
+
+Review4046711715 identified that a successful query refresh did not reset the separate
+mutation error. `refreshFavorites` now returns success only for an authoritative response
+owned by the same occurrence; the card resets its error only for that receipt. A failed
+refresh keeps the error and retry action. Nineteen focused component/helper cases pass,
+including both refresh outcomes. Production bundle rebuild:365647gzip/fivepreloads.
+The Spanish branch of the bilingual recovery browser script is also retained as
+`directory-favorite-recovery.spec.mjs` to exercise delayed search, search retry, ambiguous
+save, authoritative refresh and error dismissal. Browser receipt records the final result.
