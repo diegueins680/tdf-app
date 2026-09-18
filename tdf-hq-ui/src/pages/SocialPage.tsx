@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import SocialWorkspace from '../features/social/SocialWorkspace';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
@@ -61,6 +62,7 @@ export default function SocialPage() {
 }
 
 function LegacySocialPage() {
+  const { t } = useTranslation();
   useDocumentTitle('Social');
   const qc = useQueryClient();
   const { session } = useSession();
@@ -448,7 +450,7 @@ function LegacySocialPage() {
                   ) : shareQrError ? (
                     <Typography variant="caption" color="error">{shareQrError}</Typography>
                   ) : (
-                    <CircularProgress size={20} />
+                    <CircularProgress size={20} aria-label={t('auditAccessibility.generatingContactQr')} />
                   )}
                 </Box>
                 <Stack spacing={1} flex={1}>
@@ -562,7 +564,7 @@ function LegacySocialPage() {
               <Alert severity="error">No pudimos cargar sugerencias. Intenta de nuevo.</Alert>
             ) : suggestionsQuery.isLoading ? (
               <Stack direction="row" spacing={1.5} alignItems="center">
-                <CircularProgress size={18} />
+                <CircularProgress size={18} aria-label={t('auditAccessibility.loadingSuggestions')} />
                 <Typography color="text.secondary">Buscando conexiones...</Typography>
               </Stack>
             ) : (suggestionsQuery.data?.length ?? 0) === 0 ? (
@@ -621,7 +623,7 @@ function LegacySocialPage() {
 
           {(followersQuery.isLoading || followingQuery.isLoading || friendsQuery.isLoading || profilesQuery.isLoading) ? (
             <Stack direction="row" alignItems="center" spacing={1.5} sx={{ py: 2 }}>
-              <CircularProgress size={20} />
+              <CircularProgress size={20} aria-label={t('auditAccessibility.loadingNetwork')} />
               <Typography>Cargando red social...</Typography>
             </Stack>
           ) : (

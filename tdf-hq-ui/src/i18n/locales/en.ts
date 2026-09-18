@@ -1,6 +1,22 @@
 import authEntry from './authEntry.en';
 const en = {
   authEntry,
+  auditAccessibility: {
+    loadingActivitySummary: 'Loading summary by user',
+    loadingRecentActivity: 'Loading recent activity',
+
+    loadingProfiles: 'Loading profiles',
+    loadingClassifieds: 'Loading classifieds',
+    loadingApplications: 'Loading applications',
+    loadingInvitations: 'Loading invitations',
+
+    activitySummary: 'Summary by user',
+    recentActivity: 'Recent activity',
+    generatingContactQr: 'Generating contact QR code',
+    loadingSuggestions: 'Loading suggested connections',
+    loadingNetwork: 'Loading social network',
+    workflowBoard: 'Project board',
+  },
   fanHubOnboarding: {
     title: 'First steps',
     managerTitle: 'Useful now',
@@ -261,6 +277,7 @@ const en = {
       promoPending: 'Promo code will be applied at checkout',
     },
     actions: {
+      pay: 'Pay {{amount}}',
       back: 'Back',
       cancel: 'Cancel',
       continue: 'Continue to Payment',
@@ -272,6 +289,7 @@ const en = {
       paymentSubmit: 'Payment submission failed',
       paymentFailed: 'Payment failed',
       paymentUnclear: 'Payment status unclear. Please contact support.',
+      unavailable: 'Payment is unavailable right now. No tickets were reserved. Please try again later.',
       paymentIntent: 'Failed to create payment intent',
       unexpected: 'An unexpected error occurred',
     },

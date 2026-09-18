@@ -173,3 +173,56 @@ invariant counterexample. Component regressions cover the corresponding UI/API
 mechanisms, and an actual isolated HTTP/PostgreSQL browser test checks code-account
 persistence while a different cookie account remains signed in. Optional nested
 null handling is covered by multipart parser contract tests, not this state model.
+
+## Checkout readiness — UX-260917-026 / PR #429
+
+`CheckoutReadiness.tla` models two request slots and generations 0..2, an open/closed
+buyer dialog, arbitrary SDK readiness, cancellation and reopening. TLC1.7.2 checks
+389 generated /221 distinct states (depth9): `ReadyBeforeReservation`,
+`CurrentReservation`, `SingleCurrentFlight`, and `Settles`. Weak fairness for each
+`Resolve` assumes the SDK promise eventually settles, successfully or unsuccessfully.
+An indefinitely stalled SDK/network is not certified. Three negative configurations
+independently remove readiness, current-generation fencing, or single-flight admission;
+each must violate its named safety invariant.
+
+The implementation checks `loadCheckoutStripe()` before `createPaymentIntent`, fences
+both await boundaries using `buyerAttempt`, and rejects duplicate submissions through
+`buyerPending`. Layout cleanup, close, event/tier/session changes invalidate the generation.
+Session changes also clear pending success timers; late payment callbacks are fenced.
+Component regressions exercise null SDK plus retry/input retention, unmount, cancellation
+and duplicate submissions. The model does not prove payment settlement, backend
+idempotency, inventory transactions, session authorization or provider availability.
+Existing event/payment models and backend gates retain their separate scope.
+
+### Cancellation during reservation (review PRRT_kwDOQPdUrM6joQEq)
+
+`CheckoutCancellation.tla` splits SDK readiness from the consequential reservation
+request. With `GuardReservation=TRUE`, TLC1.7.2 explores 13 generated /8 distinct
+states (depth6), checks `NoAbandonedReservation`, `PendingRetainsDialog` and
+`ReservationSettles` under weak fairness of the server response. Cancel is permitted
+before that request. The component sets a synchronous `reservationPending` ref before
+sending and guards every dialog-close path; `reserving` disables the visible button.
+The response reaches the payment form; failure restores cancellation and input.
+
+The reservation negative configuration removes that guard: submit, SDK ready, cancel, successful
+server response is the expected abandoned-reservation counterexample. A component
+regression failed against60d754aab and passes after the guard, exercising button,
+Escape, backdrop and duplicate submission while the API promise is pending.
+This focused model assumes the component remains mounted and the account/context
+remains fixed after dispatch. It does not prove recovery after tab/browser shutdown,
+forced navigation, account switching, ambiguous transport failure, server expiry or
+payment compensation. Existing generation fencing still prevents another context
+from receiving old results; server reservation recovery remains a separate concern.
+
+Review PRRT_kwDOQPdUrM6jofR3 extends the same close guard across elements.submit and
+stripe.confirmPayment. A synchronous child ref also prevents duplicate payment
+submission before React commits processing state; a generation-fenced callback
+updates the parent paymentPending guard. Success reaches confirmation and onSuccess
+once; a rejected payment restores dismissal without reporting success.
+CheckoutCancellation now includes payment/paying/confirmed states, NoLostPayment,
+PaymentSettles and a second negative configuration that specifically permits closing
+during payment confirmation. Removing GuardPayment yields the lost-success trace.
+The additional component regression reproduced duplicate confirmation before the
+fix and verifies Escape/backdrop suppression and one successful order callback;
+another verifies rejection recovery. The fixed-context and eventual-response limits
+above still apply; no real card, provider settlement or background recovery is proved.

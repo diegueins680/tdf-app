@@ -87,11 +87,11 @@
     ],
     "acceptanceCriteria": "All mobile gates pass on published commit; generated API matches parent; native validation and release identify exact same SHA.",
     "verificationMethod": "Old pin 326/327 with timeout; current main 456/456 plus typecheck; remaining checks recorded separately.",
-    "releaseStatus": "Published mobilec63290b is pinned by #406; mobile#90 merged9e478ef; combined successor efa2555 awaits final parent pin and release.",
-    "status": "in progress",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+    "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
-    "mergeStatus": "pending"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
   {
     "id": "UX-260917-005",
@@ -133,11 +133,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Entire arrival/login/signup/reset/navigation journey follows selected es/en, including errors and screen-reader names.",
     "verificationMethod": "Source inventory plus bilingual browser/native task scripts.",
-    "releaseStatus": "Auth/public navigation and Spanish policy translations implemented in #422 successor;20/20 bilingual production-bundle cases and mobile458 tests pass. Whole-platform bilingual coverage remains open.",
-    "status": "in progress",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
+    "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained.",
-    "mergeStatus": "pending"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
   {
     "id": "UX-260917-007",
@@ -155,7 +155,7 @@
     "dependencies": [],
     "acceptanceCriteria": "Anonymous login renders and theme toggle retains input under denied operations/getters; no uncaught errors; no unauthorized session created.",
     "verificationMethod": "Playwright Chromium/Firefox/WebKit, desktop/tablet/phone and axe; exact baseline/final logs.",
-    "releaseStatus": "Merged#421; web deployment437fddd and anonymous phone smoke under denied storage getters confirmed. No claim of exhaustive authenticated coverage.",
+    "releaseStatus": "Merged#421; web deployment437fddd and anonymous phone smoke under denied storage getters confirmed. No claim of exhaustive authenticated coverage. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
     "status": "deployed",
     "implementationStatus": "implemented",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
@@ -201,11 +201,11 @@
     ],
     "acceptanceCriteria": "Canonical clients match and actual synthetic activation succeeds without unauthorized grant or lost Google claim",
     "verificationMethod": "schema generation, server tests, authenticated staged journey",
-    "releaseStatus": "Backend db69e0534e87ffcb9b3ccf3a856a7fc85e839f16 guarded release complete2026-09-18T02:03:41Z; both machine health/version verified; evidence/production-release-db69.json. Web db69 Cloudflare success. Native store and remaining journey acceptance separate.",
-    "status": "in progress",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+    "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
-    "mergeStatus": "pending"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
   {
     "id": "UX-260917-010",
@@ -225,11 +225,11 @@
     ],
     "acceptanceCriteria": "Replacement link opens recovery directly; valid destination survives; unsafe targets remain rejected by existing routing validation; closing returns to usable login; failed request retains email with actionable feedback.",
     "verificationMethod": "PW-PER-LOCALE ES/EN across five browser/device profiles and existing loginRouting tests.",
-    "releaseStatus": "Recovery email local safe redirect implemented;30 API/routing/login tests,5 Hspec/100 QuickCheck and20 combined browser cases pass. #422 final publication/gates/review/deploy pending.",
-    "status": "implemented",
+    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
+    "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
-    "mergeStatus": "pending"
+    "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9"
   },
   {
     "id": "UX-260917-011",
@@ -247,11 +247,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Helper text meets 4.5:1 in light/dark themes across desktop/tablet/phone and selected browsers; no weakened axe checks.",
     "verificationMethod": "Axe plus screenshot inspection; include signup with intent and long ES/EN policy copy.",
-    "releaseStatus": "Semantic helper color fixed;20 production-bundle browser cases pass. #422 successor merge/release pending.",
-    "status": "implemented",
+    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication.",
+    "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
-    "mergeStatus": "pending"
+    "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9"
   },
   {
     "id": "UX-260917-012",
@@ -273,9 +273,9 @@
     ],
     "acceptanceCriteria": "FH-01 through FH-06 in fanhub-onboarding.md; no automatic completion, firstValue fabrication or stale session update; single pending command per generation; accessible retry and conditional liveness.",
     "verificationMethod": "TLC safety/conditional liveness with five negative controls; component/API conformance; 14 isolated browser cases across five profiles; actual backend/native scope remains separate.",
-    "releaseStatus": "Backend db69e0534e87ffcb9b3ccf3a856a7fc85e839f16 guarded release complete2026-09-18T02:03:41Z; both machine health/version verified; evidence/production-release-db69.json. Web db69 Cloudflare success. Native store and remaining journey acceptance separate.",
-    "status": "verification pending",
-    "mergeStatus": "merged #425 as 437fdddea907ba7a20b8626242bf2aed108d6789",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+    "status": "merged",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
     "verificationStatus": "exact-head CI, TLC and PostgreSQL foundation passed; fixtures not live persistence"
   },
   {
@@ -387,11 +387,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Tests reject email/token sentinels and assert autocapture off. **Implemented and unit-verified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "PostHog masks personal data, disables DOM autocapture; SessionContext identifies only opaque party ID. Analytics sentinel tests pass. Network inspection of production analytics still pending.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; PostHog masks personal data, disables DOM autocapture; SessionContext identifies only opaque party ID. Analytics sentinel tests pass. Network inspection of production analytics still pending.",
+    "mergeStatus": "Introduction/successor 7876ed55fa140ef09466a5281e3c40123b6f04e9 verified ancestor of main db69e0534.",
+    "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
   {
     "id": "REC-01",
@@ -411,11 +411,11 @@
     ],
     "acceptanceCriteria": "Desktop/Pixel 7 aborted transport never renders success. **Implemented and runtime-verified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "Recovery transport failure uses localized retry state, retains email/destination and never reports success. Ten current ES/EN production-bundle cases across five profiles pass with intercepted failure.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; Recovery transport failure uses localized retry state, retains email/destination and never reports success. Ten current ES/EN production-bundle cases across five profiles pass with intercepted failure.",
+    "mergeStatus": "Introduction/successor 8d62611de8a786a9643b92c721b34b2ac5d5b521 verified ancestor of main db69e0534.",
+    "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
   {
     "id": "AUTH-01",
@@ -433,11 +433,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Never-resolving signup unit test times out deterministically. **Implemented and unit-verified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "API uses30-second AbortController; actual API unit exercises never-resolving signup and bounded timeout. API/unit conformance passes; localized failures are a newer#422 follow-up.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; API uses30-second AbortController; actual API unit exercises never-resolving signup and bounded timeout. API/unit conformance passes; localized failures are a newer#422 follow-up.",
+    "mergeStatus": "Introduction/successor 8d62611de8a786a9643b92c721b34b2ac5d5b521 verified ancestor of main db69e0534.",
+    "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
   {
     "id": "ONB-01",
@@ -457,11 +457,11 @@
     ],
     "acceptanceCriteria": "Synthetic signup submits correct payload, `marketingOptIn:false`, no `fanArtistIds`, and has no serious/critical axe violations. **Implemented and runtime-verified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "General signup uses form/Enter/autocomplete and versioned consent, marketing false. Existing browser fixtures verify payload and axe; actual isolated signup/follow persistence recorded in onboarding-browser-final.json. Locale successor#422 remains separate.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; General signup uses form/Enter/autocomplete and versioned consent, marketing false. Existing browser fixtures verify payload and axe; actual isolated signup/follow persistence recorded in onboarding-browser-final.json. Locale successor#422 remains separate.",
+    "mergeStatus": "Introduction/successor 8d62611de8a786a9643b92c721b34b2ac5d5b521 verified ancestor of main db69e0534.",
+    "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
   {
     "id": "ONB-02",
@@ -481,11 +481,11 @@
     ],
     "acceptanceCriteria": "Exact CTA URLs differ; external redirects remain rejected by existing tests. **Implemented and unit/runtime-verified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "Neutral general CTA and normalized intent/safe redirect remain. Actual signup/follow persistence and recovery destination browser evidence retained; OAuth-provider runtime remains unavailable.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; Neutral general CTA and normalized intent/safe redirect remain. Actual signup/follow persistence and recovery destination browser evidence retained; OAuth-provider runtime remains unavailable.",
+    "mergeStatus": "Introduction/successor 8d62611de8a786a9643b92c721b34b2ac5d5b521 verified ancestor of main db69e0534.",
+    "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
   {
     "id": "DIST-01",
@@ -503,11 +503,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Test asserts `/login?redirect=…`. **Implemented and unit-verified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "DistributionLandingPage retains canonical encoded redirect; focused component test passes. No public distribution flag activation inferred.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; DistributionLandingPage retains canonical encoded redirect; focused component test passes. No public distribution flag activation inferred.",
+    "mergeStatus": "Introduction/successor 8d62611de8a786a9643b92c721b34b2ac5d5b521 verified ancestor of main db69e0534.",
+    "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
   {
     "id": "MOB-AUTH-01",
@@ -525,11 +525,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Test asserts anonymous state and all persistence cleared. **Implemented and Jest-verified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "Published mobile1ec9160 contained in merged PR94/f2b4823. AuthProvider revokes null session; TicketCheckout exposes public context/auth choices; allowlisted deep links preserve path/query and normalize repeated separators.",
+    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
+    "mergeStatus": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
+    "releaseStatus": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced."
   },
   {
     "id": "MOB-COM-01",
@@ -547,11 +547,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Anonymous fixture sees event and auth choices; return URL contains event. **Implemented and Jest-verified; device runtime unverified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "Published mobile1ec9160 contained in merged PR94/f2b4823. AuthProvider revokes null session; TicketCheckout exposes public context/auth choices; allowlisted deep links preserve path/query and normalize repeated separators.",
+    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
+    "mergeStatus": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
+    "releaseStatus": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced."
   },
   {
     "id": "REV-01",
@@ -569,10 +569,10 @@
     "dependencies": [],
     "acceptanceCriteria": "No-quote completion exposes no staff destination; quote-backed completion still links to public tracking. **Implemented and unit/runtime-verified with synthetic fixtures.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
+    "status": "merged",
     "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
+    "verificationStatus": "Current PublicBookingPage/MarketplacePage plus onboarding/campaign suites:34 tests pass. No staff calendar in no-quote receipt; no fake-contact empty marketplace. Current full production journey still pending.",
+    "mergeStatus": "Current main a81 contains historical fix; source and focused tests rechecked",
     "releaseStatus": "Per-finding deployment/publication verification pending"
   },
   {
@@ -591,10 +591,10 @@
     "dependencies": [],
     "acceptanceCriteria": "Empty state makes no notification claim and collects no contact data; useful public alternatives remain. **Implemented and unit/runtime-verified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
+    "status": "merged",
     "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
+    "verificationStatus": "Current PublicBookingPage/MarketplacePage plus onboarding/campaign suites:34 tests pass. No staff calendar in no-quote receipt; no fake-contact empty marketplace. Current full production journey still pending.",
+    "mergeStatus": "Current main a81 contains historical fix; source and focused tests rechecked",
     "releaseStatus": "Per-finding deployment/publication verification pending"
   },
   {
@@ -613,11 +613,11 @@
     "dependencies": [],
     "acceptanceCriteria": "One follow/contact attempt, no duplicate event, safe cancellation and cross-account isolation. **Deferred.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "FanHub preserves selected artist via existing shared follow-resume helper; ArtistPublicPage requires explicit confirmation after signup.",
     "verificationStatus": "Final integrated production bundle: 2074 unit tests before the final color-only repair; Chromium/Firefox/WebKit real isolated signup→follow→persisted completion→reload, Space action retains route, light/dark 320/390/834/1280px and 200% text; zero axe violations/page errors. Chromium guest→signup→explicit follow→reload persists. See evidence/onboarding-browser-final.json. Not production/SMTP/OAuth evidence.",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
+    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication."
   },
   {
     "id": "PRIV-02",
@@ -635,11 +635,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Legacy persistent values are discarded; contact drafts created by the current user exist only in the current tab and clear with the tab/explicit clear/payment success. Account-switch behavior in an already-open anonymous tab was not separately runtime-tested. **Implemented and unit/runtime-verified for storage scope; boundary edge case remains unverified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "Session-only personal drafts discard legacy persistent values. SessionProvider test exercises login/account change/expiry cleanup; current47-case conformance passes. Real-browser shared-tab account switch remains pending.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; Session-only personal drafts discard legacy persistent values. SessionProvider test exercises login/account change/expiry cleanup; current47-case conformance passes. Real-browser shared-tab account switch remains pending.",
+    "mergeStatus": "Introduction/successor 4e2fab9edc6117ea5e850174a1c1a0be3e6abf35 verified ancestor of main db69e0534.",
+    "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
   {
     "id": "STATE-02",
@@ -657,11 +657,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Malformed response rejects with a stable error rather than entering render data. **Implemented and unit-verified; malformed live-provider/runtime path not exercised.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "Review API validates page and author boundary; API/component malformed-result regressions pass in current47-case conformance. Real-browser malformed upstream response remains pending.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; Review API validates page and author boundary; API/component malformed-result regressions pass in current47-case conformance. Real-browser malformed upstream response remains pending.",
+    "mergeStatus": "Introduction/successor 173f996227ede1b5c6804e7ee6d2b4bcd822d0c2 verified ancestor of main db69e0534.",
+    "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
   {
     "id": "STATE-01",
@@ -703,11 +703,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Event/service IDs and filters survive auth; external schemes rejected. **Deferred.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "Published mobile1ec9160 contained in merged PR94/f2b4823. AuthProvider revokes null session; TicketCheckout exposes public context/auth choices; allowlisted deep links preserve path/query and normalize repeated separators.",
+    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
+    "mergeStatus": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
+    "releaseStatus": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced."
   },
   {
     "id": "MOB-LINK-01",
@@ -725,11 +725,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Single/double slash fixtures resolve identically without broadening external routes. **Deferred.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "merged",
+    "implementationStatus": "Published mobile1ec9160 contained in merged PR94/f2b4823. AuthProvider revokes null session; TicketCheckout exposes public context/auth choices; allowlisted deep links preserve path/query and normalize repeated separators.",
+    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
+    "mergeStatus": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
+    "releaseStatus": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced."
   },
   {
     "id": "API-01",
@@ -749,11 +749,11 @@
     ],
     "acceptanceCriteria": "Generated web/mobile types match server JSON and role enum; no hand edits. **Deferred to contract batch.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "Canonical schema now requires username/password, includes Agency, and optional non-null claimArtistId; current generated web/mobile clients match.",
     "verificationStatus": "Current schema inspected and clients byte-compared at efa2555; hosted API contract checks passed on38256/8c2e5. Current root merge/backend rollout pending.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
+    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication."
   },
   {
     "id": "EXP-01",
@@ -795,11 +795,11 @@
     ],
     "acceptanceCriteria": "No mixed-language path for supported locale; Ecuador examples retain international acceptance. **Deferred.**",
     "verificationMethod": "Current runtime, component/source and release evidence; original report is historical.",
-    "status": "verification pending",
+    "status": "merged",
     "implementationStatus": "I18N successor implemented in #422; campaign labels historically implemented; neither is a new finding.",
     "verificationStatus": "I18N20-case policy/recovery matrix passed; complete campaign keyboard/screen-reader runtime remains pending.",
-    "mergeStatus": "Reconcile by source and related PR evidence.",
-    "releaseStatus": "Full finding acceptance/release remains unverified."
+    "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
+    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation."
   },
   {
     "id": "A11Y-01",
@@ -819,7 +819,7 @@
     "verificationMethod": "Current runtime, component/source and release evidence; original report is historical.",
     "status": "verification pending",
     "implementationStatus": "I18N successor implemented in #422; campaign labels historically implemented; neither is a new finding.",
-    "verificationStatus": "I18N20-case policy/recovery matrix passed; complete campaign keyboard/screen-reader runtime remains pending.",
+    "verificationStatus": "Domo tables now named keyboard-focusable regions; operational before/after evidence. Historical Domo whole-journey acceptance still requires review against original finding.",
     "mergeStatus": "Reconcile by source and related PR evidence.",
     "releaseStatus": "Full finding acceptance/release remains unverified."
   },
@@ -831,10 +831,10 @@
     "dependencies": [
       "root PR #422"
     ],
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "Local changes; next exact-head review and hosted gates pending",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
     "id": "UX-260917-015",
     "title": "FanHub overflows narrow viewports after authenticated onboarding",
     "severity": "medium",
@@ -855,10 +855,10 @@
     "dependencies": [
       "root PR #422"
     ],
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "Local changes; next exact-head review and hosted gates pending",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
     "id": "UX-260917-016",
     "title": "Artist card intercepts Space on its follow control",
     "severity": "medium",
@@ -879,10 +879,10 @@
     "dependencies": [
       "root PR #422"
     ],
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "Local changes; next exact-head review and hosted gates pending",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
     "id": "UX-260917-017",
     "title": "Informational, warning and dark-surface public actions fail normal-text contrast",
     "severity": "medium",
@@ -913,11 +913,11 @@
     ],
     "acceptanceCriteria": "Controls and playback artwork links have accessible names; repeat applicable axe and keyboard checks.",
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "local scoped repair",
     "verificationStatus": "Final integrated bundle 84 cases (42 static public routes × 320/1280px), zero axe violations, horizontal overflow, page errors or HTTP5xx; evidence/public-runtime-final.json. Does not cover dynamic resource routes, all roles, languages or native.",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
   },
   {
     "id": "UX-260917-019",
@@ -937,11 +937,11 @@
     ],
     "acceptanceCriteria": "No horizontal page overflow at320px; readable branding and dates; generated code scrollable by keyboard.",
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "local scoped repair",
     "verificationStatus": "Final integrated bundle 84 cases (42 static public routes × 320/1280px), zero axe violations, horizontal overflow, page errors or HTTP5xx; evidence/public-runtime-final.json. Does not cover dynamic resource routes, all roles, languages or native.",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
   },
   {
     "id": "UX-260917-020",
@@ -961,11 +961,11 @@
     ],
     "acceptanceCriteria": "No enabled form without verified current credential; stale/ABA replies ignored; actionable retry; same-origin API validates; recoverable input retained.",
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "local scoped repair",
     "verificationStatus": "Full web217 suites/2085 tests before final small transport/draft edits; affected final15 tests pass. AccessCodeValidation9 states and LiveIntakeAuthority42 states plus named negative controls pass. Real browser against isolated PostgreSQL17 verifies explicit code account persisted the inscription while unrelated cookie session is unchanged. Fresh/stored-Spanish recovery link opens English in Chromium/Firefox/WebKit. No production intake submitted.",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
   },
   {
     "id": "UX-260917-021",
@@ -985,10 +985,185 @@
     ],
     "acceptanceCriteria": "Empty optional musician/song fields can persist; old/new client/server combinations stay compatible; contradictory aliases remain rejected; no change to ownership or permission rules.",
     "verificationMethod": "Actual multipart HTTP and DB persistence; parser regression tests; web wire-contract regression.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "local repair",
     "verificationStatus": "33 multipart Hspec examples pass, preserving contradictory alias rejection. Web wire omission regression passes. Real browser writes with old strict backend; new compiled backend direct HTTP200 persists owner50,1 musician and1 song with null optionals in isolated PostgreSQL17.",
-    "mergeStatus": "pending",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
+  },
+  {
+    "id": "UX-260917-022",
+    "kind": "confirmed",
+    "title": "Operational horizontal scroll regions cannot be reached by keyboard",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "Initial operational and administrative route arrival, navigation and form use",
+    "roles": "actual isolated Admin+Customer and Customer sessions; route-specific authorization retained",
+    "surface": "Kanban; Domo; financial report tables; DDEX partners; activity tables; shell",
+    "evidence": "Versioned operational-admin-before.json; production bundle with actual isolated backend/PostgreSQL17 at320/1280px. New assertions found during initial audit coverage, not inferred from source alone.",
+    "userImpact": "Keyboard users cannot scroll clipped content or identify the region.",
+    "rootCause": "Overflow containers lacked keyboard focusability and region names.",
+    "proposedChange": "Add named focusable regions; main scroll area accepts keyboard focus.",
+    "dependencies": [
+      "PR #422",
+      "operational audit successor"
+    ],
+    "acceptanceCriteria": "All observed overflowing tables/boards can receive focus and scroll; labels describe contents.",
+    "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
+    "status": "implemented",
+    "implementationStatus": "dccd66606; integrated with#422 in d4f720e51; review follow-up distinguishes region/progress names, registers calendar locales and gates payment-intent creation on SDK readiness",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage.",
+    "mergeStatus": "PR #429 open; successor after review corrections pending exact-head gates/review",
+    "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-023",
+    "kind": "confirmed",
+    "title": "Operational controls and loading indicators lack accessible names",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "Initial operational and administrative route arrival, navigation and form use",
+    "roles": "actual isolated Admin+Customer and Customer sessions; route-specific authorization retained",
+    "surface": "FullCalendar navigation; DDEX status; invoice options; artist enrichment; social; calendar sync; activity; system",
+    "evidence": "Versioned operational-admin-before.json; production bundle with actual isolated backend/PostgreSQL17 at320/1280px. New assertions found during initial audit coverage, not inferred from source alone.",
+    "userImpact": "Screen-reader users cannot identify purpose or progress.",
+    "rootCause": "Unlabelled icon child images, selects, checkboxes and progress indicators.",
+    "proposedChange": "Use localized FullCalendar text controls, explicit select label association, clickable checkbox labels and named progress.",
+    "dependencies": [
+      "PR #422",
+      "operational audit successor"
+    ],
+    "acceptanceCriteria": "No corresponding axe name violations during affected load/form states; ordinary actions remain usable.",
+    "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
+    "status": "implemented",
+    "implementationStatus": "dccd66606; integrated with#422 in d4f720e51; review follow-up distinguishes region/progress names, registers calendar locales and gates payment-intent creation on SDK readiness",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Focused slow-response verification pending. Four delayed-response ES/EN browser checks pass for both activity loading names and directory profile loader.",
+    "mergeStatus": "PR #429 open; successor after review corrections pending exact-head gates/review",
+    "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-024",
+    "kind": "confirmed",
+    "title": "Service types text is unreadable in the light theme",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "Initial operational and administrative route arrival, navigation and form use",
+    "roles": "actual isolated Admin+Customer and Customer sessions; route-specific authorization retained",
+    "surface": "ServiceTypesPage",
+    "evidence": "Versioned operational-admin-before.json; production bundle with actual isolated backend/PostgreSQL17 at320/1280px. New assertions found during initial audit coverage, not inferred from source alone.",
+    "userImpact": "Operational content has insufficient text contrast in light theme.",
+    "rootCause": "Fixed pale text colors assumed a dark background.",
+    "proposedChange": "Use established theme text colors.",
+    "dependencies": [
+      "PR #422",
+      "operational audit successor"
+    ],
+    "acceptanceCriteria": "At least4.5:1 for ordinary text in both supported themes.",
+    "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
+    "status": "implemented",
+    "implementationStatus": "dccd66606; integrated with#422 in d4f720e51",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+    "mergeStatus": "pending successor PR",
+    "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-025",
+    "kind": "confirmed",
+    "title": "Narrow operational alerts create inaccessible inner overflow",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "Initial operational and administrative route arrival, navigation and form use",
+    "roles": "actual isolated Admin+Customer and Customer sessions; route-specific authorization retained",
+    "surface": "Shared MUI Alert; diagnostics; optional-service errors",
+    "evidence": "Versioned operational-admin-before.json; production bundle with actual isolated backend/PostgreSQL17 at320/1280px. New assertions found during initial audit coverage, not inferred from source alone.",
+    "userImpact": "Phone users cannot read error messages and retry actions reliably.",
+    "rootCause": "Action and message compete for narrow width; long configuration keys do not wrap.",
+    "proposedChange": "Allow message wrapping and move action to its own row below600px.",
+    "dependencies": [
+      "PR #422",
+      "operational audit successor"
+    ],
+    "acceptanceCriteria": "Affected alerts fit320px and actions remain reachable without clipping.",
+    "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
+    "status": "implemented",
+    "implementationStatus": "dccd66606; integrated with#422 in d4f720e51",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+    "mergeStatus": "pending successor PR",
+    "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-026",
+    "kind": "confirmed",
+    "title": "Missing optional payment configuration throws during event-page import",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "Initial operational and administrative route arrival, navigation and form use",
+    "roles": "actual isolated Admin+Customer and Customer sessions; route-specific authorization retained",
+    "surface": "StripeCheckoutModal; SocialEventsPage",
+    "evidence": "Versioned operational-admin-before.json; production bundle with actual isolated backend/PostgreSQL17 at320/1280px. New assertions found during initial audit coverage, not inferred from source alone.",
+    "userImpact": "Page emits an unhandled SDK initialization error even when checkout is not requested. Review reproduced an unusable checkout reserving inventory before establishing a usable Stripe client.",
+    "rootCause": "loadStripe was called with an empty publishable key at module load.",
+    "proposedChange": "Initialize Stripe only when the configured public key is nonempty; retain existing actionable missing-configuration state.",
+    "dependencies": [
+      "PR #422",
+      "operational audit successor"
+    ],
+    "acceptanceCriteria": "No SDK startup exception without optional configuration; configured payment behavior is preserved; no real payments tested. Missing/unavailable SDK never creates an intent; cancel/unmount/context changes fence late responses; duplicate submit is single-flight; failed readiness retains input for retry. After dispatching a reservation, dialog cancel/Escape/backdrop cannot discard the pending result; success reaches payment and failure restores cancellation.",
+    "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
+    "status": "implemented",
+    "implementationStatus": "dccd66606; integrated with#422 in d4f720e51; review follow-up distinguishes region/progress names, registers calendar locales and gates payment-intent creation on SDK readiness; PRRT_kwDOQPdUrM6joQEq confirmed slow-reservation cancellation regression; synchronous reservationPending close guard and disabled Cancel added.; second confirmed review PRRT_kwDOQPdUrM6jofR3 adds paymentPending close guard and synchronous single-flight across elements.submit/confirmPayment, retaining generation fencing.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. 16 component/logic tests pass; TLC CheckoutReadiness221distinct states, safety/conditional liveness plus3negative controls pass. No real charges or settlement proof. Integrated17unit cases include account change;10browsercases5profiles/3engines prove unavailable retry/cancel and0intent creation. Model bounds unchanged; generation maps session/event/tier/close changes. Review regression fails before fix;19 component/logic tests pass afterward; TypeScript/build364991gzip bytes/5preloads and affected lint pass. CheckoutCancellation separately models fixed-context cancellation,5distinct states; unsafe guard negative control produces NoAbandonedReservation counterexample;10 current browser cases pass in5profiles/3engines. Full pinned TLC1.7.2/Alloy6.2.0 runner passes, including all four checkout negative controls. 21component/logic tests pass including delayed payment success delivered once and provider rejection recovery. Payment-aware TLC8distinct states and both cancellation negative controls pass; full runner completing. TypeScript/build364988gzip/5preloads pass.",
+    "mergeStatus": "PR #429 open; successor after review corrections pending exact-head gates/review",
+    "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-027",
+    "kind": "confirmed",
+    "title": "Classified management renders duplicate main landmarks",
+    "severity": "low",
+    "confidence": "high",
+    "journey": "Initial operational and administrative route arrival, navigation and form use",
+    "roles": "actual isolated Admin+Customer and Customer sessions; route-specific authorization retained",
+    "surface": "DirectoryManagePage within AppShell",
+    "evidence": "Versioned operational-admin-before.json; production bundle with actual isolated backend/PostgreSQL17 at320/1280px. New assertions found during initial audit coverage, not inferred from source alone.",
+    "userImpact": "Assistive technology landmark navigation has duplicate main targets.",
+    "rootCause": "Nested Container redeclares main and main-content ID already owned by shell.",
+    "proposedChange": "Let the shell own the sole main landmark.",
+    "dependencies": [
+      "PR #422",
+      "operational audit successor"
+    ],
+    "acceptanceCriteria": "Exactly one main and one main-content ID in classified-management route.",
+    "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
+    "status": "implemented",
+    "implementationStatus": "dccd66606; integrated with#422 in d4f720e51",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+    "mergeStatus": "pending successor PR",
+    "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-028",
+    "kind": "confirmed",
+    "title": "Wrapped school breadcrumb links have undersized touch targets",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "Initial operational and administrative route arrival, navigation and form use",
+    "roles": "actual isolated Admin+Customer and Customer sessions; route-specific authorization retained",
+    "surface": "RegistryBreadcrumbs; school trial queue at320px",
+    "evidence": "Versioned operational-admin-before.json; production bundle with actual isolated backend/PostgreSQL17 at320/1280px. New assertions found during initial audit coverage, not inferred from source alone.",
+    "userImpact": "Touch users can activate the wrong adjacent destination.",
+    "rootCause": "Inline18px link boxes have insufficient spacing when breadcrumbs wrap.",
+    "proposedChange": "Use inline-flex breadcrumb links with minimum24px height.",
+    "dependencies": [
+      "PR #422",
+      "operational audit successor"
+    ],
+    "acceptanceCriteria": "WCAG2.2 target-size check passes for wrapped breadcrumb links; destinations remain unchanged.",
+    "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
+    "status": "implemented",
+    "implementationStatus": "dccd66606; integrated with#422 in d4f720e51",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+    "mergeStatus": "pending successor PR",
     "releaseStatus": "not deployed"
   },
   {
@@ -1009,10 +1184,35 @@
     ],
     "acceptanceCriteria": "Shared transactional builder uses generic CTA; course senders explicitly retain course CTA; localized password reset unchanged.",
     "verificationMethod": "Call-site inspection, Stack/GHC9.10.3 build and existing passwordReset Hspec/QuickCheck regression. No claim of real mailbox delivery.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "Focused Email.hs fix in current#422 successor",
     "verificationStatus": "Stack --fast test passwordReset:8 examples/100generated pass; module rebuilt. SMTP/rendered mailbox not executed.",
-    "mergeStatus": "pending exact-head CI/review",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
+  },
+  {
+    "id": "UX-260917-030",
+    "kind": "confirmed",
+    "title": "Radio player overlays modal checkout retry and cancel controls",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "Ticket checkout → payment unavailable → retry or cancel",
+    "roles": "Authenticated customer/admin",
+    "surface": "Global RadioWidget dock, dismissed control and floating panel; StripeCheckoutModal",
+    "evidence": "Actual compiled bundle at1280×720: readiness error expands dialog, radio atz1400 covers footer, Playwright ordinary click hits radio outside aria-hidden modal subtree. evidence/checkout-radio-before.png. No real payment/API intent created.",
+    "userImpact": "Pointer users cannot retry or cancel from the obscured footer; focused controls can be hidden.",
+    "rootCause": "Radio uses snackbar-level1400 above MUI modal1300.",
+    "proposedChange": "Use theme.zIndex.appBar for all radio floating surfaces so modal and backdrop remain above them.",
+    "dependencies": [
+      "UX-260917-026",
+      "PR #429"
+    ],
+    "acceptanceCriteria": "Unforced pointer retry and cancellation succeed at desktop/phone/tablet; radio remains usable outside modal; ES/EN unavailable flow preserves input and creates0intents.",
+    "verificationMethod": "Versioned before/after browser proof, durable Playwright regression across5profiles/3engines; existing theme ordering from MUI documentation.",
+    "status": "implemented",
+    "implementationStatus": "Three RadioWidget layers use existing theme appBar level; no audio behavior change.",
+    "verificationStatus": "10 durable ES/EN Playwright cases pass on5profiles/3engines at integrated b9a654f9b, unforced clicks retry/cancel and0payment intents. Compiled bundle; synthetic transport. Not real Stripe settlement.",
+    "mergeStatus": "PR #429 successor pending",
     "releaseStatus": "not deployed"
   }
 ]

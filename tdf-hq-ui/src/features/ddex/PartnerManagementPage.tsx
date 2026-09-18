@@ -114,7 +114,7 @@ const PartnerManagementPage: React.FC = () => {
         </Button>
       </Stack>
 
-      <TableContainer component={Paper}>
+      <TableContainer tabIndex={0} role="region" aria-label="Socios de distribución" component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
