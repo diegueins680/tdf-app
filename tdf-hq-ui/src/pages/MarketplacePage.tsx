@@ -1802,10 +1802,12 @@ export default function MarketplacePage() {
                   ))}
                 </Stack>
               )}
-              <FormControl size="small" sx={{ minWidth: 180 }}>
+              <FormControl size="small" sx={{ minWidth: 180, maxWidth: '100%' }}>
                 <InputLabel id="marketplace-sort-label">Ordenar por</InputLabel>
                 <Select
                   labelId="marketplace-sort-label"
+                  sx={{ '& .MuiSelect-select': { whiteSpace: 'normal', overflowWrap: 'anywhere' } }}
+                  MenuProps={{ sx: { '& .MuiMenuItem-root': { whiteSpace: 'normal', overflowWrap: 'anywhere' } } }}
                   value={sort}
                   label="Ordenar por"
                   onChange={(event: SelectChangeEvent<'relevance' | 'price-asc' | 'price-desc' | 'title-asc'>) =>
