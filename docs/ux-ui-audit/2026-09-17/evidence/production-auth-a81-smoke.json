@@ -1,0 +1,38 @@
+[
+  {
+    "deniedStorage": false,
+    "loginEnglish": true,
+    "signupOpens": true,
+    "legalLinks": [
+      {
+        "text": "account terms",
+        "href": "https://tdf-app.pages.dev/account/terms.html"
+      },
+      {
+        "text": "account privacy policy",
+        "href": "https://tdf-app.pages.dev/account/privacy.html"
+      }
+    ],
+    "recoveryEnglish": true,
+    "tokenRemoved": true,
+    "errors": []
+  },
+  {
+    "deniedStorage": true,
+    "loginEnglish": true,
+    "signupOpens": true,
+    "legalLinks": [
+      {
+        "text": "account terms",
+        "href": "https://tdf-app.pages.dev/account/terms.html"
+      },
+      {
+        "text": "account privacy policy",
+        "href": "https://tdf-app.pages.dev/account/privacy.html"
+      }
+    ],
+    "recoveryEnglish": true,
+    "tokenRemoved": true,
+    "errors": []
+  }
+]

@@ -133,7 +133,7 @@
     "dependencies": [],
     "acceptanceCriteria": "Entire arrival/login/signup/reset/navigation journey follows selected es/en, including errors and screen-reader names.",
     "verificationMethod": "Source inventory plus bilingual browser/native task scripts.",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
     "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained.",
@@ -155,7 +155,7 @@
     "dependencies": [],
     "acceptanceCriteria": "Anonymous login renders and theme toggle retains input under denied operations/getters; no uncaught errors; no unauthorized session created.",
     "verificationMethod": "Playwright Chromium/Firefox/WebKit, desktop/tablet/phone and axe; exact baseline/final logs.",
-    "releaseStatus": "Merged#421; web deployment437fddd and anonymous phone smoke under denied storage getters confirmed. No claim of exhaustive authenticated coverage.",
+    "releaseStatus": "Merged#421; web deployment437fddd and anonymous phone smoke under denied storage getters confirmed. No claim of exhaustive authenticated coverage. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
     "status": "deployed",
     "implementationStatus": "implemented",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
@@ -225,7 +225,7 @@
     ],
     "acceptanceCriteria": "Replacement link opens recovery directly; valid destination survives; unsafe targets remain rejected by existing routing validation; closing returns to usable login; failed request retains email with actionable feedback.",
     "verificationMethod": "PW-PER-LOCALE ES/EN across five browser/device profiles and existing loginRouting tests.",
-    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication.",
+    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
     "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
@@ -799,7 +799,7 @@
     "implementationStatus": "I18N successor implemented in #422; campaign labels historically implemented; neither is a new finding.",
     "verificationStatus": "I18N20-case policy/recovery matrix passed; complete campaign keyboard/screen-reader runtime remains pending.",
     "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
-    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication."
+    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation."
   },
   {
     "id": "A11Y-01",
@@ -1112,7 +1112,7 @@
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "implemented",
     "implementationStatus": "dccd66606; integrated with#422 in d4f720e51; review follow-up distinguishes region/progress names, registers calendar locales and gates payment-intent creation on SDK readiness",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. 16 component/logic tests pass; TLC CheckoutReadiness221distinct states, safety/conditional liveness plus3negative controls pass. No real charges or settlement proof.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. 16 component/logic tests pass; TLC CheckoutReadiness221distinct states, safety/conditional liveness plus3negative controls pass. No real charges or settlement proof. Integrated17unit cases include account change;10browsercases5profiles/3engines prove unavailable retry/cancel and0intent creation. Model bounds unchanged; generation maps session/event/tier/close changes.",
     "mergeStatus": "PR #429 open; successor after review corrections pending exact-head gates/review",
     "releaseStatus": "not deployed"
   },
@@ -1211,7 +1211,7 @@
     "verificationMethod": "Versioned before/after browser proof, durable Playwright regression across5profiles/3engines; existing theme ordering from MUI documentation.",
     "status": "implemented",
     "implementationStatus": "Three RadioWidget layers use existing theme appBar level; no audio behavior change.",
-    "verificationStatus": "Before reproduction captured; after browser checks pending.",
+    "verificationStatus": "10 durable ES/EN Playwright cases pass on5profiles/3engines at integrated b9a654f9b, unforced clicks retry/cancel and0payment intents. Compiled bundle; synthetic transport. Not real Stripe settlement.",
     "mergeStatus": "PR #429 successor pending",
     "releaseStatus": "not deployed"
   }

@@ -617,3 +617,17 @@ with generated contract changes only; existing native19/10 artifacts remain sour
 Student198 arrivals: one real unnamed progress in /mis-clasificados; four directory
 load states now named. Includes before evidence, follow-up runtime pending.
 Remaining historical booking/marketplace/onboarding/campaign suites34tests pass.
+
+### Verified review successor — 2026-09-18 05:06 UTC
+
+Integrated b9a654f9b production bundle: TypeScript/build budget364975gzip/5preloads
+pass.17checkout component/logic tests pass, including session switch while SDK is
+pending.10durable Playwright ES/EN cases on desktop/phone/tablet+Firefox+WebKit
+pass: readiness failure retains input,0intents, ordinary retry/cancel clicks remain
+unobscured by radio. Screenshots/trace on failure remain configured in the repository.
+Six ES/EN calendar/board/activity named-region cases pass with actual isolated API
+and locale response fixture; initial English attempts inherited real account Spanish
+preference, corrected fixture explicitly, not a product failure.
+Public production web a81: English login, signup dialog/legal links, recovery/token
+removal pass with storage allowed and denied;0pageerrors, no account/password mutation.
+Evidence files distinguish synthetic checkout/locale responses from production reads.
