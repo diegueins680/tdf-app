@@ -1,3 +1,4 @@
+import { useContactCreation } from '../hooks/useContactCreation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings, type ServiceBookingCommerceDTO } from '../api/bookings';
@@ -58,6 +59,7 @@ const parsePositiveInt = (raw: string | null): number | null => {
 };
 
 export default function BookingsPage() {
+  const contactCreation = useContactCreation();
   const { timezone: zone, locale } = useLocalePreferences();
   const { formatMoney } = useCurrency();
   const location = useLocation();
@@ -384,8 +386,9 @@ export default function BookingsPage() {
     setCreateContactOpen(true);
   }, []);
   const createPartyMutation = useMutation({
-    mutationFn: (payload: PartyCreate) => Parties.create(payload),
+    mutationFn: (payload: PartyCreate) => contactCreation.create(payload),
     onSuccess: (party) => {
+      contactCreation.reset();
       setCustomerPartyId(party.partyId);
       setSelectedCustomer({ partyId: party.partyId, partyType: party.isOrg ? 'organization' : 'person', displayName: party.displayName, username: null, avatarUrl: null, secondaryLabel: 'Contacto nuevo', accountStatus: 'no-account' });
       setCreateContactOpen(false);

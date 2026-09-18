@@ -1,3 +1,4 @@
+import { useContactCreation } from '../hooks/useContactCreation';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Typography,
@@ -67,6 +68,7 @@ interface LeadCreateDialogProps {
 }
 
 function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
+  const contactCreation = useContactCreation();
   const qc = useQueryClient();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -89,8 +91,9 @@ function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
   }, [open]);
 
   const mutation = useMutation<PartyDTO, Error, PartyCreate>({
-    mutationFn: (body) => Parties.create(body),
+    mutationFn: (body) => contactCreation.create(body),
     onSuccess: () => {
+      contactCreation.reset();
       void qc.invalidateQueries({ queryKey: ['parties'] });
       onClose();
     },

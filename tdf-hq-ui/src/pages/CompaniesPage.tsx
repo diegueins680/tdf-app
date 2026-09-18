@@ -1,3 +1,4 @@
+import { useContactCreation } from '../hooks/useContactCreation';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Typography,
@@ -113,6 +114,7 @@ interface CreateCompanyDialogProps {
 }
 
 function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
+  const contactCreation = useContactCreation();
   const createCompanyQueryClient = useQueryClient();
   const [displayName, setDisplayName] = useState('');
   const [legalName, setLegalName] = useState('');
@@ -131,8 +133,9 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
   }, [open]);
 
   const createCompanyMutation = useMutation({
-    mutationFn: (body: PartyCreate) => Parties.create(body),
+    mutationFn: (body: PartyCreate) => contactCreation.create(body),
     onSuccess: () => {
+      contactCreation.reset();
       void createCompanyQueryClient.invalidateQueries({ queryKey: ['parties'] });
       onClose();
     },

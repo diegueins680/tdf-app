@@ -1,5 +1,13 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  "googleLinkTitle": "Connect your TDF account",
+  "googleLinkExplanation": "Use your existing TDF credentials to connect Google. If you previously used only Google, reset your TDF password first. Create an account only if you do not already have one.",
+  "googleLinkUsername": "TDF username or email",
+  "googleLinkPassword": "TDF password",
+  "googleLinkReset": "Reset my TDF password",
+  "googleLinkCreate": "Create an account",
+  "googleLinkConnect": "Connect Google",
+
   "networkError": "Could not connect to the service. Check your connection and try again.",
   "timeoutError": "The request took too long. Check your connection and try again.",
   "invalidCredentials": "Incorrect username or password. Check your details and try again.",

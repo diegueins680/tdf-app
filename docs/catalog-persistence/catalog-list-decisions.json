@@ -13870,13 +13870,13 @@
       "reviewed": true
     },
     {
-      "id": "3af2c7276922c616b2d7",
+      "id": "e0dc2e3cf62797ab7a24",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Ordered migration IDs and paths are deployment execution mechanics. The original 105 entries and applied SQL checksums remain unchanged. The final forward migration adds model-declared Party dependency and archive guards, including legacy reviewers and approvers without foreign keys. Introduction-commit ancestry remains enforced.",
+      "justification": "Ordered migration identifiers and introduction commits are release execution mechanics. Preserve the first 106 entries unchanged and append the scoped provider-subject binding table; ledger checksum and ancestry checks remain enforced.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
       "reviewBatch": "identity-reconciliation-2026-09-17",
@@ -13885,7 +13885,26 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 106
+        "valueCount": 107
+      }
+    },
+    {
+      "id": "1848a88a99f437444f6d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Incorrect provenance could imply credential verification that did not occur.",
+      "justification": "These two immutable audit values describe which server-authenticated binding operation ran. They are security protocol provenance, not configurable customer roles or business statuses. Both require an independently verified provider subject.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "provider-identity-2026-09-18",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-18_provider_subject_identity.sql",
+        "line": 7,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 2
       }
     }
   ]

@@ -5908,7 +5908,7 @@ spec = describe "TDF.Server helpers" $ do
             case decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical Google login payload to decode, got: " <> decodeErr)
-                Right (DTO.GoogleLoginRequest idTokenValue _ _ _ _) ->
+                Right (DTO.GoogleLoginRequest idTokenValue _ _ _ _ _) ->
                     idTokenValue `shouldBe` "google-id-token"
 
             case decodeChangePasswordRequest

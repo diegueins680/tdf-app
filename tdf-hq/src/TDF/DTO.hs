@@ -1009,6 +1009,7 @@ instance FromJSON LoginRequest where
 
 data GoogleLoginRequest = GoogleLoginRequest
   { idToken :: Text
+  , linkAccount :: Maybe LoginRequest
   , marketingOptIn :: Maybe Bool
   , termsAccepted :: Maybe Bool
   , termsVersion :: Maybe Text

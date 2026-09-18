@@ -550,6 +550,11 @@
       "id": "2026-09-18_identity_review_dependencies",
       "path": "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql",
       "introducedBy": "d442013ce79b2afefdda6a203500cf2a58532ca7"
+    },
+    {
+      "id": "2026-09-18_provider_subject_identity",
+      "path": "tdf-hq/sql/2026-09-18_provider_subject_identity.sql",
+      "introducedBy": "b0779951f9010263fcda9c9165d3ec14ba6f9e55"
     }
   ]
 }

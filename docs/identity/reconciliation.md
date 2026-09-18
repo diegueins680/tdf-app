@@ -139,11 +139,11 @@ endpoint must supply a stable key for each source operation; the optional header
 compatibility for existing clients. There is no global unique email/phone/name constraint.
 
 Existing authentication username uniqueness and scoped social-sync/import keys remain in place.
-The legacy Google login still matches a verified email to a credential and discards the provider
-subject; replacing it requires an explicit authenticated account-linking flow and migration of
-existing Google users. This is an unresolved prevention gap, not identity evidence for cleanup.
-Other creation paths without request keys and external integration relationships also require
-further work before claiming comprehensive recurrence prevention.
+The provider-subject follow-up replaces email-only Google matching with explicit authenticated
+account linking and scoped immutable bindings. See [provider-prevention.md](provider-prevention.md)
+for rollout, validation and remaining entry points. Public Live Session ingestion and older
+creation clients without request keys still require further work before claiming comprehensive
+recurrence prevention.
 
 ## Validation
 

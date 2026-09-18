@@ -11,6 +11,8 @@ module TDF.ServerAuth
   ( sessionServer
   , login
   , googleLogin
+  , completeGoogleLogin
+  , resolveGoogleCredential
   , signup
   , changePassword
   , passwordReset
@@ -32,6 +34,7 @@ module TDF.ServerAuth
   , validatePasswordChangeUsernameInput
   , validateGoogleIdTokenInput
   , validateGoogleIdTokenInfo
+  , validateGoogleTokenExpiry
   , validateAuthPassword
   , validateCurrentPasswordInput
   , validatePasswordResetToken
@@ -78,6 +81,8 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
+import Text.Read (readMaybe)
 import Data.Time (NominalDiffTime, UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
@@ -129,6 +134,7 @@ data GoogleIdTokenInfo = GoogleIdTokenInfo
   , gitPicture :: Maybe Text
   , gitSub :: Text
   , gitIss :: Maybe Text
+  , gitExp :: Integer
   } deriving (Show, Generic)
 
 instance FromJSON GoogleIdTokenInfo where
@@ -140,6 +146,10 @@ instance FromJSON GoogleIdTokenInfo where
     gitPicture <- o .:? "picture"
     gitIss <- o .:? "iss"
     gitEmailVerified <- parseEmailVerified o
+    expiryValue <- o .: "exp"
+    gitExp <- case expiryValue of
+      String value -> maybe (fail "exp must be an integer") pure (readMaybe (T.unpack value))
+      value -> parseJSON value
     pure GoogleIdTokenInfo{..}
     where
       parseEmailVerified obj = do
@@ -156,7 +166,9 @@ instance FromJSON GoogleIdTokenInfo where
           _ -> fail "email_verified must be a boolean or one of true, false, 1, 0"
 
 data GoogleProfile = GoogleProfile
-  { gpEmail :: Text
+  { gpIssuer :: Text
+  , gpSubject :: Text
+  , gpEmail :: Text
   , gpName :: Maybe Text
   , gpPicture :: Maybe Text
   } deriving (Show)
@@ -1127,6 +1139,7 @@ googleLogin GoogleLoginRequest{..} = do
   tokenClean <- either throwError pure (validateGoogleIdTokenInput idToken)
   acceptedTermsVersion <- either throwError pure (validateSignupTermsAcceptance termsAccepted termsVersion)
   onboardingIntentClean <- traverse (either throwError pure . validateOnboardingIntent) onboardingIntent
+  linkAccountClean <- traverse (either throwError pure . validateLoginRequest) linkAccount
   Env pool cfg <- ask
   let mClientId = googleClientId cfg
   when (isNothing mClientId) $
@@ -1136,7 +1149,7 @@ googleLogin GoogleLoginRequest{..} = do
   case verification of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right profile -> do
-      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin acceptedTermsVersion marketingOptIn onboardingIntentClean profile)
+      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin acceptedTermsVersion marketingOptIn onboardingIntentClean linkAccountClean profile)
       case result of
         Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
         Right resp -> do
@@ -1616,7 +1629,14 @@ verifyGoogleIdToken manager rawToken mExpectedClientId = do
             then pure (Left "Tu sesión de Google es inválida o expiró.")
             else case eitherDecode (responseBody resp) of
               Left _ -> pure (Left "No pudimos validar tu sesión con Google.")
-              Right info -> pure (validateGoogleIdTokenInfo mExpectedClientId info)
+              Right info -> do
+                now <- getCurrentTime
+                pure (validateGoogleTokenExpiry now info >> validateGoogleIdTokenInfo mExpectedClientId info)
+
+validateGoogleTokenExpiry :: UTCTime -> GoogleIdTokenInfo -> Either Text ()
+validateGoogleTokenExpiry now info
+  | gitExp info <= floor (utcTimeToPOSIXSeconds now) = Left "Google session expired"
+  | otherwise = Right ()
 
 validateGoogleIdTokenInfo :: Maybe Text -> GoogleIdTokenInfo -> Either Text GoogleProfile
 validateGoogleIdTokenInfo mExpectedClientId info
@@ -1639,7 +1659,9 @@ validateGoogleIdTokenInfo mExpectedClientId info
         Just normalizedEmail ->
           let normalizedName = sanitizeGoogleProfileName (gitName info)
               profile = GoogleProfile
-                { gpEmail = normalizedEmail
+                { gpIssuer = "https://accounts.google.com"
+                , gpSubject = gitSub info
+                , gpEmail = normalizedEmail
                 , gpName = normalizedName <|> Just normalizedEmail
                 , gpPicture = gitPicture info
                 }
@@ -1672,9 +1694,11 @@ sanitizeGoogleProfileName rawName = do
     then Just name
     else Nothing
 
-completeGoogleLogin :: Maybe Text -> Maybe Bool -> Maybe Text -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingIntent GoogleProfile{..} = do
-  existingResult <- lookupByEmail gpEmail
+completeGoogleLogin :: Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof GoogleProfile{..} = do
+  -- Serialize one issuing-system subject across login, signup, linking and retries.
+  -- A verified email is profile data, never authorization to an existing account.
+  existingResult <- resolveGoogleCredential gpIssuer gpSubject linkProof
   case existingResult of
     Left err -> pure (Left err)
     Right mExisting ->
@@ -1689,7 +1713,7 @@ completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingInt
               sessionToken <-
                 createReusableSessionToken
                   (userCredentialPartyId cred)
-                  (Just ("google-login:" <> gpEmail))
+                  (Just ("google-login:" <> userCredentialUsername cred))
               mUser <- loadAuthedUser sessionToken
               case mUser of
                 Nothing -> pure (Left "No pudimos cargar tu perfil.")
@@ -1733,14 +1757,16 @@ completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingInt
                   ensureFanProfileIfMissing pid displayName now
                   tempPassword <- liftIO generateTemporaryPassword
                   hashed <- liftIO (hashPasswordText tempPassword)
-                  _ <- insert UserCredential
+                  let providerUsername = "google:" <> gpSubject
+                  credentialId <- insert UserCredential
                     { userCredentialPartyId = pid
-                    , userCredentialUsername = gpEmail
+                    , userCredentialUsername = providerUsername
                     , userCredentialPasswordHash = hashed
                     , userCredentialActive = True
                     }
+                  bindGoogleCredential gpIssuer gpSubject credentialId "new-account"
                   sessionToken <-
-                    createReusableSessionToken pid (Just ("google-login:" <> gpEmail))
+                    createReusableSessionToken pid (Just ("google-login:" <> providerUsername))
                   mUser <- loadAuthedUser sessionToken
                   case mUser of
                     Nothing -> do
@@ -1796,16 +1822,41 @@ selectUniqueLoginEmailCredential :: [Entity UserCredential] -> Maybe (Entity Use
 selectUniqueLoginEmailCredential [credential] = Just credential
 selectUniqueLoginEmailCredential _ = Nothing
 
-lookupByEmail :: Text -> SqlPersistT IO (Either Text (Maybe (Entity UserCredential)))
-lookupByEmail emailAddress = do
-  let query =
-        "SELECT ?? FROM user_credential \
-        \ JOIN party ON user_credential.party_id = party.id \
-        \ WHERE lower(trim(COALESCE(party.primary_email, ''))) = lower(trim(?)) \
-        \ ORDER BY user_credential.id ASC \
-        \ LIMIT 2"
-  creds <- rawSql query [PersistText emailAddress]
-  pure (selectUniqueGoogleLoginCredential creds)
+-- Linking requires proof of both the verified provider subject and the active
+-- TDF credential. Bindings are immutable; no profile, role or ownership transfer.
+resolveGoogleCredential :: Text -> Text -> Maybe LoginRequest -> SqlPersistT IO (Either Text (Maybe (Entity UserCredential)))
+resolveGoogleCredential issuer subject proof = do
+  _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+    [PersistText (issuer <> ":" <> subject)] :: SqlPersistT IO [Single Int64]
+  bound <- rawSql "SELECT ?? FROM user_credential JOIN auth_provider_identity i ON i.credential_id=user_credential.id WHERE i.issuer=? AND i.subject=? FOR UPDATE OF user_credential"
+    [PersistText issuer, PersistText subject]
+  case proof of
+    Nothing -> pure $ case bound of
+      [] -> Right Nothing
+      [credential@(Entity _ value)] | userCredentialActive value -> Right (Just credential)
+      _ -> Left "Unable to connect this account"
+    Just LoginRequest{username=accountName,password=accountPassword} -> do
+      candidate <- lookupCredential accountName
+      case candidate of
+        Nothing -> pure (Left "Unable to connect this account")
+        Just (Entity credentialId _) | not (null bound) && map entityKey bound /= [credentialId] ->
+          pure (Left "Unable to connect this account")
+        Just (Entity credentialId _) -> do
+          locked <- rawSql "SELECT ?? FROM user_credential WHERE id=? FOR UPDATE" [toPersistValue credentialId]
+          case locked of
+            [credential@(Entity _ value)]
+              | userCredentialActive value
+              , validatePassword (TE.encodeUtf8 (userCredentialPasswordHash value)) (TE.encodeUtf8 accountPassword)
+              , null bound || map entityKey bound == [credentialId] -> do
+                  bindGoogleCredential issuer subject credentialId "password-confirmed"
+                  pure (Right (Just credential))
+            _ -> pure (Left "Unable to connect this account")
+
+bindGoogleCredential :: Text -> Text -> UserCredentialId -> Text -> SqlPersistT IO ()
+bindGoogleCredential issuer subject credentialId method = do
+  _ <- rawSql "INSERT INTO auth_provider_identity(issuer,subject,credential_id,verification_method) VALUES (?,?,?,?) ON CONFLICT(issuer,subject) DO NOTHING RETURNING credential_id"
+    [PersistText issuer,PersistText subject,toPersistValue credentialId,PersistText method] :: SqlPersistT IO [Single Int64]
+  pure ()
 
 selectUniqueGoogleLoginCredential
   :: [Entity UserCredential]

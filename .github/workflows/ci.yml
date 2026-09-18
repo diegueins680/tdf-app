@@ -242,6 +242,13 @@ jobs:
           createdb -h postgres -U postgres tdf_hq_merch_runtime_test
           ./scripts/test-artist-merch-runtime.sh
 
+      - name: Verify provider identity authentication and concurrent linking
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-provider-identity.sh
+
       - name: Verify reversible identity reconciliation
         env:
           PGPASSWORD: postgres
