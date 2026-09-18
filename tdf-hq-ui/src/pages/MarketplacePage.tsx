@@ -1,3 +1,4 @@
+import { readOptionalBrowserStorage, writeOptionalBrowserPreference, removeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
 import { useTranslation } from 'react-i18next';
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -458,7 +459,7 @@ export default function MarketplacePage() {
     if (typeof window === 'undefined') return DEFAULT_MARKETPLACE_VIEW_STATE;
     return resolveMarketplaceInitialViewState(
       window.location.search,
-      parseSavedFilters(localStorage.getItem(FILTERS_KEY)),
+      parseSavedFilters(readOptionalBrowserStorage('local', FILTERS_KEY)),
     );
   });
   const [initialBuyerSnapshot] = useState<SavedBuyer>(() => {
@@ -474,7 +475,7 @@ export default function MarketplacePage() {
   const [pendingPhotoUrl, setPendingPhotoUrl] = useState<string | null>(null);
   const [cartId, setCartId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(CART_STORAGE_KEY);
+    return readOptionalBrowserStorage('local', CART_STORAGE_KEY);
   });
   const [category, setCategory] = useState<string>(initialViewState.category);
   const [purpose, setPurpose] = useState<'all' | 'rent' | 'sale'>(initialViewState.purpose);
@@ -508,7 +509,7 @@ export default function MarketplacePage() {
   const showDatafastOption = !datafastUnavailable;
   const [paymentMethod, setPaymentMethod] = useState<MarketplacePaymentMethod>(() => {
     if (typeof window === 'undefined') return 'contact';
-    const saved = localStorage.getItem(PAYMENT_PREF_KEY);
+    const saved = readOptionalBrowserStorage('local', PAYMENT_PREF_KEY);
     return saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
   });
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -549,7 +550,7 @@ export default function MarketplacePage() {
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
-      const raw = localStorage.getItem(CART_META_KEY);
+      const raw = readOptionalBrowserStorage('local', CART_META_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (!parsed?.cartId) return null;
@@ -612,15 +613,15 @@ export default function MarketplacePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (cartId) {
-      localStorage.setItem(CART_STORAGE_KEY, cartId);
+      writeOptionalBrowserPreference(CART_STORAGE_KEY, cartId);
       return;
     }
-    localStorage.removeItem(CART_STORAGE_KEY);
+    removeOptionalBrowserPreference(CART_STORAGE_KEY);
   }, [cartId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(PAYMENT_PREF_KEY, paymentMethod);
+    writeOptionalBrowserPreference(PAYMENT_PREF_KEY, paymentMethod);
   }, [paymentMethod]);
 
   useEffect(() => {
@@ -667,7 +668,7 @@ export default function MarketplacePage() {
     );
     if (typeof window === 'undefined') return;
     if (count <= 0) {
-      localStorage.removeItem(CART_META_KEY);
+      removeOptionalBrowserPreference(CART_META_KEY);
       setSavedCartMeta(null);
       fireCartMetaEvent();
       return;
@@ -678,7 +679,7 @@ export default function MarketplacePage() {
       title: it.mciTitle,
       subtotal: it.mciSubtotalDisplay,
     }));
-    localStorage.setItem(
+    writeOptionalBrowserPreference(
       CART_META_KEY,
       JSON.stringify({ cartId: cartQuery.data.mcCartId, count, preview, updatedAt }),
     );
@@ -730,7 +731,7 @@ export default function MarketplacePage() {
       const count = data.mcItems.reduce((acc, it) => acc + it.mciQuantity, 0);
       if (typeof window !== 'undefined') {
         if (count <= 0) {
-          localStorage.removeItem(CART_META_KEY);
+          removeOptionalBrowserPreference(CART_META_KEY);
           setSavedCartMeta(null);
         } else {
           const updatedAt = Date.now();
@@ -738,7 +739,7 @@ export default function MarketplacePage() {
             title: it.mciTitle,
             subtotal: it.mciSubtotalDisplay,
           }));
-          localStorage.setItem(
+          writeOptionalBrowserPreference(
             CART_META_KEY,
             JSON.stringify({ cartId: data.mcCartId, count, preview, updatedAt }),
           );
@@ -756,8 +757,8 @@ export default function MarketplacePage() {
     setSavedCartMeta(null);
     setShowRestoreBanner(false);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(CART_STORAGE_KEY);
-      localStorage.removeItem(CART_META_KEY);
+      removeOptionalBrowserPreference(CART_STORAGE_KEY);
+      removeOptionalBrowserPreference(CART_META_KEY);
     }
     fireCartMetaEvent();
   }, [qc]);
@@ -804,8 +805,8 @@ export default function MarketplacePage() {
       setSavedCartMeta(null);
       setShowRestoreBanner(false);
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(CART_STORAGE_KEY);
-        localStorage.removeItem(CART_META_KEY);
+        removeOptionalBrowserPreference(CART_STORAGE_KEY);
+        removeOptionalBrowserPreference(CART_META_KEY);
       }
       setToast(
         `Pedido creado y pendiente de pago. Te contactaremos por ${
@@ -912,8 +913,8 @@ export default function MarketplacePage() {
       setSavedCartMeta(null);
       setShowRestoreBanner(false);
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(CART_STORAGE_KEY);
-        localStorage.removeItem(CART_META_KEY);
+        removeOptionalBrowserPreference(CART_STORAGE_KEY);
+        removeOptionalBrowserPreference(CART_META_KEY);
       }
       setToast('Pago verificado con PayPal. Gracias por tu compra.');
       fireCartMetaEvent();
@@ -1167,7 +1168,7 @@ export default function MarketplacePage() {
     if (typeof window === 'undefined') return;
     try {
       const payload = { search, category, sort, purpose, condition };
-      localStorage.setItem(FILTERS_KEY, JSON.stringify(payload));
+      writeOptionalBrowserPreference(FILTERS_KEY, JSON.stringify(payload));
       const params = new URLSearchParams(window.location.search);
       if (search) params.set('q', search); else params.delete('q');
       if (category !== 'all') params.set('cat', category); else params.delete('cat');

@@ -81,6 +81,9 @@ run_negative_tlc() {
     exit 1
   fi
 }
+run_tlc MarketplaceStorage.tla MarketplaceStorage.cfg marketplace-storage
+run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
+run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla
 run_tlc OptionalTokenRecovery.tla OptionalTokenRecovery.cfg optional-token-recovery
 run_negative_tlc OptionalTokenRecoveryUnsafeStorage.cfg optional-token-storage 'Temporal properties were violated' OptionalTokenRecovery.tla
 run_negative_tlc OptionalTokenRecoveryUnsafeFragment.cfg optional-token-fragment 'Invariant FragmentPrecedence is violated' OptionalTokenRecovery.tla
