@@ -83,6 +83,7 @@ Options:
   --db-app <name>    Fly PostgreSQL app (default: tdf-hq-db)
   --database <name>  PostgreSQL database (default: tdf_hq)
   --image <ref>      Immutable image; defaults to diegueins680/tdf-hq:<sha>
+  --recovery-sha <sha> Reviewed ancestor with identical migrations and compatible authentication
 `;
 }
 
@@ -116,6 +117,7 @@ export function parseArgs(argv) {
       '--app': 'app',
       '--db-app': 'dbApp',
       '--database': 'database',
+      '--recovery-sha': 'recoverySha',
     }[flag];
     if (!key || args.length === 0) throw new Error(`Unknown or incomplete option: ${flag}`);
     options[key] = args.shift();
@@ -268,6 +270,30 @@ async function resolveReleaseContext(options) {
     throw new Error('The target commit has no registered production migrations.');
   }
 
+  let recoverySha;
+  if (options.recoverySha) {
+    recoverySha = normalizeFullSha(options.recoverySha);
+    if (recoverySha === sha || !await gitIsAncestor(recoverySha, sha)) {
+      throw new Error('Recovery must be a distinct reviewed ancestor of the release.');
+    }
+    const recoveryManifest = JSON.parse(await readGitBlob(recoverySha, manifestRelativePath));
+    if (JSON.stringify(recoveryManifest) !== JSON.stringify(manifest)) {
+      throw new Error('Recovery and release must have identical migration manifests.');
+    }
+    for (const migration of migrations) {
+      const content = await expandMigrationIncludes(
+        { path: migration.path, content: await readGitBlob(recoverySha, migration.path) },
+        (includedPath) => readGitBlob(recoverySha, includedPath),
+      );
+      if (createHash('sha256').update(content).digest('hex') !== migration.checksum) {
+        throw new Error(`Recovery migration differs: ${migration.id}`);
+      }
+    }
+    if (!(await rollbackCompatibility({ migrations }, recoverySha)).compatible) {
+      throw new Error('Recovery source does not preserve the required authentication contract.');
+    }
+  }
+
   const flyConfig = await readGitBlob(sha, path.relative(rootDir, flyConfigPath));
   const securityEmergencyPreflightSql = await readGitBlob(
     sha,
@@ -283,6 +309,7 @@ async function resolveReleaseContext(options) {
     image,
     flyConfig,
     migrations,
+    recoverySha,
     securityEmergencyPreflightSql,
   };
 }
@@ -494,6 +521,15 @@ async function remotePreflight(context) {
     allowUnavailableAutomaticRunner: true,
     allowUnavailableReputationWorker: true,
   });
+  if (context.recoverySha) {
+    const repository = context.image.slice(0, context.image.lastIndexOf(':'));
+    const artifact = await verifyImageExists(`${repository}:${context.recoverySha}`, context.recoverySha);
+    context.recoveryArtifact = {
+      sha: context.recoverySha,
+      image: artifact.resolvedImage,
+      acceptableImageDigests: artifact.acceptableDigests,
+    };
+  }
   for (const machine of machines) {
     const check = await smokeMachine(context, machine.id, null);
     machine.releaseSnapshot = {
@@ -507,6 +543,12 @@ async function remotePreflight(context) {
     if (!machine.releaseSnapshot.imageDigest) blockers.push(`Machine ${machine.id} has no rollback image digest.`);
     if (!machine.releaseSnapshot.instanceId) blockers.push(`Machine ${machine.id} has no instance snapshot.`);
     if (!previousSha(machine)) blockers.push(`Machine ${machine.id} does not report a full rollback source commit.`);
+    else {
+      machine.releaseSnapshot.rollbackPolicy = await rollbackCompatibility(context, previousSha(machine));
+      if (!machine.releaseSnapshot.rollbackPolicy.compatible && !context.recoveryArtifact) {
+        blockers.push(`Machine ${machine.id} has an unsafe prior binary. Supply --recovery-sha with a verified compatible ancestor image before release.`);
+      }
+    }
   }
   for (const required of ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']) {
     if (!secrets.has(required)) blockers.push(`Required Fly secret is missing: ${required}`);
@@ -542,6 +584,12 @@ async function remotePreflight(context) {
     currentVersion: version.commit,
     resolvedImage: context.resolvedImage,
     acceptableImageDigests: [...context.acceptableImageDigests],
+    recovery: machines.map(({ id, releaseSnapshot }) => ({
+      machineId: id,
+      ...releaseSnapshot.rollbackPolicy,
+      mode: releaseSnapshot.rollbackPolicy.compatible ? 'compatible-rollback' : 'compatible-forward-recovery',
+      fallback: context.recoveryArtifact ?? null,
+    })),
   };
 }
 
@@ -652,16 +700,80 @@ function previousSha(machine) {
   }
 }
 
+// This reviewed commit binds Google authentication to issuer/subject and requires
+// deliberate new-account intent. Restoring an earlier binary would re-enable
+// email-only authority even if the additive table itself remains intact.
+const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';
+
+async function gitIsAncestor(ancestor, descendant) {
+  try {
+    await run(['git', 'merge-base', '--is-ancestor', ancestor, descendant], { log: false });
+    return true;
+  } catch (error) {
+    if (error.cause?.code === 1) return false;
+    throw error; // Missing history/tooling is not evidence of compatibility.
+  }
+}
+
+export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor) {
+  const candidate = normalizeFullSha(sha);
+  const requiredCommit = context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity')
+    ? providerIdentityFloor
+    : null;
+  return {
+    sha: candidate,
+    requiredCommit,
+    compatible: requiredCommit === null || await isAncestor(requiredCommit, candidate),
+  };
+}
+
+export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor) {
+  const policy = await rollbackCompatibility(context, sha, isAncestor);
+  if (!policy.compatible) {
+    throw new Error(`Unsafe authentication rollback blocked: ${policy.sha} predates ${policy.requiredCommit}. Keep provider bindings and recover forward with a compatible reviewed image.`);
+  }
+  return deploy();
+}
+
+export function selectRecoveryTarget(snapshot, fallback) {
+  if (snapshot.rollbackPolicy?.compatible) {
+    return { sha: snapshot.sha, image: snapshot.image, acceptableImageDigests: [snapshot.imageDigest] };
+  }
+  if (!fallback?.sha || !fallback.image || !fallback.acceptableImageDigests?.length) {
+    throw new Error('No verified compatible recovery artifact; refusing legacy rollback.');
+  }
+  return fallback;
+}
+
+export async function recoverReleaseMachines(originalMachines, touchedMachines, recover) {
+  const rollbacks = [];
+  const errors = [];
+  // Before any deploy attempt there can be no new provider authority from this
+  // release. Once a canary could serve traffic, every legacy replica must move
+  // forward too, even if rollout never reached it. Keep attempting the rest
+  // when one recovery fails; report failures instead of claiming fleet safety.
+  if (touchedMachines.size === 0) return { rollbacks, errors };
+  const required = [...originalMachines].reverse().filter(machine =>
+    touchedMachines.has(machine.id) || machine.releaseSnapshot.rollbackPolicy?.compatible === false);
+  for (const machine of required) {
+    try {
+      rollbacks.push(await recover(machine));
+    } catch (error) {
+      errors.push({ machineId: machine.id, error: error.message });
+    }
+  }
+  return { rollbacks, errors };
+}
+
 async function rollbackMachine(context, machine) {
-  const image = machine.releaseSnapshot?.image ?? previousImage(machine);
-  const sha = previousSha(machine);
+  const { image, sha, acceptableImageDigests } = selectRecoveryTarget(machine.releaseSnapshot, context.recoveryArtifact);
   if (!image || !sha) throw new Error(`Cannot construct rollback for Machine ${machine.id}.`);
   const contextualReputationEnabled = capturedContextualReputationGate(machine);
   const eventDiscoveryGates = captureEventDiscoveryGates([{ values: machine.releaseSnapshot?.runtimeEnv ?? {} }]);
   const projectionGate = await currentPublicReputationProjectionGate(context, machine);
   // Keep rollback on the same deploy lane as rollout. `flyctl machine update`
   // duplicates Docker Hub digest references as repo@digest@digest before the API call.
-  await run(buildMachineDeployArgs({
+  await withCompatibleRollback(context, sha, () => run(buildMachineDeployArgs({
     app: context.app,
     image,
     sha,
@@ -669,10 +781,10 @@ async function rollbackMachine(context, machine) {
     ...eventDiscoveryGates,
     publicReputationProjectionEnabled: projectionGate,
     onlyMachine: machine.id,
-  }));
+  })));
   const restored = (await readMachines(context.app)).find(({ id }) => id === machine.id);
   if (!restored) throw new Error(`Rolled-back Machine ${machine.id} disappeared.`);
-  if (restored.image_ref?.digest !== machine.releaseSnapshot?.imageDigest) {
+  if (!acceptableImageDigests.includes(restored.image_ref?.digest)) {
     throw new Error(`Machine ${machine.id} rollback digest does not match its snapshot.`);
   }
   const envBlockers = runtimeEnvBlockers(
@@ -884,6 +996,12 @@ async function executeRelease(context) {
     remainingMachines: remaining.map((machine) => machine.id),
     rollbacks: [],
     rollout: [],
+    recovery: originalMachines.map(({ id, releaseSnapshot }) => ({
+      machineId: id,
+      ...releaseSnapshot.rollbackPolicy,
+      mode: releaseSnapshot.rollbackPolicy.compatible ? 'compatible-rollback' : 'compatible-forward-recovery',
+      fallback: context.recoveryArtifact ?? null,
+    })),
   };
   const touchedMachines = new Set();
   const leaseToken = randomUUID();
@@ -926,9 +1044,8 @@ async function executeRelease(context) {
     try {
       report.canary = await verifyTargetMachine(context, canary.id);
     } catch (error) {
-      report.rollbacks.push(await rollbackMachine(context, canary));
-      touchedMachines.delete(canary.id);
-      throw new Error(`Canary verification failed and was rolled back: ${error.message}`, { cause: error });
+      report.canaryVerificationError = error.message;
+      throw new Error(`Canary verification failed; compatible fleet recovery required: ${error.message}`, { cause: error });
     }
 
     for (const machine of remaining) {
@@ -970,15 +1087,10 @@ async function executeRelease(context) {
       report.reportPath = await writeReport(context, report);
       return report;
     }
-    const rollbackErrors = [];
-    for (const machine of [...originalMachines].reverse().filter(({ id }) => touchedMachines.has(id))) {
-      try {
-        report.rollbacks.push(await rollbackMachine(context, machine));
-      } catch (rollbackError) {
-        rollbackErrors.push({ machineId: machine.id, error: rollbackError.message });
-      }
-    }
-    report.rollbackErrors = rollbackErrors;
+    const recovery = await recoverReleaseMachines(originalMachines, touchedMachines,
+      machine => rollbackMachine(context, machine));
+    report.rollbacks.push(...recovery.rollbacks);
+    report.rollbackErrors = recovery.errors;
     if (leaseHeld) {
       try {
         await releaseReleaseLease(context, leaseToken);
@@ -1010,7 +1122,14 @@ async function main() {
       flyConfig: context.flyConfig,
       dryRun: true,
     });
-    console.log(JSON.stringify(plan, null, 2));
+    console.log(JSON.stringify({
+      ...plan,
+      recoveryPolicy: {
+        minimumAuthenticationCommit: context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity') ? providerIdentityFloor : null,
+        fallbackSource: context.recoverySha ?? null,
+        immutableArtifactVerification: 'required in preflight',
+      },
+    }, null, 2));
     return;
   }
 
@@ -1027,6 +1146,7 @@ async function main() {
       securityEmergencyReadiness: preflight.securityEmergencyReadiness,
       currentVersion: preflight.currentVersion,
       resolvedImage: preflight.resolvedImage,
+      recovery: preflight.recovery,
     }, null, 2));
     return;
   }
