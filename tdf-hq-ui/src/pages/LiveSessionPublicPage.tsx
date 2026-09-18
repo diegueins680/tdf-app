@@ -19,16 +19,15 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { LiveSessionIntakeForm } from './LiveSessionIntakePage';
 import { resolveApiBase } from '../config/apiBase';
-import { setTransientApiToken, useSession } from '../session/SessionContext';
 
 export default function LiveSessionPublicPage() {
   const [sp] = useSearchParams();
   const tokenFromQuery = sp.get('token') ?? sp.get('t') ?? '';
-  const { session } = useSession();
   const [accessCode, setAccessCode] = useState(() => tokenFromQuery);
   const [codeStatus, setCodeStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [lastValidatedCode, setLastValidatedCode] = useState('');
+  const [verifiedPartyId, setVerifiedPartyId] = useState<number>();
   const canUseForm = codeStatus === 'valid' && accessCode.trim() === lastValidatedCode;
   const validationGeneration = useRef(0);
   const pendingValidation = useRef<AbortController | null>(null);
@@ -58,6 +57,7 @@ export default function LiveSessionPublicPage() {
     try {
       const res = await fetch(`${resolveApiBase()}/session`, {
         headers: { Authorization: `Bearer ${code}` },
+        credentials: 'omit',
         signal: controller.signal,
       });
       if (!res.ok) throw new Error('invalid');
@@ -67,6 +67,7 @@ export default function LiveSessionPublicPage() {
         throw new Error('invalid');
       }
       if (generation !== validationGeneration.current) return;
+      setVerifiedPartyId(Number(account.partyId));
       setCodeStatus('valid');
       setLastValidatedCode(code);
     } catch {
@@ -85,22 +86,6 @@ export default function LiveSessionPublicPage() {
     setAccessCode(tokenFromQuery);
     setCodeStatus('idle');
   }, [tokenFromQuery, invalidateValidation]);
-
-  useEffect(() => {
-    const code = accessCode.trim();
-    if (session) {
-      setTransientApiToken(null);
-      return undefined;
-    }
-    if (!code || !canUseForm) {
-      setTransientApiToken(null);
-      return undefined;
-    }
-    setTransientApiToken(code);
-    return () => {
-      setTransientApiToken(null);
-    };
-  }, [accessCode, canUseForm, session]);
 
   useEffect(() => {
     const code = accessCode.trim();
@@ -235,7 +220,7 @@ export default function LiveSessionPublicPage() {
                 )}
               </Stack>
               <Box component="fieldset" disabled={!canUseForm} sx={{ minWidth: 0, m: 0, p: 0, border: 0 }}>
-                <LiveSessionIntakeForm variant="public" />
+                <LiveSessionIntakeForm key={verifiedPartyId ?? 'unverified'} variant="public" draftOwner={verifiedPartyId} accessCode={canUseForm ? lastValidatedCode : undefined} />
               </Box>
             </Stack>
           </Paper>

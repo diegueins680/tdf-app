@@ -136,7 +136,7 @@
     "releaseStatus": "Auth/public navigation and Spanish policy translations implemented in #422 successor;20/20 bilingual production-bundle cases and mobile458 tests pass. Whole-platform bilingual coverage remains open.",
     "status": "in progress",
     "implementationStatus": "in progress",
-    "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
+    "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending.",
     "mergeStatus": "pending"
   },
   {
@@ -954,8 +954,8 @@
     "surface": "LiveSessionPublicPage; LiveSessionIntakePage",
     "evidence": "Actual isolated backend with valid synthetic token: /live-sessions/intake/ping404 while /session200 returns matching persisted party. Source skipped validation entirely with empty API base.",
     "userImpact": "Public journey becomes inaccessible or cannot safely continue.",
-    "rootCause": "Invented endpoint and superficial HTTP handling; no asynchronous generation fence; opacity/pointer-events failed to disable keyboard controls.",
-    "proposedChange": "Use configured session contract; require positive safe integer partyId; abort/timeout and generation fence; native disabled fieldset retains input during revalidation.",
+    "rootCause": "Invented endpoint and superficial HTTP handling; no asynchronous generation fence; opacity/pointer-events failed to disable keyboard controls. Review exposed ambient cookie/Bearer conflicts and globally shared transient credentials; submission completion also lacked current-code generation fencing. Legacy unscoped local draft could load another account’s saved intake.",
+    "proposedChange": "Use configured session contract; require positive safe integer partyId; abort/timeout and generation fence; native disabled fieldset retains input during revalidation. Explicit credentials: omit cookies during validation and submission, never overwrite global session token; public form omits private CRM selector/prewrites; current-generation receipt only after persistence. Draft storage is partitioned by verified party and public/internal variant; unverified forms do not read/write stored drafts; switching verified owners remounts form; legacy unscoped content remains untouched and is not auto-imported.",
     "dependencies": [
       "PR #422"
     ],
@@ -963,7 +963,31 @@
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
     "status": "implemented",
     "implementationStatus": "local scoped repair",
-    "verificationStatus": "8 component cases pass within43-test set; AccessCodeValidation TLC9 states safety/liveness plus stale and superficial-response negative controls; full pinned TLC/Alloy runner passes. HTTP endpoint behavior independently confirmed; no production submission inferred.",
+    "verificationStatus": "Full web217 suites/2085 tests before final small transport/draft edits; affected final15 tests pass. AccessCodeValidation9 states and LiveIntakeAuthority42 states plus named negative controls pass. Real browser against isolated PostgreSQL17 verifies explicit code account persisted the inscription while unrelated cookie session is unchanged. Fresh/stored-Spanish recovery link opens English in Chromium/Firefox/WebKit. No production intake submitted.",
+    "mergeStatus": "pending",
+    "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-021",
+    "kind": "confirmed",
+    "title": "Live Session optional null values contradict the published intake contract",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "Public or staff musician submits an otherwise valid inscription with optional fields empty",
+    "roles": "authenticated intake users and invited musicians",
+    "surface": "LiveSessionIntakeForm; LiveSessions multipart parser; canonical OpenAPI",
+    "evidence": "Actual new production UI bundle and isolated PostgreSQL17 backend returned HTTP400: email must be omitted instead of null. Canonical LiveSessionMusician and LiveSessionSong schemas explicitly allow nullable optionals. No persistence occurred in this rejected request.",
+    "userImpact": "A normal form submission cannot complete without filling optional fields.",
+    "rootCause": "Optional nested alias parser rejects null, while client and published schema support it.",
+    "proposedChange": "Omit null nested optionals in web transport for old-server compatibility; backend accepts unambiguous nullable optional values while still rejecting conflicting canonical/legacy aliases, invalid references and required-field violations.",
+    "dependencies": [
+      "PR #422"
+    ],
+    "acceptanceCriteria": "Empty optional musician/song fields can persist; old/new client/server combinations stay compatible; contradictory aliases remain rejected; no change to ownership or permission rules.",
+    "verificationMethod": "Actual multipart HTTP and DB persistence; parser regression tests; web wire-contract regression.",
+    "status": "implemented",
+    "implementationStatus": "local repair",
+    "verificationStatus": "33 multipart Hspec examples pass, preserving contradictory alias rejection. Web wire omission regression passes. Real browser writes with old strict backend; new compiled backend direct HTTP200 persists owner50,1 musician and1 song with null optionals in isolated PostgreSQL17.",
     "mergeStatus": "pending",
     "releaseStatus": "not deployed"
   }

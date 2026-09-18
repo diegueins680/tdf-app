@@ -51,6 +51,12 @@ describe('auth api', () => {
     expect(JSON.parse(init.body)).toEqual({ email: 'ana@example.com' });
   });
 
+  it('carries the requested recovery language without changing the email body', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true } as Response);
+    await requestPasswordReset('ana@example.com', '/fans', 'en-US');
+    expect(fetchMock).toHaveBeenCalledWith('/v1/password-reset?redirect=%2Ffans&locale=en', expect.objectContaining({ body: JSON.stringify({ email: 'ana@example.com' }) }));
+  });
+
   it('posts password reset confirmations to the v1 confirm endpoint', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,

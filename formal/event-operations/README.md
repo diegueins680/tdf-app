@@ -152,3 +152,24 @@ syntax mistakenly made the context predicate a transition guard instead of the
 assigned boolean; TLC's liveness counterexample exposed the disabled stale-response
 transition. Parenthesizing the assigned expression restored the intended discard
 transition. This model-authoring error is distinct from the component regressions.
+
+## Live Session submission authority — 2026-09-18
+
+`LiveIntakeAuthority` connects UX-260917-020 to explicit credential transport and
+receipt fencing in `LiveSessionIntakeForm` / `submitLiveSessionIntake`. TLC1.7.2
+exhaustively checked96 generated /42 distinct states (depth5): two accounts,
+one verified code, one submission, up to two code edits, arbitrary ambient cookie
+switches, and successful or failed persistence. `ExplicitAuthority` requires that
+writes use the verified code account; `CurrentReceipt` excludes stale/ABA success;
+`PersistedReceipt` permits success only after persistence. Weak fairness of the
+backend response action establishes that a pending request eventually settles.
+This assumes a response eventually arrives; it does not prove network availability,
+transactional atomicity of the intake handler, duplicate-submission prevention,
+or permissions of unrelated CRM handlers.
+
+Three executable negative controls independently remove explicit credentials,
+receipt generation fencing, or persistence confirmation. Each produced its named
+invariant counterexample. Component regressions cover the corresponding UI/API
+mechanisms, and an actual isolated HTTP/PostgreSQL browser test checks code-account
+persistence while a different cookie account remains signed in. Optional nested
+null handling is covered by multipart parser contract tests, not this state model.
