@@ -148,17 +148,17 @@
     "journey": "arrival/authentication/first useful action",
     "roles": "anonymous and all authenticated roles",
     "surface": "Browser storage denial can prevent public app startup",
-    "evidence": "i18n/index.ts reads localStorage before module initialization; AppThemeProvider read/write outside try; SessionContext evaluates storage getter before its inner catch. Runtime regression added before fixes. Follow-up provider integration reproduced two further crashes with actual nonempty locale/currency catalog data. Original browser fixture had empty catalog data and missed this path. 2026-09-18: nine actual isolated authenticated arrival failures under storage denial. Page fixes exposed eight remaining failures from RadioWidget; captured component stack proves shared root cause. See storage-boundaries.md.",
+    "evidence": "i18n/index.ts reads localStorage before module initialization; AppThemeProvider read/write outside try; SessionContext evaluates storage getter before its inner catch. Runtime regression added before fixes. Follow-up provider integration reproduced two further crashes with actual nonempty locale/currency catalog data. Original browser fixture had empty catalog data and missed this path. 2026-09-18: nine actual isolated authenticated arrival failures under storage denial. Page fixes exposed eight remaining failures from RadioWidget; captured component stack proves shared root cause. See storage-boundaries.md. 2026-09-18 directory follow-up: optional city getter/getItem/setItem crashes confirmed by three failing original component cases; see directory-entry.md.",
     "userImpact": "Visitor cannot reach login or discovery when browser storage is restricted.",
     "rootCause": "Optional preferences/session cache treated as required boot dependencies.",
     "proposedChange": "Keep preferences in memory when storage unavailable; protect getter/read/write boundaries without fabricating a session.",
     "dependencies": [],
     "acceptanceCriteria": "Anonymous login renders and theme toggle retains input under denied operations/getters; no uncaught errors; no unauthorized session created.",
     "verificationMethod": "Playwright Chromium/Firefox/WebKit, desktop/tablet/phone and axe; exact baseline/final logs.",
-    "releaseStatus": "Merged#421; web deployment437fddd and anonymous phone smoke under denied storage getters confirmed. No claim of exhaustive authenticated coverage. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation. This remaining-storage continuation is not merged/deployed.",
+    "releaseStatus": "Merged#421; web deployment437fddd and anonymous phone smoke under denied storage getters confirmed. No claim of exhaustive authenticated coverage. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation. This remaining-storage continuation is not merged/deployed. New directory follow-up not yet merged/deployed.",
     "status": "implemented",
-    "implementationStatus": "Earlier startup fixes deployed; additional trial filters, service token-cache recovery and all authenticated radio preference accesses implemented. Directory follow-up separately preserved in PR447.",
-    "verificationStatus": "see evidence and acceptance criteria; full coverage not complete Storage continuation:40 focused tests;48 final actual isolated Admin/API browser cases across3engines;20 controlled anonymous cases on page-fix predecessor; full pinned formal suite,TS/lint/build/strict1138catalog pass. Intermediate RadioWidget failures excluded.",
+    "implementationStatus": "Earlier startup fixes deployed; additional trial filters, service token-cache recovery and all authenticated radio preference accesses implemented. Directory follow-up separately preserved in PR447.\nRelated increment evidence: Previous startup fixes deployed; directory city follow-up implemented with URL/in-memory fallback.",
+    "verificationStatus": "see evidence and acceptance criteria; full coverage not complete Storage continuation:40 focused tests;48 final actual isolated Admin/API browser cases across3engines;20 controlled anonymous cases on page-fix predecessor; full pinned formal suite,TS/lint/build/strict1138catalog pass. Intermediate RadioWidget failures excluded. Directory follow-up: 18 focused tests, pinned formal suite, TypeScript/lint/build and targeted production-bundle browser checks; see directory-entry.md and receipt.",
     "mergeStatus": "merged #421 as 6b48449e7f934e91b9450c44be3b43873922ffd9"
   },
   {
@@ -1614,5 +1614,30 @@
         "implication": "Ordinary content should fit320CSSpx without two-dimensional scrolling; contained tab strip remains independently scrollable."
       }
     ]
+  },
+  {
+    "id": "UX-260917-046",
+    "kind": "confirmed",
+    "title": "Directory favorites apply obsolete session authority",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "Discovery → save event → authoritative first useful action; logout/account switching",
+    "roles": "Authenticated directory visitors, including A→B→A return",
+    "surface": "DirectorySearchPage / ResultCard favorites and first-value capture",
+    "status": "implemented",
+    "evidence": "Three actual component counterexamples fail original dispatch/receipt behavior; late read and ambiguous network recovery tested. See directory-entry.md.",
+    "rootCause": "Party-only effect-delayed guard and cache keys cannot distinguish session occurrences or immediate revocation.",
+    "userImpact": "An obsolete control may send a favorite mutation using a newer session; delayed success may mark progress or update saved state after switching accounts.",
+    "acceptanceCriteria": "Check current occurrence before requests and receipt effects, isolate read caches, preserve public search input, and only acknowledge persisted success. Offer authoritative refresh after ambiguous failure.",
+    "implementationStatus": "Immediate session identity, occurrence/mount predicates, isolated query scopes, guarded first-value callback, refresh action.",
+    "verificationMethod": "Component counterexamples/conformance tests; executable TLC model with named negative controls; production-bundle browser checks for affected arrival.",
+    "verificationStatus": "18 focused tests pass; 356/208 TLC states depth9, dispatch29 and receipt63 negative controls; full pinned formal suite passes. TS/lint/build and strict1138-candidate catalog gate pass. Browser receipt contains exact scope. Review follow-up:19 focused tests and5 recovery browser cases pass; authoritative refresh clears error only on success/current session. New initialJS365647gzip.",
+    "dependencies": [
+      "independent review",
+      "applicable CI",
+      "Cloudflare deployment and production verification"
+    ],
+    "mergeStatus": "PR447; independent approval and refreshed checks required.",
+    "releaseStatus": "Not deployed."
   }
 ]

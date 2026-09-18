@@ -35,7 +35,7 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import LoginIcon from '@mui/icons-material/Login';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
 import {
@@ -49,7 +49,7 @@ import OpenStreetMapResults from '../components/directory/OpenStreetMapResults';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { useMetaTags } from '../hooks/useMetaTags';
-import { useSession } from '../session/SessionContext';
+import { getActiveSession, useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { API_BASE_URL } from '../api/client';
 
@@ -86,16 +86,26 @@ export default function DirectorySearchPage() {
   const navigate = useNavigate();
   const { session } = useSession();
   const queryClient = useQueryClient();
-  const activePartyIdRef = useRef(session?.partyId);
+  const scope = useId();
+  const occurrence = useRef({ session, generation: 0 });
+  if (occurrence.current.session !== session) occurrence.current = { session, generation: occurrence.current.generation + 1 };
+  const generation = occurrence.current.generation;
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const isActiveParty = (expectedPartyId: number) => mounted.current && session?.partyId === expectedPartyId
+    && getActiveSession() === session && occurrence.current.generation === generation;
   const initial = useMemo(() => new URLSearchParams(location.search), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [draftQuery, setDraftQuery] = useState(initial.get('q') ?? '');
   const [query, setQuery] = useState(initial.get('q') ?? '');
   const [entityType, setEntityType] = useState<DirectoryEntityType | 'all'>(
     (initial.get('entityType') as DirectoryEntityType | null) ?? 'all',
   );
-  const [cityId, setCityId] = useState(
-    initial.get('cityId') ?? (typeof localStorage === 'undefined' ? '' : localStorage.getItem(CITY_STORAGE_KEY) ?? ''),
-  );
+  const [cityId, setCityId] = useState(() => {
+    const requestedCity = initial.get('cityId');
+    if (requestedCity !== null) return requestedCity;
+    try { return window.localStorage.getItem(CITY_STORAGE_KEY) ?? ''; }
+    catch { return ''; } // A saved city is optional; search remains available.
+  });
   const [professionId, setProfessionId] = useState(initial.get('professionId') ?? '');
   const [serviceId, setServiceId] = useState(initial.get('serviceId') ?? '');
   const [instrumentId, setInstrumentId] = useState(initial.get('instrumentId') ?? '');
@@ -106,10 +116,6 @@ export default function DirectorySearchPage() {
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [geoMessage, setGeoMessage] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'grid' | 'map'>('list');
-
-  useEffect(() => {
-    activePartyIdRef.current = session?.partyId;
-  }, [session?.partyId]);
 
   useMetaTags({
     title: query ? `${query} en el directorio musical` : 'Directorio y clasificados musicales',
@@ -138,7 +144,9 @@ export default function DirectorySearchPage() {
   }, [cityId, coordinates, taxonomies.data]);
 
   useEffect(() => {
-    if (cityId) localStorage.setItem(CITY_STORAGE_KEY, cityId);
+    if (!cityId) return;
+    try { window.localStorage.setItem(CITY_STORAGE_KEY, cityId); }
+    catch { /* Keep the selected city in memory and in the search URL. */ }
   }, [cityId]);
 
   const searchBase: DirectorySearchQuery = {
@@ -173,10 +181,16 @@ export default function DirectorySearchPage() {
     : taxonomies.data?.cities.some((city) => city.id === cityId)
       ? cityId
       : '';
-  const favoritesQueryKey = ['directory', 'favorites', session?.partyId] as const;
+  const favoritesQueryKey = ['directory', 'favorites', session?.partyId, scope, generation] as const;
   const favorites = useQuery({
     queryKey: favoritesQueryKey,
-    queryFn: () => Directory.favorites(),
+    queryFn: async () => {
+      const ownerPartyId = session?.partyId;
+      if (ownerPartyId === undefined || !isActiveParty(ownerPartyId)) throw new Error('Sesión cambiada');
+      const saved = await Directory.favorites();
+      if (!isActiveParty(ownerPartyId)) throw new Error('Sesión cambiada');
+      return saved;
+    },
     enabled: Boolean(session?.partyId),
     retry: false,
   });
@@ -191,12 +205,18 @@ export default function DirectorySearchPage() {
       : favorites.isError
         ? 'error'
         : 'ready';
+  const refreshFavorites = async (): Promise<boolean> => {
+    const ownerPartyId = session?.partyId;
+    if (ownerPartyId === undefined || !isActiveParty(ownerPartyId)) return false;
+    const result = await favorites.refetch();
+    return result.isSuccess && isActiveParty(ownerPartyId);
+  };
   const updateFavoriteCache = (
     expectedPartyId: number,
     item: DirectorySearchItem,
     saved: boolean,
   ) => {
-    if (activePartyIdRef.current !== expectedPartyId) return;
+    if (!isActiveParty(expectedPartyId)) return;
     queryClient.setQueryData<DirectoryFavorite[]>(favoritesQueryKey, (current = []) => {
       const withoutTarget = current.filter(
         (favorite) => favorite.targetKind !== item.type || favorite.targetId !== item.id,
@@ -373,7 +393,7 @@ export default function DirectorySearchPage() {
           {sponsored.length > 0 && (
             <Box component="section" aria-labelledby="sponsored-heading">
               <Typography id="sponsored-heading" variant="overline">Patrocinados</Typography>
-              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout="list" isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} isActiveParty={(expectedPartyId) => activePartyIdRef.current === expectedPartyId} />)}</Stack>
+              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout="list" isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={refreshFavorites} isActiveParty={isActiveParty} />)}</Stack>
             </Box>
           )}
 
@@ -394,7 +414,7 @@ export default function DirectorySearchPage() {
           {view === 'map' && items.length > 0 ? <OpenStreetMapResults items={items} /> : null}
           {view !== 'map' && items.length > 0 ? (
             <Box sx={{ display: 'grid', gridTemplateColumns: view === 'grid' ? { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' } : '1fr', gap: 2 }}>
-              {items.map((item) => <ResultCard key={`${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout={view === 'grid' ? 'grid' : 'list'} isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} isActiveParty={(expectedPartyId) => activePartyIdRef.current === expectedPartyId} />)}
+              {items.map((item) => <ResultCard key={`${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout={view === 'grid' ? 'grid' : 'list'} isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={refreshFavorites} isActiveParty={isActiveParty} />)}
             </Box>
           ) : null}
           {results.hasNextPage && <Button variant="outlined" size="large" onClick={() => { void results.fetchNextPage(); }} disabled={results.isFetchingNextPage} sx={{ alignSelf: 'center' }}>{results.isFetchingNextPage ? 'Cargando…' : 'Ver más resultados'}</Button>}
@@ -411,6 +431,7 @@ function ResultCard({
   isFavorite,
   favoriteAvailability,
   onFavoriteChanged,
+  onRefreshFavorites,
   isActiveParty,
 }: {
   item: DirectorySearchItem;
@@ -419,6 +440,7 @@ function ResultCard({
   isFavorite: boolean;
   favoriteAvailability: 'unauthenticated' | 'loading' | 'error' | 'ready';
   onFavoriteChanged: (partyId: number, item: DirectorySearchItem, saved: boolean) => void;
+  onRefreshFavorites: () => Promise<boolean>;
   isActiveParty: (partyId: number) => boolean;
 }) {
   const path = resultPath(item);
@@ -426,6 +448,7 @@ function ResultCard({
   const imageUrl = resolveImageUrl(item.imageUrl) ?? fallbackImageUrl;
   const favorite = useMutation({
     mutationFn: async ({ ownerPartyId, saved }: { ownerPartyId: number; saved: boolean }) => {
+      if (!isActiveParty(ownerPartyId)) throw new Error('Sesión cambiada');
       if (saved) await Directory.addFavorite(item.type, item.id);
       else await Directory.removeFavorite(item.type, item.id);
       return { ownerPartyId, saved };
@@ -441,7 +464,7 @@ function ResultCard({
         source: 'web_directory_search',
       });
       if (saved && item.type === 'event') {
-        void captureFirstValueOnce(analytics, ownerPartyId, 'event_saved');
+        void captureFirstValueOnce(analytics, ownerPartyId, 'event_saved', undefined, () => isActiveParty(ownerPartyId));
       }
     },
   });
@@ -507,7 +530,7 @@ function ResultCard({
           <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
           {partyId ? (
             <Button
-              onClick={() => favorite.mutate({ ownerPartyId: partyId, saved: !isFavorite })}
+              onClick={() => { if (isActiveParty(partyId)) favorite.mutate({ ownerPartyId: partyId, saved: !isFavorite }); }}
               disabled={favorite.isPending || favoriteAvailability !== 'ready'}
               startIcon={isFavorite ? <BookmarkIcon /> : <BookmarkBorderIcon />}
               aria-pressed={isFavorite}
@@ -531,8 +554,8 @@ function ResultCard({
           )}
         </CardActions>
         {favorite.isError ? (
-          <Alert severity="error" sx={{ mx: 2, mb: 2 }}>
-            No se pudo {isFavorite ? 'quitar' : 'guardar'} este resultado. Tu cuenta no cambió; inténtalo otra vez.
+          <Alert severity="error" sx={{ mx: 2, mb: 2 }} action={<Button onClick={() => { void onRefreshFavorites().then((refreshed) => { if (refreshed && partyId !== undefined && isActiveParty(partyId)) favorite.reset(); }); }}>Consultar guardados</Button>}>
+            No pudimos confirmar el cambio de este resultado. Vuelve a consultar tus guardados antes de intentarlo otra vez.
           </Alert>
         ) : null}
       </Box>

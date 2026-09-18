@@ -95,6 +95,9 @@ run_tlc CalendarConnection.tla CalendarConnection.cfg calendar-connection
 run_negative_tlc CalendarConnectionReplay.cfg calendar-replay 'Invariant AtMostOneAutomaticExchange is violated' CalendarConnection.tla
 run_negative_tlc CalendarConnectionStorage.cfg calendar-storage 'Invariant OnlyPersistedConnection is violated' CalendarConnection.tla
 run_negative_tlc CalendarConnectionStale.cfg calendar-stale 'Invariant CurrentSessionReceipt is violated' CalendarConnection.tla
+run_tlc DirectoryFavoriteAuthority.tla DirectoryFavoriteAuthority.cfg directory-favorite-authority
+run_negative_tlc DirectoryFavoriteAuthorityUnsafeDispatch.cfg directory-favorite-dispatch 'Invariant AuthorizedDispatch is violated' DirectoryFavoriteAuthority.tla
+run_negative_tlc DirectoryFavoriteAuthorityUnsafeReceipt.cfg directory-favorite-receipt 'Invariant CurrentSessionReceipt is violated' DirectoryFavoriteAuthority.tla
 run_negative_tlc ExperimentAuthorityStale.cfg experiment-stale 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityDuplicate.cfg experiment-duplicate 'Invariant ExposureAtMostOnce is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityAccount.cfg experiment-account 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla

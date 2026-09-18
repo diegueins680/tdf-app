@@ -367,3 +367,11 @@ render, A→B→A, cache races, and persisted timestamps. The model abstracts pr
 exchange/persistence, selected-calendar identities and query-library scheduling; those
 require HTTP and component/browser conformance tests. It does not prove Google OAuth
 consent, token revocation, server authorization or arbitrary calendar handlers.
+## Directory favorite authority (2026-09-18)
+
+`DirectoryFavoriteAuthority` bounds one read/save request, three session occurrences,
+lagging render and unmount. TLC checks356 generated/208distinct states (depth9),
+current-session dispatch/receipt and authoritative persistence. Weak fairness assumes
+dispatch and eventual success/failure response; terminal quiescence is permitted.
+Unsafe dispatch/receipt variants must violate their named invariants (29/63states).
+[Implementation, counterexamples and limits](../../docs/ux-ui-audit/2026-09-17/directory-entry.md).
