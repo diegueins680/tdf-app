@@ -23,7 +23,7 @@ it.each([
   fireEvent.change(screen.getByLabelText(new RegExp(`^${field}`)), { target: { value: 'Synthetic Contact' } });
   fireEvent.click(screen.getByRole('button', { name: 'Crear' }));
   await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
-  const cancel = screen.getByRole('button', { name: 'Cancelar' }) as HTMLButtonElement;
+  const cancel = screen.getByRole<HTMLButtonElement>('button', { name: 'Cancelar' });
   expect(cancel.disabled).toBe(true);
   fireEvent.click(cancel);
   fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape', code: 'Escape' });
