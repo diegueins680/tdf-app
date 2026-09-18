@@ -366,8 +366,9 @@ internAuditServer user =
               , M.notificationNotifType = "internship_audit_assigned"
               , M.notificationTitle = "Nueva tarea de prácticas"
               , M.notificationBody = "Tu auditoría funcional del estudio está lista. Abre Prácticas para comenzar."
-              , M.notificationTargetType = Just "internship_task"
+              , M.notificationTargetType = Just "intern_audit_plan"
               , M.notificationTargetId = Nothing
+              , M.notificationTargetKey = Just (toPathPiece planKey)
               , M.notificationIsRead = False
               , M.notificationCreatedAt = now
               }
@@ -1062,6 +1063,7 @@ internAuditServer user =
           , M.notificationBody = notificationBody
           , M.notificationTargetType = Just "intern_audit_plan"
           , M.notificationTargetId = Nothing
+          , M.notificationTargetKey = Just (toPathPiece planKey)
           , M.notificationIsRead = False
           , M.notificationCreatedAt = now
           }) recipients

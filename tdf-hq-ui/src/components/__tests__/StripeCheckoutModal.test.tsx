@@ -9,7 +9,7 @@ import type {
   StripePaymentIntentDTO,
   TicketPurchaseWithPromoDTO,
 } from '../../api/socialEvents';
-import type { Stripe } from '@stripe/stripe-js';
+import type { Stripe, PaymentIntentResult } from '@stripe/stripe-js';
 import appI18n from '../../i18n/index';
 
 const validatePromoCode =
@@ -39,11 +39,15 @@ jest.unstable_mockModule('@stripe/stripe-js', () => ({
   loadStripe: () => Promise.resolve(null),
 }));
 
+const confirmPayment = jest.fn<() => Promise<PaymentIntentResult>>();
+const submitElements = jest.fn<() => Promise<{ error?: { message: string } }>>();
+let paymentSdkAvailable = false;
+
 jest.unstable_mockModule('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: ReactNode }) => <>{children}</>,
   PaymentElement: () => <div data-testid="stripe-payment-element" />,
-  useStripe: () => null,
-  useElements: () => null,
+  useStripe: () => paymentSdkAvailable ? { confirmPayment } : null,
+  useElements: () => paymentSdkAvailable ? { submit: submitElements } : null,
 }));
 
 const { StripeCheckoutModal } = await import('../StripeCheckoutModal');
@@ -102,6 +106,8 @@ describe('StripeCheckoutModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    paymentSdkAvailable = false;
+    submitElements.mockResolvedValue({});
     loadCheckoutStripe.mockResolvedValue({} as Stripe);
   });
 
@@ -337,6 +343,47 @@ describe('StripeCheckoutModal', () => {
     expect(screen.getByRole('button', { name: /Cancel/i })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
     expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('retains a pending payment confirmation and delivers successful completion once', async () => {
+    paymentSdkAvailable = true;
+    let finish!: (result: PaymentIntentResult) => void;
+    confirmPayment.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    createPaymentIntent.mockResolvedValueOnce({ spiClientSecret: 'secret', spiOrderId: 'order-paid', spiPaymentIntentId: 'intent-paid', spiAmountCents: 5000, spiCurrency: 'USD' });
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+    const pay = await screen.findByRole('button', { name: /^Pay /i });
+    const form = pay.closest('form')!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await waitFor(() => expect(confirmPayment).toHaveBeenCalledTimes(1));
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    const backdrop = document.querySelector('.MuiBackdrop-root')!;
+    fireEvent.mouseDown(backdrop);
+    fireEvent.click(backdrop);
+    expect(mockOnClose).not.toHaveBeenCalled();
+    finish({ paymentIntent: { id: 'intent-paid', status: 'succeeded' } } as PaymentIntentResult);
+    fireEvent.click(await screen.findByRole('button', { name: /Close/i }));
+    expect(mockOnSuccess).toHaveBeenCalledTimes(1);
+    expect(mockOnSuccess).toHaveBeenCalledWith('order-paid');
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('restores dismissal after a provider rejects payment without reporting success', async () => {
+    paymentSdkAvailable = true;
+    confirmPayment.mockResolvedValueOnce({ error: { type: 'card_error', message: 'Card declined' } });
+    createPaymentIntent.mockResolvedValueOnce({ spiClientSecret: 'secret', spiOrderId: 'order-rejected', spiPaymentIntentId: 'intent-rejected', spiAmountCents: 5000, spiCurrency: 'USD' });
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Pay /i }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Card declined');
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+    expect(mockOnSuccess).not.toHaveBeenCalled();
   });
 
   it('closes modal on cancel', () => {

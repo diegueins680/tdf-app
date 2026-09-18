@@ -54,6 +54,7 @@ interface CheckoutFormProps {
   orderId: string | null;
   onSuccess: (orderId: string) => void;
   onBack: () => void;
+  onProcessingChange: (processing: boolean) => void;
 }
 
 interface DivRef {
@@ -81,10 +82,11 @@ const CHECKOUT_ACTION_SPINNER_SIZE_PX = 2 * 10 + 4;
 const CHECKOUT_SUCCESS_AUTO_CLOSE_DELAY_MS = 2 * 1000;
 
 
-function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBack }: CheckoutFormProps) {
+function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBack, onProcessingChange }: CheckoutFormProps) {
   const { t } = useTranslation();
   const stripe = useStripe();
   const elements = useElements();
+  const paymentInFlight = useRef(false);
   const [state, dispatch] = useReducer(checkoutFormReducer, initialCheckoutFormState);
   const paymentSummaryRef = useRef(null) as DivRef;
   const paymentErrorRef = useRef(null) as DivRef;
@@ -100,12 +102,15 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
   }, [state.error]);
 
   const submitPayment = async () => {
+    if (paymentInFlight.current) return;
     if (!stripe || !elements) {
       dispatch({ type: 'submitFailed', error: t('checkout.errors.stripeMissing') });
       window.requestAnimationFrame(() => paymentErrorRef.current?.focus());
       return;
     }
 
+    paymentInFlight.current = true;
+    onProcessingChange(true);
     dispatch({ type: 'submitStarted' });
 
     try {
@@ -138,6 +143,9 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
       dispatch({ type: 'submitFailed', error: t('checkout.errors.paymentUnclear') });
     } catch (err) {
       dispatch({ type: 'submitFailed', error: err instanceof Error ? err.message : t('checkout.errors.unexpected') });
+    } finally {
+      paymentInFlight.current = false;
+      onProcessingChange(false);
     }
   };
 
@@ -224,6 +232,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   const buyerAttempt = useRef(0);
   const buyerPending = useRef(false);
   const reservationPending = useRef(false);
+  const paymentPending = useRef(false);
   const [reserving, setReserving] = useState(false);
   const returnFocusRef = useRef(null) as HTMLElementRef;
   const nameInputRef = useRef(null) as InputRef;
@@ -240,6 +249,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
     setStripeClient(null);
     buyerPending.current = false;
     reservationPending.current = false;
+    paymentPending.current = false;
     setReserving(false);
     if (successTimerRef.current !== null) window.clearTimeout(successTimerRef.current);
     successTimerRef.current = null;
@@ -357,7 +367,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   };
 
   const handleClose = () => {
-    if (reservationPending.current) return;
+    if (reservationPending.current || paymentPending.current) return;
     buyerAttempt.current += 1;
     buyerPending.current = false;
     if (successTimerRef.current !== null) {
@@ -494,6 +504,9 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
               orderId={state.orderId}
               onSuccess={handlePaymentSuccess}
               onBack={handleBackToBuyerDetails}
+              onProcessingChange={(processing) => {
+                if (renderAttempt === buyerAttempt.current) paymentPending.current = processing;
+              }}
             />
           </Elements>
         )}
