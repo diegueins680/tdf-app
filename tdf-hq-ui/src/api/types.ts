@@ -1467,6 +1467,7 @@ export interface ContentReactionReq {
 }
 
 export interface NotificationDTO {
+  nTargetKey?: string | null;
   nId: number;
   nType: string;
   nTitle: string;

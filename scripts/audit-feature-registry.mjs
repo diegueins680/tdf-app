@@ -72,6 +72,8 @@ function expoRouteForFile(file) {
   const relative = path.relative(mobileAppPath, file).replaceAll(path.sep, '/');
   if (!/\.[cm]?[jt]sx?$/.test(relative)) return null;
   const withoutExtension = relative.replace(/\.[^.]+$/, '');
+  // Expo Router's root native-intent module rewrites URLs; it is not a screen.
+  if (withoutExtension === '+native-intent') return null;
   const segments = withoutExtension.split('/');
   if (segments.at(-1) === '_layout' || segments.at(-1) === '+html') return null;
   const visible = segments.filter((segment) => !/^\(.+\)$/.test(segment));

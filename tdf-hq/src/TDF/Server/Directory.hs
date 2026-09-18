@@ -358,7 +358,8 @@ publicVenue venueId = jsonOne err404
 
 directoryProtectedServer :: AuthedUser -> ServerT DirectoryProtectedAPI AppM
 directoryProtectedServer user =
-       setAgeAssurance user
+       notificationContext user
+  :<|> setAgeAssurance user
   :<|> listManagedProfiles user
   :<|> createProfile user
   :<|> updateProfile user
@@ -922,7 +923,7 @@ createApplication user classifiedId idempotency request@ApplicationCreateRequest
     let fingerprint = requestFingerprint request
     runDB $ rawExecute "INSERT INTO classified_application(id,classified_id,applicant_profile_id,message,portfolio,availability_text,proposed_amount_minor,currency_id,status,idempotency_key,request_fingerprint) VALUES (?,?,?,?,?::jsonb,?,?,?,'submitted',?,?)"
       [toPersistValue applicationId,toPersistValue classifiedId,toPersistValue applicantProfileId,PersistText (T.strip message),PersistText (decodeJsonText portfolio),optionalText availability,optionalInt64 proposedAmountMinor,optionalUuid currencyId,PersistText idempotency,PersistText fingerprint]
-    notifyClassifiedAuthor classifiedId "directory.application" "Nueva postulación" "Recibiste una postulación a tu anuncio."
+    notifyClassifiedAuthor classifiedId applicationId "directory.application" "Nueva postulación" "Recibiste una postulación a tu anuncio."
     recordAuthenticatedEvent user "application_submitted" "application" (UUID.toText applicationId)
     applicationSummary user applicationId
 
@@ -967,7 +968,7 @@ createInvitation user idempotency request@InvitationCreateRequest
     consumeRate user "invitation" 10
     now <- liftIO getCurrentTime
     runDB $ rawExecute "INSERT INTO directory_invitation(id,sender_profile_id,target_profile_id,classified_id,message,status,idempotency_key,request_fingerprint,expires_at) VALUES (?,?,?,?,?,'pending',?,?,?)" [toPersistValue invitationId,toPersistValue senderProfileId,toPersistValue targetProfileId,optionalUuid classifiedId,PersistText (T.strip message),PersistText idempotency,PersistText (requestFingerprint request),toPersistValue (addUTCTime (30*24*60*60) now)]
-    notifyProfile targetProfileId "directory.invitation" "Nueva invitación" "Un perfil te invitó a una oportunidad."
+    notifyProfile targetProfileId invitationId "directory.invitation" "Nueva invitación" "Un perfil te invitó a una oportunidad."
     recordAuthenticatedEvent user "invitation_sent" "invitation" (UUID.toText invitationId)
     invitationSummary user invitationId
 
@@ -1008,7 +1009,7 @@ invitationParticipantRole user invitationId = do
 
 invitationSummary user invitationId = do
   role <- invitationParticipantRole user invitationId
-  jsonOne err404 "SELECT jsonb_build_object('id',invitation.id,'senderProfileId',invitation.sender_profile_id,'targetProfileId',invitation.target_profile_id,'classifiedId',invitation.classified_id,'message',invitation.message,'status',invitation.status,'expiresAt',invitation.expires_at,'version',invitation.version,'participantRole',?::text,'senderProfile',jsonb_build_object('id',sender_profile.id,'name',sender_profile.public_name,'slug',sender_profile.slug),'targetProfile',jsonb_build_object('id',target_profile.id,'name',target_profile.public_name,'slug',target_profile.slug),'classified',CASE WHEN classified.id IS NULL THEN NULL ELSE jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'status',classified.status) END) FROM directory_invitation invitation JOIN directory_profile sender_profile ON sender_profile.id=invitation.sender_profile_id JOIN directory_profile target_profile ON target_profile.id=invitation.target_profile_id LEFT JOIN classified ON classified.id=invitation.classified_id WHERE invitation.id=?" [PersistText role,toPersistValue invitationId]
+  jsonOne err404 "SELECT jsonb_build_object('id',invitation.id,'senderProfileId',invitation.sender_profile_id,'targetProfileId',invitation.target_profile_id,'classifiedId',invitation.classified_id,'message',invitation.message,'status',CASE WHEN invitation.status='pending' AND invitation.expires_at<=now() THEN 'expired' ELSE invitation.status END,'expiresAt',invitation.expires_at,'version',invitation.version,'participantRole',?::text,'senderProfile',jsonb_build_object('id',sender_profile.id,'name',sender_profile.public_name,'slug',sender_profile.slug),'targetProfile',jsonb_build_object('id',target_profile.id,'name',target_profile.public_name,'slug',target_profile.slug),'classified',CASE WHEN classified.id IS NULL THEN NULL ELSE jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'status',classified.status) END) FROM directory_invitation invitation JOIN directory_profile sender_profile ON sender_profile.id=invitation.sender_profile_id JOIN directory_profile target_profile ON target_profile.id=invitation.target_profile_id LEFT JOIN classified ON classified.id=invitation.classified_id WHERE invitation.id=?" [PersistText role,toPersistValue invitationId]
 
 contactProfile user idempotency request@DirectoryContactRequest
   { senderProfileId, targetProfileId, contextKind, contextId, message } = do
@@ -1088,8 +1089,8 @@ createReview user idempotency request@DirectoryReviewCreateRequest
           "INSERT INTO directory_review(id,interaction_id,author_profile_id,subject_profile_id,rating,body,status) VALUES (?,?,?,?,?,?,'published') ON CONFLICT(interaction_id,author_profile_id,subject_profile_id) DO NOTHING"
           [toPersistValue reviewId,toPersistValue interactionId,toPersistValue authorProfileId,toPersistValue subjectProfileId,PersistInt64 (fromIntegral rating),optionalText (T.strip <$> body)]
         rawExecute
-          "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,is_read,created_at) SELECT DISTINCT manager.account_party_id,'directory.review-created','Nueva reseña verificada','Un perfil con una interacción completada publicó una reseña.','directory_review',FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_manage AND manager.account_party_id<>? AND EXISTS (SELECT 1 FROM directory_review review WHERE review.id=?)"
-          [toPersistValue subjectProfileId,toPersistValue (auPartyId user),toPersistValue reviewId]
+          "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,'directory.review-created','Nueva reseña verificada','Un perfil con una interacción completada publicó una reseña.','directory_review',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_manage AND manager.account_party_id<>? AND EXISTS (SELECT 1 FROM directory_review review WHERE review.id=?)"
+          [toPersistValue reviewId,toPersistValue subjectProfileId,toPersistValue (auPartyId user),toPersistValue reviewId]
       created <- jsonRows reviewSummarySql [toPersistValue reviewId]
       case created of
         value:_ -> pure value
@@ -1383,9 +1384,9 @@ consumeRate user action maxCount = do
   rows <- jsonRows "WITH current AS (INSERT INTO directory_rate_limit(scope,subject_hash,window_started_at,count,updated_at) VALUES (?,encode(digest(?::text,'sha256'),'hex'),date_trunc('day',now()),1,now()) ON CONFLICT(scope,subject_hash,window_started_at) DO UPDATE SET count=directory_rate_limit.count+1,updated_at=now() RETURNING count) SELECT jsonb_build_object('allowed',count<=?) FROM current" [PersistText action,PersistText (T.pack (show (partyNumber user))),PersistInt64 maxCount]
   case listToMaybe rows of Just (Object values) | KeyMap.lookup "allowed" values==Just (Bool True) -> pure (); _ -> throwError err429 {errBody="rate limit exceeded"}
 
-notifyClassifiedAuthor classifiedId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_application',FALSE,now() FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id AND manager.active AND manager.can_contact WHERE classified.id=?" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue classifiedId]
+notifyClassifiedAuthor classifiedId applicationId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_application',?::text,FALSE,now() FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id AND manager.active AND manager.can_contact WHERE classified.id=?" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue applicationId,toPersistValue classifiedId]
 
-notifyProfile profileIdValue notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_invitation',FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue profileIdValue]
+notifyProfile profileIdValue invitationId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_invitation',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue invitationId,toPersistValue profileIdValue]
 
 isDirectoryAdmin user = hasModuleAccess ModuleAdmin user
 
@@ -1445,3 +1446,23 @@ validateContactContext user senderProfileIdValue targetProfileIdValue kind ident
     rows <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_invitation WHERE id=? AND status IN ('accepted','conversation_open') AND ((sender_profile_id=? AND target_profile_id=?) OR (sender_profile_id=? AND target_profile_id=?))" [toPersistValue identifier,toPersistValue senderProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue senderProfileIdValue]
     when (null rows) (throwError err404 {errBody="invitation contact context is not accepted or does not match the participants"})
   _ -> throwError err400 {errBody="unsupported contact context"}
+
+-- Read-only notification destinations recheck the underlying resource scope.
+-- Never accept a URL or disclose whether an inaccessible record exists.
+notificationContext :: AuthedUser -> Text -> UUID.UUID -> AppM Value
+notificationContext user kind ident = case kind of
+  "application" -> do
+    role <- applicationParticipantRole user ident
+    unless (role == "author") $ throwError err404
+    jsonOne err404
+      "SELECT jsonb_build_object('id',a.id,'classifiedId',a.classified_id,'authorProfileId',c.author_profile_id,'title',c.title,'status',a.status,'message',a.message,'submittedAt',a.submitted_at,'applicantProfile',jsonb_build_object('id',p.id,'name',p.public_name,'slug',p.slug)) FROM classified_application a JOIN classified c ON c.id=a.classified_id JOIN directory_profile p ON p.id=a.applicant_profile_id WHERE a.id=?"
+      [toPersistValue ident]
+  "invitation" -> invitationSummary user ident
+  "review" -> do
+    visible <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_review r JOIN directory_profile subject ON subject.id=r.subject_profile_id JOIN directory_profile_manager m ON m.profile_id=coalesce(subject.canonical_profile_id,subject.id) WHERE r.id=? AND r.status='published' AND m.account_party_id=? AND m.active AND m.can_manage" [toPersistValue ident,toPersistValue (auPartyId user)]
+    when (null visible) $ throwError err404
+    jsonOne err404 reviewSummarySql [toPersistValue ident]
+  "alert" -> jsonOne err404
+    "SELECT jsonb_build_object('id',d.id,'searchName',s.name,'resultType',doc.entity_kind,'resultId',doc.entity_id,'slug',doc.slug,'title',doc.title) FROM directory_alert_delivery d JOIN directory_saved_search s ON s.id=d.saved_search_id LEFT JOIN directory_profile original ON d.result_kind='profile' AND original.id::text=d.result_id JOIN directory_public_search_document doc ON doc.entity_kind=d.result_kind AND doc.entity_id=coalesce(original.canonical_profile_id::text,d.result_id) WHERE d.id=? AND s.account_party_id=? AND (doc.expires_at IS NULL OR doc.expires_at>now()) AND (doc.entity_kind<>'event' OR NOT EXISTS (SELECT 1 FROM external_event_ref ref WHERE ref.event_id::text=doc.entity_id AND lower(trim(ref.source_status))=?))"
+    [toPersistValue ident,toPersistValue (auPartyId user),PersistText Social.externalEventRefSuppressedStatus]
+  _ -> throwError err404

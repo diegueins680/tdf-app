@@ -165,6 +165,9 @@ jobs:
       - name: Install mobile dependencies
         run: npm --prefix tdf-mobile ci
 
+      - name: Verify shared notification destinations
+        run: node scripts/generate-notification-navigation.mjs --check
+
       - name: Run mobile checks
         run: npm run quality:mobile
 
@@ -395,6 +398,14 @@ jobs:
 
       - name: Rehearse access-request notification compatibility migration
         run: npm run test:access-request-notification-migration
+
+      - name: Rehearse notification navigation and history-preserving rollback
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-notification-navigation-migration.sh
 
       - name: Rehearse Party selector rate-limit scope migration
         run: npm run test:party-selector-rate-limit-migration

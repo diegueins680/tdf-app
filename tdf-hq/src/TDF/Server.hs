@@ -3047,7 +3047,7 @@ fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
-  :<|> (notifList user :<|> notifCount user :<|> notifMarkRead user :<|> notifMarkAllRead user)
+  :<|> (notifList user :<|> notifCount user :<|> notifGet user :<|> notifMarkRead user :<|> notifMarkAllRead user)
   :<|> CatalogServer.createSelfFanRoleRequest user
   :<|> discoveryFeed user
   :<|> fanClubSecureListMyClubs user
@@ -3929,6 +3929,7 @@ accessRequestsServer user =
        listMine
   :<|> createRequest
   :<|> listReviewQueue
+  :<|> getRequest
   :<|> decideRequest
   :<|> cancelRequest
   where
@@ -4052,6 +4053,7 @@ accessRequestsServer user =
             , notificationBody = "Tu solicitud fue enviada al grupo revisor correspondiente."
             , notificationTargetType = Just "feature_access_request"
             , notificationTargetId = Just (fromIntegral (fromSqlKey requestId))
+            , notificationTargetKey = Nothing
             , notificationIsRead = False
             , notificationCreatedAt = now
             }
@@ -4077,6 +4079,20 @@ accessRequestsServer user =
         [Asc ME.FeatureAccessRequestRequestedAt]
       let visibleRows = filter (reviewerCanSeeRequest user . entityVal) rows
       mapM loadFeatureAccessRequestDTO visibleRows
+
+    getRequest requestIdValue = do
+      when (requestIdValue <= 0) $ throwError err404
+      requestEntity <- runDB (getEntity (toSqlKey requestIdValue)) >>= maybe (throwError err404) pure
+      let requestValue = entityVal requestEntity
+          owner = ME.featureAccessRequestRequesterPartyId requestValue == auPartyId user
+          reviewer = not owner && isFeatureAccessReviewer user && reviewerCanSeeRequest user requestValue
+      unless (owner || reviewer) $ throwError err404
+      now <- liftIO getCurrentTime
+      let effective = if ME.featureAccessRequestStatus requestValue == "pending"
+                         && maybe False (<= now) (ME.featureAccessRequestExpiresAt requestValue)
+            then requestValue { ME.featureAccessRequestStatus = "expired" } else requestValue
+      dto <- loadFeatureAccessRequestDTO (Entity (entityKey requestEntity) effective)
+      pure $ object ["request" .= dto, "canReview" .= reviewer, "canCancel" .= owner]
 
     decideRequest requestIdValue (FeatureAccessRequestDecision requestedDecision requestedNotes) = do
       unless (isFeatureAccessReviewer user) $
@@ -4115,6 +4131,7 @@ accessRequestsServer user =
               else "La solicitud fue revisada. Consulta las notas del revisor para más información."
           , notificationTargetType = Just "feature_access_request"
           , notificationTargetId = Just (fromIntegral requestIdValue)
+          , notificationTargetKey = Nothing
           , notificationIsRead = False
           , notificationCreatedAt = now
           }
@@ -4335,6 +4352,7 @@ notifyEligibleFeatureReviewers requester feature actionName requestId now = do
             <> " solicitó acceso. La solicitud está disponible para revisión."
         , notificationTargetType = Just "feature_access_request"
         , notificationTargetId = Just (fromIntegral (fromSqlKey requestId))
+        , notificationTargetKey = Nothing
         , notificationIsRead = False
         , notificationCreatedAt = now
         }
@@ -8567,16 +8585,26 @@ notifList user mUnreadOnly = do
     let filters = [NotificationRecipientPartyId ==. auPartyId user]
                   ++ [NotificationIsRead ==. False | mUnreadOnly == Just True]
     notifs <- selectList filters [Desc NotificationCreatedAt, LimitTo 50]
-    pure $ map (\(Entity nid n) -> NotificationDTO
+    pure $ map notificationToDTO notifs
+
+notifGet :: AuthedUser -> Int64 -> AppM NotificationDTO
+notifGet user ident = do
+  entity <- runDB (selectFirst [NotificationId ==. toSqlKey ident,
+    NotificationRecipientPartyId ==. auPartyId user] []) >>= maybe (throwError err404) pure
+  pure (notificationToDTO entity)
+
+notificationToDTO :: Entity Notification -> NotificationDTO
+notificationToDTO (Entity nid n) = NotificationDTO
       { nId = fromSqlKey nid
       , nType = notificationNotifType n
       , nTitle = notificationTitle n
       , nBody = notificationBody n
       , nTargetType = notificationTargetType n
       , nTargetId = fmap fromIntegral (notificationTargetId n)
+      , nTargetKey = notificationTargetKey n
       , nIsRead = notificationIsRead n
       , nCreatedAt = notificationCreatedAt n
-      }) notifs
+      }
 
 notifCount :: AuthedUser -> AppM NotificationCountDTO
 notifCount user = do
