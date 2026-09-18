@@ -47,6 +47,7 @@ import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
+import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
@@ -828,6 +829,7 @@ main :: IO ()
 main = hspec $ do
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
+    EmailHeadersSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
             commercialStoreScore initialCommercialFormula 4
