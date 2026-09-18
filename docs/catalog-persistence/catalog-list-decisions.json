@@ -13932,6 +13932,25 @@
         "name": "CHECK IN",
         "valueCount": 2
       }
+    },
+    {
+      "id": "45ebf094418d755368b6",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Reviewed the ordered 111-entry migration registry. Preserve all preceding immutable entries and append scoped trial/student creation receipts. This is release execution metadata, not a business catalog. Used receipts prevent destructive migration rollback.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "identity-trial-prevention-2026-09-18",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 111
+      }
     }
   ]
 }

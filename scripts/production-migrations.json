@@ -570,6 +570,11 @@
       "id": "2026-09-18_course_identity_requests",
       "path": "tdf-hq/sql/2026-09-18_course_identity_requests.sql",
       "introducedBy": "9bc040b718db0a297c9766a6c4084e0803765599"
+    },
+    {
+      "id": "2026-09-18_trial_identity_requests",
+      "path": "tdf-hq/sql/2026-09-18_trial_identity_requests.sql",
+      "introducedBy": "8a83c8cfb84296b21ccd5c4fecbcc35f1ebd95e7"
     }
   ]
 }

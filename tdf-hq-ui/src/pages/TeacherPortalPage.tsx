@@ -591,9 +591,17 @@ export default function TeacherPortalPage() {
     enabled: Boolean(teacherId),
   });
 
+  const identityRequestKey = useRef<string | null>(null);
+  const identityRequestPending = useRef(false);
   const createStudentMutation = useMutation({
-    mutationFn: (payload: { fullName: string; email: string; phone?: string }) => Trials.createStudent(payload),
+    mutationFn: (payload: Parameters<typeof Trials.createStudent>[0]) => {
+      identityRequestPending.current = true;
+      identityRequestKey.current ??= crypto.randomUUID();
+      return Trials.createStudent(payload, identityRequestKey.current);
+    },
+    onSettled: () => { identityRequestPending.current = false; },
     onSuccess: () => {
+      identityRequestKey.current = null;
       void qc.invalidateQueries({ queryKey: ['teacher-students'] });
     },
   });

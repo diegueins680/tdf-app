@@ -583,6 +583,7 @@ import TDF.Seed
     , syntheticPersonaSeedingAllowed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
+import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
@@ -17013,6 +17014,7 @@ main = hspec $ do
     ServerAuthSpec.spec
     ProviderIdentitySpec.spec
     LiveIntakeIdentitySpec.spec
+    TrialIdentitySpec.spec
     CourseIdentitySpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec

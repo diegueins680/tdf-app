@@ -209,9 +209,17 @@ export default function ClassesPage() {
     phone: '',
     notes: '',
   });
+  const identityRequestKey = useRef<string | null>(null);
+  const identityRequestPending = useRef(false);
   const studentMutation = useMutation({
-    mutationFn: Trials.createStudent,
+    mutationFn: (payload: Parameters<typeof Trials.createStudent>[0]) => {
+      identityRequestPending.current = true;
+      identityRequestKey.current ??= crypto.randomUUID();
+      return Trials.createStudent(payload, identityRequestKey.current);
+    },
+    onSettled: () => { identityRequestPending.current = false; },
     onSuccess: () => {
+      identityRequestKey.current = null;
       void qc.invalidateQueries({ queryKey: ['class-students'] });
     },
   });
@@ -300,7 +308,9 @@ export default function ClassesPage() {
     setStudentForm({ fullName: '', email: '', phone: '', notes: '' });
     setStudentDialogOpen(true);
   };
-  const closeStudentDialog = () => setStudentDialogOpen(false);
+  const closeStudentDialog = () => {
+    if (!identityRequestPending.current) setStudentDialogOpen(false);
+  };
 
   const handleDateChange = (value: string, minutesFallback: number) => {
     const iso = value ? toIsoOrNull(value) : null;
@@ -703,7 +713,7 @@ export default function ClassesPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeStudentDialog}>Cancelar</Button>
+          <Button onClick={closeStudentDialog} disabled={studentMutation.isPending}>Cancelar</Button>
           <Button
             variant="contained"
             onClick={() => {
@@ -714,8 +724,12 @@ export default function ClassesPage() {
                   phone: studentForm.phone.trim() || undefined,
                   notes: studentForm.notes.trim() || undefined,
                 };
-                await studentMutation.mutateAsync(payload);
-                closeStudentDialog();
+                try {
+                  await studentMutation.mutateAsync(payload);
+                  setStudentDialogOpen(false);
+                } catch {
+                  // Keep the form and request key; React Query displays the error.
+                }
               })();
             }}
             disabled={studentMutation.isPending}

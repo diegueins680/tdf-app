@@ -10,6 +10,7 @@ module TDF.Trials.Server where
 import           Control.Exception      (SomeException, displayException, throwIO, try)
 import           Control.Monad          (forM, forM_, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
+import qualified Data.Aeson as A
 import           Data.Int               (Int64)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
@@ -1171,27 +1172,28 @@ publicTrialsServer =
     :<|> publicSubjectsH
     :<|> publicSlotsH
   where
-    signupH :: SignupIn -> AppM SignupOut
-    signupH rawInput = do
-      SignupIn{..} <- either (liftIO . throwIO) pure (validatePublicSignupInput rawInput)
-      now <- liftIO getCurrentTime
-      let fullName = composeFullName firstName lastName
-      partyIdKey <- createOrFetchParty fullName (Just email) phone now
-      _ <- insert $ LeadInterest
-        { leadInterestPartyId   = partyIdKey
-        , leadInterestInterestType = "signup"
-        , leadInterestSubjectId = Nothing
-        , leadInterestDetails   = Just (T.intercalate " | " (filter (not . T.null)
-            [ firstName <> " " <> lastName
-            , email
-            , maybe "" id phone
-            ]))
-        , leadInterestSource    = "public_signup"
-        , leadInterestDriveLink = Nothing
-        , leadInterestStatus    = "Open"
-        , leadInterestCreatedAt = now
-        }
-      pure (SignupOut True)
+    signupH :: Maybe Text -> SignupIn -> AppM SignupOut
+    signupH requestKey rawInput = do
+      validated@SignupIn{..} <- either (liftIO . throwIO) pure (validatePublicSignupInput rawInput)
+      withTrialIdentityRequest "public-signup" Nothing requestKey (A.toJSON validated) $ do
+        now <- liftIO getCurrentTime
+        let fullName = composeFullName firstName lastName
+        partyIdKey <- createTrialContact fullName (Just email) phone now
+        leadKey <- insert $ LeadInterest
+          { leadInterestPartyId   = partyIdKey
+          , leadInterestInterestType = "signup"
+          , leadInterestSubjectId = Nothing
+          , leadInterestDetails   = Just (T.intercalate " | " (filter (not . T.null)
+              [ firstName <> " " <> lastName
+              , email
+              , maybe "" id phone
+              ]))
+          , leadInterestSource    = "public_signup"
+          , leadInterestDriveLink = Nothing
+          , leadInterestStatus    = "Open"
+          , leadInterestCreatedAt = now
+          }
+        pure (SignupOut True, partyIdKey, Just leadKey, Nothing)
 
     interestH :: InterestIn -> AppM InterestOut
     interestH rawInput = do
@@ -1211,60 +1213,44 @@ publicTrialsServer =
         }
       pure (InterestOut (entityKeyInt key))
 
-    trialRequestCreateH :: TrialRequestIn -> AppM TrialRequestOut
-    trialRequestCreateH rawInput = do
-      now <- liftIO getCurrentTime
-      TrialRequestIn{..} <- either (liftIO . throwIO) pure (validatePublicTrialRequestInput rawInput)
-      let nameClean  = cleanOptional fullName
-          emailClean = cleanOptional email
-          phoneClean = cleanOptional phone
-      slots <- either (liftIO . throwIO) pure (validatePreferredSlotsAt now preferred)
-      subjectKey <- requirePublicActiveSubject subjectId
-      resolvedPartyId <- createOrFetchParty nameClean emailClean phoneClean now
+    trialRequestCreateH :: Maybe Text -> TrialRequestIn -> AppM TrialRequestOut
+    trialRequestCreateH requestKey rawInput = do
+      validated@TrialRequestIn{..} <- either (liftIO . throwIO) pure (validatePublicTrialRequestInput rawInput)
+      withTrialIdentityRequest "public-trial" Nothing requestKey (A.toJSON validated) $ do
+        now <- liftIO getCurrentTime
+        let nameClean  = cleanOptional fullName
+            emailClean = cleanOptional email
+            phoneClean = cleanOptional phone
+        slots <- either (liftIO . throwIO) pure (validatePreferredSlotsAt now preferred)
+        subjectKey <- requirePublicActiveSubject subjectId
+        resolvedPartyId <- createTrialContact nameClean emailClean phoneClean now
 
-      mNewCred <- case emailClean of
-        Nothing -> pure Nothing
-        Just addr -> ensureUserAccountForParty resolvedPartyId nameClean addr
-
-      -- Send welcome email only when we created a credential.
-      case (mNewCred, emailClean) of
-        (Just (username, password), Just addr) -> liftIO $ do
-          cfg <- loadConfig
-          let svc = EmailSvc.mkEmailService cfg
-              display = fromMaybe addr nameClean
-          welcomeResult <- (try $
-            EmailSvc.sendWelcome svc display addr username password) :: IO (Either SomeException ())
-          case welcomeResult of
-            Left err ->
-              hPutStrLn stderr ("[Trials] Failed to send welcome email to " <> T.unpack addr <> ": " <> displayException err)
-            Right () -> pure ()
-        _ -> pure ()
-      case slots of
-        [] ->
-          liftIO $ throwIO err500 { errBody = "Validated preferred slots were unexpectedly empty" }
-        PreferredSlot firstStart firstEnd : rest -> do
-          let pref2 = listToMaybe rest
-              pref3 = listToMaybe (drop 1 rest)
-              (pref2Start, pref2End) = slotBounds pref2
-              (pref3Start, pref3End) = slotBounds pref3
-              partyKey = resolvedPartyId
-          ensureSubjectAvailability subjectKey slots
-          rid <- insert TrialRequest
-            { trialRequestPartyId           = partyKey
-            , trialRequestSubjectId         = subjectKey
-            , trialRequestPref1Start        = firstStart
-            , trialRequestPref1End          = firstEnd
-            , trialRequestPref2Start        = pref2Start
-            , trialRequestPref2End          = pref2End
-            , trialRequestPref3Start        = pref3Start
-            , trialRequestPref3End          = pref3End
-            , trialRequestNotes             = notes
-            , trialRequestStatus            = statusRequested
-            , trialRequestAssignedTeacherId = Nothing
-            , trialRequestAssignedAt        = Nothing
-            , trialRequestCreatedAt         = now
-            }
-          pure (TrialRequestOut (entityKeyInt rid) statusRequested)
+        case slots of
+          [] ->
+            liftIO $ throwIO err500 { errBody = "Validated preferred slots were unexpectedly empty" }
+          PreferredSlot firstStart firstEnd : rest -> do
+            let pref2 = listToMaybe rest
+                pref3 = listToMaybe (drop 1 rest)
+                (pref2Start, pref2End) = slotBounds pref2
+                (pref3Start, pref3End) = slotBounds pref3
+                partyKey = resolvedPartyId
+            ensureSubjectAvailability subjectKey slots
+            rid <- insert TrialRequest
+              { trialRequestPartyId           = partyKey
+              , trialRequestSubjectId         = subjectKey
+              , trialRequestPref1Start        = firstStart
+              , trialRequestPref1End          = firstEnd
+              , trialRequestPref2Start        = pref2Start
+              , trialRequestPref2End          = pref2End
+              , trialRequestPref3Start        = pref3Start
+              , trialRequestPref3End          = pref3End
+              , trialRequestNotes             = notes
+              , trialRequestStatus            = statusRequested
+              , trialRequestAssignedTeacherId = Nothing
+              , trialRequestAssignedAt        = Nothing
+              , trialRequestCreatedAt         = now
+              }
+            pure (TrialRequestOut (entityKeyInt rid) statusRequested, partyKey, Nothing, Just rid)
 
     slotBounds :: Maybe PreferredSlot -> (Maybe UTCTime, Maybe UTCTime)
     slotBounds = maybe (Nothing, Nothing) $ \(PreferredSlot s e) -> (Just s, Just e)
@@ -1292,23 +1278,69 @@ publicTrialsServer =
       available <- anyM (\teacherId -> teacherAvailable teacherId slotStart slotEnd) teacherIds
       unless available $ liftIO $ throwIO err422 { errBody = "No hay profesores disponibles en el horario solicitado" }
 
-createOrFetchParty :: Maybe Text -> Maybe Text -> Maybe Text -> UTCTime -> AppM PartyId
-createOrFetchParty mName mEmail mPhone now = do
+
+-- The server controls the scope and authenticated actor. The key identifies one
+-- operation, never an identity claim. This runs in the handler's transaction.
+withTrialIdentityRequest
+  :: (A.ToJSON response, A.FromJSON response)
+  => Text -> Maybe PartyId -> Maybe Text -> A.Value
+  -> AppM (response, PartyId, Maybe Trials.LeadInterestId, Maybe Trials.TrialRequestId)
+  -> AppM response
+withTrialIdentityRequest scope actor maybeKey payload action = do
+  key <- case maybeKey of
+    Just value | T.length value >= 16 && T.length value <= 128
+      && T.all (\ch -> ch <= '\x7f' && (isAlphaNum ch || ch == '-' || ch == '_')) value -> pure value
+    _ -> liftIO $ throwIO err400 { errBody = "Refresh the form before submitting: a valid Idempotency-Key is required." }
+  let jsonText :: A.ToJSON value => value -> Text
+      jsonText = TE.decodeUtf8 . BL8.toStrict . A.encode
+  _ <- (rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(? || ':' || ?, 0))"
+    [PersistText scope, PersistText key] :: AppM [Single Int64])
+  rows <- (rawSql "SELECT request_payload::text, response_payload::text FROM identity_trial_request WHERE request_scope=? AND request_key=?"
+    [PersistText scope, PersistText key] :: AppM [(Single Text, Single Text)])
+  case rows of
+    [(Single savedPayload, Single savedResponse)]
+      | A.decodeStrict' (TE.encodeUtf8 savedPayload) == Just payload ->
+          maybe (liftIO $ throwIO err500 { errBody = "Saved request requires review" }) pure
+            (A.decodeStrict' (TE.encodeUtf8 savedResponse))
+      | otherwise -> liftIO $ throwIO err409 { errBody = "This request was already saved with different details. Review it before creating another." }
+    [] -> do
+      (response, partyKey, leadKey, trialKey) <- action
+      rawExecute "INSERT INTO identity_trial_request(request_scope,request_key,actor_party_id,party_id,lead_interest_id,trial_request_id,request_payload,response_payload) VALUES (?,?,?,?,?,?,?::jsonb,?::jsonb)"
+        [ PersistText scope, PersistText key, toPersistValue actor, toPersistValue partyKey
+        , toPersistValue leadKey, toPersistValue trialKey, PersistText (jsonText payload), PersistText (jsonText response)]
+      pure response
+    _ -> liftIO $ throwIO err500 { errBody = "Request identity requires review" }
+
+createTrialStudentContact :: PartyId -> Bool -> StudentCreate -> Maybe Text -> AppM (StudentDTO, PartyId)
+createTrialStudentContact actor schoolStaff StudentCreate{..} notesValue = do
+  now <- liftIO getCurrentTime
+  partyId <- createTrialContact (Just (T.strip fullName)) (Just email) phone now
+  requireAutomaticSecurityPolicy
+    "trial.student-created.student"
+    partyId
+    (Just actor)
+    "trials-admin"
+    ("student-created:" <> T.pack (show (fromSqlKey partyId)))
+    now
+  unless schoolStaff $
+    void $ upsert (TeacherStudent actor partyId True now) [TeacherStudentActive =. True]
+  forM_ notesValue $ \txt ->
+    update partyId [Models.PartyNotes =. Just txt]
+  Entity _ party <- getJustEntity partyId
+  let response = StudentDTO
+            { studentId   = entityKeyInt partyId
+            , displayName = Models.partyDisplayName party
+            , email       = Models.partyPrimaryEmail party
+            , phone       = Models.partyPrimaryPhone party
+            }
+  pure (response, partyId)
+
+createTrialContact :: Maybe Text -> Maybe Text -> Maybe Text -> UTCTime -> AppM PartyId
+createTrialContact mName mEmail mPhone now = do
   emailVal <- either (liftIO . throwIO) pure (validateRequiredEmail mEmail)
   phoneVal <- either (liftIO . throwIO) pure (validateOptionalPhone mPhone)
   display <- either (liftIO . throwIO) pure (validatePublicLeadDisplayName mName emailVal)
-  existing <- selectList [Models.PartyPrimaryEmail ==. Just emailVal] [LimitTo 2]
-  case existing of
-    [Entity pid party] -> do
-      let updates = catMaybes
-            [ if isJust (partyPrimaryPhone party) || isNothing phoneVal then Nothing else Just (Models.PartyPrimaryPhone =. phoneVal)
-            , if isJust (partyWhatsapp party) || isNothing phoneVal then Nothing else Just (Models.PartyWhatsapp =. phoneVal)
-            , if T.strip (partyDisplayName party) == "" && not (T.null display) then Just (Models.PartyDisplayName =. display) else Nothing
-            ]
-      unless (null updates) $
-        update pid updates
-      pure pid
-    [] -> insert Party
+  insert Party
       { partyLegalName       = Nothing
       , partyDisplayName     = display
       , partyIsOrg           = False
@@ -1324,8 +1356,6 @@ createOrFetchParty mName mEmail mPhone now = do
       , partyCountryId        = Nothing
       , partyCreatedAt       = now
       }
-    _ ->
-      liftIO $ throwIO err409 { errBody = "Multiple parties match this email" }
 
 validatePublicLeadDisplayName :: Maybe Text -> Text -> Either ServerError Text
 validatePublicLeadDisplayName rawName fallbackEmail =
@@ -2193,7 +2223,7 @@ privateTrialsServer user@AuthedUser{..} =
         then pure []
         else selectList [SubjectId <-. subjectIds] []
       let subjectMap = Map.fromList [ (entityKey s, entityVal s) | s <- subjectEntities ]
-          subjectsByTeacher = Map.fromListWith (<>) 
+          subjectsByTeacher = Map.fromListWith (<>)
             [ ( Trials.teacherSubjectTeacherId (entityVal link)
               , [ Trials.teacherSubjectSubjectId (entityVal link) ]
               )
@@ -2432,33 +2462,16 @@ privateTrialsServer user@AuthedUser{..} =
           ids <- teacherStudentIdsFor auPartyId
           studentsByIds ids
 
-    studentCreateH :: StudentCreate -> AppM StudentDTO
-    studentCreateH StudentCreate{..} = do
+    studentCreateH :: Maybe Text -> StudentCreate -> AppM StudentDTO
+    studentCreateH requestKey input@StudentCreate{..} = do
       ensureSchoolAccess
       let fullNameVal = T.strip fullName
       when (T.null fullNameVal) $
         liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
       notesValue <- either (liftIO . throwIO) pure (validateOptionalPublicTextField "notes" 2000 notes)
-      now <- liftIO getCurrentTime
-      partyId <- createOrFetchParty (Just fullNameVal) (Just email) phone now
-      requireAutomaticSecurityPolicy
-        "trial.student-created.student"
-        partyId
-        (Just auPartyId)
-        "trials-admin"
-        ("student-created:" <> T.pack (show (fromSqlKey partyId)))
-        now
-      unless isSchoolStaff $
-        void $ upsert (TeacherStudent auPartyId partyId True now) [TeacherStudentActive =. True]
-      forM_ notesValue $ \txt ->
-        update partyId [Models.PartyNotes =. Just txt]
-      Entity _ party <- getJustEntity partyId
-      pure StudentDTO
-        { studentId   = entityKeyInt partyId
-        , displayName = Models.partyDisplayName party
-        , email       = Models.partyPrimaryEmail party
-        , phone       = Models.partyPrimaryPhone party
-        }
+      withTrialIdentityRequest ("school-student:" <> T.pack (show (fromSqlKey auPartyId))) (Just auPartyId) requestKey (A.toJSON input) $ do
+        (response, partyId) <- createTrialStudentContact auPartyId isSchoolStaff input notesValue
+        pure (response, partyId, Nothing, Nothing)
 
     studentUpdateH :: Int -> StudentUpdate -> AppM StudentDTO
     studentUpdateH studentIdInt StudentUpdate{..} = do

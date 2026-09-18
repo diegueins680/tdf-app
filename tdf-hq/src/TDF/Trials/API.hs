@@ -17,9 +17,9 @@ strictRequestObjectOptions :: Options
 strictRequestObjectOptions = defaultOptions { rejectUnknownFields = True }
 
 type PublicTrialsAPI =
-       "signup" :> ReqBody '[JSON] SignupIn :> Post '[JSON] SignupOut
+       "signup" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] SignupIn :> Post '[JSON] SignupOut
   :<|> "interests" :> ReqBody '[JSON] InterestIn :> Post '[JSON] InterestOut
-  :<|> "trial-requests" :> ReqBody '[JSON] TrialRequestIn :> PostCreated '[JSON] TrialRequestOut
+  :<|> "trial-requests" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] TrialRequestIn :> PostCreated '[JSON] TrialRequestOut
   :<|> "subjects" :> Get '[JSON] [SubjectDTO]
   :<|> "trial-slots" :> QueryParam "subjectId" Int :> Get '[JSON] [TrialSlotDTO]
 
@@ -57,7 +57,7 @@ type PrivateTrialsAPI =
   :<|> "teachers" :> Capture "id" Int :> "students" :> ReqBody '[JSON] TeacherStudentLinkIn :> Post '[JSON] NoContent
   :<|> "teachers" :> Capture "id" Int :> "students" :> Capture "studentId" Int :> Delete '[JSON] NoContent
   :<|> "students" :> Get '[JSON] [StudentDTO]
-  :<|> "students" :> ReqBody '[JSON] StudentCreate :> PostCreated '[JSON] StudentDTO
+  :<|> "students" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] StudentCreate :> PostCreated '[JSON] StudentDTO
   :<|> "students" :> Capture "id" Int :> ReqBody '[JSON] StudentUpdate :> Patch '[JSON] StudentDTO
 
 -- Minimal DTOs for the above (you likely have them elsewhere; these are placeholders)

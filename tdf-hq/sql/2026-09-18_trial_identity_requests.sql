@@ -11,11 +11,11 @@ CREATE TABLE IF NOT EXISTS identity_trial_request (
   response_payload jsonb NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (request_scope, request_key),
-  CHECK (
+  CHECK ((
     (request_scope='public-signup' AND actor_party_id IS NULL AND lead_interest_id IS NOT NULL AND trial_request_id IS NULL)
     OR (request_scope='public-trial' AND actor_party_id IS NULL AND trial_request_id IS NOT NULL AND lead_interest_id IS NULL)
     OR (request_scope='school-student:' || actor_party_id::text AND actor_party_id IS NOT NULL AND lead_interest_id IS NULL AND trial_request_id IS NULL)
-  )
+  ) IS TRUE)
 );
 REVOKE ALL ON identity_trial_request FROM PUBLIC;
 DROP TRIGGER IF EXISTS identity_archive_reference_guard ON identity_trial_request;
