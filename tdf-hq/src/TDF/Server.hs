@@ -1763,7 +1763,8 @@ whatsappWebhookServer =
                   , ME.CourseRegistrationCreatedAt >=. oneHourAgo
                   ]
               when (recentCount < 3) $ do
-                _ <- createOrUpdateRegistration (productionCourseSlug envConfig) CourseRegistrationRequest
+                _ <- createCourseRegistrationInScope "whatsapp-course" (productionCourseSlug envConfig)
+                  (Just ("whatsapp-message-" <> T.pack (show (fromSqlKey (entityKey incomingEntity))))) CourseRegistrationRequest
                   { fullName = Nothing
                   , email = Nothing
                   , phoneE164 = Just phone
@@ -5888,51 +5889,22 @@ ensurePartyForCourseRegistrationDb
   -> SqlPersistT IO (Either ServerError PartyId)
 ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do
   let display = fromMaybe "Alumno / cliente" (cleanOptional mName <|> mEmail <|> mPhone)
-  mExistingResult <- case mEmail of
-    Just addr -> selectUniquePartyByPrimaryEmail addr
-    Nothing -> case mPhone of
-      Just phone -> selectUniquePartyByPrimaryPhone phone
-      Nothing -> pure (Right Nothing)
-  case mExistingResult of
-    Left err -> pure (Left err)
-    Right mExisting -> fmap Right $ do
-      pid <- case mExisting of
-        Just (Entity partyId party) -> do
-          let updates = catMaybes
-                [ if isJust (partyPrimaryEmail party) || isNothing mEmail
-                    then Nothing
-                    else Just (PartyPrimaryEmail =. mEmail)
-                , if isJust (partyPrimaryPhone party) || isNothing mPhone
-                    then Nothing
-                    else Just (PartyPrimaryPhone =. mPhone)
-                , if isJust (partyWhatsapp party) || isNothing mPhone
-                    then Nothing
-                    else Just (PartyWhatsapp =. mPhone)
-                , if T.null (M.partyDisplayName party)
-                    then Just (PartyDisplayName =. display)
-                    else Nothing
-                ]
-          unless (null updates) $
-            update partyId updates
-          pure partyId
-        Nothing -> insert Party
-          { partyLegalName = Nothing
-          , partyDisplayName = display
-          , partyIsOrg = False
-          , partyTaxId = Nothing
-          , partyPrimaryEmail = mEmail
-          , partyPrimaryPhone = mPhone
-          , partyWhatsapp = mPhone
-          , partyInstagram = Nothing
-          , partyEmergencyContact = Nothing
-          , partyNotes = Nothing
-          , partyStripeCustomerId = Nothing
-          , partyCountryCode = Nothing
-          , partyCountryId = Nothing
-          , partyCreatedAt = now
-          }
-      ensureCourseRegistrationPartyRoles pid now
-      pure pid
+  Right <$> insert Party
+    { partyLegalName = Nothing
+    , partyDisplayName = display
+    , partyIsOrg = False
+    , partyTaxId = Nothing
+    , partyPrimaryEmail = mEmail
+    , partyPrimaryPhone = mPhone
+    , partyWhatsapp = mPhone
+    , partyInstagram = Nothing
+    , partyEmergencyContact = Nothing
+    , partyNotes = Just "Unverified course contact; supplied details do not establish account identity."
+    , partyStripeCustomerId = Nothing
+    , partyCountryCode = Nothing
+    , partyCountryId = Nothing
+    , partyCreatedAt = now
+    }
 
 ensureCourseRegistrationParty
   :: Maybe Text
@@ -5940,43 +5912,31 @@ ensureCourseRegistrationParty
   -> Maybe Text
   -> UTCTime
   -> AppM (Maybe PartyId, Maybe (Text, Text))
-ensureCourseRegistrationParty mName mEmail mPhone now =
-  case mEmail of
-    Just emailAddr -> do
-      (partyId, mNewUser) <- ensurePartyWithAccount mName emailAddr mPhone
-      runDB $ ensureCourseRegistrationPartyRoles partyId now
-      pure (Just partyId, mNewUser)
-    Nothing -> case mPhone of
-      Nothing -> pure (Nothing, Nothing)
-      Just _ -> do
-        partyResult <- runDB $ ensurePartyForCourseRegistrationDb mName Nothing mPhone now
-        partyId <- either throwError pure partyResult
-        pure (Just partyId, Nothing)
+ensureCourseRegistrationParty mName mEmail mPhone now = do
+  result <- runDB $ ensurePartyForCourseRegistrationDb mName mEmail mPhone now
+  partyId <- either throwError pure result
+  pure (Just partyId, Nothing)
 
 ensureCourseRegistrationPartyLink
   :: Entity ME.CourseRegistration
   -> AppM (Entity ME.CourseRegistration)
-ensureCourseRegistrationPartyLink ent@(Entity regId reg) =
+ensureCourseRegistrationPartyLink (Entity regId _) = runDB $ do
+  -- Re-read under a row lock so concurrent administrative reads cannot create
+  -- competing contacts for the same source registration.
+  _ <- rawSql "SELECT id FROM course_registration WHERE id=? FOR UPDATE"
+    [toPersistValue regId] :: SqlPersistT IO [Single Int64]
+  reg <- getJust regId
   case ME.courseRegistrationPartyId reg of
-    Just _ -> pure ent
+    Just _ -> pure (Entity regId reg)
     Nothing -> do
       now <- liftIO getCurrentTime
-      (mPartyId, _) <- ensureCourseRegistrationParty
+      result <- ensurePartyForCourseRegistrationDb
         (ME.courseRegistrationFullName reg)
         (ME.courseRegistrationEmail reg)
-        (ME.courseRegistrationPhoneE164 reg)
-        now
-      case mPartyId of
-        Nothing -> pure ent
-        Just partyId -> do
-          runDB $ update regId
-            [ ME.CourseRegistrationPartyId =. Just partyId
-            , ME.CourseRegistrationUpdatedAt =. now
-            ]
-          pure (Entity regId reg
-            { ME.courseRegistrationPartyId = Just partyId
-            , ME.courseRegistrationUpdatedAt = now
-            })
+        (ME.courseRegistrationPhoneE164 reg) now
+      partyId <- either (liftIO . throwIO) pure result
+      update regId [ME.CourseRegistrationPartyId =. Just partyId, ME.CourseRegistrationUpdatedAt =. now]
+      pure (Entity regId reg { ME.courseRegistrationPartyId = Just partyId, ME.courseRegistrationUpdatedAt = now })
 
 parseOptionalUtcText :: Text -> Maybe Text -> AppM (Maybe UTCTime)
 parseOptionalUtcText fieldName mValue =
@@ -6638,8 +6598,13 @@ courseEmailSentWithinLast24Hours rawRecipientEmail = do
         [Desc ME.CourseEmailEventCreatedAt]
       pure (isJust mRecent)
 
-createOrUpdateRegistration :: Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
-createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
+createOrUpdateRegistration :: Text -> Maybe Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
+createOrUpdateRegistration = createCourseRegistrationInScope "public-course"
+
+createCourseRegistrationInScope :: Text -> Text -> Maybe Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
+createCourseRegistrationInScope namespace rawSlug mRequestKey payload@CourseRegistrationRequest{..} = do
+  requestKey <- either (throwError . marketplaceCheckoutBadRequest) pure $
+    ServiceStorefront.validateIdempotencyKey mRequestKey
   metaRaw <- loadCourseMetadata rawSlug
   let Courses.CourseMetadata{ Courses.slug = metaSlug
                             , Courses.sessions = metaSessions
@@ -6662,67 +6627,58 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
     throwBadRequest "nombre requerido"
   when (sourceClean == "landing" && isNothing normalizedEmail) $
     throwBadRequest "email requerido"
-  existingResult <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean
-  existing <- either throwError pure existingResult
-  either throwError pure $
-    validateCourseRegistrationSeatAvailability
-      metaRemaining
-      (ME.courseRegistrationStatus . entityVal <$> existing)
-  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now
-  case existing of
-    -- Update in-place only when the existing row is still pending; otherwise create a fresh row.
-    Just (Entity regId reg) | isPendingCourseRegistrationStatus (ME.courseRegistrationStatus reg) -> do
-      let resolvedPartyId = ME.courseRegistrationPartyId reg <|> mPartyId
-      runDB $ update regId
-        [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)
-        , ME.CourseRegistrationEmail =. (normalizedEmail <|> ME.courseRegistrationEmail reg)
-        , ME.CourseRegistrationPhoneE164 =. (phoneClean <|> ME.courseRegistrationPhoneE164 reg)
-        , ME.CourseRegistrationPartyId =. resolvedPartyId
-        , ME.CourseRegistrationSource =. sourceClean
-        , ME.CourseRegistrationStatus =. pendingStatus
-        , ME.CourseRegistrationHowHeard =. (howHeardClean <|> ME.courseRegistrationHowHeard reg)
-        , ME.CourseRegistrationUtmSource =. (utmSourceVal <|> ME.courseRegistrationUtmSource reg)
-        , ME.CourseRegistrationUtmMedium =. (utmMediumVal <|> ME.courseRegistrationUtmMedium reg)
-        , ME.CourseRegistrationUtmCampaign =. (utmCampaignVal <|> ME.courseRegistrationUtmCampaign reg)
-        , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)
-        , ME.CourseRegistrationUpdatedAt =. now
-        ]
-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
-    _ -> do
-      regId <- runDB $ insert ME.CourseRegistration
-        { ME.courseRegistrationCourseSlug = slugVal
-        , ME.courseRegistrationPartyId = mPartyId
-        , ME.courseRegistrationFullName = nameClean
-        , ME.courseRegistrationEmail = normalizedEmail
-        , ME.courseRegistrationPhoneE164 = phoneClean
-        , ME.courseRegistrationSource = sourceClean
-        , ME.courseRegistrationStatus = pendingStatus
-        , ME.courseRegistrationAdminNotes = Nothing
-        , ME.courseRegistrationHowHeard = howHeardClean
-        , ME.courseRegistrationUtmSource = utmSourceVal
-        , ME.courseRegistrationUtmMedium = utmMediumVal
-        , ME.courseRegistrationUtmCampaign = utmCampaignVal
-        , ME.courseRegistrationUtmContent = utmContentVal
-        , ME.courseRegistrationStripePaymentIntentId = Nothing
-        , ME.courseRegistrationStripeSubscriptionId = Nothing
-        , ME.courseRegistrationSubscriptionStatus = Nothing
-        , ME.courseRegistrationCreatedAt = now
-        , ME.courseRegistrationUpdatedAt = now
-        }
-      void $ runDB $ insertCourseRegistrationFollowUp
-        regId
-        mPartyId
-        Nothing
-        "registration"
-        (Just "Inscripción recibida")
-        ("Nueva inscripción capturada desde " <> sourceClean <> ".")
-        Nothing
-        Nothing
-        Nothing
-        now
-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
+  let requestScope = namespace <> ":" <> slugVal
+      requestBody = TE.decodeUtf8 (BL.toStrict (encode payload))
+  (regId, savedStatus, created) <- runDB $ do
+    _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+      [PersistText (requestScope <> ":" <> requestKey)] :: SqlPersistT IO [Single Int64]
+    previous <- rawSql "SELECT receipt.registration_id, receipt.request_payload=?::jsonb, registration.status FROM identity_course_registration_request receipt JOIN course_registration registration ON registration.id=receipt.registration_id WHERE receipt.request_scope=? AND receipt.request_key=?"
+      [PersistText requestBody, PersistText requestScope, PersistText requestKey]
+    case previous of
+      [(Single existingId, Single True, Single existingStatus)] -> pure (toSqlKey existingId, existingStatus, False)
+      [(_, Single False, _)] -> liftIO $ throwIO err409 { errBody = "This registration changed after an earlier send. Review the saved registration before starting another submission." }
+      [] -> do
+          either (liftIO . throwIO) pure $ validateCourseRegistrationSeatAvailability metaRemaining Nothing
+          partyResult <- ensurePartyForCourseRegistrationDb nameClean normalizedEmail phoneClean now
+          partyId <- either (liftIO . throwIO) pure partyResult
+          let mPartyId = Just partyId
+          regId <- insert ME.CourseRegistration
+            { ME.courseRegistrationCourseSlug = slugVal
+            , ME.courseRegistrationPartyId = mPartyId
+            , ME.courseRegistrationFullName = nameClean
+            , ME.courseRegistrationEmail = normalizedEmail
+            , ME.courseRegistrationPhoneE164 = phoneClean
+            , ME.courseRegistrationSource = sourceClean
+            , ME.courseRegistrationStatus = pendingStatus
+            , ME.courseRegistrationAdminNotes = Nothing
+            , ME.courseRegistrationHowHeard = howHeardClean
+            , ME.courseRegistrationUtmSource = utmSourceVal
+            , ME.courseRegistrationUtmMedium = utmMediumVal
+            , ME.courseRegistrationUtmCampaign = utmCampaignVal
+            , ME.courseRegistrationUtmContent = utmContentVal
+            , ME.courseRegistrationStripePaymentIntentId = Nothing
+            , ME.courseRegistrationStripeSubscriptionId = Nothing
+            , ME.courseRegistrationSubscriptionStatus = Nothing
+            , ME.courseRegistrationCreatedAt = now
+            , ME.courseRegistrationUpdatedAt = now
+            }
+          void $ insertCourseRegistrationFollowUp
+            regId
+            mPartyId
+            Nothing
+            "registration"
+            (Just "Inscripción recibida")
+            ("Nueva inscripción capturada desde " <> sourceClean <> ".")
+            Nothing
+            Nothing
+            Nothing
+            now
+          rawExecute "INSERT INTO identity_course_registration_request(request_scope,request_key,request_payload,registration_id) VALUES (?,?,?::jsonb,?)"
+            [PersistText requestScope, PersistText requestKey, PersistText requestBody, toPersistValue regId]
+          pure (regId, pendingStatus, True)
+      _ -> liftIO $ throwIO err500 { errBody = "Could not resolve registration request" }
+  when created $ sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail Nothing
+  pure CourseRegistrationResponse { id = fromSqlKey regId, status = savedStatus }
   where
     sendConfirmation courseSlug regKey courseTitle landing metaSessions nameClean mEmail mNewUser =
       case mEmail of

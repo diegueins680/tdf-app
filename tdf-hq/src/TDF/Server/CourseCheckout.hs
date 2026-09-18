@@ -252,7 +252,7 @@ courseCheckoutUnavailableResponse slugVal
     }
 
 createCourseCheckoutRegistration
-  :: (Text -> Courses.CourseRegistrationRequest -> AppM Courses.CourseRegistrationResponse)
+  :: (Text -> Maybe Text -> Courses.CourseRegistrationRequest -> AppM Courses.CourseRegistrationResponse)
   -> Text
   -> Maybe Text
   -> Courses.CourseRegistrationRequest
@@ -266,7 +266,7 @@ createCourseCheckoutRegistration legacyRegistration rawSlug mIdempotency request
     Checkout.domainEnabledForEnvironment checkoutEnvironment "courses"
   if not domainEnabled
     then courseCheckoutUnavailableResponse slugVal
-      <$> legacyRegistration rawSlug request
+      <$> legacyRegistration rawSlug mIdempotency request
     else do
       unless (Courses.termsAccepted request == Just True) $
         throwError (badRequestError

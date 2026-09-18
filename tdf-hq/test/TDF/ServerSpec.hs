@@ -4575,7 +4575,7 @@ spec = describe "TDF.Server helpers" $ do
             assertConflict "phone" phoneSelectorResult
 
     describe "ensurePartyForCourseRegistrationDb" $
-        it "rejects duplicate phone fallbacks instead of linking a course registration arbitrarily" $ do
+        it "keeps course contacts separate even when their phone matches existing people" $ do
             (singleId, singleResult, duplicateResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
                 let mkParty displayName phoneNumber =
@@ -4613,22 +4613,15 @@ spec = describe "TDF.Server helpers" $ do
                 pure (expectedId, resolvedSingle, resolvedDuplicate)
 
             case singleResult of
-                Right partyId -> partyId `shouldBe` singleId
+                Right partyId -> partyId `shouldNotBe` singleId
                 Left serverErr ->
                     expectationFailure
                         ( "Expected single course registration party match, got: "
                             <> show serverErr
                         )
             case duplicateResult of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 409
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "Multiple parties match this phone"
-                Right partyId ->
-                    expectationFailure
-                        ( "Expected duplicate course registration party match to fail, got: "
-                            <> show partyId
-                        )
+                Right partyId -> partyId `shouldNotBe` singleId
+                Left serverErr -> expectationFailure ("Shared contact details must remain valid: " <> show serverErr)
 
     describe "courseRegistrationFollowUpCounts" $
         it "counts non-intake follow-up rows for the admin list summary" $ do

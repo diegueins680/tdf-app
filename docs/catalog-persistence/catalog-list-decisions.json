@@ -13848,22 +13848,22 @@
       "reviewed": true
     },
     {
-      "id": "6575f00697f8dc105583",
+      "id": "f0740d2211a309c2515f",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Ordered migration IDs and introduction commits are release execution mechanics. Preserve the first 108 entries and append actor-scoped intake receipts. No existing migration or checksum is rewritten; the receipt migration has an ancestor introduction commit and refuses destructive rollback after use.",
+      "justification": "Reviewed the ordered 110-entry migration registry. Preserve the preceding 109 immutable entries and append source-scoped course request receipts with an ancestor introduction commit. This is release execution metadata, not an editable business catalog. The receipt rollback refuses to discard accepted operations.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "identity-intake-prevention-2026-09-18",
+      "reviewBatch": "identity-course-prevention-2026-09-18",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 109
+        "valueCount": 110
       }
     },
     {
