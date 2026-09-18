@@ -1,6 +1,8 @@
+import directorySearch from './directorySearch.es';
 import authEntry from './authEntry.es';
 const es = {
   authEntry,
+  directorySearch,
   auditAccessibility: {
     loadingFeaturedArtists: 'Cargando artistas destacados',
     loadingMarketplace: 'Cargando productos del marketplace',

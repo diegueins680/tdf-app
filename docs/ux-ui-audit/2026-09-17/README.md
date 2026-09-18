@@ -5,7 +5,69 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
-## Checkpoint vigente — 2026-09-18 11:40 UTC
+## Continuación verificada — 2026-09-18 12:44 UTC
+
+Este bloque sustituye los estados históricos inferiores, conservando sus evidencias.
+La última consulta remota mantiene main raíz `2ce7a1a0d275ecc65924b5df68bc39cd7a373b1d`
+y móvil `90cae070446df6c740e9e8f25a034f3deb12c5c7`. El gitlink publicado de main
+sigue en `4122bb75e9c550eaf5ed7ee81b89ee5188938271`; #435 propone90ca.
+La API pública devuelve `/version=5c11577a5d31f079b3e070a7810a6b04a48d99f4`
+y `/health` con status/db OK. La última verificación de assets web identifica2ce
+en Cloudflare `a3c035c1-2b7b-4398-80fb-8ef0b9258da2` (recibo en #435).
+No se ha ejecutado una nueva mutación de producción durante estas correcciones.
+
+Incrementos publicados y aún sin aprobación independiente:
+
+| PR | Head | Estado observado |
+|---|---|---|
+| [435](https://github.com/diegueins680/tdf-app/pull/435) | de177c858 | Pin móvil90ca, evidencia nativa y catálogo regenerado; gates aplicables completos |
+| [442](https://github.com/diegueins680/tdf-app/pull/442) | 1aa708a00 | Nombres ES/EN de carga pública; gates aplicables completos |
+| [443](https://github.com/diegueins680/tdf-app/pull/443) | 1d4143f78 | Catálogo sin N+1 y tarifa preservada ante desactivación concurrente; HTTP/PG real y modelos; gates completos |
+| [444](https://github.com/diegueins680/tdf-app/pull/444) | 9497be8f4 | Esquema de calendario110 y preferencias opcionales; gates completos |
+| [445](https://github.com/diegueins680/tdf-app/pull/445) | 563dafa42 | Retorno OAuth único y estado persistido de calendario; depende444; gates completos |
+| [446](https://github.com/diegueins680/tdf-app/pull/446) | f92b9947d | Texto público ampliado y navegación accesible; gates completos |
+| [447](https://github.com/diegueins680/tdf-app/pull/447) | c7124f906 | Directorio sin dependencia del almacenamiento; guardados aislados por sesión; persona E2E aún ejecutándose |
+
+Vercel informa límite de builds en varios heads. Es un contexto externo no requerido;
+no equivale a fallo de Cloudflare, ni se declara verde. La protección mantiene una
+aprobación independiente y descarta revisiones obsoletas; ningún PR está fusionado por
+estar verde. Revisiones concretas de443/444/445/435/447 atendidas con evidencia; renovar
+head/base, discusiones, checks y aprobaciones antes de cada merge.
+
+Este sucesor del directorio conserva447 e implementa la continuación deUX006 yUX047:
+idioma de búsqueda/errores/mapa y recuperación de compartir.26pruebas y10recorridos
+ES/EN pasan; paquete inicial367923gzip/fivepreloads. Ver
+[directory-language-sharing.md](directory-language-sharing.md) y su recibo. Al integrar
+las ramas, combinar las entradas existentes por ID:435 contiene los hallazgos nativos
+y de calendario pendientes,446 añade045,447 añade046 y este sucesor añade047. No
+reemplazar el registro completo con una copia antigua de otra rama.
+
+Apple consultado12:44: versión1.0.1 sigue WAITING_FOR_REVIEW y AFTER_APPROVAL;
+build21 VALID/IN_BETA_TESTING, external READY_FOR_BETA_SUBMISSION. Build22 no aparece
+en esa consulta de App Store Connect aunque EAS sí terminó su artefacto. Sigue pendiente
+el handoff de coordinación de tiendas del otro operador antes de modificar la liberación.
+La cuota EAS iOS Free impidió crear el build de la corrección90ca; no hay nuevo artefacto
+iOS firmado de esa fuente ni publicación final. Android QA4602 final está descargado y
+validado, paquete aislado `com.tdf.records.uxaudit`, pero ADB no muestra dispositivos.
+No se ha instalado ni ejecutado ese APK final. Las apps personal y notificationqa siguen
+intactas. Se mantiene pendiente el gate Google OAuth en iPhone físico, no certificable
+por el simulador. Los recibos nativos completos y la lista de invitaciones permanecen
+versionados en435; no confundir aceptación SMTP con inscripción o entrega.
+
+Siguiente paso de release: aprobar los heads vigentes; fusionar incrementos elegibles
+con merge normal,444 antes445,447 antes este sucesor y móvil publicado antes435. Para
+backend, verificar lease/ledger actual y usar runner con438: snapshot, plan/compatibilidad,
+artefacto inmutable, recuperación compatible de todas las réplicas, canary y smoke.
+Preservar el commit de introducción de la migración49ff02de5; no squash. Las observaciones
+12:44 no renuevan automáticamente un lease ni autorizan competir con otro release.
+
+Continúa sin completarse la cobertura inicial integral: estados con recursos poblados,
+combinaciones de roles, verificación manual de lector de pantalla, dispositivos físicos,
+distribución final y métricas de campo. Los recorridos controlados no certifican esos
+ámbitos. Próxima verificación independiente: contrastar las hipótesis de almacenamiento
+restantes en diagnóstico/clases y retorno/seguimiento de servicios antes de exigir cambios.
+
+## Checkpoint histórico — 2026-09-18 11:40 UTC
 
 Este apartado sustituye los estados históricos de abajo. La auditoría sigue
 **PARTIALLY COMPLETE**; quedan cobertura de acciones/estados y publicación nativa,
