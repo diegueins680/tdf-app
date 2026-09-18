@@ -134,10 +134,11 @@
     "acceptanceCriteria": "Entire arrival/login/signup/reset/navigation journey follows selected es/en, including errors and screen-reader names.",
     "verificationMethod": "Source inventory plus bilingual browser/native task scripts.",
     "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation. Directory follow-up not yet merged/deployed.",
-    "status": "merged",
+    "status": "implemented",
     "implementationStatus": "Authentication previously merged; directory ES/EN catalog, metadata, taxonomy locale and accessible labels implemented in focused successor.",
     "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained. Directory:26 focused tests and10 ES/EN production-bundle journeys in3engines/5profiles pass; public identities and query retained.",
-    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "id": "UX-260917-007",
@@ -159,7 +160,8 @@
     "status": "implemented",
     "implementationStatus": "Earlier startup fixes deployed; additional trial filters, service token-cache recovery and all authenticated radio preference accesses implemented. Directory follow-up separately preserved in PR447.\nRelated increment evidence: Previous startup fixes deployed; directory city follow-up implemented with URL/in-memory fallback.",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete Storage continuation:40 focused tests;48 final actual isolated Admin/API browser cases across3engines;20 controlled anonymous cases on page-fix predecessor; full pinned formal suite,TS/lint/build/strict1138catalog pass. Intermediate RadioWidget failures excluded. Directory follow-up: 18 focused tests, pinned formal suite, TypeScript/lint/build and targeted production-bundle browser checks; see directory-entry.md and receipt.",
-    "mergeStatus": "merged #421 as 6b48449e7f934e91b9450c44be3b43873922ffd9"
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "id": "UX-260917-008",
@@ -1038,8 +1040,9 @@
     "status": "implemented",
     "implementationStatus": "Original #429 fixes deployed; additional initial-coverage loaders named on Teachers, TeacherPortal, DDEX inbox, Services/revisions, Reports and Chat threads/messages in audit/ux-remaining-coverage-20260918. Public follow-up names five observed loaders with distinct existing ES/EN translation infrastructure: featuredartists,marketplace,publishedrecordings/releases/sessions.",
     "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Focused slow-response verification pending. Four delayed-response ES/EN browser checks pass for both activity loading names and directory profile loader. Eight-case delayed ES/EN checks passed for first5 additional loaders. Subsequent Reports/Chat initial arrival and12-case delayed runtime confirmed missing names; final expanded checks pending. Final14 slow-response ES/EN cases pass: real isolated API/session, locale override; synthetic read-only thread for message loading. All8 additional loaders have distinct translated accessible names; zero aria-progressbar-name violations. Final build365423gzip/5preloads passes. Follow-up18 delayed-read cases (3pages×ES/EN×3engines) on real production bundle pass; each asserts actual document language and distinct translated accessible names. TypeScript/build/lint pass;365762gzipbytes/5preloads withinbudget. Earlier local harness used an obsolete locale key, so its requested-English rows were Spanish and discarded; corrected harness explicitly asserts actual language. No screen-reader/manual announcement certification.",
-    "mergeStatus": "PR4421aa708a00; all applicable checks PASS, independent review pending.\nRelated increment evidence: Merged #429 as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after exact2fb approval and all applicable gates. Public loader successor pending independent review/hosted checks.",
-    "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented. Newly confirmed public slow-loading gap is not yet deployed; prior operational fixes remain deployed."
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
+    "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented. Newly confirmed public slow-loading gap is not yet deployed; prior operational fixes remain deployed.",
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "id": "UX-260917-024",
@@ -1377,7 +1380,7 @@
       "independent review and CI",
       "web deployment"
     ],
-    "mergeStatus": "PR445 head563dafa42 has applicable gates passed; independent approval pending. Diagnostic successor awaits integration review.\nRelated increment evidence: PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.\nRelated increment evidence: Focused successor to #444; not merged.",
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
     "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
     "id": "UX-260917-044",
     "title": "Calendar shows local connection claims and labels preference cleanup as disconnection",
@@ -1389,7 +1392,8 @@
     "acceptanceCriteria": "Connection and last-sync state come from the selected calendar API; configuration errors cannot retain a confirmed connection; current-session cache/response isolation; local cleanup described accurately; no provider health or revocation claim without execution.",
     "implementationStatus": "Consume URL code before microtask dispatch; synchronous mutation guards; session-occurrence form/cache isolation and active-session checks; selected configuration authoritative; truthful refresh/cleanup text. Diagnostics no longer displays unverified browser markers as connection or synchronization facts.",
     "verificationMethod": "Actual React component negative/positive controls, production-bundle browser with actual isolated auth/config and only token-exchange failure controlled, executable TLC model plus named unsafe configurations.",
-    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json. Diagnostic old-marker/denial regressions and48 actual isolated arrival cases pass in storage-boundaries continuation."
+    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json. Diagnostic old-marker/denial regressions and48 actual isolated arrival cases pass in storage-boundaries continuation.",
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "id": "UX-260917-035",
@@ -1463,11 +1467,12 @@
     ],
     "acceptanceCriteria": "80 generated listing cases retain active filtering, prices, approved terms and detail parity with bounded SQL executions independent of item count. Records published collections and wire shape remain identical. Required checks pass and the deployed public journeys complete within the existing client deadline. No field-percentile claim without representative field data.",
     "verificationMethod": "Actual isolated HTTP/PostgreSQL with a TCP protocol observer counting catalog transactions, excluding independent workers; generated listing combinations, list/detail parity and published collection SQL oracle. Old binary is a meaningful negative control. Full backend tests and existing formal/release gates; read-only query grouping adds no consequential state transition.",
-    "status": "verification pending",
+    "status": "implemented",
     "implementationStatus": "Public list uses getMany and one approved-terms join, preserving shared DTO rendering. Records fixed reads share one transaction; locale and missing publication-state guards unchanged. No migration/cache/API shape change. Review repair binds the selected listing IDs rather than re-reading active listings; no base-price fallback after concurrent deactivation.",
     "verificationStatus": "Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Full stack tests running; production-after pending. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Full2587backend examples:0failures/3existing pending; npm verify:formal passes its scoped gates.\nRelated increment evidence: Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Full stack tests running; production-after pending. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Actual concurrent HTTP/PostgreSQL negative10001≠2001, corrected response2001 with terms and next-request exclusion PASS. Query counts remain5/28. Both11-state positive catalog models and11-state unsafe control pass in the full pinned suite. Final Stack build PASS; new hosted gates pending.",
-    "mergeStatus": "PR #443 open at 641876c76519a16b015231335bed46c8593f39fb; all applicable checks pass; independent review required.\nRelated increment evidence: Not merged; focused successor being prepared on main2ce7a1a0d.",
-    "releaseStatus": "Not deployed; production remains5c until live evidence establishes a later revision."
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
+    "releaseStatus": "Not deployed; production remains5c until live evidence establishes a later revision.",
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "kind": "confirmed",
@@ -1480,7 +1485,7 @@
       "guarded backend release and web deployment"
     ],
     "status": "implemented",
-    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.\nRelated increment evidence: Not merged; focused calendar runtime PR being prepared.",
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
     "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
     "id": "UX-260917-040",
     "title": "Existing admin calendar API has no production runtime tables",
@@ -1493,7 +1498,8 @@
     "acceptanceCriteria": "Full migration batch replays and restarts idempotently; populated synthetic data preserved; unauthenticated401/nonAdmin403/admin200; response omits tokens; real browser empty state works; deployed schema and journey verified.",
     "implementationStatus": "Migration introduction49ff02de5 retained in ancestry, manifest registration and schema gate; historical migrations unchanged. No credentials seeded and no external sync started.",
     "verificationMethod": "Real PostgreSQL17 production-baseline replay; actual compiled Haskell HTTP contracts and12generated events; missing-column/unique-key/guard negative controls. Existing authorization and identity trigger semantics reused, not a new global correctness claim.",
-    "verificationStatus": "Migration/restart idempotence and HTTP assertions PASS;58release tests PASS;6browser cases Admin/ReadOnly×320/768/1280 PASS. Browser setup initially lacked allowed loopback origin; configured isolated proxy/server before qualified execution. Hosted gates and production pending."
+    "verificationStatus": "Migration/restart idempotence and HTTP assertions PASS;58release tests PASS;6browser cases Admin/ReadOnly×320/768/1280 PASS. Browser setup initially lacked allowed loopback origin; configured isolated proxy/server before qualified execution. Hosted gates and production pending.",
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "kind": "confirmed",
@@ -1506,7 +1512,7 @@
       "guarded backend release and web deployment"
     ],
     "status": "implemented",
-    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.\nRelated increment evidence: Not merged; focused calendar runtime PR being prepared.",
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
     "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
     "id": "UX-260917-041",
     "title": "Calendar optional preference storage failure replaces the form with an error boundary",
@@ -1519,7 +1525,8 @@
     "acceptanceCriteria": "Property getter and all three storage operations may throw without losing the form or clear action; API results remain usable; browser storage-denial cases pass.",
     "implementationStatus": "Local guarded preference helpers reused by all20read/write/remove sites; no storage format, API or legal content change. Optional import.meta.env access supports the component test host with the same Vite behavior.",
     "verificationMethod": "Four real React component cases for getter/getItem/setItem/removeItem plus production-bundle actual HTTP browser negative/positive evidence. No consequential state-transition semantics changed.",
-    "verificationStatus": "4component tests PASS, TypeScript/lint/build PASS (365647gzipbytes/5preloads);3actual storage-denial browser engines PASS. Initial component attempt failed on absent Jest import.meta.env, not counted as the storage counterexample; browser original failure is retained."
+    "verificationStatus": "4component tests PASS, TypeScript/lint/build PASS (365647gzipbytes/5preloads);3actual storage-denial browser engines PASS. Initial component attempt failed on absent Jest import.meta.env, not counted as the storage counterexample; browser original failure is retained.",
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "id": "UX-260917-042",
@@ -1561,7 +1568,7 @@
       "independent review and CI",
       "web deployment"
     ],
-    "mergeStatus": "PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.\nRelated increment evidence: Focused successor to #444; not merged.",
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
     "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
     "id": "UX-260917-043",
     "title": "Calendar OAuth return automatically replays a one-use authorization code",
@@ -1573,7 +1580,8 @@
     "acceptanceCriteria": "One automatic dispatch per returned code, URL code removed while unrelated parameters/hash remain, failed input retained, explicit retry and synchronous duplicate-click guard, no stale-session response effects.",
     "implementationStatus": "Consume URL code before microtask dispatch; synchronous mutation guards; session-occurrence form/cache isolation and active-session checks; selected configuration authoritative; truthful refresh/cleanup text.",
     "verificationMethod": "Actual React component negative/positive controls, production-bundle browser with actual isolated auth/config and only token-exchange failure controlled, executable TLC model plus named unsafe configurations.",
-    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json."
+    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json.",
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "id": "UX-260917-045",
@@ -1595,7 +1603,7 @@
     "implementationStatus": "Wrap header groups with flex gap; inherit emergency word wrapping, allow multiline buttons/chips without clipping the page; constrain marketplace sort control and wrap its options.",
     "verificationMethod": "Actual Firefox font preference before/after;84 real isolated API browser arrival/stress cases;40 controlled keyboard/menu E2E cases;6 existing component tests;TypeScript/lint/build. No authority or consequential state transition changes; formal source gate remains required through CI.",
     "verificationStatus": "84 final ES/EN cases PASS, zero axe/page errors/overflow;40 focused keyboard cases pass in three engines/five profiles at320px. Actual Firefox16/32font at320/768/1280 fits; initial JS365727gzip/5preloads under budget. Harness failures disclosed in evidence/public-text-reflow.json.",
-    "mergeStatus": "Focused reflow PR being prepared; no merge.",
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
     "releaseStatus": "Not deployed.",
     "dependencies": [
       "required checks",
@@ -1613,7 +1621,8 @@
         "accessed": "2026-09-18",
         "implication": "Ordinary content should fit320CSSpx without two-dimensional scrolling; contained tab strip remains independently scrollable."
       }
-    ]
+    ],
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "id": "UX-260917-046",
@@ -1637,8 +1646,9 @@
       "applicable CI",
       "Cloudflare deployment and production verification"
     ],
-    "mergeStatus": "PR447; independent approval and refreshed checks required.",
-    "releaseStatus": "Not deployed."
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
+    "releaseStatus": "Not deployed.",
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
     "id": "UX-260917-047",
@@ -1663,7 +1673,7 @@
       "applicable CI",
       "Cloudflare publication and production verification"
     ],
-    "mergeStatus": "Focused successor pending creation; no merge.",
+    "mergeStatus": "Included in audit/ux-release-integration-20260918 with original commits preserved (product integration ecd3607236e7a1a515a05020c4ffda32522ea726). Not merged into main. Independent exact-head approval and applicable combined gates pending; source PRs435/442–448 remain open until containment and integration merge are established.",
     "releaseStatus": "Not deployed.",
     "sources": [
       {
@@ -1671,6 +1681,7 @@
         "accessed": "2026-09-18",
         "implication": "Handle share promise rejection; AbortError covers cancelled/no-target flow. Browser acknowledgement is not recipient-delivery evidence."
       }
-    ]
+    ],
+    "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   }
 ]

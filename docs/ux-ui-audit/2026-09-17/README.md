@@ -5,6 +5,56 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Integración de release — 2026-09-18 13:31 UTC
+
+La rama `audit/ux-release-integration-20260918` reúne únicamente los incrementos
+pendientes de esta auditoría:435,442–448 y la continuación de almacenamiento
+`dd9633c1d`. Todos sus heads están contenidos por merges normales en `ecd360723`;
+se conservan la autoría, la referencia móvil publicada90ca y la introducción49ff
+necesaria para la migración110. Los PR anteriores siguen abiertos hasta verificar y
+fusionar la integración; no se cierra ni incorpora otro trabajo de notificaciones.
+Una sola revisión independiente del head final sustituirá las ocho rondas pendientes.
+**Todavía no está fusionada ni desplegada.**
+
+La integración incorpora búsqueda ES/EN y recuperación de favoritos, errores de
+compartir/cancelar, controles públicos accesibles, texto ampliado, catálogo eficiente,
+calendario con estado persistido y protección ante almacenamiento opcional denegado.
+La continuación007 también protege la radio compartida: corregir únicamente las
+páginas no bastaba porque RadioWidget aún podía sustituir toda la vista por un error.
+El diagnóstico remite al calendario autorizado en lugar de afirmar una conexión a
+partir de preferencias locales. No se inventan tokens ni se confirman pagos sin ellos.
+
+Verificación conjunta: TypeScript/lint/build pasan;368211 bytes gzip iniciales y cinco
+precargas (límite419840/ocho). Pasan74 pruebas de release,25 de CI, inventario estricto
+1138/1588 con JSON/CSV coherentes, contratos HTTP/PostgreSQL de catálogo y calendario,
+y el conjunto real TLC/Alloy con controles negativos. Hay90 casos controlados de
+navegador cualificados (89 del primer run y el caso fallido por disco repetido),48
+casos con sesión real aislada y18 de carga ES/EN en tres motores. La suite web total
+pasa2185 pruebas en224 suites, sin fallos (349s; sin caché). Las primeras
+corridas afectadas por ENOSPC quedan excluidas; sólo se retiraron cachés regenerables
+propias y descargas antiguas, conservando fuentes, ejecutables y evidencias.
+[Recibo conjunto y límites](evidence/release-integration-verification.json).
+
+Producción sigue en API5c11577a5, saludable con base de datos, y web2ce7a1a0d;
+440 ya está desplegado. La migración110 y estos incrementos requieren revisión,
+CI aplicable y release guardado: snapshot previo, artefacto inmutable, lease,
+canary, contrato de recuperación compatible y verificación funcional posterior.
+No borrar las nuevas tablas ni restaurar una imagen incompatible con autenticación.
+
+La publicación móvil sigue pendiente:90ca está en el repositorio, no en las tiendas
+como release final cualificado. El APK QA4602 está disponible, pero no hay Android
+ni iPhone físico conectado; falta Google OAuth físico en iOS y capacidad para el
+build corregido. La última consulta Apple12:44 conserva WAITING_FOR_REVIEW y
+AFTER_APPROVAL; se necesita el handoff de coordinación de tiendas antes de competir
+con el operador activo. Una compilación terminada no acredita ese handoff.
+
+La cobertura inicial integral continúa abierta: recursos poblados, combinaciones de
+roles, estados restantes de interrupción/offline/sesión, lector de pantalla manual,
+dispositivos físicos y rendimiento de campo. Las hipótesis de almacenamiento durante
+checkout/RSVP no se convierten en defectos confirmados sin reproducción y sin verificar
+idempotencia y recuperación. Próximo paso ejecutable: publicar el head único, comprobar CI/revisiones y fusionar
+sólo con aprobación independiente válida para ese head.
+
 ## Continuación verificada — 2026-09-18 12:44 UTC
 
 Este bloque sustituye los estados históricos inferiores, conservando sus evidencias.
