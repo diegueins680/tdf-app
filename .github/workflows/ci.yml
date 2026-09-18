@@ -222,6 +222,10 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Check payment arithmetic against exact Integer oracle
+        working-directory: tdf-hq
+        run: stack exec -- runghc -isrc test/PaymentArithmeticProbe.hs
+
       - name: Verify artist self-service transactions and migration
         env:
           PGHOST: postgres
