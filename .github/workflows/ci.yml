@@ -260,6 +260,10 @@ jobs:
         run: sh scripts/test-live-intake-identity.sh
 
       - name: Verify source-scoped course contacts and registration retries
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
         run: sh scripts/test-course-identity.sh
 
       - name: Verify reversible identity reconciliation

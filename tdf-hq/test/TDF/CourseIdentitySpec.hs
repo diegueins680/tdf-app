@@ -5,7 +5,8 @@ import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar)
 import Control.Exception (SomeException, try)
 import Control.Monad (forM, void)
 import Control.Monad.Logger (runNoLoggingT)
-import Control.Monad.Reader (runReaderT)
+import Control.Monad.Reader (ReaderT, runReaderT)
+import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS
 import Data.Either (isLeft)
 import Data.Int (Int64)
@@ -13,13 +14,14 @@ import Data.List (isInfixOf)
 import Data.Text (Text)
 import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool)
 import Database.Persist.Postgresql (createPostgresqlPool)
-import Servant (ServerError, errHTTPCode, runHandler)
+import Servant (Handler, ServerError, errHTTPCode, runHandler)
 import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.Config (AppConfig(..), loadConfig)
 import TDF.DB (Env(..))
 import qualified TDF.Routes.Courses as C
 import TDF.Server (createCourseRegistrationInScope)
+import qualified TDF.Server.CourseCheckout as Checkout
 
 spec :: Spec
 spec = describe "course-identity-postgresql" $ do
@@ -72,6 +74,74 @@ spec = describe "course-identity-postgresql" $ do
         result2 <- submit pool "public-course" "course-failing-request" payload
         either (const False) (> 0) result2 `shouldBe` True
 
+      it "preserves a fallback registration when checkout becomes enabled" $ \pool -> do
+        setCheckoutEnabled pool False
+        a <- route pool "course-cross-mode-fallback" payload
+        before <- scalar pool "SELECT count(*) FROM course_registration"
+        setCheckoutEnabled pool True
+        b <- route pool "course-cross-mode-fallback" payload
+        fmap C.registrationId b `shouldBe` fmap C.registrationId a
+        fmap C.checkoutId b `shouldBe` Right Nothing
+        scalar pool "SELECT count(*) FROM course_registration" `shouldReturn` before
+        scalar pool "SELECT count(*) FROM course_registration_checkout_runtime" `shouldReturn` 0
+      it "preserves checkout details across disabling checkout and changing policy availability" $ \pool -> do
+        setCheckoutEnabled pool True
+        a <- route pool "course-cross-mode-checkout" payload
+        either (const False) C.checkoutAvailable a `shouldBe` True
+        before <- scalar pool "SELECT count(*) FROM course_registration"
+        setCheckoutEnabled pool False
+        runSqlPool (rawExecute "UPDATE course_checkout_policy SET active=false WHERE policy_version='identity-test-v1'" []) pool
+        b <- route pool "course-cross-mode-checkout" payload
+        fmap C.registrationId b `shouldBe` fmap C.registrationId a
+        fmap C.checkoutId b `shouldBe` fmap C.checkoutId a
+        fmap C.lookupToken b `shouldBe` fmap C.lookupToken a
+        scalar pool "SELECT count(*) FROM course_registration" `shouldReturn` before
+        changed <- route pool "course-cross-mode-checkout" (payload { C.fullName = Just "Changed" })
+        either id (const 0) changed `shouldBe` 409
+        runSqlPool (rawExecute "UPDATE course_checkout_policy SET active=true WHERE policy_version='identity-test-v1'" []) pool
+      it "permits distinct attendees sharing an email without duplicating their retries" $ \pool -> do
+        setCheckoutEnabled pool True
+        a <- route pool "course-shared-email-a" payload
+        b <- route pool "course-shared-email-b" payload
+        either (const False) C.checkoutAvailable a `shouldBe` True
+        either (const False) C.checkoutAvailable b `shouldBe` True
+        fmap C.registrationId a `shouldNotBe` fmap C.registrationId b
+        scalar pool "SELECT count(*) FROM commerce_payment_attempt" `shouldReturn` 0
+      it "converges when a pending fallback submission overlaps checkout enablement" $ \pool -> do
+        setCheckoutEnabled pool False
+        entered <- newEmptyMVar
+        resume <- newEmptyMVar
+        finished <- newEmptyMVar
+        let pausedLegacy slug key body = do
+              liftIO (putMVar entered ())
+              liftIO (takeMVar resume)
+              createCourseRegistrationInScope "public-course" slug key body
+        before <- scalar pool "SELECT count(*) FROM course_registration"
+        void $ forkIO $ do
+          result <- try (routeWithLegacy pool "course-concurrent-mode-switch" payload pausedLegacy) :: IO (Either SomeException (Either Int C.CourseCheckoutResponse))
+          putMVar finished result
+        takeMVar entered
+        setCheckoutEnabled pool True
+        checkout <- route pool "course-concurrent-mode-switch" payload
+        putMVar resume ()
+        fallback <- takeMVar finished
+        case fallback of
+          Left err -> expectationFailure (show err)
+          Right saved -> do
+            fmap C.registrationId saved `shouldBe` fmap C.registrationId checkout
+            fmap C.checkoutId saved `shouldBe` fmap C.checkoutId checkout
+        scalar pool "SELECT count(*) FROM course_registration" `shouldReturn` (before+1)
+        scalar pool "SELECT count(*) FROM commerce_payment_attempt" `shouldReturn` 0
+      it "rejects unsupported key punctuation before either creation transaction" $ \pool -> do
+        before <- scalar pool "SELECT count(*) FROM course_registration"
+        setCheckoutEnabled pool False
+        a <- route pool "course.unsupported:key" payload
+        either id (const 0) a `shouldBe` 400
+        setCheckoutEnabled pool True
+        b <- route pool "course.unsupported:key" payload
+        either id (const 0) b `shouldBe` 400
+        scalar pool "SELECT count(*) FROM course_registration" `shouldReturn` before
+
 payload :: C.CourseRegistrationRequest
 payload = C.CourseRegistrationRequest (Just "Synthetic course contact") (Just "course-identity@example.test") (Just "+593990000111") "landing" Nothing Nothing (Just True)
 
@@ -96,3 +166,20 @@ snapshot pool = mapM (scalar pool)
   , "SELECT count(*) FROM course_registration_follow_up f JOIN course_registration r ON r.id=f.registration_id WHERE r.course_slug='identity-test-course'"
   , "SELECT count(*) FROM course_email_event WHERE course_slug='identity-test-course'"
   ]
+
+setCheckoutEnabled :: ConnectionPool -> Bool -> IO ()
+setCheckoutEnabled pool enabled = runSqlPool (rawExecute
+  ("UPDATE revenue_feature_flag SET enabled=" <> (if enabled then "true" else "false") <> " WHERE flag_key='commerce.courses' AND environment='production'") []) pool
+
+route :: ConnectionPool -> Text -> C.CourseRegistrationRequest -> IO (Either Int C.CourseCheckoutResponse)
+route pool key body = routeWithLegacy pool key body (createCourseRegistrationInScope "public-course")
+
+routeWithLegacy :: ConnectionPool -> Text -> C.CourseRegistrationRequest
+  -> (Text -> Maybe Text -> C.CourseRegistrationRequest -> ReaderT Env Handler C.CourseRegistrationResponse)
+  -> IO (Either Int C.CourseCheckoutResponse)
+routeWithLegacy pool key body legacy = do
+  cfg <- loadConfig
+  result <- runHandler $ runReaderT
+    (Checkout.createCourseCheckoutRegistration legacy "identity-paid-course" (Just key) body)
+    (Env pool (cfg { emailConfig = Nothing }))
+  pure (either (Left . errHTTPCode) Right result)
