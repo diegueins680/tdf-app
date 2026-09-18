@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React, { useState } from 'react';
 import {
   Box,
@@ -28,6 +29,7 @@ import { DDEX } from '../../api/ddex';
 import { firstNonEmptyString } from '../../utils/stringValues';
 
 const DdexInboxPage: React.FC = () => {
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -58,7 +60,7 @@ const DdexInboxPage: React.FC = () => {
   if (isLoading || referencesLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+        <CircularProgress aria-label={t('auditAccessibility.loadingDdex')} />
       </Box>
     );
   }
