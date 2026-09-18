@@ -21,6 +21,7 @@ import { confirmPasswordReset, type LoginResponseDTO } from '../api/auth';
 import { loadSessionSnapshot } from '../api/session';
 import { useSession, type SessionUser } from '../session/SessionContext';
 import { buildLoginRedirectPath, readSafeRedirectPath, resolvePostAuthPath } from '../utils/loginRouting';
+import { authErrorMessage } from '../utils/authErrorMessage';
 import { isValidAuthPassword } from '../utils/passwordPolicy';
 
 const normalizeRoles = (roles: readonly string[] | undefined): string[] =>
@@ -152,10 +153,7 @@ export default function ResetPasswordPage() {
     } catch (error) {
       setFeedback({
         type: 'error',
-        message:
-          error instanceof Error && error.message.trim() !== ''
-            ? error.message
-            : t('authEntry.resetError'),
+        message: authErrorMessage(error, t, 'authEntry.resetError'),
       });
     }
   };
