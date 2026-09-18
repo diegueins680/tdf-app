@@ -1415,5 +1415,59 @@
     "implementationStatus": "Local guarded preference helpers reused by all20read/write/remove sites; no storage format, API or legal content change. Optional import.meta.env access supports the component test host with the same Vite behavior.",
     "verificationMethod": "Four real React component cases for getter/getItem/setItem/removeItem plus production-bundle actual HTTP browser negative/positive evidence. No consequential state-transition semantics changed.",
     "verificationStatus": "4component tests PASS, TypeScript/lint/build PASS (365647gzipbytes/5preloads);3actual storage-denial browser engines PASS. Initial component attempt failed on absent Jest import.meta.env, not counted as the storage counterexample; browser original failure is retained."
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "Admin calendar OAuth return, configuration recovery and account switching",
+    "roles": [
+      "Admin"
+    ],
+    "status": "implemented",
+    "dependencies": [
+      "UX-260917-040 / PR #444 runtime schema",
+      "independent review and CI",
+      "web deployment"
+    ],
+    "mergeStatus": "Focused successor to #444; not merged.",
+    "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
+    "id": "UX-260917-043",
+    "title": "Calendar OAuth return automatically replays a one-use authorization code",
+    "severity": "high",
+    "surface": "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+    "evidence": "Old component dispatches twice; real production bundle dispatches 26/30/30 requests at 320/768/1280px after a controlled rejected exchange. The initial unbounded component reproduction timed out; bounded regression explicitly observes the second call.",
+    "rootCause": "The effect depends on an unstable mutation object, resets autoExchanging after each settlement, and leaves code in the URL.",
+    "userImpact": "Repeated credential requests and misleading success or connection state prevent a reliable administrative integration journey.",
+    "acceptanceCriteria": "One automatic dispatch per returned code, URL code removed while unrelated parameters/hash remain, failed input retained, explicit retry and synchronous duplicate-click guard, no stale-session response effects.",
+    "implementationStatus": "Consume URL code before microtask dispatch; synchronous mutation guards; session-occurrence form/cache isolation and active-session checks; selected configuration authoritative; truthful refresh/cleanup text.",
+    "verificationMethod": "Actual React component negative/positive controls, production-bundle browser with actual isolated auth/config and only token-exchange failure controlled, executable TLC model plus named unsafe configurations.",
+    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json."
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "Admin calendar OAuth return, configuration recovery and account switching",
+    "roles": [
+      "Admin"
+    ],
+    "status": "implemented",
+    "dependencies": [
+      "UX-260917-040 / PR #444 runtime schema",
+      "independent review and CI",
+      "web deployment"
+    ],
+    "mergeStatus": "Focused successor to #444; not merged.",
+    "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
+    "id": "UX-260917-044",
+    "title": "Calendar shows local connection claims and labels preference cleanup as disconnection",
+    "severity": "medium",
+    "surface": "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+    "evidence": "Actual empty server configuration still displays tokens saved for a synthetic previous account. Source and component tests show cleanup performs no revocation and config GET performs no provider probe.",
+    "rootCause": "Global localStorage markers establish connection state; one-time config application does not clear stale state; config refresh is described as provider verification and local cleanup as disconnect.",
+    "userImpact": "Repeated credential requests and misleading success or connection state prevent a reliable administrative integration journey.",
+    "acceptanceCriteria": "Connection and last-sync state come from the selected calendar API; configuration errors cannot retain a confirmed connection; current-session cache/response isolation; local cleanup described accurately; no provider health or revocation claim without execution.",
+    "implementationStatus": "Consume URL code before microtask dispatch; synchronous mutation guards; session-occurrence form/cache isolation and active-session checks; selected configuration authoritative; truthful refresh/cleanup text.",
+    "verificationMethod": "Actual React component negative/positive controls, production-bundle browser with actual isolated auth/config and only token-exchange failure controlled, executable TLC model plus named unsafe configurations.",
+    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json."
   }
 ]
