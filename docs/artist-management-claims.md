@@ -74,3 +74,30 @@ states for the new model with safety and conditional liveness; the no-lock negat
 control violated UniqueTarget in7 states. The complete existing TLC/Alloy6.2.0 runner
 also passed its expected controls. No production claim or new native artifact is
 claimed by these isolated tests.
+
+Review follow-up (discussion_r4042542142): the same Party may own both a core
+artist directory twin and a newer band. Preparation now selects only `artist`
+source profiles and separately requires the canonical target to remain `artist`.
+A blocked artist cannot be bypassed by selecting its band's unblocked profile;
+a canonical link to a different kind fails closed without a replacement twin.
+The expanded real HTTP fixture reproduced the old behavior (200 instead of404
+for a blocked artist with a newer band). Positive execution is recorded below.
+`ArtistClaimKind.tla` exhaustively bounds source/canonical kinds to artist/band;
+`OnlyArtist` and `NoWrongSourceReuse` connect these predicates to the SQL source
+filter and canonical guard. Termination assumes one fair atomic transaction.
+The unfiltered/unguarded negative model must violate `OnlyArtist`. This model
+does not claim to verify canonical graph integrity or administrator decisions.
+
+
+### Review follow-up: route context and profile kind (2026-09-18 UTC)
+
+The expanded real HTTP/PostgreSQL17 fixture now passes against the rebuilt backend
+and hosted backend-quality job105440820017 (run35293357409, head7411a2a).
+The old binary fails the blocked-artist-with-newer-band case (200 instead of404).
+Source and canonical target must both be artist profiles; no ownership is granted.
+
+Review4042801092 additionally reproduced activation/claim-route races at each await:
+two negative component tests failed, then13 activation tests passed with a generation
+that includes session identity and location.key. Leaving and returning does not revive
+a pending activation. See formal/event-operations/ArtistActivation.tla and its documented
+fairness/bounds; the negative configuration removes the generation fence.

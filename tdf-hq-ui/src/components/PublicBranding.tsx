@@ -264,7 +264,7 @@ export default function PublicBranding({
             justifyContent="space-between"
           >
             <Stack spacing={1} sx={{ maxWidth: 460 }}>
-              <Typography variant="subtitle2" sx={{ letterSpacing: 0.2 }}>
+              <Typography variant="subtitle2" color="text.primary" sx={{ letterSpacing: 0.2 }}>
                 TDF Records
               </Typography>
               <Typography variant="body2" color="text.secondary">

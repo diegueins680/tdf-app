@@ -1010,9 +1010,9 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
               {sessions.map((session) => (
                 <Stack
                   key={`${session.date}-${session.label}`}
-                  direction="row"
+                  direction={{ xs: 'column', sm: 'row' }}
                   spacing={1}
-                  alignItems="center"
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
                   sx={{ bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 2, px: 1.5, py: 1 }}
                 >
                   <Chip
@@ -1132,6 +1132,11 @@ function FormCard({
           {seatsText && (
             <Alert
               severity={isFull ? 'warning' : 'info'}
+              sx={{
+                flexWrap: 'wrap',
+                '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' },
+                '& .MuiAlert-action': { ml: { xs: 0, sm: 'auto' }, pl: { xs: 0, sm: 2 }, pb: 0.5 },
+              }}
               action={
                 <Button
                   size="small"

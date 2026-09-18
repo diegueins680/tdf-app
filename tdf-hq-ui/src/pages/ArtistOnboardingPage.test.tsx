@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { Link as RouterLink, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import type { SessionUser } from '../session/SessionContext';
 
 let session: SessionUser | null;
@@ -24,6 +24,8 @@ const { default: ArtistOnboardingPage } = await import('./ArtistOnboardingPage')
 const LoginDestination = () => <div data-testid="login-destination">{useLocation().search}</div>;
 const show = (path = '/artista/crear') => render(
   <MemoryRouter initialEntries={[path]}>
+    <RouterLink to="/artista/crear?claimArtistId=77">Elegir reclamación de prueba</RouterLink>
+    <RouterLink to="/artista/crear">Volver a activación de prueba</RouterLink>
     <Routes>
       <Route path="/artista/crear" element={<ArtistOnboardingPage />} />
       <Route path="/mi-artista" element={<div>Editor de artista</div>} />
@@ -143,4 +145,22 @@ it('coalesces duplicate activation commands in the same turn', async () => {
   expect(activate).toHaveBeenCalledTimes(1);
   finish({ apArtistId: 42 });
   await screen.findByText('Editor de artista');
+});
+
+
+it.each(['activation', 'refresh'])('ignores %s receipts after switching to a claim and back', async (phase) => {
+  let finish!: (value: unknown) => void;
+  const deferred = new Promise(resolve => { finish = resolve; });
+  if (phase === 'activation') activate.mockReturnValueOnce(deferred);
+  else get.mockReturnValueOnce(deferred);
+  show();
+  fireEvent.click(screen.getByRole('button', { name: 'Crear mi perfil de artista' }));
+  await waitFor(() => expect(phase === 'activation' ? activate : get).toHaveBeenCalledTimes(1));
+  fireEvent.click(screen.getByRole('link', { name: 'Elegir reclamación de prueba' }));
+  await screen.findByText('Artista importado');
+  fireEvent.click(screen.getByRole('link', { name: 'Volver a activación de prueba' }));
+  await act(async () => { finish({ ...session!, roles: ['Artist'], apArtistId: 42 }); await deferred; });
+  expect(login).not.toHaveBeenCalled();
+  expect(screen.queryByText('Editor de artista')).not.toBeInTheDocument();
+  if (phase === 'activation') expect(get).not.toHaveBeenCalled();
 });

@@ -95,13 +95,13 @@ const COPY = {
 const screenReaderOnlySx = {
   border: 0,
   clip: 'rect(0 0 0 0)',
-  height: 1,
+  height: '1px',
   margin: -1,
   overflow: 'hidden',
   padding: 0,
   position: 'absolute',
   whiteSpace: 'nowrap',
-  width: 1,
+  width: '1px',
 };
 
 type AudioInputRef = RefObject<HTMLInputElement>;
@@ -197,6 +197,11 @@ function AuthNotices(props: AuthNoticesProps) {
     return (
       <Alert
         severity="info"
+        sx={{
+          flexWrap: 'wrap',
+          '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' },
+          '& .MuiAlert-action': { ml: { xs: 0, sm: 'auto' }, pl: { xs: 0, sm: 2 }, pb: 0.5 },
+        }}
         action={
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
             <Button disabled={false} component={RouterLink} to={loginPath} size="small" variant="contained">
@@ -223,6 +228,11 @@ function AuthNotices(props: AuthNoticesProps) {
     return (
       <Alert
         severity="info"
+        sx={{
+          flexWrap: 'wrap',
+          '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' },
+          '& .MuiAlert-action': { ml: { xs: 0, sm: 'auto' }, pl: { xs: 0, sm: 2 }, pb: 0.5 },
+        }}
         action={
           <Button disabled={false} component={RouterLink} to={loginPath} size="small" variant="contained">
             {COPY.auth.renew}

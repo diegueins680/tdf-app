@@ -431,8 +431,8 @@ export default function MixingMasteringPage() {
           {/* Filter */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
             <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Tipo de servicio</InputLabel>
-              <Select value={serviceFilter} label="Tipo de servicio" onChange={handleFilterChange}>
+              <InputLabel id="mixing-service-type-label">Tipo de servicio</InputLabel>
+              <Select labelId="mixing-service-type-label" value={serviceFilter} label="Tipo de servicio" onChange={handleFilterChange}>
                 <MenuItem value="all">Todos los servicios</MenuItem>
                 <MenuItem value="Mixing">Mezcla</MenuItem>
                 <MenuItem value="Mastering">Mastering</MenuItem>

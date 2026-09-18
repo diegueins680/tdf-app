@@ -138,7 +138,7 @@ export default function MusicMakerPage() {
           multiline
           minRows={2}
         />
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
           <Button
             variant="contained"
             startIcon={<PlayArrowIcon />}
@@ -165,6 +165,9 @@ export default function MusicMakerPage() {
             </Typography>
             <Box
               component="pre"
+              tabIndex={0}
+              role="region"
+              aria-label="Instrucciones Tidal generadas"
               sx={{
                 p: 2,
                 bgcolor: 'grey.900',
