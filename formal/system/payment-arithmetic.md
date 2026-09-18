@@ -1,7 +1,11 @@
 # Payment arithmetic correspondence
 
-Authority: accepted ADR 0101 (verified partial captures/refunds), 0102 (integer minor units),
-0104 (balanced immutable financial entries), and the current audit's explicit integrity mandate.
+Authority: accepted embedded ADR-0200 in
+`docs/payments/ecuador-payment-platform-audit-2026-09-09.md`, invariants 1 and 6 and its
+State model paragraph (integer minor units and cumulative capture/refund bounds); ADR 0102
+(integer minor-unit snapshots), ADR 0104 (balanced immutable financial entries), and the
+current audit's explicit integrity mandate. ADR 0101 governs provider evidence/refund workflow;
+it is not the source of the numeric cumulative-bound requirement.
 Implementation: `tdf-hq/src/TDF/Commerce/StateMachine.hs`; caller:
 `tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs:transitionPaymentIntent`.
 
