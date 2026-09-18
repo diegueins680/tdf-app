@@ -148,17 +148,17 @@
     "journey": "arrival/authentication/first useful action",
     "roles": "anonymous and all authenticated roles",
     "surface": "Browser storage denial can prevent public app startup",
-    "evidence": "i18n/index.ts reads localStorage before module initialization; AppThemeProvider read/write outside try; SessionContext evaluates storage getter before its inner catch. Runtime regression added before fixes. Follow-up provider integration reproduced two further crashes with actual nonempty locale/currency catalog data. Original browser fixture had empty catalog data and missed this path.",
+    "evidence": "i18n/index.ts reads localStorage before module initialization; AppThemeProvider read/write outside try; SessionContext evaluates storage getter before its inner catch. Runtime regression added before fixes. Follow-up provider integration reproduced two further crashes with actual nonempty locale/currency catalog data. Original browser fixture had empty catalog data and missed this path. 2026-09-18: nine actual isolated authenticated arrival failures under storage denial. Page fixes exposed eight remaining failures from RadioWidget; captured component stack proves shared root cause. See storage-boundaries.md.",
     "userImpact": "Visitor cannot reach login or discovery when browser storage is restricted.",
     "rootCause": "Optional preferences/session cache treated as required boot dependencies.",
     "proposedChange": "Keep preferences in memory when storage unavailable; protect getter/read/write boundaries without fabricating a session.",
     "dependencies": [],
     "acceptanceCriteria": "Anonymous login renders and theme toggle retains input under denied operations/getters; no uncaught errors; no unauthorized session created.",
     "verificationMethod": "Playwright Chromium/Firefox/WebKit, desktop/tablet/phone and axe; exact baseline/final logs.",
-    "releaseStatus": "Merged#421; web deployment437fddd and anonymous phone smoke under denied storage getters confirmed. No claim of exhaustive authenticated coverage. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
-    "status": "deployed",
-    "implementationStatus": "implemented",
-    "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
+    "releaseStatus": "Merged#421; web deployment437fddd and anonymous phone smoke under denied storage getters confirmed. No claim of exhaustive authenticated coverage. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation. This remaining-storage continuation is not merged/deployed.",
+    "status": "implemented",
+    "implementationStatus": "Earlier startup fixes deployed; additional trial filters, service token-cache recovery and all authenticated radio preference accesses implemented. Directory follow-up separately preserved in PR447.",
+    "verificationStatus": "see evidence and acceptance criteria; full coverage not complete Storage continuation:40 focused tests;48 final actual isolated Admin/API browser cases across3engines;20 controlled anonymous cases on page-fix predecessor; full pinned formal suite,TS/lint/build/strict1138catalog pass. Intermediate RadioWidget failures excluded.",
     "mergeStatus": "merged #421 as 6b48449e7f934e91b9450c44be3b43873922ffd9"
   },
   {
@@ -1363,5 +1363,32 @@
     "verificationStatus": "54 corrected browser cases PASS:zeroaxeviolations,zero200%textoverflow,zeroerrors; Chromium/Firefox keyboardTab, explicit legacyfocusoutline. ProductionbuildPASS, allfivechangedstaticassets byte-identical tosource. InitialJS365648gzipbytes/5preloads withinbudget. Before/afterevidence recorded; WebKit defaultTabskipslinks, no manualreaderclaim.",
     "mergeStatus": "Not merged; focused PR being prepared",
     "releaseStatus": "Not deployed"
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "Admin calendar OAuth return, configuration recovery and account switching",
+    "roles": [
+      "Admin"
+    ],
+    "status": "implemented",
+    "dependencies": [
+      "UX-260917-040 / PR #444 runtime schema",
+      "independent review and CI",
+      "web deployment"
+    ],
+    "mergeStatus": "PR445 head563dafa42 has applicable gates passed; independent approval pending. Diagnostic successor awaits integration review.",
+    "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
+    "id": "UX-260917-044",
+    "title": "Calendar shows local connection claims and labels preference cleanup as disconnection",
+    "severity": "medium",
+    "surface": "tdf-hq-ui/src/pages/CalendarSyncPage.tsx; AdminDiagnosticsPage calendar summary",
+    "evidence": "Actual empty server configuration still displays tokens saved for a synthetic previous account. Source and component tests show cleanup performs no revocation and config GET performs no provider probe. Diagnostics also inferred missing/configured calendar and last-sync from global browser markers. That stale summary is replaced with a link to the single authoritative calendar screen.",
+    "rootCause": "Global localStorage markers establish connection state; one-time config application does not clear stale state; config refresh is described as provider verification and local cleanup as disconnect.",
+    "userImpact": "Repeated credential requests and misleading success or connection state prevent a reliable administrative integration journey.",
+    "acceptanceCriteria": "Connection and last-sync state come from the selected calendar API; configuration errors cannot retain a confirmed connection; current-session cache/response isolation; local cleanup described accurately; no provider health or revocation claim without execution.",
+    "implementationStatus": "Consume URL code before microtask dispatch; synchronous mutation guards; session-occurrence form/cache isolation and active-session checks; selected configuration authoritative; truthful refresh/cleanup text. Diagnostics no longer displays unverified browser markers as connection or synchronization facts.",
+    "verificationMethod": "Actual React component negative/positive controls, production-bundle browser with actual isolated auth/config and only token-exchange failure controlled, executable TLC model plus named unsafe configurations.",
+    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json. Diagnostic old-marker/denial regressions and48 actual isolated arrival cases pass in storage-boundaries continuation."
   }
 ]

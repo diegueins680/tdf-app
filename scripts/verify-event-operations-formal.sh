@@ -79,6 +79,9 @@ run_negative_tlc() {
     exit 1
   fi
 }
+run_tlc OptionalTokenRecovery.tla OptionalTokenRecovery.cfg optional-token-recovery
+run_negative_tlc OptionalTokenRecoveryUnsafeStorage.cfg optional-token-storage 'Temporal properties were violated' OptionalTokenRecovery.tla
+run_negative_tlc OptionalTokenRecoveryUnsafeFragment.cfg optional-token-fragment 'Invariant FragmentPrecedence is violated' OptionalTokenRecovery.tla
 run_negative_tlc ExperimentAuthorityStale.cfg experiment-stale 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityDuplicate.cfg experiment-duplicate 'Invariant ExposureAtMostOnce is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityAccount.cfg experiment-account 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla

@@ -317,3 +317,12 @@ perform no machine recovery. The executable model abstracts verified immutable
 artifacts and trusted commit ancestry. It does not prove identity-token validation,
 the cloud provider, or whole-system availability. Exact executions are in the
 canonical UX audit record.
+
+## Optional private-token cache recovery (2026-09-18)
+
+`OptionalTokenRecovery` checks32initial scenarios,96generated/distinct states (depth3).
+No invented/missing token can dispatch a request; tracking fragments take precedence.
+Weakly fair resolve/dispatch ensure recovery terminates when storage returns or throws.
+Unsafe storage (84states) violates liveness; cache-first mutation (41states) violates
+fragment precedence. This is client token-presence conformance, not server permission
+or payment-settlement verification. [Evidence and limits](../../docs/ux-ui-audit/2026-09-17/storage-boundaries.md).

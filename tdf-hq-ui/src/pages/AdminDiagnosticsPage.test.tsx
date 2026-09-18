@@ -126,71 +126,29 @@ describe('AdminDiagnosticsPage', () => {
     window.localStorage.clear();
   });
 
-  it('replaces empty calendar dash rows with one setup hint', async () => {
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderPage(container);
-
+  it.each(['empty', 'old-markers', 'getter-denied', 'read-denied'])('routes to authoritative calendar state without trusting browser markers: %s', async (scenario) => {
+    const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage')!;
+    if (scenario === 'old-markers') {
+      window.localStorage.setItem('calendar-sync.calendarId', 'old-account-calendar');
+      window.localStorage.setItem('calendar-sync.lastSyncAt', '2026-01-01T00:00:00Z');
+    }
+    const deny = () => { throw new DOMException('Denied', 'SecurityError'); };
+    const spy = scenario === 'read-denied' ? jest.spyOn(Storage.prototype, 'getItem').mockImplementation(deny) : undefined;
+    if (scenario === 'getter-denied') Object.defineProperty(window, 'localStorage', { configurable: true, get: deny });
+    const container = document.createElement('div'); document.body.appendChild(container);
+    let cleanup = async () => { container.remove(); };
     try {
+      ({ cleanup } = await renderPage(container));
       await waitForExpectation(() => {
-        expect(container.querySelector('[data-testid="admin-diagnostics-calendar-empty"]')).not.toBeNull();
-        expect(container.textContent).toContain(
-          'Todavía no hay calendario configurado. Conecta Google Calendar para activar el diagnóstico de sincronización.',
-        );
-        expect(container.textContent).toContain('Conectar calendario');
+        expect(container.textContent).toContain('Ver estado del calendario');
+        expect(container.textContent).toContain('confirmadas por el servidor');
         expect(container.querySelector('a[href="/configuracion/integraciones/calendario"]')).not.toBeNull();
-        expect(container.textContent).not.toContain('Abrir página de sincronización');
-        expect(container.textContent).not.toContain('Calendar ID: —');
-        expect(container.textContent).not.toContain('Última sincronización: —');
+        expect(container.textContent).not.toContain('old-account-calendar');
+        expect(container.textContent).not.toContain('2026-01-01');
+        expect(container.textContent).not.toContain('Todavía no hay calendario configurado');
       });
     } finally {
-      await cleanup();
-    }
-  });
-
-  it('treats blank stored calendar sync values as unconfigured setup state', async () => {
-    window.localStorage.setItem('calendar-sync.calendarId', '   ');
-    window.localStorage.setItem('calendar-sync.lastSyncAt', '\n\t');
-
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderPage(container);
-
-    try {
-      await waitForExpectation(() => {
-        expect(container.querySelector('[data-testid="admin-diagnostics-calendar-empty"]')).not.toBeNull();
-        expect(container.textContent).toContain(
-          'Todavía no hay calendario configurado. Conecta Google Calendar para activar el diagnóstico de sincronización.',
-        );
-        expect(container.textContent).toContain('Conectar calendario');
-        expect(container.textContent).not.toContain('Calendar ID:');
-        expect(container.textContent).not.toContain('Última sincronización:');
-        expect(container.textContent).not.toContain('Aún no se registra una sincronización.');
-      });
-    } finally {
-      await cleanup();
-    }
-  });
-
-  it('keeps partial calendar setup focused on the next missing sync state', async () => {
-    window.localStorage.setItem('calendar-sync.calendarId', 'primary-calendar');
-
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderPage(container);
-
-    try {
-      await waitForExpectation(() => {
-        expect(container.textContent).toContain('Calendar ID: primary-calendar');
-        expect(container.querySelector('[data-testid="admin-diagnostics-calendar-sync-pending"]')).not.toBeNull();
-        expect(container.textContent).toContain('Aún no se registra una sincronización.');
-        expect(container.textContent).toContain('Abrir sincronización');
-        expect(container.textContent).not.toContain('Última sincronización: —');
-        expect(container.textContent).not.toContain('Calendar ID: —');
-        expect(container.textContent).not.toContain('Conectar calendario');
-      });
-    } finally {
-      await cleanup();
+      await cleanup(); Object.defineProperty(window, 'localStorage', descriptor); spy?.mockRestore();
     }
   });
 
