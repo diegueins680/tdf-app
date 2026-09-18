@@ -6578,8 +6578,8 @@ recordCourseEmailEvent rawSlug mRegistrationId rawRecipientEmail mRecipientName 
       , ME.courseEmailEventCreatedAt = now
       }
 
-courseEmailSentWithinLast24Hours :: Text -> AppM Bool
-courseEmailSentWithinLast24Hours rawRecipientEmail = do
+courseEmailSentWithinLast24Hours :: ME.CourseRegistrationId -> Text -> AppM Bool
+courseEmailSentWithinLast24Hours registrationKey rawRecipientEmail = do
   let recipientEmail = T.toLower (T.strip rawRecipientEmail)
   if T.null recipientEmail
     then pure False
@@ -6588,6 +6588,8 @@ courseEmailSentWithinLast24Hours rawRecipientEmail = do
       let cutoff = addUTCTime (negate 86400) now
       mRecent <- runDB $ selectFirst
         [ ME.CourseEmailEventRecipientEmail ==. recipientEmail
+        , ME.CourseEmailEventRegistrationId ==. Just registrationKey
+        , ME.CourseEmailEventEventType ==. "registration_confirmation"
         , ME.CourseEmailEventStatus ==. "sent"
         , ME.CourseEmailEventCreatedAt >=. cutoff
         ]
@@ -6708,10 +6710,10 @@ createCourseRegistrationInScope namespace rawSlug mRequestKey payload@CourseRegi
                 "skipped"
                 (Just msg)
             Just _ -> do
-              alreadySent <- courseEmailSentWithinLast24Hours emailAddr
+              alreadySent <- courseEmailSentWithinLast24Hours regKey emailAddr
               if alreadySent
                 then do
-                  let msg = "[CourseRegistration] Skipped registration confirmation to " <> emailAddr <> ": daily email cap reached (max 1 every 24h)."
+                  let msg = "[CourseRegistration] Skipped registration confirmation to " <> emailAddr <> ": this registration already received a confirmation within 24h."
                   liftIO $ LogBuf.addLog LogBuf.LogWarning msg
                   recordCourseEmailEvent
                     courseSlug
@@ -6753,10 +6755,10 @@ createCourseRegistrationInScope namespace rawSlug mRequestKey payload@CourseRegi
               -- This is evaluated after registration_confirmation, so a just-sent
               -- confirmation will block welcome in the same request.
               for_ mNewUser $ \(username, tempPassword) -> do
-                welcomeAlreadySent <- courseEmailSentWithinLast24Hours emailAddr
+                welcomeAlreadySent <- courseEmailSentWithinLast24Hours regKey emailAddr
                 if welcomeAlreadySent
                   then do
-                    let msg = "[CourseRegistration] Skipped welcome email to " <> emailAddr <> ": daily email cap reached (max 1 every 24h)."
+                    let msg = "[CourseRegistration] Skipped welcome email to " <> emailAddr <> ": this registration already received a confirmation within 24h."
                     liftIO $ LogBuf.addLog LogBuf.LogWarning msg
                     recordCourseEmailEvent
                       courseSlug
