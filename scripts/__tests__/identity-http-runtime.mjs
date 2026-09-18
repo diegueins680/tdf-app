@@ -49,6 +49,7 @@ try {
   const post = (who, requestKey = key, payload = body) => fetch(`${base}/parties`, { method: 'POST', headers: { ...headers(who), 'Content-Type': 'application/json', 'Idempotency-Key': requestKey }, body: JSON.stringify(payload) });
   assert.equal((await post(null)).status, 401);
   assert.equal((await post('denied')).status, 403);
+  assert.equal((await fetch(`${base}/parties`, { method: 'POST', headers: { ...headers('a'), 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).status, 400, 'legacy keyless creation must not bypass replay protection');
   const created = await Promise.all(Array.from({ length: 8 }, async () => {
     const response = await post('a'); assert.equal(response.status, 200); return response.json();
   }));

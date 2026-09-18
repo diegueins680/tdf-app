@@ -16266,9 +16266,9 @@ export interface operations {
     createParty: {
         parameters: {
             query?: never;
-            header?: {
+            header: {
                 /** @description Stable request key scoped to the authenticated actor. Reuse on retries with the same body; a changed body returns 409. Contact attributes never establish identity. */
-                "Idempotency-Key"?: string;
+                "Idempotency-Key": string;
             };
             path?: never;
             cookie?: never;
@@ -18769,7 +18769,14 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description A supplied musician identity is ambiguous */
+            /** @description The actor cannot select a supplied contact */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The accepted submission changed or an archived contact requires review */
             409: {
                 headers: {
                     [name: string]: unknown;

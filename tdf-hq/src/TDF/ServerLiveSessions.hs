@@ -20,7 +20,7 @@ module TDF.ServerLiveSessions
   , validateLiveSessionTermsAcceptance
   ) where
 
-import           Control.Monad              ((>=>), forM_, unless, when, zipWithM)
+import           Control.Monad              (forM_, unless, when, zipWithM)
 import           Control.Exception          (throwIO, try, catch)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
@@ -37,6 +37,7 @@ import           Data.Char                  ( GeneralCategory
                                             , isControl
                                             )
 import           Data.Maybe                 (mapMaybe)
+import           Data.Int                   (Int64)
 import qualified Data.Set                   as Set
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
@@ -128,8 +129,8 @@ liveSessionsServer user = intakeHandler
 
       pool <- asks envPool
       result <- liftIO $ try $ catch (runSqlPool (do
-        rawExecute "SELECT pg_advisory_xact_lock(hashtextextended(?,0))"
-          [PersistText ("live-intake:" <> T.pack (show (fromSqlKey (auPartyId user))) <> ":" <> key)]
+        _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+          [PersistText ("live-intake:" <> T.pack (show (fromSqlKey (auPartyId user))) <> ":" <> key)] :: SqlPersistT IO [Single Int64]
         riderDigest <- traverse (digestBytes . snd) rider
         let body = TE.decodeUtf8 (BL.toStrict (encode (liveSessionRequestPayload payload (fst <$> rider) riderDigest)))
         previous <- rawSql "SELECT request_payload = ?::jsonb FROM identity_live_intake_request WHERE actor_party_id=? AND request_key=?"
@@ -443,8 +444,6 @@ validateLiveSessionMusicianCount musicians
       Left err400 { errBody = "musician partyId must be a positive integer" }
   | hasDuplicates referencedPartyIds =
       Left err400 { errBody = "referenced musician partyIds must be distinct" }
-  | hasDuplicates referencedEmails =
-      Left err400 { errBody = "musician emails must be distinct" }
   | otherwise =
       Right ()
   where
@@ -454,8 +453,6 @@ validateLiveSessionMusicianCount musicians
     referencedPartyIds =
       mapMaybe lsmPartyId musicians
 
-    referencedEmails =
-      mapMaybe (lsmEmail >=> normalizeAuthEmailAddress) musicians
 
 hasDuplicates :: Ord a => [a] -> Bool
 hasDuplicates = go Set.empty

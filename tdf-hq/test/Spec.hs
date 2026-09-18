@@ -16043,11 +16043,10 @@ main = hspec $ do
             assertRejected
                 "referenced musician partyIds must be distinct"
                 [mkMusician (Just 7) Nothing, mkMusician (Just 7) Nothing]
-            assertRejected
-                "musician emails must be distinct"
+            validateLiveSessionMusicianCount
                 [ mkMusician Nothing (Just " Player@Example.com ")
                 , mkMusician Nothing (Just "player@example.com")
-                ]
+                ] `shouldBe` Right ()
 
     describe "validateLiveSessionBandName" $ do
         it "trims live-session band names before intake persistence" $

@@ -87,7 +87,7 @@ export interface LiveSessionIntakeFormProps {
 }
 
 export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftOwner }: LiveSessionIntakeFormProps) {
-  const [submissionKey, setSubmissionKey] = useState(() => crypto.randomUUID());
+  const [submissionKey, setSubmissionKey] = useState<string>(() => crypto.randomUUID());
   const qc = useQueryClient();
   const authority = useRef({ accessCode, generation: 0 });
   if (authority.current.accessCode !== accessCode) {

@@ -43,6 +43,10 @@ spec = describe "live-intake-identity-postgresql" $ do
           counts pool `shouldReturn` [4,1,1,1,1,0,0]
           rows <- runSqlPool (rawSql "SELECT count(*) FROM party WHERE primary_email='shared@example.test'" []) pool
           rows `shouldBe` [Single (2 :: Int64)]
+        it "allows separate musicians in one intake to share contact details" $ \pool -> do
+          let second = musician { lsmName = "Separate synthetic person" }
+          submit pool member "shared-details-same-intake" (payload { lsiMusicians = [musician,second] }) `shouldReturn` Right NoContent
+          counts pool `shouldReturn` [5,1,2,1,1,0,0]
         it "serializes concurrent retries into one intake and one new contact" $ \pool -> do
           boxes <- forM [1..5 :: Int] $ \_ -> do
             box <- newEmptyMVar
