@@ -10084,6 +10084,9 @@ components:
         idToken:
           type: string
           description: Google ID token returned by Google Identity Services
+        createNewAccount:
+          type: boolean
+          description: Must be explicitly true, with current terms acceptance, to create a new account for an unbound Google subject. Omission never creates an account.
         linkAccount:
           allOf:
             - $ref: '#/components/schemas/LoginRequest'

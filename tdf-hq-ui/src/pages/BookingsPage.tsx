@@ -227,6 +227,9 @@ export default function BookingsPage() {
     shareUrl?: string;
   } | null>(null);
   const [createContactOpen, setCreateContactOpen] = useState(false);
+  useEffect(() => {
+    if (!createContactOpen) contactCreation.reset();
+  }, [createContactOpen, contactCreation]);
   const [createContactForm, setCreateContactForm] = useState({ name: '', email: '', phone: '' });
   const [createContactError, setCreateContactError] = useState<string | null>(null);
   const serviceTypes = useMemo<ServiceType[]>(

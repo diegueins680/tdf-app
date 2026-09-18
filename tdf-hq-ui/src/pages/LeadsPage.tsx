@@ -80,6 +80,7 @@ function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
 
   useEffect(() => {
     if (!open) {
+      contactCreation.reset();
       setName('');
       setEmail('');
       setPhone('');
@@ -88,7 +89,7 @@ function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
       setNotes('');
       setError(null);
     }
-  }, [open]);
+  }, [open, contactCreation]);
 
   const mutation = useMutation<PartyDTO, Error, PartyCreate>({
     mutationFn: (body) => contactCreation.create(body),

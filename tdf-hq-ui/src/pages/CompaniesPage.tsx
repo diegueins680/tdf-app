@@ -124,13 +124,14 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
 
   useEffect(() => {
     if (!open) {
+      contactCreation.reset();
       setDisplayName('');
       setLegalName('');
       setEmail('');
       setTaxId('');
       setError(null);
     }
-  }, [open]);
+  }, [open, contactCreation]);
 
   const createCompanyMutation = useMutation({
     mutationFn: (body: PartyCreate) => contactCreation.create(body),

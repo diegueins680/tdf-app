@@ -416,10 +416,10 @@ validateSignupTermsAcceptance _ _ =
 supportedAccountTermsVersion :: Text
 supportedAccountTermsVersion = "tdf-account-terms-v1"
 
-validateGoogleAccountCreationTerms :: Maybe Text -> Either Text ()
-validateGoogleAccountCreationTerms (Just version)
+validateGoogleAccountCreationTerms :: Maybe Bool -> Maybe Text -> Either Text ()
+validateGoogleAccountCreationTerms (Just True) (Just version)
   | version == supportedAccountTermsVersion = Right ()
-validateGoogleAccountCreationTerms _ =
+validateGoogleAccountCreationTerms _ _ =
   Left "Accept the terms and privacy policy through the signup flow before creating a Google account"
 
 normalizeAuthPhoneNumber :: Text -> Maybe Text
@@ -1149,7 +1149,7 @@ googleLogin GoogleLoginRequest{..} = do
   case verification of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right profile -> do
-      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin acceptedTermsVersion marketingOptIn onboardingIntentClean linkAccountClean profile)
+      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin createNewAccount acceptedTermsVersion marketingOptIn onboardingIntentClean linkAccountClean profile)
       case result of
         Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
         Right resp -> do
@@ -1694,8 +1694,8 @@ sanitizeGoogleProfileName rawName = do
     then Just name
     else Nothing
 
-completeGoogleLogin :: Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof GoogleProfile{..} = do
+completeGoogleLogin :: Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeGoogleLogin creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof GoogleProfile{..} = do
   -- Serialize one issuing-system subject across login, signup, linking and retries.
   -- A verified email is profile data, never authorization to an existing account.
   existingResult <- resolveGoogleCredential gpIssuer gpSubject linkProof
@@ -1719,7 +1719,7 @@ completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingInt
                 Nothing -> pure (Left "No pudimos cargar tu perfil.")
                 Just user -> pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just False }))
         Nothing ->
-          case validateGoogleAccountCreationTerms acceptedTermsVersion of
+          case validateGoogleAccountCreationTerms creationIntent acceptedTermsVersion of
             Left consentError -> pure (Left consentError)
             Right () -> do
               now <- liftIO getCurrentTime

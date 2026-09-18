@@ -273,6 +273,7 @@ describe('LoginPage Google signup consent flow', () => {
         marketingOptIn: false,
         termsAccepted: true,
         termsVersion: 'tdf-account-terms-v1',
+        createNewAccount: true,
       });
       expect(loginMock).toHaveBeenCalledWith(
         expect.objectContaining({ partyId: 404, apiToken: 'fictional-session-token' }),

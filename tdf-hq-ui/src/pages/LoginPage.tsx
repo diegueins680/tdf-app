@@ -491,6 +491,7 @@ export default function LoginPage() {
           idToken: credential,
           ...(linkAccount ? { linkAccount } : {}),
           ...(signupDialogOpen ? {
+            createNewAccount: true,
             marketingOptIn: false,
             termsAccepted: true,
             termsVersion: ACCOUNT_TERMS_VERSION,
