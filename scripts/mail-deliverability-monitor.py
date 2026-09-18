@@ -159,7 +159,7 @@ def collect(output):
                         failures, aggregates = summarize_message(raw)
                         statuses.update(failures)
                         report['aggregateReports'].extend(aggregates)
-                    except (ValueError, ET.ParseError, zipfile.BadZipFile, OSError):
+                    except (ValueError, ET.ParseError, zipfile.BadZipFile, OSError, RuntimeError):
                         report['errors'].append('unparseable_report')
         report['dsnStatuses'] = dict(statuses)
         report['mailboxReadSucceeded'] = True

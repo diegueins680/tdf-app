@@ -124,7 +124,8 @@ para simular esas plantillas.
 
 Validación local: seis ejemplos Hspec, incluida una propiedad QuickCheck de cien
 casos y el rechazo de un destinatario excluido antes de SMTP; compilación de Email
-con Stack/GHC 9.10.3; cinco pruebas del monitor; auditoría formal sin errores.
+con Stack/GHC 9.10.3; seis pruebas del monitor (incluida la continuación después de
+ZIP cifrado o con compresión no compatible); auditoría formal sin errores.
 Los checks hospedados y la revisión independiente del PR son requisitos antes de
 fusionar/desplegar. La rama protegida exige una aprobación; no se usa bypass.
 

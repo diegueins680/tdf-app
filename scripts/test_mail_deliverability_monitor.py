@@ -3,6 +3,12 @@ import pathlib
 import unittest
 from email.message import EmailMessage
 import gzip
+import io
+import json
+import struct
+import tempfile
+import zipfile
+from unittest.mock import MagicMock, patch
 
 spec = importlib.util.spec_from_file_location('monitor', pathlib.Path(__file__).with_name('mail-deliverability-monitor.py'))
 monitor = importlib.util.module_from_spec(spec)
@@ -10,6 +16,45 @@ spec.loader.exec_module(monitor)
 
 
 class MonitorTests(unittest.TestCase):
+    def test_unreadable_zip_does_not_stop_later_reports(self):
+        xml = b'<feedback><policy_published><domain>tdfrecords.net</domain></policy_published><record><row><count>1</count><policy_evaluated><dkim>pass</dkim></policy_evaluated></row></record></feedback>'
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, 'w') as output:
+            output.writestr('report.xml', xml)
+        original = archive.getvalue()
+        for case in ['encrypted', 'unsupported_compression']:
+            with self.subTest(case=case):
+                broken = bytearray(original)
+                central = broken.index(b'PK\x01\x02')
+                if case == 'encrypted':
+                    struct.pack_into('<H', broken, 6, 1)
+                    struct.pack_into('<H', broken, central + 8, 1)
+                else:
+                    struct.pack_into('<H', broken, 8, 999)
+                    struct.pack_into('<H', broken, central + 10, 999)
+                messages = []
+                for payload, filename, subtype in [(bytes(broken), 'bad.zip', 'zip'), (xml, 'good.xml', 'xml')]:
+                    message = EmailMessage()
+                    message.set_content('Report')
+                    message.add_attachment(payload, maintype='application', subtype=subtype, filename=filename)
+                    messages.append(message.as_bytes())
+                mailbox = MagicMock()
+                mailbox.select.return_value = ('OK', [])
+                mailbox.uid.side_effect = [('OK', [b'1 2']), ('OK', [(b'1', messages[0])]),
+                                           ('OK', [(b'2', messages[1])]), ('OK', [b''])]
+                process = MagicMock(returncode=0, stdout='DNS answer')
+                live = MagicMock(returncode=0, stdout=json.dumps({'Machines': [{'id': 'abcd', 'state': 'started'}]}))
+                config = MagicMock(returncode=0, stdout='SMTP_USERNAME=test\nSMTP_PASSWORD=test\n')
+                with tempfile.TemporaryDirectory() as directory, \
+                     patch.object(monitor.subprocess, 'run', side_effect=[process] * 20 + [live, config]), \
+                     patch.object(monitor.imaplib, 'IMAP4_SSL') as client, patch('builtins.print'):
+                    client.return_value.__enter__.return_value = mailbox
+                    self.assertEqual(monitor.collect(pathlib.Path(directory)), 1)
+                    report = json.loads((pathlib.Path(directory) / 'latest.json').read_text())
+                self.assertTrue(report['mailboxReadSucceeded'])
+                self.assertEqual(report['errors'], ['unparseable_report'])
+                self.assertEqual(report['aggregateReports'], [{'messages': 1, 'aligned': 1}])
+
     def test_discovers_replacement_and_rejects_unhealthy_or_wrong_process(self):
         self.assertEqual(monitor.select_live_machine({'Machines': [
             {'id': 'aabb', 'state': 'stopped'},
