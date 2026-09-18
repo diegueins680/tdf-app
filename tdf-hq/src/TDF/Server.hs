@@ -7930,23 +7930,7 @@ ensurePartyRecordDb now mName emailAddr mPhone = do
         Just nameTxt | not (T.null nameTxt) -> nameTxt
         _                                   -> emailAddr
       phoneClean = mPhone >>= normalizePhone
-  mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
-  case mPartyOrErr of
-    Left serverErr -> pure (Left serverErr)
-    Right mParty -> fmap Right $ case mParty of
-      Just (Entity pid party) -> do
-        let updates = catMaybes
-              [ if not (T.null (M.partyDisplayName party)) || T.null display
-                  then Nothing
-                  else Just (PartyDisplayName =. display)
-              , case phoneClean of
-                  Just phone | isNothing (partyPrimaryPhone party) ->
-                    Just (PartyPrimaryPhone =. Just phone)
-                  _ -> Nothing
-              ]
-        unless (null updates) (update pid updates)
-        pure pid
-      Nothing -> insert Party
+  Right <$> insert Party
         { partyLegalName = Nothing
         , partyDisplayName = display
         , partyIsOrg = False
@@ -7956,7 +7940,7 @@ ensurePartyRecordDb now mName emailAddr mPhone = do
         , partyWhatsapp = Nothing
         , partyInstagram = Nothing
         , partyEmergencyContact = Nothing
-        , partyNotes = Nothing
+        , partyNotes = Just "Unverified guest booking contact; supplied contact details do not establish account identity."
         , partyStripeCustomerId = Nothing
         , partyCountryCode = Nothing
         , partyCountryId = Nothing
@@ -11579,7 +11563,6 @@ createPublicBookingCheckout mIdempotency Api.PublicBookingCheckoutReq{..} = do
       | otherwise -> throwError err409
           { errBody = "Idempotency key was already used for a different booking checkout" }
     Nothing -> do
-      partyId <- ensurePartyRecord (Just fullNameClean) emailClean phoneClean
       resourceKeys <- runDB $
         resolveResourcesForBooking (Just offering) requestedResourceIds startsAtClean endsAtClean
       let lookupHash = marketplaceSha256Text lookupToken
@@ -11587,7 +11570,7 @@ createPublicBookingCheckout mIdempotency Api.PublicBookingCheckoutReq{..} = do
           resolvedEngineerName = resolveBookingEngineerName engineerNameClean mEngineerParty
       creation <- createServiceBookingCheckoutTransaction
         checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
-        fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+        fullNameClean emailClean notesClean phoneClean mEngineerParty resolvedEngineerName
         offering policy price startsAtClean endsAtClean resourceKeys
       case creation of
         Left serverErr -> throwError serverErr
@@ -11617,7 +11600,7 @@ createServiceBookingCheckoutTransaction
   -> Text
   -> Text
   -> Maybe Text
-  -> Key Party
+  -> Maybe Text
   -> Maybe (Entity Party)
   -> Maybe Text
   -> Entity Catalog.ServiceOffering
@@ -11629,7 +11612,7 @@ createServiceBookingCheckoutTransaction
   -> AppM (Either ServerError (Key Booking))
 createServiceBookingCheckoutTransaction
     checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
-    fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+    fullNameClean emailClean notesClean phoneClean mEngineerParty resolvedEngineerName
     (Entity offeringKey offering) policy price startsAtClean endsAtClean resourceKeys = do
   Env{ envPool } <- ask
   result <- liftIO $
@@ -11677,6 +11660,10 @@ createServiceBookingCheckoutTransaction
           { errBody = "Approved booking service references a missing service-order catalog" }) pure mCatalog
       let totalMinorInt = fromIntegral (ServiceBookings.bpbTotalMinor price)
           serviceLabel = Catalog.serviceOfferingNameEs offering
+      -- The request lock and existing-order check precede contact creation.
+      -- Email is contact data, never proof of access to an existing account.
+      partyResult <- ensurePartyRecordDb now (Just fullNameClean) emailClean phoneClean
+      partyId <- either (liftIO . throwIO) pure partyResult
       serviceOrderKey <- insert ServiceOrder
         { serviceOrderCustomerId = partyId
         , serviceOrderArtistId = entityKey <$> mEngineerParty
