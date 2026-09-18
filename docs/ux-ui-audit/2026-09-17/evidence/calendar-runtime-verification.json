@@ -1,0 +1,216 @@
+{
+  "observedAt": "2026-09-18T11:01:31.006960+00:00",
+  "productionReadOnlySchema": {
+    "apiRevision": "5c11577a5",
+    "database": "tdf_hq",
+    "calendarConfigExists": false,
+    "calendarEventsExist": false,
+    "inspection": "BEGIN READ ONLY; to_regclass; COMMIT; no table contents or credentials read"
+  },
+  "beforeAdminTablet": [
+    {
+      "role": "admin",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [
+        {
+          "path": "/api/calendar/v1/config",
+          "status": 500
+        },
+        {
+          "path": "/api/calendar/v1/events",
+          "status": 500
+        },
+        {
+          "path": "/api/calendar/v1/config",
+          "status": 500
+        },
+        {
+          "path": "/api/calendar/v1/events",
+          "status": 500
+        }
+      ],
+      "headings": [],
+      "violations": []
+    }
+  ],
+  "after": [
+    {
+      "role": "admin",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 320,
+      "scenario": "calendar-after-schema/empty-or-denial",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 768,
+      "scenario": "calendar-after-schema/empty-or-denial",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 1280,
+      "scenario": "calendar-after-schema/empty-or-denial",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 320,
+      "scenario": "calendar-after-schema/empty-or-denial",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 768,
+      "scenario": "calendar-after-schema/empty-or-denial",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 1280,
+      "scenario": "calendar-after-schema/empty-or-denial",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    }
+  ],
+  "storageBefore": [
+    {
+      "role": "admin",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 768,
+      "error": "locator.waitFor: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('Sin eventos sincronizados para este calendario.', { exact: true }) to be visible\u001b[22m\n",
+      "errors": [],
+      "failures": [],
+      "body": "Saltar al contenido principal\nSaltar al contenido principal\nBuscar sección\n0\nA\nEstado sistema\n/\n\nCalendario Google\n\nAlgo salió al cargar esta sección.\n\nPuedes reintentar o volver al inicio.\n\nReintentar\nIr al inicio\nEN PAUSA: SIN EMISORAS DISPONIBLESRADIO"
+    }
+  ],
+  "storageAfter": [
+    {
+      "role": "admin",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 768,
+      "scenario": "calendar-after-schema/empty-or-denial",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": [],
+      "engine": "chromium"
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 768,
+      "scenario": "calendar-after-schema/empty-or-denial",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": [],
+      "engine": "firefox"
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 768,
+      "scenario": "calendar-after-schema/empty-or-denial",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": [],
+      "engine": "webkit"
+    }
+  ],
+  "sql": "full automatic production migration replay and restart idempotence passed on fresh isolated PostgreSQL17; HTTP public401/nonAdmin403/admin200 empty+populated/credential omission/12generated events/reapplication preserve rows passed",
+  "negativeSchemaControls": "missing access_token, disabled archived-owner guard and missing calendar-event unique key all rejected then rolled back",
+  "releaseBoundary": "No production migration, OAuth token exchange or external sync executed"
+}

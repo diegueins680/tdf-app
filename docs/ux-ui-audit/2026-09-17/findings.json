@@ -17,10 +17,10 @@
     ],
     "acceptanceCriteria": "Both machines stable; /health JSON status and db ok; /version exact verified SHA; essential public and authorized synthetic journeys pass.",
     "verificationMethod": "Fly machine status, immutable digest, SQL preflight, endpoint probes and observation window.",
-    "releaseStatus": "Backend critical recovery already deployed; /health and /version confirmed9f0da14. Further journey validation remains; old coordination hold resolved.",
-    "status": "verification pending",
+    "releaseStatus": "Guarded2f01 complete2026-09-18T07:32:24Z, zero rollback, fresh snapshotvs_OzXgpX4lyQnsnqNk2YZ6Vb9. Existing discovery settings preserved.",
+    "status": "deployed",
     "implementationStatus": "recovered by earlier critical release",
-    "verificationStatus": "Backend now healthy in guarded db69 release; checksum/schema preflight and both-machine health pass. Earlier incompatibility repaired by existing #423/#424 integrations; no new schema workaround.",
+    "verificationStatus": "Guarded release2f01 verifies both exact immutable-image machines,107migration compatibility, health/db ok and stable public/legitimate AppReview session onboarding200. Native authenticated return succeeded against production. Earlier critical incompatibility remains repaired; no new workaround.",
     "mergeStatus": "earlier critical changes merged"
   },
   {
@@ -90,7 +90,7 @@
     "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
     "status": "merged",
     "implementationStatus": "in progress",
-    "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
+    "verificationStatus": "Historical onboarding recovery is incorporated. Current main430 pins7b7ecaf; tab fix667 must be integrated without losing required Google provider contract. Parent435 reconciliation and cold-start release blocker UX035 remain pending.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
   {
@@ -679,11 +679,11 @@
     "dependencies": [
       "UX-260917-012"
     ],
-    "acceptanceCriteria": "Cross-device completion persists, account switch isolates state, optional onboarding is escapable. **Deferred pending contract.**",
+    "acceptanceCriteria": "Cross-device authoritative completion persists; account switch isolates state; optional onboarding is escapable. Server contract exists; remaining native runtime verification is explicit.",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "verification pending",
     "implementationStatus": "Server-owned session onboarding contract already implemented; UX-012 adds frontend current-session fences. No new contract project required.",
-    "verificationStatus": "Actual isolated HTTP two-account test passed persistence/idempotence/logout/isolation; three-engine actual signup→follow→reload passed. Native cross-device and production observations remain pending.",
+    "verificationStatus": "Actual isolated iOS18.3 simulator: password login/reopen, logout/account switch pass. UX037 exposed social-event/FanHub follow mismatch. Corrected Hermes production bundle: nativeB first follow and restart persist; actual webB sees follow and completed onboarding after reload; accountA completedAt unchanged. Final native artifact/Android/physical Google gates remain explicit.",
     "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
     "releaseStatus": "Per-finding deployment/publication verification pending"
   },
@@ -771,11 +771,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Contract distinguishes signup from sign-in/new device and survives refresh/account switch. **Deferred; not reactivated.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Focused successor b62895313 ports missing API/config/handlers from8c2960874 and both-arm tests3f1e6f3; existing model/DTO/migration retained. Adds progress-row serialization and post-lock clock, canonical OpenAPI paths and paused release guard. Integrated current main4b0bc6ed7 as0ebdb180d; experiment remains disabled.",
     "verificationStatus": "Pre-integration: Stack9.10.3 --fast build;2578Hspec examples0fail1PG-onlypending; actual isolated HTTP/PostgreSQL paused/no-write,16concurrent assignments/exposures, account isolation, completion/expiry lock contention and revocation pass. Full pinned TLC/Alloy runner and3experiment negative controls pass.43native conformance tests pass after two initial5-second timeouts under host contention; no test timeout/assertion weakened. Post-main integration checks pending.",
-    "mergeStatus": "Focused successor not yet merged; mobile generated contract companion pending publication.",
-    "releaseStatus": "No new deployment or experiment activation. Production already has original migration/checksum and0assignments at05:13UTC; current release ownership must be rechecked."
+    "mergeStatus": "Merged #431 as2f01b20b0c2a2e2088570c3dc5deba6197266452.",
+    "releaseStatus": "Guarded2f01 complete; authenticated production assignment200 reports experimentEnabled=false,newlyAssigned=false,nullassignment/exposure. Intentionally paused as approved; no activated experiment or conversion claim."
   },
   {
     "id": "I18N-01",
@@ -817,11 +817,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Current static audit has zero findings and helper tests pass. Authenticated campaign keyboard/axe and screen-reader runtime remain unverified. **Implemented and static/unit-verified; manual runtime deferred.**",
     "verificationMethod": "Current runtime, component/source and release evidence; original report is historical.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Use SelectProps.labelId for the visible MUI combobox, referencing row+column; notes retain their existing labels. Name calendar/creative progress indicators.",
     "verificationStatus": "Actual isolated API/browser after label correction:320/1280 zero axe WCAG2.2-tagged violations; row/column IDs on visible combobox and notes. Complete5-tab cross-engine/keyboard/focus regression pending final shared-header change. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow.",
-    "mergeStatus": "Follow-up implementation not merged",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "Merged #433 as6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval and all applicable hosted checks.",
+    "releaseStatus": "Cloudflare345dbb80-6d55-4dfc-8e60-0f8dbecc72ac SUCCESS; public asset list matches. Ten production-bundle campaign cases PASS across5profiles/3engines with synthetic transport. Actual isolated14ES/ENloading cases already pass; no human screen-reader or field-performance claim."
   },
   {
     "kind": "confirmed",
@@ -1019,13 +1019,13 @@
   {
     "id": "UX-260917-023",
     "kind": "confirmed",
-    "title": "Operational controls and loading indicators lack accessible names",
+    "title": "Operational controls and public loading indicators lack accessible names",
     "severity": "medium",
     "confidence": "high",
     "journey": "Initial operational and administrative route arrival, navigation and form use",
     "roles": "actual isolated Admin+Customer and Customer sessions; route-specific authorization retained",
-    "surface": "FullCalendar navigation; DDEX status; invoice options; artist enrichment; social; calendar sync; activity; system",
-    "evidence": "Versioned operational-admin-before.json; production bundle with actual isolated backend/PostgreSQL17 at320/1280px. New assertions found during initial audit coverage, not inferred from source alone.",
+    "surface": "FullCalendar navigation; DDEX status; invoice options; artist enrichment; social; calendar sync; activity; system; public /tdf, /marketplace and /records initial loading",
+    "evidence": "Versioned operational-admin-before.json; production bundle with actual isolated backend/PostgreSQL17 at320/1280px. New assertions found during initial audit coverage, not inferred from source alone. Initial production arrival verification at5d49f61fa found12 aria-progressbar-name cases (sixpaths includingaliases ×320/1280) among84cases. Runtime JSON preserved; no HTTP5xx/pageerrors/overflow observed in that pass.",
     "userImpact": "Screen-reader users cannot identify purpose or progress.",
     "rootCause": "Unlabelled icon child images, selects, checkboxes and progress indicators.",
     "proposedChange": "Use localized FullCalendar text controls, explicit select label association, clickable checkbox labels and named progress.",
@@ -1036,10 +1036,10 @@
     "acceptanceCriteria": "No corresponding axe name violations during affected load/form states; ordinary actions remain usable.",
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "implemented",
-    "implementationStatus": "Original #429 fixes deployed; additional initial-coverage loaders named on Teachers, TeacherPortal, DDEX inbox, Services/revisions, Reports and Chat threads/messages in audit/ux-remaining-coverage-20260918.",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Focused slow-response verification pending. Four delayed-response ES/EN browser checks pass for both activity loading names and directory profile loader. Eight-case delayed ES/EN checks passed for first5 additional loaders. Subsequent Reports/Chat initial arrival and12-case delayed runtime confirmed missing names; final expanded checks pending. Final14 slow-response ES/EN cases pass: real isolated API/session, locale override; synthetic read-only thread for message loading. All8 additional loaders have distinct translated accessible names; zero aria-progressbar-name violations. Final build365423gzip/5preloads passes.",
-    "mergeStatus": "Merged #429 as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after exact2fb approval and all applicable gates.",
-    "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented."
+    "implementationStatus": "Original #429 fixes deployed; additional initial-coverage loaders named on Teachers, TeacherPortal, DDEX inbox, Services/revisions, Reports and Chat threads/messages in audit/ux-remaining-coverage-20260918. Public follow-up names five observed loaders with distinct existing ES/EN translation infrastructure: featuredartists,marketplace,publishedrecordings/releases/sessions.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Focused slow-response verification pending. Four delayed-response ES/EN browser checks pass for both activity loading names and directory profile loader. Eight-case delayed ES/EN checks passed for first5 additional loaders. Subsequent Reports/Chat initial arrival and12-case delayed runtime confirmed missing names; final expanded checks pending. Final14 slow-response ES/EN cases pass: real isolated API/session, locale override; synthetic read-only thread for message loading. All8 additional loaders have distinct translated accessible names; zero aria-progressbar-name violations. Final build365423gzip/5preloads passes. Follow-up18 delayed-read cases (3pages×ES/EN×3engines) on real production bundle pass; each asserts actual document language and distinct translated accessible names. TypeScript/build/lint pass;365762gzipbytes/5preloads withinbudget. Earlier local harness used an obsolete locale key, so its requested-English rows were Spanish and discarded; corrected harness explicitly asserts actual language. No screen-reader/manual announcement certification.",
+    "mergeStatus": "PR4421aa708a00; all applicable checks PASS, independent review pending.",
+    "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented. Newly confirmed public slow-loading gap is not yet deployed; prior operational fixes remain deployed."
   },
   {
     "id": "UX-260917-024",
@@ -1233,11 +1233,11 @@
     ],
     "acceptanceCriteria": "Status and notes keyboard focus remain visibly unobscured at320/1280 and across supported browser engines; header actions remain accessible, no page overflow.",
     "verificationMethod": "Browser elementFromPoint at focused control center, keyboard menu open/Escape/next field, axe/reflow checks across5tabs and5profiles.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Removed sticky positioning from shared PageShell header in audit/ux-remaining-coverage-20260918. Explicit nearest scrolling on table-control focus also fixes Linux WebKit notes clipping observed in CI.",
     "verificationStatus": "Actual compiled final bundle320/1280: status and notes centers hit the focused controls, not header; zero axe WCAG-tagged violations. Build/typecheck365423gzip/5preloads and affected lint pass. Durable5profile/3engine5tab regression running. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow. New local production build365428gzip/5preloads,10cases in5profiles/3engines and affected lint PASS; corrected Linux hosted run pending.",
-    "mergeStatus": "not merged",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "Merged #433 as6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval and all applicable hosted checks.",
+    "releaseStatus": "Cloudflare345dbb80-6d55-4dfc-8e60-0f8dbecc72ac SUCCESS; public asset list matches. Ten production-bundle campaign cases PASS across5profiles/3engines with synthetic transport. Actual isolated14ES/ENloading cases already pass; no human screen-reader or field-performance claim."
   },
   {
     "id": "UX-260917-033",
@@ -1259,11 +1259,11 @@
     ],
     "acceptanceCriteria": "ES/EN5of5 for authenticated users,1of1 for guests; changing locale rerenders labels; hidden routes remain hidden and permissions unchanged; corrected native artifact and applicable distribution verified.",
     "verificationMethod": "Actual before accessibility tree; component tests of actual TabsLayout plus finite locale/auth/platform label contracts; native runtime and release evidence separate.",
-    "status": "in progress",
+    "status": "verification pending",
     "implementationStatus": "Mobile PR101 afbd5dcc7 based on34971c451; visible-tab count and ES/EN labels evaluated from current settings/session.",
-    "verificationStatus": "Hosted validate/Datadog PASS;83suites486cases plus final12 focused cases, TypeScript, lint, release checks PASS. Corrected EAS simulator4696e1b9 FINISHED; actual artifact execution pending.",
-    "mergeStatus": "mobile PR101draft; parent not merged",
-    "releaseStatus": "not deployed or published"
+    "verificationStatus": "Corrected actual EAS iOS18.3 simulator passed5visible labels,authenticated return/relaunch,ES→EN→ES. Hosted667 checks pass, generated API bytes unchanged from349; no physical/human reader/Androidruntime claim.",
+    "mergeStatus": "Mobile101 mergedebec681; root435 head06d5 approved with applicable checks passed but gitlink conflicts after main430. Preserve current7b7 provider contract in successor; no parent merge yet.",
+    "releaseStatus": "iOS21 source667 uploadc06c203d FINISHED, ASC VALID/IN_BETA_TESTING. Android12 source667 uploadc41e9287 FINISHED, Play version/hash verified; internal DRAFT. Promotion held for shared RootLayout cold-start blocker UX035/mobile102. No physical OAuth or public publication."
   },
   {
     "id": "UX-260917-031",
@@ -1281,11 +1281,11 @@
     "dependencies": [],
     "acceptanceCriteria": "16 controlled concurrent first visits all200, one row/count16; concurrent settings plus8 visits preserve settings/count24; other account count starts1; denied/revoked requests write nothing.",
     "verificationMethod": "Actual executable HTTP/PostgreSQL controlled interleaving, TLC finite-state concurrency model with legacy negative control.",
-    "status": "in progress",
-    "implementationStatus": "Atomic upsert implemented in isolated branch audit/ux-navigation-concurrency-20260918; build pending. No schema/API changes.",
-    "verificationStatus": "Hosted corrected binary passed controlled16 concurrent first visits, exact1:16 count and second-account isolation. The subsequent settings PUT failed400, revealing UX034 wire mismatch. Full HTTP gate remains pending after correction; previous TLC33generated/16distinct and unsafe35distinct counterexample remain applicable, unchanged model.",
-    "mergeStatus": "not merged",
-    "releaseStatus": "not deployed"
+    "status": "deployed",
+    "implementationStatus": "Atomic unique-key upsert merged in5c11577a5; no schema/API changes. Build and actual concurrency gates passed.",
+    "verificationStatus": "CI35319379339 SUCCESS:2584examples0fail1pending,15focused, actual HTTP/PostgreSQL controlled16concurrent visits/count24/settings/canonical+legacy/mixed+unknown/isolation/revocation passed. Formal NavigationVisit/unsafe negative verified.",
+    "mergeStatus": "Normal merge5c11577a5d31f079b3e070a7810a6b04a48d99f4; exact9213 approved and all applicable gates passed; zero review threads.",
+    "releaseStatus": "Guarded application5c11577a5 deployed by identity operator09:02:21UTC; both machines healthy exact5c, immutable artifact verified,108migration ledger/lease0. Read-only production health/version observation and limits: evidence/provider-navigation-production.json. No duplicate rollout."
   },
   {
     "id": "UX-260917-034",
@@ -1306,11 +1306,11 @@
     ],
     "acceptanceCriteria": "Canonical and prior prefixed payloads persist the same preferences; mixed/unknown fields rejected, account authority unchanged; concurrent visits preserve settings and exact counts.",
     "verificationMethod": "Generated JSON roundtrip property, explicit negative decode cases and actual HTTP/PostgreSQL mixed visit/settings gate. Existing NavigationVisit CountsMatchAccepted/SettingsPreserved model maps to upsert update lists; model scope does not prove arbitrary decoding.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Strict canonical decoder with legacy fallback in TDF.DTO; no schema/API schema change.",
-    "verificationStatus": "Before failure confirmed by actual400. Corrected decoder unit/generative and full hosted HTTP execution pending; node syntax and diff checks pass.",
-    "mergeStatus": "not merged",
-    "releaseStatus": "not deployed"
+    "verificationStatus": "CI35319379339 SUCCESS:2584examples0fail1pending,15focused, actual HTTP/PostgreSQL controlled16concurrent visits/count24/settings/canonical+legacy/mixed+unknown/isolation/revocation passed. Formal NavigationVisit/unsafe negative verified.",
+    "mergeStatus": "Normal merge5c11577a5d31f079b3e070a7810a6b04a48d99f4; exact9213 approved and all applicable gates passed; zero review threads.",
+    "releaseStatus": "Guarded application5c11577a5 deployed by identity operator09:02:21UTC; both machines healthy exact5c, immutable artifact verified,108migration ledger/lease0. Read-only production health/version observation and limits: evidence/provider-navigation-production.json. No duplicate rollout."
   },
   {
     "id": "UX-260917-036",
@@ -1332,11 +1332,11 @@
     ],
     "acceptanceCriteria": "Legacy/unknown recovery cannot execute a deploy callback. Compatible prior or explicit immutable fallback is verified before mutation; schema manifests/checksums match; reports identify recovery policy and preserve canary failure. After any deploy attempt, failure recovery includes untouched unsafe replicas; individual recovery errors cannot prevent attempts on remaining replicas and cannot count as verified recovery.",
     "verificationMethod": "ProviderRollback TLC legacy/compatible/mixed two-machine models, unsafe negative control, executable boundary tests including two machine orders/all prior combinations/retries/missing history, existing release contract tests.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "withCompatibleRollback and selectRecoveryTarget gate actual deploy; --recovery-sha accepts only distinct reviewed ancestors with identical migration manifests/expanded SQL. Preflight verifies immutable artifacts and blocks without safe recovery. recoverReleaseMachines handles the actual canary/fleet catch, includes untouched unsafe replicas and records per-machine failures.",
-    "verificationStatus": "74 release tests pass. Four TLC configurations pass (38/31/35/38 distinct states); unsafe rollback and partial-fleet recovery yield the named counterexamples. Full pinned TLA+/Alloy runner passed. No cloud failure induced; hosted checks required on revised head.",
-    "mergeStatus": "PR #438; review identified partial-fleet recovery defect on approved3ad97a31e. Focused correction requires renewed exact-head review/checks.",
-    "releaseStatus": "No production mutation; block next provider-containing release until reviewed recovery guard is merged and verified."
+    "verificationStatus": "74 release tests pass. Four TLC configurations pass (38/31/35/38 distinct states); unsafe rollback and partial-fleet recovery yield the named counterexamples. Full pinned TLA+/Alloy runner passed. No cloud failure induced; all applicable hosted gates passed on exact35172083a. Real preflight passed after production advanced to5c; no induced cloud failure.",
+    "mergeStatus": "PR438 merged499e8be7b8edaccbbd46a4d763e4c3b6326b4d92 after exact35172083a approval and all applicable checks; review thread resolved.",
+    "releaseStatus": "Reviewed recovery runner merged499e8be7b, published as supported tooling-only checkoutfcc037848. Real read-only preflight validates current5c and compatible immutablef1ff fallback. Separate actual5c rollout used oldrunner and did not roll back; no cloud-failure execution claim."
   },
   {
     "id": "UX-260917-038",
@@ -1358,11 +1358,11 @@
     ],
     "acceptanceCriteria": "All54cases have zero applicable axe violations/page errors/overflow atnormal or200%text. Keyboard focus remains visible. Published static bytes match reviewed source.",
     "verificationMethod": "Actual static files served overHTTP with correct MIME; Chromium/Firefox/WebKit axe WCAG2.2AA tags and text-resize geometry; keyboard Tab in Chromium/Firefox. WebKit default Tab skipslinks, so do not claim full keyboard/reader coverage. CSS-only behavior does not need a new authentication model.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Focused CSS changes; no policy translation/content or API changes.",
-    "verificationStatus": "54 corrected browser cases PASS:zeroaxeviolations,zero200%textoverflow,zeroerrors; Chromium/Firefox keyboardTab, explicit legacyfocusoutline. ProductionbuildPASS, allfivechangedstaticassets byte-identical tosource. InitialJS365648gzipbytes/5preloads withinbudget. Before/afterevidence recorded; WebKit defaultTabskipslinks, no manualreaderclaim.",
-    "mergeStatus": "Not merged; focused PR being prepared",
-    "releaseStatus": "Not deployed"
+    "verificationStatus": "54 corrected browser cases PASS:zeroaxeviolations,zero200%textoverflow,zeroerrors; Chromium/Firefox keyboardTab, explicit legacyfocusoutline. ProductionbuildPASS, allfivechangedstaticassets byte-identical tosource. InitialJS365648gzipbytes/5preloads withinbudget. Before/afterevidence recorded; WebKit defaultTabskipslinks, no manualreaderclaim. Production54cases in three browser engines alsoPASS; Cloudflare .html redirects resolve toprettyURLs correctly.",
+    "mergeStatus": "PR440 normal merge5d49f61fa68000abb188bf6d9bb19a3bce035aec after exact8f1972654 independent approval and all applicable hosted gates; zero review threads.",
+    "releaseStatus": "Cloudflare production3980085d-58af-4a1c-87b8-491e211d8a69 SUCCESS for merge5d49f61fa; all5changedstaticassets match reviewed source atimmutable+publicURLs.54productionbrowsercases pass withzeroaxe/errors/normal-or200percent-textoverflow. See static-pages-production artifact/runtime evidence."
   },
   {
     "kind": "confirmed",
@@ -1377,7 +1377,7 @@
       "independent review and CI",
       "web deployment"
     ],
-    "mergeStatus": "PR445 head563dafa42 has applicable gates passed; independent approval pending. Diagnostic successor awaits integration review.",
+    "mergeStatus": "PR445 head563dafa42 has applicable gates passed; independent approval pending. Diagnostic successor awaits integration review.\nRelated increment evidence: PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.",
     "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
     "id": "UX-260917-044",
     "title": "Calendar shows local connection claims and labels preference cleanup as disconnection",
@@ -1390,5 +1390,189 @@
     "implementationStatus": "Consume URL code before microtask dispatch; synchronous mutation guards; session-occurrence form/cache isolation and active-session checks; selected configuration authoritative; truthful refresh/cleanup text. Diagnostics no longer displays unverified browser markers as connection or synchronization facts.",
     "verificationMethod": "Actual React component negative/positive controls, production-bundle browser with actual isolated auth/config and only token-exchange failure controlled, executable TLC model plus named unsafe configurations.",
     "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json. Diagnostic old-marker/denial regressions and48 actual isolated arrival cases pass in storage-boundaries continuation."
+  },
+  {
+    "id": "UX-260917-035",
+    "kind": "confirmed",
+    "title": "Fresh native protected notification link can crash the root navigator",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "fresh installation / protected deep link / authentication handoff",
+    "roles": "unauthenticated and restoring native sessions",
+    "surface": "Expo RootLayout / notification native intent",
+    "evidence": "Actual Android11 artifact cold start tdf://notification/900000001: AndroidRuntime FATAL EXCEPTION expo-updates-error-recovery, Maximum update depth exceeded; companion operator retained adb APP_CRASH proof. Source667 RootLayout is byte-identical to224. Candidate mobile102 e002715 verification pending.",
+    "userImpact": "A new user cannot reach sign-in from a shared protected notification link.",
+    "rootCause": "Candidate diagnosis: session guard unmounts/remounts root navigator during loading/redirect; actual repair must pass fresh-first-link runtime tests.",
+    "proposedChange": "Reuse bounded mobile102 root navigator repair and preserve current auth/tab behavior.",
+    "dependencies": [
+      "mobile PR102 actual Android/iOS runtime verification",
+      "integrated published mobile source",
+      "signed successor builds and store distribution"
+    ],
+    "acceptanceCriteria": "Fresh-first-link notification/request cold starts reach sign-in without crash; target survives authorized login; protected content is withheld during restoration; normal launch/return/tab locale remain functional on supported platforms.",
+    "verificationMethod": "Actual Android negative control; actual candidate Android/iOS first-link tests; router session-loading tests and full mobile gates; signed integrated release observation.",
+    "status": "merged",
+    "implementationStatus": "Companion operator candidate e002715 in draft mobile102; do not duplicate repair.",
+    "verificationStatus": "Other operator final4f7 iOS97f46:3cold/request/warm scenariosPASS. PhysicalSamsungAndroid16 isolatednotificationqa82a56/e867 runtimeidentical4f7:3scenariosPASS, noQAcrash/ANR; personalPlayappunchanged. QApackage does not establishproductionOAuth/FCM/Playqualification.",
+    "mergeStatus": "Mobile102merged0c1ee7f3387875496afadf930cb71b29c9edde99 after hosted gates; application4f7 plus evidence870020b.",
+    "releaseStatus": "Final corrected store publication remains pending integration with104; old667Android12/iOS21 must not be promoted as final corrected release. Apple1.0.1 remains WAITING_FOR_REVIEW with AFTER_APPROVAL automatic release (read-only11:36UTC), an outstanding promotion risk; store coordination handoff requested before changing the release option. Other operator0c Android14/iOS22 builds FINISHED but exclude104; no submission/publication is inferred."
+  },
+  {
+    "id": "UX-260917-037",
+    "kind": "confirmed",
+    "title": "Native artist onboarding writes a different follow contract from FanHub",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "signup / follow artist / persisted completion / return on web and native",
+    "roles": "authenticated new Fan and returning account",
+    "surface": "mobile social screen; canonical FanHub API boundary",
+    "evidence": "Actual iOS18.3 SE simulator, EAS native binary5c6fb225/source3c72536 and isolated HTTP/PostgreSQL API38256cf: native social-event artist follow persists, but FanHub follows stay empty and onboarding completion returns200 newlyCompleted=false/progress.completedAt=null. See evidence/native-canonical-follow-negative.json. The original native row also overflows on a long artist name. Follow-up actual regression reproduces2stale query writes after A->B->A; party-only comparison is insufficient.",
+    "userImpact": "The first useful native action is absent from FanHub and cannot complete authoritative onboarding. Native local-only following display is lost on restart.",
+    "rootCause": "Native onboarding uses social-events artist namespace and local followedArtistIds; server completion recognizes canonical FanHub engagement evidence.",
+    "proposedChange": "Use existing FanHub catalog and follow APIs for onboarding; read persisted follows keyed by current Party, reject stale-account mutations/results and wrap long names. Keep social-event artist APIs for their own journeys.",
+    "dependencies": [
+      "mobile102 runtime qualification",
+      "final supported native artifact verification",
+      "parent mobile reference and distribution"
+    ],
+    "acceptanceCriteria": "Native first follow is visible in FanHub, completes authoritative onboarding once, survives app restart and web reload, and cannot change another account. Long names retain the action within the screen.",
+    "verificationMethod": "Actual isolated native Hermes production bundle + HTTP/PostgreSQL + actual web production bundle; contract/component tests and existing FanHubOnboarding current-session/persisted-receipt model conformance.",
+    "status": "merged",
+    "implementationStatus": "Mobile104 d70d945fc includes canonical FanHub follow, captured session-occurrence and immediate client token guards, and current main0c contract compatibility.",
+    "verificationStatus": "502 tests/84 suites plus full release check and hosted validate/Datadog pass on d70d945fc; actual A-B-A and immediate client-token revocation regressions, canonical namespace integration and bounded models documented in native-artist-follow.md. Final Android isolated QA build1c92c4c3 FINISHED, APK/manifest/hash verified; physical execution pending disconnected device. Earlier source runtime evidence retained separately. Final507tests/85suites PASS. Actuald70canonicalfollow completes D viaisolatedPG; a785 coldreturn and persistedfollow PASS. NativeLanding042 also fixed; older1c92Androidartifact doesnotqualifynewsource.",
+    "mergeStatus": "Mobile104 merged90cae070446df6c740e9e8f25a034f3deb12c5c7 from exacta785c99848478f9c27263e84454d6bdb81df4d4f after all hosted gates; parent435 pending.",
+    "releaseStatus": "Hold native promotion until corrected source and final qualified artifacts are published."
+  },
+  {
+    "id": "UX-260917-039",
+    "kind": "confirmed",
+    "title": "Public catalog database round trips exceed the web request deadline",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "anonymous arrival / marketplace inventory and Records discovery",
+    "roles": "anonymous and authenticated web visitors",
+    "surface": "GET /marketplace; GET /records/feed; public client 30-second deadline",
+    "evidence": "Production 5c11577a5: marketplace200 after38.924s, repeat15s timeout with zero bytes; Records200 after10.566s and repeat10.249s. /health200 in0.299s. Actual isolated HTTP/PostgreSQL before/after and query-budget negative control in public-catalog-readiness.md.",
+    "userImpact": "Marketplace arrival can abort before the listing response; Records content remains loading for seconds despite a healthy health endpoint.",
+    "rootCause": "Marketplace loads each asset and approved rental terms sequentially, including a new transaction per listing. Records runs every fixed collection/dependency read in its own transaction. Remote database round trips accumulate.",
+    "proposedChange": "Batch public listing assets and approved terms; use one transaction for the fixed Records feed reads. Preserve item/checkout authority, publication filters, wire contract and operational flags.",
+    "dependencies": [
+      "independent review",
+      "required backend/CI checks",
+      "immutable image and guarded compatible backend release"
+    ],
+    "acceptanceCriteria": "80 generated listing cases retain active filtering, prices, approved terms and detail parity with bounded SQL executions independent of item count. Records published collections and wire shape remain identical. Required checks pass and the deployed public journeys complete within the existing client deadline. No field-percentile claim without representative field data.",
+    "verificationMethod": "Actual isolated HTTP/PostgreSQL with a TCP protocol observer counting catalog transactions, excluding independent workers; generated listing combinations, list/detail parity and published collection SQL oracle. Old binary is a meaningful negative control. Full backend tests and existing formal/release gates; read-only query grouping adds no consequential state transition.",
+    "status": "verification pending",
+    "implementationStatus": "Public list uses getMany and one approved-terms join, preserving shared DTO rendering. Records fixed reads share one transaction; locale and missing publication-state guards unchanged. No migration/cache/API shape change.",
+    "verificationStatus": "Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Full stack tests running; production-after pending. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Full2587backend examples:0failures/3existing pending; npm verify:formal passes its scoped gates.",
+    "mergeStatus": "PR #443 open at 641876c76519a16b015231335bed46c8593f39fb; all applicable checks pass; independent review required.",
+    "releaseStatus": "Not deployed; production remains5c until live evidence establishes a later revision."
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "administrative Google Calendar integration arrival and recovery",
+    "roles": "Admin; anonymous and ReadOnly denial controls",
+    "dependencies": [
+      "independent review",
+      "applicable CI gates",
+      "guarded backend release and web deployment"
+    ],
+    "status": "implemented",
+    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.",
+    "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
+    "id": "UX-260917-040",
+    "title": "Existing admin calendar API has no production runtime tables",
+    "severity": "high",
+    "surface": "/configuracion/integraciones/calendario; GET /calendar/v1/config and /events",
+    "evidence": "Tablet Admin arrival returns500 from both real isolated endpoints. Read-only production to_regclass confirms google_calendar_config and google_calendar_event are absent. See evidence/calendar-runtime-verification.json.",
+    "userImpact": "Administrators cannot inspect or initialize the advertised calendar integration; health does not detect the missing service schema.",
+    "rootCause": "The production migration ledger omitted the Persistent-declared calendar tables while RUN_MIGRATIONS is intentionally disabled.",
+    "proposedChange": "Add forward-only compatible tables, optional owner FK and existing archived-owner guard; include shape/constraint/guard checks in the guarded release schema verification.",
+    "acceptanceCriteria": "Full migration batch replays and restarts idempotently; populated synthetic data preserved; unauthenticated401/nonAdmin403/admin200; response omits tokens; real browser empty state works; deployed schema and journey verified.",
+    "implementationStatus": "Migration introduction49ff02de5 retained in ancestry, manifest registration and schema gate; historical migrations unchanged. No credentials seeded and no external sync started.",
+    "verificationMethod": "Real PostgreSQL17 production-baseline replay; actual compiled Haskell HTTP contracts and12generated events; missing-column/unique-key/guard negative controls. Existing authorization and identity trigger semantics reused, not a new global correctness claim.",
+    "verificationStatus": "Migration/restart idempotence and HTTP assertions PASS;58release tests PASS;6browser cases Admin/ReadOnly×320/768/1280 PASS. Browser setup initially lacked allowed loopback origin; configured isolated proxy/server before qualified execution. Hosted gates and production pending."
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "administrative Google Calendar integration arrival and recovery",
+    "roles": "Admin; anonymous and ReadOnly denial controls",
+    "dependencies": [
+      "independent review",
+      "applicable CI gates",
+      "guarded backend release and web deployment"
+    ],
+    "status": "implemented",
+    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.",
+    "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
+    "id": "UX-260917-041",
+    "title": "Calendar optional preference storage failure replaces the form with an error boundary",
+    "severity": "medium",
+    "surface": "CalendarSyncPage storage effects and clear/success handlers",
+    "evidence": "Real browser, only calendar-sync.* storage methods denied: page shows Algo salió al cargar esta sección and the empty-state assertion fails. Same actual API and corrected bundle pass in Chromium/Firefox/WebKit.",
+    "userImpact": "Private/restricted storage or quota errors prevent essential calendar access and may interrupt already successful API feedback.",
+    "rootCause": "Unprotected localStorage property access/getItem/setItem/removeItem in optional preference handling.",
+    "proposedChange": "Make optional preference operations best-effort and retain in-memory form state and authoritative API behavior.",
+    "acceptanceCriteria": "Property getter and all three storage operations may throw without losing the form or clear action; API results remain usable; browser storage-denial cases pass.",
+    "implementationStatus": "Local guarded preference helpers reused by all20read/write/remove sites; no storage format, API or legal content change. Optional import.meta.env access supports the component test host with the same Vite behavior.",
+    "verificationMethod": "Four real React component cases for getter/getItem/setItem/removeItem plus production-bundle actual HTTP browser negative/positive evidence. No consequential state-transition semantics changed.",
+    "verificationStatus": "4component tests PASS, TypeScript/lint/build PASS (365647gzipbytes/5preloads);3actual storage-denial browser engines PASS. Initial component attempt failed on absent Jest import.meta.env, not counted as the storage counterexample; browser original failure is retained."
+  },
+  {
+    "id": "UX-260917-042",
+    "kind": "confirmed",
+    "title": "Cold native return ignores a restored session when deep-link login bypassed the welcome marker",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "native authenticated deep-link login / cold return visit",
+    "roles": "authenticated native users",
+    "surface": "app/index.tsx optional onboarding marker and hydrated auth state",
+    "evidence": "Actual iOS18.3 production Hermes d70: native login/profile succeeds; cold root shows welcome, while explicit social deep link retains session and canonical follow persists. Two component regressions reproduce unseen/pending marker failures. Versioned native-landing.md.",
+    "userImpact": "Returning authenticated users see signup/login entry instead of their useful authenticated landing; slow optional storage can delay entry.",
+    "rootCause": "Index consulted auth loading but ignored its token, selecting root solely from optional local seen marker.",
+    "proposedChange": "After hydration, derive the destination from the current token before the optional marker. Preserve anonymous first/return behavior and protected-route authorization.",
+    "dependencies": [
+      "mobile104",
+      "parent435 contract pin",
+      "qualified Android/iOS artifacts and production distribution",
+      "physical OAuth gate"
+    ],
+    "acceptanceCriteria": "Hydration waits; current session reaches landing despite absent or indefinitely pending marker; anonymous seen/unseen choice retained; real cold reopen retains session/follow; required builds/publication verified.",
+    "implementationStatus": "Mobile104 sourcea785c99848478f9c27263e84454d6bdb81df4d4f, merged90cae070446df6c740e9e8f25a034f3deb12c5c7. Destination computed from live auth; no API grants or storage format change.",
+    "verificationMethod": "5component cases, two meaningful old-source failures;507tests/85suites and release check; TLC9state model with marker-only negative control and no fairness assumption on storage; actual compatible iOS simulator binary + production Hermes bundle, two cold returns.",
+    "verificationStatus": "All stated local/hosted mobile gates and full pinned TLC/Alloy PASS. Actual simulator afterfix sees connected profile and persisted follow on two cold launches. Not a new cloud/signed artifact; physical Android/iOS and stores remain pending.",
+    "status": "merged",
+    "mergeStatus": "Mobile104 merged90cae070 after exacta785 checks, clean base0c and no review threads; mobile main unprotected, no fabricated review. Parent435 not merged.",
+    "releaseStatus": "Not production distributed. EAS iOS successor rejected by exhausted monthly quota. Final Android QA4602aa55 from6f8a998 (atop merged90ca) FINISHED, APK e9b8dbeaea34e4ad00a5a9a660b7bddea3ca76ddd7a83b7c6787e25e65420c14 downloaded and package/version verified. Physical device absent; not installed. Previous1c92 excludes042 and is superseded."
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "Admin calendar OAuth return, configuration recovery and account switching",
+    "roles": [
+      "Admin"
+    ],
+    "status": "implemented",
+    "dependencies": [
+      "UX-260917-040 / PR #444 runtime schema",
+      "independent review and CI",
+      "web deployment"
+    ],
+    "mergeStatus": "PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.",
+    "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
+    "id": "UX-260917-043",
+    "title": "Calendar OAuth return automatically replays a one-use authorization code",
+    "severity": "high",
+    "surface": "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+    "evidence": "Old component dispatches twice; real production bundle dispatches 26/30/30 requests at 320/768/1280px after a controlled rejected exchange. The initial unbounded component reproduction timed out; bounded regression explicitly observes the second call.",
+    "rootCause": "The effect depends on an unstable mutation object, resets autoExchanging after each settlement, and leaves code in the URL.",
+    "userImpact": "Repeated credential requests and misleading success or connection state prevent a reliable administrative integration journey.",
+    "acceptanceCriteria": "One automatic dispatch per returned code, URL code removed while unrelated parameters/hash remain, failed input retained, explicit retry and synchronous duplicate-click guard, no stale-session response effects.",
+    "implementationStatus": "Consume URL code before microtask dispatch; synchronous mutation guards; session-occurrence form/cache isolation and active-session checks; selected configuration authoritative; truthful refresh/cleanup text.",
+    "verificationMethod": "Actual React component negative/positive controls, production-bundle browser with actual isolated auth/config and only token-exchange failure controlled, executable TLC model plus named unsafe configurations.",
+    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json."
   }
 ]

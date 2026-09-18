@@ -64,6 +64,8 @@ run_tlc() {
 cd "${MODEL_DIR}"
 
 # Keep TLC sequential: 1.7.2 materializes standard modules through a shared temp location.
+run_tlc NativeLanding.tla NativeLanding.cfg native-landing
+run_tlc NativeArtistFollow.tla NativeArtistFollow.cfg native-artist-follow
 run_tlc ExperimentAuthority.tla ExperimentAuthority.cfg experiment-authority
 run_tlc ExperimentAuthority.tla ExperimentAuthorityPaused.cfg experiment-paused
 run_tlc EventLifecycle.tla EventLifecycle.cfg event-lifecycle
@@ -82,6 +84,10 @@ run_negative_tlc() {
 run_tlc OptionalTokenRecovery.tla OptionalTokenRecovery.cfg optional-token-recovery
 run_negative_tlc OptionalTokenRecoveryUnsafeStorage.cfg optional-token-storage 'Temporal properties were violated' OptionalTokenRecovery.tla
 run_negative_tlc OptionalTokenRecoveryUnsafeFragment.cfg optional-token-fragment 'Invariant FragmentPrecedence is violated' OptionalTokenRecovery.tla
+run_negative_tlc NativeLandingMarkerOnly.cfg native-landing-marker-only 'Invariant CurrentSessionSkipsMarker is violated' NativeLanding.tla
+run_negative_tlc NativeArtistFollowNamespace.cfg native-artist-namespace 'Invariant SuccessfulFollowQualifies is violated' NativeArtistFollow.tla
+run_negative_tlc NativeArtistFollowSession.cfg native-artist-session 'Invariant CurrentSession is violated' NativeArtistFollow.tla
+
 run_negative_tlc ExperimentAuthorityStale.cfg experiment-stale 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityDuplicate.cfg experiment-duplicate 'Invariant ExposureAtMostOnce is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityAccount.cfg experiment-account 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla

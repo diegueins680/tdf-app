@@ -1,0 +1,1244 @@
+[
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/data-deletion.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/data-deletion",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/deauthorize.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/deauthorize",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/data-deletion.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/index.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/privacy.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/privacy",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/support.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/support",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/terms.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/terms",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/privacy.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/privacy",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/terms.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/terms",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/data-deletion.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/data-deletion",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/deauthorize.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/deauthorize",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/data-deletion.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/index.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/privacy.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/privacy",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/support.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/support",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/terms.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/terms",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/privacy.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/privacy",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/terms.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/terms",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/data-deletion.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/data-deletion",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/deauthorize.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/deauthorize",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/data-deletion.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/index.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/privacy.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/privacy",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/support.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/support",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/terms.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/terms",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/privacy.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/privacy",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/terms.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/terms",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/data-deletion.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/data-deletion",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/deauthorize.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/deauthorize",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/data-deletion.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/index.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/privacy.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/privacy",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/support.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/support",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/terms.html",
+    "focus": {
+      "tag": "A",
+      "outline": "auto"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/terms",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/privacy.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/privacy",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/terms.html",
+    "focus": {
+      "tag": "A",
+      "outline": "solid"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/terms",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/data-deletion.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/data-deletion",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/deauthorize.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/deauthorize",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/data-deletion.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/index.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/privacy.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/privacy",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/support.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/support",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/terms.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/terms",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/privacy.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/privacy",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/terms.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 320,
+      "scroll": 320
+    },
+    "status": 200,
+    "finalPath": "/terms",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/data-deletion.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/data-deletion",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/deauthorize.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/deauthorize",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/data-deletion.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/index.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/privacy.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/privacy",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/support.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/support",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/terms.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/mobile-app/terms",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/privacy.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/privacy",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/terms.html",
+    "focus": {
+      "tag": "BODY",
+      "outline": "none"
+    },
+    "zoom": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "status": 200,
+    "finalPath": "/terms",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  }
+]

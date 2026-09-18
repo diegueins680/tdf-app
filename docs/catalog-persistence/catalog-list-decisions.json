@@ -13155,13 +13155,13 @@
       "reviewed": true
     },
     {
-      "id": "faf664611d7ab0aa954d",
+      "id": "bffc5decb0aa4633b170",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "justification": "Manually reviewed2026-09-18: published qualified mobile104merge90cae070 includes the five fixed native tab destinations and reactive translated title keys from101. These names/icons/title slots are dispatch configuration, not editable business data. Final507tests and actual iOS five-tab coldreturn/follow evidence pass; physical/store publication is tracked separately.",
       "reviewed": true
     },
     {
