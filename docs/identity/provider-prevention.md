@@ -90,3 +90,12 @@ if recovery is used, inspect skipped acknowledgements for separate attendees sha
 Do not resend blindly. Both source commits must be incorporated into protected main before
 production execution. Schema and operation-specific merge undo remain separate from application
 recovery; never discard provider bindings, accepted receipts, or later unrelated edits.
+
+For the pinned `98a561a9446a1c51e627f6ad5a48737fe5122d85` application release,
+use a clean checkout of the reviewed runner-only commit
+`9fd718923895f331b505ea8850a0b525be4b8039`, after its inclusion in protected main.
+Its only difference from the application target is `scripts/production-release.mjs`,
+which satisfies the existing release checkout guard. Run `plan`, then `preflight`,
+then `release` with that target and the compatible recovery SHA above. The final
+documentation/test commit is not a supported checkout for releasing this older
+pinned application target. Do not widen the checkout allowlist to bypass this guard.
