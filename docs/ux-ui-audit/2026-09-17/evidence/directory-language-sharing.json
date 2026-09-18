@@ -1,0 +1,65 @@
+{
+  "date": "2026-09-18",
+  "languageBefore": {
+    "language": "en",
+    "heading": "Encuentra a la gente y las oportunidades que hacen música",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "buttons": [
+      "Buscar",
+      "Usar mi ubicación",
+      "Limpiar filtros",
+      "",
+      "",
+      "",
+      "músico",
+      "productor",
+      "estudio",
+      "concierto"
+    ]
+  },
+  "shareCounterexample": {
+    "stats": {
+      "startTime": "2026-09-18T12:36:05.313Z",
+      "duration": 11331.09,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 1,
+      "flaky": 0
+    },
+    "error": "Unhandled Synthetic user cancellation from rejected native share promise; controlled browser API, actual old handler."
+  },
+  "browser": {
+    "stats": {
+      "startTime": "2026-09-18T12:38:59.225Z",
+      "duration": 127075.23,
+      "expected": 10,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "engines": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "profiles": 5,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "transport": "Synthetic API/share/clipboard/geolocation; production bundle."
+  },
+  "focusedTests": 26,
+  "initialJsGzipBytes": 367923,
+  "preloads": 5,
+  "catalogCandidates": 1138,
+  "lint": "PASS",
+  "typescript": "PASS",
+  "build": "PASS",
+  "sourceSha256": "e41ea71f40d7c2270b7027918f4a7c0828303acb5acf300e5b391efb1bc90c62",
+  "harnessLimit": "Initial setup ran inside a blocked cross-origin map iframe; limited fixture initialization to top frame and reran all10cases successfully.",
+  "screenshots": [
+    "directory-es-recovered.png",
+    "directory-en-recovered.png"
+  ]
+}

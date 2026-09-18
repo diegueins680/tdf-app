@@ -13155,13 +13155,13 @@
       "reviewed": true
     },
     {
-      "id": "faf664611d7ab0aa954d",
+      "id": "bffc5decb0aa4633b170",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "justification": "Manually reviewed2026-09-18: published qualified mobile104merge90cae070 includes the five fixed native tab destinations and reactive translated title keys from101. These names/icons/title slots are dispatch configuration, not editable business data. Final507tests and actual iOS five-tab coldreturn/follow evidence pass; physical/store publication is tracked separately.",
       "reviewed": true
     },
     {
@@ -13848,25 +13848,6 @@
       "reviewed": true
     },
     {
-      "id": "f0740d2211a309c2515f",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Reviewed the ordered 110-entry migration registry. Preserve the preceding 109 immutable entries and append source-scoped course request receipts with an ancestor introduction commit. This is release execution metadata, not an editable business catalog. The receipt rollback refuses to discard accepted operations.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "identity-course-prevention-2026-09-18",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 110
-      }
-    },
-    {
       "id": "21babc54d68f0c44d55e",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -13931,6 +13912,35 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2
+      }
+    },
+    {
+      "id": "faf664611d7ab0aa954d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "02464a57896073665826",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Reviewed 111-entry immutable release registry: preserve main calendar migration and append course request receipts without changing prior SQL or introductions.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "identity-course-prevention-2026-09-18",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 111
       }
     }
   ]

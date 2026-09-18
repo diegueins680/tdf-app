@@ -137,6 +137,7 @@ test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT enabled FRO
 verification_sql="$(node "${repo_root}/scripts/render-production-schema-verification.mjs")"
 assert_gate_rejected() {
   local mutation="$1"
+  local expected_error="${2:-Production provider capability gates must exist; refunds and Datafast must remain disabled}"
   local output
   if output="$(psql "${database_url}" -X -v ON_ERROR_STOP=1 2>&1 <<SQL
 BEGIN;
@@ -148,12 +149,16 @@ SQL
     echo "Schema verification unexpectedly accepted: ${mutation}" >&2
     exit 1
   fi
-  if [[ "${output}" != *'Production provider capability gates must exist; refunds and Datafast must remain disabled'* ]]; then
+  if [[ "${output}" != *"${expected_error}"* ]]; then
     echo "${output}" >&2
     echo "Schema verification failed for an unexpected reason" >&2
     exit 1
   fi
 }
+
+assert_gate_rejected "ALTER TABLE google_calendar_config DROP COLUMN access_token;" "Calendar runtime columns or archived-owner guard are incompatible"
+assert_gate_rejected "ALTER TABLE google_calendar_config DISABLE TRIGGER identity_archive_reference_guard;" "Calendar runtime columns or archived-owner guard are incompatible"
+assert_gate_rejected "ALTER TABLE google_calendar_event DROP CONSTRAINT unique_calendar_event;" "Calendar runtime columns or archived-owner guard are incompatible"
 
 for flag in checkout.paypal.webhooks checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do
   assert_gate_rejected "DELETE FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = '${flag}';"

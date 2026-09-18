@@ -1,3 +1,4 @@
+import { readOptionalBrowserStorage } from '../utils/optionalBrowserStorage';
 import { useMemo } from 'react';
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
@@ -34,7 +35,7 @@ export default function ServiceOrderTrackingPage() {
   const lookupToken = useMemo(() => {
     const fragmentToken = readFragmentToken();
     if (fragmentToken) return fragmentToken;
-    return typeof window === 'undefined' ? '' : sessionStorage.getItem(`tdf-service-order:${orderNumber}`)?.trim() ?? '';
+    return typeof window === 'undefined' ? '' : readOptionalBrowserStorage('session', `tdf-service-order:${orderNumber}`)?.trim() ?? '';
   }, [orderNumber]);
 
   const orderQuery = useQuery({

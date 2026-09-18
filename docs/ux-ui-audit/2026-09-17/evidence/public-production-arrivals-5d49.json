@@ -1,0 +1,1442 @@
+[
+  {
+    "route": "/",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/instagram",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/ig",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/tdf",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/comercio",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/commerce",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribucion",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribution",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/sobre-tdf",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/inicio",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/buscar",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/fans",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/fans",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mi-artista",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/mi-artista",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/artista/crear",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/artista/crear",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/marketplace",
+    "title": "Marketplace · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/tiendas",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tiendas",
+    "title": "Merch de artistas · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering/pago-datafast",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/mezcla-mastering/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/services/mixing-mastering",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace/pago-datafast",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/marketplace/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/google-drive/callback",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/oauth/google-drive/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/instagram/callback",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/oauth/instagram/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-dic-2025",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-abr-2026",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/trials",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/trials",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/live-sessions/registro",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/live-sessions/registro",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/feedback",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/feedback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/privacidad",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/privacidad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/apelaciones",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/apelaciones",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reputacion/como-se-calcula",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/reputacion/como-se-calcula",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/consentimiento",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/whatsapp/consentimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/ok",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/whatsapp/ok",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/records",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/records",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".css-8qb8m4.MuiBox-root:nth-child(1) > .css-1k3rcvr.MuiStack-root > .MuiCircularProgress-root.MuiCircularProgress-indeterminate.MuiCircularProgress-colorInherit"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              "#releases > .css-1k3rcvr.MuiStack-root > .MuiCircularProgress-root.MuiCircularProgress-indeterminate.MuiCircularProgress-colorInherit"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-8qb8m4.MuiBox-root:nth-child(3) > .css-1k3rcvr.MuiStack-root > .MuiCircularProgress-root.MuiCircularProgress-indeterminate.MuiCircularProgress-colorInherit"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/donar",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/donar",
+    "title": "Donaciones · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/reservar",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/dj-booth",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar/dj-booth",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/domo-del-pululahua",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/venues/domo-del-pululahua",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/login",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reset",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/reset",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/herramientas/creador-musical",
+    "width": 320,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/herramientas/creador-musical",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/instagram",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/ig",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/tdf",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/comercio",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/commerce",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribucion",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribution",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/sobre-tdf",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/inicio",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/buscar",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/fans",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/fans",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mi-artista",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/mi-artista",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/artista/crear",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/artista/crear",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/marketplace",
+    "title": "Marketplace · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiCircularProgress-root"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/tiendas",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/tiendas",
+    "title": "Merch de artistas · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering/pago-datafast",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/mezcla-mastering/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/services/mixing-mastering",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace/pago-datafast",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/marketplace/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/google-drive/callback",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/oauth/google-drive/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/instagram/callback",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/oauth/instagram/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-dic-2025",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-abr-2026",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/trials",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/trials",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/live-sessions/registro",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/live-sessions/registro",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/feedback",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/feedback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/privacidad",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/privacidad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/apelaciones",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/apelaciones",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reputacion/como-se-calcula",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/reputacion/como-se-calcula",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/consentimiento",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/whatsapp/consentimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/ok",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/whatsapp/ok",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/records",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/records",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-progressbar-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".css-8qb8m4.MuiBox-root:nth-child(1) > .css-1k3rcvr.MuiStack-root > .MuiCircularProgress-root.MuiCircularProgress-indeterminate.MuiCircularProgress-colorInherit"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              "#releases > .css-1k3rcvr.MuiStack-root > .MuiCircularProgress-root.MuiCircularProgress-indeterminate.MuiCircularProgress-colorInherit"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-8qb8m4.MuiBox-root:nth-child(3) > .css-1k3rcvr.MuiStack-root > .MuiCircularProgress-root.MuiCircularProgress-indeterminate.MuiCircularProgress-colorInherit"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/donar",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/donar",
+    "title": "Donaciones · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/reservar",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/dj-booth",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar/dj-booth",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/domo-del-pululahua",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/venues/domo-del-pululahua",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/login",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reset",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/reset",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/herramientas/creador-musical",
+    "width": 1280,
+    "language": "es",
+    "scenario": "production-public-arrival/anonymous",
+    "finalPath": "/herramientas/creador-musical",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  }
+]

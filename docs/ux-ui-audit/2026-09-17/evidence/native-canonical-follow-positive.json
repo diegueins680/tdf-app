@@ -1,0 +1,19 @@
+{
+  "at": "2026-09-18T08:50:48.748Z",
+  "actualIsolatedPostgres": true,
+  "nativeFirstValuePersisted": "artist_followed",
+  "nativeCompletedAt": "2026-09-18T08:50:04.7075Z",
+  "webBSeesFollow": true,
+  "webBOnboardingHidden": true,
+  "webBReloadPersists": true,
+  "accountACompletionUnchanged": true,
+  "physicalDevice": false,
+  "nativeBundle": "entry-8877b7ff6d885a6eaecf92d5e2360795.hbc",
+  "backend": "38256cf721d92380c8cfc0b6d19e10bd8703c233",
+  "finalSource": "60fccd5",
+  "finalBundle": "entry-1672408e67b2eae14653ee1f2d7c9f00.hbc",
+  "finalBundleSha256": "b28593cc6926264eaf6b4385f7d5fb7cd9eece0b85a5fce88d077c4b942c355c",
+  "finalNativeReopenAndNetworkHeading": true,
+  "nativeBaseArtifact": "5c6fb225-a150-443f-ba5f-6f9b0949cd61",
+  "qualification": "Local exported production Hermes bundle installed into unchanged EAS simulator native shell. No native dependency/config changes. Not a store artifact."
+}

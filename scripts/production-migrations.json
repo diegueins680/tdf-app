@@ -567,6 +567,11 @@
       "introducedBy": "062143d3cb98befb6a52a987c7d42980f70313f3"
     },
     {
+      "id": "2026-09-18_calendar_runtime_schema",
+      "path": "tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql",
+      "introducedBy": "49ff02de5ade1b8923f099c22af0bbf57350a078"
+    },
+    {
       "id": "2026-09-18_course_identity_requests",
       "path": "tdf-hq/sql/2026-09-18_course_identity_requests.sql",
       "introducedBy": "9bc040b718db0a297c9766a6c4084e0803765599"

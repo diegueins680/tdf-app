@@ -1,3 +1,4 @@
+import { readOptionalBrowserStorage, writeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -168,15 +169,15 @@ export default function TrialLessonsPage() {
 
   const [subjectFilter, setSubjectFilter] = useState<number | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';
-    return parseFilterId(window.localStorage.getItem('trial.filter.subject'));
+    return parseFilterId(readOptionalBrowserStorage('local', 'trial.filter.subject'));
   });
   const [teacherFilter, setTeacherFilter] = useState<number | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';
-    return parseFilterId(window.localStorage.getItem('trial.filter.teacher'));
+    return parseFilterId(readOptionalBrowserStorage('local', 'trial.filter.teacher'));
   });
   const [statusFilter, setStatusFilter] = useState<StatusKey | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';
-    const raw = window.localStorage.getItem('trial.filter.status');
+    const raw = readOptionalBrowserStorage('local', 'trial.filter.status');
     return parseStatusFilter(raw);
   });
   const [fromInput, setFromInput] = useState(() => {
@@ -187,7 +188,7 @@ export default function TrialLessonsPage() {
       start.setHours(0, 0, 0, 0);
       return toLocalInput(start.toISOString());
     }
-    return window.localStorage.getItem('trial.filter.from') ?? (() => {
+    return readOptionalBrowserStorage('local', 'trial.filter.from') ?? (() => {
       const now = new Date();
       const start = new Date(now);
       start.setDate(now.getDate() - 7);
@@ -202,7 +203,7 @@ export default function TrialLessonsPage() {
       end.setHours(23, 59, 0, 0);
       return toLocalInput(end.toISOString());
     }
-    return window.localStorage.getItem('trial.filter.to') ?? (() => {
+    return readOptionalBrowserStorage('local', 'trial.filter.to') ?? (() => {
       const end = new Date();
       end.setDate(end.getDate() + 30);
       end.setHours(23, 59, 0, 0);
@@ -264,11 +265,11 @@ export default function TrialLessonsPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem('trial.filter.subject', subjectFilter === 'all' ? '' : String(subjectFilter));
-    window.localStorage.setItem('trial.filter.teacher', teacherFilter === 'all' ? '' : String(teacherFilter));
-    window.localStorage.setItem('trial.filter.status', statusFilter === 'all' ? '' : statusFilter);
-    window.localStorage.setItem('trial.filter.from', fromInput);
-    window.localStorage.setItem('trial.filter.to', toInput);
+    writeOptionalBrowserPreference('trial.filter.subject', subjectFilter === 'all' ? '' : String(subjectFilter));
+    writeOptionalBrowserPreference('trial.filter.teacher', teacherFilter === 'all' ? '' : String(teacherFilter));
+    writeOptionalBrowserPreference('trial.filter.status', statusFilter === 'all' ? '' : statusFilter);
+    writeOptionalBrowserPreference('trial.filter.from', fromInput);
+    writeOptionalBrowserPreference('trial.filter.to', toInput);
   }, [fromInput, statusFilter, subjectFilter, teacherFilter, toInput]);
   const [formError, setFormError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);

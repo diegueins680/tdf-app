@@ -293,6 +293,17 @@ jobs:
           TDF_CLAIM_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-artist-claim-target-http.sh
 
+      - name: Verify public catalog persistence contract and database round trips
+        env:
+          TDF_PUBLIC_CATALOG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_PUBLIC_CATALOG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: node scripts/__tests__/public-catalog-http-runtime.mjs
+      - name: Verify calendar runtime schema and admin HTTP contract
+        env:
+          TDF_CALENDAR_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_CALENDAR_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: node scripts/__tests__/calendar-http-runtime.mjs
+
       - name: Verify navigation first-visit concurrency and account isolation
         env:
           TDF_NAVIGATION_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
