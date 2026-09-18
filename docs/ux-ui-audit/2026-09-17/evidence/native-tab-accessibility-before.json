@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-09-18T06:40:00Z",
+  "platform": "iOS18.3 simulator97AB8B7E",
+  "sourceSha": "1ec9160ebcec19fff406c11b09ad0dc39bf76203",
+  "artifactKind": "previously verified EAS simulator variant dd963682; not the signed store IPA",
+  "installedVersion": "1.0.1",
+  "installedBuild": "1",
+  "visibleTabCount": 5,
+  "actualAccessibilityLabels": [
+    "Crear, tab, 4 of 12",
+    "Directorio, tab, 1 of 12",
+    "Explorar, tab, 3 of 12",
+    "Perfil, tab, 5 of 12",
+    "Seguir, tab, 2 of 12"
+  ],
+  "sourceMechanism": "Installed React Navigation BottomTabBar defaults to all registered routes, including seven href:null hidden screens; mobileSurface titles translated only at module initialization",
+  "limits": "Actual accessibility tree inspection. Human VoiceOver and corrected binary not yet executed. Additional return flow used an incorrect logout assertion; not a passing return/relaunch test."
+}

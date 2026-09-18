@@ -39,6 +39,35 @@ merge rollback remains the operation-specific command in [reconciliation.md](rec
 Revoking an authentication binding requires an authorized account-security review; rolling an
 application back must not restore email-only Google authorization as a recovery shortcut.
 
+The guarded release runner enforces that rule before issuing any rollback deploy.
+For a target containing `2026-09-18_provider_subject_identity`, the captured prior
+commit must contain `c53b33e7ef868fb7b64f876199ed66be0f617efc` (reviewed subject
+binding and explicit signup intent). Missing commit history fails closed. The
+check is unconditional on binding counts: a canary can accept a binding after a
+read-only count, so an empty table is not permission to restore legacy authority.
+
+Preflight blocks the first rollout from `2f01b20b...` until an explicit
+`--recovery-sha <full-commit>` supplies a distinct reviewed ancestor that preserves
+this authentication contract. The recovery and target must have identical
+migration manifests and expanded SQL checksums. Both images are resolved to
+verified immutable digests before any database or machine mutation. For this
+transition the already-reviewed provider merge `f1ff05e6f591cb87ef71a9b66c5abeefa4c40095`
+is the compatible recovery source; its existing Build Image pipeline must finish.
+
+Preflight and the release report label recovery per machine as
+`compatible-rollback` or `compatible-forward-recovery`. If canary/fleet validation
+fails with a legacy prior, the same guarded deploy/smoke path uses the verified
+compatible recovery artifact, preserving the captured operational flags and
+provider bindings. The original verification error remains in the report. Never
+restore an older database or drop bindings. If recovery itself fails, inspect the
+report, machine state and release lease, and repair the compatible artifact or
+cloud failure through the documented guarded lane before claiming recovery.
+
+Subsequent compatible prior images retain automatic guarded rollback and do not
+require the override. Ancestry
+assumes reviewed commits have not deliberately reverted the authority contract;
+it does not replace review, artifact integrity or runtime checks.
+
 Remaining work: the Live Session ingestion path still resolves musicians by email and
 performs multiple database transactions, and older API/import clients can omit contact request
 keys. Those paths require their own scoped submission identities and relationship review.

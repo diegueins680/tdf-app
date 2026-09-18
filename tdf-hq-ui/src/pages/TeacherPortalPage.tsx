@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -498,6 +499,7 @@ function SubjectRoomsSummary(props: SubjectRoomsSummaryProps) {
 }
 
 export default function TeacherPortalPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { session } = useSession();
   const teacherId = session?.partyId ?? null;
@@ -1129,7 +1131,7 @@ export default function TeacherPortalPage() {
         </Stack>
       </Box>
 
-      {loading && <LinearProgress />}
+      {loading && <LinearProgress aria-label={t('auditAccessibility.loadingTeacherAgenda')} />}
 
       <Paper sx={{ borderRadius: 2.5 }} variant="outlined">
         <Tabs
