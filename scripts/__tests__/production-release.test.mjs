@@ -47,6 +47,7 @@ primary_region = "gru"
   REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
   REPUTATION_AGGREGATION_ENVIRONMENT = "production"
   REPUTATION_AGGREGATION_MODE = "simulation"
+  SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"
   EVENT_DISCOVERY_ENABLED = "false"
   EVENT_DISCOVERY_AUTO_PUBLISH = "false"
   HQ_ASSETS_DIR = "/data/assets"
@@ -751,6 +752,18 @@ test('validateFlyConfig structurally identifies production reputation configurat
   );
 });
 
+test('validateFlyConfig keeps the onboarding experiment paused until activation is approved', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"',
+        'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "true"',
+      ),
+    ),
+    /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED|activation approval/i,
+  );
+});
+
 test('validateFlyConfig requires the persisted production default locale', () => {
   assert.throws(
     () => validateFlyConfig(safeFlyConfig.replace('DEFAULT_LOCALE = "es"', 'DEFAULT_LOCALE = "en"')),
@@ -808,6 +821,7 @@ test('runtime preflight preserves a coherent captured contextual reputation gate
     REPUTATION_AGGREGATION_MODE: 'simulation',
     EVENT_DISCOVERY_ENABLED: 'false',
     EVENT_DISCOVERY_AUTO_PUBLISH: 'false',
+    SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED: 'false',
     DEFAULT_LOCALE: 'es',
   };
   const rows = [
@@ -817,6 +831,7 @@ test('runtime preflight preserves a coherent captured contextual reputation gate
 
   assert.equal(captureContextualReputationGate(rows), false);
   assert.deepEqual(runtimeEnvBlockers(rows), []);
+  assert.match(runtimeEnvBlockers([{ machineId: 'machine-a', values: { ...values, SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED: 'true' } }])[0], /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED/);
   assert.deepEqual(runtimeEnvBlockers(rows, { contextualReputationEnabled: false }), []);
   assert.match(
     runtimeEnvBlockers(rows, { contextualReputationEnabled: true })[0],
@@ -1079,6 +1094,8 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'ddex-operational-cutover-2026-08-12',
     'user_onboarding_progress',
     'user_onboarding_progress_eligible_idx',
+    'user_experiment_assignment',
+    'user_experiment_assignment_pending_exposure_idx',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
@@ -1157,6 +1174,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_WORKER_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_MODE=simulation/);
+  assert.match(canaryCommand, /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_ENABLED=false/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_AUTO_PUBLISH=false/);
   assert.doesNotMatch(canaryCommand, /--strategy canary(?:\s|$)/);
@@ -1284,6 +1302,7 @@ test('runtime checks accept captured discovery settings and reject subsequent dr
     CONTEXTUAL_REPUTATION_ENABLED: 'false', REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
     REPUTATION_AGGREGATION_ENVIRONMENT: 'production', REPUTATION_AGGREGATION_MODE: 'simulation',
     EVENT_DISCOVERY_ENABLED: 'true', EVENT_DISCOVERY_AUTO_PUBLISH: 'true', DEFAULT_LOCALE: 'es',
+    SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED: 'false',
   };
   const rows = [{ machineId: 'a', values }];
   const gates = captureEventDiscoveryGates(rows);

@@ -5013,7 +5013,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
                     result <-
                         liftIO $
                             runHandler $
@@ -5052,7 +5052,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding = sessionServer
+                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
                         runSession tokenValue =
                             liftIO $
                                 runHandler $
@@ -5124,7 +5124,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
                         runSessionAction action =
                             liftIO $ runHandler $ runReaderT action env
                     current <- runSessionAction (getOnboarding (Just "Bearer google-token") Nothing)
@@ -5244,7 +5244,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeWith tokenValue request =
                             liftIO $ runHandler $ runReaderT
                                 (completeProgress (Just ("Bearer " <> tokenValue)) Nothing request)
@@ -5342,7 +5342,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress :<|> _getExperiment :<|> _recordExposure = sessionServer
                         reconcileWith mToken =
                             liftIO $ runHandler $ runReaderT
                                 (reconcileProgress (("Bearer " <>) <$> mToken) Nothing)
@@ -5476,7 +5476,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeAccessRequest =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5588,7 +5588,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeEventSave =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5702,7 +5702,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeMomentReaction =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5871,6 +5871,107 @@ spec = describe "TDF.Server helpers" $ do
                 , (False, 0, 1)
                 , (True, 1, 2)
                 ]
+        it "keeps experiment-assignment and exposure Party-bound, versioned, atomic, and paused by default" $ do
+            (pausedResult, firstAssignmentResult, repeatedAssignmentResult, firstExposureResult, repeatedExposureResult, controlAssignmentResult, controlExposureResult, expiredResult) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (controlPartyId, treatmentPartyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    expiredPartyId <- liftIO $ flip runSqlPool pool $ do
+                        partyIdValue <- insert
+                            M.Party
+                                { M.partyLegalName = Nothing
+                                , M.partyDisplayName = "Expired Experiment User"
+                                , M.partyIsOrg = False
+                                , M.partyTaxId = Nothing
+                                , M.partyPrimaryEmail = Just "expired-experiment@example.com"
+                                , M.partyPrimaryPhone = Nothing
+                                , M.partyWhatsapp = Nothing
+                                , M.partyInstagram = Nothing
+                                , M.partyEmergencyContact = Nothing
+                                , M.partyNotes = Nothing
+                                , M.partyStripeCustomerId = Nothing
+                                , M.partyCountryCode = Nothing
+                                , M.partyCountryId = Nothing
+                                , M.partyCreatedAt = now
+                                }
+                        insert_ (M.ApiToken "expired-experiment-token" partyIdValue Nothing True)
+                        pure partyIdValue
+                    let signupAt = addUTCTime (-3600) now
+                        insertProgress partyIdValue signupAtValue =
+                            liftIO $ flip runSqlPool pool $ insert_
+                                M.UserOnboardingProgress
+                                    { M.userOnboardingProgressPartyId = partyIdValue
+                                    , M.userOnboardingProgressSignupCompletedAt = Just signupAtValue
+                                    , M.userOnboardingProgressIntent = Just "events"
+                                    , M.userOnboardingProgressCompletedAt = Nothing
+                                    , M.userOnboardingProgressFirstValue = Nothing
+                                    , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                                    , M.userOnboardingProgressUpdatedAt = signupAtValue
+                                    }
+                        pausedEnv = Env pool (marketplaceTestConfig False)
+                        enabledEnv = Env pool ((marketplaceTestConfig False) {singleFeatureOnboardingExperimentEnabled = True})
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> _completeProgress :<|> _reconcileOnboarding :<|> getExperiment :<|> recordExposure = sessionServer
+                        runExperiment env tokenValue action =
+                            liftIO $ runHandler $ runReaderT
+                                (action (Just ("Bearer " <> tokenValue)) Nothing "single-feature-onboarding-v1")
+                                env
+                    insertProgress controlPartyId signupAt
+                    insertProgress treatmentPartyId signupAt
+                    insertProgress expiredPartyId (addUTCTime (-(25 * 60 * 60)) now)
+                    paused <- runExperiment pausedEnv "google-token" getExperiment
+                    firstAssignment <- runExperiment enabledEnv "google-token" getExperiment
+                    repeatedAssignment <- runExperiment enabledEnv "google-token" getExperiment
+                    firstExposure <- runExperiment enabledEnv "google-token" recordExposure
+                    repeatedExposure <- runExperiment enabledEnv "google-token" recordExposure
+                    controlAssignment <- runExperiment enabledEnv "ambiguous-token" getExperiment
+                    controlExposure <- runExperiment enabledEnv "ambiguous-token" recordExposure
+                    expired <- runExperiment enabledEnv "expired-experiment-token" getExperiment
+                    pure (paused, firstAssignment, repeatedAssignment, firstExposure, repeatedExposure, controlAssignment, controlExposure, expired)
+
+            case pausedResult of
+                Right assignmentValue -> do
+                    DTO.experimentEnabled assignmentValue `shouldBe` False
+                    DTO.experimentEligible assignmentValue `shouldBe` False
+                    DTO.variant assignmentValue `shouldBe` "control"
+                    DTO.assignedAt assignmentValue `shouldBe` Nothing
+                Left serverErr -> expectationFailure ("Expected paused assignment response, got: " <> show serverErr)
+            case (firstAssignmentResult, repeatedAssignmentResult) of
+                (Right firstAssignment, Right repeatedAssignment) -> do
+                    DTO.experimentEnabled firstAssignment `shouldBe` True
+                    DTO.experimentEligible firstAssignment `shouldBe` True
+                    DTO.experimentVersion firstAssignment `shouldBe` 1
+                    DTO.variant firstAssignment `shouldBe` "treatment_singlefeature"
+                    DTO.newlyAssigned firstAssignment `shouldBe` True
+                    DTO.newlyAssigned repeatedAssignment `shouldBe` False
+                    DTO.variant repeatedAssignment `shouldBe` DTO.variant firstAssignment
+                    DTO.assignedAt repeatedAssignment `shouldBe` DTO.assignedAt firstAssignment
+                    DTO.eligibleUntil repeatedAssignment `shouldBe` DTO.eligibleUntil firstAssignment
+                results -> expectationFailure ("Expected stable experiment assignments, got: " <> show results)
+            case (firstExposureResult, repeatedExposureResult) of
+                (Right firstExposure, Right repeatedExposure) -> do
+                    DTO.newlyExposed firstExposure `shouldBe` True
+                    DTO.exposedAt (DTO.assignment firstExposure) `shouldSatisfy` (/= Nothing)
+                    DTO.newlyExposed repeatedExposure `shouldBe` False
+                    DTO.exposedAt (DTO.assignment repeatedExposure)
+                        `shouldBe` DTO.exposedAt (DTO.assignment firstExposure)
+                results -> expectationFailure ("Expected idempotent experiment exposure, got: " <> show results)
+            case (controlAssignmentResult, controlExposureResult) of
+                (Right controlAssignment, Right controlExposure) -> do
+                    DTO.variant controlAssignment `shouldBe` "control"
+                    DTO.newlyAssigned controlAssignment `shouldBe` True
+                    DTO.newlyExposed controlExposure `shouldBe` True
+                    DTO.variant (DTO.assignment controlExposure) `shouldBe` "control"
+                results -> expectationFailure ("Expected an eligible control assignment and exposure, got: " <> show results)
+            case expiredResult of
+                Right assignmentValue -> do
+                    DTO.experimentEnabled assignmentValue `shouldBe` True
+                    DTO.experimentEligible assignmentValue `shouldBe` False
+                    DTO.assignedAt assignmentValue `shouldBe` Nothing
+                    DTO.newlyAssigned assignmentValue `shouldBe` False
+                Left serverErr -> expectationFailure ("Expected expired cohort to fail closed, got: " <> show serverErr)
 
     describe "validateOptionalSignupPhone" $ do
         it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
@@ -15486,6 +15587,7 @@ marketplaceTestConfig seedFlag =
         , stripePublishableKey = Nothing
         , stripeWebhookSecret = Nothing
         , contextualReputationEnabled = False
+        , singleFeatureOnboardingExperimentEnabled = False
         , eventDiscoveryEnabled = False
         , eventDiscoveryAutoPublish = False
         , eventDiscoveryPilotLimit = 20
@@ -15711,6 +15813,21 @@ initializeAuthSchema = do
         \\"first_value_completed_at\" TIMESTAMP NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"user_experiment_assignment\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"experiment_id\" VARCHAR NOT NULL,\
+        \\"experiment_version\" INTEGER NOT NULL,\
+        \\"variant\" VARCHAR NOT NULL,\
+        \\"assigned_at\" TIMESTAMP NOT NULL,\
+        \\"eligible_until\" TIMESTAMP NOT NULL,\
+        \\"exposed_at\" TIMESTAMP NULL,\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\"),\
+        \UNIQUE(\"party_id\", \"experiment_id\", \"experiment_version\")\
         \)"
         []
 

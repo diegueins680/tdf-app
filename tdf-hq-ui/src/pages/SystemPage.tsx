@@ -177,7 +177,7 @@ export default function SystemPage() {
           </Stack>
         </Paper>
 
-        {loading && <Box display="flex" alignItems="center" justifyContent="center" minHeight={160}><CircularProgress /></Box>}
+        {loading && <Box display="flex" alignItems="center" justifyContent="center" minHeight={160}><CircularProgress aria-label="Cargando estado del sistema" /></Box>}
         {!loading && errMsg && <Alert severity="error">{errMsg}</Alert>}
         {!loading && !errMsg && (
           <Paper sx={{ p: 3 }}>

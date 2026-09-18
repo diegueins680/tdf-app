@@ -275,6 +275,9 @@ export function validateFlyConfig(toml) {
   const reputationAggregationMode = String(
     env.get('REPUTATION_AGGREGATION_MODE') ?? '',
   ).trim().toLowerCase();
+  const singleFeatureOnboardingExperiment = String(
+    env.get('SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED') ?? '',
+  ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
   const eventDiscoveryAutoPublish = String(
     env.get('EVENT_DISCOVERY_AUTO_PUBLISH') ?? '',
@@ -341,6 +344,9 @@ export function validateFlyConfig(toml) {
   }
   if (reputationAggregationMode !== 'simulation') {
     throw new Error('fly.toml must set REPUTATION_AGGREGATION_MODE="simulation".');
+  }
+  if (singleFeatureOnboardingExperiment !== 'false') {
+    throw new Error('fly.toml must stage SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED="false" until explicit activation approval.');
   }
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
@@ -2252,6 +2258,22 @@ BEGIN
   ) <> 8 THEN
     RAISE EXCEPTION 'Account-bound onboarding progress constraints are incomplete';
   END IF;
+
+  IF to_regclass('public.user_experiment_assignment') IS NULL OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_experiment_assignment'
+  ) <> 8 OR to_regclass('public.user_experiment_assignment_pending_exposure_idx') IS NULL THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment schema is missing or incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid = 'public.user_experiment_assignment'::regclass
+      AND convalidated
+      AND contype IN ('f', 'u', 'c')
+  ) <> 7 THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment constraints are incomplete';
+  END IF;
 END
 $verify$;`;
 }
@@ -2292,6 +2314,7 @@ export function buildMachineDeployArgs({
     '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
     '--env', `EVENT_DISCOVERY_ENABLED=${eventDiscoveryEnabled}`,
     '--env', `EVENT_DISCOVERY_AUTO_PUBLISH=${eventDiscoveryAutoPublish}`,
+    '--env', 'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',
     '--wait-timeout', '10m',

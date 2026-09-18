@@ -1,0 +1,420 @@
+[
+  {
+    "role": "admin",
+    "route": "/bookings",
+    "width": 320,
+    "finalPath": "/estudio/calendario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/pipelines",
+    "width": 320,
+    "finalPath": "/estudio/pipelines",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/kanban",
+    "width": 320,
+    "finalPath": "/estudio/pipelines",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/system",
+    "width": 320,
+    "finalPath": "/configuracion/preferencias",
+    "title": "Configuración / Sistema · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/mis-clasificados",
+    "width": 320,
+    "finalPath": "/mis-clasificados",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/social",
+    "width": 320,
+    "finalPath": "/social",
+    "title": "Social · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/label/ddex",
+    "width": 320,
+    "finalPath": "/label/ddex",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/label/ddex/partners",
+    "width": 320,
+    "finalPath": "/label/ddex/partners",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/escuela/trial-queue",
+    "width": 320,
+    "finalPath": "/escuela/trial-queue",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/finanzas",
+    "width": 320,
+    "finalPath": "/finanzas/pagos",
+    "title": "Finanzas / Pagos · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/finanzas/pagos",
+    "width": 320,
+    "finalPath": "/finanzas/pagos",
+    "title": "Finanzas / Pagos · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/finanzas/reporte-david-celaya",
+    "width": 320,
+    "finalPath": "/finanzas/reporte-david-celaya",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/configuracion/actividad",
+    "width": 320,
+    "finalPath": "/configuracion/actividad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/configuracion/integraciones/calendario",
+    "width": 320,
+    "finalPath": "/configuracion/integraciones/calendario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [
+      {
+        "path": "/api/calendar/v1/config",
+        "status": 500
+      },
+      {
+        "path": "/api/calendar/v1/events",
+        "status": 500
+      }
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/bookings",
+    "width": 1280,
+    "finalPath": "/estudio/calendario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/pipelines",
+    "width": 1280,
+    "finalPath": "/estudio/pipelines",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/kanban",
+    "width": 1280,
+    "finalPath": "/estudio/pipelines",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/system",
+    "width": 1280,
+    "finalPath": "/configuracion/preferencias",
+    "title": "Configuración / Sistema · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/mis-clasificados",
+    "width": 1280,
+    "finalPath": "/mis-clasificados",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/social",
+    "width": 1280,
+    "finalPath": "/social",
+    "title": "Social · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/label/ddex",
+    "width": 1280,
+    "finalPath": "/label/ddex",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/label/ddex/partners",
+    "width": 1280,
+    "finalPath": "/label/ddex/partners",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/escuela/trial-queue",
+    "width": 1280,
+    "finalPath": "/escuela/trial-queue",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/finanzas",
+    "width": 1280,
+    "finalPath": "/finanzas/pagos",
+    "title": "Finanzas / Pagos · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/finanzas/pagos",
+    "width": 1280,
+    "finalPath": "/finanzas/pagos",
+    "title": "Finanzas / Pagos · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/finanzas/reporte-david-celaya",
+    "width": 1280,
+    "finalPath": "/finanzas/reporte-david-celaya",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/configuracion/actividad",
+    "width": 1280,
+    "finalPath": "/configuracion/actividad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/configuracion/integraciones/calendario",
+    "width": 1280,
+    "finalPath": "/configuracion/integraciones/calendario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [
+      {
+        "path": "/api/calendar/v1/config",
+        "status": 500
+      },
+      {
+        "path": "/api/calendar/v1/events",
+        "status": 500
+      },
+      {
+        "path": "/api/calendar/v1/config",
+        "status": 500
+      },
+      {
+        "path": "/api/calendar/v1/events",
+        "status": 500
+      }
+    ],
+    "violations": []
+  }
+]
