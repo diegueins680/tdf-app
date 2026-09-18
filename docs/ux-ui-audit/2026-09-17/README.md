@@ -825,4 +825,17 @@ reserved addresses were excluded earlier. No accepted invitation was resent. The
 private ledger/audience and retry safeguards are durably stored with owner-only
 permissions; delivery, reading, enrollment and actual testing are not inferred.
 iOS21 submissionc06c203d FINISHED (upload), not App Review/publication. Android12
-buildd16877f8 FINISHED; artifact verification and upload are the next step.
+buildd16877f8 FINISHED; signed AAB verification and submissionc41e9287 both completed. Play confirms versionCode12 and the exact local SHA-256; the internal release remains draft. No Alpha12 rollout or public availability is claimed.
+
+
+Checkpoint 2026-09-18 07:56 UTC (supersedes earlier store next actions):
+- Root main advanced to f1ff05e6f (#430); its mobile pin7b7ecaf includes explicit Google account creation/linking. #435 must preserve that current contract when reconciling its667 tab fixes; do not downgrade to667 or import the unrelated intake stack. Exact06d5 independent approval and all applicable gates passed, but the gitlink now conflicts and one checkpoint review needs correction.
+- Android12 Play readback matches AAB SHA-2561beade7326ad630b1e83038ff495dd50fc149c9e4696144d1087798887fdb541. iOS21 is VALID/IN_BETA_TESTING, build5ebb79bf-8bf0-4802-9dff-42239c97afbb. These are upload/beta states, not public publication.
+- NEW release blocker UX035: another operator reproduced an Android11 fresh-install protected-notification-link crash (Maximum update depth exceeded). Source667 retains the identical RootLayout from224, so Android12/iOS21 promotion is held pending candidate mobile#102 and platform runtime verification. An iOS crash is not asserted. Alpha10 and Apple19 existing reviews stay untouched.
+- The user asked this operator to perform the physical iPhone Google flow. Fresh xcrun xctrace/devicectl discovery found only this Mac and simulators, no attached physical device. The existing physical-production gate cannot be executed here; no request to repeat credentials or a previously established absence.
+- Native cross-device persistence preparation uses an isolated simulator-only configuration targeting localhost18631/PostgreSQL test data. The first archive/upload failed ENOSPC before EAS accepted a build; no simulator execution is claimed. Preserve production demo sessions and do not send them to the isolated API.
+- Invitation completion remains80SMTP-accepted/2recipient-refused/0ambiguous/0unattempted of82, one invalid-domain excluded. The private correction list contains the three unusable addresses, never committed. No enrollment or delivery inference.
+
+Next: verify mobile#102 actual Android/iOS cold-start evidence, integrate only the already-required provider contract/tab fixes/cold-start repair, qualify and publish that source before advancing the parent gitlink; rerun affected gates and obtain any exact-head approval required by protection. #432 corrected HTTP/generative CI is still running; its9213 independent approval is current. Continue isolated native progress verification when host storage permits.
+
+Additional initial coverage:92 missing-resource public arrivals across23 parameterized routes, ES/EN and320/1280px, completed against the actual isolated backend and dabb production bundle. No axe violations, horizontal overflow, page errors or HTTP5xx were observed. Evidence public-dynamic-missing-runtime.json; populated resources/actions, complete copy translation and other state combinations remain separate.

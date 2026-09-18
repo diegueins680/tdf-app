@@ -90,7 +90,7 @@
     "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
     "status": "merged",
     "implementationStatus": "in progress",
-    "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
+    "verificationStatus": "Historical onboarding recovery is incorporated. Current main430 pins7b7ecaf; tab fix667 must be integrated without losing required Google provider contract. Parent435 reconciliation and cold-start release blocker UX035 remain pending.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
   {
@@ -679,7 +679,7 @@
     "dependencies": [
       "UX-260917-012"
     ],
-    "acceptanceCriteria": "Cross-device completion persists, account switch isolates state, optional onboarding is escapable. **Deferred pending contract.**",
+    "acceptanceCriteria": "Cross-device authoritative completion persists; account switch isolates state; optional onboarding is escapable. Server contract exists; remaining native runtime verification is explicit.",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "verification pending",
     "implementationStatus": "Server-owned session onboarding contract already implemented; UX-012 adds frontend current-session fences. No new contract project required.",
@@ -1262,7 +1262,33 @@
     "status": "verification pending",
     "implementationStatus": "Mobile PR101 afbd5dcc7 based on34971c451; visible-tab count and ES/EN labels evaluated from current settings/session.",
     "verificationStatus": "Corrected actual EAS iOS18.3 simulator passed5visible labels,authenticated return/relaunch,ES→EN→ES. Hosted667 checks pass, generated API bytes unchanged from349; no physical/human reader/Androidruntime claim.",
-    "mergeStatus": "Mobile101 mergedebec681092ba12a9f8a58019e35ae52a6949eb6f; parent pins published source667193e15517ecb087fbbacf6041b1296814da78, whose runtime matches testedafbd.",
-    "releaseStatus": "iOS21 source667 build0771998e FINISHED; actual IPA1.0.1/build21 signature resources/hash verified; submissionc06c203d FINISHED (upload). Android12d16877f8 FINISHED, signed AAB hash verified; upload in progress. No new AppReview/store-publication or physical-device claim."
+    "mergeStatus": "Mobile101 mergedebec681; root435 head06d5 approved with applicable checks passed but gitlink conflicts after main430. Preserve current7b7 provider contract in successor; no parent merge yet.",
+    "releaseStatus": "iOS21 source667 uploadc06c203d FINISHED, ASC VALID/IN_BETA_TESTING. Android12 source667 uploadc41e9287 FINISHED, Play version/hash verified; internal DRAFT. Promotion held for shared RootLayout cold-start blocker UX035/mobile102. No physical OAuth or public publication."
+  },
+  {
+    "id": "UX-260917-035",
+    "kind": "confirmed",
+    "title": "Fresh native protected notification link can crash the root navigator",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "fresh installation / protected deep link / authentication handoff",
+    "roles": "unauthenticated and restoring native sessions",
+    "surface": "Expo RootLayout / notification native intent",
+    "evidence": "Actual Android11 artifact cold start tdf://notification/900000001: AndroidRuntime FATAL EXCEPTION expo-updates-error-recovery, Maximum update depth exceeded; companion operator retained adb APP_CRASH proof. Source667 RootLayout is byte-identical to224. Candidate mobile102 e002715 verification pending.",
+    "userImpact": "A new user cannot reach sign-in from a shared protected notification link.",
+    "rootCause": "Candidate diagnosis: session guard unmounts/remounts root navigator during loading/redirect; actual repair must pass fresh-first-link runtime tests.",
+    "proposedChange": "Reuse bounded mobile102 root navigator repair and preserve current auth/tab behavior.",
+    "dependencies": [
+      "mobile PR102 actual Android/iOS runtime verification",
+      "integrated published mobile source",
+      "signed successor builds and store distribution"
+    ],
+    "acceptanceCriteria": "Fresh-first-link notification/request cold starts reach sign-in without crash; target survives authorized login; protected content is withheld during restoration; normal launch/return/tab locale remain functional on supported platforms.",
+    "verificationMethod": "Actual Android negative control; actual candidate Android/iOS first-link tests; router session-loading tests and full mobile gates; signed integrated release observation.",
+    "status": "in progress",
+    "implementationStatus": "Companion operator candidate e002715 in draft mobile102; do not duplicate repair.",
+    "verificationStatus": "Unit/type/lint candidate checks pass; actual corrected-device verification pending. Existing prior warm-initialized iOS tests do not cover this failure.",
+    "mergeStatus": "Not merged",
+    "releaseStatus": "Hold Android12/iOS21 promotion; Alpha10 and Apple19 unchanged. iOS failure not asserted; verification required."
   }
 ]

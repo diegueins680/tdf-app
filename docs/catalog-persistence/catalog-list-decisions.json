@@ -13848,13 +13848,13 @@
       "reviewed": true
     },
     {
-      "id": "4f27e0e516bc34335e31",
+      "id": "8636ebcd3dde0b4ae06c",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Ordered migration IDs and paths are deployment execution mechanics. All 106 reviewed main entries and their immutable SQL are preserved; the notification migration is appended with its original introduction ancestor. The ledger continues to enforce checksums and idempotence.",
+      "justification": "Ordered migration identifiers and introduction commits are release execution mechanics. Preserve main’s first 107 entries including notification navigation, then append the independent provider-subject binding table. Both migrations preserve their introduction commits and ledger checksums; no existing migration is rewritten.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
       "reviewBatch": "notification-identity-integration-2026-09-18",
@@ -13863,7 +13863,7 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 107
+        "valueCount": 108
       }
     },
     {
@@ -13912,6 +13912,25 @@
         "kind": "switch-cases",
         "name": "notification.nTargetType",
         "valueCount": 9
+      }
+    },
+    {
+      "id": "1848a88a99f437444f6d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Incorrect provenance could imply credential verification that did not occur.",
+      "justification": "These two immutable audit values describe which server-authenticated binding operation ran. They are security protocol provenance, not configurable customer roles or business statuses. Both require an independently verified provider subject.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "provider-identity-2026-09-18",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-18_provider_subject_identity.sql",
+        "line": 7,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 2
       }
     }
   ]

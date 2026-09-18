@@ -10124,6 +10124,13 @@ components:
         idToken:
           type: string
           description: Google ID token returned by Google Identity Services
+        createNewAccount:
+          type: boolean
+          description: Must be explicitly true, with current terms acceptance, to create a new account for an unbound Google subject. Omission never creates an account.
+        linkAccount:
+          allOf:
+            - $ref: '#/components/schemas/LoginRequest'
+          description: Explicitly connect the verified Google identity using the existing TDF account credentials. No account or permission is merged.
         marketingOptIn:
           type: boolean
           description: Optional consent to receive TDF product and marketing updates when creating an account.

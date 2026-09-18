@@ -1,3 +1,4 @@
+import { useContactCreation } from '../hooks/useContactCreation';
 import { logger } from '../utils/logger';
 import {
   Alert,
@@ -38,7 +39,6 @@ import {
 } from '../api/records';
 import { Bookings } from '../api/bookings';
 import { Rooms } from '../api/rooms';
-import { Parties } from '../api/parties';
 import { Admin } from '../api/admin';
 import { Services } from '../api/services';
 import { Engineers } from '../api/engineers';
@@ -231,6 +231,7 @@ function _BookingRequestDialog({
       .setZone(BOOKING_ZONE)
       .toFormat("HH:mm")}`;
 
+  const contactCreation = useContactCreation();
   const mutation = useMutation({
     mutationFn: async () => {
       if (!parsedStart.isValid || !parsedEnd.isValid) {
@@ -242,7 +243,7 @@ function _BookingRequestDialog({
       if (!selectedService) {
         throw new Error('Selecciona un servicio publicado para continuar.');
       }
-      const party = await Parties.create({
+      const party = await contactCreation.create({
         cDisplayName: contactName.trim(),
         cIsOrg: false,
         cPrimaryEmail: email.trim(),
@@ -287,6 +288,7 @@ function _BookingRequestDialog({
       });
     },
     onSuccess: (created) => {
+      contactCreation.reset();
       setSuccessMessage(`Sesión creada para ${created.title} el ${DateTime.fromISO(created.startsAt).setZone(BOOKING_ZONE).toFormat("dd LLL yyyy, HH:mm")}.`);
       setFormError(null);
       void qc.invalidateQueries({ queryKey: ['bookings'] });

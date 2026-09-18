@@ -1,3 +1,4 @@
+import { useContactCreation } from '../hooks/useContactCreation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings, type ServiceBookingCommerceDTO } from '../api/bookings';
@@ -33,7 +34,6 @@ import { DateTime } from 'luxon';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
-import { Parties } from '../api/parties';
 import type { PartySelectorOption } from '../api/partySelector';
 import { PartySelector } from '../components/party-selector/PartySelector';
 import { Services } from '../api/services';
@@ -62,6 +62,7 @@ const parsePositiveInt = (raw: string | null): number | null => {
 };
 
 export default function BookingsPage() {
+  const contactCreation = useContactCreation();
   const { timezone: zone, locale } = useLocalePreferences();
   const { formatMoney } = useCurrency();
   const location = useLocation();
@@ -230,6 +231,9 @@ export default function BookingsPage() {
     shareUrl?: string;
   } | null>(null);
   const [createContactOpen, setCreateContactOpen] = useState(false);
+  useEffect(() => {
+    if (!createContactOpen) contactCreation.reset();
+  }, [createContactOpen, contactCreation]);
   const [createContactForm, setCreateContactForm] = useState({ name: '', email: '', phone: '' });
   const [createContactError, setCreateContactError] = useState<string | null>(null);
   const serviceTypes = useMemo<ServiceType[]>(
@@ -388,8 +392,9 @@ export default function BookingsPage() {
     setCreateContactOpen(true);
   }, []);
   const createPartyMutation = useMutation({
-    mutationFn: (payload: PartyCreate) => Parties.create(payload),
+    mutationFn: (payload: PartyCreate) => contactCreation.create(payload),
     onSuccess: (party) => {
+      contactCreation.reset();
       setCustomerPartyId(party.partyId);
       setSelectedCustomer({ partyId: party.partyId, partyType: party.isOrg ? 'organization' : 'person', displayName: party.displayName, username: null, avatarUrl: null, secondaryLabel: 'Contacto nuevo', accountStatus: 'no-account' });
       setCreateContactOpen(false);

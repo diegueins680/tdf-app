@@ -214,7 +214,7 @@ describe('LoginPage Google signup consent flow', () => {
     }
   }, 15_000);
 
-  it('hands a new Google user into signup and retries with accepted versioned terms', async () => {
+  it('offers existing-account connection before explicit new signup and retries with versioned terms', async () => {
     googleLoginRequestMock
       .mockRejectedValueOnce(new Error(GOOGLE_CONSENT_ERROR))
       .mockResolvedValueOnce({
@@ -239,9 +239,15 @@ describe('LoginPage Google signup consent flow', () => {
         await flushPromises();
       });
 
-      const signupDialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      const connectionDialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      expect(connectionDialog?.textContent).toContain('Conecta tu cuenta TDF');
+      await act(async () => {
+        findButton('Crear una cuenta')?.click();
+        await flushPromises();
+      });
+      await waitFor(() => expect(document.querySelector('[aria-labelledby="login-signup-dialog-title"] input[type="checkbox"]')).not.toBeNull());
+      const signupDialog = document.querySelector<HTMLElement>('[aria-labelledby="login-signup-dialog-title"]');
       expect(signupDialog).not.toBeNull();
-      expect(signupDialog?.textContent).toContain('Esta cuenta de Google todavía no está registrada en TDF.');
       expect(document.body.textContent).not.toContain(GOOGLE_CONSENT_ERROR);
       expect(googleLoginRequestMock).toHaveBeenNthCalledWith(1, { idToken: GOOGLE_CREDENTIAL });
 
@@ -267,6 +273,7 @@ describe('LoginPage Google signup consent flow', () => {
         marketingOptIn: false,
         termsAccepted: true,
         termsVersion: 'tdf-account-terms-v1',
+        createNewAccount: true,
       });
       expect(loginMock).toHaveBeenCalledWith(
         expect.objectContaining({ partyId: 404, apiToken: 'fictional-session-token' }),
@@ -276,4 +283,32 @@ describe('LoginPage Google signup consent flow', () => {
       await cleanup();
     }
   }, 15_000);
+  it('connects an existing account only after explicit credential submission', async () => {
+    googleLoginRequestMock.mockRejectedValueOnce(new Error(GOOGLE_CONSENT_ERROR))
+      .mockResolvedValueOnce({ token: 'fictional-session', partyId: 42, roles: [], modules: [], accountCreated: false });
+    const cleanup = await renderLoginPage();
+    try {
+      await waitFor(() => expect(findButton('Google login test button')).not.toBeNull());
+      await act(async () => { findButton('Google login test button')?.click(); await flushPromises(); });
+      await waitFor(() => expect(findButton('Conectar Google')).not.toBeNull());
+      const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      const setInput = (selector: string, value: string) => {
+        const input = dialog?.querySelector<HTMLInputElement>(selector);
+        expect(input).not.toBeNull();
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, value);
+        input?.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      await act(async () => {
+        setInput('input[autocomplete="username"]', 'existing-user');
+        setInput('input[autocomplete="current-password"]', 'fictional-password');
+        await flushPromises();
+      });
+      await act(async () => { findButton('Conectar Google')?.click(); await flushPromises(); });
+      await waitFor(() => expect(googleLoginRequestMock).toHaveBeenLastCalledWith({
+        idToken: GOOGLE_CREDENTIAL, linkAccount: { username: 'existing-user', password: 'fictional-password' },
+      }));
+      expect(loginMock).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: true });
+    } finally { await cleanup(); }
+  });
+
 });

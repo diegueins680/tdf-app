@@ -159,6 +159,8 @@ export default function LoginPage() {
   const [rememberDevice, setRememberDevice] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [googleLinkToken, setGoogleLinkToken] = useState<string | null>(null);
+  const [googleLinkAccount, setGoogleLinkAccount] = useState({ username: '', password: '' });
   const [resetEmail, setResetEmail] = useState('');
   const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);
@@ -447,7 +449,7 @@ export default function LoginPage() {
   }, [analytics, requestedIntent, signupMutation]);
 
   const handleGoogleCredential = useCallback(
-    async (credentialResponse: { credential?: string }) => {
+    async (credentialResponse: { credential?: string }, linkAccount?: { username: string; password: string }) => {
       // The Google login contract cannot claim an existing artist. Keep the
       // selected claim in the email signup form, including late popup callbacks.
       if (claimArtistId !== null) {
@@ -487,12 +489,16 @@ export default function LoginPage() {
         setGoogleError(null);
         const response = await googleLoginMutation.mutateAsync({
           idToken: credential,
+          ...(linkAccount ? { linkAccount } : {}),
           ...(signupDialogOpen ? {
+            createNewAccount: true,
             marketingOptIn: false,
             termsAccepted: true,
             termsVersion: ACCOUNT_TERMS_VERSION,
           } : {}),
         });
+        setGoogleLinkToken(null);
+        setGoogleLinkAccount({ username: '', password: '' });
         const nextSession = await buildResolvedSession({
           username: fallbackUsername,
           displayName: fallbackName,
@@ -515,8 +521,8 @@ export default function LoginPage() {
         navigate(googleTargetPath, { replace: true });
       } catch (err) {
         if (!signupDialogOpen && isGoogleSignupConsentRequiredError(err)) {
-          openSignupDialog(requestedIntent, 'google_login_handoff');
-          setSignupFeedback({ type: 'info', message: t('authEntry.consentPrompt') });
+          setGoogleLinkToken(credential);
+          setGoogleLinkAccount({ username: '', password: '' });
           return;
         }
         const message = authErrorMessage(err, t, 'authEntry.googleLoginError');
@@ -535,7 +541,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, openSignupDialog, redirectPath, rememberDevice, requestedIntent, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, termsAccepted, t],
+    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, termsAccepted, t],
   );
 
   useEffect(() => {
@@ -1262,6 +1268,35 @@ export default function LoginPage() {
           </Box>
         </Stack>
       </Container>
+      <Dialog open={googleLinkToken !== null} fullWidth maxWidth="xs"
+        onClose={() => { setGoogleLinkToken(null); setGoogleLinkAccount({ username: '', password: '' }); }}>
+        <DialogTitle>{t('authEntry.googleLinkTitle')}</DialogTitle>
+        <Box component="form" onSubmit={(event: FormEvent<HTMLFormElement>) => {
+          event.preventDefault();
+          if (googleLinkToken) void handleGoogleCredential({ credential: googleLinkToken }, googleLinkAccount);
+        }}>
+          <DialogContent>
+            <Stack spacing={2}>
+              <Typography>{t('authEntry.googleLinkExplanation')}</Typography>
+              <TextField required autoComplete="username" label={t('authEntry.googleLinkUsername')}
+                value={googleLinkAccount.username} onChange={event => setGoogleLinkAccount(value => ({ ...value, username: event.target.value }))} />
+              <TextField required type="password" autoComplete="current-password" label={t('authEntry.googleLinkPassword')}
+                value={googleLinkAccount.password} onChange={event => setGoogleLinkAccount(value => ({ ...value, password: event.target.value }))} />
+              {googleError && <Alert severity="error">{googleError}</Alert>}
+              <Button onClick={() => { setGoogleLinkToken(null); setGoogleLinkAccount({ username: '', password: '' }); setResetDialogOpen(true); }}>
+                {t('authEntry.googleLinkReset')}
+              </Button>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button disabled={googleLoginMutation.isPending} onClick={() => {
+              setGoogleLinkToken(null); setGoogleLinkAccount({ username: '', password: '' });
+              openSignupDialog(requestedIntent, 'google_login_handoff');
+            }}>{t('authEntry.googleLinkCreate')}</Button>
+            <Button type="submit" disabled={googleLoginMutation.isPending}>{t('authEntry.googleLinkConnect')}</Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
       <Dialog
         open={resetDialogOpen}
         onClose={closeResetDialog}

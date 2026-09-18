@@ -583,6 +583,7 @@ import TDF.Seed
     , syntheticPersonaSeedingAllowed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
+import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
@@ -17009,6 +17010,7 @@ main = hspec $ do
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    ProviderIdentitySpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
     ServerProposalsSpec.spec
