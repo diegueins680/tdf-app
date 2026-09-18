@@ -42,6 +42,7 @@ import qualified Network.HTTP.Client as HTTP
 import Network.HTTP.Types.Status (statusCode)
 import Network.HTTP.Types.URI (renderSimpleQuery)
 import System.Random (randomRIO)
+import System.Timeout (timeout)
 import Text.Read (readMaybe)
 
 newtype YouTubeKey = YouTubeKey Text
@@ -57,7 +58,7 @@ youTubeKey raw
 -- Never retain provider bodies, credential headers or HttpException's request.
 data ProviderError = MissingCredential | InvalidCredential | InvalidIdentity
   | TransportFailure | ProviderHttp Int | UnexpectedContentType | OversizedResponse
-  | InvalidResponse | IncompleteResponse
+  | InvalidResponse
   deriving (Eq, Show)
 
 data Channel = Channel
@@ -142,9 +143,10 @@ request manager (YouTubeKey key) endpoint query = do
         , HTTP.checkResponse = \_ _ -> pure ()
         }
       attempt n = do
-        result <- try (HTTP.withResponse req manager readResponse)
-          :: IO (Either HTTP.HttpException (Either ProviderError BL.ByteString))
-        let safe = either (const (Left TransportFailure)) id result
+        result <- timeout (15 * 1000000) (try (HTTP.withResponse req manager readResponse))
+          :: IO (Maybe (Either HTTP.HttpException (Either ProviderError BL.ByteString)))
+        let safe = maybe (Left TransportFailure)
+              (either (const (Left TransportFailure)) id) result
             retry = case safe of
               Left TransportFailure -> True
               Left (ProviderHttp status) -> status == 429 || status >= 500
@@ -234,7 +236,7 @@ parseVideo expected ident item = do
     ended <- maybe (pure Nothing) (.:? "actualEndTime") live :: Parser (Maybe UTCTime)
     if owner /= expected then pure (ReviewVideo ident "channel_mismatch")
     else if upload /= "processed" then pure (ReviewVideo ident "not_processed")
-    else if broadcast /= "none" || (isJust live && not (isJust started && isJust ended))
+    else if broadcast /= "none" || (isJust live && not (completed started ended))
       then pure (ReviewVideo ident "live_not_completed")
     else do
       videoTitle <- snippet .: "title"
@@ -251,6 +253,9 @@ parseVideo expected ident item = do
       videoEmbeddable <- status .: "embeddable"
       pure (PublicVideo Video
         { videoId = ident, videoChannelId = owner, videoCompletedLive = isJust ended, .. })
+  where
+    completed (Just start) (Just end) = end >= start
+    completed _ _ = False
 
 parseThumbnail :: Text -> Object -> Key -> Parser (Maybe Thumbnail)
 parseThumbnail ident thumbnails size = do
