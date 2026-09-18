@@ -13848,25 +13848,6 @@
       "reviewed": true
     },
     {
-      "id": "f0740d2211a309c2515f",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Reviewed the ordered 110-entry migration registry. Preserve the preceding 109 immutable entries and append source-scoped course request receipts with an ancestor introduction commit. This is release execution metadata, not an editable business catalog. The receipt rollback refuses to discard accepted operations.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "identity-course-prevention-2026-09-18",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 110
-      }
-    },
-    {
       "id": "21babc54d68f0c44d55e",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
