@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { useState } from 'react';
 import { act, fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { PartyCreate, PartyDTO } from '../api/types';
@@ -8,12 +9,18 @@ jest.unstable_mockModule('../api/parties', () => ({ Parties: { list: async () =>
 jest.unstable_mockModule('../components/PartyRelatedPopover', () => ({ default: () => null }));
 const { default: CompaniesPage } = await import('./CompaniesPage');
 const { default: LeadsPage } = await import('./LeadsPage');
+const { CreatePartyDialog } = await import('./PartiesPage');
+function ContactDialogHarness() {
+  const [open, setOpen] = useState(false);
+  return <><button onClick={() => setOpen(true)}>Nuevo contacto</button><CreatePartyDialog open={open} onClose={() => setOpen(false)} /></>;
+}
 
 afterEach(() => { cleanup(); create.mockReset(); });
 
 it.each([
   ['company', CompaniesPage, 'Nueva empresa', 'Nombre comercial'],
   ['lead', LeadsPage, 'Nuevo lead', 'Nombre'],
+  ['contact', ContactDialogHarness, 'Nuevo contacto', 'Nombre / Display'],
 ] as const)('keeps a pending %s dialog and its retry identity across failed responses', async (_, Page, openLabel, field) => {
   let rejectRequest!: (error: Error) => void;
   create.mockImplementationOnce(() => new Promise((_, reject) => { rejectRequest = reject; }));
