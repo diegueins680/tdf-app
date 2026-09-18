@@ -345,3 +345,25 @@ minor units on the old code, then preserves2001/terms on the corrected handler; 
 next request excludes the deactivated row. Query count stays5 with80generated
 fixtures. This does not certify checkout/fulfillment transactions or claim snapshot
 isolation for every returned asset field.
+### Calendar connection and OAuth return
+
+`CalendarConnection.tla` bounds one returned code, two automatic dispatch attempts,
+three session occurrences (including A→B→A), and success/failure responses. TLC
+explores 27 generated / 21 distinct states, depth 5. `AtMostOneAutomaticExchange`,
+`OnlyPersistedConnection`, and `CurrentSessionReceipt` pass. `RequestSettles` assumes
+weak fairness of the combined successful/failed response; a permanently unavailable
+network is outside that liveness assumption. Terminal quiescent states are expected,
+so deadlock checking is disabled explicitly; safety and temporal properties remain
+enabled. Three unsafe configurations separately reproduce replay (9 states), a
+storage-derived connection claim (3 states), and a stale session receipt (11 states;
+see the executable output for the exact exploration).
+
+Mapping: CalendarSyncPage consumes/removes the URL code before queued dispatch;
+a synchronous busy guard also prevents duplicate clicks. Session occurrences remount
+the form and partition query caches, with mounted/current-session checks immediately
+before response effects. Only the selected calendar's API configuration establishes
+its saved connection. React tests cover replay/error/retry, StrictMode, logout before
+render, A→B→A, cache races, and persisted timestamps. The model abstracts provider
+exchange/persistence, selected-calendar identities and query-library scheduling; those
+require HTTP and component/browser conformance tests. It does not prove Google OAuth
+consent, token revocation, server authorization or arbitrary calendar handlers.

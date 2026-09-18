@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState, useRef, useId } from 'react';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
   Box,
@@ -20,6 +20,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import LinkIcon from '@mui/icons-material/Link';
 import EventIcon from '@mui/icons-material/Event';
 import { DateTime } from 'luxon';
+import { useSession, getActiveSession, type SessionUser } from '../session/SessionContext';
 import { CalendarApi } from '../api/calendar';
 import { isSessionAuthFailureMessage } from '../session/authEvents';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -64,6 +65,22 @@ const getCalendarPageErrorMessage = (error: unknown, fallback: string): string |
 };
 
 export default function CalendarSyncPage() {
+  const { session } = useSession();
+  const occurrence = useRef({ session, generation: 0 });
+  if (occurrence.current.session !== session) occurrence.current = { session, generation: occurrence.current.generation + 1 };
+  return <CalendarSyncForm key={occurrence.current.generation} authority={session} />;
+}
+
+function CalendarSyncForm({ authority }: { authority: SessionUser | null }) {
+  const scope = useId();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const isCurrent = useCallback(() => mounted.current && authority !== null && getActiveSession() === authority, [authority]);
+  const exchangeBusy = useRef(false);
+  const syncBusy = useRef(false);
+  const consumedRedirect = useRef<string | null>(null);
   const { timezone: zone, locale } = useLocalePreferences();
   const displayDateTime = useCallback((value: Date | string | number) =>
     formatDateTime(value, { locale, timeZone: zone }), [locale, zone]);
@@ -71,17 +88,15 @@ export default function CalendarSyncPage() {
   const [code, setCode] = useState('');
   const [fromInput, setFromInput] = useState('');
   const [toInput, setToInput] = useState('');
-  const [connectedCalendar, setConnectedCalendar] = useState<string | null>(null);
   const [accountEmail, setAccountEmail] = useState('');
   const [calendarHistory, setCalendarHistory] = useState<string[]>([]);
-  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
-  const [appliedRemoteConfig, setAppliedRemoteConfig] = useState(false);
-  const [autoExchanging, setAutoExchanging] = useState(false);
   const [copyToast, setCopyToast] = useState<string | null>(null);
   const [syncToast, setSyncToast] = useState<{ message: string; severity: 'success' | 'error' | 'info' } | null>(null);
 
   const trimmedCalendarId = calendarId.trim();
+  const selectedCalendar = useRef(trimmedCalendarId);
+  selectedCalendar.current = trimmedCalendarId;
   const location = useLocation();
   const loginRedirectPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
@@ -135,17 +150,11 @@ export default function CalendarSyncPage() {
     if (typeof window === 'undefined') return;
     const storedId = readCalendarPreference('calendar-sync.calendarId');
     const storedRange = readCalendarPreference('calendar-sync.range');
-    const storedConnected = readCalendarPreference('calendar-sync.connected');
-    const storedLastSync = readCalendarPreference('calendar-sync.lastSyncAt');
     const storedAccount = readCalendarPreference('calendar-sync.account');
     const storedHistory = readCalendarPreference('calendar-sync.history');
 
     const normalizedStoredId = normalizeStoredText(storedId);
     setCalendarId(normalizedStoredId || 'primary');
-    const normalizedConnected = normalizeStoredText(storedConnected);
-    if (normalizedConnected) setConnectedCalendar(normalizedConnected);
-    const normalizedLastSync = normalizeStoredText(storedLastSync);
-    if (normalizedLastSync) setLastSyncAt(normalizedLastSync);
     const normalizedAccount = normalizeStoredText(storedAccount);
     if (normalizedAccount) setAccountEmail(normalizedAccount);
     if (storedHistory) {
@@ -192,16 +201,6 @@ export default function CalendarSyncPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (connectedCalendar) writeCalendarPreference('calendar-sync.connected', connectedCalendar);
-  }, [connectedCalendar]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (lastSyncAt) writeCalendarPreference('calendar-sync.lastSyncAt', lastSyncAt);
-  }, [lastSyncAt]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
     writeCalendarPreference('calendar-sync.account', accountEmail.trim());
   }, [accountEmail]);
 
@@ -218,7 +217,7 @@ export default function CalendarSyncPage() {
   }, [fromIso, toIso]);
 
   const eventsQuery = useQuery({
-    queryKey: ['calendar-events', trimmedCalendarId, fromIso, toIso],
+    queryKey: ['calendar-events', scope, trimmedCalendarId, fromIso, toIso],
     queryFn: () =>
       CalendarApi.listEvents({
         calendarId: trimmedCalendarId || undefined,
@@ -226,61 +225,57 @@ export default function CalendarSyncPage() {
         to: toIso ?? undefined,
       }),
     enabled:
-      Boolean(trimmedCalendarId) &&
+      Boolean(authority) && Boolean(trimmedCalendarId) &&
       !rangeError &&
       (!fromInput || Boolean(fromIso)) &&
       (!toInput || Boolean(toIso)),
   });
+  const configKey = ['calendar-config', scope, trimmedCalendarId];
+  const configQuery = useQuery({
+    queryKey: configKey,
+    queryFn: () => CalendarApi.getConfig(trimmedCalendarId),
+    enabled: Boolean(authority) && Boolean(trimmedCalendarId),
+    staleTime: 0,
+  });
+  const connectedCalendar = !configQuery.isError && configQuery.data?.calendarId === trimmedCalendarId
+    ? configQuery.data.calendarId : null;
+  const lastSyncAt = connectedCalendar ? configQuery.data?.syncedAt ?? null : null;
   const syncMutation = useMutation({
-    mutationFn: () =>
-      CalendarApi.sync({
-        calendarId: trimmedCalendarId || 'primary',
-        from: fromIso ?? undefined,
-        to: toIso ?? undefined,
-      }),
-    onSuccess: (res) => {
-      const ts = new Date().toISOString();
-      setLastSyncAt(ts);
+    mutationFn: (payload: { calendarId: string; from?: string; to?: string }) => CalendarApi.sync(payload),
+    onSuccess: (res, payload) => {
+      if (!isCurrent() || selectedCalendar.current !== payload.calendarId) return;
       void eventsQuery.refetch();
-      if (typeof window !== 'undefined') {
-        writeCalendarPreference('calendar-sync.lastSyncAt', ts);
-      }
-      setSyncToast({
-        severity: 'success',
-        message: `Sync OK (${displayDateTime(ts)}): ${res.created} creados, ${res.updated} actualizados.`,
-      });
+      void configQuery.refetch();
+      setSyncToast({ severity: 'success', message: `Sincronización guardada: ${res.created} creados, ${res.updated} actualizados.` });
     },
-    onError: () =>
-      setSyncToast({
-        severity: 'error',
-        message: 'No pudimos sincronizar ahora. Revisa credenciales y rango.',
-      }),
+    onSettled: () => { syncBusy.current = false; },
+    onError: (_, payload) => {
+      if (!isCurrent() || selectedCalendar.current !== payload.calendarId) return;
+      setSyncToast({ severity: 'error', message: 'No pudimos sincronizar ahora. Revisa credenciales y rango.' });
+    },
   });
 
-  const configQuery = useQuery({
-    queryKey: ['calendar-config'],
-    queryFn: () => CalendarApi.getConfig(),
-    staleTime: 5 * 60 * 1000,
-  });
   const configAuthError =
     configQuery.error instanceof Error && isSessionAuthFailureMessage(configQuery.error.message);
   const configErrorMessage = configQuery.isError
     ? getCalendarPageErrorMessage(configQuery.error, 'No se pudo cargar la configuración de calendario.')
     : null;
 
-  const testConnection = useCallback(async () => {
+  const refreshConfig = async () => {
+    const calendar = trimmedCalendarId;
     const res = await configQuery.refetch();
-    setSyncToast(
-      res.data
-        ? { severity: 'info', message: 'Conexión verificada con el proveedor de calendario.' }
-        : { severity: 'error', message: 'No pudimos validar la conexión. Revisa las credenciales.' },
-    );
-  }, [configQuery]);
+    if (!isCurrent() || selectedCalendar.current !== calendar) return;
+    setSyncToast(res.isError
+      ? { severity: 'error', message: 'No pudimos consultar la configuración. Inténtalo de nuevo.' }
+      : res.data
+        ? { severity: 'info', message: 'Configuración guardada en TDF. Sincroniza para comprobar el acceso a Google.' }
+        : { severity: 'info', message: 'Este calendario no tiene una conexión guardada en TDF.' });
+  };
 
   const authUrlMutation = useMutation({
     mutationFn: CalendarApi.getAuthUrl,
     onSuccess: (data) => {
-      if (data.url && typeof window !== 'undefined') {
+      if (isCurrent() && data.url && typeof window !== 'undefined') {
         window.open(data.url, '_blank', 'noopener,noreferrer');
       }
     },
@@ -288,22 +283,26 @@ export default function CalendarSyncPage() {
 
   const exchangeMutation = useMutation({
     mutationFn: (payload: { code: string; calendarId: string }) => CalendarApi.exchangeCode(payload),
-    onSuccess: (_, variables) => {
+    onSuccess: async (config, variables) => {
+      if (!isCurrent() || selectedCalendar.current !== variables.calendarId) return;
+      const key = ['calendar-config', scope, variables.calendarId];
+      await queryClient.cancelQueries({ queryKey: key, exact: true });
+      if (!isCurrent() || selectedCalendar.current !== variables.calendarId) return;
+      queryClient.setQueryData(key, config);
       setCode('');
       setShowValidation(false);
-      setConnectedCalendar(variables.calendarId);
-      setLastSyncAt(null);
       void eventsQuery.refetch();
     },
+    onSettled: () => { exchangeBusy.current = false; },
   });
+  const { mutate: exchangeMutate } = exchangeMutation;
+  const exchange = useCallback((payload: { code: string; calendarId: string }) => {
+    if (!isCurrent() || exchangeBusy.current) return;
+    exchangeBusy.current = true;
+    exchangeMutate(payload);
+  }, [exchangeMutate, isCurrent]);
 
-  const lastSyncSummary = useMemo(() => {
-    if (!lastSyncAt) return 'Sin sincronizar';
-    const formatted = displayDateTime(lastSyncAt);
-    const fromLabel = fromInput ? displayDateTime(fromInput) : 'Sin fecha inicio';
-    const toLabel = toInput ? displayDateTime(toInput) : 'Sin fecha fin';
-    return `${formatted} · Rango: ${fromLabel} → ${toLabel}`;
-  }, [displayDateTime, fromInput, lastSyncAt, toInput]);
+  const lastSyncSummary = lastSyncAt ? displayDateTime(lastSyncAt) : 'Sin sincronizar';
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
   const eventsErrorMessage = eventsQuery.isError
@@ -324,7 +323,7 @@ export default function CalendarSyncPage() {
     setShowValidation(true);
     if (!trimmedCalendarId || !code.trim()) return;
     const payload = { code: code.trim(), calendarId: trimmedCalendarId || 'primary' };
-    exchangeMutation.mutate(payload);
+    exchange(payload);
     const nextHistory = Array.from(new Set([payload.calendarId, ...calendarHistory])).slice(0, 5);
     setCalendarHistory(nextHistory);
     if (typeof window !== 'undefined') {
@@ -335,13 +334,16 @@ export default function CalendarSyncPage() {
   const handleSync = () => {
     setShowValidation(true);
     if (!trimmedCalendarId || !connectedCalendar || rangeError || (fromInput && !fromIso) || (toInput && !toIso)) return;
-    syncMutation.mutate();
+    if (!isCurrent() || syncBusy.current) return;
+    syncBusy.current = true;
+    syncMutation.mutate({ calendarId: trimmedCalendarId, from: fromIso ?? undefined, to: toIso ?? undefined });
   };
 
-  const handleDisconnect = () => {
-    setConnectedCalendar(null);
-    setLastSyncAt(null);
+  const handleClearPreferences = () => {
     setCode('');
+    setFromInput('');
+    setToInput('');
+    setSyncToast(null);
     if (typeof window !== 'undefined') {
       removeCalendarPreference('calendar-sync.calendarId');
       removeCalendarPreference('calendar-sync.range');
@@ -355,37 +357,25 @@ export default function CalendarSyncPage() {
     setCalendarHistory([]);
   };
 
-  // Auto-handle OAuth redirect ?code=... so users don't paste manually
+  // Consume the returned code once, before asynchronous work. The retained input
+  // allows an explicit retry; a render, error or StrictMode replay cannot resubmit.
   useEffect(() => {
+    if (!isCurrent()) return;
     const params = new URLSearchParams(location.search);
-    const codeParam = params.get('code');
-    const calendarParam = params.get('calendarId');
-    if (!codeParam || autoExchanging) return;
-    setAutoExchanging(true);
-    setCode(codeParam);
-    if (calendarParam) setCalendarId(calendarParam);
+    const returnedCode = params.get('code');
+    if (!returnedCode || consumedRedirect.current === returnedCode) return;
+    consumedRedirect.current = returnedCode;
+    params.delete('code');
+    const calendar = (params.get('calendarId') ?? '').trim() || trimmedCalendarId || 'primary';
+    navigate({ pathname: location.pathname, search: params.toString() ? `?${params}` : '', hash: location.hash }, { replace: true });
+    setCalendarId(calendar);
+    selectedCalendar.current = calendar;
+    setCode(returnedCode);
     setShowValidation(true);
-    const targetCalendar = calendarParam ?? (trimmedCalendarId || 'primary');
-    exchangeMutation.mutate(
-      { code: codeParam, calendarId: targetCalendar },
-      {
-        onSettled: () => setAutoExchanging(false),
-      },
-    );
-  }, [autoExchanging, exchangeMutation, location.search, trimmedCalendarId]);
-
-  useEffect(() => {
-    if (!configQuery.isSuccess || appliedRemoteConfig) return;
-    const cfg = configQuery.data;
-    if (!cfg) {
-      setAppliedRemoteConfig(true);
-      return;
-    }
-    setConnectedCalendar(cfg.calendarId);
-    setCalendarId((prev) => (prev.trim() ? prev : cfg.calendarId));
-    setLastSyncAt(cfg.syncedAt ?? null);
-    setAppliedRemoteConfig(true);
-  }, [appliedRemoteConfig, configQuery.data, configQuery.isSuccess]);
+    // Let the mounted mutation observer settle before dispatch (including the
+    // development StrictMode setup/cleanup cycle). Authority is checked again.
+    queueMicrotask(() => exchange({ code: returnedCode, calendarId: calendar }));
+  }, [exchange, isCurrent, location.hash, location.pathname, location.search, navigate, trimmedCalendarId]);
 
   return (
     <Stack spacing={3}>
@@ -408,7 +398,7 @@ export default function CalendarSyncPage() {
           <Stack direction="row" spacing={1} flexWrap="wrap">
             <Chip
               color={connectedCalendar ? 'success' : 'default'}
-              label={connectedCalendar ? `Tokens guardados para ${connectedCalendar}` : 'Tokens pendientes'}
+              label={connectedCalendar ? `Configuración guardada para ${connectedCalendar}` : 'Sin conexión confirmada'}
               size="small"
             />
             <Chip variant="outlined" label={`Zona local: ${zone}`} size="small" />
@@ -418,10 +408,14 @@ export default function CalendarSyncPage() {
               size="small"
               label={`Última sync: ${lastSyncAt ? displayDateTime(lastSyncAt) : 'Sin sincronizar'}`}
             />
-            <Button size="small" onClick={handleDisconnect} variant="outlined" color="inherit">
-              Desconectar y limpiar
+            <Button size="small" onClick={handleClearPreferences} disabled={exchangeMutation.isPending || syncMutation.isPending} variant="outlined" color="inherit">
+              Limpiar preferencias locales
             </Button>
           </Stack>
+          <Typography variant="caption" color="text.secondary">
+            Limpiar preferencias sólo borra el formulario en este navegador. La conexión guardada permanece en TDF.
+            Para revocar el acceso, usa los permisos de tu cuenta de Google.
+          </Typography>
           {configErrorMessage && (
             <Alert
               severity="warning"
@@ -448,6 +442,7 @@ export default function CalendarSyncPage() {
                   </Typography>
                   <Autocomplete
                     freeSolo
+                    disabled={exchangeMutation.isPending || syncMutation.isPending}
                     options={calendarHistory}
                     value={calendarId}
                     onChange={(_, value) => setCalendarId(value ?? '')}
@@ -528,6 +523,7 @@ export default function CalendarSyncPage() {
                   <TextField
                     label="Code (pegado desde Google)"
                     value={code}
+                    disabled={exchangeMutation.isPending}
                     onChange={(e) => setCode(e.target.value)}
                     error={Boolean(codeError)}
                     helperText={codeError || 'Pega el code mostrado por Google tras aceptar el consentimiento.'}
@@ -539,8 +535,8 @@ export default function CalendarSyncPage() {
                   >
                     Guardar tokens
                   </Button>
-                  {exchangeMutation.isSuccess && <Alert severity="success">Tokens guardados.</Alert>}
-                  {exchangeMutation.isError && (
+                  {exchangeMutation.isSuccess && exchangeMutation.variables?.calendarId === trimmedCalendarId && connectedCalendar && <Alert severity="success">Conexión guardada en TDF.</Alert>}
+                  {exchangeMutation.isError && exchangeMutation.variables?.calendarId === trimmedCalendarId && (
                     <Alert severity="error">No se pudo intercambiar el code. Revisa el client_id/secret y el redirect.</Alert>
                   )}
                 </Stack>
@@ -621,24 +617,24 @@ export default function CalendarSyncPage() {
             </Grid>
           </Grid>
           <Divider />
-          {exchangeMutation.isError && (
+          {exchangeMutation.isError && exchangeMutation.variables?.calendarId === trimmedCalendarId && (
             <Alert severity="error">No se pudo intercambiar el code. Revisa el client_id/secret y el redirect.</Alert>
           )}
-          {exchangeMutation.isSuccess && <Alert severity="success">Tokens guardados.</Alert>}
-          {syncMutation.isError && <Alert severity="error">La sincronización falló.</Alert>}
+          {exchangeMutation.isSuccess && exchangeMutation.variables?.calendarId === trimmedCalendarId && connectedCalendar && <Alert severity="success">Conexión guardada en TDF.</Alert>}
+          {syncMutation.isError && syncMutation.variables?.calendarId === trimmedCalendarId && <Alert severity="error">La sincronización falló.</Alert>}
           <Stack direction="row" spacing={1}>
             <Button
               variant="outlined"
               size="small"
               startIcon={<LinkIcon />}
               onClick={() => {
-                void testConnection();
+                void refreshConfig();
               }}
             >
-              Probar conexión
+              Actualizar configuración
             </Button>
           </Stack>
-          {syncMutation.isSuccess && (
+          {syncMutation.isSuccess && syncMutation.variables?.calendarId === trimmedCalendarId && (
             <Alert severity="success">
               Sync OK: {syncMutation.data.updated} actualizados, {syncMutation.data.created} creados, {syncMutation.data.deleted} cancelados.
             </Alert>

@@ -1377,7 +1377,7 @@
       "independent review and CI",
       "web deployment"
     ],
-    "mergeStatus": "PR445 head563dafa42 has applicable gates passed; independent approval pending. Diagnostic successor awaits integration review.\nRelated increment evidence: PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.",
+    "mergeStatus": "PR445 head563dafa42 has applicable gates passed; independent approval pending. Diagnostic successor awaits integration review.\nRelated increment evidence: PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.\nRelated increment evidence: Focused successor to #444; not merged.",
     "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
     "id": "UX-260917-044",
     "title": "Calendar shows local connection claims and labels preference cleanup as disconnection",
@@ -1561,7 +1561,7 @@
       "independent review and CI",
       "web deployment"
     ],
-    "mergeStatus": "PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.",
+    "mergeStatus": "PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.\nRelated increment evidence: Focused successor to #444; not merged.",
     "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
     "id": "UX-260917-043",
     "title": "Calendar OAuth return automatically replays a one-use authorization code",
