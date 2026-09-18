@@ -1,0 +1,133 @@
+{
+  "observedAt": "2026-09-18T09:23:22.009195+00:00",
+  "production": "https://tdf-hq.fly.dev",
+  "sha": "5c11577a5d31f079b3e070a7810a6b04a48d99f4",
+  "releaseOperator": "Separate identity workstream, observed existing completion; UX operator did not repeat deployment.",
+  "guardedRelease": {
+    "status": "complete",
+    "startedAt": "2026-09-18T08:58:08.054Z",
+    "finishedAt": "2026-09-18T09:02:21.298Z",
+    "image": "diegueins680/tdf-hq:5c11577a5d31f079b3e070a7810a6b04a48d99f4",
+    "resolvedImage": "diegueins680/tdf-hq@sha256:f46d81abafcfb6f2f38c106259d657ca8209dcda0bd089b7e4a96d780b507010",
+    "canaryMachine": "0807ee9cd34668",
+    "remainingMachines": [
+      "3d8d2500c67168"
+    ],
+    "rollbacks": []
+  },
+  "runnerBoundary": "Actual rollout used the application5c runner before438. No rollback occurred. Do not attribute new438 recovery execution to this rollout. New reviewed438 runner subsequently passed read-only preflight; no cloud failure was induced.",
+  "reviewedRecoveryTooling": {
+    "sha": "fcc037848",
+    "sourcePR": "https://github.com/diegueins680/tdf-app/pull/438",
+    "guardSource": "35172083af75f9c7530624173d82819252e25d1a",
+    "mode": "published tooling-only checkout; byte-identical merged runner; read-only preflight passed",
+    "recovery": [
+      {
+        "machineId": "0807ee9cd34668",
+        "sha": "5c11577a5d31f079b3e070a7810a6b04a48d99f4",
+        "requiredCommit": "c53b33e7ef868fb7b64f876199ed66be0f617efc",
+        "compatible": true,
+        "mode": "compatible-rollback",
+        "fallback": {
+          "sha": "f1ff05e6f591cb87ef71a9b66c5abeefa4c40095",
+          "image": "diegueins680/tdf-hq@sha256:0225fd7874ae9f9372eac3dba5b46490357c4f0e3683f7590e070c8973ab3b4b",
+          "acceptableImageDigests": [
+            "sha256:0225fd7874ae9f9372eac3dba5b46490357c4f0e3683f7590e070c8973ab3b4b",
+            "sha256:7904e1aa6d84d14a022367c53609f70a85114e30d0c729647af673f12c3666d4"
+          ]
+        }
+      },
+      {
+        "machineId": "3d8d2500c67168",
+        "sha": "5c11577a5d31f079b3e070a7810a6b04a48d99f4",
+        "requiredCommit": "c53b33e7ef868fb7b64f876199ed66be0f617efc",
+        "compatible": true,
+        "mode": "compatible-rollback",
+        "fallback": {
+          "sha": "f1ff05e6f591cb87ef71a9b66c5abeefa4c40095",
+          "image": "diegueins680/tdf-hq@sha256:0225fd7874ae9f9372eac3dba5b46490357c4f0e3683f7590e070c8973ab3b4b",
+          "acceptableImageDigests": [
+            "sha256:0225fd7874ae9f9372eac3dba5b46490357c4f0e3683f7590e070c8973ab3b4b",
+            "sha256:7904e1aa6d84d14a022367c53609f70a85114e30d0c729647af673f12c3666d4"
+          ]
+        }
+      }
+    ]
+  },
+  "version": {
+    "buildTime": "2026-09-18T08:06:26Z",
+    "commit": "5c11577a5d31f079b3e070a7810a6b04a48d99f4",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "health": {
+    "db": "ok",
+    "status": "ok"
+  },
+  "runtimeEnv": [
+    {
+      "machineId": "0807ee9cd34668",
+      "values": {
+        "RUN_MIGRATIONS": "false",
+        "AUTO_APPLY_PRODUCTION_MIGRATIONS": "true",
+        "CONTEXTUAL_REPUTATION_ENABLED": "false",
+        "PUBLIC_REPUTATION_PROJECTION_ENABLED": "true",
+        "REPUTATION_AGGREGATION_WORKER_ENABLED": "false",
+        "REPUTATION_AGGREGATION_ENVIRONMENT": "production",
+        "REPUTATION_AGGREGATION_MODE": "simulation",
+        "EVENT_DISCOVERY_ENABLED": "true",
+        "EVENT_DISCOVERY_AUTO_PUBLISH": "true",
+        "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED": "false",
+        "DEFAULT_LOCALE": "es"
+      }
+    },
+    {
+      "machineId": "3d8d2500c67168",
+      "values": {
+        "RUN_MIGRATIONS": "false",
+        "AUTO_APPLY_PRODUCTION_MIGRATIONS": "true",
+        "CONTEXTUAL_REPUTATION_ENABLED": "false",
+        "PUBLIC_REPUTATION_PROJECTION_ENABLED": "true",
+        "REPUTATION_AGGREGATION_WORKER_ENABLED": "false",
+        "REPUTATION_AGGREGATION_ENVIRONMENT": "production",
+        "REPUTATION_AGGREGATION_MODE": "simulation",
+        "EVENT_DISCOVERY_ENABLED": "true",
+        "EVENT_DISCOVERY_AUTO_PUBLISH": "true",
+        "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED": "false",
+        "DEFAULT_LOCALE": "es"
+      }
+    }
+  ],
+  "database": {
+    "ledgerRows": 108,
+    "releaseLeaseCount": 0,
+    "observedAt": "2026-09-18T09:11Z"
+  },
+  "backup": {
+    "preReleaseDumpSHA256": "a62d9d2b47d38aaf0f9935b98d7136d5685a47bd3cbb296e4ddc0a30995d7606",
+    "actualBytesAndReceiptVerified": true,
+    "contents": "Private operator-controlled recovery folder; never committed."
+  },
+  "postReleaseSnapshot": {
+    "id": "vs_4olB3lmb0Z2SklONv8pYGL0",
+    "createdAt": "2026-09-18T09:06:52Z",
+    "status": "created",
+    "boundary": "Taken after release by UX operator; does not replace the other operator pre-release backup."
+  },
+  "logObservation": {
+    "rows": 100,
+    "levels": {
+      "info": 100
+    },
+    "firstAt": "2026-09-18T09:01:28.11316722Z",
+    "lastAt": "2026-09-18T09:01:57.640147Z",
+    "machine": "3d8d2500c67168",
+    "errorKeywordRows": 0,
+    "limit": "Limited Fly tail returned startup entries only, not a continuous post-release error window or fleet-wide absence of errors."
+  },
+  "limits": [
+    "Read-only demo onboarding/experiment endpoints200; experiment remains disabled intentionally.",
+    "Production health/version observation does not replace local actual concurrent navigation HTTP/Postgres acceptance.",
+    "No physical Google OAuth or consequential production writes performed."
+  ]
+}

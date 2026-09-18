@@ -1,0 +1,39 @@
+{
+  "observedAt": "2026-09-18T09:38:00Z",
+  "mobileSource": "09649d63ef219e3b936adf7ca381b249d7277b80",
+  "finding": "UX-260917-037",
+  "positive": {
+    "generated": 592,
+    "distinct": 328,
+    "depth": 9,
+    "properties": [
+      "CurrentSession",
+      "PersistedCompletion",
+      "SuccessfulFollowQualifies",
+      "RequestsSettle"
+    ]
+  },
+  "negativeControls": [
+    {
+      "configuration": "NativeArtistFollowNamespace.cfg",
+      "violated": "SuccessfulFollowQualifies",
+      "generated": 31,
+      "distinct": 28
+    },
+    {
+      "configuration": "NativeArtistFollowSession.cfg",
+      "violated": "CurrentSession",
+      "generated": 171,
+      "distinct": 116
+    }
+  ],
+  "mobileTests": {
+    "suites": 84,
+    "tests": 499,
+    "typecheck": "passed",
+    "lint": "passed",
+    "oldImplementationRegression": "A-B-A test fails with2stale query writes; fixed implementation passes"
+  },
+  "fullPinnedRunner": "passed",
+  "limits": "See native-artist-follow.md; finite model and actual isolated runtime are separate from final physical/store release."
+}

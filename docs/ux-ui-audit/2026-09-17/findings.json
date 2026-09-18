@@ -1285,11 +1285,11 @@
     ],
     "acceptanceCriteria": "Fresh-first-link notification/request cold starts reach sign-in without crash; target survives authorized login; protected content is withheld during restoration; normal launch/return/tab locale remain functional on supported platforms.",
     "verificationMethod": "Actual Android negative control; actual candidate Android/iOS first-link tests; router session-loading tests and full mobile gates; signed integrated release observation.",
-    "status": "in progress",
+    "status": "merged",
     "implementationStatus": "Companion operator candidate e002715 in draft mobile102; do not duplicate repair.",
-    "verificationStatus": "Unit/type/lint candidate checks pass; actual corrected-device verification pending. Existing prior warm-initialized iOS tests do not cover this failure.",
-    "mergeStatus": "Not merged",
-    "releaseStatus": "Hold Android12/iOS21 promotion; Alpha10 and Apple19 unchanged. iOS failure not asserted; verification required."
+    "verificationStatus": "Other operator final4f7 iOS97f46:3cold/request/warm scenariosPASS. PhysicalSamsungAndroid16 isolatednotificationqa82a56/e867 runtimeidentical4f7:3scenariosPASS, noQAcrash/ANR; personalPlayappunchanged. QApackage does not establishproductionOAuth/FCM/Playqualification.",
+    "mergeStatus": "Mobile102merged0c1ee7f3387875496afadf930cb71b29c9edde99 after hosted gates; application4f7 plus evidence870020b.",
+    "releaseStatus": "Final corrected store publication remains pending integration with104; old667Android12/iOS21 must not be promoted as final corrected release."
   },
   {
     "id": "UX-260917-031",
@@ -1307,11 +1307,11 @@
     "dependencies": [],
     "acceptanceCriteria": "16 controlled concurrent first visits all200, one row/count16; concurrent settings plus8 visits preserve settings/count24; other account count starts1; denied/revoked requests write nothing.",
     "verificationMethod": "Actual executable HTTP/PostgreSQL controlled interleaving, TLC finite-state concurrency model with legacy negative control.",
-    "status": "merged",
-    "implementationStatus": "Atomic upsert implemented in isolated branch audit/ux-navigation-concurrency-20260918; build pending. No schema/API changes.",
+    "status": "deployed",
+    "implementationStatus": "Atomic unique-key upsert merged in5c11577a5; no schema/API changes. Build and actual concurrency gates passed.",
     "verificationStatus": "CI35319379339 SUCCESS:2584examples0fail1pending,15focused, actual HTTP/PostgreSQL controlled16concurrent visits/count24/settings/canonical+legacy/mixed+unknown/isolation/revocation passed. Formal NavigationVisit/unsafe negative verified.",
     "mergeStatus": "Normal merge5c11577a5d31f079b3e070a7810a6b04a48d99f4; exact9213 approved and all applicable gates passed; zero review threads.",
-    "releaseStatus": "Automatic image35322697541 building; production remains2f01. Release also contains430; recovery compatibility guard required before production."
+    "releaseStatus": "Guarded application5c11577a5 deployed by identity operator09:02:21UTC; both machines healthy exact5c, immutable artifact verified,108migration ledger/lease0. Read-only production health/version observation and limits: evidence/provider-navigation-production.json. No duplicate rollout."
   },
   {
     "id": "UX-260917-034",
@@ -1332,11 +1332,11 @@
     ],
     "acceptanceCriteria": "Canonical and prior prefixed payloads persist the same preferences; mixed/unknown fields rejected, account authority unchanged; concurrent visits preserve settings and exact counts.",
     "verificationMethod": "Generated JSON roundtrip property, explicit negative decode cases and actual HTTP/PostgreSQL mixed visit/settings gate. Existing NavigationVisit CountsMatchAccepted/SettingsPreserved model maps to upsert update lists; model scope does not prove arbitrary decoding.",
-    "status": "merged",
+    "status": "deployed",
     "implementationStatus": "Strict canonical decoder with legacy fallback in TDF.DTO; no schema/API schema change.",
     "verificationStatus": "CI35319379339 SUCCESS:2584examples0fail1pending,15focused, actual HTTP/PostgreSQL controlled16concurrent visits/count24/settings/canonical+legacy/mixed+unknown/isolation/revocation passed. Formal NavigationVisit/unsafe negative verified.",
     "mergeStatus": "Normal merge5c11577a5d31f079b3e070a7810a6b04a48d99f4; exact9213 approved and all applicable gates passed; zero review threads.",
-    "releaseStatus": "Automatic image35322697541 building; production remains2f01. Release also contains430; recovery compatibility guard required before production."
+    "releaseStatus": "Guarded application5c11577a5 deployed by identity operator09:02:21UTC; both machines healthy exact5c, immutable artifact verified,108migration ledger/lease0. Read-only production health/version observation and limits: evidence/provider-navigation-production.json. No duplicate rollout."
   },
   {
     "id": "UX-260917-037",
@@ -1347,7 +1347,7 @@
     "journey": "signup / follow artist / persisted completion / return on web and native",
     "roles": "authenticated new Fan and returning account",
     "surface": "mobile social screen; canonical FanHub API boundary",
-    "evidence": "Actual iOS18.3 SE simulator, EAS native binary5c6fb225/source3c72536 and isolated HTTP/PostgreSQL API38256cf: native social-event artist follow persists, but FanHub follows stay empty and onboarding completion returns200 newlyCompleted=false/progress.completedAt=null. See evidence/native-canonical-follow-negative.json. The original native row also overflows on a long artist name.",
+    "evidence": "Actual iOS18.3 SE simulator, EAS native binary5c6fb225/source3c72536 and isolated HTTP/PostgreSQL API38256cf: native social-event artist follow persists, but FanHub follows stay empty and onboarding completion returns200 newlyCompleted=false/progress.completedAt=null. See evidence/native-canonical-follow-negative.json. The original native row also overflows on a long artist name. Follow-up actual regression reproduces2stale query writes after A->B->A; party-only comparison is insufficient.",
     "userImpact": "The first useful native action is absent from FanHub and cannot complete authoritative onboarding. Native local-only following display is lost on restart.",
     "rootCause": "Native onboarding uses social-events artist namespace and local followedArtistIds; server completion recognizes canonical FanHub engagement evidence.",
     "proposedChange": "Use existing FanHub catalog and follow APIs for onboarding; read persisted follows keyed by current Party, reject stale-account mutations/results and wrap long names. Keep social-event artist APIs for their own journeys.",
@@ -1359,8 +1359,8 @@
     "acceptanceCriteria": "Native first follow is visible in FanHub, completes authoritative onboarding once, survives app restart and web reload, and cannot change another account. Long names retain the action within the screen.",
     "verificationMethod": "Actual isolated native Hermes production bundle + HTTP/PostgreSQL + actual web production bundle; contract/component tests and existing FanHubOnboarding current-session/persisted-receipt model conformance.",
     "status": "implemented",
-    "implementationStatus": "Mobile PR #104 source60fccd5 uses canonical FanHub catalog/follow contract; Party-scoped server query and owner fences replace local-only follow state; long names wrap and people network is labeled.",
-    "verificationStatus": "498 tests and complete native release check passed; final heading-only edit10focusedtests passed. Actual iOS18.3 simulator Hermes bundle entry-1672408e67b2eae14653ee1f2d7c9f00.hbc SHA256b28593cc6926264eaf6b4385f7d5fb7cd9eece0b85a5fce88d077c4b942c355c passed persisted-follow/reopen/network-label assertions. Prior functionally identical bundle nativeB→webB first-follow/completion/reload passed; accountA completion unchanged. Actual isolated backend38256cf/PostgreSQL17, native shellEAS5c6fb225. Not Android, physical Google OAuth or final signed store artifact evidence.",
+    "implementationStatus": "Published mobile104 head09649d63ef219e3b936adf7ca381b249d7277b80 uses canonical Party-ID FanHub follow and captured session-occurrence predicate. Includes102 reviewed fix/evidence and7b7 provider compatibility without unrelated intake.",
+    "verificationStatus": "499tests/84suites,TypeScript,lintPASS. Existing actualiOS/localPostgres+web cross-device60f proof retained. New TLC328states positive with namespace28/session116state negativecontrols and fullformalrunnerPASS. FinalAndroidb721 QA10d5b607building; physical execution pending disconnected phone. See native-artist-follow.md.",
     "mergeStatus": "Draft mobile #104 published60fccd5; depends on #102 runtime qualification and final integrated gates.",
     "releaseStatus": "Hold native promotion until corrected source and final qualified artifacts are published."
   },
@@ -1386,9 +1386,9 @@
     "verificationMethod": "ProviderRollback TLC legacy/compatible/mixed two-machine models, unsafe negative control, executable boundary tests including two machine orders/all prior combinations/retries/missing history, existing release contract tests.",
     "status": "merged",
     "implementationStatus": "withCompatibleRollback and selectRecoveryTarget gate actual deploy; --recovery-sha accepts only distinct reviewed ancestors with identical migration manifests/expanded SQL. Preflight verifies immutable artifacts and blocks without safe recovery. recoverReleaseMachines handles the actual canary/fleet catch, includes untouched unsafe replicas and records per-machine failures.",
-    "verificationStatus": "74 release tests pass. Four TLC configurations pass (38/31/35/38 distinct states); unsafe rollback and partial-fleet recovery yield the named counterexamples. Full pinned TLA+/Alloy runner passed. No cloud failure induced; hosted checks required on revised head.",
+    "verificationStatus": "74 release tests pass. Four TLC configurations pass (38/31/35/38 distinct states); unsafe rollback and partial-fleet recovery yield the named counterexamples. Full pinned TLA+/Alloy runner passed. No cloud failure induced; all applicable hosted gates passed on exact35172083a. Real preflight passed after production advanced to5c; no induced cloud failure.",
     "mergeStatus": "PR438 merged499e8be7b8edaccbbd46a4d763e4c3b6326b4d92 after exact35172083a approval and all applicable checks; review thread resolved.",
-    "releaseStatus": "No production mutation; block next provider-containing release until reviewed recovery guard is merged and verified."
+    "releaseStatus": "Reviewed recovery runner merged499e8be7b, published as supported tooling-only checkoutfcc037848. Real read-only preflight validates current5c and compatible immutablef1ff fallback. Separate actual5c rollout used oldrunner and did not roll back; no cloud-failure execution claim."
   },
   {
     "id": "UX-260917-038",
@@ -1410,10 +1410,10 @@
     ],
     "acceptanceCriteria": "All54cases have zero applicable axe violations/page errors/overflow atnormal or200%text. Keyboard focus remains visible. Published static bytes match reviewed source.",
     "verificationMethod": "Actual static files served overHTTP with correct MIME; Chromium/Firefox/WebKit axe WCAG2.2AA tags and text-resize geometry; keyboard Tab in Chromium/Firefox. WebKit default Tab skipslinks, so do not claim full keyboard/reader coverage. CSS-only behavior does not need a new authentication model.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Focused CSS changes; no policy translation/content or API changes.",
-    "verificationStatus": "54 corrected browser cases PASS:zeroaxeviolations,zero200%textoverflow,zeroerrors; Chromium/Firefox keyboardTab, explicit legacyfocusoutline. ProductionbuildPASS, allfivechangedstaticassets byte-identical tosource. InitialJS365648gzipbytes/5preloads withinbudget. Before/afterevidence recorded; WebKit defaultTabskipslinks, no manualreaderclaim.",
-    "mergeStatus": "Not merged; focused PR being prepared",
-    "releaseStatus": "Not deployed"
+    "verificationStatus": "54 corrected browser cases PASS:zeroaxeviolations,zero200%textoverflow,zeroerrors; Chromium/Firefox keyboardTab, explicit legacyfocusoutline. ProductionbuildPASS, allfivechangedstaticassets byte-identical tosource. InitialJS365648gzipbytes/5preloads withinbudget. Before/afterevidence recorded; WebKit defaultTabskipslinks, no manualreaderclaim. Production54cases in three browser engines alsoPASS; Cloudflare .html redirects resolve toprettyURLs correctly.",
+    "mergeStatus": "PR440 normal merge5d49f61fa68000abb188bf6d9bb19a3bce035aec after exact8f1972654 independent approval and all applicable hosted gates; zero review threads.",
+    "releaseStatus": "Cloudflare production3980085d-58af-4a1c-87b8-491e211d8a69 SUCCESS for merge5d49f61fa; all5changedstaticassets match reviewed source atimmutable+publicURLs.54productionbrowsercases pass withzeroaxe/errors/normal-or200percent-textoverflow. See static-pages-production artifact/runtime evidence."
   }
 ]

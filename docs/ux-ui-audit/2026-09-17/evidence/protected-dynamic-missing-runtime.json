@@ -1,0 +1,830 @@
+[
+  {
+    "role": "admin",
+    "route": "/perfil/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/perfil/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/merch/orden/900000001/evaluar",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/merch/orden/900000001/evaluar",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/merch/vendedor/tiendas/900000001/reputacion",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/merch/vendedor/tiendas/900000001/reputacion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/social/eventos/900000001/logistica",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/social/eventos/900000001/logistica",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Logística · Evento"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/fans/clubs/900000001/members",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/fans/clubs/900000001/members",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/fans/clubs/900000001/members/900000002",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/fans/clubs/900000001/members/900000002",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/practicas/tareas/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/practicas/tareas/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Detalle de tarea"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/practicas/auditorias/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/practicas/auditorias/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Auditoría funcional y de experiencia del manejo del estudio"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/feedback/interno/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/feedback/interno/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/label/ddex/documents/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/label/ddex/documents/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/label/ddex/documents/900000001/import",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/label/ddex/documents/900000001/import",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/notificaciones/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/notificaciones/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Notificación"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/perfil/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/perfil/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/merch/orden/900000001/evaluar",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/merch/orden/900000001/evaluar",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/merch/vendedor/tiendas/900000001/reputacion",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/merch/vendedor/tiendas/900000001/reputacion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/social/eventos/900000001/logistica",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/social/eventos/900000001/logistica",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Logística · Evento"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/fans/clubs/900000001/members",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/fans/clubs/900000001/members",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/fans/clubs/900000001/members/900000002",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/fans/clubs/900000001/members/900000002",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/practicas/tareas/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/practicas/tareas/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Detalle de tarea"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/practicas/auditorias/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/practicas/auditorias/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Auditoría funcional y de experiencia del manejo del estudio"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/feedback/interno/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/feedback/interno/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/label/ddex/documents/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/label/ddex/documents/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/label/ddex/documents/900000001/import",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/label/ddex/documents/900000001/import",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "admin",
+    "route": "/notificaciones/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/notificaciones/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Notificación"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/perfil/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/perfil/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/merch/orden/900000001/evaluar",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/merch/orden/900000001/evaluar",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/merch/vendedor/tiendas/900000001/reputacion",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/merch/vendedor/tiendas/900000001/reputacion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/eventos/900000001/logistica",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/social/eventos/900000001/logistica",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/fans/clubs/900000001/members",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/fans/clubs/900000001/members",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/fans/clubs/900000001/members/900000002",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/fans/clubs/900000001/members/900000002",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/practicas/tareas/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/practicas/tareas/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/practicas/auditorias/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/practicas/auditorias/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/feedback/interno/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/feedback/interno/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/ddex/documents/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/label/ddex/documents/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/ddex/documents/900000001/import",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/label/ddex/documents/900000001/import",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/notificaciones/900000001",
+    "width": 320,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/notificaciones/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Notificación"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/perfil/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/perfil/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/merch/orden/900000001/evaluar",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/merch/orden/900000001/evaluar",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/merch/vendedor/tiendas/900000001/reputacion",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/merch/vendedor/tiendas/900000001/reputacion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/eventos/900000001/logistica",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/social/eventos/900000001/logistica",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/fans/clubs/900000001/members",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/fans/clubs/900000001/members",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/fans/clubs/900000001/members/900000002",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/fans/clubs/900000001/members/900000002",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/practicas/tareas/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/practicas/tareas/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/practicas/auditorias/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/practicas/auditorias/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/feedback/interno/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/feedback/interno/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/ddex/documents/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/label/ddex/documents/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/ddex/documents/900000001/import",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/label/ddex/documents/900000001/import",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/notificaciones/900000001",
+    "width": 1280,
+    "scenario": "absent-resource-or-denial",
+    "finalPath": "/notificaciones/900000001",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Notificación"
+    ],
+    "violations": []
+  }
+]
