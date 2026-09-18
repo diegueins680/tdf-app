@@ -51,7 +51,7 @@ import           TDF.WhatsApp.History     (normalizeWhatsAppPhone)
 
 type LiveSessionsAPI =
   "live-sessions" :>
-    ( "intake" :> MultipartForm Tmp LiveSessionIntakePayload :> Post '[JSON] NoContent
+    ( "intake" :> Header "Idempotency-Key" Text :> MultipartForm Tmp LiveSessionIntakePayload :> Post '[JSON] NoContent
     )
 
 data AliasedField a

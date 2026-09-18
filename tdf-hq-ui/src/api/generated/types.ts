@@ -2913,7 +2913,7 @@ export interface paths {
         put?: never;
         /**
          * Submit a Live Session intake
-         * @description Creates a Live Session intake using canonical persisted genre and instrument UUIDs. Musicians and setlist are JSON-encoded strings inside the multipart form. Copied genre, instrument, role, label, code, and slug fields are rejected.
+         * @description Atomically creates an intake and its contacts, using canonical persisted genre and instrument UUIDs. Email never selects an existing person. Explicit contact IDs require existing access. Intake does not create login credentials or grant roles. Musicians and setlist are JSON-encoded strings inside the multipart form. Copied genre, instrument, role, label, code, and slug fields are rejected.
          */
         post: operations["createLiveSessionIntake"];
         delete?: never;
@@ -18733,7 +18733,10 @@ export interface operations {
     createLiveSessionIntake: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Stable identity for one submission, scoped to the authenticated actor. Reuse unchanged requests after failures; changed accepted requests return 409. */
+                "Idempotency-Key": string;
+            };
             path?: never;
             cookie?: never;
         };

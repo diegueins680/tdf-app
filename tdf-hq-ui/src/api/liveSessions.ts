@@ -31,7 +31,7 @@ export interface InputInventoryItem {
   status?: string | null;
 }
 
-export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload, accessCode?: string): Promise<void> {
+export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload, accessCode: string | undefined, requestKey: string): Promise<void> {
   const base = resolveApiBase();
   const authHeader = accessCode ? `Bearer ${accessCode}` : buildAuthorizationHeader();
   const wireFields: Omit<LiveSessionIntakeMultipart, 'rider'> = {
@@ -70,7 +70,7 @@ export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload,
     method: 'POST',
     credentials: accessCode ? 'omit' : 'same-origin',
     body: form,
-    headers: authHeader ? { Authorization: authHeader } : undefined,
+    headers: { 'Idempotency-Key': requestKey, ...(authHeader ? { Authorization: authHeader } : {}) },
   });
 
   if (!res.ok) {

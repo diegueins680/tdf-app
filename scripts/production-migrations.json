@@ -560,6 +560,11 @@
       "id": "2026-09-18_provider_subject_identity",
       "path": "tdf-hq/sql/2026-09-18_provider_subject_identity.sql",
       "introducedBy": "b0779951f9010263fcda9c9165d3ec14ba6f9e55"
+    },
+    {
+      "id": "2026-09-18_live_intake_idempotency",
+      "path": "tdf-hq/sql/2026-09-18_live_intake_idempotency.sql",
+      "introducedBy": "062143d3cb98befb6a52a987c7d42980f70313f3"
     }
   ]
 }

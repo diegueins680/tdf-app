@@ -1,4 +1,3 @@
-import { useContactCreation } from '../hooks/useContactCreation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -20,10 +19,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
-import type { PartyDTO, PartyUpdate } from '../api/types';
 import type { PartySelectorOption } from '../api/partySelector';
 import { PartySelector } from '../components/party-selector/PartySelector';
-import { Admin } from '../api/admin';
 import { submitLiveSessionIntake } from '../api/liveSessions';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { toLocalDateInputValue } from '../utils/dateOnly';
@@ -90,7 +87,7 @@ export interface LiveSessionIntakeFormProps {
 }
 
 export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftOwner }: LiveSessionIntakeFormProps) {
-  const contactCreation = useContactCreation();
+  const [submissionKey, setSubmissionKey] = useState(() => crypto.randomUUID());
   const qc = useQueryClient();
   const authority = useRef({ accessCode, generation: 0 });
   if (authority.current.accessCode !== accessCode) {
@@ -128,6 +125,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       const raw = window.localStorage.getItem(draftKey);
       if (!raw) return;
       const parsed = JSON.parse(raw) as Partial<{
+        submissionKey: string;
         bandName: string;
         bandDescription: string;
         primaryGenreId: string;
@@ -138,6 +136,9 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
         musicians: MusicianEntry[];
         setlist: SongEntry[];
       }>;
+      if (typeof parsed.submissionKey === 'string' && /^[A-Za-z0-9_-]{16,128}$/.test(parsed.submissionKey)) {
+        setSubmissionKey(parsed.submissionKey);
+      }
       setBandName(parsed.bandName ?? '');
       setBandDescription(parsed.bandDescription ?? '');
       setPrimaryGenreId(parsed.primaryGenreId ?? '');
@@ -162,6 +163,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
   useEffect(() => {
     if (typeof window === 'undefined' || !draftKey) return;
     const payload = {
+      submissionKey,
       bandName,
       bandDescription,
       primaryGenreId,
@@ -178,6 +180,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       // ignore storage errors
     }
   }, [
+    submissionKey,
     draftKey,
     bandName,
     bandDescription,
@@ -203,29 +206,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
     [genreOptions, primaryGenreId],
   );
 
-  const createPartyAndUser = async (entry: MusicianEntry): Promise<PartyDTO> => {
-    const instrumentName = instrumentOptions.find((item) => item.id === entry.instrumentId)?.name;
-    const created = await contactCreation.create({
-      cDisplayName: entry.name,
-      cIsOrg: false,
-      cInstagram: asNullableString(entry.instagram),
-    }, entry.id);
-    const updatePayload: PartyUpdate = {
-      uPrimaryEmail: asNullableString(entry.email),
-      uPrimaryPhone: asNullableString(entry.phone),
-      uNotes: instrumentName ? `Instrumento: ${instrumentName}` : undefined,
-      uInstagram: asNullableString(entry.instagram),
-    };
-    await Parties.update(created.partyId, updatePayload);
-    if (entry.email) {
-      await Admin.createUser({
-        partyId: created.partyId,
-        username: entry.email,
-      });
-    }
-    return created;
-  };
-
   const mutation = useMutation({
     mutationFn: async () => {
       const generation = authority.current.generation;
@@ -241,22 +221,12 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       for (const entry of musicians) {
         if (!entry.name.trim() && !entry.partyId) continue;
 
-        let partyId = variant === 'public' ? undefined : entry.partyId;
-
-        if (variant !== 'public' && !partyId) {
-          const created = await createPartyAndUser(entry);
-          partyId = created.partyId;
-          await qc.invalidateQueries({ queryKey: ['parties'] });
-        } else if (variant !== 'public' && partyId && entry.instagram.trim()) {
-          await Parties.update(partyId, {
-            uInstagram: asNullableString(entry.instagram),
-          });
-        }
+        const partyId = variant === 'public' ? undefined : entry.partyId;
 
         const instagramNote = asNullableString(entry.instagram)
           ? `Instagram: ${entry.instagram.trim().startsWith('@') ? entry.instagram.trim() : `@${entry.instagram.trim()}`}`
           : null;
-        const phoneNote = variant === 'public' && entry.phone.trim() ? `Teléfono: ${entry.phone.trim()}` : null;
+        const phoneNote = entry.phone.trim() ? `Teléfono: ${entry.phone.trim()}` : null;
         const mergedNotes = [asNullableString(entry.notes), instagramNote, phoneNote].filter(Boolean).join(' · ') || null;
 
         ensuredMusicians.push({
@@ -293,12 +263,13 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
           })
           .filter((song) => song.title.length > 0),
         riderFile,
-      }, variant === 'public' ? accessCode : undefined);
+      }, variant === 'public' ? accessCode : undefined, submissionKey);
       return generation;
     },
     onSuccess: (generation) => {
-      contactCreation.reset();
       if (generation !== authority.current.generation) return;
+      void qc.invalidateQueries({ queryKey: ['parties'] });
+      setSubmissionKey(crypto.randomUUID());
       setAcceptedTerms(false);
       setShowSuccessDialog(true);
     },

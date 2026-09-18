@@ -252,6 +252,13 @@ jobs:
           PGPASSWORD: postgres
         run: sh scripts/test-provider-identity.sh
 
+      - name: Verify atomic Live Session identity intake
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-live-intake-identity.sh
+
       - name: Verify reversible identity reconciliation
         env:
           PGPASSWORD: postgres

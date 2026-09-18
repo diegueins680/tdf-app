@@ -35,7 +35,7 @@ it('submits only with the validated code, without ambient CRM mutations, and awa
  show(); fill();
  expect(screen.queryByText('Private contact selector')).not.toBeInTheDocument();
  send(); await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
- expect(submit).toHaveBeenCalledWith(expect.objectContaining({ bandName: 'Banda sintética', musicians: [expect.objectContaining({ name: 'Músico sintético', isExisting: false })] }), 'synthetic-code');
+ expect(submit).toHaveBeenCalledWith(expect.objectContaining({ bandName: 'Banda sintética', musicians: [expect.objectContaining({ name: 'Músico sintético', isExisting: false })] }), 'synthetic-code', expect.any(String));
  expect(create).not.toHaveBeenCalled(); expect(update).not.toHaveBeenCalled(); expect(createUser).not.toHaveBeenCalled();
  expect(screen.queryByText('Persisted receipt')).not.toBeInTheDocument();
  await act(async () => { finish(); });
@@ -57,6 +57,7 @@ it('keeps input and offers retry after a persistence failure', async () => {
  expect(screen.queryByText('Persisted receipt')).not.toBeInTheDocument();
  expect(screen.getByLabelText(/Nombre de la banda/)).toHaveValue('Banda sintética');
  send(); await screen.findByText('Persisted receipt'); expect(submit).toHaveBeenCalledTimes(2);
+ expect(submit.mock.calls[0]?.[2]).toBe(submit.mock.calls[1]?.[2]);
 });
 
 it('does not disclose legacy or another account’s draft before verifying the owner', async () => {
@@ -65,4 +66,13 @@ it('does not disclose legacy or another account’s draft before verifying the o
  show();
  expect(screen.getByLabelText(/Nombre de la banda/)).toHaveValue('');
  expect(localStorage.getItem('live-session-draft')).toContain('Private legacy band');
+});
+
+it('sends new internal musicians atomically without pre-creating contacts or accounts', async () => {
+ const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+ submit.mockResolvedValue(undefined);
+ render(<QueryClientProvider client={client}><LiveSessionIntakeForm variant="internal" draftOwner={17} /></QueryClientProvider>);
+ fill(); send(); await screen.findByText('Persisted receipt');
+ expect(create).not.toHaveBeenCalled(); expect(update).not.toHaveBeenCalled(); expect(createUser).not.toHaveBeenCalled();
+ expect(submit.mock.calls[0]?.[2]).toEqual(expect.any(String));
 });

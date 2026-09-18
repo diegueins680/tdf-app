@@ -21,11 +21,11 @@ module TDF.ServerLiveSessions
   ) where
 
 import           Control.Monad              ((>=>), forM_, unless, when, zipWithM)
-import           Control.Exception          (throwIO)
+import           Control.Exception          (throwIO, try, catch)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
-import           Crypto.BCrypt              (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
+import           Data.Aeson                 (Value, encode, object, (.=))
 import           Data.Char                  ( GeneralCategory
                                               ( Format
                                               , LineSeparator
@@ -42,20 +42,18 @@ import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (UTCTime, getCurrentTime)
-import           Data.UUID                  (toText)
-import           Data.UUID.V4               (nextRandom)
 import           Database.Persist
-import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.PostgreSQL.Simple (SqlError(..))
+import           Database.Persist.Sql       (SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey)
 import           Servant
 import           Servant.Multipart          (FileData(..), Tmp)
-import           System.Directory           (createDirectoryIfMissing, getFileSize)
+import           System.Directory           (createDirectoryIfMissing, doesFileExist, getFileSize)
 import           System.FilePath            ((</>), takeFileName)
 import qualified Data.ByteString.Lazy       as BL
 
 import           TDF.API.LiveSessions
-import           TDF.Auth                   (AuthedUser, auPartyId)
+import           TDF.Auth                   (AuthedUser, auPartyId, ModuleAccess(..), hasModuleAccess)
 import qualified TDF.Catalog.Models        as Catalog
-import           TDF.Catalog.Security       (applySecurityRoleAssignmentPolicy)
 import           TDF.DB                     (Env(..))
 import           TDF.Models
 import qualified TDF.Models                 as M
@@ -99,7 +97,8 @@ liveSessionsServer
   -> ServerT LiveSessionsAPI m
 liveSessionsServer user = intakeHandler
   where
-    intakeHandler payload = do
+    intakeHandler requestKey payload = do
+      key <- either throwError pure (validateLiveSessionRequestKey requestKey)
       bandName <- either throwError pure (validateLiveSessionBandName (lsiBandName payload))
       acceptedTermsVersion <-
         either throwError pure $
@@ -115,9 +114,7 @@ liveSessionsServer user = intakeHandler
       musicianInstruments <- mapM (traverse resolvePublishedInstrument . lsmInstrumentId) (lsiMusicians payload)
 
       now <- liftIO getCurrentTime
-      riderPath <- traverse validateAndStoreRiderFile (lsiRider payload)
-
-      preparedMusicians <- zipWithM (ensureMusician now) musicianInstruments (lsiMusicians payload)
+      rider <- traverse readRiderFile (lsiRider payload)
       resolvedSongOrders <-
         either
           (\err ->
@@ -129,7 +126,33 @@ liveSessionsServer user = intakeHandler
           pure
           (resolveLiveSessionSetlistSortOrders (lsiSetlist payload))
 
-      intakeId <- withPool $ insert ME.LiveSessionIntake
+      pool <- asks envPool
+      result <- liftIO $ try $ catch (runSqlPool (do
+        rawExecute "SELECT pg_advisory_xact_lock(hashtextextended(?,0))"
+          [PersistText ("live-intake:" <> T.pack (show (fromSqlKey (auPartyId user))) <> ":" <> key)]
+        riderDigest <- traverse (digestBytes . snd) rider
+        let body = TE.decodeUtf8 (BL.toStrict (encode (liveSessionRequestPayload payload (fst <$> rider) riderDigest)))
+        previous <- rawSql "SELECT request_payload = ?::jsonb FROM identity_live_intake_request WHERE actor_party_id=? AND request_key=?"
+          [PersistText body, toPersistValue (auPartyId user), PersistText key]
+        case previous of
+          [Single True] -> pure NoContent
+          [Single False] -> liftIO $ throwIO err409 { errBody = "This submission changed after an earlier send. Review the saved intake before starting another submission." }
+          [] -> createIntake key body now bandName acceptedTermsVersion contactEmail primaryGenreKey musicianInstruments resolvedSongOrders rider riderDigest payload
+          _ -> liftIO $ throwIO err500 { errBody = "Could not resolve intake request" }
+        ) pool) (\(sqlError :: SqlError) ->
+          if sqlState sqlError == "55000"
+            then throwIO err409 { errBody = "An archived contact requires administrative review before this intake can be saved." }
+            else throwIO sqlError)
+      either (throwError :: ServerError -> m NoContent) pure result
+
+    createIntake key body now bandName acceptedTermsVersion contactEmail primaryGenreKey musicianInstruments resolvedSongOrders rider riderDigest payload = do
+      preparedMusicians <- zipWithM (ensureMusician now) musicianInstruments (lsiMusicians payload)
+      riderPath <- case (rider, riderDigest) of
+        (Just (safeName, bytes), Just contentHash) -> do
+          pathHash <- digestBytes (BL.fromStrict (TE.encodeUtf8 (T.pack (show (fromSqlKey (auPartyId user))) <> ":" <> key <> ":" <> contentHash)))
+          Just <$> liftIO (storeRiderFile pathHash safeName bytes)
+        _ -> pure Nothing
+      intakeId <- insert ME.LiveSessionIntake
         { ME.liveSessionIntakeBandName     = bandName
         , ME.liveSessionIntakeBandDescription = lsiBandDescription payload
         , ME.liveSessionIntakePrimaryGenre = Nothing
@@ -154,8 +177,7 @@ liveSessionsServer user = intakeHandler
                  then Nothing
                  else Just (sortOrder, title, song)
 
-      withPool $
-        forM_
+      forM_
           (zip preparedMusicians (lsiMusicians payload))
           $ \((partyKey, musicianEmail, instrumentKey), m) ->
               insert_ ME.LiveSessionMusician
@@ -170,8 +192,7 @@ liveSessionsServer user = intakeHandler
                 , ME.liveSessionMusicianIsExisting = lsmIsExisting m
                 }
 
-      withPool $
-        forM_ preparedSongs $ \(sortOrder, title, song) ->
+      forM_ preparedSongs $ \(sortOrder, title, song) ->
           insert_ ME.LiveSessionSong
             { ME.liveSessionSongIntakeId  = intakeId
             , ME.liveSessionSongTitle     = title
@@ -181,69 +202,50 @@ liveSessionsServer user = intakeHandler
             , ME.liveSessionSongSortOrder = sortOrder
             }
 
+      rawExecute "INSERT INTO identity_live_intake_request(actor_party_id,request_key,request_payload,intake_id) VALUES (?,?,?::jsonb,?)"
+        [toPersistValue (auPartyId user), PersistText key, PersistText body, toPersistValue intakeId]
       pure NoContent
 
     ensureMusician
       :: UTCTime
       -> Maybe (Catalog.InstrumentId, Text)
       -> LiveSessionMusicianPayload
-      -> m (Key Party, Maybe Text, Maybe Catalog.InstrumentId)
+      -> SqlPersistT IO (Key Party, Maybe Text, Maybe Catalog.InstrumentId)
     ensureMusician now instrumentRef LiveSessionMusicianPayload{..} = do
-      mEmail <-
-        either throwError pure $
-          validateLiveSessionOptionalEmail "musicians.email" lsmEmail
+      mEmail <- either (liftIO . throwIO) pure $
+        validateLiveSessionOptionalEmail "musicians.email" lsmEmail
       let trimmedName = T.strip lsmName
-      (partyKey, accountEmail) <- case lsmPartyId of
+      partyKey <- case lsmPartyId of
         Just pidInt -> do
           let key = toSqlKey (fromIntegral pidInt)
-          existingParty <- withPool $ get key
-          case existingParty of
-            Nothing -> throwError err400 { errBody = "Referenced party not found" }
+          unless (key == auPartyId user || hasModuleAccess ModuleCRM user) $
+            liftIO $ throwIO err403 { errBody = "You cannot select this contact" }
+          -- Do not expose contact information before checking access. The archive
+          -- guard also revalidates this reference when the musician is inserted.
+          existing <- get key
+          case existing of
+            Nothing -> liftIO $ throwIO err400 { errBody = "Referenced contact is unavailable" }
             Just party -> do
-              referencedPartyEmail <-
-                either throwError pure $
-                  validateLiveSessionReferencedPartyEmail
-                    (M.partyPrimaryEmail party)
-                    mEmail
-              pure (key, referencedPartyEmail)
-        Nothing -> do
-          found <- case resolveLiveSessionMusicianLookup mEmail of
-            LookupLiveSessionMusicianByEmail email -> do
-              matches <-
-                withPool $
-                  selectList [M.PartyPrimaryEmail ==. Just email] [LimitTo 2]
-              either throwError pure (selectUniqueLiveSessionMusicianByEmail matches)
-            CreateLiveSessionMusician ->
-              pure Nothing
-          case found of
-            Just ent ->
-              pure (entityKey ent, M.partyPrimaryEmail (entityVal ent))
-            Nothing -> withPool $ do
-              key <- insert Party
-                { partyLegalName        = Nothing
-                , partyDisplayName      =
-                    if T.null trimmedName
-                      then "Músico Live Session"
-                      else trimmedName
-                , partyIsOrg            = False
-                , partyTaxId            = Nothing
-                , partyPrimaryEmail     = mEmail
-                , partyPrimaryPhone     = Nothing
-                , partyWhatsapp         = Nothing
-                , partyInstagram        = Nothing
-                , partyEmergencyContact = Nothing
-                , partyNotes            = liveSessionMusicianPartyNotes (snd <$> instrumentRef)
-                , partyStripeCustomerId = Nothing
-                , partyCountryCode       = Nothing
-                , partyCountryId         = Nothing
-                , partyCreatedAt        = now
-                }
-              pure (key, mEmail)
-
-      when (partyKey == toSqlKey 0) $
-        throwError err400 { errBody = "Invalid party reference" }
-      withPool $ ensureArtistRole now partyKey
-      withPool $ ensureUserAccount partyKey accountEmail
+              _ <- either (liftIO . throwIO) pure $
+                validateLiveSessionReferencedPartyEmail (M.partyPrimaryEmail party) mEmail
+              pure key
+        Nothing -> insert Party
+          { partyLegalName = Nothing
+          , partyDisplayName = if T.null trimmedName then "Músico Live Session" else trimmedName
+          , partyIsOrg = False
+          , partyTaxId = Nothing
+          , partyPrimaryEmail = mEmail
+          , partyPrimaryPhone = Nothing
+          , partyWhatsapp = Nothing
+          , partyInstagram = Nothing
+          , partyEmergencyContact = Nothing
+          , partyNotes = liveSessionMusicianPartyNotes (snd <$> instrumentRef)
+          , partyStripeCustomerId = Nothing
+          , partyCountryCode = Nothing
+          , partyCountryId = Nothing
+          , partyCreatedAt = now
+          }
+      -- Intake registers a contact, not authentication, privileges, or consent.
       pure (partyKey, mEmail, fst <$> instrumentRef)
 
     resolvePublishedGenre :: Text -> m Catalog.GenreId
@@ -294,85 +296,58 @@ liveSessionsServer user = intakeHandler
         result
       pure (instrumentKey, label)
 
-    ensureArtistRole :: UTCTime -> PartyId -> SqlPersistT IO ()
-    ensureArtistRole now pid = do
-      result <- applySecurityRoleAssignmentPolicy
-        "live-session.artist-profile.artist"
-        pid
-        False
-        (Just (auPartyId user))
-        "live-session-intake"
-        ("live-session-artist:" <> T.pack (show (fromSqlKey pid)))
-        now
-      case result of
-        Right _ -> pure ()
-        Left message ->
-          liftIO $ throwIO err503
-            { errBody = BL.fromStrict (TE.encodeUtf8 message)
-            }
-
-    ensureUserAccount :: PartyId -> Maybe Text -> SqlPersistT IO ()
-    ensureUserAccount pid mEmail = do
-      existing <- selectFirst [UserCredentialPartyId ==. pid, UserCredentialActive ==. True] []
-      case existing of
-        Just _  -> pure ()
-        Nothing -> do
-          baseUsername <- pure $ case mEmail of
-            Just email | not (T.null email) -> T.toLower email
-            _ -> "livesession-" <> T.pack (show (fromSqlKey pid))
-          username <- generateUniqueUsername baseUsername
-          tempPwd <- liftIO randomPassword
-          hashed <- liftIO (hashPasswordText tempPwd)
-          _ <- insert UserCredential
-            { userCredentialPartyId      = pid
-            , userCredentialUsername     = username
-            , userCredentialPasswordHash = hashed
-            , userCredentialActive       = True
-            }
-          pure ()
-
-    generateUniqueUsername :: Text -> SqlPersistT IO Text
-    generateUniqueUsername base = do
-      conflict <- getBy (UniqueCredentialUsername base)
-      case conflict of
-        Nothing -> pure base
-        Just _  -> generateCollisionUsername base
-
-    generateCollisionUsername :: Text -> SqlPersistT IO Text
-    generateCollisionUsername base = do
-      suffix <- liftIO (T.pack . show . toText <$> nextRandom)
-      let candidate = buildLiveSessionUsernameCollisionCandidate base suffix
-      conflict <- getBy (UniqueCredentialUsername candidate)
-      case conflict of
-        Nothing -> pure candidate
-        Just _  -> generateCollisionUsername base
-
-    hashPasswordText :: Text -> IO Text
-    hashPasswordText pwd = do
-      let raw = TE.encodeUtf8 pwd
-      mHash <- hashPasswordUsingPolicy slowerBcryptHashingPolicy raw
-      case mHash of
-        Nothing   -> fail "Failed to hash password"
-        Just hash -> pure (TE.decodeUtf8 hash)
-
-    randomPassword :: IO Text
-    randomPassword = toText <$> nextRandom
-
-    validateAndStoreRiderFile :: FileData Tmp -> m Text
-    validateAndStoreRiderFile file@FileData{..} = do
+    readRiderFile :: FileData Tmp -> m (Text, BL.ByteString)
+    readRiderFile FileData{..} = do
       safeName <- either throwError pure (validateLiveSessionRiderFileName fdFileName)
       size <- liftIO (getFileSize fdPayload)
       either throwError pure (validateLiveSessionRiderFileSize size)
-      liftIO (storeRiderFile safeName file)
+      bytes <- liftIO (BL.readFile fdPayload)
+      either throwError pure (validateLiveSessionRiderFileSize (fromIntegral (BL.length bytes)))
+      pure (safeName, bytes)
 
-    storeRiderFile :: Text -> FileData Tmp -> IO Text
-    storeRiderFile safeName FileData{..} = do
-      token <- toText <$> nextRandom
-      let destDir  = "uploads/live-sessions"
-          destPath = destDir </> T.unpack token <> "-" <> T.unpack safeName
-      createDirectoryIfMissing True destDir
-      BL.readFile fdPayload >>= BL.writeFile destPath
-      pure (T.pack destPath)
+-- A retry uses the same path; a partial write is detected rather than overwritten.
+storeRiderFile :: Text -> Text -> BL.ByteString -> IO Text
+storeRiderFile pathHash safeName bytes = do
+  let destDir = "uploads/live-sessions"
+      destPath = destDir </> T.unpack pathHash <> "-" <> T.unpack safeName
+  createDirectoryIfMissing True destDir
+  exists <- doesFileExist destPath
+  if exists
+    then do
+      stored <- BL.readFile destPath
+      unless (stored == bytes) $ throwIO err409 { errBody = "The previous rider upload needs review before retrying" }
+    else BL.writeFile destPath bytes
+  pure (T.pack destPath)
+
+digestBytes :: BL.ByteString -> SqlPersistT IO Text
+digestBytes bytes = do
+  rows <- rawSql "SELECT encode(digest(?::bytea,'sha256'),'hex')" [PersistByteString (BL.toStrict bytes)]
+  case rows of
+    [Single digest] -> pure digest
+    _ -> liftIO $ throwIO err500 { errBody = "Could not identify intake upload" }
+
+validateLiveSessionRequestKey :: Maybe Text -> Either ServerError Text
+validateLiveSessionRequestKey (Just key)
+  | T.length key >= 16 && T.length key <= 128
+  , T.all (\ch -> isAscii ch && (isAlphaNum ch || ch == '-' || ch == '_')) key = Right key
+validateLiveSessionRequestKey _ = Left err400
+  { errBody = "Refresh the Live Session form before submitting so retries can be saved safely." }
+
+liveSessionRequestPayload :: LiveSessionIntakePayload -> Maybe Text -> Maybe Text -> Value
+liveSessionRequestPayload LiveSessionIntakePayload{..} riderName riderDigest = object
+  [ "bandName" .= lsiBandName, "bandDescription" .= lsiBandDescription
+  , "primaryGenreId" .= lsiPrimaryGenreId, "inputList" .= lsiInputList
+  , "contactEmail" .= lsiContactEmail, "contactPhone" .= lsiContactPhone
+  , "sessionDate" .= lsiSessionDate, "availability" .= lsiAvailability
+  , "acceptedTerms" .= lsiAcceptedTerms, "termsVersion" .= lsiTermsVersion
+  , "riderName" .= riderName, "riderSha256" .= riderDigest
+  , "musicians" .= map (\LiveSessionMusicianPayload{..} -> object
+      [ "partyId" .= lsmPartyId, "name" .= lsmName, "email" .= lsmEmail
+      , "instrumentId" .= lsmInstrumentId, "notes" .= lsmNotes, "isExisting" .= lsmIsExisting ]) lsiMusicians
+  , "setlist" .= map (\LiveSessionSongPayload{..} -> object
+      [ "title" .= lssTitle, "bpm" .= lssBpm, "songKey" .= lssSongKey
+      , "lyrics" .= lssLyrics, "sortOrder" .= lssSortOrder ]) lsiSetlist
+  ]
 
 validateLiveSessionRiderFileSize :: Integer -> Either ServerError ()
 validateLiveSessionRiderFileSize size
