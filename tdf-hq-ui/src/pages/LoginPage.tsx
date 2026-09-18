@@ -540,7 +540,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, openSignupDialog, redirectPath, rememberDevice, requestedIntent, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, termsAccepted, t],
+    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, termsAccepted, t],
   );
 
   useEffect(() => {

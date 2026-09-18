@@ -30,7 +30,6 @@ import { DateTime } from 'luxon';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
-import { Parties } from '../api/parties';
 import type { PartySelectorOption } from '../api/partySelector';
 import { PartySelector } from '../components/party-selector/PartySelector';
 import { Services } from '../api/services';

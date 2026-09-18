@@ -5905,6 +5905,7 @@ spec = describe "TDF.Server helpers" $ do
                     usernameValue `shouldBe` "ada@example.com"
                     passwordValue `shouldBe` "supersecret"
 
+            decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\",\"linkAccount\":null}" `shouldSatisfy` isLeft
             case decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical Google login payload to decode, got: " <> decodeErr)
