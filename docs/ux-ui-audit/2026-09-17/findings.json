@@ -1359,8 +1359,8 @@
     "acceptanceCriteria": "Native first follow is visible in FanHub, completes authoritative onboarding once, survives app restart and web reload, and cannot change another account. Long names retain the action within the screen.",
     "verificationMethod": "Actual isolated native Hermes production bundle + HTTP/PostgreSQL + actual web production bundle; contract/component tests and existing FanHubOnboarding current-session/persisted-receipt model conformance.",
     "status": "implemented",
-    "implementationStatus": "Published mobile104 head09649d63ef219e3b936adf7ca381b249d7277b80 uses canonical Party-ID FanHub follow and captured session-occurrence predicate. Includes102 reviewed fix/evidence and7b7 provider compatibility without unrelated intake.",
-    "verificationStatus": "499tests/84suites,TypeScript,lintPASS. Existing actualiOS/localPostgres+web cross-device60f proof retained. New TLC328states positive with namespace28/session116state negativecontrols and fullformalrunnerPASS. FinalAndroidb721 QA10d5b607building; physical execution pending disconnected phone. See native-artist-follow.md.",
+    "implementationStatus": "Mobile104 d70d945fc includes canonical FanHub follow, captured session-occurrence and immediate client token guards, and current main0c contract compatibility.",
+    "verificationStatus": "502 tests/84 suites plus full release check and hosted validate/Datadog pass on d70d945fc; actual A-B-A and immediate client-token revocation regressions, canonical namespace integration and bounded models documented in native-artist-follow.md. Final Android isolated QA build1c92c4c3 FINISHED, APK/manifest/hash verified; physical execution pending disconnected device. Earlier source runtime evidence retained separately.",
     "mergeStatus": "Draft mobile #104 published60fccd5; depends on #102 runtime qualification and final integrated gates.",
     "releaseStatus": "Hold native promotion until corrected source and final qualified artifacts are published."
   },

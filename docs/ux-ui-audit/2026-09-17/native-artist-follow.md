@@ -13,9 +13,12 @@ callbacks accepted the old receipt and wrote account A's current query cache.
 `useSessionOwnership` now captures the session occurrence, including credential
 changes, as a predicate in mutation variables. Dispatch, success/error and the
 existing authoritative completion helper check it. It is not sufficient to compare
-Party IDs after account return. Mobile source09649d63ef219e3b936adf7ca381b249d7277b80
+Party IDs after account return. A second failing regression revoked the actual HTTP
+client token before React rerendered; the callback still dispatched. The captured
+predicate now additionally checks isCurrentAuthToken before dispatch/receipt/handshake.
+That negative test now passes, including no cache or completion side effects. Mobile source96208df
 contains this fix plus the reviewed102 documentation; it excludes unrelated intake
-application changes.499 mobile tests, TypeScript and lint pass. A previous full run
+application changes.500 mobile tests, TypeScript and lint pass. A previous full run
 hit shared disk exhaustion and one timing failure; after removing only the owned
 simulator, the affected6 tests and all84suites passed. That interrupted run is not
 passing evidence.
@@ -67,10 +70,24 @@ are outside this model. Source/session invariants do not certify usability.
 ## Release boundary
 
 Previous60fccd5 actual iOS production-Hermes-in-EAS-shell proof remains valid for its
-source, not relabeled as final09649d6 native qualification. Android QA build10d5b607
-uses sourceb72174c atop09649d6, separate package`com.tdf.records.uxaudit`, a local
-isolated backend and QA signing. This is not a store artifact or OAuth/FCM/Play
-identity qualification. Its physical execution is pending after the Samsung was
-disconnected at09:36UTC. Existing personal Play installation is preserved. Root
-reference must advance only to published, qualified compatible mobile source.
-Physical iOS Google and store review/publication remain separate open gates.
+source, not relabeled as final native qualification. Current `d70d945fc` integrates
+mobile main `0c1ee7f33`, including the accepted Parties idempotency header and trial
+contracts, and the session-occurrence/immediate-token-revocation fixes. All502tests
+in84suites and the complete release check pass; hosted validate/Datadog pass.
+
+Final Android QA build `1c92c4c3-578a-48af-b6e8-8b7fd2ca4bdd` is FINISHED from
+`f9822f99` atop that source. Downloaded APK ZIP and manifest verified: separate
+package `com.tdf.records.uxaudit`, 1.0.1(8), local isolated backend and QA signing;
+SHA256 `85bf87e2ca30b9ac06e34a8076889efbaf1cac42d3d6b2bf7c08bc948cac5d89`.
+This is not a store artifact or OAuth/FCM/Play identity qualification. Physical
+execution is pending: the Samsung disconnected at09:36UTC and ADB still lists no
+device at10:18UTC. Existing personal Play installation is preserved. Superseded
+10d5b607 lacks the immediate-token guard;46c2fdd4 was canceled after the compatible
+main integration required a replacement. Neither qualifies the final candidate.
+
+The formal transition/property set is unchanged; the actual client-token guard
+refines current-session authority. Actual client revocation is checked by its new
+conformance regression, not claimed as a cloud experiment. Root reference must
+advance only to published, qualified compatible mobile source. Physical iOS Google
+and store review/publication remain separate open gates. Notification operator's
+0c production builds exclude104; they do not establish this finding's release.
