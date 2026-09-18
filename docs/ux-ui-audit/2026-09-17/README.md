@@ -5,57 +5,86 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
-## Checkpoint verificado — 2026-09-18 17:37 UTC
+## Checkpoint verificado — 2026-09-18 18:24 UTC
 
-Este bloque sustituye estados históricos inferiores. La API sigue en
-`e1a825bda26dbb16b1c732e551cc4880d5626943`, release guardado completado16:02UTC
-con110 migraciones, dos máquinas saludables y lease liberado. Recuperación:
-imagen compatible5c11577a5 verificada, snapshotvs_LRqNAqabQP5Upg7NwLqaVPX;
-no restaurar binarios de autenticación antiguos ni borrar migraciones.
-[Recibo de backend](evidence/release-e1-verification.json). No desplegar el
-intermedio de otro operador436; su integración final mantiene coordinación propia.
+Este bloque sustituye los estados históricos inferiores. #450 está fusionado como
+`3f0a56c0ded55fa9525dc80c895505ffcb069449`. Cloudflare `8f01e9e1` y la web pública
+coincidieron; seis casos reales en tres motores verificaron Marketplace con
+almacenamiento denegado, búsqueda y recarga, sin errores ni infracciones axe.
+UX007 queda desplegado. [Evidencia y límites](evidence/marketplace-storage-deployment.json).
 
-#450 ya está fusionado como `3f0a56c0ded55fa9525dc80c895505ffcb069449`.
-Cloudflare8f01e9e1 y web pública coinciden; seis casos reales en tres motores
-verifican Marketplace con almacenamiento denegado, búsqueda y recarga, sin errores
-ni infracciones axe. [Evidencia y límites](evidence/marketplace-storage-deployment.json).
-UX007 queda desplegado; no se infiere cobertura completa de todos los recorridos.
+La API continúa en `e1a825bda26dbb16b1c732e551cc4880d5626943` (comprobación
+18:09 UTC). El release guardado terminó a las 16:02 UTC: 110 migraciones, dos
+máquinas saludables y lease liberado. La recuperación conserva la imagen compatible
+`5c11577a5` y el snapshot `vs_LRqNAqabQP5Upg7NwLqaVPX`; no se deben restaurar
+binarios antiguos de autenticación ni borrar migraciones.
+[Recibo](evidence/release-e1-verification.json). El intermedio #436 de otro operador
+no debe desplegarse por separado; su integración final tiene coordinación propia.
 
-**GitHub Actions gratuito ya produce iOS firmado.** Mobile105–108 fusionados;
-run35370877715 pasó y produjo1.0.1(23), source751d261fd, SDK26.2,
-SHA2566d5b3c3a2b658314b7c04db1719a522f5e54d964d0029444471ff4754fad9cbe.
-Apple validó el archivo sin errores17:18UTC; todavía no está subido a TestFlight.
-[Recibo](evidence/ios-github23-artifact.json). Se conservaron los intentos fallidos
-por entorno Jest y serialización CocoaPods/JSON; no se relajó Podfile.lock.
-No se contrató Starter; el usuario eligió GitHub antes de pagar. Expo confirma
-Free15/15 en ambos sistemas; Android firmado también se prepara en GitHub estándar.
+**GitHub Actions gratuito produce iOS firmado.** Los workflows móviles #105–114
+están fusionados hasta `2a0e5a99535d9ef199a3e3464a660192f882f72b`. Se utilizan
+runners estándar `macos-15` y `ubuntu-24.04`, identidades de firma existentes,
+secretos cifrados y artefactos con retención de un día. No se contrató Starter;
+la decisión vigente del usuario es GitHub Actions gratuito. La cuota Free de EAS
+sigue agotada en ambos sistemas. Los intentos fallidos por entorno Jest,
+CocoaPods/JSON y memoria Gradle se conservan; no se debilitaron los controles.
 
-El Samsung físico confirmó seguir a un artista, persistencia y sesión al reabrir
-el APK aislado correcto46b1; [recibo](evidence/android-physical-46b1.json).
-Android15/90ca ya fue subido y validado en Play; Alpha indica **in review**,
-no disponibilidad aún. [Estado](evidence/android15-review-state.json). Las80
-invitaciones previas no se repiten; sigue pendiente el requisito humano12testers/14días.
-Apple1.0.1 quedó MANUAL/WAITING_FOR_REVIEW: la versión antigua no se publica sola.
-El Google OAuth físico en iPhone continúa sin ejecutar por falta de dispositivo.
+El build **iOS 1.0.1 (25)** terminó en el
+[run 35376470123](https://github.com/diegueins680/TDF-mobile/actions/runs/35376470123),
+source `9f4d0e89c430e25fcd572b4c87736cad15e12012`, SDK 26.2. La verificación
+independiente del IPA confirma firma, perfil App Store, enlaces Google y API de
+producción. Apple lo validó y recibió a las 18:08 UTC; a las 18:12 UTC ya estaba
+VALID e IN_BETA_TESTING. [Recibo](evidence/ios-github25-artifact.json). El número remoto de EAS
+se sincronizó a 25 para evitar reutilizarlo, sin iniciar otro build. iOS 24 ya está
+VALID/IN_BETA_TESTING, pero es intermedio: no contiene la corrección final de texto.
+Se retiró de revisión el build antiguo y se vinculó el 25. El nuevo envío
+`c59f5706-f10e-4caf-ad00-3fff47911f3b` está WAITING_FOR_REVIEW desde las 18:16 UTC,
+con publicación MANUAL; no se publicará automáticamente. La cuenta de demostración existente pasó acceso,
+sesión y onboarding a las 18:01 UTC, sin crear cuentas ni divulgar credenciales.
+[Comprobación](evidence/app-review-account-recheck.json).
 
-La ampliación de texto real al200% confirmó etiquetas nativas truncadas (UX033).
-Mobile109 corrige altura/wrapping sin limitar la preferencia;508pruebas/releasecheck
-y CI pasan, merge3647203bb20198ce7727b928492963f2ece20cd1. El prototipo nativo
-firmado muestra etiquetas completas; se restauró font_scale1.0. Ese prototipo no
-califica autenticación ni distribución. El Samsung se desconectó después. iOS24
-run35373472132 terminó correctamente: IPA firmado/verificado
-SHA256f8f137efa9975d09cf4a92d9082e4c50c10c9827d329e7b2212e141fef56a389,
-[recibo](evidence/ios-github24-artifact.json); validación/subida Apple en curso.
-Android17 run35375029184 está compilando desde mobile111/e637216.
-El primer intento no se ejecutó por un contexto GitHub inválido;111 lo corrige
-y actionlint1.7.12 verifica ambos workflows. Parent prepara pin364
-con contratos generados idénticos a90ca, todavía sin merge del nuevo checkpoint.
+**Android 15 ya está disponible para los testers seleccionados** en Alpha,
+según Play Console a las 18:09 UTC. [Estado](evidence/android15-available-state.json).
+El panel muestra dos inscritos; siguen faltando doce personas durante catorce días
+para solicitar producción. [Requisito vigente](evidence/play-production-eligibility.json).
+No se repiten las 80 invitaciones enviadas. Android 17, con texto ampliado corregido,
+terminó correctamente en el [run 35376997735](https://github.com/diegueins680/TDF-mobile/actions/runs/35376997735).
+El primer build nativo falló por Metaspace de 512 MiB durante lint; #113 aumenta
+heap/Metaspace a 4/2 GiB y limita workers a dos, conservando lint, arquitecturas y
+verificación de dependencias. El AAB 17 pasó verificación independiente de firma, certificado, manifest,
+configuración de producción y SHA256. El envío se validó y registró en Alpha a las 18:18 UTC; Play Console confirma
+**in review**. [Recibo](evidence/android17-alpha-submission.json) y
+[estado de revisión](evidence/android17-review-state.json). Android 15 sigue
+disponible mientras se revisa el 17.
 
-Siguiente acción: verificar artefacto24 y distribución de prueba, finalizar el
-build Android gratuito, publicar el pin/checkpoint y completar cobertura inicial
-pendiente (recursos poblados/roles/estados, lectores, dispositivos y rendimiento).
-La auditoría conserva69hallazgos y412filas de cobertura; inventario no equivale
-a verificación. Los bloqueos físicos y de tiendas no prueban finalización.
+UX033 conserva las pruebas nativas originales de idioma, conteo y retorno. La
+ampliación real confirmó truncamiento adicional: #109 corrige Android y #112 mide
+las etiquetas iOS fuera de la barra para permitir su altura completa. Pasaron
+510 pruebas, los gates de CI y siete casos focalizados; las imágenes y el árbol
+accesible del simulador muestran cinco pestañas y ningún auxiliar expuesto.
+En Samsung, el prototipo QA mantiene completas las etiquetas a 1×/2×; se restauró
+la preferencia original. Ese prototipo verifica presentación, no autenticación.
+El APK aislado completo 46b1 sí pasó acceso, seguimiento persistente y sesión al
+reabrir en Samsung. [Recibo](evidence/android-physical-46b1.json).
+El teléfono ya no aparece por ADB; no se modificó la instalación personal. El
+simulador temporal de esta auditoría se eliminó después de conservar su evidencia
+para resolver la falta de espacio que interrumpió la primera descarga Android17. Sigue
+faltando el iPhone físico para Google OAuth y no se acredita lectura humana con
+VoiceOver/TalkBack ni rendimiento de campo.
+
+El parent #454 prepara el pin `2a0e5a9`, con contratos generados idénticos a `90ca`
+y ambos informes de catálogo regenerados y verificados. #114 hace que los comandos
+production/store usen GitHub y elimina el número iOS usado que estaba prellenado.
+Las diferencias posteriores a las fuentes de ambos binarios sólo afectan workflows,
+documentación y scripts npm; código de app, nativo, dependencias y metadatos de
+ejecución son idénticos. [Comparación](evidence/mobile-artifact-pin-equivalence.json).
+El parent aún no está fusionado.
+Siguiente acción: verificar el envío de Android 17 y las revisiones de tiendas,
+actualizar este checkpoint y completar su revisión independiente.
+La auditoría integral conserva 69 hallazgos y 412 filas; continúa pendiente la
+cobertura de recursos poblados, combinaciones de roles, estados, lectores y
+plataformas indicados en coverage.csv. Inventario y pruebas parciales no equivalen
+a aceptación de toda la plataforma.
 
 ## Integración de release — 2026-09-18 13:31 UTC
 

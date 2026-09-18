@@ -1,0 +1,32 @@
+{
+  "observedAt": "2026-09-18T18:24:23.668451+00:00",
+  "parentCandidatePin": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+  "comparisons": [
+    {
+      "artifactSourceSHA": "9f4d0e89c430e25fcd572b4c87736cad15e12012",
+      "changedPaths": [
+        ".github/workflows/android-release-build.yml",
+        ".github/workflows/ios-release-build.yml",
+        "README.md",
+        "docs/release.md",
+        "package.json"
+      ],
+      "onlyWorkflowDocumentationAndNpmScripts": true,
+      "appNativeAssetsDependenciesAndRuntimeMetadataIdentical": true,
+      "artifactSourceAncestorOfPin": true
+    },
+    {
+      "artifactSourceSHA": "c2a4cb289dbc9bc52de98c6eac8a6ca81c0cfeae",
+      "changedPaths": [
+        ".github/workflows/ios-release-build.yml",
+        "README.md",
+        "docs/release.md",
+        "package.json"
+      ],
+      "onlyWorkflowDocumentationAndNpmScripts": true,
+      "appNativeAssetsDependenciesAndRuntimeMetadataIdentical": true,
+      "artifactSourceAncestorOfPin": true
+    }
+  ],
+  "limits": "No new app build claimed for pin. Signed iOS25/Android17 source receipts remain exact; workflow/docs-only successors do not relabel those source SHAs."
+}

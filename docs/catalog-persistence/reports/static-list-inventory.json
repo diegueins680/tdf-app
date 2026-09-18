@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-18T17:33:41.972Z",
+  "generatedAt": "2026-09-18T18:25:37.654Z",
   "repositoryRoot": ".",
   "filesScanned": 1594,
   "candidateCount": 1138,
@@ -112738,7 +112738,7 @@
       "lines": [
         432
       ],
-      "consumerCount": 159,
+      "consumerCount": 160,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -112844,6 +112844,7 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx"
       ],
       "mobileConsumers": [
+        "tdf-mobile/app/(tabs)/_layout.tsx",
         "tdf-mobile/app/(tabs)/events.tsx",
         "tdf-mobile/app/access-requests/new.tsx",
         "tdf-mobile/app/artistDetail.tsx",
