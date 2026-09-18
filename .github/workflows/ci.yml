@@ -145,6 +145,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        # Opt in to mobile; web hosts use .gitmodules' update=none default.
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
         with:
           submodules: recursive
 
@@ -315,6 +320,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        # Opt in to mobile; web hosts use .gitmodules' update=none default.
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
         with:
           submodules: recursive
 
