@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root=$(cd -- "$(dirname -- "$0")/.." && pwd)
+node "$root/scripts/generate-identity-party-reference-view.mjs" --check
 : "${TDF_IDENTITY_TEST_DATABASE_URL:?Set a dedicated empty test database URL}"
 psql_cmd=(psql "$TDF_IDENTITY_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1)
 test "$("${psql_cmd[@]}" -Atc "SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p')")" = 0
@@ -10,6 +11,8 @@ CREATE TABLE party(id bigserial PRIMARY KEY, display_name text NOT NULL,legal_na
 CREATE TABLE user_credential(id bigserial PRIMARY KEY,party_id bigint REFERENCES party(id),username text UNIQUE,password_hash text,active boolean NOT NULL DEFAULT true);
 CREATE TABLE booking(id bigserial PRIMARY KEY,party_id bigint REFERENCES party(id),notes text);
 CREATE TABLE party_security_role(id bigserial PRIMARY KEY,party_id bigint,role_id uuid);
+CREATE TABLE catalog_import_job(id bigserial PRIMARY KEY,requested_by bigint);
+CREATE TABLE external_review_fixture(id bigserial PRIMARY KEY,reviewer_id bigint);
 CREATE TABLE catalog_revision(id bigserial PRIMARY KEY,reviewed_by bigint,approved_by bigint);
 CREATE TABLE catalog_audit_event(id bigserial PRIMARY KEY,reviewer_id bigint,approver_id bigint);
 INSERT INTO party(display_name) VALUES('Operator');

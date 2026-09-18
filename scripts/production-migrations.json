@@ -545,6 +545,11 @@
       "id": "2026-09-17_identity_reconciliation",
       "path": "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
       "introducedBy": "ab0a7cc211c0ad1be72fcc60ed3ad324d8227501"
+    },
+    {
+      "id": "2026-09-18_identity_review_dependencies",
+      "path": "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql",
+      "introducedBy": "d442013ce79b2afefdda6a203500cf2a58532ca7"
     }
   ]
 }

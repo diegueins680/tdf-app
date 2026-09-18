@@ -36,6 +36,10 @@ BEGIN
   INSERT INTO booking(party_id) VALUES(b);
   IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'booking reference ignored'; END IF;
   DELETE FROM booking WHERE party_id=b;
+  -- Model-derived names also cover nonstandard fields outside the naming heuristic.
+  INSERT INTO catalog_import_job(requested_by) VALUES(b);
+  IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'model-declared requested_by dependency ignored'; END IF;
+  DELETE FROM catalog_import_job WHERE requested_by=b;
   -- Legacy review/approval relationships have no Party foreign keys.
   FOREACH audit_column IN ARRAY ARRAY['reviewed_by','approved_by','reviewer_id','approver_id'] LOOP
     audit_table:=CASE WHEN audit_column IN ('reviewed_by','approved_by') THEN 'catalog_revision' ELSE 'catalog_audit_event' END;
@@ -75,6 +79,12 @@ BEGIN
       RAISE EXCEPTION 'updated archived audit reference allowed: %',audit_column;
     EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
   END LOOP;
+  BEGIN
+    INSERT INTO catalog_import_job(requested_by) VALUES(b);
+    RAISE EXCEPTION 'model-declared archived reference allowed';
+  EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+  -- A separate issuing system's reviewer ID is not a Party reference.
+  INSERT INTO external_review_fixture(reviewer_id) VALUES(b);
   BEGIN
     UPDATE party SET notes='illegal edit' WHERE id=b;
     RAISE EXCEPTION 'archived party write allowed';

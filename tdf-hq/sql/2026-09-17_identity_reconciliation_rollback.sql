@@ -28,5 +28,6 @@ DROP TABLE identity_complementary_link;
 DROP TABLE identity_party_archive;
 DROP TABLE identity_merge_history;
 DROP TABLE identity_reconciliation_case;
+DROP VIEW IF EXISTS identity_known_party_reference;
 DROP TABLE identity_contact_request;
 COMMIT;
