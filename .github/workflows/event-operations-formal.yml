@@ -3,34 +3,10 @@ name: Event operations verification
 on:
   workflow_dispatch:
   pull_request:
-    paths:
-      - "formal/event-operations/**"
-      - "docs/event-operations/**"
-      - "docs/adr/0115-canonical-event-operations.md"
-      - "docs/adr/0116-bounded-formal-verification.md"
-      - "docs/adr/0117-shared-resource-allocation.md"
-      - "scripts/verify-event-operations-formal.sh"
-      - "scripts/test-event-operations-foundation-migration.sh"
-      - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
-      - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
-      - "tdf-hq/test/integration/event_operations_foundation_fixture.sql"
-      - "package.json"
-      - ".github/workflows/event-operations-formal.yml"
   push:
     branches: [main]
-    paths:
-      - "formal/event-operations/**"
-      - "docs/event-operations/**"
-      - "docs/adr/0115-canonical-event-operations.md"
-      - "docs/adr/0116-bounded-formal-verification.md"
-      - "docs/adr/0117-shared-resource-allocation.md"
-      - "scripts/verify-event-operations-formal.sh"
-      - "scripts/test-event-operations-foundation-migration.sh"
-      - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
-      - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
-      - "tdf-hq/test/integration/event_operations_foundation_fixture.sql"
-      - "package.json"
-      - ".github/workflows/event-operations-formal.yml"
+  schedule:
+    - cron: '23 5 * * 1'
 
 permissions:
   contents: read
@@ -40,11 +16,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  specification-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Initialize arithmetic execution receipt
+        run: |
+          mkdir "${{ runner.temp }}/payment-proof"
+          printf '%s\n' '{"status":"not-executed","reason":"Prerequisite checks or installation have not completed"}' > "${{ runner.temp }}/payment-proof/result.json"
+      - name: Check specification inventory and evidence admission
+        run: |
+          python scripts/specification-inventory.py --check
+          node --test scripts/__tests__/verification-evidence.test.mjs
+      - name: Install pinned arithmetic verifier
+        run: python -m pip install -r formal/system/requirements-verification.txt
+      - name: Verify actual payment arithmetic and negative controls
+        run: |
+          python scripts/verify-payment-arithmetic.py > "${{ runner.temp }}/payment-proof/solver-output.json"
+          mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
+          python scripts/test-payment-arithmetic-verifier.py
+      - name: Preserve solver result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: payment-proof-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/payment-proof
+          if-no-files-found: error
+
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
 
       - uses: actions/setup-java@v5
         with:
@@ -67,7 +81,15 @@ jobs:
         env:
           TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
           ALLOY_JAR: ${{ runner.temp }}/tdf-formal-tools/alloy-6.2.0.jar
-        run: npm run verify:event-operations:formal
+        run: node scripts/verify-system-evidence.mjs --output "${{ runner.temp }}/formal-evidence"
+
+      - name: Preserve verification evidence, including failed executions
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: formal-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/formal-evidence
+          if-no-files-found: error
 
   postgres-foundation:
     runs-on: ubuntu-latest

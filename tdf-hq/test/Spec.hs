@@ -2529,6 +2529,30 @@ main = hspec $ do
             Commerce.transitionPayment created (Commerce.PaymentCaptureVerified 10001)
               `shouldSatisfy` isLeft
 
+        it "rejects capture and refund overflow before adding Int64 amounts" $ do
+            let maximumAmount = maxBound :: Int64
+                partialCapture = Commerce.PaymentLifecycle
+                  Commerce.PaymentPartiallyCaptured maximumAmount maximumAmount 1 0
+                partialRefund = Commerce.PaymentLifecycle
+                  Commerce.PaymentPartiallyRefunded maximumAmount maximumAmount maximumAmount 1
+            Commerce.transitionPayment partialCapture (Commerce.PaymentCaptureVerified maximumAmount)
+              `shouldSatisfy` isLeft
+            Commerce.transitionPayment partialRefund (Commerce.PaymentRefundVerified maximumAmount)
+              `shouldSatisfy` isLeft
+            fmap Commerce.paymentCapturedMinor
+              (Commerce.transitionPayment partialCapture (Commerce.PaymentCaptureVerified (maximumAmount - 1)))
+              `shouldBe` Right maximumAmount
+            fmap Commerce.paymentRefundedMinor
+              (Commerce.transitionPayment partialRefund (Commerce.PaymentRefundVerified (maximumAmount - 1)))
+              `shouldBe` Right maximumAmount
+
+        it "checks exact ledger sums instead of Int64 modular zero" $ do
+            let maximumAmount = maxBound :: Int64
+            Commerce.ledgerBalances [("USD", maximumAmount), ("USD", maximumAmount), ("USD", 2)]
+              `shouldBe` False
+            Commerce.ledgerBalances [("USD", maximumAmount), ("USD", maximumAmount),
+              ("USD", -maximumAmount), ("USD", -maximumAmount)] `shouldBe` True
+
         it "voids only the exact remaining authorization" $ do
             let partiallyCaptured =
                   Commerce.transitionPayment created
