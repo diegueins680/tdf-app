@@ -40,5 +40,13 @@
     "Source-derived SMT proves only recognized arithmetic under documented preconditions and trusted translation",
     "Social database tests are fixture/trace evidence, not unrestricted SQL refinement",
     "Release/merge and whole-system formal completion remain separate and pending"
+  ],
+  "evidenceTransformations": [
+    {
+      "path": "formal/system/evidence/social-postgres.log",
+      "transformation": "Removed psql table-format trailing whitespace only; raw local output retained at /private/tmp/tdf-formal-social-postgres.log",
+      "rawSha256": "811b8a5b5e6aadf72a79b90e8a9bc7fee73d250ea8848d59449d15d5f387a549",
+      "storedSha256": "55fde07f5616dd4f6fbef11c596121860ac04787f9905aac1cd77a958a4bc822"
+    }
   ]
 }

@@ -149,7 +149,7 @@ REVOKE
 COMMIT
 DO
 UPDATE 1
- social_v2_publish_batch 
+ social_v2_publish_batch
 -------------------------
                        4
 (1 row)
@@ -157,7 +157,7 @@ UPDATE 1
 DO
 UPDATE 1
 INSERT 0 1
- social_v2_publish_batch 
+ social_v2_publish_batch
 -------------------------
                        1
 (1 row)
@@ -168,7 +168,7 @@ DO
 DELETE 1
 DO
 INSERT 0 1
-                    social_v2_preferences                    
+                    social_v2_preferences
 -------------------------------------------------------------
  {"revision": 1, "discoverable": true, "personalized": true}
 (1 row)
@@ -176,7 +176,7 @@ INSERT 0 1
 DO
 DO
 DO
-                  ?column?                  
+                  ?column?
 --------------------------------------------
  PASS: 30 TLC-generated consent transitions
 (1 row)
@@ -186,13 +186,13 @@ INSERT 0 4
 INSERT 0 4
 DO
 ROLLBACK
-                                                  ?column?                                                  
+                                                  ?column?
 ------------------------------------------------------------------------------------------------------------
  PASS: directed follows, retries, revocation, 60-command budget, uniqueness, foreign keys, block constraint
 (1 row)
 
 BEGIN
-                 measure                 | violations 
+                 measure                 | violations
 -----------------------------------------+------------
  blocked pairs retaining consent/follows |          0
  closed accounts retaining active edges  |          0
@@ -200,12 +200,12 @@ BEGIN
  publication order above counter         |          0
 (4 rows)
 
- pending_publications 
+ pending_publications
 ----------------------
                     0
 (1 row)
 
- connected_pair_stock 
+ connected_pair_stock
 ----------------------
                     0
 (1 row)
