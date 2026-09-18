@@ -47,6 +47,7 @@ import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
+import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
@@ -583,6 +584,9 @@ import TDF.Seed
     , syntheticPersonaSeedingAllowed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
+import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
+import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
+import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.ServerSpec as ServerSpec
@@ -828,6 +832,7 @@ main :: IO ()
 main = hspec $ do
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
+    EmailHeadersSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
             commercialStoreScore initialCommercialFormula 4
@@ -17012,6 +17017,9 @@ main = hspec $ do
     ServerAuthSpec.spec
     ProviderIdentitySpec.spec
     LiveIntakeIdentitySpec.spec
+    TrialIdentitySpec.spec
+    CourseIdentitySpec.spec
+    MarketplaceIdentitySpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
     ServerProposalsSpec.spec

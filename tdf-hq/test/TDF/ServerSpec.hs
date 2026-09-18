@@ -24,7 +24,7 @@ import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Database.Persist
-    ( Entity(..), Key, PersistValue(PersistText), count, get, insert, insert_, insertKey
+    ( Entity(..), Key, PersistValue(PersistText), count, get, getJust, insert, insert_, insertKey
     , selectList, toPersistValue, update, (=.), (==.)
     )
 import Database.Persist.Sql
@@ -4511,7 +4511,7 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected duplicate party email match to fail, got: " <> show value)
 
     describe "ensurePartyForInquiry" $
-        it "rejects duplicate contact fallbacks instead of arbitrary ad inquiry parties" $ do
+        it "creates independent unverified inquiry contacts when details are shared" $ do
             (duplicateEmailResult, duplicatePhoneResult, phoneSelectorResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
                 let mkParty displayName emailAddr phoneNumber =
@@ -4570,12 +4570,12 @@ spec = describe "TDF.Server helpers" $ do
                                     <> contactLabel
                                     <> " match to fail"
                                 )
-            assertConflict "email" duplicateEmailResult
-            assertConflict "phone" duplicatePhoneResult
+            either (const False) (const True) duplicateEmailResult `shouldBe` True
+            either (const False) (const True) duplicatePhoneResult `shouldBe` True
             assertConflict "phone" phoneSelectorResult
 
     describe "ensurePartyForCourseRegistrationDb" $
-        it "rejects duplicate phone fallbacks instead of linking a course registration arbitrarily" $ do
+        it "keeps course contacts separate even when their phone matches existing people" $ do
             (singleId, singleResult, duplicateResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
                 let mkParty displayName phoneNumber =
@@ -4613,22 +4613,15 @@ spec = describe "TDF.Server helpers" $ do
                 pure (expectedId, resolvedSingle, resolvedDuplicate)
 
             case singleResult of
-                Right partyId -> partyId `shouldBe` singleId
+                Right partyId -> partyId `shouldNotBe` singleId
                 Left serverErr ->
                     expectationFailure
                         ( "Expected single course registration party match, got: "
                             <> show serverErr
                         )
             case duplicateResult of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 409
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "Multiple parties match this phone"
-                Right partyId ->
-                    expectationFailure
-                        ( "Expected duplicate course registration party match to fail, got: "
-                            <> show partyId
-                        )
+                Right partyId -> partyId `shouldNotBe` singleId
+                Left serverErr -> expectationFailure ("Shared contact details must remain valid: " <> show serverErr)
 
     describe "courseRegistrationFollowUpCounts" $
         it "counts non-intake follow-up rows for the admin list summary" $ do
@@ -12118,8 +12111,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "user@example.com" (Just "call me at 099 123 4567") "phoneE164 inválido"
 
     describe "ensurePartyRecord" $
-        it "keeps guest-commerce identity Party-only and reuses the same contact" $ do
-            (firstResult, secondResult, credentialCount, partyCount) <-
+        it "keeps separate unverified guest operations distinct despite a shared email" $ do
+            (firstResult, secondResult, credentialCount, partyCount, originalPhone) <-
                 runNoLoggingT $ do
                     pool <- createSqlitePool ":memory:" 1
                     liftIO $ runSqlPool initializeAuthSchema pool
@@ -12135,25 +12128,28 @@ spec = describe "TDF.Server helpers" $ do
                                         (ensurePartyRecord displayName "guest-booking@example.com" phoneNumber)
                                         env
                     first <- ensureGuestParty (Just "Guest Booking") Nothing
-                    second <- ensureGuestParty (Just "Updated Guest") (Just "+593991234567")
                     let firstPartyId = case first of
                             Left serverErr -> error ("Guest Party creation failed: " <> show serverErr)
                             Right partyId -> partyId
+                    liftIO $ runSqlPool (insert_ (UserCredential firstPartyId "established-guest" "unchanged-test-hash" True)) pool
+                    second <- ensureGuestParty (Just "Updated Guest") (Just "+593991234567")
+                    preserved <- liftIO $ runSqlPool (getJust firstPartyId) pool
                     counts <- liftIO $ flip runSqlPool pool $
                         (,)
                             <$> count [M.UserCredentialPartyId ==. firstPartyId]
                             <*> count [M.PartyPrimaryEmail ==. Just "guest-booking@example.com"]
-                    pure (first, second, fst counts, snd counts)
+                    pure (first, second, fst counts, snd counts, M.partyPrimaryPhone preserved)
 
             case (firstResult, secondResult) of
                 (Right firstPartyId, Right secondPartyId) ->
-                    secondPartyId `shouldBe` firstPartyId
+                    secondPartyId `shouldNotBe` firstPartyId
                 (Left serverErr, _) ->
                     expectationFailure ("Expected first guest Party creation to succeed, got: " <> show serverErr)
                 (_, Left serverErr) ->
                     expectationFailure ("Expected repeated guest Party lookup to succeed, got: " <> show serverErr)
-            credentialCount `shouldBe` 0
-            partyCount `shouldBe` 1
+            credentialCount `shouldBe` 1
+            originalPhone `shouldBe` Nothing
+            partyCount `shouldBe` 2
 
     describe "validatePublicBookingNotes" $ do
         it "trims optional public-booking notes and keeps multiline intent" $ do

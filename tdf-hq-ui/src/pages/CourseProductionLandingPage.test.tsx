@@ -345,6 +345,14 @@ describe('CourseProductionLandingPage', () => {
         expect(text(container)).not.toContain('Cupo retenido temporalmente');
         expect(text(container)).not.toContain('Pago verificado');
       });
+      await setInputValue(inputs[0], 'Corrected synthetic name');
+      registerMock.mockRejectedValueOnce(new Error('still unavailable'));
+      await act(async () => {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await flushPromises();
+      });
+      await waitForExpectation(() => expect(registerMock).toHaveBeenCalledTimes(2));
+      expect(registerMock.mock.calls[0]?.[2]).toBe(registerMock.mock.calls[1]?.[2]);
     } finally {
       await cleanup();
     }

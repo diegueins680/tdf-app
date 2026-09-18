@@ -33,6 +33,8 @@ data EmailConfig = EmailConfig
   , smtpUsername     :: Text
   , smtpPassword     :: Text
   , smtpUseTLS       :: Bool
+  -- Only confirmed delivery failures; never promotional unsubscribe preferences.
+  , smtpUndeliverableRecipients :: [Text]
   } deriving (Show)
 
 data AppConfig = AppConfig
@@ -768,6 +770,7 @@ loadConfig = do
   smtpFromEnv <- lookupEnv "SMTP_FROM"
   smtpFromNameEnv <- lookupEnv "SMTP_FROM_NAME"
   smtpTlsEnv  <- lookupEnv "SMTP_TLS"
+  smtpUndeliverableEnv <- lookupEnv "SMTP_UNDELIVERABLE_RECIPIENTS"
   igTokenEnv <- lookupEnv "INSTAGRAM_APP_TOKEN"
   igBaseEnv <- lookupEnv "INSTAGRAM_GRAPH_BASE"
   igMsgTokenEnv <- lookupEnv "INSTAGRAM_MESSAGING_TOKEN"
@@ -998,7 +1001,9 @@ loadConfig = do
   cookieName <- validateSessionCookieName sessionCookieNameEnv
   cookieDomain <- validateSessionCookieDomain sessionCookieDomainEnv
   cookiePath <- validateSessionCookiePath sessionCookiePathEnv
-  emailCfg <- mkEmailConfig smtpHostEnv smtpUserEnv smtpPassEnv smtpFromEnv smtpFromNameEnv smtpPortEnv smtpTlsEnv
+  undeliverable <- either fail pure (parseUndeliverableRecipients smtpUndeliverableEnv)
+  emailCfgBase <- mkEmailConfig smtpHostEnv smtpUserEnv smtpPassEnv smtpFromEnv smtpFromNameEnv smtpPortEnv smtpTlsEnv
+  let emailCfg = fmap (\email -> email { smtpUndeliverableRecipients = undeliverable }) emailCfgBase
   let normalizedAppBase = appBaseUrlVal
       cookieSecureDefault =
         maybe False (\base -> "https://" `T.isPrefixOf` T.toLower base) normalizedAppBase
@@ -1268,6 +1273,7 @@ loadConfig = do
                 , smtpUsername = userVal
                 , smtpPassword = passVal
                 , smtpUseTLS = useTls
+                , smtpUndeliverableRecipients = []
                 }
           _ ->
             fail $
@@ -1290,46 +1296,51 @@ loadConfig = do
                  then fail "SMTP_FROM_NAME must not contain hidden formatting characters"
                  else pure name
 
-    normalizeConfiguredEmailAddress rawEmail =
-      let normalized = T.toLower (T.strip rawEmail)
-      in if isValidConfiguredEmailAddress normalized then Just normalized else Nothing
+normalizeConfiguredEmailAddress :: Text -> Maybe Text
+normalizeConfiguredEmailAddress rawEmail =
+  let normalized = T.toLower (T.strip rawEmail)
+  in if isValidConfiguredEmailAddress normalized then Just normalized else Nothing
 
-    isValidConfiguredEmailAddress email =
-      case T.splitOn "@" email of
-        [localPart, domainPart] ->
-          validEmailPart localPart
-            && validDomain domainPart
-            && not (".." `T.isInfixOf` localPart)
-            && not (".." `T.isInfixOf` domainPart)
-            && not (T.isPrefixOf "." localPart)
-            && not (T.isSuffixOf "." localPart)
-        _ -> False
+isValidConfiguredEmailAddress :: Text -> Bool
+isValidConfiguredEmailAddress email =
+  case T.splitOn "@" email of
+    [localPart, domainPart] ->
+      validEmailPart localPart
+        && validDomain domainPart
+        && not (".." `T.isInfixOf` localPart)
+        && not (".." `T.isInfixOf` domainPart)
+        && not (T.isPrefixOf "." localPart)
+        && not (T.isSuffixOf "." localPart)
+    _ -> False
 
-    validEmailPart part =
-      not (T.null part)
-        && T.all
-          (\ch ->
-            (ch >= 'a' && ch <= 'z')
-              || (ch >= '0' && ch <= '9')
-              || ch `elem` (".!#$%&'*+/=?^_`{|}~-" :: String)
-          )
-          part
+validEmailPart :: Text -> Bool
+validEmailPart part =
+  not (T.null part)
+    && T.all
+      (\ch ->
+        (ch >= 'a' && ch <= 'z')
+          || (ch >= '0' && ch <= '9')
+          || ch `elem` (".!#$%&'*+/=?^_`{|}~-" :: String)
+      )
+      part
 
-    validDomain domain =
-      let labels = T.splitOn "." domain
-      in length labels >= 2 && all validDomainLabel labels
+validDomain :: Text -> Bool
+validDomain domain =
+  let labels = T.splitOn "." domain
+  in length labels >= 2 && all validDomainLabel labels
 
-    validDomainLabel label =
-      not (T.null label)
-        && not (T.isPrefixOf "-" label)
-        && not (T.isSuffixOf "-" label)
-        && T.all
-          (\ch ->
-            (ch >= 'a' && ch <= 'z')
-              || (ch >= '0' && ch <= '9')
-              || ch == '-'
-          )
-          label
+validDomainLabel :: Text -> Bool
+validDomainLabel label =
+  not (T.null label)
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all
+      (\ch ->
+        (ch >= 'a' && ch <= 'z')
+          || (ch >= '0' && ch <= '9')
+          || ch == '-'
+      )
+      label
 
 validateSessionCookieSameSite :: Bool -> Maybe String -> IO Text
 validateSessionCookieSameSite cookieSecure rawSameSite =
@@ -2118,3 +2129,24 @@ nonEmpty txt =
 
 nonEmptyPath :: String -> Maybe FilePath
 nonEmptyPath = fmap T.unpack . nonEmpty . T.pack
+
+parseUndeliverableRecipients :: Maybe String -> Either String [Text]
+parseUndeliverableRecipients raw =
+  let entries = filter (not . T.null) . map T.strip . T.split (`elem` [',', '\n', '\r']) $
+        maybe "" T.pack raw
+  in case traverse normalizeConfiguredEmailAddress entries of
+       Nothing -> Left "SMTP_UNDELIVERABLE_RECIPIENTS must contain valid email addresses"
+       Just recipients -> Right (nub (map T.toCaseFold recipients))
+
+isUndeliverableRecipient :: EmailConfig -> Text -> Bool
+isUndeliverableRecipient cfg recipient =
+  T.toCaseFold (T.strip recipient) `elem` smtpUndeliverableRecipients cfg
+
+-- Webador documents its mailbox service for direct/transactional messages,
+-- explicitly excluding newsletters. This guard affects only the bulk endpoint.
+isWebadorSmtpHost :: Text -> Bool
+isWebadorSmtpHost raw =
+  let host = T.dropWhileEnd (== '.') (T.toCaseFold (T.strip raw))
+  in host `elem` ["webador.com", "jouwweb.nl"]
+       || ".webador.com" `T.isSuffixOf` host
+       || ".jouwweb.nl" `T.isSuffixOf` host

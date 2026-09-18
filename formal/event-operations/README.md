@@ -375,3 +375,26 @@ current-session dispatch/receipt and authoritative persistence. Weak fairness as
 dispatch and eventual success/failure response; terminal quiescence is permitted.
 Unsafe dispatch/receipt variants must violate their named invariants (29/63states).
 [Implementation, counterexamples and limits](../../docs/ux-ui-audit/2026-09-17/directory-entry.md).
+
+## Marketplace optional storage boundary (2026-09-18)
+
+`MarketplaceStorage.tla` connects UX-260917-007 to the page's optional
+read/write/remove helpers and the unchanged required checkout idempotency key.
+One visit selects working/denied storage; at most two checkout attempts are modeled.
+`NoStorageExceptionEscapes` and `NoDispatchWithoutDurableKey` hold; `BrowsingAvailable`
+assumes weak fairness of opening the page, not eventual storage availability. TLC
+1.7.2 distribution / TLC2 2.17 explores eight generated/distinct states, depth four.
+Unsafe optional-cache and required-key configurations produce their named invariant
+counterexamples (four and six generated states). Terminal quiescence is allowed.
+The full pinned TLC/Alloy6.2.0 suite passes on Java21.0.12.1.
+
+The first draft's unparenthesized Boolean assignment was a model defect and failed
+the positive invariant. Parenthesizing that assignment repaired the specification;
+that failure is not claimed as a product counterexample. Product negative controls
+are four original Marketplace component failures. The 23 final component/API tests
+also reject checkout twice without any POST when getter/getItem/setItem fail.
+Browser conformance checks use the production bundle and actual isolated PostgreSQL
+catalog: search, empty results, URL state and reload despite denied operations.
+This small model does not prove server payment execution, successful persistence,
+all crash/reload schedules, account isolation or storage availability transitions;
+existing payment models and HTTP contracts remain separate evidence.
