@@ -88,7 +88,7 @@ The survivor is an established active account, then the oldest created Party, th
 stable ID. Creation time breaks an identity-stability tie; it never resolves field freshness.
 Source records with credentials, permissions, profiles, memberships, bookings, messages,
 financial/audit references or other detected dependencies are blocked. The function inventories
-all declared Party foreign keys and legacy scalar Party/user/actor references. Operators must
+all declared Party foreign keys, the model-declared Party references, and legacy scalar Party/user/actor/reviewer/approver references. The forward repair migration adds guards for the model-declared columns, including catalog approval history without foreign keys. `node scripts/generate-identity-party-reference-view.mjs --check` verifies this registry against the models; after release, model changes require a reviewed forward migration, not editing applied SQL. Operators must
 also inspect integration payloads and any untyped external references before attesting a case;
 this scalar inventory cannot prove the absence of arbitrary identities embedded in free text or
 external systems. Such dependencies require a separately reviewed relationship migration.
