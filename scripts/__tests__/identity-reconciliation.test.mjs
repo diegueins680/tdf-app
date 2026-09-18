@@ -33,3 +33,10 @@ test('SQL literal and identifier inputs are bounded without shell interpolation'
   assert.throws(() => sqlText('a\0b'));
   assert.throws(() => assertUuid("'; DELETE FROM party; --"));
 });
+
+test('rejects malformed or repeated inventory IDs before rendering any operator SQL', () => {
+  for (const id of ["1); DELETE FROM party; --", "1", 0, -1, NaN, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => candidateGroups({ parties: [p(id, { display_name: 'Same' })] }));
+  }
+  assert.throws(() => candidateGroups({ parties: [p(1), p(1)] }));
+});

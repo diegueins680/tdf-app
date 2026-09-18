@@ -31,7 +31,9 @@ test "$("${psql_cmd[@]}" -qAtc "SELECT count(*) FROM party WHERE display_name='C
 BEGIN;
 CREATE ROLE identity_untrusted_test;
 DO $$ BEGIN
-  IF has_table_privilege('identity_untrusted_test','identity_merge_history','SELECT')
+  IF has_table_privilege('identity_untrusted_test','identity_complementary_link','SELECT')
+    OR has_function_privilege('identity_untrusted_test','identity_link_parties(uuid,uuid,text)','EXECUTE')
+    OR has_table_privilege('identity_untrusted_test','identity_merge_history','SELECT')
     OR has_function_privilege('identity_untrusted_test','identity_create_contact(bigint,text,jsonb)','EXECUTE')
     OR has_function_privilege('identity_untrusted_test','identity_execute_merge(uuid,uuid,text)','EXECUTE') THEN
     RAISE EXCEPTION 'identity history or merge privileges leaked';

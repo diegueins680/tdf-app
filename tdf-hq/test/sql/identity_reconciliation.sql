@@ -77,6 +77,21 @@ BEGIN
   UPDATE identity_reconciliation_case SET member_ids=ARRAY[b,c],status='confirmed',evidence=evidence||jsonb_build_object('member_ids',ARRAY[b,c]),
     before_parties=(SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) FROM party p WHERE id IN(b,c)) WHERE id=case_key;
   IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'conflicting values merged'; END IF;
+  -- Complementary records can be linked without merging conflicting contact fields.
+  UPDATE identity_reconciliation_case SET status='separate',evidence=evidence||'{"disposition":"retain-and-link"}',
+    before_parties=(SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) FROM party p WHERE id IN(b,c)) WHERE id=case_key;
+  plan:=identity_link_plan(case_key);
+  IF NOT (plan->>'can_execute')::boolean THEN RAISE EXCEPTION 'valid complementary link blocked: %',plan->'blockers'; END IF;
+  operation_key:=gen_random_uuid();
+  IF identity_link_parties(operation_key,case_key,plan->>'fingerprint')->>'status'<>'linked' THEN RAISE EXCEPTION 'link failed'; END IF;
+  IF identity_link_parties(operation_key,case_key,plan->>'fingerprint')->>'status'<>'already-linked' THEN RAISE EXCEPTION 'link retry repeated effects'; END IF;
+  IF (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) FROM party p WHERE id IN(b,c)) IS DISTINCT FROM plan->'before' THEN RAISE EXCEPTION 'link changed identity fields'; END IF;
+  IF EXISTS(SELECT 1 FROM identity_party_archive WHERE party_id IN(b,c)) THEN RAISE EXCEPTION 'complementary record archived'; END IF;
+  IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'linked records became mergeable'; END IF;
+  UPDATE party SET notes='later linked-contact edit' WHERE id=b;
+  IF identity_unlink_parties(operation_key)->>'status'<>'unlinked' THEN RAISE EXCEPTION 'unlink failed'; END IF;
+  IF identity_unlink_parties(operation_key)->>'status'<>'already-unlinked' THEN RAISE EXCEPTION 'unlink retry repeated effects'; END IF;
+  IF (SELECT notes FROM party WHERE id=b)<>'later linked-contact edit' THEN RAISE EXCEPTION 'unlink lost an unrelated edit'; END IF;
   RAISE NOTICE 'identity integration: retry, false positives, whole-group proof, ownership, relationships, stale plans, archival, field provenance and rollback passed';
 END $$;
 ROLLBACK;

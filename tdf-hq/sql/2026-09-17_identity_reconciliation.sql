@@ -41,7 +41,21 @@ CREATE TABLE IF NOT EXISTS identity_party_archive (
   archived_at timestamptz NOT NULL DEFAULT now(),
   CHECK(party_id<>canonical_party_id)
 );
-REVOKE ALL ON identity_reconciliation_case,identity_merge_history,identity_party_archive,identity_contact_request FROM PUBLIC;
+CREATE TABLE IF NOT EXISTS identity_complementary_link (
+  operation_id uuid PRIMARY KEY,
+  case_id uuid NOT NULL REFERENCES identity_reconciliation_case(id),
+  first_party_id bigint NOT NULL REFERENCES party(id),
+  second_party_id bigint NOT NULL REFERENCES party(id),
+  evidence jsonb NOT NULL,
+  before_parties jsonb NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  revoked_at timestamptz,
+  actor text NOT NULL DEFAULT session_user,
+  CHECK(first_party_id<second_party_id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS identity_complementary_link_active_pair
+  ON identity_complementary_link(first_party_id,second_party_id) WHERE revoked_at IS NULL;
+REVOKE ALL ON identity_reconciliation_case,identity_merge_history,identity_party_archive,identity_contact_request,identity_complementary_link FROM PUBLIC;
 
 -- This function is called only after the existing CRM authorization check.
 -- A key is scoped to the authenticated actor, and a changed payload is rejected.
@@ -236,6 +250,69 @@ BEGIN
   UPDATE identity_reconciliation_case SET status='reverted' WHERE id=h.case_id;
   RETURN jsonb_build_object('status','reverted');
 END $$;
+-- Informational linkage never changes authentication, ownership or permissions.
+CREATE OR REPLACE FUNCTION identity_link_plan(case_key uuid)
+RETURNS jsonb LANGUAGE plpgsql AS $$
+DECLARE c identity_reconciliation_case%ROWTYPE; members bigint[]; snapshots jsonb; blockers jsonb:='[]';
+BEGIN
+  SELECT * INTO c FROM identity_reconciliation_case WHERE id=case_key;
+  IF NOT FOUND THEN RAISE EXCEPTION 'identity case not found'; END IF;
+  SELECT array_agg(DISTINCT v ORDER BY v) INTO members FROM unnest(c.member_ids) v;
+  SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) INTO snapshots FROM party p WHERE id=ANY(members);
+  IF cardinality(members)<>2 OR cardinality(c.member_ids)<>2 OR coalesce(jsonb_array_length(snapshots),0)<>2 THEN
+    blockers:=blockers||'"exactly-two-existing-members-required"'::jsonb;
+  END IF;
+  IF c.status<>'separate' OR c.reviewed_by IS NULL OR c.reviewed_at IS NULL
+    OR c.evidence->>'disposition' IS DISTINCT FROM 'retain-and-link'
+    OR coalesce(c.evidence->>'basis','') NOT IN ('verified-source-subject','authenticated-owner-attestation')
+    OR coalesce(length(c.evidence->>'issuer'),0)=0 OR coalesce(length(c.evidence->>'scope'),0)=0
+    OR coalesce(length(c.evidence->>'subject'),0)=0 OR coalesce(length(c.evidence->>'evidence_reference'),0)<10
+    OR c.evidence->'member_ids' IS DISTINCT FROM to_jsonb(members) THEN
+    blockers:=blockers||'"explicit-whole-group-link-review-required"'::jsonb;
+  END IF;
+  IF snapshots IS DISTINCT FROM c.before_parties THEN blockers:=blockers||'"stale-party-evidence"'::jsonb; END IF;
+  IF EXISTS(SELECT 1 FROM identity_party_archive WHERE party_id=ANY(members)) THEN blockers:=blockers||'"archived-member"'::jsonb; END IF;
+  IF EXISTS(SELECT 1 FROM identity_complementary_link WHERE first_party_id=members[1] AND second_party_id=members[2] AND revoked_at IS NULL) THEN
+    blockers:=blockers||'"existing-active-link"'::jsonb;
+  END IF;
+  RETURN jsonb_build_object('case_id',case_key,'members',members,'before',snapshots,'blockers',blockers,
+    'can_execute',blockers='[]'::jsonb,'effect','informational-link-only',
+    'fingerprint',encode(digest(coalesce(snapshots::text,'null')||c.evidence::text||c.status||coalesce(c.reviewed_by::text,'')||':link','sha256'),'hex'));
+END $$;
+CREATE OR REPLACE FUNCTION identity_link_parties(operation_key uuid,case_key uuid,expected_fingerprint text)
+RETURNS jsonb LANGUAGE plpgsql AS $$
+DECLARE prior identity_complementary_link%ROWTYPE; plan jsonb;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('identity-reconciliation',0));
+  SELECT * INTO prior FROM identity_complementary_link WHERE operation_id=operation_key;
+  IF FOUND THEN
+    IF prior.case_id<>case_key OR prior.revoked_at IS NOT NULL THEN RAISE EXCEPTION 'link operation replay conflict'; END IF;
+    RETURN jsonb_build_object('status','already-linked','operation_id',operation_key);
+  END IF;
+  PERFORM 1 FROM identity_reconciliation_case WHERE id=case_key FOR UPDATE;
+  PERFORM 1 FROM party WHERE id IN (SELECT unnest(member_ids) FROM identity_reconciliation_case WHERE id=case_key) ORDER BY id FOR UPDATE;
+  plan:=identity_link_plan(case_key);
+  IF plan->>'can_execute'<>'true' OR plan->>'fingerprint' IS DISTINCT FROM expected_fingerprint THEN
+    RAISE EXCEPTION 'link plan is blocked or stale' USING ERRCODE='55000';
+  END IF;
+  INSERT INTO identity_complementary_link(operation_id,case_id,first_party_id,second_party_id,evidence,before_parties)
+    SELECT operation_key,case_key,(plan->'members'->>0)::bigint,(plan->'members'->>1)::bigint,c.evidence,plan->'before'
+    FROM identity_reconciliation_case c WHERE c.id=case_key;
+  RETURN jsonb_build_object('status','linked','operation_id',operation_key);
+END $$;
+CREATE OR REPLACE FUNCTION identity_unlink_parties(operation_key uuid)
+RETURNS jsonb LANGUAGE plpgsql AS $$
+DECLARE prior identity_complementary_link%ROWTYPE;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('identity-reconciliation',0));
+  SELECT * INTO prior FROM identity_complementary_link WHERE operation_id=operation_key FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'link operation not found'; END IF;
+  IF prior.revoked_at IS NOT NULL THEN RETURN jsonb_build_object('status','already-unlinked'); END IF;
+  UPDATE identity_complementary_link SET revoked_at=now() WHERE operation_id=operation_key;
+  RETURN jsonb_build_object('status','unlinked');
+END $$;
+REVOKE ALL ON FUNCTION identity_link_plan(uuid),identity_link_parties(uuid,uuid,text),identity_unlink_parties(uuid) FROM PUBLIC;
+
 -- Archived contacts cannot acquire new relationships or credentials through any
 -- legacy writer. Historical references on unrelated updates remain untouched.
 CREATE OR REPLACE FUNCTION identity_reject_archived_reference()

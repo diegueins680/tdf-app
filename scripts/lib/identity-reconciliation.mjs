@@ -3,6 +3,11 @@ import { createHash } from 'node:crypto';
 // Candidate hints never prove identity. Do not union connected components:
 // A~B and B~C are two reviews, not evidence that A, B and C are one person.
 export function candidateGroups(inventory) {
+  if (!Array.isArray(inventory?.parties)
+    || inventory.parties.some(p => !Number.isSafeInteger(p.id) || p.id <= 0)
+    || new Set(inventory.parties.map(p => p.id)).size !== inventory.parties.length) {
+    throw new Error('Inventory must contain unique positive integer Party identifiers');
+  }
   const groups = new Map();
   for (const field of ['primary_email', 'primary_phone', 'instagram', 'display_name', 'tax_id']) {
     const buckets = new Map();

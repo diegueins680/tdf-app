@@ -60,6 +60,19 @@ proof by copying shared contact fields into the subject. Missing authoritative p
 review blocker. Updating the status alone does not permit execution. The current inventory
 contains no authoritative verified person-subject binding and confirms zero groups automatically.
 
+## Retain and link complementary records
+
+For a verified person with intentionally separate contact/artist and account records, review the
+case as `separate` with whole-group evidence and `disposition: "retain-and-link"`. Then use
+`--command link-dry-run --case CASE_UUID` and `--command link --case CASE_UUID --operation UUID
+--fingerprint LINK_PLAN_SHA256`, with the database/output arguments above. This creates a private,
+informational link with provenance. It changes no Party fields, authentication, management rights,
+roles, consent or canonical routing. Both records remain active for their distinct purposes.
+`--command links` lists the access-controlled links; `--command unlink --operation UUID` reverses
+one linkage while retaining its history and all subsequent contact edits. Retries have no additional
+effects. This association alone never establishes permission to manage an artist profile; verified
+management still uses the existing directory claim workflow.
+
 ## Survivor, fields and dependency safety
 
 The survivor is an established active account, then the oldest created Party, then the lowest

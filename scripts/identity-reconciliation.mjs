@@ -47,7 +47,7 @@ if (values.command === 'inventory') {
     PERFORM pg_advisory_xact_lock(hashtextextended('identity-reconciliation',0));
     PERFORM 1 FROM identity_reconciliation_case WHERE id=${key}::uuid AND status='review' FOR UPDATE;
     IF NOT FOUND THEN RAISE EXCEPTION 'case is not awaiting review'; END IF;
-    PERFORM 1 FROM party WHERE id=ANY((SELECT member_ids FROM identity_reconciliation_case WHERE id=${key}::uuid)) ORDER BY id FOR UPDATE;
+    PERFORM 1 FROM party WHERE id IN (SELECT unnest(member_ids) FROM identity_reconciliation_case WHERE id=${key}::uuid) ORDER BY id FOR UPDATE;
     plan:=identity_merge_plan(${key}::uuid);
     IF plan->>'fingerprint' IS DISTINCT FROM ${sqlText(decision.expected_fingerprint)} THEN RAISE EXCEPTION 'review evidence changed'; END IF;
     UPDATE identity_reconciliation_case SET status=${sqlText(decision.status)},reviewed_by=${decision.reviewer_party_id},
@@ -55,6 +55,15 @@ if (values.command === 'inventory') {
       before_parties=plan->'before' WHERE id=${key}::uuid;
   END $review$;
   SELECT identity_merge_plan(${key}::uuid);`;
+} else if (values.command === 'link-dry-run') {
+  sql = `SELECT identity_link_plan(${sqlText(assertUuid(values.case))}::uuid);`;
+} else if (values.command === 'link') {
+  if (!/^[a-f0-9]{64}$/.test(values.fingerprint ?? '')) throw new Error('Exact link dry-run fingerprint is required');
+  sql = `SELECT identity_link_parties(${sqlText(assertUuid(values.operation))}::uuid,${sqlText(assertUuid(values.case))}::uuid,${sqlText(values.fingerprint)});`;
+} else if (values.command === 'unlink') {
+  sql = `SELECT identity_unlink_parties(${sqlText(assertUuid(values.operation))}::uuid);`;
+} else if (values.command === 'links') {
+  sql = 'SELECT jsonb_agg(to_jsonb(link)) FROM identity_complementary_link link;';
 } else if (values.command === 'dry-run') {
   sql = `SELECT identity_merge_plan(${sqlText(assertUuid(values.case))}::uuid);`;
 } else if (values.command === 'execute') {
@@ -65,7 +74,7 @@ if (values.command === 'inventory') {
 } else if (values.command === 'list') {
   sql = 'SELECT jsonb_agg(jsonb_build_object(\'id\',id,\'members\',member_ids,\'status\',status,\'reason\',reason)) FROM identity_reconciliation_case;';
 } else throw new Error('Unknown command');
-const readOnly = ['inventory', 'dry-run', 'list'].includes(values.command);
+const readOnly = ['inventory', 'dry-run', 'list', 'links', 'link-dry-run'].includes(values.command);
 const invocation = buildDatabaseSqlInvocation({ dbApp: values['db-app'], database: values.database },
   `BEGIN${readOnly ? ' READ ONLY' : ''};\nSET LOCAL standard_conforming_strings=on;\nSET LOCAL lock_timeout='5s';\nSET LOCAL statement_timeout='60s';\n${sql}\nCOMMIT;`, { tuplesOnly: true });
 writeFileSync(values.output, '', { mode: 0o600, flag: 'wx' });
