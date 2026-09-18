@@ -68,8 +68,25 @@ require the override. Ancestry
 assumes reviewed commits have not deliberately reverted the authority contract;
 it does not replace review, artifact integrity or runtime checks.
 
-Remaining work: the Live Session ingestion path still resolves musicians by email and
-performs multiple database transactions, and older API/import clients can omit contact request
-keys. Those paths require their own scoped submission identities and relationship review.
-This follow-up does not claim comprehensive prevention until those remaining paths are repaired
-and the client/backend rollout is verified.
+Subsequent prevention changes add atomic Live Session intake and mandatory contact/import
+request keys, followed by commerce, course, trial and ad-inquiry receipts. Verify the actual
+deployed release before treating those controls as active; source implementation alone does
+not establish rollout.
+
+The guarded release runner also requires compatible contact writers during recovery. Intake
+targets require ancestor `02115f7d1b0786f3cdd4287a9466dd22682f603b`; targets with course,
+trial or ad request migrations require `6eab8592744015124b0162ce9e9361f51a04f538`.
+These reviewed writer contracts include the earlier provider protection. An older binary can
+ignore accepted receipts and repeat creation or account grants, so an empty-table count never
+permits falling back to it. The same mixed-fleet recovery lane upgrades untouched incompatible
+replicas after a canary failure and records incomplete recovery.
+
+For the first combined release, the separately built recovery candidate is
+`bdd9e24bddaaa96e2da72d75041b1e1b20236e04`. It preserves all 113 migrations and the identity
+writer contracts, and its backend, PostgreSQL and browser checks passed. Its image must finish
+the existing Build Image workflow and resolve to an immutable digest before preflight can
+accept `--recovery-sha`. It predates the registration-specific confirmation-email throttle fix;
+if recovery is used, inspect skipped acknowledgements for separate attendees sharing an email.
+Do not resend blindly. Both source commits must be incorporated into protected main before
+production execution. Schema and operation-specific merge undo remain separate from application
+recovery; never discard provider bindings, accepted receipts, or later unrelated edits.
