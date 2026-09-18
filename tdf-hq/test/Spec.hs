@@ -144,7 +144,7 @@ import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
 import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
-import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage)
+import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
@@ -204,6 +204,7 @@ import TDF.FeatureRegistry
 import TDF.Models (ArtistProfile (..), Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
+import qualified TDF.Profiles.ArtistActivationSpec as ArtistActivationSpec
 import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.DDEX.Detect as DDEXDetect
@@ -2795,6 +2796,27 @@ main = hspec $ do
         it "uses the provided refund timeline verbatim" $
             resolveRefundTimelineMessage (Just "Tu banco lo verá en 48 horas.")
                 `shouldBe` "Tu banco lo verá en 48 horas."
+
+    describe "passwordResetLink" $ do
+        it "preserves a local destination through the email query string" $
+            passwordResetLink (Just "https://tdf.example/") "synthetic-token" (Just "/fans?artist=42&tab=eventos#próximo")
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token&redirect=%2Ffans%3Fartist%3D42%26tab%3Deventos%23pr%C3%B3ximo"
+        it "retains the legacy link for clients without a destination" $
+            passwordResetLink (Just "https://tdf.example") "synthetic-token" Nothing
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token"
+        it "does not put external, control-character or oversized destinations in email" $
+            forM_ ["https://evil.example", "//evil.example", "/\\evil.example", "/fans\n", "/x\ty", "/" <> Data.Text.replicate 501 "x"] $ \destination ->
+                passwordResetLink (Just "https://tdf.example") "synthetic-token" (Just destination)
+                    `shouldBe` "https://tdf.example/reset?token=synthetic-token"
+        it "encodes query delimiters in tokens rather than adding parameters" $
+            passwordResetLink (Just "https://tdf.example") "a&redirect=//evil.example" Nothing
+                `shouldBe` "https://tdf.example/reset?token=a%26redirect%3D%2F%2Fevil.example"
+
+        it "keeps arbitrary untrusted destinations on the configured origin" $
+            QC.property $ \raw ->
+                let link = passwordResetLink (Just "https://tdf.example") "synthetic-token" (Just (Data.Text.pack raw))
+                in "https://tdf.example/reset?token=synthetic-token" `Data.Text.isPrefixOf` link
+                    && not (Data.Text.any (\c -> c == '\n' || c == '\r' || c == '\t') link)
 
     describe "accountCreatedEmailContent" $ do
         it "never includes a credential or reset token" $ do
@@ -16940,6 +16962,7 @@ main = hspec $ do
     EventDiscoverySpec.spec
     EventResearchSpec.spec
     ArtistSpec.spec
+    ArtistActivationSpec.spec
     ServerAuthSpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec

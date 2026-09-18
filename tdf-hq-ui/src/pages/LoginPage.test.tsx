@@ -1,3 +1,4 @@
+import i18n from '../i18n';
 import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
@@ -53,11 +54,7 @@ jest.unstable_mockModule('../utils/logger', () => ({
   logger: { log: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
-jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => (key === 'login.signupDialog.title' ? 'Crear cuenta' : key),
-  }),
-}));
+
 
 const { default: LoginPage, isGoogleSignupConsentRequiredError } = await import('./LoginPage');
 
@@ -67,7 +64,7 @@ const findButton = (name: string): HTMLButtonElement | null =>
   Array.from(document.querySelectorAll<HTMLButtonElement>('button'))
     .find((button) => button.textContent?.trim() === name) ?? null;
 
-const renderLoginPage = async () => {
+const renderLoginPage = async (initialEntry = '/login') => {
   const container = document.createElement('div');
   document.body.appendChild(container);
   let root: Root | null = createRoot(container);
@@ -80,7 +77,7 @@ const renderLoginPage = async () => {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/login']}>
+        <MemoryRouter initialEntries={[initialEntry]}>
           <LoginPage />
         </MemoryRouter>
       </QueryClientProvider>,
@@ -108,7 +105,8 @@ describe('LoginPage Google signup consent flow', () => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('es');
     googleCallback = null;
     googleLoginRequestMock.mockReset();
     loginMock.mockReset();
@@ -150,6 +148,33 @@ describe('LoginPage Google signup consent flow', () => {
     expect(isGoogleSignupConsentRequiredError(new Error(` ${GOOGLE_CONSENT_ERROR} `))).toBe(true);
     expect(isGoogleSignupConsentRequiredError(new Error('Invalid Google token'))).toBe(false);
     expect(isGoogleSignupConsentRequiredError(GOOGLE_CONSENT_ERROR)).toBe(false);
+  });
+
+  it('retains an artist claim and rejects Google callbacks that cannot carry it', async () => {
+    const cleanup = await renderLoginPage('/login?signup=1&intent=artist_profile&claimArtistId=42');
+    try {
+      await waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+      const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      await act(async () => {
+        dialog?.querySelector<HTMLInputElement>('input[aria-label="Acepto los términos y la política de privacidad"]')?.click();
+        await flushPromises();
+      });
+      expect(dialog?.textContent).toContain('completa este formulario con el correo asociado al artista');
+      expect(findButton('Google signup test button')).toBeNull();
+      expect(googleCallback).not.toBeNull();
+      await act(async () => {
+        googleCallback?.({ credential: GOOGLE_CREDENTIAL });
+        await flushPromises();
+      });
+      expect(googleLoginRequestMock).not.toHaveBeenCalled();
+      expect(loginMock).not.toHaveBeenCalled();
+      expect(document.querySelector('[role="dialog"]')).toBe(dialog);
+      // The unavailable selection warning proves the claim ID was retained;
+      // clearing it would silently turn this into a new-profile signup.
+      expect(dialog?.textContent).toContain('El perfil elegido ya no está disponible para reclamar.');
+    } finally {
+      await cleanup();
+    }
   });
 
   it('opens the consent-first signup flow directly for new Google users', async () => {

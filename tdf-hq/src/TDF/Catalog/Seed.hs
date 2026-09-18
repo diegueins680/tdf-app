@@ -433,6 +433,7 @@ seedSecurityRegistry = do
       , ("00000000-0000-4000-8000-000000000307", "trial.teacher-subject.teacher", "teacher-subject-configured", "teacher", "Docente por configuración de materias", "Teacher on subject configuration", False)
       , ("00000000-0000-4000-8000-000000000308", "trial.teacher-student.student", "teacher-student-linked", "student", "Estudiante por vínculo docente", "Student on teacher link", False)
       , ("00000000-0000-4000-8000-000000000309", "trial.student-created.student", "student-created", "student", "Estudiante creado por la escuela", "Student created by school", False)
+      , ("00000000-0000-4000-8000-000000000313", "artist.self-service.artist", "artist-self-service-activated", "artist", "Artista por creación de perfil propio", "Artist on own profile creation", False)
       , ("00000000-0000-4000-8000-000000000310", "live-session.artist-profile.artist", "artist-profile-created", "artist", "Artista por perfil de Live Session", "Artist on Live Session profile creation", False)
       ]
     roleModuleGrants =

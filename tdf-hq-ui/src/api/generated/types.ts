@@ -445,6 +445,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request an account recovery email */
+        post: operations["requestPasswordReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/login": {
         parameters: {
             query?: never;
@@ -1377,6 +1394,26 @@ export interface paths {
         get: operations["listFanArtists"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/me/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate my artist profile immediately
+         * @description Creates the authenticated account's artist profile and grants only the Artist role through an audited automatic policy in one transaction. No manual approval or invitation is required. Repeated calls preserve existing profile content and create no duplicate grant. Revoked roles and inactive accounts cannot be reactivated this way. No target party or role is accepted.
+         */
+        post: operations["activateMyArtistProfile"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5045,6 +5082,26 @@ export interface paths {
         get: operations["listSavedDirectorySearches"];
         put?: never;
         post: operations["createSavedDirectorySearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/artist-claim-targets/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Prepare a core artist for a reviewed management claim
+         * @description Authenticated, idempotent preparation. Reuses an existing canonical directory target or creates a private draft under a per-artist lock. Returns only an opaque target ID and the core artist public name. Does not publish, grant permissions, or transfer identity. Archived, suspended and blocked targets are denied.
+         */
+        put: operations["prepareArtistManagementClaim"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9467,6 +9524,24 @@ export interface components {
             progress: components["schemas"]["OnboardingProgress"];
             /** @description True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence. */
             newlyCompleted: boolean;
+        };
+        ExperimentAssignment: {
+            experimentId: string;
+            experimentVersion: number;
+            experimentEnabled: boolean;
+            experimentEligible: boolean;
+            variant: string;
+            /** Format: date-time */
+            assignedAt: string | null;
+            /** Format: date-time */
+            eligibleUntil: string | null;
+            /** Format: date-time */
+            exposedAt: string | null;
+            newlyAssigned: boolean;
+        };
+        ExperimentExposureResult: {
+            assignment: components["schemas"]["ExperimentAssignment"];
+            newlyExposed: boolean;
         };
         SessionResponse: {
             username: string;
@@ -14149,6 +14224,41 @@ export interface operations {
             };
         };
     };
+    requestPasswordReset: {
+        parameters: {
+            query?: {
+                /** @description Optional local destination, revalidated against the recovered account's permissions. Invalid destinations are ignored. */
+                redirect?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Request processed without revealing whether the account exists or email delivery succeeded. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request email. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -15615,6 +15725,40 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ArtistProfile"][];
                 };
+            };
+        };
+    };
+    activateMyArtistProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artist profile ready to edit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistProfile"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Account or automatic artist policy does not allow activation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -23239,6 +23383,46 @@ export interface operations {
         responses: {
             /** @description Idempotent saved search; alert deliveries are deduplicated by result version */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    prepareArtistManagementClaim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted claim target; no management access granted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist unavailable for claims */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -537,6 +537,11 @@
       "introducedBy": "9ddd014b9d6a897d15608d9d23f4445c4c7118eb"
     },
     {
+      "id": "2026-09-16_artist_self_service",
+      "path": "tdf-hq/sql/2026-09-16_artist_self_service.sql",
+      "introducedBy": "d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37"
+    },
+    {
       "id": "2026-09-17_identity_reconciliation",
       "path": "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
       "introducedBy": "ab0a7cc211c0ad1be72fcc60ed3ad324d8227501"

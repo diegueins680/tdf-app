@@ -292,6 +292,7 @@ import TDF.Models
     )
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
+import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.SocialEventLifecycle as EventLifecycle
 import TDF.ServerRadio (
@@ -3323,32 +3324,43 @@ socialEventsServer user =
         resolvedGenres <-
             liftIO (runSqlPool (resolvePublishedArtistGenres (artistGenreIds dto)) envPool)
                 >>= either (throwError . invalidArtistGenreIdsError) pure
-        key <- liftIO $ runSqlPool
+        result <- liftIO $ runSqlPool
             ( do
-                artistKey <- insert
-                        ArtistProfile
-                            { artistProfilePartyId = Just targetPartyId
-                            , artistProfileName = artistNameVal
-                            , artistProfileBio = artistBio dto
-                            , artistProfileAvatarUrl = artistAvatarUrl dto
-                            , -- Keep this nullable for compatibility with deployments where the
-                              -- legacy column type is TEXT instead of TEXT[].
-                              artistProfileGenres = Nothing
-                            , artistProfileSocialLinks = encodeSocialLinks (artistSocialLinks dto)
-                            , artistProfileCountryCode = Nothing
-                            , artistProfileCountryId = Nothing
-                            , artistProfileCreatedAt = now
-                            , artistProfileUpdatedAt = now
-                            }
-                forM_ (zip [0 :: Int ..] resolvedGenres) $ \(position, (genreId, _)) ->
-                    insert_ ArtistGenreMembership
-                        { artistGenreMembershipArtistId = artistKey
-                        , artistGenreMembershipGenreId = genreId
-                        , artistGenreMembershipSortOrder = position
-                        , artistGenreMembershipCreatedAt = now
-                        }
-                pure artistKey
+                activation <- if targetPartyId == renderPartyId user
+                    then fmap (fmap (const ())) (ArtistProfiles.activateOwnArtistProfile (auPartyId user) now)
+                    else pure (Right ())
+                case activation of
+                    Left message -> pure (Left err403{errBody = BL.fromStrict (TE.encodeUtf8 message)})
+                    Right () -> do
+                        current <- selectFirst [ArtistProfilePartyId ==. Just targetPartyId] []
+                        case current of
+                            Just _ -> pure (Left err409{errBody = "An artist profile already exists for this party"})
+                            Nothing -> do
+                                artistKey <- insert
+                                        ArtistProfile
+                                            { artistProfilePartyId = Just targetPartyId
+                                            , artistProfileName = artistNameVal
+                                            , artistProfileBio = artistBio dto
+                                            , artistProfileAvatarUrl = artistAvatarUrl dto
+                                            , -- Keep this nullable for compatibility with deployments where the
+                                              -- legacy column type is TEXT instead of TEXT[].
+                                              artistProfileGenres = Nothing
+                                            , artistProfileSocialLinks = encodeSocialLinks (artistSocialLinks dto)
+                                            , artistProfileCountryCode = Nothing
+                                            , artistProfileCountryId = Nothing
+                                            , artistProfileCreatedAt = now
+                                            , artistProfileUpdatedAt = now
+                                            }
+                                forM_ (zip [0 :: Int ..] resolvedGenres) $ \(position, (genreId, _)) ->
+                                    insert_ ArtistGenreMembership
+                                        { artistGenreMembershipArtistId = artistKey
+                                        , artistGenreMembershipGenreId = genreId
+                                        , artistGenreMembershipSortOrder = position
+                                        , artistGenreMembershipCreatedAt = now
+                                        }
+                                pure (Right artistKey)
             ) envPool
+        key <- either throwError pure result
         let genreIds = map fst resolvedGenres
             genreList = map snd resolvedGenres
         pure

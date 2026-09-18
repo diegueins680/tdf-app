@@ -8,7 +8,7 @@ jest.unstable_mockModule('../utils/env', () => ({
   },
 }));
 
-const { confirmPasswordReset, loginRequest, signupRequest } = await import('./auth');
+const { confirmPasswordReset, loginRequest, signupRequest, requestPasswordReset } = await import('./auth');
 
 const createHeaders = (contentType?: string, extra: Record<string, string | null> = {}) => ({
   get: jest.fn((name: string) => {
@@ -29,6 +29,26 @@ describe('auth api', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+  });
+
+  it.each([undefined, null, 'https://evil.example/', '//evil.example/', '/\\evil.example/'])('omits unsafe reset destinations: %s', async (redirect) => {
+    fetchMock.mockResolvedValueOnce({ ok: true } as Response);
+    await requestPasswordReset('ana@example.com', redirect);
+    expect(fetchMock).toHaveBeenCalledWith('/v1/password-reset', expect.objectContaining({
+      body: JSON.stringify({ email: 'ana@example.com' }),
+    }));
+  });
+
+  it('carries a safe destination separately from the compatible email-only body', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true } as Response);
+    const redirect = '/fans?artist=42&tab=eventos#próximo';
+    await requestPasswordReset('ana@example.com', redirect);
+    const [url, init] = fetchMock.mock.calls[0]!;
+    if (typeof url !== 'string' || typeof init?.body !== 'string') {
+      throw new Error('Expected a URL string and the compatible JSON body');
+    }
+    expect(new URL(url, 'https://tdf.local').searchParams.get('redirect')).toBe('/fans?artist=42&tab=eventos#pr%C3%B3ximo');
+    expect(JSON.parse(init.body)).toEqual({ email: 'ana@example.com' });
   });
 
   it('posts password reset confirmations to the v1 confirm endpoint', async () => {
