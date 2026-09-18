@@ -13867,6 +13867,45 @@
         "validation": "scripts/test-identity-reconciliation.sh",
         "authoritativeModel": "identity_reconciliation_case.status"
       }
+    },
+    {
+      "id": "cedbc4f84ceef2965f77",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Ordered migration identifiers and script paths remain deployment execution mechanics, with applied revisions persisted in the ledger. This manifest preserves all 103 main entries unchanged and adds the independently reviewed artist policy after them. Directory privacy view composition and artist policy touch independent objects; both are retained with unchanged SQL. All 104 introduction SHAs are ancestors containing their registered path.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-directory-integration-2026-09-17",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 104
+      }
+    },
+    {
+      "id": "3ad9915d69339318f9ff",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
+      "justification": "Reviewed 2026-09-18: AuthErrorCode union in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "reviewed": true
+    },
+    {
+      "id": "4b3f6f86992b9c64f7a3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
+      "justification": "Reviewed 2026-09-18: error.code translation switch in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "reviewed": true
     }
   ]
 }
