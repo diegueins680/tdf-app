@@ -762,6 +762,60 @@ paths:
                 $ref: '#/components/schemas/OnboardingCompletionResult'
         '401':
           description: Authentication required
+  /session/experiments/{experimentId}/assignment:
+    parameters:
+      - name: experimentId
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [single-feature-onboarding-v1]
+    get:
+      tags: [Session]
+      summary: Read the current account experiment assignment
+      description: Uses authenticated Party authority and persisted signup/completion eligibility. Disabled by default; paused responses do not assign or record exposure. No roles or permissions are granted. Assignment is versioned and exposure is idempotent.
+      operationId: getExperimentAssignment
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Current experiment state, including a paused control response when disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentAssignment'
+        '401':
+          description: Authentication required
+        '404':
+          description: Unsupported experiment
+  /session/experiments/{experimentId}/exposure:
+    parameters:
+      - name: experimentId
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [single-feature-onboarding-v1]
+    post:
+      tags: [Session]
+      summary: Record the current account experiment exposure
+      description: Uses authenticated Party authority and persisted signup/completion eligibility. Disabled by default; paused responses do not assign or record exposure. No roles or permissions are granted. Assignment is versioned and exposure is idempotent.
+      operationId: recordExperimentExposure
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Current experiment state, including a paused control response when disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentExposureResult'
+        '401':
+          description: Authentication required
+        '404':
+          description: Unsupported experiment
   /public/courses/{slug}:
     parameters:
       - name: slug

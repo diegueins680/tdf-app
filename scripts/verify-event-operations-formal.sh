@@ -64,6 +64,8 @@ run_tlc() {
 cd "${MODEL_DIR}"
 
 # Keep TLC sequential: 1.7.2 materializes standard modules through a shared temp location.
+run_tlc ExperimentAuthority.tla ExperimentAuthority.cfg experiment-authority
+run_tlc ExperimentAuthority.tla ExperimentAuthorityPaused.cfg experiment-paused
 run_tlc EventLifecycle.tla EventLifecycle.cfg event-lifecycle
 run_tlc EventLifecycle.tla EventLifecycleBoundaries.cfg event-lifecycle-boundaries
 
@@ -77,6 +79,9 @@ run_negative_tlc() {
     exit 1
   fi
 }
+run_negative_tlc ExperimentAuthorityStale.cfg experiment-stale 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
+run_negative_tlc ExperimentAuthorityDuplicate.cfg experiment-duplicate 'Invariant ExposureAtMostOnce is violated' ExperimentAuthority.tla
+run_negative_tlc ExperimentAuthorityAccount.cfg experiment-account 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
 run_negative_tlc EventLifecycleUnsafeFinance.cfg unsafe-finance 'Invariant AcceptedAuditIsAuthorized is violated'
 run_negative_tlc EventLifecycleUnsafeArchive.cfg unsafe-archive 'Invariant AcceptedAuditIsAuthorized is violated'
 run_negative_tlc EventLifecycleUnsafeAudit.cfg unsafe-audit 'Action property AuditAppendOnly is violated'
