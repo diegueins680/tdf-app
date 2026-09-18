@@ -233,6 +233,11 @@ describe('auth api', () => {
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
+  it('tags an empty unauthorized response for locale-aware presentation', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 401, headers: createHeaders('text/plain'), text: async () => '' } as Response);
+    await expect(loginRequest({ username: 'synthetic', password: 'fictional' })).rejects.toMatchObject({ code: 'credentials', message: 'Credenciales inválidas' });
+  });
+
   it('aborts a hanging signup request with a stable timeout message', async () => {
     jest.useFakeTimers();
     fetchMock.mockImplementation((_input, init) => new Promise((_resolve, reject) => {
@@ -249,9 +254,7 @@ describe('auth api', () => {
       termsAccepted: true,
       termsVersion: 'test-terms',
     });
-    const rejection = expect(pending).rejects.toThrow(
-      'La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.',
-    );
+    const rejection = expect(pending).rejects.toMatchObject({ code: 'timeout', message: 'La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.' });
 
     await jest.advanceTimersByTimeAsync(30_000);
     await rejection;
