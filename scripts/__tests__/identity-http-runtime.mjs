@@ -69,12 +69,16 @@ try {
   const execute = () => JSON.parse(sql(`SELECT identity_execute_merge('${operation}','${caseId}','${plan.fingerprint}');`));
   assert.equal(execute().status, 'applied'); assert.equal(execute().status, 'already-applied');
   assert.equal((await post('a', 'identity-http-request-0002')).status, 409, 'retired request cannot silently reuse canonical identity');
+  const edit = (id, who, notes) => fetch(`${base}/parties/${id}`, { method: 'PUT', headers: { ...headers(who), 'Content-Type': 'application/json' }, body: JSON.stringify({ uNotes: notes }) });
+  assert.equal((await edit(retired, 'a', 'must not write')).status, 409, 'archived edits need an understandable conflict');
+  assert.equal((await edit(retired, 'denied', 'must not write')).status, 403);
+
   const listed = await (await fetch(`${base}/parties?limit=200`, { headers: headers('a') })).json();
   assert.ok(!listed.some(p => p.partyId === retired));
   assert.equal((await (await fetch(`${base}/parties/${retired}`, { headers: headers('a') })).json()).partyId, survivor);
   assert.equal((await fetch(`${base}/parties/${retired}`, { headers: headers('denied') })).status, 403);
   assert.equal((await fetch(`${base}/parties/${retired}`)).status, 401);
-  sql(`UPDATE party SET notes='unrelated later edit' WHERE id=${survivor};`);
+  assert.equal((await edit(survivor, 'a', 'unrelated later edit')).status, 200);
   assert.equal(JSON.parse(sql(`SELECT identity_rollback_merge('${operation}');`)).status, 'reverted');
   assert.equal(JSON.parse(sql(`SELECT identity_rollback_merge('${operation}');`)).status, 'already-reverted');
   assert.equal(sql(`SELECT notes FROM party WHERE id=${survivor}`), 'unrelated later edit');

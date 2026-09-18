@@ -9390,7 +9390,7 @@ updateParty user pidI req = do
   primaryEmailUpdate <- either throwError pure (validatePartyPrimaryEmailUpdate (uPrimaryEmail req))
   Env pool _ <- ask
   let pid = toSqlKey pidValid :: Key Party
-  liftIO $ flip runSqlPool pool $ do
+  result <- liftIO $ try $ flip runSqlPool pool $ do
     mp <- get pid
     case mp of
       Nothing -> pure ()
@@ -9408,7 +9408,12 @@ updateParty user pidI req = do
               , partyNotes            = maybe (partyNotes p) Just       (uNotes req)
               }
         replace pid p'
-  getParty user pidValid
+  case result of
+    Left sqlError
+      | sqlState sqlError == "55000" ->
+          throwError err409 { errBody = "This contact was archived. Open its current record before editing." }
+      | otherwise -> throwError err500 { errBody = "Contact update failed" }
+    Right () -> getParty user pidValid
 
 validatePartyDisplayName :: Text -> Either ServerError Text
 validatePartyDisplayName rawDisplayName =
