@@ -137,7 +137,7 @@ type CmsAdminAPI =
 
 type PartyAPI =
        QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [PartyDTO]
-  :<|> ReqBody '[JSON] PartyCreate :> Post '[JSON] PartyDTO
+  :<|> Header "Idempotency-Key" Text :> ReqBody '[JSON] PartyCreate :> Post '[JSON] PartyDTO
   :<|> "search" :>
          QueryParam "q" Text :>
          QueryParam "context" Text :>

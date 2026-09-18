@@ -45,7 +45,7 @@ Welcome to the comprehensive documentation for the TDF Records Platform. This in
 
 ### Mobile Development (React Native)
 - **[README.md](README.md#mobile-app---tdf-mobile)** - Mobile app overview
-- **Note:** Mobile app is a Git submodule - run `git submodule update --init --recursive`
+- **Note:** Mobile app is a Git submodule - run `git submodule update --init --checkout --recursive`
 
 ### API Development
 - **[DEVELOPMENT.md](DEVELOPMENT.md#making-api-changes)** - API development workflow
@@ -268,7 +268,7 @@ The Musician Developer agent specializes in:
 2. **CORS errors**: Verify `ALLOW_ORIGINS` includes your frontend URL
 3. **API generation fails**: Validate OpenAPI spec and check paths
 4. **Module not found**: Run `stack clean && stack build` or `npm install`
-5. **Submodule issues**: Run `git submodule update --init --recursive`
+5. **Submodule issues**: Run `git submodule update --init --checkout --recursive`
 
 ### Support Channels
 - Review existing documentation
