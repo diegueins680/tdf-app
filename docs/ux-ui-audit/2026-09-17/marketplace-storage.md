@@ -33,3 +33,20 @@ La continuación está implementada y verificada localmente; revisión, merge y
 despliegue siguen pendientes. No requiere migración ni cambio de API. Recuperación:
 revertir este incremento web únicamente preservando los demás cambios de main;
 no ejecutar rollback de base de datos ni de autenticación por este cambio.
+
+## Production verification — 2026-09-18 17:20 UTC
+
+PR450 exact585003b6e passed all applicable gates and independent approval, then
+merged normally as3f0a56c0ded55fa9525dc80c895505ffcb069449. The original CI run
+passed259/260 persona cases; WebKit recovery-dialog close timed out on unchanged
+auth code. The exact local case passed3/3; one justified retry of only that CI job
+passed all260. Failed attempts are not counted as passing evidence.
+
+Cloudflare8f01e9e1 completed; public HTML matches its immutable deployment byte
+for byte. Six real production cases passed in Chromium/Firefox/WebKit320/1280
+with both storage getters denied: populated catalog, search, empty results, URL
+filters and reload, zero page errors, axe violations and horizontal overflow.
+The first probe expected Aguilar on page1 although the catalog sorts it later;
+that fixture error is excluded. The corrected check starts at the observed QHA
+item and finds Aguilar through search. No order/payment was attempted. API remains
+e1; no backend deployment was duplicated. See evidence/marketplace-storage-deployment.json.

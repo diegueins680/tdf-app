@@ -1,0 +1,87 @@
+{
+  "sourceSHA": "9f4d0e89c430e25fcd572b4c87736cad15e12012",
+  "runId": "35376470123",
+  "runAttempt": "1",
+  "bundleIdentifier": "com.tdfrecords.app",
+  "version": "1.0.1",
+  "build": "25",
+  "sdk": "iphoneos26.2",
+  "xcode": "2620",
+  "artifact": "TDFRecords.ipa",
+  "bytes": 45497230,
+  "sha256": "087137b510977a614541f0d80c01c76003def64afc687f2179780036b15de925",
+  "signatureVerified": true,
+  "embeddedProductionAPI": true,
+  "publication": "Apple VALID; internal TestFlight IN_BETA_TESTING; App Review WAITING_FOR_REVIEW submission c59f5706-f10e-4caf-ad00-3fff47911f3b, release MANUAL. Public production not released; physical iPhone Google OAuth pending.",
+  "physicalGoogleOAuth": "required separately before production",
+  "independentLocalVerification": "Passed codesign deep/strict, embedded App Store provisioning profile, bundle/version/build, SDK26.2, Google URL scheme and production API.",
+  "appleValidation": {
+    "observedAt": "2026-09-18T18:06:42.133Z",
+    "exitCode": 0,
+    "signal": null,
+    "ipaSHA256": "087137b510977a614541f0d80c01c76003def64afc687f2179780036b15de925"
+  },
+  "appleUpload": {
+    "observedAt": "2026-09-18T18:08:23.481Z",
+    "exitCode": 0,
+    "signal": null,
+    "ipaSHA256": "087137b510977a614541f0d80c01c76003def64afc687f2179780036b15de925"
+  },
+  "appleProcessing": {
+    "observedAt": "2026-09-18T18:12:36.321Z",
+    "status": 200,
+    "kind": "build25",
+    "data": [
+      {
+        "id": "9fc7948f-c3a3-4e61-a08f-28960ba6e997",
+        "version": "25",
+        "uploadedDate": "2026-09-18T11:09:34-07:00",
+        "processingState": "VALID"
+      }
+    ],
+    "beta": [
+      {
+        "id": "9fc7948f-c3a3-4e61-a08f-28960ba6e997",
+        "autoNotifyEnabled": true,
+        "internalBuildState": "IN_BETA_TESTING",
+        "externalBuildState": "READY_FOR_BETA_SUBMISSION"
+      }
+    ]
+  },
+  "appReview": {
+    "observedAt": "2026-09-18T18:16:24.971Z",
+    "phase": "submit",
+    "build": {
+      "id": "9fc7948f-c3a3-4e61-a08f-28960ba6e997",
+      "version": "25",
+      "processingState": "VALID"
+    },
+    "result": {
+      "type": "reviewSubmissions",
+      "id": "c59f5706-f10e-4caf-ad00-3fff47911f3b",
+      "attributes": {
+        "platform": "IOS",
+        "submittedDate": "2026-09-18T18:16:23.722Z",
+        "state": "WAITING_FOR_REVIEW"
+      },
+      "relationships": {
+        "items": {
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/c59f5706-f10e-4caf-ad00-3fff47911f3b/relationships/items",
+            "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/c59f5706-f10e-4caf-ad00-3fff47911f3b/items"
+          }
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/c59f5706-f10e-4caf-ad00-3fff47911f3b"
+      }
+    },
+    "version": {
+      "id": "df5500ae-e7a2-4b3c-8de9-e06869733bde",
+      "state": "WAITING_FOR_REVIEW",
+      "releaseType": "MANUAL"
+    },
+    "publicRelease": false,
+    "physicalGoogleOAuth": "pending; MANUAL release hold retained"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "at": "2026-09-18T18:39:12.508483+00:00",
+  "maestroExit": 0,
+  "scope": "Native search editing at200%, long text horizontally scrolls and clears; tab navigation remains visible",
+  "excludedAttempt": "hideKeyboard issued Back when software keyboard was already absent, returning to previous USB settings; fixture error, not product regression",
+  "limits": "No soft-keyboard or whole-form accessibility certification"
+}

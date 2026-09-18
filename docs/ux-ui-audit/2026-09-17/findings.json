@@ -86,12 +86,12 @@
       "mobile PR"
     ],
     "acceptanceCriteria": "All mobile gates pass on published commit; generated API matches parent; native validation and release identify exact same SHA.",
-    "verificationMethod": "Old pin 326/327 with timeout; current main 456/456 plus typecheck; remaining checks recorded separately.",
-    "releaseStatus": "Current mobile corrections not publicly distributed. Android15 source90ca EAS96622c14 and isolatedQA46b1 in progress. Old4602 used preview/production API and is disqualified for isolated QA; wrong-profile download removed with receipt. iOS23 GitHub first attempt failed1/507 tests from production env leaking into Jest;106 isolates test env. Apple1.0.1 release MANUAL and WAITING_FOR_REVIEW verified15:51. Physical iPhone OAuth pending.",
+    "verificationMethod": "Current published mobile pin qualified with release:check, regenerated API parity, 510 mobile tests, signed-artifact checks and bounded runtime evidence; historical baseline and failures retained in Git history and evidence/status-reconciliation.json.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained.",
     "status": "merged",
-    "implementationStatus": "in progress",
-    "verificationStatus": "Historical onboarding recovery is incorporated. Current main430 pins7b7ecaf; tab fix667 must be integrated without losing required Google provider contract. Parent435 reconciliation and cold-start release blocker UX035 remain pending.",
-    "mergeStatus": "Mobile90ca source merged; parent pin90ca merged through435/449 as e1. GitHub build workflow merged mobile#105 a72ee5; workflow-only successor106 pending."
+    "implementationStatus": "implemented; merge evidence below, release and remaining verification tracked separately",
+    "verificationStatus": "Historical recovery, Google provider contract, native cold-start repair and enlarged-tab fixes are contained in2a0e5a99535d9ef199a3e3464a660192f882f72b. Root454 b22 CI completed:2193 web tests,510 mobile tests,persona browser gate,contracts,catalog and primary Cloudflare pass. Regeneration against newly merged root7635a5f leaves mobile generated types unchanged and identical to web; release:check passes. Correct isolated Android QA46b1 passed login/follow/cold return, with installed064b recheck at18:32; iOS simulator text/cold-link evidence remains separately bounded. Exact signed iOS25/Android17 source SHAs and equivalent runtime at the pin are in evidence/mobile-artifact-pin-equivalence.json. New parent head requires its own review/gates; physical iPhone Google and full native acceptance remain incomplete.",
+    "mergeStatus": "Original product corrections contained in mobile90cae070 and parent435/449 e1. Mobile105–114 merged through2a0e5a99535d9ef199a3e3464a660192f882f72b, including native text and GitHub tooling. Parent454 pin pending independent review/merge. Generated API contracts unchanged; evidence/mobile-artifact-pin-equivalence.json relates the exact signed sources."
   },
   {
     "id": "UX-260917-005",
@@ -111,7 +111,7 @@
     ],
     "acceptanceCriteria": "Rejected launch shows accessible ES/EN guidance; explicit retry uses same policy URL; entered email remains; no implicit signup/consent.",
     "verificationMethod": "Rendered React Native regression and native font/screen-reader checks.",
-    "releaseStatus": "Mobile#89 mergedd22b49e; iOS simulator policy-return/input verified on74d784c; production store release pending.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained.",
     "status": "merged",
     "implementationStatus": "implemented",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
@@ -136,7 +136,7 @@
     "releaseStatus": "Web/API e1 deployed2026-09-18; guarded backend complete16:02:10Z, 110 migrations, both machines healthy, lease released. See evidence/release-e1-verification.json. Per-journey acceptance and native distribution remain separately bounded.",
     "status": "deployed",
     "implementationStatus": "Authentication previously merged; directory ES/EN catalog, metadata, taxonomy locale and accessible labels implemented in focused successor.",
-    "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained. Directory:26 focused tests and10 ES/EN production-bundle journeys in3engines/5profiles pass; public identities and query retained.",
+    "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final release status is recorded separately. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained. Directory:26 focused tests and10 ES/EN production-bundle journeys in3engines/5profiles pass; public identities and query retained.",
     "mergeStatus": "Merged through #449 as e1a825bda26dbb16b1c732e551cc4880d5626943; normal ancestry preserves original increments and migration introduction49ff.",
     "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
@@ -156,11 +156,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Anonymous login renders and theme toggle retains input under denied operations/getters; no uncaught errors; no unauthorized session created.",
     "verificationMethod": "Playwright Chromium/Firefox/WebKit, desktop/tablet/phone and axe; exact baseline/final logs.",
-    "releaseStatus": "Web/API e1 deployed2026-09-18; guarded backend complete16:02:10Z, 110 migrations, both machines healthy, lease released. See evidence/release-e1-verification.json. Per-journey acceptance and native distribution remain separately bounded. New Marketplace continuation NOT deployed; finding remains open.",
-    "status": "implemented",
+    "releaseStatus": "Web450 Cloudflare8f01e9e1 verified public=immutable; six actual production storage-denial cases pass. Backend remains verifiede1. See evidence/marketplace-storage-deployment.json. Full unrelated route/state coverage remains explicit.",
+    "status": "deployed",
     "implementationStatus": "Earlier startup fixes deployed; additional trial filters, service token-cache recovery and all authenticated radio preference accesses implemented. Directory follow-up separately preserved in PR447.\nRelated increment evidence: Previous startup fixes deployed; directory city follow-up implemented with URL/in-memory fallback. Marketplace continuation guards only optional preferences/cart display caches; durable checkout keys remain required.",
-    "verificationStatus": "see evidence and acceptance criteria; full coverage not complete Storage continuation:40 focused tests;48 final actual isolated Admin/API browser cases across3engines;20 controlled anonymous cases on page-fix predecessor; full pinned formal suite,TS/lint/build/strict1138catalog pass. Intermediate RadioWidget failures excluded. Directory follow-up: 18 focused tests, pinned formal suite, TypeScript/lint/build and targeted production-bundle browser checks; see directory-entry.md and receipt. Marketplace successor:23 tests;30 distinct real isolated API/browser cases; full pinned TLC/Alloy; TypeScript/lint/build pass. See evidence/marketplace-storage-verification.json.",
-    "mergeStatus": "Merged through #449 as e1a825bda26dbb16b1c732e551cc4880d5626943; normal ancestry preserves original increments and migration introduction49ff. New Marketplace continuation not yet merged.",
+    "verificationStatus": "see evidence and acceptance criteria; full coverage not complete Storage continuation:40 focused tests;48 final actual isolated Admin/API browser cases across3engines;20 controlled anonymous cases on page-fix predecessor; full pinned formal suite,TS/lint/build/strict1138catalog pass. Intermediate RadioWidget failures excluded. Directory follow-up: 18 focused tests, pinned formal suite, TypeScript/lint/build and targeted production-bundle browser checks; see directory-entry.md and receipt. Marketplace successor:23 tests;30 distinct real isolated API/browser cases; full pinned TLC/Alloy; TypeScript/lint/build pass. See evidence/marketplace-storage-verification.json. Six production cases at320/1280 in3engines pass catalog/search/empty/URLreload/axe/errors/overflow; no consequential production mutation.",
+    "mergeStatus": "Startup/directory corrections merged through449/e1; Marketplace450 merged3f0a56c0ded55fa9525dc80c895505ffcb069449 after exact-head independent approval and applicable gates.",
     "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
@@ -179,7 +179,7 @@
     "dependencies": [],
     "acceptanceCriteria": "release:check passes with generated Expo route declarations present; existing navigation tests pass",
     "verificationMethod": "release:check and 19 navigation tests",
-    "releaseStatus": "Mobile#89 mergedd22b49e; release:check with Expo generated route types passed; store release pending.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained.",
     "status": "merged",
     "implementationStatus": "implemented",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
@@ -203,9 +203,9 @@
     ],
     "acceptanceCriteria": "Canonical clients match and actual synthetic activation succeeds without unauthorized grant or lost Google claim",
     "verificationMethod": "schema generation, server tests, authenticated staged journey",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment.",
     "status": "merged",
-    "implementationStatus": "in progress",
+    "implementationStatus": "implemented; merge evidence below, release and remaining verification tracked separately",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
@@ -227,9 +227,9 @@
     ],
     "acceptanceCriteria": "Replacement link opens recovery directly; valid destination survives; unsafe targets remain rejected by existing routing validation; closing returns to usable login; failed request retains email with actionable feedback.",
     "verificationMethod": "PW-PER-LOCALE ES/EN across five browser/device profiles and existing loginRouting tests.",
-    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment. Historical a81 public smoke verified English login/signup/legal/recovery with storage allowed/denied and token removal; no signup, email or reset mutation.",
     "status": "merged",
-    "implementationStatus": "in progress",
+    "implementationStatus": "implemented; merge evidence below, release and remaining verification tracked separately",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
     "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9"
   },
@@ -249,9 +249,9 @@
     "dependencies": [],
     "acceptanceCriteria": "Helper text meets 4.5:1 in light/dark themes across desktop/tablet/phone and selected browsers; no weakened axe checks.",
     "verificationMethod": "Axe plus screenshot inspection; include signup with intent and long ES/EN policy copy.",
-    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication.",
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment.",
     "status": "merged",
-    "implementationStatus": "in progress",
+    "implementationStatus": "implemented; merge evidence below, release and remaining verification tracked separately",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
     "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9"
   },
@@ -275,7 +275,7 @@
     ],
     "acceptanceCriteria": "FH-01 through FH-06 in fanhub-onboarding.md; no automatic completion, firstValue fabrication or stale session update; single pending command per generation; accessible retry and conditional liveness.",
     "verificationMethod": "TLC safety/conditional liveness with five negative controls; component/API conformance; 14 isolated browser cases across five profiles; actual backend/native scope remains separate.",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment.",
     "status": "merged",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
     "verificationStatus": "exact-head CI, TLC and PostgreSQL foundation passed; fixtures not live persistence"
@@ -300,7 +300,7 @@
     "verificationMethod": "Two activation regressions failed before repair (7 preexisting passed); malformed claim receipt also failed before validation. Final 18/18 component tests pass. Current event formal runner passed safety/liveness/negative controls and Alloy; CurrentContext/SingleFlight/TerminalOnly map to session identity, flight guard and validated receipts. Model bounds and assumptions remain those of fanhub-onboarding.md; does not prove artist database or authorization.",
     "status": "merged",
     "implementationStatus": "implemented in source912f8326ba7a13611cfbad592f6680fe50bdbefc",
-    "verificationStatus": "13 activation tests, TypeScript, full UI lint and23 CI contracts pass. Full pinned TLC/Alloy runner passes; ArtistActivation15 states with safety/liveness and named negative control. Exact new head CI/review pending.",
+    "verificationStatus": "13 activation tests, TypeScript, full UI lint and23 CI contracts pass. Full pinned TLC/Alloy runner passes; ArtistActivation15 states with safety/liveness and named negative control. Exact-head approval and applicable CI completed before #406 merged; see mergeStatus.",
     "mergeStatus": "PR #406 merged as db69e0534e87ffcb9b3ccf3a856a7fc85e839f16; all applicable source gates and exact independent approval verified",
     "releaseStatus": "Backend db69e0534e87ffcb9b3ccf3a856a7fc85e839f16 guarded release complete2026-09-18T02:03:41Z; both machine health/version verified; evidence/production-release-db69.json. Web db69 Cloudflare success. Native store and remaining journey acceptance separate."
   },
@@ -369,9 +369,9 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "merged",
     "implementationStatus": "Sensitive query/property redaction and visible reset-token removal preserved;671536398/7876ed55f contained in main437fddd.",
-    "verificationStatus": "Current source inspected; analytics regression included in41 passing targeted tests. Production PostHog interception remains unverified.",
+    "verificationStatus": "Current source inspected; analytics regression included in41 passing targeted tests. Production PostHog interception remains unverified. Three real production reset-page cases in Chromium/Firefox/WebKit now verify synthetic token removal from the visible URL and zero backend writes/page errors. No telemetry event was observed; original broad request matcher counted assets/catalog reads and is excluded as analytics evidence. evidence/production-reset-privacy.json.",
     "mergeStatus": "contained in main437fddd",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "releaseStatus": "Token-removal behavior observed on the public production reset page in3engines; analytics-event redaction/production authenticated privacy remain unqualified."
   },
   {
     "id": "PRIV-01",
@@ -391,7 +391,7 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "merged",
     "implementationStatus": "PostHog masks personal data, disables DOM autocapture; SessionContext identifies only opaque party ID. Analytics sentinel tests pass. Network inspection of production analytics still pending.",
-    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; PostHog masks personal data, disables DOM autocapture; SessionContext identifies only opaque party ID. Analytics sentinel tests pass. Network inspection of production analytics still pending.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; PostHog masks personal data, disables DOM autocapture; SessionContext identifies only opaque party ID. Analytics sentinel tests pass. Network inspection of production analytics still pending. Anonymous production reset-page network probe in3engines observed no telemetry events, so it does not close authenticated identification/privacy acceptance; evidence/production-reset-privacy.json.",
     "mergeStatus": "Introduction/successor 7876ed55fa140ef09466a5281e3c40123b6f04e9 verified ancestor of main db69e0534.",
     "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
@@ -529,9 +529,9 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "merged",
     "implementationStatus": "Published mobile1ec9160 contained in merged PR94/f2b4823. AuthProvider revokes null session; TicketCheckout exposes public context/auth choices; allowlisted deep links preserve path/query and normalize repeated separators.",
-    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
-    "mergeStatus": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
-    "releaseStatus": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced."
+    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending. Later physical Samsung isolated QA verifies password login, persisted follow and session after reopening (evidence/android-physical-46b1.json and android-reconnect-verification.json). These checks do not close the distinct checkout, protected post-login destination, cross-account and physical iPhone Google cases.",
+    "mergeStatus": "Mobile PR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root422 merged f19bb8855e8a9bc5b73ee4c3199c631540eb0df9. Contained through mobile2a0e5a9 and parent449/e1; parent454 qualifies the current published pin, pending review/merge.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
   },
   {
     "id": "MOB-COM-01",
@@ -551,9 +551,9 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "merged",
     "implementationStatus": "Published mobile1ec9160 contained in merged PR94/f2b4823. AuthProvider revokes null session; TicketCheckout exposes public context/auth choices; allowlisted deep links preserve path/query and normalize repeated separators.",
-    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
-    "mergeStatus": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
-    "releaseStatus": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced."
+    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending. Later physical Samsung isolated QA verifies password login, persisted follow and session after reopening (evidence/android-physical-46b1.json and android-reconnect-verification.json). These checks do not close the distinct checkout, protected post-login destination, cross-account and physical iPhone Google cases.",
+    "mergeStatus": "Mobile PR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root422 merged f19bb8855e8a9bc5b73ee4c3199c631540eb0df9. Contained through mobile2a0e5a9 and parent449/e1; parent454 qualifies the current published pin, pending review/merge.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
   },
   {
     "id": "REV-01",
@@ -619,7 +619,7 @@
     "implementationStatus": "FanHub preserves selected artist via existing shared follow-resume helper; ArtistPublicPage requires explicit confirmation after signup.",
     "verificationStatus": "Final integrated production bundle: 2074 unit tests before the final color-only repair; Chromium/Firefox/WebKit real isolated signup→follow→persisted completion→reload, Space action retains route, light/dark 320/390/834/1280px and 200% text; zero axe violations/page errors. Chromium guest→signup→explicit follow→reload persists. See evidence/onboarding-browser-final.json. Not production/SMTP/OAuth evidence.",
     "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
-    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication."
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
   },
   {
     "id": "PRIV-02",
@@ -638,8 +638,8 @@
     "acceptanceCriteria": "Legacy persistent values are discarded; contact drafts created by the current user exist only in the current tab and clear with the tab/explicit clear/payment success. Account-switch behavior in an already-open anonymous tab was not separately runtime-tested. **Implemented and unit/runtime-verified for storage scope; boundary edge case remains unverified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "merged",
-    "implementationStatus": "Session-only personal drafts discard legacy persistent values. SessionProvider test exercises login/account change/expiry cleanup; current47-case conformance passes. Real-browser shared-tab account switch remains pending.",
-    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; Session-only personal drafts discard legacy persistent values. SessionProvider test exercises login/account change/expiry cleanup; current47-case conformance passes. Real-browser shared-tab account switch remains pending.",
+    "implementationStatus": "Session-only personal drafts discard legacy persistent values. SessionProvider test exercises login/account change/expiry cleanup; current47-case conformance passes. Real-browser logout-mediated shared-tab account switch now passes in3engines against isolated API/PostgreSQL: two distinct accounts each, both personal draft keys and legacy values cleared, authoritative session null after each logout. Synthetic draft injection; no production account. evidence/shared-tab-account-privacy.json. Concurrent tabs and involuntary expiry remain separate pending cases.",
+    "verificationStatus": "2026-09-18:9 targeted web suites/47 tests pass on c801066e4; Session-only personal drafts discard legacy persistent values. SessionProvider test exercises login/account change/expiry cleanup; current47-case conformance passes. Real-browser logout-mediated shared-tab account switch now passes in3engines against isolated API/PostgreSQL: two distinct accounts each, both personal draft keys and legacy values cleared, authoritative session null after each logout. Synthetic draft injection; no production account. evidence/shared-tab-account-privacy.json. Concurrent tabs and involuntary expiry remain separate pending cases.",
     "mergeStatus": "Introduction/successor 4e2fab9edc6117ea5e850174a1c1a0be3e6abf35 verified ancestor of main db69e0534.",
     "releaseStatus": "Contained in served db69 source; per-journey production acceptance still pending, not inferred from source containment."
   },
@@ -685,9 +685,9 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "verification pending",
     "implementationStatus": "Server-owned session onboarding contract already implemented; UX-012 adds frontend current-session fences. No new contract project required.",
-    "verificationStatus": "Actual isolated iOS18.3 simulator: password login/reopen, logout/account switch pass. UX037 exposed social-event/FanHub follow mismatch. Corrected Hermes production bundle: nativeB first follow and restart persist; actual webB sees follow and completed onboarding after reload; accountA completedAt unchanged. Final native artifact/Android/physical Google gates remain explicit.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "verificationStatus": "Actual isolated iOS18.3 simulator: password login/reopen, logout/account switch pass. UX037 exposed social-event/FanHub follow mismatch. Corrected Hermes production bundle: nativeB first follow and restart persist; actual webB sees follow and completed onboarding after reload; accountA completedAt unchanged. Final native artifact/Android/physical Google gates remain explicit. Correct full isolated Android QA46b1/6f8 on physicalSamsung passed login/canonicalfollow/coldreturn; authoritative API session/follows/onboarding200, count1, personalapp unchanged. See evidence/android-physical-46b1.json. This does not qualify production Google OAuth. Reconnected Samsung18:32UTC recheck passes persisted follow/cold-session return and1x/2x complete tab geometry on verified installed QA prototype064b; originalfont1.0 restored and personalapp unchanged. evidence/android-reconnect-verification.json. This is not installation of the Play17 artifact.",
+    "mergeStatus": "Original product corrections contained in mobile90cae070 and parent435/449 e1. Mobile105–114 merged through2a0e5a99535d9ef199a3e3464a660192f882f72b, including native text and GitHub tooling. Parent454 pin pending independent review/merge. Generated API contracts unchanged; evidence/mobile-artifact-pin-equivalence.json relates the exact signed sources.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
   },
   {
     "id": "MOB-ROUTE-01",
@@ -707,9 +707,9 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "merged",
     "implementationStatus": "Published mobile1ec9160 contained in merged PR94/f2b4823. AuthProvider revokes null session; TicketCheckout exposes public context/auth choices; allowlisted deep links preserve path/query and normalize repeated separators.",
-    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
-    "mergeStatus": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
-    "releaseStatus": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced."
+    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending. Later physical Samsung isolated QA verifies password login, persisted follow and session after reopening (evidence/android-physical-46b1.json and android-reconnect-verification.json). These checks do not close the distinct checkout, protected post-login destination, cross-account and physical iPhone Google cases.",
+    "mergeStatus": "Mobile PR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root422 merged f19bb8855e8a9bc5b73ee4c3199c631540eb0df9. Contained through mobile2a0e5a9 and parent449/e1; parent454 qualifies the current published pin, pending review/merge.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
   },
   {
     "id": "MOB-LINK-01",
@@ -729,9 +729,9 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "merged",
     "implementationStatus": "Published mobile1ec9160 contained in merged PR94/f2b4823. AuthProvider revokes null session; TicketCheckout exposes public context/auth choices; allowlisted deep links preserve path/query and normalize repeated separators.",
-    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
-    "mergeStatus": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
-    "releaseStatus": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced."
+    "verificationStatus": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending. Later physical Samsung isolated QA verifies password login, persisted follow and session after reopening (evidence/android-physical-46b1.json and android-reconnect-verification.json). These checks do not close the distinct checkout, protected post-login destination, cross-account and physical iPhone Google cases.",
+    "mergeStatus": "Mobile PR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root422 merged f19bb8855e8a9bc5b73ee4c3199c631540eb0df9. Contained through mobile2a0e5a9 and parent449/e1; parent454 qualifies the current published pin, pending review/merge.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
   },
   {
     "id": "API-01",
@@ -753,9 +753,9 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "merged",
     "implementationStatus": "Canonical schema now requires username/password, includes Agency, and optional non-null claimArtistId; current generated web/mobile clients match.",
-    "verificationStatus": "Current schema inspected and clients byte-compared at efa2555; hosted API contract checks passed on38256/8c2e5. Current root merge/backend rollout pending.",
+    "verificationStatus": "Current schema inspected and clients byte-compared at efa2555; hosted API contract checks passed on38256/8c2e5. Root422 merged and the contract is included in deployed e1; current generated web/mobile clients remain byte-identical after regeneration from main7635a5f.",
     "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
-    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication."
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
   },
   {
     "id": "EXP-01",
@@ -775,7 +775,7 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "deployed",
     "implementationStatus": "Focused successor b62895313 ports missing API/config/handlers from8c2960874 and both-arm tests3f1e6f3; existing model/DTO/migration retained. Adds progress-row serialization and post-lock clock, canonical OpenAPI paths and paused release guard. Integrated current main4b0bc6ed7 as0ebdb180d; experiment remains disabled.",
-    "verificationStatus": "Pre-integration: Stack9.10.3 --fast build;2578Hspec examples0fail1PG-onlypending; actual isolated HTTP/PostgreSQL paused/no-write,16concurrent assignments/exposures, account isolation, completion/expiry lock contention and revocation pass. Full pinned TLC/Alloy runner and3experiment negative controls pass.43native conformance tests pass after two initial5-second timeouts under host contention; no test timeout/assertion weakened. Post-main integration checks pending.",
+    "verificationStatus": "Pre-integration: Stack9.10.3 --fast build;2578Hspec examples0fail1PG-onlypending; actual isolated HTTP/PostgreSQL paused/no-write,16concurrent assignments/exposures, account isolation, completion/expiry lock contention and revocation pass. Full pinned TLC/Alloy runner and3experiment negative controls pass.43native conformance tests pass after two initial5-second timeouts under host contention; no test timeout/assertion weakened. Post-integration approval and applicable hosted gates completed before431 merged; production remains intentionally paused as specified in releaseStatus.",
     "mergeStatus": "Merged #431 as2f01b20b0c2a2e2088570c3dc5deba6197266452.",
     "releaseStatus": "Guarded2f01 complete; authenticated production assignment200 reports experimentEnabled=false,newlyAssigned=false,nullassignment/exposure. Intentionally paused as approved; no activated experiment or conversion claim."
   },
@@ -801,7 +801,7 @@
     "implementationStatus": "I18N successor implemented in #422; campaign labels historically implemented; neither is a new finding.",
     "verificationStatus": "I18N20-case policy/recovery matrix passed; complete campaign keyboard/screen-reader runtime remains pending.",
     "mergeStatus": "Contained in #422 merge f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
-    "releaseStatus": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation."
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment. Historical a81 public smoke verified English login/signup/legal/recovery with storage allowed/denied and token removal; no signup, email or reset mutation."
   },
   {
     "id": "A11Y-01",
@@ -821,7 +821,7 @@
     "verificationMethod": "Current runtime, component/source and release evidence; original report is historical.",
     "status": "deployed",
     "implementationStatus": "Use SelectProps.labelId for the visible MUI combobox, referencing row+column; notes retain their existing labels. Name calendar/creative progress indicators.",
-    "verificationStatus": "Actual isolated API/browser after label correction:320/1280 zero axe WCAG2.2-tagged violations; row/column IDs on visible combobox and notes. Complete5-tab cross-engine/keyboard/focus regression pending final shared-header change. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow.",
+    "verificationStatus": "Actual isolated API/browser after label correction:320/1280 zero axe WCAG2.2-tagged violations; row/column IDs on visible combobox and notes. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow.",
     "mergeStatus": "Merged #433 as6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval and all applicable hosted checks.",
     "releaseStatus": "Cloudflare345dbb80-6d55-4dfc-8e60-0f8dbecc72ac SUCCESS; public asset list matches. Ten production-bundle campaign cases PASS across5profiles/3engines with synthetic transport. Actual isolated14ES/ENloading cases already pass; no human screen-reader or field-performance claim."
   },
@@ -834,9 +834,9 @@
       "root PR #422"
     ],
     "status": "merged",
-    "implementationStatus": "Local changes; next exact-head review and hosted gates pending",
+    "implementationStatus": "Implemented and merged; exact source and approval/gate evidence recorded in mergeStatus.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment.",
     "id": "UX-260917-015",
     "title": "FanHub overflows narrow viewports after authenticated onboarding",
     "severity": "medium",
@@ -858,9 +858,9 @@
       "root PR #422"
     ],
     "status": "merged",
-    "implementationStatus": "Local changes; next exact-head review and hosted gates pending",
+    "implementationStatus": "Implemented and merged; exact source and approval/gate evidence recorded in mergeStatus.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment.",
     "id": "UX-260917-016",
     "title": "Artist card intercepts Space on its follow control",
     "severity": "medium",
@@ -882,9 +882,9 @@
       "root PR #422"
     ],
     "status": "merged",
-    "implementationStatus": "Local changes; next exact-head review and hosted gates pending",
+    "implementationStatus": "Implemented and merged; exact source and approval/gate evidence recorded in mergeStatus.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment.",
     "id": "UX-260917-017",
     "title": "Informational, warning and dark-surface public actions fail normal-text contrast",
     "severity": "medium",
@@ -916,10 +916,10 @@
     "acceptanceCriteria": "Controls and playback artwork links have accessible names; repeat applicable axe and keyboard checks.",
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
     "status": "merged",
-    "implementationStatus": "local scoped repair",
+    "implementationStatus": "Implemented; source, merge and release evidence recorded separately.",
     "verificationStatus": "Final integrated bundle 84 cases (42 static public routes × 320/1280px), zero axe violations, horizontal overflow, page errors or HTTP5xx; evidence/public-runtime-final.json. Does not cover dynamic resource routes, all roles, languages or native.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
   },
   {
     "id": "UX-260917-019",
@@ -940,10 +940,10 @@
     "acceptanceCriteria": "No horizontal page overflow at320px; readable branding and dates; generated code scrollable by keyboard.",
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
     "status": "merged",
-    "implementationStatus": "local scoped repair",
+    "implementationStatus": "Implemented; source, merge and release evidence recorded separately.",
     "verificationStatus": "Final integrated bundle 84 cases (42 static public routes × 320/1280px), zero axe violations, horizontal overflow, page errors or HTTP5xx; evidence/public-runtime-final.json. Does not cover dynamic resource routes, all roles, languages or native.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
   },
   {
     "id": "UX-260917-020",
@@ -964,10 +964,10 @@
     "acceptanceCriteria": "No enabled form without verified current credential; stale/ABA replies ignored; actionable retry; same-origin API validates; recoverable input retained.",
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
     "status": "merged",
-    "implementationStatus": "local scoped repair",
+    "implementationStatus": "Implemented; source, merge and release evidence recorded separately.",
     "verificationStatus": "Full web217 suites/2085 tests before final small transport/draft edits; affected final15 tests pass. AccessCodeValidation9 states and LiveIntakeAuthority42 states plus named negative controls pass. Real browser against isolated PostgreSQL17 verifies explicit code account persisted the inscription while unrelated cookie session is unchanged. Fresh/stored-Spanish recovery link opens English in Chromium/Firefox/WebKit. No production intake submitted.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
   },
   {
     "id": "UX-260917-021",
@@ -988,10 +988,10 @@
     "acceptanceCriteria": "Empty optional musician/song fields can persist; old/new client/server combinations stay compatible; contradictory aliases remain rejected; no change to ownership or permission rules.",
     "verificationMethod": "Actual multipart HTTP and DB persistence; parser regression tests; web wire-contract regression.",
     "status": "merged",
-    "implementationStatus": "local repair",
+    "implementationStatus": "Implemented; source, merge and release evidence recorded separately.",
     "verificationStatus": "33 multipart Hspec examples pass, preserving contradictory alias rejection. Web wire omission regression passes. Real browser writes with old strict backend; new compiled backend direct HTTP200 persists owner50,1 musician and1 song with null optionals in isolated PostgreSQL17.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
   },
   {
     "id": "UX-260917-022",
@@ -1014,7 +1014,7 @@
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "deployed",
     "implementationStatus": "dccd66606; integrated with#422 in d4f720e51; review follow-up distinguishes region/progress names, registers calendar locales and gates payment-intent creation on SDK readiness",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage.",
     "mergeStatus": "Merged #429 as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after exact2fb approval and all applicable gates.",
     "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented."
   },
@@ -1039,7 +1039,7 @@
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "deployed",
     "implementationStatus": "Original #429 fixes deployed; additional initial-coverage loaders named on Teachers, TeacherPortal, DDEX inbox, Services/revisions, Reports and Chat threads/messages in audit/ux-remaining-coverage-20260918. Public follow-up names five observed loaders with distinct existing ES/EN translation infrastructure: featuredartists,marketplace,publishedrecordings/releases/sessions.",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Focused slow-response verification pending. Four delayed-response ES/EN browser checks pass for both activity loading names and directory profile loader. Eight-case delayed ES/EN checks passed for first5 additional loaders. Subsequent Reports/Chat initial arrival and12-case delayed runtime confirmed missing names; final expanded checks pending. Final14 slow-response ES/EN cases pass: real isolated API/session, locale override; synthetic read-only thread for message loading. All8 additional loaders have distinct translated accessible names; zero aria-progressbar-name violations. Final build365423gzip/5preloads passes. Follow-up18 delayed-read cases (3pages×ES/EN×3engines) on real production bundle pass; each asserts actual document language and distinct translated accessible names. TypeScript/build/lint pass;365762gzipbytes/5preloads withinbudget. Earlier local harness used an obsolete locale key, so its requested-English rows were Spanish and discarded; corrected harness explicitly asserts actual language. No screen-reader/manual announcement certification.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Four delayed-response ES/EN browser checks pass for both activity loading names and directory profile loader. Eight-case delayed ES/EN checks passed for first5 additional loaders. Subsequent Reports/Chat initial arrival and12-case delayed runtime confirmed missing names; the final expanded result follows. Final14 slow-response ES/EN cases pass: real isolated API/session, locale override; synthetic read-only thread for message loading. All8 additional loaders have distinct translated accessible names; zero aria-progressbar-name violations. Final build365423gzip/5preloads passes. Follow-up18 delayed-read cases (3pages×ES/EN×3engines) on real production bundle pass; each asserts actual document language and distinct translated accessible names. TypeScript/build/lint pass;365762gzipbytes/5preloads withinbudget. Earlier local harness used an obsolete locale key, so its requested-English rows were Spanish and discarded; corrected harness explicitly asserts actual language. No screen-reader/manual announcement certification.",
     "mergeStatus": "Merged through #449 as e1a825bda26dbb16b1c732e551cc4880d5626943; normal ancestry preserves original increments and migration introduction49ff.",
     "releaseStatus": "Web/API e1 deployed2026-09-18; guarded backend complete16:02:10Z, 110 migrations, both machines healthy, lease released. See evidence/release-e1-verification.json. Per-journey acceptance and native distribution remain separately bounded.",
     "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
@@ -1065,7 +1065,7 @@
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "deployed",
     "implementationStatus": "dccd66606; integrated with#422 in d4f720e51",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.",
     "mergeStatus": "Merged #429 as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after exact2fb approval and all applicable gates.",
     "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented."
   },
@@ -1090,7 +1090,7 @@
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "deployed",
     "implementationStatus": "dccd66606; integrated with#422 in d4f720e51",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.",
     "mergeStatus": "Merged #429 as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after exact2fb approval and all applicable gates.",
     "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented."
   },
@@ -1115,7 +1115,7 @@
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "deployed",
     "implementationStatus": "dccd66606; integrated with#422 in d4f720e51; review follow-up distinguishes region/progress names, registers calendar locales and gates payment-intent creation on SDK readiness; PRRT_kwDOQPdUrM6joQEq confirmed slow-reservation cancellation regression; synchronous reservationPending close guard and disabled Cancel added.; second confirmed review PRRT_kwDOQPdUrM6jofR3 adds paymentPending close guard and synchronous single-flight across elements.submit/confirmPayment, retaining generation fencing.",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. 16 component/logic tests pass; TLC CheckoutReadiness221distinct states, safety/conditional liveness plus3negative controls pass. No real charges or settlement proof. Integrated17unit cases include account change;10browsercases5profiles/3engines prove unavailable retry/cancel and0intent creation. Model bounds unchanged; generation maps session/event/tier/close changes. Review regression fails before fix;19 component/logic tests pass afterward; TypeScript/build364991gzip bytes/5preloads and affected lint pass. CheckoutCancellation separately models fixed-context cancellation,5distinct states; unsafe guard negative control produces NoAbandonedReservation counterexample;10 current browser cases pass in5profiles/3engines. Full pinned TLC1.7.2/Alloy6.2.0 runner passes, including all four checkout negative controls. 21component/logic tests pass including delayed payment success delivered once and provider rejection recovery. Payment-aware TLC8distinct states and both cancellation negative controls pass; full runner completing. TypeScript/build364988gzip/5preloads pass.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. 16 component/logic tests pass; TLC CheckoutReadiness221distinct states, safety/conditional liveness plus3negative controls pass. No real charges or settlement proof. Integrated17unit cases include account change;10browsercases5profiles/3engines prove unavailable retry/cancel and0intent creation. Model bounds unchanged; generation maps session/event/tier/close changes. Review regression fails before fix;19 component/logic tests pass afterward; TypeScript/build364991gzip bytes/5preloads and affected lint pass. CheckoutCancellation separately models fixed-context cancellation,5distinct states; unsafe guard negative control produces NoAbandonedReservation counterexample;10 current browser cases pass in5profiles/3engines. Full pinned TLC1.7.2/Alloy6.2.0 runner passes, including all four checkout negative controls. 21component/logic tests pass including delayed payment success delivered once and provider rejection recovery. Payment-aware TLC8distinct states and both cancellation negative controls pass; full runner passed before the approved429 merge. TypeScript/build364988gzip/5preloads pass.",
     "mergeStatus": "Merged #429 as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after exact2fb approval and all applicable gates.",
     "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented."
   },
@@ -1140,7 +1140,7 @@
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "deployed",
     "implementationStatus": "dccd66606; integrated with#422 in d4f720e51",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.",
     "mergeStatus": "Merged #429 as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after exact2fb approval and all applicable gates.",
     "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented."
   },
@@ -1165,7 +1165,7 @@
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "deployed",
     "implementationStatus": "dccd66606; integrated with#422 in d4f720e51",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.",
     "mergeStatus": "Merged #429 as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after exact2fb approval and all applicable gates.",
     "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented."
   },
@@ -1191,7 +1191,7 @@
     "implementationStatus": "Focused Email.hs fix in current#422 successor",
     "verificationStatus": "Stack --fast test passwordReset:8 examples/100generated pass; module rebuilt. SMTP/rendered mailbox not executed.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment."
+    "releaseStatus": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
   },
   {
     "id": "UX-260917-030",
@@ -1238,7 +1238,7 @@
     "verificationMethod": "Browser elementFromPoint at focused control center, keyboard menu open/Escape/next field, axe/reflow checks across5tabs and5profiles.",
     "status": "deployed",
     "implementationStatus": "Removed sticky positioning from shared PageShell header in audit/ux-remaining-coverage-20260918. Explicit nearest scrolling on table-control focus also fixes Linux WebKit notes clipping observed in CI.",
-    "verificationStatus": "Actual compiled final bundle320/1280: status and notes centers hit the focused controls, not header; zero axe WCAG-tagged violations. Build/typecheck365423gzip/5preloads and affected lint pass. Durable5profile/3engine5tab regression running. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow. New local production build365428gzip/5preloads,10cases in5profiles/3engines and affected lint PASS; corrected Linux hosted run pending.",
+    "verificationStatus": "Actual compiled final bundle320/1280: status and notes centers hit the focused controls, not header; zero axe WCAG-tagged violations. Build/typecheck365423gzip/5preloads and affected lint pass. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow. New local production build365428gzip/5preloads,10cases in5profiles/3engines and affected lint PASS; corrected Linux hosted run passed before the approved433 merge.",
     "mergeStatus": "Merged #433 as6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval and all applicable hosted checks.",
     "releaseStatus": "Cloudflare345dbb80-6d55-4dfc-8e60-0f8dbecc72ac SUCCESS; public asset list matches. Ten production-bundle campaign cases PASS across5profiles/3engines with synthetic transport. Actual isolated14ES/ENloading cases already pass; no human screen-reader or field-performance claim."
   },
@@ -1251,7 +1251,7 @@
     "journey": "native arrival / navigation / returning session / language selection",
     "roles": "signed-in accounts and anonymous public-directory visitors",
     "surface": "Expo Router tabs / mobileSurface navigation configuration",
-    "evidence": "Actual iOS simulator tree labels Perfil as tab5of12 while five tabs are visible; same source persists in parent-pinned34971c451. React Navigation counts registered hidden routes by default. Titles are translated only at module initialization from the separate default-Spanish translator.",
+    "evidence": "Actual iOS simulator tree labels Perfil as tab5of12 while five tabs are visible; same source persists in parent-pinned34971c451. React Navigation counts registered hidden routes by default. Titles are translated only at module initialization from the separate default-Spanish translator. Continuation: physical Samsung Android16 font_scale2.0 clips tab text; compatible QA native prototype with corrected Hermes now wraps all labels and restores original1.0. See mobile109 versioned before/after. Actual iOS18.3 at accessibility-extra-large still clips109; line allowance alone also ellipsizes.112 moves measurement outside constrained bar; versioned simulator images show complete labels.",
     "userImpact": "Screen-reader navigation announces inaccessible destinations and an English count on Spanish UI; current locale changes do not update tab labels.",
     "rootCause": "Default all-route accessibility count plus module-initialized translated titles disconnected from UserSettings locale.",
     "proposedChange": "Resolve visible titles from current locale and explicitly name visible positions on iOS; retain native Android roles/name-only labels and guest-only public tab.",
@@ -1260,13 +1260,13 @@
       "qualified simulator/signed artifacts",
       "store review/publication"
     ],
-    "acceptanceCriteria": "ES/EN5of5 for authenticated users,1of1 for guests; changing locale rerenders labels; hidden routes remain hidden and permissions unchanged; corrected native artifact and applicable distribution verified.",
+    "acceptanceCriteria": "ES/EN5of5 for authenticated users,1of1 for guests; changing locale rerenders labels; hidden routes remain hidden and permissions unchanged; corrected native artifact and applicable distribution verified. System text enlargement retains complete labels without truncation, safe-area overlap or suppressing scaling.",
     "verificationMethod": "Actual before accessibility tree; component tests of actual TabsLayout plus finite locale/auth/platform label contracts; native runtime and release evidence separate.",
     "status": "verification pending",
-    "implementationStatus": "Mobile PR101 afbd5dcc7 based on34971c451; visible-tab count and ES/EN labels evaluated from current settings/session.",
-    "verificationStatus": "Corrected actual EAS iOS18.3 simulator passed5visible labels,authenticated return/relaunch,ES→EN→ES. Hosted667 checks pass, generated API bytes unchanged from349; no physical/human reader/Androidruntime claim.",
-    "mergeStatus": "Mobile101 mergedebec681; root435 head06d5 approved with applicable checks passed but gitlink conflicts after main430. Preserve current7b7 provider contract in successor; no parent merge yet.",
-    "releaseStatus": "iOS21 source667 uploadc06c203d FINISHED, ASC VALID/IN_BETA_TESTING. Android12 source667 uploadc41e9287 FINISHED, Play version/hash verified; internal DRAFT. Promotion held for shared RootLayout cold-start blocker UX035/mobile102. No physical OAuth or public publication."
+    "implementationStatus": "Original locale/count correction retained; mobile109 custom scalable/wrapping labels reserve measured height and safe area. iOS112 uses out-of-bar measurement hidden from accessibility/touches and line allowance permitting one per code point; Android109 path retained.",
+    "verificationStatus": "Earlier real iOS simulator ES/EN tab/session checks retained.508tests/releasecheck and hosted109 gates pass. PhysicalSamsung before/after at1x/2x verifies visual layout in signed local QA prototype, not a new store artifact/auth qualification or human reader test. Seven final component tests/releasecheck and hosted510tests pass. Actual compatible iOS simulator/production Hermes shows complete scaled labels; five localized accessible tabs/zero exposed measuring nodes, originalcontent-size large restored. Not physical VoiceOver/OAuth. Reconnected Samsung18:32UTC recheck passes persisted follow/cold-session return and1x/2x complete tab geometry on verified installed QA prototype064b; originalfont1.0 restored and personalapp unchanged. evidence/android-reconnect-verification.json. This is not installation of the Play17 artifact.",
+    "mergeStatus": "Mobile109/112 corrections merged; final2a0e5a9 retains application code of iOS25 source9f and Android17 sourcec2. Parent454 pin pending independent review/merge.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
   },
   {
     "id": "UX-260917-031",
@@ -1335,11 +1335,11 @@
     ],
     "acceptanceCriteria": "Legacy/unknown recovery cannot execute a deploy callback. Compatible prior or explicit immutable fallback is verified before mutation; schema manifests/checksums match; reports identify recovery policy and preserve canary failure. After any deploy attempt, failure recovery includes untouched unsafe replicas; individual recovery errors cannot prevent attempts on remaining replicas and cannot count as verified recovery.",
     "verificationMethod": "ProviderRollback TLC legacy/compatible/mixed two-machine models, unsafe negative control, executable boundary tests including two machine orders/all prior combinations/retries/missing history, existing release contract tests.",
-    "status": "merged",
+    "status": "deployed",
     "implementationStatus": "withCompatibleRollback and selectRecoveryTarget gate actual deploy; --recovery-sha accepts only distinct reviewed ancestors with identical migration manifests/expanded SQL. Preflight verifies immutable artifacts and blocks without safe recovery. recoverReleaseMachines handles the actual canary/fleet catch, includes untouched unsafe replicas and records per-machine failures.",
     "verificationStatus": "74 release tests pass. Four TLC configurations pass (38/31/35/38 distinct states); unsafe rollback and partial-fleet recovery yield the named counterexamples. Full pinned TLA+/Alloy runner passed. No cloud failure induced; all applicable hosted gates passed on exact35172083a. Real preflight passed after production advanced to5c; no induced cloud failure.",
     "mergeStatus": "PR438 merged499e8be7b8edaccbbd46a4d763e4c3b6326b4d92 after exact35172083a approval and all applicable checks; review thread resolved.",
-    "releaseStatus": "Reviewed recovery runner merged499e8be7b, published as supported tooling-only checkoutfcc037848. Real read-only preflight validates current5c and compatible immutablef1ff fallback. Separate actual5c rollout used oldrunner and did not roll back; no cloud-failure execution claim."
+    "releaseStatus": "Guarded e1a825bda production release completed 2026-09-18T16:02:10Z using the compatible recovery policy; qualified previous5c11577a, snapshotvs_LRqNAqabQP5Upg7NwLqaVPX, two healthy machines and lease0. evidence/release-e1-verification.json. No cloud failure/rollback induced; failure paths remain supported by executable tests and model counterexamples."
   },
   {
     "id": "UX-260917-038",
@@ -1416,10 +1416,10 @@
     "acceptanceCriteria": "Fresh-first-link notification/request cold starts reach sign-in without crash; target survives authorized login; protected content is withheld during restoration; normal launch/return/tab locale remain functional on supported platforms.",
     "verificationMethod": "Actual Android negative control; actual candidate Android/iOS first-link tests; router session-loading tests and full mobile gates; signed integrated release observation.",
     "status": "merged",
-    "implementationStatus": "Companion operator candidate e002715 in draft mobile102; do not duplicate repair.",
+    "implementationStatus": "Mobile102 root-navigator repair merged and contained in90cae070; preserved in c2a4cb. Actual prior Android crash and repaired Android/iOS native scenarios are retained as separate evidence.",
     "verificationStatus": "Other operator final4f7 iOS97f46:3cold/request/warm scenariosPASS. PhysicalSamsungAndroid16 isolatednotificationqa82a56/e867 runtimeidentical4f7:3scenariosPASS, noQAcrash/ANR; personalPlayappunchanged. QApackage does not establishproductionOAuth/FCM/Playqualification.",
-    "mergeStatus": "Mobile102merged0c1ee7f3387875496afadf930cb71b29c9edde99 after hosted gates; application4f7 plus evidence870020b.",
-    "releaseStatus": "Final corrected store publication remains pending integration with104; old667Android12/iOS21 must not be promoted as final corrected release. Apple1.0.1 remains WAITING_FOR_REVIEW with AFTER_APPROVAL automatic release (read-only11:36UTC), an outstanding promotion risk; store coordination handoff requested before changing the release option. Other operator0c Android14/iOS22 builds FINISHED but exclude104; no submission/publication is inferred."
+    "mergeStatus": "Original product corrections contained in mobile90cae070 and parent435/449 e1. Mobile105–114 merged through2a0e5a99535d9ef199a3e3464a660192f882f72b, including native text and GitHub tooling. Parent454 pin pending independent review/merge. Generated API contracts unchanged; evidence/mobile-artifact-pin-equivalence.json relates the exact signed sources.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
   },
   {
     "id": "UX-260917-037",
@@ -1443,9 +1443,9 @@
     "verificationMethod": "Actual isolated native Hermes production bundle + HTTP/PostgreSQL + actual web production bundle; contract/component tests and existing FanHubOnboarding current-session/persisted-receipt model conformance.",
     "status": "merged",
     "implementationStatus": "Mobile104 d70d945fc includes canonical FanHub follow, captured session-occurrence and immediate client token guards, and current main0c contract compatibility.",
-    "verificationStatus": "502 tests/84 suites plus full release check and hosted validate/Datadog pass on d70d945fc; actual A-B-A and immediate client-token revocation regressions, canonical namespace integration and bounded models documented in native-artist-follow.md. Final Android isolated QA build1c92c4c3 FINISHED, APK/manifest/hash verified; physical execution pending disconnected device. Earlier source runtime evidence retained separately. Final507tests/85suites PASS. Actuald70canonicalfollow completes D viaisolatedPG; a785 coldreturn and persistedfollow PASS. NativeLanding042 also fixed; older1c92Androidartifact doesnotqualifynewsource.",
-    "mergeStatus": "Mobile104 merged90cae070446df6c740e9e8f25a034f3deb12c5c7 from exacta785c99848478f9c27263e84454d6bdb81df4d4f after all hosted gates; parent435 pending.",
-    "releaseStatus": "Hold native promotion until corrected source and final qualified artifacts are published."
+    "verificationStatus": "502 tests/84 suites plus full release check and hosted validate/Datadog pass on d70d945fc; actual A-B-A and immediate client-token revocation regressions, canonical namespace integration and bounded models documented in native-artist-follow.md. Final Android isolated QA build1c92c4c3 FINISHED, APK/manifest/hash verified; physical execution of that historical artifact was not qualified; later qualified artifacts and actual device results follow. Earlier source runtime evidence retained separately. Final507tests/85suites PASS. Actuald70canonicalfollow completes D viaisolatedPG; a785 coldreturn and persistedfollow PASS. NativeLanding042 also fixed; older1c92Androidartifact doesnotqualifynewsource. Correct full isolated Android QA46b1/6f8 on physicalSamsung passed login/canonicalfollow/coldreturn; authoritative API session/follows/onboarding200, count1, personalapp unchanged. See evidence/android-physical-46b1.json. This does not qualify production Google OAuth. Reconnected Samsung18:32UTC recheck passes persisted follow/cold-session return and1x/2x complete tab geometry on verified installed QA prototype064b; originalfont1.0 restored and personalapp unchanged. evidence/android-reconnect-verification.json. This is not installation of the Play17 artifact.",
+    "mergeStatus": "Original product corrections contained in mobile90cae070 and parent435/449 e1. Mobile105–114 merged through2a0e5a99535d9ef199a3e3464a660192f882f72b, including native text and GitHub tooling. Parent454 pin pending independent review/merge. Generated API contracts unchanged; evidence/mobile-artifact-pin-equivalence.json relates the exact signed sources.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
   },
   {
     "id": "UX-260917-039",
@@ -1469,7 +1469,7 @@
     "verificationMethod": "Actual isolated HTTP/PostgreSQL with a TCP protocol observer counting catalog transactions, excluding independent workers; generated listing combinations, list/detail parity and published collection SQL oracle. Old binary is a meaningful negative control. Full backend tests and existing formal/release gates; read-only query grouping adds no consequential state transition.",
     "status": "deployed",
     "implementationStatus": "Public list uses getMany and one approved-terms join, preserving shared DTO rendering. Records fixed reads share one transaction; locale and missing publication-state guards unchanged. No migration/cache/API shape change. Review repair binds the selected listing IDs rather than re-reading active listings; no base-price fallback after concurrent deactivation.",
-    "verificationStatus": "Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Full stack tests running; production-after pending. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Full2587backend examples:0failures/3existing pending; npm verify:formal passes its scoped gates.\nRelated increment evidence: Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Full stack tests running; production-after pending. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Actual concurrent HTTP/PostgreSQL negative10001≠2001, corrected response2001 with terms and next-request exclusion PASS. Query counts remain5/28. Both11-state positive catalog models and11-state unsafe control pass in the full pinned suite. Final Stack build PASS; new hosted gates pending.",
+    "verificationStatus": "Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Full2587backend examples:0failures/3existing pending; npm verify:formal passes its scoped gates.\nRelated increment evidence: Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Actual concurrent HTTP/PostgreSQL negative10001≠2001, corrected response2001 with terms and next-request exclusion PASS. Query counts remain5/28. Both11-state positive catalog models and11-state unsafe control pass in the full pinned suite. Final Stack build PASS; applicable hosted gates passed before449 integrated443.",
     "mergeStatus": "Merged through #449 as e1a825bda26dbb16b1c732e551cc4880d5626943; normal ancestry preserves original increments and migration introduction49ff.",
     "releaseStatus": "Web/API e1 deployed2026-09-18; guarded backend complete16:02:10Z, 110 migrations, both machines healthy, lease released. See evidence/release-e1-verification.json. Per-journey acceptance and native distribution remain separately bounded.",
     "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
@@ -1498,7 +1498,7 @@
     "acceptanceCriteria": "Full migration batch replays and restarts idempotently; populated synthetic data preserved; unauthenticated401/nonAdmin403/admin200; response omits tokens; real browser empty state works; deployed schema and journey verified.",
     "implementationStatus": "Migration introduction49ff02de5 retained in ancestry, manifest registration and schema gate; historical migrations unchanged. No credentials seeded and no external sync started.",
     "verificationMethod": "Real PostgreSQL17 production-baseline replay; actual compiled Haskell HTTP contracts and12generated events; missing-column/unique-key/guard negative controls. Existing authorization and identity trigger semantics reused, not a new global correctness claim.",
-    "verificationStatus": "Migration/restart idempotence and HTTP assertions PASS;58release tests PASS;6browser cases Admin/ReadOnly×320/768/1280 PASS. Browser setup initially lacked allowed loopback origin; configured isolated proxy/server before qualified execution. Hosted gates and production pending.",
+    "verificationStatus": "Migration/restart idempotence and HTTP assertions PASS;58release tests PASS;6browser cases Admin/ReadOnly×320/768/1280 PASS. Browser setup initially lacked allowed loopback origin; configured isolated proxy/server before qualified execution. Applicable hosted gates passed before449 merged; production calendar tables and110-entry ledger were verified during guarded e1 (evidence/release-e1-verification.json).",
     "integrationEvidence": "evidence/release-integration-verification.json; prior per-increment verification and deployed portions remain separately recorded."
   },
   {
@@ -1511,9 +1511,9 @@
       "applicable CI gates",
       "guarded backend release and web deployment"
     ],
-    "status": "merged",
-    "mergeStatus": "Mobile90ca source merged; parent pin90ca merged through435/449 as e1. GitHub build workflow merged mobile#105 a72ee5; workflow-only successor106 pending.",
-    "releaseStatus": "Current mobile corrections not publicly distributed. Android15 source90ca EAS96622c14 and isolatedQA46b1 in progress. Old4602 used preview/production API and is disqualified for isolated QA; wrong-profile download removed with receipt. iOS23 GitHub first attempt failed1/507 tests from production env leaking into Jest;106 isolates test env. Apple1.0.1 release MANUAL and WAITING_FOR_REVIEW verified15:51. Physical iPhone OAuth pending.",
+    "status": "deployed",
+    "mergeStatus": "Calendar optional-storage correction merged in444/449 as e1a825bda26dbb16b1c732e551cc4880d5626943.",
+    "releaseStatus": "Web/API e1 deployed2026-09-18; calendar tables present and guarded release complete. Isolated Admin browser acceptance preserved; no external Google consent/synchronization claim. See evidence/release-e1-verification.json.",
     "id": "UX-260917-041",
     "title": "Calendar optional preference storage failure replaces the form with an error boundary",
     "severity": "medium",
@@ -1550,10 +1550,10 @@
     "acceptanceCriteria": "Hydration waits; current session reaches landing despite absent or indefinitely pending marker; anonymous seen/unseen choice retained; real cold reopen retains session/follow; required builds/publication verified.",
     "implementationStatus": "Mobile104 sourcea785c99848478f9c27263e84454d6bdb81df4d4f, merged90cae070446df6c740e9e8f25a034f3deb12c5c7. Destination computed from live auth; no API grants or storage format change.",
     "verificationMethod": "5component cases, two meaningful old-source failures;507tests/85suites and release check; TLC9state model with marker-only negative control and no fairness assumption on storage; actual compatible iOS simulator binary + production Hermes bundle, two cold returns.",
-    "verificationStatus": "All stated local/hosted mobile gates and full pinned TLC/Alloy PASS. Actual simulator afterfix sees connected profile and persisted follow on two cold launches. Not a new cloud/signed artifact; physical Android/iOS and stores remain pending.",
+    "verificationStatus": "All stated local/hosted mobile gates and full pinned TLC/Alloy PASS. Actual simulator afterfix sees connected profile and persisted follow on two cold launches. That simulator observation alone did not qualify a signed build or physical device; later device and store evidence are recorded separately. Correct full isolated Android QA46b1/6f8 on physicalSamsung passed login/canonicalfollow/coldreturn; authoritative API session/follows/onboarding200, count1, personalapp unchanged. See evidence/android-physical-46b1.json. This does not qualify production Google OAuth. Reconnected Samsung18:32UTC recheck passes persisted follow/cold-session return and1x/2x complete tab geometry on verified installed QA prototype064b; originalfont1.0 restored and personalapp unchanged. evidence/android-reconnect-verification.json. This is not installation of the Play17 artifact.",
     "status": "merged",
-    "mergeStatus": "Mobile90ca source merged; parent pin90ca merged through435/449 as e1. GitHub build workflow merged mobile#105 a72ee5; workflow-only successor106 pending.",
-    "releaseStatus": "Current mobile corrections not publicly distributed. Android15 source90ca EAS96622c14 and isolatedQA46b1 in progress. Old4602 used preview/production API and is disqualified for isolated QA; wrong-profile download removed with receipt. iOS23 GitHub first attempt failed1/507 tests from production env leaking into Jest;106 isolates test env. Apple1.0.1 release MANUAL and WAITING_FOR_REVIEW verified15:51. Physical iPhone OAuth pending."
+    "mergeStatus": "Original product corrections contained in mobile90cae070 and parent435/449 e1. Mobile105–114 merged through2a0e5a99535d9ef199a3e3464a660192f882f72b, including native text and GitHub tooling. Parent454 pin pending independent review/merge. Generated API contracts unchanged; evidence/mobile-artifact-pin-equivalence.json relates the exact signed sources.",
+    "releaseStatus": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
   },
   {
     "kind": "confirmed",
