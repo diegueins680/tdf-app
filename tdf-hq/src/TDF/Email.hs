@@ -370,7 +370,7 @@ sendMailWithLogging cfg toAddr _subject mail = do
   case result of
     Left err -> do
       let errLine = T.concat
-            [ "[Email] smtp_failed message_id="
+            [ "[Email] smtp_error delivery=unknown message_id="
             , messageId
             ]
       BS.hPutStrLn stderr (TE.encodeUtf8 errLine)

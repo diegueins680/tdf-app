@@ -84,9 +84,11 @@ tres autoritativos y resolutores. Conservar todos los MX, DKIM, A/CNAME y buzone
 
 - Generar un UUID por intento y fecha UTC antes de SMTP; el mismo Message-ID queda
   en la firma DKIM y en los registros. Un solo Date y Message-ID por mensaje.
-- El registro común distingue `smtp_attempt`, `smtp_accepted` y `smtp_failed`;
+- El registro común distingue `smtp_attempt`, `smtp_accepted` y `smtp_error delivery=unknown`;
   no escribe destinatario, asunto, contenido ni texto arbitrario de excepción.
   El resto de registros históricos de otros handlers no se ha rediseñado.
+  Una excepción después de DATA puede dejar la entrega incierta; no se reintenta
+  automáticamente ni se interpreta como rechazo confirmado.
 - `SMTP_UNDELIVERABLE_RECIPIENTS` es una lista revisada de fallos de entrega, con
   normalización/validación. Rechaza antes de conectar a SMTP y no comunica un éxito
   falso al llamador. No almacena bajas promocionales ni cambia cuentas de usuarios.
@@ -122,7 +124,7 @@ para simular esas plantillas.
 
 Validación local: seis ejemplos Hspec, incluida una propiedad QuickCheck de cien
 casos y el rechazo de un destinatario excluido antes de SMTP; compilación de Email
-con Stack/GHC 9.10.3; cuatro pruebas del lector de informes; auditoría formal sin errores.
+con Stack/GHC 9.10.3; cinco pruebas del monitor; auditoría formal sin errores.
 Los checks hospedados y la revisión independiente del PR son requisitos antes de
 fusionar/desplegar. La rama protegida exige una aprobación; no se usa bypass.
 

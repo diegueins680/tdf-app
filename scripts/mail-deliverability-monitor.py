@@ -15,6 +15,7 @@ import io
 import json
 import os
 import pathlib
+import re
 import shlex
 import ssl
 import subprocess
@@ -23,6 +24,17 @@ import xml.etree.ElementTree as ET
 
 DOMAIN = 'tdfrecords.net'
 LIMIT = 2 * 1024 * 1024
+
+
+def select_live_machine(status):
+    eligible = [machine['id'] for machine in status.get('Machines', [])
+                if machine.get('state') == 'started'
+                and re.fullmatch(r'[0-9a-f]+', machine.get('id', ''))
+                and machine.get('config', {}).get('metadata', {}).get('fly_process_group', 'app') == 'app'
+                and all(check.get('status') == 'passing' for check in machine.get('checks', []))]
+    if not eligible:
+        raise RuntimeError('No healthy application Machine available')
+    return sorted(eligible)[0]
 
 
 def aggregate_xml(payload):
@@ -110,8 +122,13 @@ def collect(output):
     keys = ['SMTP_USERNAME', 'SMTP_PASSWORD']
     command = 'for k in ' + ' '.join(keys) + '; do printf "%s=" "$k"; printenv "$k"; done'
     try:
+        status = subprocess.run(['flyctl', 'status', '-a', 'tdf-hq', '--json'],
+                                capture_output=True, text=True, timeout=20)
+        if status.returncode:
+            raise RuntimeError('Fly status unavailable')
+        machine = select_live_machine(json.loads(status.stdout))
         result = subprocess.run(['flyctl', 'ssh', 'console', '-a', 'tdf-hq', '--machine',
-                                 '0807ee9cd34668', '-q', '-C', 'sh -lc ' + shlex.quote(command)],
+                                 machine, '-q', '-C', 'sh -lc ' + shlex.quote(command)],
                                 capture_output=True, text=True, timeout=50)
         if result.returncode:
             raise RuntimeError('Fly configuration unavailable')

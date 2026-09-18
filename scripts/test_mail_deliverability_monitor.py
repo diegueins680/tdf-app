@@ -10,6 +10,16 @@ spec.loader.exec_module(monitor)
 
 
 class MonitorTests(unittest.TestCase):
+    def test_discovers_replacement_and_rejects_unhealthy_or_wrong_process(self):
+        self.assertEqual(monitor.select_live_machine({'Machines': [
+            {'id': 'aabb', 'state': 'stopped'},
+            {'id': 'bbcc', 'state': 'started', 'checks': [{'status': 'critical'}]},
+            {'id': 'ccdd', 'state': 'started', 'config': {'metadata': {'fly_process_group': 'worker'}}},
+            {'id': 'ddee', 'state': 'started', 'checks': [{'status': 'passing'}]},
+        ]}), 'ddee')
+        with self.assertRaises(RuntimeError):
+            monitor.select_live_machine({'Machines': []})
+
     def test_alignment_uses_policy_evaluated_not_isolated_authentication(self):
         xml = b'''<feedback><policy_published><domain>tdfrecords.net</domain></policy_published>
         <record><row><count>3</count><policy_evaluated><dkim>pass</dkim><spf>fail</spf></policy_evaluated></row></record>
