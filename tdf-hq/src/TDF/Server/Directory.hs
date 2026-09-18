@@ -1200,7 +1200,7 @@ prepareArtistClaim _user partyId = do
         targets <- rawSql
           ( "SELECT resolved.id::text FROM directory_profile source JOIN directory_profile resolved "
          <> "ON resolved.id=coalesce(source.canonical_profile_id,source.id) "
-         <> "WHERE source.subject_party_id=? ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1" )
+         <> "WHERE source.subject_party_id=? AND source.profile_kind='artist' ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1" )
           [PersistInt64 partyId] :: SqlPersistT IO [Single Text]
         targetId <- case targets of
           Single existing : _ -> pure existing
@@ -1215,7 +1215,7 @@ prepareArtistClaim _user partyId = do
         -- Existing suspended/archived/moderated records remain blocked; a new
         -- twin is not created as a way around their state.
         allowed <- rawSql
-          "SELECT id::text FROM directory_profile WHERE id=?::uuid AND profile_status NOT IN ('suspended','archived','merged') AND moderation_status<>'blocked'"
+          "SELECT id::text FROM directory_profile WHERE id=?::uuid AND profile_kind='artist' AND profile_status NOT IN ('suspended','archived','merged') AND moderation_status<>'blocked'"
           [PersistText targetId] :: SqlPersistT IO [Single Text]
         pure $ case allowed of
           [] -> Nothing

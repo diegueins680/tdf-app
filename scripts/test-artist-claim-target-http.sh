@@ -37,24 +37,33 @@ claim_psql <<'SQL' >/dev/null
 INSERT INTO party(display_name,is_org,created_at) VALUES ('Claim target account fixture',false,now());
 INSERT INTO api_token(token,party_id,label,active) SELECT 'synthetic-claim-target-token',id,'isolated claim runtime',true FROM party WHERE display_name='Claim target account fixture';
 INSERT INTO party(display_name,is_org,created_at) VALUES
- ('Claim target fresh fixture',false,now()),('Claim target draft fixture',false,now()),('Claim target blocked fixture',false,now());
+ ('Claim target fresh fixture',false,now()),('Claim target draft fixture',false,now()),('Claim target blocked fixture',false,now()),('Claim target canonical band fixture',false,now());
 INSERT INTO artist_profile(artist_party_id,slug,created_at)
- SELECT id,'claim-target-'||id,now() FROM party WHERE display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture');
+ SELECT id,'claim-target-'||id,now() FROM party WHERE display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture');
 INSERT INTO directory_profile(subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status,bio)
  SELECT id,'artist','PRIVATE DIRECTORY NAME','claim-twin-'||id,'draft','private',
  CASE WHEN display_name='Claim target blocked fixture' THEN 'blocked' ELSE 'allowed' END,'PRIVATE BIO'
- FROM party WHERE display_name IN ('Claim target draft fixture','Claim target blocked fixture');
+ FROM party WHERE display_name IN ('Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture');
+-- A newer band owned by the same Party must never win artist claim selection.
+INSERT INTO directory_profile(subject_party_id,profile_kind,public_name,slug,profile_status,visibility,updated_at)
+ SELECT id,'band','PRIVATE BAND','claim-band-'||id,'draft','private',now()+interval '1 minute'
+ FROM party WHERE display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture');
+UPDATE directory_profile artist SET canonical_profile_id=band.id
+ FROM directory_profile band JOIN party p ON p.id=band.subject_party_id
+ WHERE p.display_name='Claim target canonical band fixture' AND band.profile_kind='band'
+ AND artist.subject_party_id=p.id AND artist.profile_kind='artist';
 SQL
-TDF_CLAIM_TARGET_IDS=$(claim_psql -Atc "SELECT json_object_agg(display_name,id) FROM party WHERE display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture');") \
+TDF_CLAIM_TARGET_IDS=$(claim_psql -Atc "SELECT json_object_agg(display_name,id) FROM party WHERE display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture');") \
 TDF_CLAIM_TARGET_BASE="http://127.0.0.1:$TDF_CLAIM_HTTP_PORT" \
  node "$TDF_CLAIM_ROOT/scripts/__tests__/artist-claim-target-runtime.mjs"
 claim_psql <<'SQL' >/dev/null
 DO $$ BEGIN
- ASSERT (SELECT count(*)=3 FROM directory_profile d JOIN party p ON p.id=d.subject_party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture')), 'duplicate or missing directory twins';
- ASSERT NOT EXISTS(SELECT 1 FROM directory_profile d JOIN party p ON p.id=d.subject_party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture') AND (d.profile_status<>'draft' OR d.visibility<>'private')), 'preparation published a profile';
- ASSERT NOT EXISTS(SELECT 1 FROM directory_profile_manager m JOIN directory_profile d ON d.id=m.profile_id JOIN party p ON p.id=d.subject_party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture')), 'preparation granted management';
- ASSERT NOT EXISTS(SELECT 1 FROM user_credential c JOIN party p ON p.id=c.party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture')), 'preparation created artist credentials';
+ ASSERT (SELECT count(*)=8 FROM directory_profile d JOIN party p ON p.id=d.subject_party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture')), 'duplicate or missing directory twins';
+ ASSERT NOT EXISTS(SELECT 1 FROM directory_profile d JOIN party p ON p.id=d.subject_party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture') AND (d.profile_status<>'draft' OR d.visibility<>'private')), 'preparation published a profile';
+ ASSERT NOT EXISTS(SELECT 1 FROM directory_profile_manager m JOIN directory_profile d ON d.id=m.profile_id JOIN party p ON p.id=d.subject_party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture')), 'preparation granted management';
+ ASSERT NOT EXISTS(SELECT 1 FROM user_credential c JOIN party p ON p.id=c.party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture')), 'preparation created artist credentials';
  ASSERT (SELECT count(*)=1 FROM directory_claim c JOIN directory_profile d ON d.id=c.profile_id JOIN party p ON p.id=d.subject_party_id WHERE p.display_name='Claim target fresh fixture' AND c.status='submitted'), 'claim was duplicated or approved';
+ ASSERT NOT EXISTS(SELECT 1 FROM directory_claim c JOIN directory_profile d ON d.id=c.profile_id JOIN party p ON p.id=d.subject_party_id WHERE p.display_name LIKE 'Claim target % fixture' AND d.profile_kind<>'artist'), 'claim targeted non-artist resource';
 END $$;
 SQL
 

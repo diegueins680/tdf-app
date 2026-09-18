@@ -132,3 +132,23 @@ This assumes fetch honors abort and the event loop is scheduled. It does not est
 ongoing token validity, backend authorization, submission persistence, or network
 availability. The server must authorize each submission independently. Negative controls
 remove each guard and must violate the corresponding named invariant.
+## Artist activation context (UX-013 / PR #406)
+
+`ArtistActivation.tla` checks one activation and session refresh with up to two context
+changes, including navigation away and back (ABA). A context generation represents
+both the session object and React Router location key. TLC 1.7.2 checks CurrentContext,
+PersistedAuthority, and eventual termination assuming both requests eventually return
+(success or failure), via weak fairness. It does not promise network termination in the
+implementation or certify backend authorization. `isCurrent()` fences both await
+boundaries; the authoritative response must retain the party and Artist role. Two
+component regressions defer each boundary, navigate to a claim and back, and require
+no login or redirect; both fail before the generation repair. Disabling the generation
+fence is an executable negative control for CurrentContext. Existing account-change,
+storage-denial and single-flight component cases remain required.
+
+Execution2026-09-18:15 distinct ArtistActivation states, CurrentContext/PersistedAuthority
+and Terminates pass; unsafe configuration violates CurrentContext. Initial model
+syntax mistakenly made the context predicate a transition guard instead of the
+assigned boolean; TLC's liveness counterexample exposed the disabled stale-response
+transition. Parenthesizing the assigned expression restored the intended discard
+transition. This model-authoring error is distinct from the component regressions.
