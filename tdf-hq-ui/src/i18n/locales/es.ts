@@ -2,6 +2,12 @@ import authEntry from './authEntry.es';
 const es = {
   authEntry,
   auditAccessibility: {
+    loadingFeaturedArtists: 'Cargando artistas destacados',
+    loadingMarketplace: 'Cargando productos del marketplace',
+    loadingPublishedRecordings: 'Cargando grabaciones publicadas',
+    loadingPublishedReleases: 'Cargando lanzamientos publicados',
+    loadingPublishedSessions: 'Cargando sesiones publicadas',
+
     loadingReports: 'Cargando reportes',
     loadingConversations: 'Cargando conversaciones',
     loadingMessages: 'Cargando mensajes',
