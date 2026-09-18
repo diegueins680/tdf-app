@@ -15847,7 +15847,7 @@ listMarketplace = do
           then pure ([], Map.empty)
           else do
             assets <- getMany (map (ME.marketplaceListingAssetId . entityVal) listings)
-            rentalTerms <- loadPublicMarketplaceRentalTerms
+            rentalTerms <- loadPublicMarketplaceRentalTerms (map entityKey listings)
             pure
               ( [ (lid, listing, Map.lookup (ME.marketplaceListingAssetId listing) assets)
                 | Entity lid listing <- listings
@@ -16052,17 +16052,19 @@ data MarketplaceRentalTerms = MarketplaceRentalTerms
   , mrtTermsSummary :: Text
   } deriving (Eq, Show)
 
--- Restrict the batch to the same published listings and approved active terms as
--- the old per-item lookup. No price, approval or checkout authority is cached.
-loadPublicMarketplaceRentalTerms :: SqlPersistT IO (Map.Map Text MarketplaceRentalTerms)
-loadPublicMarketplaceRentalTerms = do
+-- Bind the already selected listing IDs. Re-reading listing.active under READ
+-- COMMITTED could remove approved terms after concurrent fulfillment deactivates
+-- an asset, causing a selected rental to fall back to its base price.
+loadPublicMarketplaceRentalTerms :: [Key ME.MarketplaceListing] -> SqlPersistT IO (Map.Map Text MarketplaceRentalTerms)
+loadPublicMarketplaceRentalTerms [] = pure Map.empty
+loadPublicMarketplaceRentalTerms listingIds = do
+  let placeholders = T.intercalate "," (replicate (length listingIds) "?::uuid")
   rows <- (rawSql
-    "SELECT CAST(t.listing_id AS TEXT), t.daily_rate_usd_cents, t.weekly_rate_usd_cents, t.security_deposit_usd_cents,\
-    \ t.late_fee_usd_cents, t.min_days, t.max_days, t.cancellation_window_hours, t.timezone, t.terms_version, t.terms_summary\
-    \ FROM marketplace_rental_listing_terms t\
-    \ JOIN marketplace_listing l ON l.id = t.listing_id\
-    \ WHERE l.active AND t.active AND t.approved_at IS NOT NULL"
-    []
+    ("SELECT CAST(t.listing_id AS TEXT), t.daily_rate_usd_cents, t.weekly_rate_usd_cents, t.security_deposit_usd_cents," <>
+     " t.late_fee_usd_cents, t.min_days, t.max_days, t.cancellation_window_hours, t.timezone, t.terms_version, t.terms_summary" <>
+     " FROM marketplace_rental_listing_terms t" <>
+     " WHERE t.listing_id IN (" <> placeholders <> ") AND t.active AND t.approved_at IS NOT NULL")
+    (map (PersistText . toPathPiece) listingIds)
     :: SqlPersistT IO
       [( Single Text, Single Int64, Single (Maybe Int64), Single Int64, Single Int64
        , Single Int, Single Int, Single Int, Single Text, Single Text, Single Text

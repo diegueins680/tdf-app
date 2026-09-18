@@ -1,0 +1,44 @@
+{
+  "observedAt": "2026-09-18T12:08:23.916731+00:00",
+  "oldSource": "641876c76519a16b015231335bed46c8593f39fb",
+  "negative": {
+    "actualMinor": 10001,
+    "expectedApprovedMinor": 2001,
+    "assertion": "selected rental must retain approved terms across concurrent deactivation"
+  },
+  "positive": [
+    {
+      "scenario": "public marketplace batch",
+      "fixtures": 80,
+      "published": 64,
+      "totalPublished": 64,
+      "executions": 5,
+      "elapsedMs": 21,
+      "actualPostgres": true
+    },
+    {
+      "scenario": "selected rental survives concurrent deactivation without base-price fallback",
+      "actualPostgres": true,
+      "status": "PASS"
+    },
+    {
+      "scenario": "published records feed",
+      "executions": 28,
+      "actualPostgres": true,
+      "fieldContract": "passed"
+    }
+  ],
+  "formal": {
+    "configurations": [
+      "approved",
+      "unapproved"
+    ],
+    "generated": 13,
+    "distinct": 11,
+    "depth": 5,
+    "unsafeDistinct": 11,
+    "property": "SelectedRentalKeepsApprovedTerms",
+    "fullPinnedRunner": "PASS"
+  },
+  "scope": "Actual Haskell HTTP/PostgreSQL test with a concurrent second-connection deactivation; no production sales, payments or inventory mutation."
+}

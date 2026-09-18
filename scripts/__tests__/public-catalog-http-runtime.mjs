@@ -27,6 +27,8 @@ const fixtures = Array.from({ length: 80 }, (_, index) => ({
   price: 10000 + index, daily: 2000 + index, weekly: index % 3 ? 10000 + index : null,
 }));
 const executions = { marketplace: 0, records: 0 };
+let deactivateAfterSelection = false;
+let concurrentDeactivation = false;
 const sockets = new Set();
 // Count actual PostgreSQL Execute/SimpleQuery messages in catalog transactions,
 // including BEGIN/COMMIT. Classify statements in memory to exclude independent
@@ -39,12 +41,21 @@ const proxy = net.createServer(client => {
   let transactionCount = 0, transactionKinds = new Set();
   const statements = new Map(), portals = new Map();
   const classify = text => ({
+    assetRead: /\bFROM\s+"?asset"?\b/i.test(text),
     begin: /^BEGIN\b/i.test(text), end: /^(COMMIT|ROLLBACK)\b/i.test(text),
     marketplace: /\b(?:FROM|JOIN)\s+"?(?:marketplace_listing|marketplace_rental_listing_terms|asset)"?\b/i.test(text),
     records: /\b(?:FROM|JOIN)\s+"?(?:editorial_collection|collection_external_resource|collection_release|collection_recording|collection_session|record_release|recording|recording_session|release_contributor|recording_contributor|session_contributor|release_external_resource|recording_external_resource|session_external_resource|record_contributor|record_external_resource|external_provider|workflow_definition|workflow_state|locale_reference)"?\b/i.test(text),
   });
   const observe = kind => {
     assert.ok(kind, 'unclassified database execution');
+    if (deactivateAfterSelection && kind.assetRead) {
+      // The first listings response has already reached the actual handler.
+      // Block forwarding the next asset response until another connection has
+      // committed deactivation, reproducing READ COMMITTED interleaving.
+      deactivateAfterSelection = false;
+      sql(`UPDATE marketplace_listing SET active=FALSE WHERE id='${fixtures[1].listingId}'`);
+      concurrentDeactivation = true;
+    }
     if (kind.begin) { transactionCount = 1; transactionKinds = new Set(); return; }
     for (const domain of ['marketplace', 'records']) if (kind[domain]) transactionKinds.add(domain);
     if (transactionCount) {
@@ -140,6 +151,18 @@ try {
     assert.equal(detail.status, 200);
     assert.deepEqual(await detail.json(), expected, 'batched list and authoritative detail must agree');
   }
+  deactivateAfterSelection = true;
+  const racedResponse = await fetch(base + '/marketplace', { signal: AbortSignal.timeout(30000) });
+  assert.equal(racedResponse.status, 200);
+  const racedListing = (await racedResponse.json()).find(row => row.miListingId === fixtures[1].listingId);
+  assert.ok(concurrentDeactivation, 'real concurrent listing update must occur between selected rows and terms');
+  assert.ok(racedListing, 'listing selected before deactivation remains in that response');
+  assert.equal(racedListing.miPriceUsdCents, fixtures[1].daily, 'selected rental must retain approved terms across concurrent deactivation');
+  assert.equal(racedListing.miRentalTermsVersion, 'synthetic-v1');
+  assert.equal(sql(`SELECT active FROM marketplace_listing WHERE id='${fixtures[1].listingId}'`), 'f');
+  const afterDeactivation = await fetch(base + '/marketplace');
+  assert.ok(!(await afterDeactivation.json()).some(row => row.miListingId === fixtures[1].listingId), 'next request excludes the deactivated listing');
+  console.log(JSON.stringify({scenario:'selected rental survives concurrent deactivation without base-price fallback', actualPostgres:true, status:'PASS'}));
   const expectedCollections = JSON.parse(sql(`SELECT COALESCE(json_agg(c.id ORDER BY c.id),'[]')
     FROM editorial_collection c JOIN workflow_state s ON c.workflow_state_id=s.id
     JOIN workflow_definition w ON s.workflow_id=w.id

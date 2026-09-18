@@ -317,3 +317,23 @@ perform no machine recovery. The executable model abstracts verified immutable
 artifacts and trusted commit ancestry. It does not prove identity-token validation,
 the cloud provider, or whole-system availability. Exact executions are in the
 canonical UX audit record.
+
+### Marketplace catalog selection consistency
+
+`MarketplaceCatalogRead.tla` models one listing, approved/unapproved immutable terms,
+selection, concurrent sale deactivation, the terms read and response rendering. Both
+approved and unapproved configurations explore13generated/11distinct states, depth5;
+SelectedRentalKeepsApprovedTerms, UnapprovedTermsNotUsed and NoUnselectedListing hold.
+RequestFinishes assumes weak fairness for selection/read/render; provider/database
+outages and changing term approval are not modeled. Terminal quiescence is expected.
+The unsafe active-listing join produces the named price-fallback counterexample in
+11states: select→deactivate→read terms→render. The full pinned TLC/Alloy suite passes.
+
+Implementation: bind the IDs already selected into the batch's parameterized IN
+query, with an empty-list guard, retaining approved/active term filters. Actual HTTP
+regression interleaves a second PostgreSQL connection after selected listings have
+reached the handler and before the terms read. It reproduces10001 instead of2001
+minor units on the old code, then preserves2001/terms on the corrected handler; the
+next request excludes the deactivated row. Query count stays5 with80generated
+fixtures. This does not certify checkout/fulfillment transactions or claim snapshot
+isolation for every returned asset field.

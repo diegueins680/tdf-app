@@ -42,3 +42,14 @@ recovery guard, canary and actual public journey verification. Preserve all curr
 flags, especially the disabled onboarding experiment. No migration rollback needed;
 a binary recovery must satisfy the existing authentication and schema compatibility
 floor. The source change is not deployed merely because CI or `/health` succeeds.
+
+Review follow-up: READ COMMITTED allowed concurrent sale fulfillment to deactivate
+a selected listing before the later active-listing JOIN. The old candidate then
+returned its base price instead of approved rental terms. A deterministic actual
+PostgreSQL-wire interleaving reproduces10001 versus2001minor units. Binding the
+already-selected IDs fixes it while retaining active/approved term predicates; a
+subsequent request excludes the now-inactive row. Empty-ID batches are total. The
+normal80fixture/64published query budget remains5; Records remains28. Final Stack
+build and actual HTTP regression pass; full pinned models pass with a meaningful
+unsafe selection-join control. The earlier2587-example full run applies to641876;
+this successor still requires its complete hosted gates and renewed exact-head review.

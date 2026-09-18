@@ -79,6 +79,9 @@ run_negative_tlc() {
     exit 1
   fi
 }
+run_tlc MarketplaceCatalogRead.tla MarketplaceCatalogRead.cfg marketplace-catalog-read
+run_tlc MarketplaceCatalogRead.tla MarketplaceCatalogReadUnapproved.cfg marketplace-catalog-unapproved
+run_negative_tlc MarketplaceCatalogReadUnsafe.cfg marketplace-catalog-unsafe 'Invariant SelectedRentalKeepsApprovedTerms is violated' MarketplaceCatalogRead.tla
 run_negative_tlc ExperimentAuthorityStale.cfg experiment-stale 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityDuplicate.cfg experiment-duplicate 'Invariant ExposureAtMostOnce is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityAccount.cfg experiment-account 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
