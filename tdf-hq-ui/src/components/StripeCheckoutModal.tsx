@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react';
+import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -17,7 +17,9 @@ import {
   Divider,
 } from '@mui/material';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
+import type { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { useSession } from '../session/SessionContext';
+import { loadCheckoutStripe } from '../utils/checkoutStripe';
 import { SocialEventsAPI, type TicketPurchaseWithPromoDTO, type SocialTicketTierDTO } from '../api/socialEvents';
 import { PromoCodeField } from './PromoCodeField';
 import {
@@ -35,8 +37,6 @@ import {
   normalizeCheckoutQuantity,
 } from './StripeCheckoutModal.logic';
 
-const stripeKey = import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY?.trim();
-const stripePromise = stripeKey ? loadStripe(stripeKey) : Promise.resolve(null);
 
 interface StripeCheckoutModalProps {
   open: boolean;
@@ -194,7 +194,7 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
           {state.processing ? (
             <CircularProgress size={CHECKOUT_ACTION_SPINNER_SIZE_PX} />
           ) : (
-            `Pay ${formatTicketTierPrice(tier, buyerDetails.quantity)}`
+            t('checkout.actions.pay', { amount: formatTicketTierPrice(tier, buyerDetails.quantity) })
           )}
         </Button>
       </Box>
@@ -218,7 +218,11 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
    * postcondition: close resets state.
    */
   const { t } = useTranslation();
+  const { session } = useSession();
   const [state, dispatch] = useReducer(checkoutModalReducer, initialCheckoutModalState);
+  const [stripeClient, setStripeClient] = useState<Stripe | null>(null);
+  const buyerAttempt = useRef(0);
+  const buyerPending = useRef(false);
   const returnFocusRef = useRef(null) as HTMLElementRef;
   const nameInputRef = useRef(null) as InputRef;
   const emailInputRef = useRef(null) as InputRef;
@@ -227,6 +231,17 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   const successSummaryRef = useRef(null) as DivRef;
   const successTimerRef = useRef(null) as TimerRef;
   const pendingSuccessOrderIdRef = useRef(null) as StringRef;
+
+  useLayoutEffect(() => {
+    buyerAttempt.current += 1;
+    dispatch({ type: 'reset' });
+    setStripeClient(null);
+    buyerPending.current = false;
+    if (successTimerRef.current !== null) window.clearTimeout(successTimerRef.current);
+    successTimerRef.current = null;
+    pendingSuccessOrderIdRef.current = null;
+    return () => { buyerAttempt.current += 1; buyerPending.current = false; };
+  }, [open, eventId, tier.ticketTierId, session]);
 
   useEffect(() => {
     if (open) {
@@ -260,6 +275,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   );
 
   const submitBuyerDetails = async () => {
+    if (buyerPending.current) return;
     const name = state.buyerDetails.name.trim();
     const email = state.buyerDetails.email.trim();
     const quantity = state.buyerDetails.quantity;
@@ -277,9 +293,15 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       return;
     }
 
+    buyerPending.current = true;
+    const attempt = buyerAttempt.current;
     dispatch({ type: 'buyerSubmitStarted' });
 
     try {
+      const client = await loadCheckoutStripe();
+      if (attempt !== buyerAttempt.current) return;
+      if (!client) throw new Error(t('checkout.errors.unavailable'));
+      setStripeClient(client);
       const payload: TicketPurchaseWithPromoDTO = {
         ticketPurchaseTierId: tier.ticketTierId ?? '',
         ticketPurchaseQuantity: quantity,
@@ -289,16 +311,20 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       };
 
       const response = await SocialEventsAPI.createPaymentIntent(payload);
+      if (attempt !== buyerAttempt.current) return;
       dispatch({
         type: 'paymentIntentReady',
         clientSecret: response.spiClientSecret,
         orderId: response.spiOrderId,
       });
     } catch (err) {
+      if (attempt !== buyerAttempt.current) return;
       dispatch({
         type: 'buyerSubmitFailed',
         error: err instanceof Error ? err.message : t('checkout.errors.paymentIntent'),
       });
+    } finally {
+      if (attempt === buyerAttempt.current) buyerPending.current = false;
     }
   };
 
@@ -320,6 +346,8 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   };
 
   const handleClose = () => {
+    buyerAttempt.current += 1;
+    buyerPending.current = false;
     if (successTimerRef.current !== null) {
       window.clearTimeout(successTimerRef.current);
       successTimerRef.current = null;
@@ -330,7 +358,9 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
     restoreFocusAfterClose();
   };
 
+  const renderAttempt = buyerAttempt.current;
   const handlePaymentSuccess = (orderId: string) => {
+    if (renderAttempt !== buyerAttempt.current) return;
     pendingSuccessOrderIdRef.current = orderId;
     dispatch({ type: 'paymentSucceeded' });
     successTimerRef.current = window.setTimeout(() => {
@@ -444,7 +474,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
         )}
 
         {state.activeStep === CHECKOUT_STEP_PAYMENT && state.clientSecret && (
-          <Elements stripe={stripePromise} options={stripeOptions}>
+          <Elements stripe={stripeClient} options={stripeOptions}>
             <CheckoutForm
               tier={tier}
               buyerDetails={state.buyerDetails}
@@ -473,7 +503,6 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
         {state.activeStep === CHECKOUT_STEP_BUYER_DETAILS && (
           <>
             <Button
-              disabled={state.loading}
               onClick={handleClose}
               onKeyDown={(event) => {
                 if (event.key === 'Escape') {

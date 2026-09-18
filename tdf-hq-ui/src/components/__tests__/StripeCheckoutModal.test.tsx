@@ -9,10 +9,15 @@ import type {
   StripePaymentIntentDTO,
   TicketPurchaseWithPromoDTO,
 } from '../../api/socialEvents';
+import type { Stripe } from '@stripe/stripe-js';
 import appI18n from '../../i18n/index';
 
 const validatePromoCode =
   jest.fn<(eventId: string, codeId: string, code?: string, tierId?: string) => Promise<PromoCodeDTO>>();
+let checkoutSession = { partyId: 42 };
+jest.unstable_mockModule('../../session/SessionContext', () => ({ useSession: () => ({ session: checkoutSession }) }));
+const loadCheckoutStripe = jest.fn<() => Promise<Stripe | null>>();
+jest.unstable_mockModule('../../utils/checkoutStripe', () => ({ loadCheckoutStripe }));
 const createPaymentIntent = jest.fn<(data: TicketPurchaseWithPromoDTO) => Promise<StripePaymentIntentDTO>>();
 
 const GENERAL_ADMISSION_PRICE_CENTS = 5 * 1000;
@@ -97,6 +102,22 @@ describe('StripeCheckoutModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    loadCheckoutStripe.mockResolvedValue({} as Stripe);
+  });
+
+  it('does not reserve under a different session after pending SDK readiness', async () => {
+    let resolve!: (client: Stripe) => void;
+    loadCheckoutStripe.mockReturnValue(new Promise<Stripe>((done) => { resolve = done; }));
+    const view = renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.submit(document.getElementById('stripe-checkout-buyer-details-form')!);
+    checkoutSession = { partyId: 43 };
+    view.rerender(<StripeCheckoutModal open onClose={mockOnClose} eventId="event-1" eventTitle="Launch Party" tier={mockTier} onSuccess={mockOnSuccess} />);
+    resolve({} as Stripe);
+    await waitFor(() => expect(screen.getByLabelText(/Your Name/i)).toHaveValue(''));
+    expect(createPaymentIntent).not.toHaveBeenCalled();
+    expect(mockOnSuccess).not.toHaveBeenCalled();
   });
 
   it('renders buyer details form on step 1', () => {
@@ -219,6 +240,64 @@ describe('StripeCheckoutModal', () => {
     await waitFor(() => {
       expect(screen.getByText(/Payment failed/i)).toBeInTheDocument();
     });
+  });
+
+  it('does not reserve inventory when the payment client is unavailable and preserves input for retry', async () => {
+    loadCheckoutStripe.mockResolvedValueOnce(null);
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('No tickets were reserved');
+    expect(createPaymentIntent).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/Your Name/i)).toHaveValue('Buyer');
+    expect(screen.getByLabelText(/Email/i)).toHaveValue('buyer@example.test');
+    createPaymentIntent.mockResolvedValueOnce({ spiClientSecret: 'secret', spiOrderId: 'order-retry', spiPaymentIntentId: 'intent-retry', spiAmountCents: 5000, spiCurrency: 'USD' });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+    await waitFor(() => expect(createPaymentIntent).toHaveBeenCalledTimes(1));
+  });
+
+  it('ignores late payment-client readiness after checkout is interrupted', async () => {
+    let ready!: (client: Stripe | null) => void;
+    loadCheckoutStripe.mockImplementationOnce(() => new Promise(resolve => { ready = resolve; }));
+    const view = renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+    view.unmount();
+    ready({} as Stripe);
+    await waitFor(() => expect(loadCheckoutStripe).toHaveBeenCalledTimes(1));
+    await Promise.resolve();
+    expect(createPaymentIntent).not.toHaveBeenCalled();
+  });
+
+  it('keeps only one readiness request while the buyer submits repeatedly', async () => {
+    let ready!: (client: Stripe | null) => void;
+    loadCheckoutStripe.mockImplementationOnce(() => new Promise(resolve => { ready = resolve; }));
+    createPaymentIntent.mockResolvedValueOnce({ spiClientSecret: 'secret', spiOrderId: 'order-once', spiPaymentIntentId: 'intent-once', spiAmountCents: 5000, spiCurrency: 'USD' });
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    const form = screen.getByLabelText(/Your Name/i).closest('form')!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    expect(loadCheckoutStripe).toHaveBeenCalledTimes(1);
+    ready({} as Stripe);
+    await waitFor(() => expect(createPaymentIntent).toHaveBeenCalledTimes(1));
+  });
+
+  it('lets the buyer cancel a pending readiness check without reserving tickets', async () => {
+    let ready!: (client: Stripe | null) => void;
+    loadCheckoutStripe.mockImplementationOnce(() => new Promise(resolve => { ready = resolve; }));
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+    ready({} as Stripe);
+    await Promise.resolve();
+    expect(createPaymentIntent).not.toHaveBeenCalled();
   });
 
   it('closes modal on cancel', () => {

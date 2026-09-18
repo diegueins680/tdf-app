@@ -5,6 +5,59 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Continuación — 2026-09-18 04:52 UTC
+
+Release guardado #422 `f19bb8855e8a9bc5b73ee4c3199c631540eb0df9` completado
+04:38:48Z. Canary y segunda máquina confirman db/status OK y SHA exacto; snapshot
+`vs_bNkX7ky3wqjsZg5nPk5OQJ` completado04:32:12Z. Imagen inmutable
+`sha256:ebf4d755ff87d866782540791433a6fdbcbfb7629deaac95e93ac6e3889c792d`.
+Read-only04:42:04Z:104 migraciones, lease0. Sin rollback. El túnel local de Fly
+falló; el mecanismo documentado usó smoke público fijado por máquina.
+`evidence/production-release-f19.json`. Recuperación: artefacto db69 compatible
+según preflight, usando de nuevo el release guardado y verificando ledger actual;
+no restaurar base ni sobrescribir despliegues posteriores. Handoff anotado en memoria.
+
+Cloudflare f19 `fa76ec18-b275-42e7-842e-18cd54c26c16` SUCCESS. Después #426
+se integró como `a81e48ea9e68b495562ae1f6592654c043dc97eb`; la web pública
+ya coincide en todos sus assets con su deployment `93ae1f5b-b0c1-43af-b25e-291fb845f18e`.
+No se revierte esta entrega independiente. API observada f19; es estado separado.
+
+Apple: confirmación explícita del titular sobre derechos de terceros guardada y
+leída por API (`USES_THIRD_PARTY_CONTENT`); categoría Music, precio gratuito y
+disponibilidad175 regiones tras release. App Privacy publicada,19 tipos vinculados
+a identidad/sin tracking, según código+manifiestos IPA. iOS1.0.1(19) enviado:
+App Review **WAITING_FOR_REVIEW**, TestFlight externo **WAITING_FOR_BETA_REVIEW**.
+`evidence/ios19-store-submitted.json` y `ios19-beta-submission.jsonl`. No publicación
+pública ni aprobación acreditada. Condición no-comerciante permanece activa.
+
+Android1.0.1(10) pasa de draft a rollout completo de Alpha por API; readback
+`evidence/android-alpha-release10.json`. Console confirma comprobaciones previas
+y cambios en revisión, incluyendo lista68. No se acredita disponibilidad nueva;
+cero invitaciones enviadas aún. Se mantienen82 contactos previstos (14 requieren
+cuenta Google) y1dirección inválida excluida; nunca publicar la audiencia privada.
+
+#429: revisión encuentra inicialización de pago sin cliente utilizable; se verifica
+SDK antes de reservar, se conserva entrada al fallar, se permite cancelar y se
+frenan respuestas antiguas/doble envío.17pruebas component/logic pasan; modelo
+CheckoutReadiness221estados distintos,3propiedades y liveness condicional pasan,
+3controles negativos detectan sus invariantes. Runner TLC1.7.2/Alloy6.2.0 completo
+aprobado. Nombres únicos de regiones/progresos ES/EN y locales FullCalendar
+registrados; botón pagar localizado. Build/lint/typecheck pasan,364882bytes gzip
+con5preloads dentro del presupuesto. Verificación de navegador del sucesor en curso.
+
+Manager/Engineer/Artist/Accounting/Teacher:198llegadas por rol,99rutas×320/1280,
+sesión/backend/PostgreSQL17 reales; cero axe/pageerror/5xx/overflow.28llegadas
+focalizadas tienen cero axe/pageerror/overflow; integración Google Calendar devuelve
+500 por OAuth no configurado en entorno aislado, pendiente de verificación real.
+No acredita acciones, combinaciones de roles, estados ni accesibilidad con lector.
+La prueba de bundle sin `VITE_API_BASE=/api` consultó rutas raíz del servidor
+estático y falló; se corrige el harness, sin contar ese intento como defecto/producto
+o evidencia positiva. No hubo escritura productiva en esa ejecución local.
+
+Siguiente: terminar regresiones de navegador y gates, publicar #429/resolver5hilos,
+renovar revisión independiente si GitHub la descarta; continuar cobertura inicial.
+Tiendas requieren decisiones externas; producción Google exige12personas/14días.
+
 ## Continuación — 2026-09-18 04:18 UTC
 
 #422 fusionada por merge normal como `f19bb8855e8a9bc5b73ee4c3199c631540eb0df9`:
@@ -547,3 +600,12 @@ El usuario volvió a confirmar que el despliegue paralelo sigue en curso: contin
 El artefacto iOS acce0957-ec70-40a6-8f9e-8192db3b7839 de fuente 74d784ceb366a3200c1f68ceb6082ef0ba9e2b7c se extrajo, instaló y arrancó en el simulador aislado TDF-UX-Audit-20260917 (iPhone 16, iOS 18.3, UDID 70262ECC-FDDB-470A-A73B-4776FAE364C1). [Captura inspeccionada](evidence/ios-74d784c-first-launch.png): bienvenida en inglés según idioma inicial del dispositivo, selector Español/English y acciones crear cuenta/acceder. No se ejecutó registro, OAuth ni lector de pantalla. Se apagó este simulador cuando el disco cayó a 87 MB; la siguiente lectura tras limpieza muestra 6,3 GiB, aún inferior a 10 GB. No se borraron archivos ajenos. Maestro está disponible; idb carece de idb_companion. Android, dispositivos físicos y publicación siguen pendientes.
 
 PR #422 pasó los gates exactos f36a6391c tras repetir sólo los jobs fallidos de instalación nativa transitoria; el log de navegador acredita 66 aprobados/10 omitidos, incluidos los diez casos ES/EN. PR #421 ya tiene backend-quality y quality SUCCESS en 19d8dc830 y aprobación independiente de tdfrecords sobre ese SHA; el merge sigue retenido por coordinación de producción. El usuario reiteró que el otro despliegue continúa: ningún merge que dispare producción ni mutación productiva por esta entrega.
+
+### Radio and modal layering (UX-260917-030)
+
+Initial checkout retry runtime found the global radio layer at1400 intercepting
+the modal footer after its error expands. The screenshot is a real compiled-bundle
+reproduction, synthetic event/payment transport. All three radio surfaces now use
+theme.zIndex.appBar. [MUI primary documentation](https://mui.com/material-ui/customization/z-index/)
+consulted2026-09-18 specifies appBar1100,modal1300,snackbar1400; reusing the theme
+keeps application controls below the modal. No audio change, provider or charge.

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   Box,
@@ -103,8 +104,9 @@ export default function DirectoryManagePage() {
 }
 
 function ProfilePanel({ profiles, loading, onCreate, onEdit, onRefresh }: { profiles: ManagedDirectoryProfile[]; loading: boolean; onCreate: () => void; onEdit: (profile: ManagedDirectoryProfile) => void; onRefresh: () => Promise<unknown> }) {
+  const { t } = useTranslation();
   const status = useMutation({ mutationFn: ({ id, value }: { id: string; value: string }) => Directory.setProfileStatus(id, value), onSuccess: onRefresh });
-  if (loading) return <CircularProgress />;
+  if (loading) return <CircularProgress aria-label={t('auditAccessibility.loadingProfiles')} />;
   return <Stack spacing={2}>
     <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate} sx={{ alignSelf: 'flex-start' }}>Crear perfil</Button>
     {profiles.length === 0 && <Alert severity="info">Crea tu primer perfil profesional. Una misma cuenta puede administrar varios perfiles autorizados.</Alert>}
@@ -115,14 +117,15 @@ function ProfilePanel({ profiles, loading, onCreate, onEdit, onRefresh }: { prof
 }
 
 function ClassifiedPanel({ classifieds, loading, onCreate, onRefresh }: { classifieds: ManagedClassified[]; loading: boolean; onCreate: () => void; onRefresh: () => Promise<unknown> }) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string | null>(null);
   const applications = useQuery({ queryKey: ['directory', 'applications', selected], queryFn: () => Directory.applications(selected!), enabled: Boolean(selected) });
   const status = useMutation({ mutationFn: ({ id, value }: { id: string; value: string }) => Directory.setClassifiedStatus(id, value), onSuccess: onRefresh });
-  if (loading) return <CircularProgress />;
+  if (loading) return <CircularProgress aria-label={t('auditAccessibility.loadingClassifieds')} />;
   return <Stack spacing={2}>
     <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate} sx={{ alignSelf: 'flex-start' }}>Publicar oportunidad</Button>
     {classifieds.length === 0 && <Alert severity="info">Todavía no tienes clasificados. Los anuncios básicos son gratuitos.</Alert>}
-    {classifieds.map((item) => <Paper key={item.id} variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}><Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{item.title}</Typography><Typography color="text.secondary">Vence: {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'al publicar +30 días'}</Typography></Box><Stack direction="row" gap={1} alignItems="center" flexWrap="wrap"><Chip label={item.status} color={item.status === 'published' ? 'success' : 'default'} />{item.status === 'draft' && <Button onClick={() => status.mutate({ id: item.id, value: 'published' })}>Publicar</Button>}{item.status === 'published' && <Button startIcon={<CheckCircleIcon />} onClick={() => status.mutate({ id: item.id, value: 'filled' })}>Marcar cubierto</Button>}<Button onClick={() => setSelected(selected === item.id ? null : item.id)}>Postulaciones</Button></Stack></Stack>{selected === item.id && <Stack mt={2} spacing={1}>{applications.isLoading && <CircularProgress size={24} />}{applications.data?.length === 0 && <Typography color="text.secondary">Sin postulaciones todavía.</Typography>}{applications.data?.map((application) => <ApplicationRow key={String(application['id'])} application={application} authorProfileId={item.authorProfileId} />)}</Stack>}</Paper>)}
+    {classifieds.map((item) => <Paper key={item.id} variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}><Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{item.title}</Typography><Typography color="text.secondary">Vence: {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'al publicar +30 días'}</Typography></Box><Stack direction="row" gap={1} alignItems="center" flexWrap="wrap"><Chip label={item.status} color={item.status === 'published' ? 'success' : 'default'} />{item.status === 'draft' && <Button onClick={() => status.mutate({ id: item.id, value: 'published' })}>Publicar</Button>}{item.status === 'published' && <Button startIcon={<CheckCircleIcon />} onClick={() => status.mutate({ id: item.id, value: 'filled' })}>Marcar cubierto</Button>}<Button onClick={() => setSelected(selected === item.id ? null : item.id)}>Postulaciones</Button></Stack></Stack>{selected === item.id && <Stack mt={2} spacing={1}>{applications.isLoading && <CircularProgress size={24} aria-label={t('auditAccessibility.loadingApplications')} />}{applications.data?.length === 0 && <Typography color="text.secondary">Sin postulaciones todavía.</Typography>}{applications.data?.map((application) => <ApplicationRow key={String(application['id'])} application={application} authorProfileId={item.authorProfileId} />)}</Stack>}</Paper>)}
   </Stack>;
 }
 
@@ -149,8 +152,9 @@ function ApplicationRow({ application, authorProfileId }: { application: Record<
 }
 
 function InvitationPanel() {
+  const { t } = useTranslation();
   const invitations = useQuery({ queryKey: ['directory', 'invitations'], queryFn: Directory.invitations });
-  if (invitations.isLoading) return <CircularProgress />;
+  if (invitations.isLoading) return <CircularProgress aria-label={t('auditAccessibility.loadingInvitations')} />;
   if (invitations.isError) return <Alert severity="error">No se pudieron cargar tus invitaciones.</Alert>;
   if (!invitations.data?.length) return <Alert severity="info">Todavía no tienes invitaciones enviadas o recibidas.</Alert>;
   return <Stack spacing={2}>{invitations.data.map((invitation) => <InvitationCard key={invitation.id} invitation={invitation} />)}</Stack>;

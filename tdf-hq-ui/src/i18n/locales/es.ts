@@ -1,6 +1,19 @@
 import authEntry from './authEntry.es';
 const es = {
   authEntry,
+  auditAccessibility: {
+    loadingProfiles: 'Cargando perfiles',
+    loadingClassifieds: 'Cargando clasificados',
+    loadingApplications: 'Cargando postulaciones',
+    loadingInvitations: 'Cargando invitaciones',
+
+    activitySummary: 'Resumen por usuario',
+    recentActivity: 'Actividad reciente',
+    generatingContactQr: 'Generando QR de contacto',
+    loadingSuggestions: 'Buscando sugerencias de contactos',
+    loadingNetwork: 'Cargando red social',
+    workflowBoard: 'Tablero de proyectos',
+  },
   fanHubOnboarding: {
     title: 'Primeros pasos',
     managerTitle: 'Lo más útil ahora',
@@ -260,6 +273,7 @@ const es = {
       promoPending: 'El código promocional se aplicará al finalizar la compra',
     },
     actions: {
+      pay: 'Pagar {{amount}}',
       back: 'Atrás',
       cancel: 'Cancelar',
       continue: 'Continuar al pago',
@@ -271,6 +285,7 @@ const es = {
       paymentSubmit: 'Error al enviar el pago',
       paymentFailed: 'Error en el pago',
       paymentUnclear: 'No se pudo confirmar el estado del pago. Por favor contacta con soporte.',
+      unavailable: 'El pago no está disponible ahora. No se reservó ninguna entrada. Inténtalo de nuevo más tarde.',
       paymentIntent: 'Error al crear la intención de pago',
       unexpected: 'Ocurrió un error inesperado',
     },

@@ -198,7 +198,7 @@ export default function KanbanPage() {
           <Typography variant="body2" color="text.secondary">
             {t('pipelines.keyboardHelp')}
           </Typography>
-          <Stack role="region" aria-label={t('pipelines.workflowTabs')} tabIndex={0} direction="row" gap={2} sx={{ overflowX: 'auto', pb: 2 }}>
+          <Stack role="region" aria-label={t('auditAccessibility.workflowBoard')} tabIndex={0} direction="row" gap={2} sx={{ overflowX: 'auto', pb: 2 }}>
             {columnOrder.map((stage) => {
               const cardIds = (columns[stage.id] ?? []).filter((id) => typeof id === 'string' && id.trim().length > 0);
               return (

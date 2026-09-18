@@ -173,3 +173,23 @@ invariant counterexample. Component regressions cover the corresponding UI/API
 mechanisms, and an actual isolated HTTP/PostgreSQL browser test checks code-account
 persistence while a different cookie account remains signed in. Optional nested
 null handling is covered by multipart parser contract tests, not this state model.
+
+## Checkout readiness — UX-260917-026 / PR #429
+
+`CheckoutReadiness.tla` models two request slots and generations 0..2, an open/closed
+buyer dialog, arbitrary SDK readiness, cancellation and reopening. TLC1.7.2 checks
+389 generated /221 distinct states (depth9): `ReadyBeforeReservation`,
+`CurrentReservation`, `SingleCurrentFlight`, and `Settles`. Weak fairness for each
+`Resolve` assumes the SDK promise eventually settles, successfully or unsuccessfully.
+An indefinitely stalled SDK/network is not certified. Three negative configurations
+independently remove readiness, current-generation fencing, or single-flight admission;
+each must violate its named safety invariant.
+
+The implementation checks `loadCheckoutStripe()` before `createPaymentIntent`, fences
+both await boundaries using `buyerAttempt`, and rejects duplicate submissions through
+`buyerPending`. Layout cleanup, close, event/tier/session changes invalidate the generation.
+Session changes also clear pending success timers; late payment callbacks are fenced.
+Component regressions exercise null SDK plus retry/input retention, unmount, cancellation
+and duplicate submissions. The model does not prove payment settlement, backend
+idempotency, inventory transactions, session authorization or provider availability.
+Existing event/payment models and backend gates retain their separate scope.
