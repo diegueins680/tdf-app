@@ -5,6 +5,35 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Cobertura operativa y tiendas — 2026-09-18 03:15 UTC
+
+El sucesor operativo conserva IDs y añade UX022–028 confirmados por navegador:
+scroll con teclado, nombres de controles/carga, contraste claro, alertas estrechas,
+SDK de pago opcional, landmarks y objetivos táctiles. Código dccd66606 integrado con
+#4226479e0350 mediante d4f720e51.198 casos admin y198 customer,99rutas×2anchos;
+28 repeticiones focalizadas finales sin axe. Estos son casos de llegada inicial,
+no aceptación de todos los estados ni certificación WCAG.15 pruebas existentes,
+lint y build pasan; el bundle integrado d4f720e51 usa364500bytes gzip/5preloads y sus28 casos
+focalizados pasan. Se normalizó coverage.csv a CSV estándar:411 filas/8columnas,
+roundtrip verificado, sin perder evidencia ni definiciones JSON de permisos.
+Se excluye como evidencia de persistencia el bundle intermedio mal configurado.
+
+Play Console observado: cuenta7746420275596660022, com.tdf.records ya en Closed
+testing. La cuenta de servicio de EAS faltaba por completo; ahora se añadió y se
+leyó estado Active con acceso sólo a TDF. Seis permisos solicitados por Expo más
+los tres permisos de lectura/políticas/enlaces que Play implica automáticamente;
+Admin, finanzas, pedidos y respuestas a reseñas permanecen desmarcados. Envío del
+build10 actualizado:f22acacc-5d30-4659-9078-a58f056f859b en ejecución; no publicación
+inferida. iOS19 subido vía7233bd21-1d94-424c-b792-c0234f497949; falta verificar
+processing y actualizar asociación del borrador. Simulador del mismo source:
+dd963682-9ce6-442b-a7a9-6d178860c15e solicitado tras fallo TLS de upload; no se
+redujo integridad/validación. Maestro en dispositivo6.9 tuvo XCTest killed antes
+de iniciar; no se acredita QA por ese intento.
+
+#4226479e0350 tiene las tres discusiones resueltas, CI en ejecución y requiere
+renovar aprobación independiente. Producción sigue db69 según el último release
+verificado. No compete con el operador de identidad ni inicia otro rollout aún.
+
 ## Checkpoint de continuación — 2026-09-18 03:10 UTC
 
 **PARTIALLY COMPLETE.** #422 f935ba1e6 recibió aprobación exacta y todos sus
