@@ -575,6 +575,11 @@
       "id": "2026-09-18_trial_identity_requests",
       "path": "tdf-hq/sql/2026-09-18_trial_identity_requests.sql",
       "introducedBy": "8a83c8cfb84296b21ccd5c4fecbcc35f1ebd95e7"
+    },
+    {
+      "id": "2026-09-18_ads_identity_requests",
+      "path": "tdf-hq/sql/2026-09-18_ads_identity_requests.sql",
+      "introducedBy": "948036699799dae2cffd45bde073fb8b02cbbbca"
     }
   ]
 }

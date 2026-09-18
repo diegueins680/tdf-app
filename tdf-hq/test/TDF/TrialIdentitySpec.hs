@@ -17,6 +17,8 @@ import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.Auth (AuthedUser(..), modulesForRoles)
 import TDF.Models (RoleEnum(..))
+import TDF.API (AdsInquiry(..), AdsInquiryOut(..))
+import TDF.Server (createAdsInquiryDb, validateAdsInquiryRequestKey)
 import qualified TDF.Trials.API as A
 import qualified TDF.Trials.DTO as D
 import TDF.Trials.Server (AppM, publicTrialsServer, privateTrialsServer)
@@ -95,6 +97,44 @@ spec = describe "trial-identity-postgresql" $ do
         void $ runSqlPool (signup (Just "trial-partial-failure") enquiry) pool
         after <- snapshot pool
         zipWith (-) after before `shouldBe` [1,1,0,1,0,0]
+
+      it "serializes ad inquiries and reserves notifications once without adopting shared contacts" $ \pool -> do
+        now <- getCurrentTime
+        let inquiry = AdsInquiry (Just "Synthetic ad contact") (Just "trial-identity@example.test") Nothing Nothing (Just "Synthetic inquiry") (Just "ads")
+        before <- snapshot pool
+        boxes <- forM [1..5 :: Int] $ \_ -> do
+          box <- newEmptyMVar
+          void $ forkIO $ do
+            result <- try (runSqlPool (createAdsInquiryDb "ads-concurrent-source" inquiry now) pool) :: IO (Either SomeException (Either ServerError (Bool, AdsInquiryOut)))
+            putMVar box result
+          pure box
+        outcomes <- mapM takeMVar boxes
+        let accepted = [(fresh,aioInquiryId response) | Right (Right (fresh,response)) <- outcomes]
+        length accepted `shouldBe` 5
+        length (filter fst accepted) `shouldBe` 1
+        map snd accepted `shouldBe` replicate 5 (snd (head accepted))
+        after <- snapshot pool
+        zipWith (-) after before `shouldBe` [1,1,0,0,0,0]
+        scalar pool "SELECT count(*) FROM identity_ads_request WHERE notification_state='dispatching'" `shouldReturn` 1
+        conflict <- runSqlPool (createAdsInquiryDb "ads-concurrent-source" (inquiry { aiName = Just "Changed" }) now) pool
+        either errHTTPCode (const 0) conflict `shouldBe` 409
+        snapshot pool `shouldReturn` after
+        independent <- runSqlPool (createAdsInquiryDb "ads-separate-source" inquiry now) pool
+        either (const False) (\(_,response) -> aioInquiryId response /= snd (head accepted)) independent `shouldBe` True
+        scalar pool "SELECT count(*) FROM lead_interest l JOIN party p ON p.id=l.party_id WHERE p.display_name='Established synthetic account'" `shouldReturn` 0
+      it "rolls back ad contacts when lead persistence fails and validates keys before writes" $ \pool -> do
+        now <- getCurrentTime
+        let inquiry = AdsInquiry (Just "Failed ad contact") (Just "trial-identity@example.test") Nothing Nothing Nothing Nothing
+        before <- snapshot pool
+        runSqlPool (rawExecute "CREATE FUNCTION ads_identity_fail() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic dependency failure'; END $$; CREATE TRIGGER ads_identity_fail BEFORE INSERT ON lead_interest FOR EACH ROW EXECUTE FUNCTION ads_identity_fail()" []) pool
+        result <- try (runSqlPool (createAdsInquiryDb "ads-dependent-failure" inquiry now) pool) :: IO (Either SomeException (Either ServerError (Bool, AdsInquiryOut)))
+        either (const True) (const False) result `shouldBe` True
+        runSqlPool (rawExecute "DROP TRIGGER ads_identity_fail ON lead_interest; DROP FUNCTION ads_identity_fail()" []) pool
+        snapshot pool `shouldReturn` before
+        either errHTTPCode (const 0) (validateAdsInquiryRequestKey Nothing) `shouldBe` 400
+        either errHTTPCode (const 0) (validateAdsInquiryRequestKey (Just "invalid punctuation!")) `shouldBe` 400
+        retried <- runSqlPool (createAdsInquiryDb "ads-dependent-failure" inquiry now) pool
+        either (const False) fst retried `shouldBe` True
 
       it "edits a student with an unchanged shared email while preserving access and changed-email checks" $ \pool -> do
         let admin = actor 900102 [Admin]

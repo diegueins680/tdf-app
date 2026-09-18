@@ -9,6 +9,8 @@ trap cleanup EXIT INT TERM
 psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/scripts/__tests__/fixtures/production-schema-20260814.sql" >/dev/null
 psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/scripts/__tests__/fixtures/catalog-production-source-fixture.sql" >/dev/null
 node "$repo_root/scripts/render-production-migration-batch.mjs" | psql -X -v ON_ERROR_STOP=1 -d "$test_database" >/dev/null
+psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/tdf-hq/sql/2026-09-18_ads_identity_requests_rollback.sql"
+psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/tdf-hq/sql/2026-09-18_ads_identity_requests.sql"
 psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/tdf-hq/sql/2026-09-18_trial_identity_requests_rollback.sql"
 psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/tdf-hq/sql/2026-09-18_trial_identity_requests.sql"
 psql -X -v ON_ERROR_STOP=1 -d "$test_database" <<'SQL'
@@ -33,5 +35,10 @@ cd "$repo_root/tdf-hq"
 stack test tdf-hq:test:tdf-hq-test --fast --ghc-options=-O0 --jobs 1 --test-arguments='--match trial-identity-postgresql'
 if psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/tdf-hq/sql/2026-09-18_trial_identity_requests_rollback.sql" >/dev/null 2>&1; then
   echo 'Rollback incorrectly removed accepted trial receipts' >&2
+  exit 1
+fi
+
+if psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/tdf-hq/sql/2026-09-18_ads_identity_requests_rollback.sql" >/dev/null 2>&1; then
+  echo 'Rollback incorrectly removed accepted ad inquiry receipts' >&2
   exit 1
 fi
