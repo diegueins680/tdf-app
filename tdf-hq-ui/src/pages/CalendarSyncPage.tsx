@@ -27,6 +27,18 @@ import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatDateTime } from '../utils/formatters';
 
+// Calendar preferences are optional; denial/quota failures must not block the
+// authoritative API result or the form's in-memory state.
+const readCalendarPreference = (key: string): string | null => {
+  try { return window.localStorage.getItem(key); } catch { return null; }
+};
+const writeCalendarPreference = (key: string, value: string): void => {
+  try { window.localStorage.setItem(key, value); } catch { /* Keep the form usable. */ }
+};
+const removeCalendarPreference = (key: string): void => {
+  try { window.localStorage.removeItem(key); } catch { /* Best-effort preference cleanup. */ }
+};
+
 const normalizeStoredText = (value: string | null): string => value?.trim() ?? '';
 
 const normalizeHistoryEntries = (value: unknown): string[] => {
@@ -77,7 +89,7 @@ export default function CalendarSyncPage() {
   );
   const icsUrl = useMemo(() => {
     if (typeof window === 'undefined') return '';
-    const base = (import.meta.env.VITE_CALENDAR_ICS_BASE ?? `${window.location.origin}/calendar/v1/ics`).trim();
+    const base = (import.meta.env?.VITE_CALENDAR_ICS_BASE ?? `${window.location.origin}/calendar/v1/ics`).trim();
     const cal = trimmedCalendarId || 'primary';
     const separator = base.includes('?') ? '&' : '?';
     return `${base}${separator}calendarId=${encodeURIComponent(cal)}`;
@@ -121,12 +133,12 @@ export default function CalendarSyncPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const storedId = window.localStorage.getItem('calendar-sync.calendarId');
-    const storedRange = window.localStorage.getItem('calendar-sync.range');
-    const storedConnected = window.localStorage.getItem('calendar-sync.connected');
-    const storedLastSync = window.localStorage.getItem('calendar-sync.lastSyncAt');
-    const storedAccount = window.localStorage.getItem('calendar-sync.account');
-    const storedHistory = window.localStorage.getItem('calendar-sync.history');
+    const storedId = readCalendarPreference('calendar-sync.calendarId');
+    const storedRange = readCalendarPreference('calendar-sync.range');
+    const storedConnected = readCalendarPreference('calendar-sync.connected');
+    const storedLastSync = readCalendarPreference('calendar-sync.lastSyncAt');
+    const storedAccount = readCalendarPreference('calendar-sync.account');
+    const storedHistory = readCalendarPreference('calendar-sync.history');
 
     const normalizedStoredId = normalizeStoredText(storedId);
     setCalendarId(normalizedStoredId || 'primary');
@@ -164,33 +176,33 @@ export default function CalendarSyncPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const normalizedCalendarId = trimmedCalendarId || 'primary';
-    window.localStorage.setItem('calendar-sync.calendarId', normalizedCalendarId);
+    writeCalendarPreference('calendar-sync.calendarId', normalizedCalendarId);
     setCalendarHistory((prev) => {
       const nextHistory = normalizeHistoryEntries([normalizedCalendarId, ...prev]);
       if (sameStringArray(prev, nextHistory)) return prev;
-      window.localStorage.setItem('calendar-sync.history', JSON.stringify(nextHistory));
+      writeCalendarPreference('calendar-sync.history', JSON.stringify(nextHistory));
       return nextHistory;
     });
   }, [trimmedCalendarId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem('calendar-sync.range', JSON.stringify({ from: fromInput, to: toInput }));
+    writeCalendarPreference('calendar-sync.range', JSON.stringify({ from: fromInput, to: toInput }));
   }, [fromInput, toInput]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (connectedCalendar) window.localStorage.setItem('calendar-sync.connected', connectedCalendar);
+    if (connectedCalendar) writeCalendarPreference('calendar-sync.connected', connectedCalendar);
   }, [connectedCalendar]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (lastSyncAt) window.localStorage.setItem('calendar-sync.lastSyncAt', lastSyncAt);
+    if (lastSyncAt) writeCalendarPreference('calendar-sync.lastSyncAt', lastSyncAt);
   }, [lastSyncAt]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem('calendar-sync.account', accountEmail.trim());
+    writeCalendarPreference('calendar-sync.account', accountEmail.trim());
   }, [accountEmail]);
 
   const fromIso = useMemo(() => toUtcIso(fromInput), [fromInput, toUtcIso]);
@@ -231,7 +243,7 @@ export default function CalendarSyncPage() {
       setLastSyncAt(ts);
       void eventsQuery.refetch();
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem('calendar-sync.lastSyncAt', ts);
+        writeCalendarPreference('calendar-sync.lastSyncAt', ts);
       }
       setSyncToast({
         severity: 'success',
@@ -316,7 +328,7 @@ export default function CalendarSyncPage() {
     const nextHistory = Array.from(new Set([payload.calendarId, ...calendarHistory])).slice(0, 5);
     setCalendarHistory(nextHistory);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem('calendar-sync.history', JSON.stringify(nextHistory));
+      writeCalendarPreference('calendar-sync.history', JSON.stringify(nextHistory));
     }
   };
 
@@ -331,12 +343,12 @@ export default function CalendarSyncPage() {
     setLastSyncAt(null);
     setCode('');
     if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('calendar-sync.calendarId');
-      window.localStorage.removeItem('calendar-sync.range');
-      window.localStorage.removeItem('calendar-sync.connected');
-      window.localStorage.removeItem('calendar-sync.lastSyncAt');
-      window.localStorage.removeItem('calendar-sync.account');
-      window.localStorage.removeItem('calendar-sync.history');
+      removeCalendarPreference('calendar-sync.calendarId');
+      removeCalendarPreference('calendar-sync.range');
+      removeCalendarPreference('calendar-sync.connected');
+      removeCalendarPreference('calendar-sync.lastSyncAt');
+      removeCalendarPreference('calendar-sync.account');
+      removeCalendarPreference('calendar-sync.history');
     }
     setCalendarId('primary');
     setAccountEmail('');

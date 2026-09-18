@@ -1363,5 +1363,57 @@
     "verificationStatus": "54 corrected browser cases PASS:zeroaxeviolations,zero200%textoverflow,zeroerrors; Chromium/Firefox keyboardTab, explicit legacyfocusoutline. ProductionbuildPASS, allfivechangedstaticassets byte-identical tosource. InitialJS365648gzipbytes/5preloads withinbudget. Before/afterevidence recorded; WebKit defaultTabskipslinks, no manualreaderclaim.",
     "mergeStatus": "Not merged; focused PR being prepared",
     "releaseStatus": "Not deployed"
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "administrative Google Calendar integration arrival and recovery",
+    "roles": "Admin; anonymous and ReadOnly denial controls",
+    "dependencies": [
+      "independent review",
+      "applicable CI gates",
+      "guarded backend release and web deployment"
+    ],
+    "status": "implemented",
+    "mergeStatus": "Not merged; focused calendar runtime PR being prepared.",
+    "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
+    "id": "UX-260917-040",
+    "title": "Existing admin calendar API has no production runtime tables",
+    "severity": "high",
+    "surface": "/configuracion/integraciones/calendario; GET /calendar/v1/config and /events",
+    "evidence": "Tablet Admin arrival returns500 from both real isolated endpoints. Read-only production to_regclass confirms google_calendar_config and google_calendar_event are absent. See evidence/calendar-runtime-verification.json.",
+    "userImpact": "Administrators cannot inspect or initialize the advertised calendar integration; health does not detect the missing service schema.",
+    "rootCause": "The production migration ledger omitted the Persistent-declared calendar tables while RUN_MIGRATIONS is intentionally disabled.",
+    "proposedChange": "Add forward-only compatible tables, optional owner FK and existing archived-owner guard; include shape/constraint/guard checks in the guarded release schema verification.",
+    "acceptanceCriteria": "Full migration batch replays and restarts idempotently; populated synthetic data preserved; unauthenticated401/nonAdmin403/admin200; response omits tokens; real browser empty state works; deployed schema and journey verified.",
+    "implementationStatus": "Migration introduction49ff02de5 retained in ancestry, manifest registration and schema gate; historical migrations unchanged. No credentials seeded and no external sync started.",
+    "verificationMethod": "Real PostgreSQL17 production-baseline replay; actual compiled Haskell HTTP contracts and12generated events; missing-column/unique-key/guard negative controls. Existing authorization and identity trigger semantics reused, not a new global correctness claim.",
+    "verificationStatus": "Migration/restart idempotence and HTTP assertions PASS;58release tests PASS;6browser cases Admin/ReadOnly×320/768/1280 PASS. Browser setup initially lacked allowed loopback origin; configured isolated proxy/server before qualified execution. Hosted gates and production pending."
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "administrative Google Calendar integration arrival and recovery",
+    "roles": "Admin; anonymous and ReadOnly denial controls",
+    "dependencies": [
+      "independent review",
+      "applicable CI gates",
+      "guarded backend release and web deployment"
+    ],
+    "status": "implemented",
+    "mergeStatus": "Not merged; focused calendar runtime PR being prepared.",
+    "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
+    "id": "UX-260917-041",
+    "title": "Calendar optional preference storage failure replaces the form with an error boundary",
+    "severity": "medium",
+    "surface": "CalendarSyncPage storage effects and clear/success handlers",
+    "evidence": "Real browser, only calendar-sync.* storage methods denied: page shows Algo salió al cargar esta sección and the empty-state assertion fails. Same actual API and corrected bundle pass in Chromium/Firefox/WebKit.",
+    "userImpact": "Private/restricted storage or quota errors prevent essential calendar access and may interrupt already successful API feedback.",
+    "rootCause": "Unprotected localStorage property access/getItem/setItem/removeItem in optional preference handling.",
+    "proposedChange": "Make optional preference operations best-effort and retain in-memory form state and authoritative API behavior.",
+    "acceptanceCriteria": "Property getter and all three storage operations may throw without losing the form or clear action; API results remain usable; browser storage-denial cases pass.",
+    "implementationStatus": "Local guarded preference helpers reused by all20read/write/remove sites; no storage format, API or legal content change. Optional import.meta.env access supports the component test host with the same Vite behavior.",
+    "verificationMethod": "Four real React component cases for getter/getItem/setItem/removeItem plus production-bundle actual HTTP browser negative/positive evidence. No consequential state-transition semantics changed.",
+    "verificationStatus": "4component tests PASS, TypeScript/lint/build PASS (365647gzipbytes/5preloads);3actual storage-denial browser engines PASS. Initial component attempt failed on absent Jest import.meta.env, not counted as the storage counterexample; browser original failure is retained."
   }
 ]
