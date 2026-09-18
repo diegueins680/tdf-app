@@ -1,0 +1,117 @@
+openapi: 3.0.3
+info:
+  title: Trial contact creation
+  version: '1.0'
+paths:
+  /trials/v1/signup:
+    post:
+      operationId: createTrialSignupEnquiry
+      description: Creates an unverified enquiry contact. A request key identifies one submission; email never establishes account ownership. Unsupported credential fields are rejected.
+      parameters:
+        - $ref: './api.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [firstName, lastName, email, marketingOptIn]
+              properties:
+                firstName: {type: string}
+                lastName: {type: string}
+                email: {type: string}
+                phone: {type: string}
+                marketingOptIn: {type: boolean}
+      responses:
+        '200':
+          description: Accepted enquiry or identical retry.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok: {type: boolean}
+        '400': {description: Invalid input or missing retry key.}
+        '409': {description: The accepted request has different details.}
+  /trials/v1/trial-requests:
+    post:
+      operationId: createPublicTrialRequest
+      description: Creates an enquiry and unverified contact atomically, without login credentials or access grants. Identical retries return the saved request even if availability changes.
+      parameters:
+        - $ref: './api.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [subjectId, preferred, email]
+              properties:
+                subjectId: {type: integer}
+                preferred:
+                  type: array
+                  items:
+                    type: object
+                    required: [startAt, endAt]
+                    properties:
+                      startAt: {type: string, format: date-time}
+                      endAt: {type: string, format: date-time}
+                fullName: {type: string}
+                email: {type: string}
+                phone: {type: string}
+                notes: {type: string}
+      responses:
+        '201':
+          description: Accepted request or identical retry.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [requestId, status]
+                properties:
+                  requestId: {type: integer}
+                  status: {type: string}
+        '400': {description: Invalid input or missing retry key.}
+        '409': {description: The accepted request has different details.}
+        '422': {description: No suitable teacher availability.}
+  /trials/v1/students:
+    post:
+      operationId: createSchoolStudent
+      description: Requires school authorization. Creates a new student contact and applies the existing student policy. Retries are scoped to the authenticated actor; shared email cannot adopt another person.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: './api.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [fullName, email]
+              properties:
+                fullName: {type: string}
+                email: {type: string}
+                phone: {type: string}
+                notes: {type: string}
+      responses:
+        '201':
+          description: Accepted student or identical retry.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [studentId, displayName, email, phone]
+                properties:
+                  studentId: {type: integer}
+                  displayName: {type: string}
+                  email: {type: string, nullable: true}
+                  phone: {type: string, nullable: true}
+        '400': {description: Invalid input or missing retry key.}
+        '401': {description: Authentication required.}
+        '403': {description: School access required.}
+        '409': {description: The accepted request has different details.}

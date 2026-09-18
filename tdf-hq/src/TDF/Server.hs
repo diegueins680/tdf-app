@@ -50,7 +50,7 @@ import           Data.Char
   )
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
-import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), decodeStrict', eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
+import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), decodeStrict', eitherDecodeStrict', eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
@@ -7800,76 +7800,6 @@ validateCourseRegistrationUtm (Just UTMTags{..}) = do
   contentVal <- validateOptionalCourseRegistrationTextField "utm.content" 256 content
   pure (sourceVal, mediumVal, campaignVal, contentVal)
 
--- Ensure a Party/UserCredential exists for a registration email. Returns (username, tempPassword) only when a new
--- credential was created.
-ensureUserAccount :: Maybe Text -> Text -> AppM (Maybe (Text, Text))
-ensureUserAccount mName emailAddr = snd <$> ensurePartyWithAccount mName emailAddr Nothing
-
-ensurePartyWithAccount :: Maybe Text -> Text -> Maybe Text -> AppM (Key Party, Maybe (Text, Text))
-ensurePartyWithAccount mName emailAddr mPhone = do
-  now <- liftIO getCurrentTime
-  let display = case fmap T.strip mName of
-        Just nameTxt | not (T.null nameTxt) -> nameTxt
-        _                                   -> emailAddr
-      phoneClean = mPhone >>= normalizePhone
-  partyResult <- runDB $ do
-    mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
-    case mPartyOrErr of
-      Left serverErr -> pure (Left serverErr)
-      Right mParty -> fmap Right $ case mParty of
-        Just (Entity pid party) -> do
-          let updates = catMaybes
-                [ if not (T.null (M.partyDisplayName party)) || T.null display
-                    then Nothing
-                    else Just (PartyDisplayName =. display)
-                , case phoneClean of
-                    Just phone | isNothing (partyPrimaryPhone party) -> Just (PartyPrimaryPhone =. Just phone)
-                    _ -> Nothing
-                ]
-          unless (null updates) (update pid updates)
-          pure pid
-        Nothing -> insert Party
-          { partyLegalName = Nothing
-          , partyDisplayName = display
-          , partyIsOrg = False
-          , partyTaxId = Nothing
-          , partyPrimaryEmail = Just emailAddr
-          , partyPrimaryPhone = phoneClean
-          , partyWhatsapp = Nothing
-          , partyInstagram = Nothing
-          , partyEmergencyContact = Nothing
-          , partyNotes = Nothing
-          , partyStripeCustomerId = Nothing
-          , partyCountryCode = Nothing
-          , partyCountryId = Nothing
-          , partyCreatedAt = now
-          }
-  partyId <- either throwError pure partyResult
-  mCred <- runDB $ selectFirst [UserCredentialPartyId ==. partyId] []
-  newCred <- case mCred of
-    Just _ -> pure Nothing
-    Nothing -> do
-      username <- runDB (generateUniqueUsername (deriveBaseUsername mName emailAddr) partyId)
-      tempPassword <- liftIO Email.generateTempPassword
-      hashed <- liftIO (hashPasswordText tempPassword)
-      _ <- runDB $ insert UserCredential
-        { userCredentialPartyId = partyId
-        , userCredentialUsername = username
-        , userCredentialPasswordHash = hashed
-        , userCredentialActive = True
-        }
-      runDB $
-        requireAutomaticSecurityPolicyDb
-          "account.generated.customer"
-          partyId
-          False
-          Nothing
-          "generated-account"
-          ("generated-account:" <> T.pack (show (fromSqlKey partyId)))
-          now
-      pure (Just (username, tempPassword))
-  pure (partyId, newCred)
-
 -- Guest commerce creates only the customer Party. Account creation remains an
 -- explicit post-purchase choice; creating a credential without delivering its
 -- random password would leave the customer with an inaccessible account.
@@ -14181,32 +14111,65 @@ validateAdsInquiry AdsInquiry{..} = do
     , aiChannel = channelClean
     }
 
-adsInquiryPublic :: AdsInquiry -> AppM AdsInquiryOut
-adsInquiryPublic rawInquiry = do
+adsInquiryPublic :: Maybe Text -> AdsInquiry -> AppM AdsInquiryOut
+adsInquiryPublic maybeKey rawInquiry = do
   inquiry <- either throwError pure (validateAdsInquiry rawInquiry)
+  requestKey <- either throwError pure (validateAdsInquiryRequestKey maybeKey)
   env <- ask
   now <- liftIO getCurrentTime
-  partyId <- runDB (ensurePartyForInquiry inquiry now) >>= either throwError pure
-  (mSubjectKey, courseLabel) <- runDB $ resolveSubject (aiCourse inquiry)
-  inquiryId <- runDB $ do
-    rid <- insert (Trials.LeadInterest
-      { Trials.leadInterestPartyId   = partyId
-      , Trials.leadInterestInterestType = "ad_inquiry"
-      , Trials.leadInterestSubjectId = mSubjectKey
-      , Trials.leadInterestDetails   = fmap T.strip (aiMessage inquiry)
-      , Trials.leadInterestSource    = T.toLower (fromMaybe "ads" (aiChannel inquiry))
-      , Trials.leadInterestDriveLink = Nothing
-      , Trials.leadInterestStatus    = "Open"
-      , Trials.leadInterestCreatedAt = now
-      })
-    pure rid
-  channels <- liftIO $ sendAutoReplies (envPool env) partyId (envConfig env) inquiry courseLabel
-  pure AdsInquiryOut
-    { aioOk = True
-    , aioInquiryId = entityKeyInt inquiryId
-    , aioPartyId = entityKeyInt partyId
-    , aioRepliedVia = channels
-    }
+  (fresh, response) <- runDB (createAdsInquiryDb requestKey inquiry now) >>= either throwError pure
+  if not fresh then pure response else do
+    -- The committed receipt reserves notification dispatch exactly once. A
+    -- crash or ambiguous external response is reviewed; retries never resend.
+    (_, courseLabel) <- runDB $ resolveSubject (aiCourse inquiry)
+    attempted <- liftIO $ (try (sendAutoReplies (envPool env) (toSqlKey (fromIntegral (aioPartyId response))) (envConfig env) inquiry courseLabel) :: IO (Either SomeException [Text]))
+    case attempted of
+      Left _ -> do
+        runDB $ rawExecute "UPDATE identity_ads_request SET notification_state='review' WHERE request_key=?" [PersistText requestKey]
+        pure response
+      Right channels -> do
+        let completed = response { aioRepliedVia = channels }
+        runDB $ rawExecute "UPDATE identity_ads_request SET notification_state=?, response_payload=?::jsonb WHERE request_key=?"
+          [PersistText (if null channels then "review" else "completed"), PersistText (TE.decodeUtf8 (BL.toStrict (encode completed))), PersistText requestKey]
+        pure completed
+
+validateAdsInquiryRequestKey :: Maybe Text -> Either ServerError Text
+validateAdsInquiryRequestKey (Just key)
+  | T.length key >= 16 && T.length key <= 128
+  , T.all (\ch -> ch <= '\x7f' && (isAlphaNum ch || ch == '-' || ch == '_')) key = Right key
+validateAdsInquiryRequestKey _ = Left err400 { errBody = "Refresh the form before submitting: a valid Idempotency-Key is required." }
+
+createAdsInquiryDb :: Text -> AdsInquiry -> UTCTime -> SqlPersistT IO (Either ServerError (Bool, AdsInquiryOut))
+createAdsInquiryDb requestKey inquiry now = do
+  let payload = TE.decodeUtf8 (BL.toStrict (encode inquiry))
+  _ <- (rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended('public-ads:' || ?, 0))" [PersistText requestKey] :: SqlPersistT IO [Single Int64])
+  saved <- (rawSql "SELECT request_payload=?::jsonb, response_payload::text FROM identity_ads_request WHERE request_key=?" [PersistText payload,PersistText requestKey] :: SqlPersistT IO [(Single Bool, Single Text)])
+  case saved of
+    [(Single True, Single response)] -> pure $ case eitherDecodeStrict' (TE.encodeUtf8 response) of
+      Left _ -> Left err500 { errBody = "Saved inquiry requires review" }
+      Right accepted -> Right (False, accepted)
+    [_] -> pure $ Left err409 { errBody = "This inquiry was already saved with different details." }
+    [] -> do
+      partyResult <- ensurePartyForInquiry inquiry now
+      case partyResult of
+        Left err -> pure (Left err)
+        Right partyId -> do
+          (subjectKey, _) <- resolveSubject (aiCourse inquiry)
+          inquiryId <- insert (Trials.LeadInterest
+            { Trials.leadInterestPartyId = partyId
+            , Trials.leadInterestInterestType = "ad_inquiry"
+            , Trials.leadInterestSubjectId = subjectKey
+            , Trials.leadInterestDetails = fmap T.strip (aiMessage inquiry)
+            , Trials.leadInterestSource = T.toLower (fromMaybe "ads" (aiChannel inquiry))
+            , Trials.leadInterestDriveLink = Nothing
+            , Trials.leadInterestStatus = "Open"
+            , Trials.leadInterestCreatedAt = now
+            })
+          let response = AdsInquiryOut True (entityKeyInt inquiryId) (entityKeyInt partyId) []
+          rawExecute "INSERT INTO identity_ads_request(request_key,party_id,lead_interest_id,request_payload,response_payload,notification_state) VALUES (?,?,?,?::jsonb,?::jsonb,'dispatching')"
+            [PersistText requestKey,toPersistValue partyId,toPersistValue inquiryId,PersistText payload,PersistText (TE.decodeUtf8 (BL.toStrict (encode response)))]
+          pure $ Right (True,response)
+    _ -> pure $ Left err500 { errBody = "Inquiry identity requires review" }
 
 validateAdsAssistRequest
   :: AdsAssistRequest
@@ -15498,68 +15461,22 @@ extractOutputFragments value =
   in directText <> partText
 
 ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO (Either ServerError PartyId)
-ensurePartyForInquiry AdsInquiry{..} now = do
-  let emailClean = T.strip <$> aiEmail
-      phoneClean = aiPhone >>= normalizePhone
-      display = fromMaybe "Contacto Ads" (T.strip <$> aiName)
-  existingResult <- case emailClean of
-    Just e  -> selectUniquePartyByPrimaryEmail e
-    Nothing -> case phoneClean of
-      Just p  -> selectUniquePartyByPrimaryPhone p
-      Nothing -> pure (Right Nothing)
-  case existingResult of
-    Left err -> pure (Left err)
-    Right mExisting ->
-      Right <$> upsertInquiryParty emailClean phoneClean display mExisting
-  where
-    upsertInquiryParty emailClean phoneClean display (Just (Entity pid party)) = do
-      let updates = catMaybes
-            [ if isJust (M.partyPrimaryEmail party) || isNothing emailClean
-                then Nothing
-                else Just (M.PartyPrimaryEmail =. emailClean)
-            , if isJust (M.partyPrimaryPhone party) || isNothing phoneClean
-                then Nothing
-                else Just (M.PartyPrimaryPhone =. phoneClean)
-            , if isJust (M.partyWhatsapp party) || isNothing phoneClean
-                then Nothing
-                else Just (M.PartyWhatsapp =. phoneClean)
-            , if T.null (M.partyDisplayName party) && not (T.null display)
-                then Just (M.PartyDisplayName =. display)
-                else Nothing
-            ]
-      unless (null updates) $
-        update pid updates
-      ensureStudentRole pid
-      pure pid
-    upsertInquiryParty emailClean phoneClean display Nothing = do
-      pid <- insert M.Party
-        { M.partyLegalName        = Nothing
-        , M.partyDisplayName      = display
-        , M.partyIsOrg            = False
-        , M.partyTaxId            = Nothing
-        , M.partyPrimaryEmail     = emailClean
-        , M.partyPrimaryPhone     = phoneClean
-        , M.partyWhatsapp         = phoneClean
-        , M.partyInstagram        = Nothing
-        , M.partyEmergencyContact = Nothing
-        , M.partyNotes            = Nothing
-        , M.partyStripeCustomerId = Nothing
-        , M.partyCountryCode       = Nothing
-        , M.partyCountryId         = Nothing
-        , M.partyCreatedAt        = now
-        }
-      ensureStudentRole pid
-      pure pid
-
-    ensureStudentRole pid =
-      requireAutomaticSecurityPolicyDb
-        "trial.inquiry.student"
-        pid
-        False
-        Nothing
-        "trial-inquiry"
-        ("trial-inquiry:" <> T.pack (show (fromSqlKey pid)))
-        now
+ensurePartyForInquiry AdsInquiry{..} now = fmap Right $ insert M.Party
+  { M.partyLegalName = Nothing
+  , M.partyDisplayName = fromMaybe "Contacto Ads" (T.strip <$> aiName)
+  , M.partyIsOrg = False
+  , M.partyTaxId = Nothing
+  , M.partyPrimaryEmail = T.strip <$> aiEmail
+  , M.partyPrimaryPhone = aiPhone >>= normalizePhone
+  , M.partyWhatsapp = Nothing
+  , M.partyInstagram = Nothing
+  , M.partyEmergencyContact = Nothing
+  , M.partyNotes = Nothing
+  , M.partyStripeCustomerId = Nothing
+  , M.partyCountryCode = Nothing
+  , M.partyCountryId = Nothing
+  , M.partyCreatedAt = now
+  }
 
 resolveSubject :: Maybe Text -> SqlPersistT IO (Maybe (Key Trials.Subject), Maybe Text)
 resolveSubject mCourse =

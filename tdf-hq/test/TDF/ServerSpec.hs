@@ -4511,7 +4511,7 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected duplicate party email match to fail, got: " <> show value)
 
     describe "ensurePartyForInquiry" $
-        it "rejects duplicate contact fallbacks instead of arbitrary ad inquiry parties" $ do
+        it "creates independent unverified inquiry contacts when details are shared" $ do
             (duplicateEmailResult, duplicatePhoneResult, phoneSelectorResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
                 let mkParty displayName emailAddr phoneNumber =
@@ -4570,8 +4570,8 @@ spec = describe "TDF.Server helpers" $ do
                                     <> contactLabel
                                     <> " match to fail"
                                 )
-            assertConflict "email" duplicateEmailResult
-            assertConflict "phone" duplicatePhoneResult
+            either (const False) (const True) duplicateEmailResult `shouldBe` True
+            either (const False) (const True) duplicatePhoneResult `shouldBe` True
             assertConflict "phone" phoneSelectorResult
 
     describe "ensurePartyForCourseRegistrationDb" $

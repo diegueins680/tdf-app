@@ -54,7 +54,8 @@ import TDF.Trials.API
   )
 import TDF.Trials.Server
   ( buildTrialUsernameCandidate
-  , createOrFetchParty
+  , createTrialContact
+  , createTrialStudentContact
   , ensurePublicLeadParty
   , privateTrialsServer
   , trialsServer
@@ -86,20 +87,20 @@ import qualified TDF.Trials.Models as Trials
 spec :: Spec
 spec = do
   describe "Public trials lead party resolution" $ do
-    it "creates/reuses signup party by email" $ do
+    it "creates independent contacts for separate enquiries sharing email" $ do
       (firstId, secondId, storedEmail, storedName, storedPhone) <- runInMemory $ do
         now <- liftIO getCurrentTime
-        firstId <- createOrFetchParty (Just "Test User") (Just " User@Example.com ") (Just "+593 99 123 4567") now
-        secondId <- createOrFetchParty (Just "Another Name") (Just "user@example.com") Nothing now
+        firstId <- createTrialContact (Just "Test User") (Just " User@Example.com ") (Just "+593 99 123 4567") now
+        secondId <- createTrialContact (Just "Another Name") (Just "user@example.com") Nothing now
         Entity _ party <- getJustEntity firstId
         pure (firstId, secondId, Models.partyPrimaryEmail party, Models.partyDisplayName party, Models.partyPrimaryPhone party)
 
-      firstId `shouldBe` secondId
+      firstId `shouldNotBe` secondId
       storedEmail `shouldBe` Just "user@example.com"
       storedName `shouldBe` "Test User"
       storedPhone `shouldBe` Just "+593991234567"
 
-    it "rejects duplicate email party matches instead of choosing an arbitrary signup fallback" $ do
+    it "keeps an enquiry independent when multiple existing parties share its email" $ do
       result <- (try $ runInMemory $ do
         now <- liftIO getCurrentTime
         let party displayName =
@@ -121,23 +122,19 @@ spec = do
                 }
         _ <- insert (party "Duplicate Public Lead A")
         _ <- insert (party "Duplicate Public Lead B")
-        createOrFetchParty
+        createTrialContact
           (Just "Duplicate Public Lead")
           (Just " duplicate@example.com ")
           Nothing
           now) :: IO (Either ServerError Models.PartyId)
       case result of
-        Left err -> do
-          errHTTPCode err `shouldBe` 409
-          BL8.unpack (errBody err) `shouldContain` "Multiple parties match this email"
-        Right partyId ->
-          expectationFailure
-            ("Expected duplicate signup parties to be rejected, got " <> show partyId)
+        Left err -> expectationFailure (show err)
+        Right partyId -> fromSqlKey partyId `shouldBe` 3
 
     it "falls back to the normalized email when the provided name is blank" $ do
       storedName <- runInMemory $ do
         now <- liftIO getCurrentTime
-        partyId <- createOrFetchParty (Just "   ") (Just " Student@Example.com ") Nothing now
+        partyId <- createTrialContact (Just "   ") (Just " Student@Example.com ") Nothing now
         Models.partyDisplayName . entityVal <$> getJustEntity partyId
 
       storedName `shouldBe` "student@example.com"
@@ -165,7 +162,7 @@ spec = do
     it "accepts common dot-and-plus email aliases while still normalizing casing" $ do
       storedEmail <- runInMemory $ do
         now <- liftIO getCurrentTime
-        partyId <- createOrFetchParty (Just "Test User") (Just " User.Name+Trial@Example.com ") Nothing now
+        partyId <- createTrialContact (Just "Test User") (Just " User.Name+Trial@Example.com ") Nothing now
         Models.partyPrimaryEmail . entityVal <$> getJustEntity partyId
 
       storedEmail `shouldBe` Just "user.name+trial@example.com"
@@ -2898,8 +2895,8 @@ spec = do
 
     it "assigns Student through the persisted automatic policy with immutable provenance" $ do
       (roleRows, auditRows) <- runTrialsInMemory $ do
-        _ <- privateStudentCreateHandler
-          (StudentCreate "Student Policy" "student-policy@example.com" Nothing Nothing)
+        _ <- createTrialStudentContact (auPartyId adminUser) True
+          (StudentCreate "Student Policy" "student-policy@example.com" Nothing Nothing) Nothing
         roles <-
           ( rawSql
               "SELECT role.code, assignment.approval_mode, policy.code FROM party_security_role assignment INNER JOIN party ON party.id=assignment.party_id INNER JOIN security_role role ON role.id=assignment.role_id INNER JOIN security_role_assignment_policy policy ON policy.id=assignment.source_policy_id WHERE party.primary_email=?"
@@ -3032,7 +3029,7 @@ tryCreateOrFetchParty
 tryCreateOrFetchParty mName mEmail mPhone =
   try $ runInMemory $ do
     now <- liftIO getCurrentTime
-    createOrFetchParty mName mEmail mPhone now
+    createTrialContact mName mEmail mPhone now
 
 initializePartySchema :: (MonadIO m) => SqlPersistT m ()
 initializePartySchema = do
@@ -3386,7 +3383,7 @@ runPublicTrialRequestHandler req =
             publicServer :<|> _privateServer ->
               case publicServer of
                 _signupH :<|> _interestH :<|> trialRequestH :<|> _subjectsH :<|> _trialSlotsH ->
-                  trialRequestH req
+                  trialRequestH (Just "public-trial-validation-fixture") req
     liftIO $ try (runHandler handler)
 
 runPublicTrialSlotsHandler
@@ -3518,7 +3515,7 @@ privateStudentCreateHandler =
         :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
         :<|> _ :<|> _ :<|> _ :<|> _ :<|> studentsH :<|> createH :<|> _ =
           privateTrialsServer adminUser
-  in studentsH `seq` createH
+  in studentsH `seq` createH (Just "student-validation-fixture")
 
 privateStudentUpdateHandler :: Int -> StudentUpdate -> SqlPersistT IO StudentDTO
 privateStudentUpdateHandler =

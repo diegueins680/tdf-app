@@ -13915,22 +13915,41 @@
       }
     },
     {
-      "id": "02464a57896073665826",
+      "id": "a3f2349267abdd1d7d29",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing receipt dispatch states can cause repeated external replies or hide interrupted delivery.",
+      "justification": "Reviewed the three persisted protocol states used by the atomic ad inquiry receipt and one-time notification reservation. These are implementation states, not configurable business options. Dispatching or review requires delivery-history inspection before any manual resend.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "identity-ads-prevention-2026-09-18",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-18_ads_identity_requests.sql",
+        "line": 7,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 3
+      }
+    },
+    {
+      "id": "1bf1f85ee995771aa455",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Reviewed 111-entry immutable release registry: preserve main calendar migration and append course request receipts without changing prior SQL or introductions.",
+      "justification": "Reviewed the ordered 113-entry release registry. Preserve the approved main calendar migration and all immutable introduction commits; append course, trial and ad inquiry receipts. This is executable release metadata, not editable business data.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "identity-course-prevention-2026-09-18",
+      "reviewBatch": "identity-trial-prevention-2026-09-18",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 111
+        "valueCount": 113
       }
     }
   ]

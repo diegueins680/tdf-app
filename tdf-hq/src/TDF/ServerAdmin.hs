@@ -147,6 +147,8 @@ import           TDF.Config             ( defaultLocale
                                         , seedTriggerToken
                                         , stripeSecretKey
                                         , stripeWebhookSecret
+                                        , isWebadorSmtpHost
+                                        , smtpHost
                                         )
 import           TDF.Models
 import           TDF.Internationalization (normalizeCountryCode)
@@ -1349,6 +1351,9 @@ adminServer user =
       let emailSvc = EmailSvc.mkEmailService cfg
       when (not dryRun && isNothing (EmailSvc.esConfig emailSvc)) $
         throwError err409 { errBody = "SMTP not configured" }
+      when (not dryRun && maybe False (isWebadorSmtpHost . smtpHost) (EmailSvc.esConfig emailSvc)) $
+        throwError err409
+          { errBody = "Webador does not support bulk campaigns. Sending is paused; preview remains available. Configure a consent-based campaign service before sending." }
       rawRecipients <- withPool (loadRegisteredUserEmailRecipients includeInactive)
       let matchedUsers = length rawRecipients
           uniqueRecipients = dedupeAdminEmailRecipients rawRecipients
