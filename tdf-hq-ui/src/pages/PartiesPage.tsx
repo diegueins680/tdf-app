@@ -1,5 +1,5 @@
 import { useContactCreation } from '../hooks/useContactCreation';
-import { useEffect, useMemo, useState, type ChangeEvent, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -92,10 +92,12 @@ const createPartySchema = z.object({
 });
 type CreatePartyFormData = z.infer<typeof createPartySchema>;
 
-function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
+export function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
   const [isOrg, setIsOrg] = useState(false);
   const contactCreation = useContactCreation();
+  const creationPending = useRef(false);
+  const requestClose = () => { if (!creationPending.current) onClose(); };
   useEffect(() => {
     if (!open) contactCreation.reset();
   }, [open, contactCreation]);
@@ -112,14 +114,19 @@ function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
       reset();
       onClose();
     },
+    onSettled: () => { creationPending.current = false; },
   });
 
-  const onSubmit = handleSubmit((data) => {
-    mutation.mutate({ cDisplayName: data.name, cIsOrg: isOrg });
-  });
+  const onSubmit = async () => {
+    if (creationPending.current) return;
+    creationPending.current = true;
+    await handleSubmit((data) => {
+      mutation.mutate({ cDisplayName: data.name, cIsOrg: isOrg });
+    }, () => { creationPending.current = false; })();
+  };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={requestClose} fullWidth maxWidth="sm">
       <DialogTitle>Nuevo contacto</DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
@@ -146,7 +153,7 @@ function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={requestClose} disabled={mutation.isPending}>Cancelar</Button>
         <Button
           onClick={() => {
             void onSubmit();
