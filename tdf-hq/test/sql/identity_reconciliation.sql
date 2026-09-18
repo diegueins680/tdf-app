@@ -22,6 +22,13 @@ BEGIN
   UPDATE identity_reconciliation_case SET status='confirmed',reviewed_by=actor_id,reviewed_at=now(),evidence=jsonb_build_object(
     'basis','verified-source-subject','issuer','fixture-issuer','scope','fixture-tenant','subject','fixture-subject',
     'evidence_reference','synthetic-test-evidence-only','external_reference_review','no-unresolved-references','member_ids',ARRAY[a,b]) WHERE id=case_key;
+  UPDATE identity_reconciliation_case SET evidence=evidence||jsonb_build_object('member_ids',ARRAY[a]) WHERE id=case_key;
+  IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'partial-group proof authorized a merge'; END IF;
+  UPDATE identity_reconciliation_case SET evidence=evidence||jsonb_build_object('member_ids',ARRAY[a,b]) WHERE id=case_key;
+  -- A credential on a redundant record cannot be moved or discarded, even if disabled.
+  INSERT INTO user_credential(party_id,username,password_hash,active) VALUES(b,'identity-fixture-disabled','not-a-real-password',false);
+  IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'disabled authentication identity was ignored'; END IF;
+  DELETE FROM user_credential WHERE party_id=b;
   -- Privilege/ownership references, including those with no FK, block execution.
   INSERT INTO party_security_role(party_id,role_id) VALUES(b,gen_random_uuid());
   IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'soft ownership reference ignored'; END IF;

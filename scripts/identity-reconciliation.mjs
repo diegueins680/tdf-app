@@ -23,7 +23,7 @@ if (values.command === 'inventory') {
 } else if (values.command === 'queue') {
   const inventory = JSON.parse(readFileSync(values.inventory, 'utf8'));
   const groups = candidateGroups(inventory);
-  sql = groups.map(group => {
+  sql = "SELECT pg_advisory_xact_lock(hashtextextended('identity-reconciliation',0));\n" + groups.map(group => {
     const ids = `ARRAY[${group.member_ids.join(',')}]::bigint[]`;
     const evidence = { hints: group.hints, member_ids: group.member_ids, inventory_sha256: inventorySummary(inventory).inventory_sha256 };
     // Read current snapshots inside the transaction. The imported file supplies

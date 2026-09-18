@@ -75,6 +75,7 @@ BEGIN
   VALUES(actor_id,request_id,body,result_id);
   RETURN result_id;
 END $$;
+REVOKE ALL ON FUNCTION identity_create_contact(bigint,text,jsonb) FROM PUBLIC;
 
 -- Every declared FK plus likely legacy scalar identity references is examined.
 -- Unknown dependencies block a merge; financial/audit/permission rows are never rewritten.
@@ -112,7 +113,7 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'identity case not found' USING ERRCODE='P0002'; END IF;
   SELECT array_agg(DISTINCT v ORDER BY v) INTO members FROM unnest(c.member_ids) v;
   SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) INTO snapshots FROM party p WHERE id=ANY(members);
-  IF cardinality(members)<>cardinality(c.member_ids) OR jsonb_array_length(snapshots)<>cardinality(members) THEN
+  IF cardinality(members)<>cardinality(c.member_ids) OR coalesce(jsonb_array_length(snapshots),0)<>cardinality(members) THEN
     blockers:=blockers||'"invalid-members"'::jsonb;
   END IF;
   -- Established accounts survive; stable oldest ID breaks ties. Creation time is

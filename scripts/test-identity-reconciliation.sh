@@ -32,6 +32,7 @@ BEGIN;
 CREATE ROLE identity_untrusted_test;
 DO $$ BEGIN
   IF has_table_privilege('identity_untrusted_test','identity_merge_history','SELECT')
+    OR has_function_privilege('identity_untrusted_test','identity_create_contact(bigint,text,jsonb)','EXECUTE')
     OR has_function_privilege('identity_untrusted_test','identity_execute_merge(uuid,uuid,text)','EXECUTE') THEN
     RAISE EXCEPTION 'identity history or merge privileges leaked';
   END IF;

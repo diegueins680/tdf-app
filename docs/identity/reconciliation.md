@@ -20,7 +20,8 @@ reviewed, issuer- and tenant-scoped identity assertion covering every member.
 
 The case queue, before-state snapshots and merge history contain private data. Only database
 operators with existing table/function privileges may use these tools. PUBLIC has no access to
-the evidence tables or merge/rollback functions. This first lane is an operator workflow, not a
+the evidence tables or merge/rollback functions. Existing PostgreSQL superusers (including the
+current application database role) retain access; there is no new HTTP endpoint for this history. This first lane is an operator workflow, not a
 new permission granted to CRM users. Keep output in a private directory; never put inventories,
 credentials, contact attributes or proof documents into PRs, Git or general reports.
 
