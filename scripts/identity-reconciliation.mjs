@@ -3,14 +3,14 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { candidateGroups, inventorySummary, sqlText, assertUuid } from './lib/identity-reconciliation.mjs';
+import { candidateGroups, operatorGroups, inventorySummary, sqlText, assertUuid } from './lib/identity-reconciliation.mjs';
 import { buildDatabaseSqlInvocation } from './lib/production-release.mjs';
 
 const { values } = parseArgs({ options: {
   command: { type: 'string', default: 'summary' }, inventory: { type: 'string' },
   'db-app': { type: 'string' }, database: { type: 'string' },
   case: { type: 'string' }, operation: { type: 'string' }, fingerprint: { type: 'string' },
-  output: { type: 'string' }, 'decision-file': { type: 'string' },
+  output: { type: 'string' }, 'groups-file': { type: 'string' }, 'decision-file': { type: 'string' },
 } });
 let sql;
 if (values.command === 'summary') {
@@ -22,7 +22,7 @@ if (values.command === 'inventory') {
   sql = readFileSync(fileURLToPath(new URL('./lib/identity-inventory.sql', import.meta.url)), 'utf8');
 } else if (values.command === 'queue') {
   const inventory = JSON.parse(readFileSync(values.inventory, 'utf8'));
-  const groups = candidateGroups(inventory);
+  const groups = values['groups-file'] ? operatorGroups(inventory, JSON.parse(readFileSync(values['groups-file'], 'utf8'))) : candidateGroups(inventory);
   sql = "SELECT pg_advisory_xact_lock(hashtextextended('identity-reconciliation',0));\n" + groups.map(group => {
     const ids = `ARRAY[${group.member_ids.join(',')}]::bigint[]`;
     const evidence = { hints: group.hints, member_ids: group.member_ids, inventory_sha256: inventorySummary(inventory).inventory_sha256 };
@@ -31,7 +31,7 @@ if (values.command === 'inventory') {
     return `INSERT INTO identity_reconciliation_case(member_ids,evidence,before_parties,reason)
       SELECT ${ids},${sqlText(JSON.stringify(evidence))}::jsonb,
         (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) FROM party p WHERE id=ANY(${ids})),${sqlText(group.reason)}
-      WHERE NOT EXISTS(SELECT 1 FROM identity_reconciliation_case WHERE member_ids=${ids} AND status<>'reverted');`;
+      WHERE NOT EXISTS(SELECT 1 FROM identity_reconciliation_case WHERE member_ids @> ${ids} AND status<>'reverted');`;
   }).join('\n') + '\nSELECT jsonb_build_object(\'awaiting_review\',count(*)) FROM identity_reconciliation_case WHERE status=\'review\';';
 } else if (values.command === 'review') {
   const decision = JSON.parse(readFileSync(values['decision-file'], 'utf8'));

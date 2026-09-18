@@ -8,10 +8,12 @@ export function candidateGroups(inventory) {
     || new Set(inventory.parties.map(p => p.id)).size !== inventory.parties.length) {
     throw new Error('Inventory must contain unique positive integer Party identifiers');
   }
+  const archived = new Set(inventory.archived_party_ids ?? []);
   const groups = new Map();
   for (const field of ['primary_email', 'primary_phone', 'instagram', 'display_name', 'tax_id']) {
     const buckets = new Map();
     for (const party of inventory.parties) {
+      if (archived.has(party.id)) continue;
       const value = party[field];
       if (typeof value !== 'string' || !value.trim()) continue;
       // Preserve local-part case, punctuation, accents, prefixes and leading zeros.
@@ -44,15 +46,20 @@ export function candidateGroups(inventory) {
 
 export function inventorySummary(inventory) {
   const groups = candidateGroups(inventory);
+  const recorded = inventory.reconciliation ?? {};
+  const unqueued = groups.filter(g => !(inventory.review_cases ?? []).some(c => g.member_ids.every(id => c.member_ids.includes(id))));
   return {
     examined: inventory.parties.length,
+    active_records: inventory.parties.length - (inventory.archived_party_ids?.length ?? 0),
     credentials: inventory.credentials?.length ?? 0,
     candidate_groups: groups.length,
-    confirmed_groups: 0,
-    awaiting_review: groups.length,
-    merges_completed: 0,
-    records_archived: 0,
-    // This inventory has no authoritative verified person-subject binding.
+    confirmed_groups: recorded.confirmed_groups ?? 0,
+    awaiting_review: (recorded.awaiting_review ?? 0) + unqueued.length,
+    merges_completed: recorded.merges_completed ?? 0,
+    merges_rolled_back: recorded.merges_rolled_back ?? 0,
+    records_archived: inventory.archived_party_ids?.length ?? 0,
+    active_links: recorded.active_links ?? 0,
+    // Identity decisions come from the reviewed ledger, never attribute hints.
     inventory_sha256: createHash('sha256').update(JSON.stringify(inventory)).digest('hex'),
   };
 }
@@ -68,4 +75,18 @@ export function assertUuid(value) {
     throw new Error('Expected UUID');
   }
   return value;
+}
+
+export function operatorGroups(inventory, supplied) {
+  candidateGroups(inventory); // Validate the source inventory before rendering SQL.
+  if (!Array.isArray(supplied)) throw new Error('Expected an array of operator groups');
+  const existing = new Set(inventory.parties.map(p => p.id));
+  return supplied.map(group => {
+    const ids = group.member_ids;
+    if (!Array.isArray(ids) || ids.length < 2 || new Set(ids).size !== ids.length
+      || ids.some(id => !Number.isSafeInteger(id) || !existing.has(id))) {
+      throw new Error('Operator groups require distinct existing integer Party IDs');
+    }
+    return { member_ids: [...ids].sort((a, b) => a - b), hints: [], reason: 'Operator-specified whole group; authoritative review is still required' };
+  });
 }

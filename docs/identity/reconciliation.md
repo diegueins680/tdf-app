@@ -39,7 +39,14 @@ node scripts/identity-reconciliation.mjs --command dry-run --case CASE_UUID \
   --db-app APP --database DATABASE --output /private/path/plan.json
 ```
 
-`queue` creates review cases idempotently. A database operator reviews the existing private records
+The database-backed inventory commands require the reconciliation migration. Inventories retain
+archived rows for accounting, exclude them from active candidate groups, and report execution
+and rollback counts from the private ledger. Attribute-only inventories never confirm identity.
+
+`queue` creates review cases idempotently. If authoritative evidence identifies a whole group
+that includes an established canonical record absent from the attribute hints, supply
+`--groups-file PRIVATE_JSON` containing `[{"member_ids":[...]}]`. Every ID must exist in the
+inventory. This only creates review cases; it cannot authorize a merge or infer a similarity chain. A database operator reviews the existing private records
 and provenance. Record `separate` for established distinct entities, with the reason. Leave
 uncertain cases in `review`. To confirm, record the reviewer Party, review time, a reason, current
 ordered Party snapshots, and an evidence object containing:

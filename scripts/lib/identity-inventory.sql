@@ -1,5 +1,13 @@
 SELECT jsonb_build_object(
- 'parties',(SELECT jsonb_agg(to_jsonb(p)) FROM party p),
+ 'parties',(SELECT coalesce(jsonb_agg(to_jsonb(p)),'[]') FROM party p),
+ 'archived_party_ids',(SELECT coalesce(jsonb_agg(party_id),'[]') FROM identity_party_archive),
+ 'review_cases',(SELECT coalesce(jsonb_agg(jsonb_build_object('member_ids',member_ids,'status',status)),'[]') FROM identity_reconciliation_case),
+ 'reconciliation',jsonb_build_object(
+   'confirmed_groups',(SELECT count(*) FROM identity_reconciliation_case WHERE status IN ('confirmed','applied','reverted') AND reviewed_by IS NOT NULL),
+   'awaiting_review',(SELECT count(*) FROM identity_reconciliation_case WHERE status IN ('review','confirmed','reverted')),
+   'merges_completed',(SELECT count(*) FROM identity_merge_history),
+   'merges_rolled_back',(SELECT count(*) FROM identity_merge_history WHERE reverted_at IS NOT NULL),
+   'active_links',(SELECT count(*) FROM identity_complementary_link WHERE revoked_at IS NULL)),
  'credentials',(SELECT jsonb_agg(jsonb_build_object('id',id,'party_id',party_id,'active',active)) FROM user_credential),
  'artists',(SELECT jsonb_agg(jsonb_build_object('party_id',artist_party_id,'spotify_id',spotify_artist_id,'youtube_id',youtube_channel_id)) FROM artist_profile),
  'sources',(SELECT jsonb_agg(to_jsonb(r)) FROM artist_inventory_reference r),

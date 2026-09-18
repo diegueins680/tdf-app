@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { candidateGroups, inventorySummary, sqlText, assertUuid } from '../lib/identity-reconciliation.mjs';
+import { candidateGroups, operatorGroups, inventorySummary, sqlText, assertUuid } from '../lib/identity-reconciliation.mjs';
 const p = (id, values = {}) => ({ id, is_org: false, ...values });
 test('shared attributes never confirm identity, even when all contact fields agree', () => {
   const parties = [1, 2, 3].map(id => p(id, { display_name: 'Same', primary_email: 'shared@example.test', primary_phone: '+12345' }));
@@ -39,4 +39,20 @@ test('rejects malformed or repeated inventory IDs before rendering any operator 
     assert.throws(() => candidateGroups({ parties: [p(id, { display_name: 'Same' })] }));
   }
   assert.throws(() => candidateGroups({ parties: [p(1), p(1)] }));
+});
+
+test('retired IDs leave active candidate inventory and summary uses recorded outcomes', () => {
+  const inventory = { parties: [p(1, { display_name: 'Same' }), p(2, { display_name: 'Same' })], archived_party_ids: [2],
+    reconciliation: { confirmed_groups: 1, awaiting_review: 0, merges_completed: 1, merges_rolled_back: 0, active_links: 0 },
+    review_cases: [{ member_ids: [1, 2], status: 'applied' }] };
+  assert.deepEqual(candidateGroups(inventory), []);
+  const summary = inventorySummary(inventory);
+  assert.equal(summary.examined, 2); assert.equal(summary.active_records, 1);
+  assert.equal(summary.merges_completed, 1); assert.equal(summary.records_archived, 1);
+  assert.equal(summary.awaiting_review, 0); assert.equal(summary.confirmed_groups, 1);
+});
+test('operator groups can explicitly include a canonical record without inferring a similarity chain', () => {
+  const inventory = { parties: [p(1), p(2), p(3)] };
+  assert.deepEqual(operatorGroups(inventory, [{ member_ids: [3, 1, 2] }])[0].member_ids, [1, 2, 3]);
+  for (const member_ids of [[1, 1], [1], [1, 4], [1, '2']]) assert.throws(() => operatorGroups(inventory, [{ member_ids }]));
 });
