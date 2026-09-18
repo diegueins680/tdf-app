@@ -1,5 +1,5 @@
 import { useContactCreation } from '../hooks/useContactCreation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Typography,
   Stack,
@@ -115,6 +115,8 @@ interface CreateCompanyDialogProps {
 
 function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
   const contactCreation = useContactCreation();
+  const creationPending = useRef(false);
+  const requestClose = () => { if (!creationPending.current) onClose(); };
   const createCompanyQueryClient = useQueryClient();
   const [displayName, setDisplayName] = useState('');
   const [legalName, setLegalName] = useState('');
@@ -141,14 +143,17 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
       onClose();
     },
     onError: (err) => setError(err.message),
+    onSettled: () => { creationPending.current = false; },
   });
 
   const submitCompany = () => {
+    if (creationPending.current) return;
     if (!displayName.trim()) {
       setError('Nombre de empresa requerido');
       return;
     }
     setError(null);
+    creationPending.current = true;
     createCompanyMutation.mutate({
       cDisplayName: displayName.trim(),
       cLegalName: legalName.trim() || null,
@@ -159,7 +164,7 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={requestClose} fullWidth maxWidth="sm">
       <DialogTitle>Nueva empresa</DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
@@ -190,10 +195,11 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
       </DialogContent>
       <DialogActions>
         <Button
+          disabled={createCompanyMutation.isPending}
           tabIndex={0}
           onClick={(event) => {
             event.currentTarget.focus();
-            onClose();
+            requestClose();
           }}
         >
           Cancelar
