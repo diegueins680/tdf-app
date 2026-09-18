@@ -276,6 +276,7 @@ test-suite tdf-hq-test
     TDF.ProviderIdentitySpec
     TDF.CourseIdentitySpec
     TDF.TrialIdentitySpec
+    TDF.MarketplaceIdentitySpec
     TDF.Commerce.WorkerLoggingSpec
     Paths_tdf_hq
     TDF.API
