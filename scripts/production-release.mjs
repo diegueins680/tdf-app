@@ -704,6 +704,20 @@ function previousSha(machine) {
 // deliberate new-account intent. Restoring an earlier binary would re-enable
 // email-only authority even if the additive table itself remains intact.
 const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';
+// Older binaries ignore these receipts and can repeat contact creation or grant
+// access through shared email. Recovery must retain the writer contract even
+// when the receipt tables happened to be empty during preflight.
+const intakeIdentityFloor = '02115f7d1b0786f3cdd4287a9466dd22682f603b';
+const sourceRequestIdentityFloor = '6eab8592744015124b0162ce9e9361f51a04f538';
+
+export function requiredIdentityCommit(context) {
+  const ids = new Set(context.migrations.map(({ id }) => id));
+  if (ids.has('2026-09-18_course_identity_requests')
+      || ids.has('2026-09-18_trial_identity_requests')
+      || ids.has('2026-09-18_ads_identity_requests')) return sourceRequestIdentityFloor;
+  if (ids.has('2026-09-18_live_intake_idempotency')) return intakeIdentityFloor;
+  return ids.has('2026-09-18_provider_subject_identity') ? providerIdentityFloor : null;
+}
 
 async function gitIsAncestor(ancestor, descendant) {
   try {
@@ -717,9 +731,7 @@ async function gitIsAncestor(ancestor, descendant) {
 
 export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor) {
   const candidate = normalizeFullSha(sha);
-  const requiredCommit = context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity')
-    ? providerIdentityFloor
-    : null;
+  const requiredCommit = requiredIdentityCommit(context);
   return {
     sha: candidate,
     requiredCommit,
@@ -730,7 +742,7 @@ export async function rollbackCompatibility(context, sha, isAncestor = gitIsAnce
 export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor) {
   const policy = await rollbackCompatibility(context, sha, isAncestor);
   if (!policy.compatible) {
-    throw new Error(`Unsafe authentication rollback blocked: ${policy.sha} predates ${policy.requiredCommit}. Keep provider bindings and recover forward with a compatible reviewed image.`);
+    throw new Error(`Unsafe authentication rollback blocked: ${policy.sha} predates ${policy.requiredCommit}. Keep provider bindings and source request receipts; recover forward with a compatible reviewed image.`);
   }
   return deploy();
 }
@@ -1126,6 +1138,7 @@ async function main() {
       ...plan,
       recoveryPolicy: {
         minimumAuthenticationCommit: context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity') ? providerIdentityFloor : null,
+        minimumIdentityWriterCommit: requiredIdentityCommit(context),
         fallbackSource: context.recoverySha ?? null,
         immutableArtifactVerification: 'required in preflight',
       },
