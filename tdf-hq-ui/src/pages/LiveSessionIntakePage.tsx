@@ -1,4 +1,3 @@
-import { useContactCreation } from '../hooks/useContactCreation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -90,7 +89,6 @@ export interface LiveSessionIntakeFormProps {
 }
 
 export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftOwner }: LiveSessionIntakeFormProps) {
-  const contactCreation = useContactCreation();
   const qc = useQueryClient();
   const authority = useRef({ accessCode, generation: 0 });
   if (authority.current.accessCode !== accessCode) {
@@ -205,11 +203,11 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
 
   const createPartyAndUser = async (entry: MusicianEntry): Promise<PartyDTO> => {
     const instrumentName = instrumentOptions.find((item) => item.id === entry.instrumentId)?.name;
-    const created = await contactCreation.create({
+    const created = await Parties.create({
       cDisplayName: entry.name,
       cIsOrg: false,
       cInstagram: asNullableString(entry.instagram),
-    }, entry.id);
+    });
     const updatePayload: PartyUpdate = {
       uPrimaryEmail: asNullableString(entry.email),
       uPrimaryPhone: asNullableString(entry.phone),
@@ -297,7 +295,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       return generation;
     },
     onSuccess: (generation) => {
-      contactCreation.reset();
       if (generation !== authority.current.generation) return;
       setAcceptedTerms(false);
       setShowSuccessDialog(true);

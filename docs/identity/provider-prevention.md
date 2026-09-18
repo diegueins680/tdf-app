@@ -8,7 +8,8 @@ email-based Google account is backfilled or linked merely because its email matc
 An unbound Google identity can connect an existing account only with that active account's
 current username/password, through the web or mobile login flow. Existing Google-only users
 can first use password recovery. Separate people with shared contact details can deliberately
-create separate accounts through the consented signup flow. A new account receives a stable
+create separate accounts through the consented signup flow with `createNewAccount: true`.
+Legacy clients that only resend consent cannot create an account for an unbound subject. A new account receives a stable
 provider-derived username; an existing binding survives email changes. Binding one subject to
 a different credential is rejected, even when both credential passwords are known. Contact
 fields, passwords, roles, consent, and ownership are not transferred.
@@ -19,9 +20,9 @@ method and creation time; PUBLIC has no privileges. The application database rol
 a superuser, as documented in the reconciliation runbook. This change does not claim database
 role isolation that the deployment does not have.
 
-The additional contact creation forms (bookings, companies, leads, internal Live Session and the
+The additional contact creation forms (bookings, companies, leads and the
 retained Records booking form) now reuse actor-scoped creation keys after failed responses or
-later form-step failures. Independent form entries and explicitly completed submissions receive
+later form-step failures. Independent form entries and explicitly completed or abandoned submissions receive
 separate keys even when their contact fields are identical. This creates no shared-email/name
 uniqueness rule and no cross-user contact lookup.
 
@@ -38,7 +39,7 @@ merge rollback remains the operation-specific command in [reconciliation.md](rec
 Revoking an authentication binding requires an authorized account-security review; rolling an
 application back must not restore email-only Google authorization as a recovery shortcut.
 
-Remaining work: the public Live Session ingestion path still resolves musicians by email and
+Remaining work: the Live Session ingestion path still resolves musicians by email and
 performs multiple database transactions, and older API/import clients can omit contact request
 keys. Those paths require their own scoped submission identities and relationship review.
 This follow-up does not claim comprehensive prevention until those remaining paths are repaired

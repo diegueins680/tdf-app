@@ -420,9 +420,11 @@ signupTermsAcceptanceSpec = describe "validateSignupTermsAcceptance" $ do
 googleAccountCreationTermsSpec :: Spec
 googleAccountCreationTermsSpec = describe "validateGoogleAccountCreationTerms" $ do
   it "allows provisioning only when the Google request carries accepted versioned terms" $ do
-    validateGoogleAccountCreationTerms (Just "tdf-account-terms-v1") `shouldBe` Right ()
-    validateGoogleAccountCreationTerms (Just "unknown-terms-v9") `shouldSatisfy` isLeft
-    validateGoogleAccountCreationTerms Nothing `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms (Just True) (Just "tdf-account-terms-v1") `shouldBe` Right ()
+    validateGoogleAccountCreationTerms (Just True) (Just "unknown-terms-v9") `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms (Just True) Nothing `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms Nothing (Just "tdf-account-terms-v1") `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms (Just False) (Just "tdf-account-terms-v1") `shouldSatisfy` isLeft
 
 signupPhoneSpec :: Spec
 signupPhoneSpec = describe "validateOptionalSignupPhone" $ do

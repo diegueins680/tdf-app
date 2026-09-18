@@ -32,3 +32,21 @@ it('shares a key across simultaneous retries but never across different form ins
   expect(create.mock.calls[0]?.[1]).toBe(create.mock.calls[1]?.[1]);
   expect(create.mock.calls[0]?.[1]).not.toBe(create.mock.calls[2]?.[1]);
 });
+
+
+it('uses a new identity when an uncertain attempt is explicitly abandoned', async () => {
+  const form = createContactCreation();
+  create.mockRejectedValueOnce(new Error('response lost')).mockResolvedValue({ partyId: 2 });
+  await expect(form.create(body)).rejects.toThrow('response lost');
+  form.reset();
+  await form.create(body);
+  expect(create.mock.calls[0]?.[1]).not.toBe(create.mock.calls[1]?.[1]);
+});
+
+it('retains the key when fields change after an uncertain response', async () => {
+  const form = createContactCreation();
+  create.mockRejectedValueOnce(new Error('response lost')).mockResolvedValue({ partyId: 1 });
+  await expect(form.create(body)).rejects.toThrow('response lost');
+  await form.create({ ...body, cDisplayName: 'Corrected spelling' });
+  expect(create.mock.calls[0]?.[1]).toBe(create.mock.calls[1]?.[1]);
+});

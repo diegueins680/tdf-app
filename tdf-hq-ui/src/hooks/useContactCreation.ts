@@ -5,16 +5,17 @@ import type { PartyCreate } from '../api/types';
 // One scope is one user-requested creation. Shared fields never identify a person.
 // Keep the key after failures (including failures later in a multi-step form).
 export function createContactCreation() {
-    const requests = new Map<string, { body: string; key: string }>();
+    const requests = new Map<string, string>();
     return {
       create(body: PartyCreate, scope = 'form') {
-        const serialized = JSON.stringify(body);
-        let request = requests.get(scope);
-        if (request?.body !== serialized) {
-          request = { body: serialized, key: crypto.randomUUID() };
-          requests.set(scope, request);
+        let key = requests.get(scope);
+        if (!key) {
+          key = crypto.randomUUID();
+          requests.set(scope, key);
         }
-        return Parties.create(body, request.key);
+        // Edits after an uncertain response retain the key. The server detects a
+        // changed accepted payload instead of silently creating another person.
+        return Parties.create(body, key);
       },
       reset() { requests.clear(); },
     };
