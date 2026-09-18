@@ -6,6 +6,7 @@ const ConfigurationIndexRedirect = lazy(() => import('./AppShell').then((module)
   default: module.ConfigurationIndexRedirect,
 })));
 
+const NotificationPage = lazy(() => import('../pages/NotificationPage'));
 const AboutPage = lazy(() => import('../pages/AboutPage'));
 const AdsInboxPage = lazy(() => import('../pages/AdsInboxPage'));
 const AdminDiagnosticsPage = lazy(() => import('../pages/AdminDiagnosticsPage'));
@@ -120,6 +121,7 @@ export function renderProtectedRoutes() {
         <Route path="/mis-clasificados" element={<DirectoryManagePage />} />
         <Route path="/admin/directorio" element={<DirectoryAdminPage />} />
         <Route path="/mi-profesor" element={<TeacherPortalPage />} />
+        <Route path="/notificaciones/:notificationId" element={<NotificationPage />} />
         <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
         <Route path="/reputation/preferences" element={<ReputationPreferencesPage />} />
         <Route path="/reputation/consents" element={<ReputationConsentsPage />} />

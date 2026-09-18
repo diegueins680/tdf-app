@@ -26,6 +26,7 @@ const append = (params: URLSearchParams, key: string, value: string | number | b
 };
 
 export const Directory = {
+  notificationContext: (kind: string, id: string) => get<Record<string, unknown>>(`/directory/notification-context/${encodeURIComponent(kind)}/${encodeURIComponent(id)}`),
   search: (query: DirectorySearchQuery = {}) => {
     const params = new URLSearchParams();
     Object.entries(query).forEach(([key, value]) => append(params, key, value));

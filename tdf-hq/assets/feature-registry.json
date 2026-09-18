@@ -3163,6 +3163,48 @@
       "searchable": false,
       "safeLockedDisclosure": false,
       "apiScopes": [{ "pathPrefix": "/stubs", "methods": { "GET": "view" } }]
+    },
+    {
+      "id": "notifications.detail",
+      "parentId": null,
+      "webRoute": "/notificaciones/:notificationId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": {
+        "es": "Notificación",
+        "en": "Notification"
+      },
+      "synonyms": {
+        "es": [],
+        "en": []
+      },
+      "keywords": [
+        "notification"
+      ],
+      "navigationGroup": "help",
+      "icon": "lock",
+      "breadcrumb": [],
+      "permissions": {
+        "view": {}
+      },
+      "globalMenu": false,
+      "accessRequestEligible": false,
+      "mobilePresentation": {
+        "kind": "native-contextual",
+        "destination": "/notifications",
+        "documentedException": null
+      },
+      "apiScopes": [
+        {
+          "pathPrefix": "/fans/me/notifications",
+          "methods": {
+            "GET": "view"
+          }
+        }
+      ],
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none"
     }
   ]
 }

@@ -39,6 +39,7 @@ export interface CreateFeatureAccessRequest {
 }
 
 export const AccessRequests = {
+  get: (id: number) => get<{ request: FeatureAccessRequestDTO; canReview: boolean; canCancel: boolean }>(`/access-requests/${id}`),
   listMine: () => get<FeatureAccessRequestDTO[]>('/access-requests'),
   create: (payload: CreateFeatureAccessRequest) =>
     post<FeatureAccessRequestDTO>('/access-requests', payload),

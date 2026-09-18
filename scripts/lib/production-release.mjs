@@ -546,7 +546,7 @@ BEGIN
   IF to_regclass('public.notification') IS NULL OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'notification'
-  ) <> 9 OR to_regclass('public.idx_notification_recipient') IS NULL THEN
+  ) NOT IN (9,10) OR to_regclass('public.idx_notification_recipient') IS NULL THEN
     RAISE EXCEPTION 'The repaired notification schema is missing or incomplete';
   END IF;
   IF EXISTS (
@@ -700,6 +700,9 @@ DECLARE
 BEGIN
   IF to_regclass('public.notification') IS NULL THEN
     RAISE EXCEPTION 'The notification relation is missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notification' AND column_name='target_key' AND data_type='text' AND is_nullable='YES') OR to_regclass('public.notification_navigation_backfill') IS NULL OR to_regclass('public.notification_navigation_constraint_history') IS NULL THEN
+    RAISE EXCEPTION 'Notification destination identity or reversible history journal is missing';
   END IF;
   -- A named allowlist must include the access-request events. The pre-ledger
   -- notification baseline had no allowlist at all, which is also valid: it
