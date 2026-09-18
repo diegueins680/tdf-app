@@ -659,3 +659,13 @@ email has been sent. Apple19 remains submitted, not public availability.
 Current bundle rerun:10/10 browser cases pass; unsafe cancellation configuration
 produces the named abandoned-reservation counterexample. Full pinned TLC1.7.2/Alloy6.2.0 runner passed, including the four checkout
 negative controls; no merge or release of this successor is claimed.
+
+### Payment confirmation review — 2026-09-18
+
+PRRT_kwDOQPdUrM6jofR3 confirms a second cancellation boundary: while Stripe confirms
+a payment, Escape/backdrop could invalidate its successful completion. The parent
+now guards that phase and the child prevents duplicate confirmation before React's
+next render.21component/logic tests pass, including delayed success/callback once
+and provider rejection recovery. The model now has8distinct states, explicit payment
+confirmation, NoLostPayment and its negative control. TypeScript/production build
+passes at364988gzip/5preloads. No real charge or broad server recovery proof.
