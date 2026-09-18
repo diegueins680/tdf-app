@@ -618,7 +618,7 @@ Student198 arrivals: one real unnamed progress in /mis-clasificados; four direct
 load states now named. Includes before evidence, follow-up runtime pending.
 Remaining historical booking/marketplace/onboarding/campaign suites34tests pass.
 
-### Verified review successor — 2026-09-18 05:06 UTC
+### Verified review successor — 2026-09-18 05:03 UTC
 
 Integrated b9a654f9b production bundle: TypeScript/build budget364975gzip/5preloads
 pass.17checkout component/logic tests pass, including session switch while SDK is
@@ -631,3 +631,7 @@ preference, corrected fixture explicitly, not a product failure.
 Public production web a81: English login, signup dialog/legal links, recovery/token
 removal pass with storage allowed and denied;0pageerrors, no account/password mutation.
 Evidence files distinguish synthetic checkout/locale responses from production reads.
+
+Four slow-response ES/EN browser checks verify distinct activity loading names and
+named directory profile loading. `evidence/operational-loading-es-en.json`.
+Local integrated catalog gate, repository-quality and final affected-source lint pass.

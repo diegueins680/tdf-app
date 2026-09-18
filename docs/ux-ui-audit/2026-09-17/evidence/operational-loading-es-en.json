@@ -1,0 +1,22 @@
+[
+  {
+    "lang": "es",
+    "route": "/configuracion/actividad",
+    "distinctLoadingNames": true
+  },
+  {
+    "lang": "es",
+    "route": "/mis-clasificados",
+    "profileLoadingNamed": true
+  },
+  {
+    "lang": "en",
+    "route": "/configuracion/actividad",
+    "distinctLoadingNames": true
+  },
+  {
+    "lang": "en",
+    "route": "/mis-clasificados",
+    "profileLoadingNamed": true
+  }
+]
