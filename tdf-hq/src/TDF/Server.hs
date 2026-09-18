@@ -7926,23 +7926,7 @@ ensurePartyRecordDb now mName emailAddr mPhone = do
         Just nameTxt | not (T.null nameTxt) -> nameTxt
         _                                   -> emailAddr
       phoneClean = mPhone >>= normalizePhone
-  mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
-  case mPartyOrErr of
-    Left serverErr -> pure (Left serverErr)
-    Right mParty -> fmap Right $ case mParty of
-      Just (Entity pid party) -> do
-        let updates = catMaybes
-              [ if not (T.null (M.partyDisplayName party)) || T.null display
-                  then Nothing
-                  else Just (PartyDisplayName =. display)
-              , case phoneClean of
-                  Just phone | isNothing (partyPrimaryPhone party) ->
-                    Just (PartyPrimaryPhone =. Just phone)
-                  _ -> Nothing
-              ]
-        unless (null updates) (update pid updates)
-        pure pid
-      Nothing -> insert Party
+  Right <$> insert Party
         { partyLegalName = Nothing
         , partyDisplayName = display
         , partyIsOrg = False
@@ -7952,7 +7936,7 @@ ensurePartyRecordDb now mName emailAddr mPhone = do
         , partyWhatsapp = Nothing
         , partyInstagram = Nothing
         , partyEmergencyContact = Nothing
-        , partyNotes = Nothing
+        , partyNotes = Just "Unverified guest booking contact; supplied contact details do not establish account identity."
         , partyStripeCustomerId = Nothing
         , partyCountryCode = Nothing
         , partyCountryId = Nothing
@@ -11575,7 +11559,6 @@ createPublicBookingCheckout mIdempotency Api.PublicBookingCheckoutReq{..} = do
       | otherwise -> throwError err409
           { errBody = "Idempotency key was already used for a different booking checkout" }
     Nothing -> do
-      partyId <- ensurePartyRecord (Just fullNameClean) emailClean phoneClean
       resourceKeys <- runDB $
         resolveResourcesForBooking (Just offering) requestedResourceIds startsAtClean endsAtClean
       let lookupHash = marketplaceSha256Text lookupToken
@@ -11583,7 +11566,7 @@ createPublicBookingCheckout mIdempotency Api.PublicBookingCheckoutReq{..} = do
           resolvedEngineerName = resolveBookingEngineerName engineerNameClean mEngineerParty
       creation <- createServiceBookingCheckoutTransaction
         checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
-        fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+        fullNameClean emailClean notesClean phoneClean mEngineerParty resolvedEngineerName
         offering policy price startsAtClean endsAtClean resourceKeys
       case creation of
         Left serverErr -> throwError serverErr
@@ -11613,7 +11596,7 @@ createServiceBookingCheckoutTransaction
   -> Text
   -> Text
   -> Maybe Text
-  -> Key Party
+  -> Maybe Text
   -> Maybe (Entity Party)
   -> Maybe Text
   -> Entity Catalog.ServiceOffering
@@ -11625,7 +11608,7 @@ createServiceBookingCheckoutTransaction
   -> AppM (Either ServerError (Key Booking))
 createServiceBookingCheckoutTransaction
     checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
-    fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+    fullNameClean emailClean notesClean phoneClean mEngineerParty resolvedEngineerName
     (Entity offeringKey offering) policy price startsAtClean endsAtClean resourceKeys = do
   Env{ envPool } <- ask
   result <- liftIO $
@@ -11673,6 +11656,10 @@ createServiceBookingCheckoutTransaction
           { errBody = "Approved booking service references a missing service-order catalog" }) pure mCatalog
       let totalMinorInt = fromIntegral (ServiceBookings.bpbTotalMinor price)
           serviceLabel = Catalog.serviceOfferingNameEs offering
+      -- The request lock and existing-order check precede contact creation.
+      -- Email is contact data, never proof of access to an existing account.
+      partyResult <- ensurePartyRecordDb now (Just fullNameClean) emailClean phoneClean
+      partyId <- either (liftIO . throwIO) pure partyResult
       serviceOrderKey <- insert ServiceOrder
         { serviceOrderCustomerId = partyId
         , serviceOrderArtistId = entityKey <$> mEngineerParty
@@ -18260,98 +18247,110 @@ submitMarketplaceManualEvidence
   context <- requireMarketplacePaymentContext rawOrderId mLookupToken
   customerReference <- either throwError pure $
     validatePublicBookingManualReference mmesCustomerReference
-  customerParty <- ensurePartyRecord
-    (Just (mpcxBuyerName context)) (mpcxBuyerEmail context) (mpcxBuyerPhone context)
-  let customerId = fromSqlKey customerParty
-      checkoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
-  outcome <- runDB $ do
-    rows <- (rawSql
-      "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
-      \ evidence.submitted_by, attempt.id::text, checkout.status,\
-      \ checkout.customer_party_id\
-      \ FROM commerce_manual_payment_evidence evidence\
-      \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
-      \ JOIN commerce_checkout_session checkout ON checkout.id = evidence.checkout_id\
-      \ JOIN marketplace_order_checkout_runtime runtime ON runtime.checkout_id = checkout.id\
-      \ WHERE runtime.order_id = ?::uuid\
-      \ AND checkout.id = ?::uuid\
-      \ AND checkout.domain_order_id = runtime.order_id::text\
-      \ AND checkout.total_minor = ? AND checkout.currency = ?\
-      \ AND attempt.checkout_id = checkout.id\
-      \ AND attempt.provider = 'bank_transfer'\
-      \ AND attempt.operation = 'manual_verify'\
-      \ AND attempt.environment = checkout.environment\
-      \ AND attempt.amount_minor = checkout.total_minor\
-      \ AND attempt.currency = checkout.currency\
-      \ FOR UPDATE OF evidence, attempt, checkout"
-      [ PersistText (toPathPiece (mpcxOrderKey context))
-      , PersistText checkoutId
-      , PersistInt64 (mpcxTotalMinor context)
-      , PersistText (mpcxCurrency context)
-      ] :: SqlPersistT IO
-        [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
-         , Single Text, Single Text, Single (Maybe Int64)
-         )])
-    case rows of
-      [( Single evidenceId, Single status, Single existingReference
-       , Single existingSubmitter, Single attemptId, Single checkoutStatus
-       , Single existingCustomer
-       )]
-        | maybe False (/= customerId) existingCustomer ->
-            pure (Left "Marketplace customer identity does not match the checkout")
-        | checkoutStatus == "paid" && status /= "approved" ->
-            pure (Left "This checkout is already paid by another payment attempt")
-        | status `elem` ["submitted", "under_review"]
-            && existingReference == Just customerReference
-            && existingSubmitter == Just customerId -> pure (Right ())
-        | status == "approved" -> pure (Right ())
-        | status `elem` ["submitted", "under_review"] ->
-            pure (Left "Different manual evidence is already under review")
-        | status `elem` ["awaiting_evidence", "rejected"] -> do
-            now <- liftIO getCurrentTime
-            rawExecute
-              "UPDATE commerce_checkout_session SET customer_party_id = COALESCE(customer_party_id, ?)\
-              \ WHERE id = ?::uuid"
-              [PersistInt64 customerId, PersistText checkoutId]
-            when (status == "rejected") $
-              Checkout.recordManualPaymentSelection
-                (mpcxCheckout context)
-                (Checkout.PaymentAttemptReference attemptId)
-                Checkout.ProviderBankTransfer
-                (marketplacePaymentCorrelationId context Checkout.ProviderBankTransfer "manual-resubmit")
-                now
-            rawExecute
-              "UPDATE commerce_manual_payment_evidence\
-              \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
-              \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
-              \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
-              \ WHERE id = ?::uuid"
-              [ PersistText customerReference
-              , PersistInt64 (mpcxTotalMinor context)
-              , PersistText (mpcxCurrency context)
-              , PersistUTCTime now
-              , PersistInt64 customerId
-              , PersistText evidenceId
-              ]
-            rawExecute
-              "INSERT INTO commerce_checkout_audit_event(\
-              \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
-              \) VALUES (?::uuid, 'manual_payment_evidence_submitted', 'customer', ?, ?,\
-              \ jsonb_build_object('attempt_id', ?))"
-              [ PersistText checkoutId
-              , PersistText (T.pack (show customerId))
-              , PersistText (marketplacePaymentCorrelationId
-                  context Checkout.ProviderBankTransfer "manual-evidence")
-              , PersistText attemptId
-              ]
-            pure (Right ())
-        | otherwise -> pure (Left "Manual evidence cannot be submitted in its current state")
-      [] -> pure (Left "Select bank transfer before submitting evidence")
-      _ -> pure (Left "Marketplace manual payment evidence is ambiguous")
+  outcome <- runDB $ submitMarketplaceManualEvidenceDb context customerReference
   either (throwError . marketplaceCheckoutConflict) pure outcome
   runDB (loadOrderDTO (mpcxOrderKey context))
     >>= either throwError pure
       . requireLoadedMarketplacePublicOrderResponse "Marketplace order"
+
+-- Called only after the order lookup-token access check. The transaction owns
+-- every contact, checkout, evidence, and audit mutation for this submission.
+submitMarketplaceManualEvidenceDb
+  :: MarketplacePaymentContext -> Text -> SqlPersistT IO (Either Text ())
+submitMarketplaceManualEvidenceDb context customerReference = do
+  let checkoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
+  rows <- (rawSql
+    "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
+    \ evidence.submitted_by, attempt.id::text, checkout.status,\
+    \ checkout.customer_party_id\
+    \ FROM commerce_manual_payment_evidence evidence\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = evidence.checkout_id\
+    \ JOIN marketplace_order_checkout_runtime runtime ON runtime.checkout_id = checkout.id\
+    \ WHERE runtime.order_id = ?::uuid\
+    \ AND checkout.id = ?::uuid\
+    \ AND checkout.domain_order_id = runtime.order_id::text\
+    \ AND checkout.total_minor = ? AND checkout.currency = ?\
+    \ AND attempt.checkout_id = checkout.id\
+    \ AND attempt.provider = 'bank_transfer'\
+    \ AND attempt.operation = 'manual_verify'\
+    \ AND attempt.environment = checkout.environment\
+    \ AND attempt.amount_minor = checkout.total_minor\
+    \ AND attempt.currency = checkout.currency\
+    \ FOR UPDATE OF evidence, attempt, checkout"
+    [ PersistText (toPathPiece (mpcxOrderKey context))
+    , PersistText checkoutId
+    , PersistInt64 (mpcxTotalMinor context)
+    , PersistText (mpcxCurrency context)
+    ] :: SqlPersistT IO
+      [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
+       , Single Text, Single Text, Single (Maybe Int64)
+       )])
+  case rows of
+    [( Single evidenceId, Single status, Single existingReference
+     , Single existingSubmitter, Single attemptId, Single checkoutStatus
+     , Single existingCustomer
+     )]
+      | Just customer <- existingCustomer, Just submitter <- existingSubmitter, customer /= submitter ->
+          pure (Left "Marketplace evidence and checkout identities require review")
+      | checkoutStatus == "paid" && status /= "approved" ->
+          pure (Left "This checkout is already paid by another payment attempt")
+      | status `elem` ["submitted", "under_review"]
+          && existingReference == Just customerReference
+          && isJust existingCustomer && existingSubmitter == existingCustomer -> pure (Right ())
+      | status == "approved" -> pure (Right ())
+      | status `elem` ["submitted", "under_review"] ->
+          pure (Left "Different manual evidence is already under review")
+      | status `elem` ["awaiting_evidence", "rejected"] -> do
+          now <- liftIO getCurrentTime
+          -- The locked checkout/evidence is the trusted operation identity.
+          -- Create a new unverified contact only for its first submission, in
+          -- this same transaction. Shared email never adopts another account.
+          customerId <- case existingCustomer <|> existingSubmitter of
+            Just existingId -> pure existingId
+            Nothing -> do
+              result <- ensurePartyRecordDb now
+                (Just (mpcxBuyerName context)) (mpcxBuyerEmail context) (mpcxBuyerPhone context)
+              fromSqlKey <$> either (liftIO . throwIO) pure result
+          rawExecute
+            "UPDATE commerce_checkout_session SET customer_party_id = COALESCE(customer_party_id, ?)\
+            \ WHERE id = ?::uuid"
+            [PersistInt64 customerId, PersistText checkoutId]
+          when (status == "rejected") $
+            Checkout.recordManualPaymentSelection
+              (mpcxCheckout context)
+              (Checkout.PaymentAttemptReference attemptId)
+              Checkout.ProviderBankTransfer
+              (marketplacePaymentCorrelationId context Checkout.ProviderBankTransfer "manual-resubmit")
+              now
+          rawExecute
+            "UPDATE commerce_manual_payment_evidence\
+            \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
+            \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
+            \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
+            \ WHERE id = ?::uuid"
+            [ PersistText customerReference
+            , PersistInt64 (mpcxTotalMinor context)
+            , PersistText (mpcxCurrency context)
+            , PersistUTCTime now
+            , PersistInt64 customerId
+            , PersistText evidenceId
+            ]
+          rawExecute
+            "INSERT INTO commerce_checkout_audit_event(\
+            \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+            \) VALUES (?::uuid, 'manual_payment_evidence_submitted', 'customer', ?, ?,\
+            \ jsonb_build_object('attempt_id', ?))"
+            [ PersistText checkoutId
+            , PersistText (T.pack (show customerId))
+            , PersistText (marketplacePaymentCorrelationId
+                context Checkout.ProviderBankTransfer "manual-evidence")
+            , PersistText attemptId
+            ]
+          pure (Right ())
+      | otherwise -> pure (Left "Manual evidence cannot be submitted in its current state")
+    [] -> pure (Left "Select bank transfer before submitting evidence")
+    _ -> pure (Left "Marketplace manual payment evidence is ambiguous")
 
 validateMarketplaceManualReview
   :: MarketplaceManualPaymentReview

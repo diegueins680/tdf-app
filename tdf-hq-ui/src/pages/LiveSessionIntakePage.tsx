@@ -5,6 +5,10 @@ import {
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Grid,
   IconButton,
   Paper,
@@ -96,6 +100,8 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
     authority.current = { accessCode, generation: authority.current.generation + 1 };
   }
   const submissionGeneration = useRef(-1);
+  const submissionPending = useRef(false);
+  const [abandonOpen, setAbandonOpen] = useState(false);
 
   const { locale } = useLocalePreferences();
   const { data: musicCatalogs, isLoading: musicCatalogsLoading } = useQuery({
@@ -268,6 +274,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       }, variant === 'public' ? accessCode : undefined, submissionKey);
       return generation;
     },
+    onSettled: () => { submissionPending.current = false; },
     onSuccess: (generation) => {
       if (generation !== authority.current.generation) return;
       void qc.invalidateQueries({ queryKey: ['parties'] });
@@ -276,6 +283,19 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       setShowSuccessDialog(true);
     },
   });
+
+  const abandonDraft = () => {
+    if (submissionPending.current || mutation.isPending) return;
+    if (draftKey) window.localStorage.removeItem(draftKey);
+    setSubmissionKey(crypto.randomUUID());
+    setBandName(''); setBandDescription(''); setPrimaryGenreId('');
+    setContactEmail(''); setContactPhone(''); setAvailableDates('');
+    setSessionDate(toLocalDateInputValue());
+    setMusicians([emptyMusician()]); setSetlist([emptySong()]);
+    setRiderFile(null); setAcceptedTerms(false); setShowSuccessDialog(false);
+    setAbandonOpen(false); mutation.reset();
+    window.history.back();
+  };
 
   const handleMusicianChange = (id: string, patch: Partial<MusicianEntry>) => {
     setMusicians((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
@@ -699,18 +719,35 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       </Paper>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="flex-end">
-        <Button variant="outlined" onClick={() => window.history.back()}>
+        <Button variant="outlined" disabled={mutation.isPending} onClick={() => {
+          if (!submissionPending.current) setAbandonOpen(true);
+        }}>
           Cancelar
         </Button>
         <Button
           variant="contained"
           size="large"
-          onClick={() => mutation.mutate()}
+          onClick={() => {
+            if (submissionPending.current) return;
+            submissionPending.current = true;
+            mutation.mutate();
+          }}
           disabled={mutation.isPending || !acceptedTerms}
         >
           {mutation.isPending ? 'Guardando…' : 'Enviar Live Session'}
         </Button>
       </Stack>
+      <Dialog open={abandonOpen} onClose={() => { if (!submissionPending.current) setAbandonOpen(false); }}>
+        <DialogTitle>¿Descartar este borrador?</DialogTitle>
+        <DialogContent>
+          Se borrará el formulario local. Si ya intentaste enviarlo, una solicitud anterior podría haberse guardado:
+          comprueba su estado con TDF antes de iniciar otra. Esto no elimina solicitudes guardadas.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAbandonOpen(false)}>Seguir editando</Button>
+          <Button onClick={abandonDraft} disabled={mutation.isPending}>Descartar borrador</Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

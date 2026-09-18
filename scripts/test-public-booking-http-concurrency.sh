@@ -71,8 +71,9 @@ run_request() {
   payload=$2
   body_path=$3
   status_path=$4
+  endpoint=${5:-/bookings/public}
   http_status=$(curl -sS --max-time 30 -o "$body_path" -w '%{http_code}' \
-    -X POST "http://127.0.0.1:$TDF_PB_HTTP_PORT/bookings/public" \
+    -X POST "http://127.0.0.1:$TDF_PB_HTTP_PORT$endpoint" \
     -H 'Content-Type: application/json' \
     -H "Idempotency-Key: $request_key" \
     --data "$payload")
@@ -181,6 +182,7 @@ env -i \
   PATH="$PATH" \
   TMPDIR="$TDF_PB_HTTP_RUNTIME_DIR" \
   APP_ENV=test \
+  COMMERCE_CHECKOUT_ENV=sandbox \
   DATABASE_URL="$TDF_PB_HTTP_DATABASE_URL" \
   APP_PORT="$TDF_PB_HTTP_PORT" \
   RESET_DB=false \
@@ -227,6 +229,12 @@ if [ -z "$offering_id" ]; then
 fi
 
 psql "$TDF_PB_HTTP_DATABASE_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL' >/dev/null
+INSERT INTO party(display_name,is_org,primary_email,primary_phone,created_at)
+VALUES ('Established synthetic account',FALSE,'public-booking-http-replay@persona.test','+593990000000',NOW());
+INSERT INTO user_credential(party_id,username,password_hash,active)
+SELECT id,'public-booking-http-established','synthetic-password-hash',TRUE
+FROM party WHERE display_name='Established synthetic account';
+
 INSERT INTO resource(name,slug,resource_type,capacity,active)
 VALUES ('Public booking HTTP room','public-booking-http-room','Room',1,TRUE);
 
@@ -285,7 +293,7 @@ assert_equal "$replay_booking_b" "$replay_booking_a" "Equal-key replay booking i
 
 assert_equal "$(psql_value "SELECT count(*) FROM booking WHERE notes='http-concurrency:replay';")" "1" "Equal-key booking rows"
 assert_equal "$(psql_value "SELECT count(*) FROM service_booking_tentative_request WHERE idempotency_key='$replay_key';")" "1" "Equal-key receipt rows"
-assert_equal "$(psql_value "SELECT count(*) FROM party WHERE lower(primary_email)='public-booking-http-replay@persona.test';")" "1" "Equal-key Party rows"
+assert_equal "$(psql_value "SELECT count(*) FROM party WHERE lower(primary_email)='public-booking-http-replay@persona.test';")" "2" "Equal-key Party rows including separate established account"
 assert_equal "$(psql_value "SELECT count(*) FROM booking_resource WHERE booking_id=$replay_booking_a;")" "1" "Equal-key resource rows"
 assert_equal "$(psql_value "SELECT count(*) FROM service_booking_resource_allocation WHERE booking_id=$replay_booking_a;")" "1" "Equal-key allocation rows"
 
@@ -329,7 +337,47 @@ assert_equal "$(psql_value "SELECT count(*) FROM booking_resource br JOIN bookin
 assert_equal "$(psql_value "SELECT count(*) FROM service_booking_resource_allocation allocation JOIN booking b ON b.id=allocation.booking_id WHERE b.notes LIKE 'http-concurrency:conflict-%';")" "1" "Conflict allocation rows"
 
 test_parties=$(psql_value "SELECT string_agg(id::text, ',') FROM party WHERE lower(primary_email) LIKE 'public-booking-http-%@persona.test';")
-assert_equal "$(psql_value "SELECT count(*) FROM user_credential WHERE party_id IN ($test_parties);")" "0" "Synthetic guest credential rows"
+assert_equal "$(psql_value "SELECT count(*) FROM user_credential WHERE party_id IN ($test_parties);")" "1" "Established credential remains the only credential"
 assert_equal "$(psql_value "SELECT count(*) FROM party_security_role WHERE party_id IN ($test_parties);")" "0" "Synthetic guest security-role rows"
+
+assert_equal "$(psql_value "SELECT count(*) FROM party p JOIN booking b ON b.party_id=p.id WHERE b.id=$replay_booking_a AND p.display_name='Established synthetic account';")" "0" "Guest must not adopt the established account"
+assert_equal "$(psql_value "SELECT primary_phone FROM party WHERE display_name='Established synthetic account';")" "+593990000000" "Established contact remains unchanged"
+
+# Exercise payable checkout through HTTP with a synthetic approved policy. No
+# payment provider is configured or called: this verifies order creation only.
+psql "$TDF_PB_HTTP_DATABASE_URL" -X -q -v ON_ERROR_STOP=1 -c "
+  WITH legacy AS (
+    INSERT INTO service_catalog(name,kind,pricing_model,default_rate_cents,active)
+    VALUES ('Synthetic identity checkout','Recording','Hourly',2000,TRUE) RETURNING id
+  ) UPDATE service_offering SET legacy_service_catalog_id=(SELECT id FROM legacy) WHERE id='$offering_id';
+  UPDATE service_booking_commerce_policy SET active=FALSE WHERE service_offering_id='$offering_id';
+  INSERT INTO service_booking_commerce_policy(service_offering_id,policy_version,currency,rate_minor,rate_unit_minutes,tax_bps,deposit_bps,hold_minutes,min_duration_minutes,max_duration_minutes,duration_step_minutes,terms_version,terms_summary,approval_status,active,approved_at,approved_by)
+  VALUES ('$offering_id','identity-http-test','USD',2000,60,0,5000,15,60,120,60,'identity-http-test','Synthetic test policy','approved',TRUE,NOW(),'isolated-test');
+" >/dev/null
+paid_start=$(psql_value "SELECT to_char(date_trunc('hour', now() AT TIME ZONE 'UTC') + interval '32 days', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"');")
+paid_key=public-booking-http-test-paid-replay-0001
+paid_payload="{\"pbcFullName\":\"Paid Guest\",\"pbcEmail\":\"public-booking-http-replay@persona.test\",\"pbcServiceOfferingId\":\"$offering_id\",\"pbcStartsAt\":\"$paid_start\",\"pbcDurationMinutes\":60,\"pbcNotes\":\"http-concurrency:paid\",\"pbcResourceIds\":[\"$resource_slug\"],\"pbcTermsAccepted\":true}"
+paid_gate="$TDF_PB_HTTP_RUNTIME_DIR/paid.start"
+run_after_gate "$paid_gate" "$paid_key" "$paid_payload" "$TDF_PB_HTTP_RUNTIME_DIR/paid-a.json" "$TDF_PB_HTTP_RUNTIME_DIR/paid-a.status" /bookings/public/checkout &
+paid_a=$!
+run_after_gate "$paid_gate" "$paid_key" "$paid_payload" "$TDF_PB_HTTP_RUNTIME_DIR/paid-b.json" "$TDF_PB_HTTP_RUNTIME_DIR/paid-b.status" /bookings/public/checkout &
+paid_b=$!
+: > "$paid_gate"
+wait "$paid_a"
+wait "$paid_b"
+for suffix in a b; do
+  if [ "$(cat "$TDF_PB_HTTP_RUNTIME_DIR/paid-$suffix.status")" != 200 ]; then
+    cat "$TDF_PB_HTTP_RUNTIME_DIR/paid-$suffix.json" >&2
+    exit 1
+  fi
+done
+assert_equal "$(json_field "$TDF_PB_HTTP_RUNTIME_DIR/paid-a.json" pbcCheckoutId)" "$(json_field "$TDF_PB_HTTP_RUNTIME_DIR/paid-b.json" pbcCheckoutId)" "Concurrent paid checkout identity"
+assert_equal "$(psql_value "SELECT count(*) FROM party WHERE primary_email='public-booking-http-replay@persona.test';")" "3" "One paid guest contact despite two concurrent requests"
+assert_equal "$(psql_value "SELECT count(*) FROM service_booking_checkout_runtime WHERE create_idempotency_key='$paid_key';")" "1" "One payable booking receipt"
+assert_equal "$(psql_value "SELECT count(*) FROM service_order WHERE description='http-concurrency:paid';")" "1" "One service order"
+run_request "$paid_key" "$paid_payload" "$TDF_PB_HTTP_RUNTIME_DIR/paid-retry.json" "$TDF_PB_HTTP_RUNTIME_DIR/paid-retry.status" /bookings/public/checkout
+assert_equal "$(cat "$TDF_PB_HTTP_RUNTIME_DIR/paid-retry.status")" "200" "Committed paid retry"
+assert_equal "$(psql_value "SELECT count(*) FROM party WHERE primary_email='public-booking-http-replay@persona.test';")" "3" "No contact from committed retry"
+assert_equal "$(psql_value "SELECT count(*) FROM commerce_payment_attempt a JOIN service_booking_checkout_runtime r ON r.checkout_id=a.checkout_id WHERE r.create_idempotency_key='$paid_key';")" "0" "No payment effects from booking retries"
 
 echo "Public booking HTTP concurrency passed: equal replay=200/200, changed payload=409, overlapping resource=200/409, no orphan Party/receipt/resource rows"

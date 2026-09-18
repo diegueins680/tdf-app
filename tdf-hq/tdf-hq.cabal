@@ -274,6 +274,7 @@ test-suite tdf-hq-test
   other-modules:
     TDF.LiveIntakeIdentitySpec
     TDF.ProviderIdentitySpec
+    TDF.MarketplaceIdentitySpec
     TDF.Commerce.WorkerLoggingSpec
     Paths_tdf_hq
     TDF.API
