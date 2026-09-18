@@ -3,7 +3,7 @@ BEGIN;
 SET LOCAL lock_timeout='5s';
 DO $$
 DECLARE a bigint; b bigint; c bigint; actor_id bigint; case_key uuid:=gen_random_uuid();
-  operation_key uuid:=gen_random_uuid(); plan jsonb; result jsonb; count_before bigint;
+  operation_key uuid:=gen_random_uuid(); plan jsonb; result jsonb; count_before bigint; audit_column text; audit_table text;
 BEGIN
   INSERT INTO party(display_name,is_org,created_at) VALUES('Identity test operator',false,now()) RETURNING id INTO actor_id;
   a:=identity_create_contact(actor_id,'request-test-0001','{"display_name":"Shared Name","is_org":false}');
@@ -36,6 +36,13 @@ BEGIN
   INSERT INTO booking(party_id) VALUES(b);
   IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'booking reference ignored'; END IF;
   DELETE FROM booking WHERE party_id=b;
+  -- Legacy review/approval relationships have no Party foreign keys.
+  FOREACH audit_column IN ARRAY ARRAY['reviewed_by','approved_by','reviewer_id','approver_id'] LOOP
+    audit_table:=CASE WHEN audit_column IN ('reviewed_by','approved_by') THEN 'catalog_revision' ELSE 'catalog_audit_event' END;
+    EXECUTE format('INSERT INTO %I(%I) VALUES($1)',audit_table,audit_column) USING b;
+    IF (identity_merge_plan(case_key)->>'can_execute')::boolean THEN RAISE EXCEPTION 'audit dependency ignored: %',audit_column; END IF;
+    EXECUTE format('DELETE FROM %I WHERE %I=$1',audit_table,audit_column) USING b;
+  END LOOP;
   plan:=identity_merge_plan(case_key);
   IF NOT (plan->>'can_execute')::boolean THEN RAISE EXCEPTION 'valid synthetic case blocked: %',plan->'blockers'; END IF;
   SELECT count(*) INTO count_before FROM party;
@@ -56,6 +63,18 @@ BEGIN
     INSERT INTO booking(party_id) VALUES(b);
     RAISE EXCEPTION 'new archived reference allowed';
   EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+  FOREACH audit_column IN ARRAY ARRAY['reviewed_by','approved_by','reviewer_id','approver_id'] LOOP
+    audit_table:=CASE WHEN audit_column IN ('reviewed_by','approved_by') THEN 'catalog_revision' ELSE 'catalog_audit_event' END;
+    BEGIN
+      EXECUTE format('INSERT INTO %I(%I) VALUES($1)',audit_table,audit_column) USING b;
+      RAISE EXCEPTION 'new archived audit reference allowed: %',audit_column;
+    EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+    EXECUTE format('INSERT INTO %I(%I) VALUES($1)',audit_table,audit_column) USING a;
+    BEGIN
+      EXECUTE format('UPDATE %I SET %I=$1 WHERE %I=$2',audit_table,audit_column,audit_column) USING b,a;
+      RAISE EXCEPTION 'updated archived audit reference allowed: %',audit_column;
+    EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+  END LOOP;
   BEGIN
     UPDATE party SET notes='illegal edit' WHERE id=b;
     RAISE EXCEPTION 'archived party write allowed';

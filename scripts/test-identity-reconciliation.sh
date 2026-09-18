@@ -10,10 +10,14 @@ CREATE TABLE party(id bigserial PRIMARY KEY, display_name text NOT NULL,legal_na
 CREATE TABLE user_credential(id bigserial PRIMARY KEY,party_id bigint REFERENCES party(id),username text UNIQUE,password_hash text,active boolean NOT NULL DEFAULT true);
 CREATE TABLE booking(id bigserial PRIMARY KEY,party_id bigint REFERENCES party(id),notes text);
 CREATE TABLE party_security_role(id bigserial PRIMARY KEY,party_id bigint,role_id uuid);
+CREATE TABLE catalog_revision(id bigserial PRIMARY KEY,reviewed_by bigint,approved_by bigint);
+CREATE TABLE catalog_audit_event(id bigserial PRIMARY KEY,reviewer_id bigint,approver_id bigint);
 INSERT INTO party(display_name) VALUES('Operator');
 SQL
 "${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-09-17_identity_reconciliation.sql"
 "${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-09-17_identity_reconciliation.sql"
+"${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-09-18_identity_review_dependencies.sql"
+"${psql_cmd[@]}" -f "$root/tdf-hq/sql/2026-09-18_identity_review_dependencies.sql"
 "${psql_cmd[@]}" -f "$root/tdf-hq/test/sql/identity_reconciliation.sql"
 # Real concurrent connections: both transactions must return the same ID.
 work=$(mktemp -d "${TMPDIR:-/tmp}/tdf-identity-concurrency.XXXXXX")
