@@ -950,7 +950,18 @@ export default function TdfDomoCampaignPage() {
                     value={(completedAssetCount / VIDEO_ASSETS.length) * 100}
                     sx={{ height: 8, borderRadius: 999 }}
                   />
-                  <TableContainer tabIndex={0} role="region" aria-label="Seguimiento de creativos">
+                  <TableContainer
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Seguimiento de creativos"
+                    onFocus={(event) => {
+                      // WebKit can focus an input while leaving most of it outside
+                      // the horizontally scrollable table after a Select closes.
+                      if (event.target !== event.currentTarget && event.currentTarget.contains(event.target)) {
+                        event.target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                      }
+                    }}
+                  >
                     <Table size="small">
                       <TableHead>
                         <TableRow>

@@ -746,3 +746,31 @@ pass. Remaining-role evidence records completed198-case fixtures without claimin
 unexecuted actions/states. Transient pipeline-tab focus and label-button contrast
 observations did not recur after settling on either viewport; they remain hypotheses.
 A confirmed actual navigation500 has its own focused successor PR #432/UX-260917-031.
+
+Checkpoint 2026-09-18 07:06 UTC: all23 remaining role fixtures completed4554
+static-route arrival cases (198 each), including StageManager, TourManager, Vendor
+and Webmaster. Together with prior role evidence this covers the31 derived roles
+at arrival, not all role combinations, dynamic resources or failure states. The CMS
+helper contrast observation belongs to an inactive selector; the explicit WCAG1.4.3
+inactive-component exception applies (primary W3C documentation checked today).
+
+#431 merged as2f01b20b0 after exact-head approval and all applicable PR gates.
+Its automatic image run35315895802 currently has a WebKit recovery-close failure;
+backend build is still running. No experiment production rollout is claimed.
+The current release baseline remains4b0bc6ed7, and the experiment must remain paused.
+
+Fresh #433 CI exposed an additional horizontal-focus issue in Linux WebKit320px:
+the focused notes field remained mostly clipped after Select dismissal. The source
+now scrolls focused table controls into view; the existing center-hit regression
+is retained. New verification is pending. This extends UX032, not a passing rerun.
+
+Native UX033 is confirmed by the actual iOS accessibility tree: five visible tabs
+were announced with a total of12, including hidden routes. Mobile PR101 atafbd5dcc7
+corrects visible counts and reactive ES/EN labels, based on parent-pinned34971c451.
+Hosted checks pass; corrected EAS simulator4696e1b9 is FINISHED. Actual corrected
+simulator execution and signed production distribution remain pending. Prior simulator
+variant1.0.1/build1 does not prove App Store build19 acceptance.
+
+The nearest-scroll correction passes10 local cases in five profiles/three engines;
+production build365428gzip and affected lint pass. Linux CI must confirm the same
+regression on the successor head. Synthetic fixtures prevent campaign submissions.

@@ -1234,9 +1234,35 @@
     "acceptanceCriteria": "Status and notes keyboard focus remain visibly unobscured at320/1280 and across supported browser engines; header actions remain accessible, no page overflow.",
     "verificationMethod": "Browser elementFromPoint at focused control center, keyboard menu open/Escape/next field, axe/reflow checks across5tabs and5profiles.",
     "status": "implemented",
-    "implementationStatus": "Removed sticky positioning from shared PageShell header in audit/ux-remaining-coverage-20260918.",
-    "verificationStatus": "Actual compiled final bundle320/1280: status and notes centers hit the focused controls, not header; zero axe WCAG-tagged violations. Build/typecheck365423gzip/5preloads and affected lint pass. Durable5profile/3engine5tab regression running. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow.",
+    "implementationStatus": "Removed sticky positioning from shared PageShell header in audit/ux-remaining-coverage-20260918. Explicit nearest scrolling on table-control focus also fixes Linux WebKit notes clipping observed in CI.",
+    "verificationStatus": "Actual compiled final bundle320/1280: status and notes centers hit the focused controls, not header; zero axe WCAG-tagged violations. Build/typecheck365423gzip/5preloads and affected lint pass. Durable5profile/3engine5tab regression running. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow. New local production build365428gzip/5preloads,10cases in5profiles/3engines and affected lint PASS; corrected Linux hosted run pending.",
     "mergeStatus": "not merged",
     "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-033",
+    "kind": "confirmed",
+    "title": "Native tab accessibility counts hidden routes and freezes initial labels",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "native arrival / navigation / returning session / language selection",
+    "roles": "signed-in accounts and anonymous public-directory visitors",
+    "surface": "Expo Router tabs / mobileSurface navigation configuration",
+    "evidence": "Actual iOS simulator tree labels Perfil as tab5of12 while five tabs are visible; same source persists in parent-pinned34971c451. React Navigation counts registered hidden routes by default. Titles are translated only at module initialization from the separate default-Spanish translator.",
+    "userImpact": "Screen-reader navigation announces inaccessible destinations and an English count on Spanish UI; current locale changes do not update tab labels.",
+    "rootCause": "Default all-route accessibility count plus module-initialized translated titles disconnected from UserSettings locale.",
+    "proposedChange": "Resolve visible titles from current locale and explicitly name visible positions on iOS; retain native Android roles/name-only labels and guest-only public tab.",
+    "dependencies": [
+      "mobile PR101",
+      "qualified simulator/signed artifacts",
+      "store review/publication"
+    ],
+    "acceptanceCriteria": "ES/EN5of5 for authenticated users,1of1 for guests; changing locale rerenders labels; hidden routes remain hidden and permissions unchanged; corrected native artifact and applicable distribution verified.",
+    "verificationMethod": "Actual before accessibility tree; component tests of actual TabsLayout plus finite locale/auth/platform label contracts; native runtime and release evidence separate.",
+    "status": "in progress",
+    "implementationStatus": "Mobile PR101 afbd5dcc7 based on34971c451; visible-tab count and ES/EN labels evaluated from current settings/session.",
+    "verificationStatus": "Hosted validate/Datadog PASS;83suites486cases plus final12 focused cases, TypeScript, lint, release checks PASS. Corrected EAS simulator4696e1b9 FINISHED; actual artifact execution pending.",
+    "mergeStatus": "mobile PR101draft; parent not merged",
+    "releaseStatus": "not deployed or published"
   }
 ]
