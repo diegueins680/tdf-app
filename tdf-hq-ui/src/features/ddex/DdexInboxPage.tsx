@@ -84,8 +84,9 @@ const DdexInboxPage: React.FC = () => {
 
       <Stack direction="row" spacing={2} mb={3}>
         <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Status</InputLabel>
+          <InputLabel id="ddex-status-label">Status</InputLabel>
           <Select
+            labelId="ddex-status-label"
             value={statusFilter}
             label="Status"
             onChange={(e) => setStatusFilter(e.target.value)}

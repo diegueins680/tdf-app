@@ -5,6 +5,96 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Continuación — 2026-09-18 04:52 UTC
+
+Release guardado #422 `f19bb8855e8a9bc5b73ee4c3199c631540eb0df9` completado
+04:38:48Z. Canary y segunda máquina confirman db/status OK y SHA exacto; snapshot
+`vs_bNkX7ky3wqjsZg5nPk5OQJ` completado04:32:12Z. Imagen inmutable
+`sha256:ebf4d755ff87d866782540791433a6fdbcbfb7629deaac95e93ac6e3889c792d`.
+Read-only04:42:04Z:104 migraciones, lease0. Sin rollback. El túnel local de Fly
+falló; el mecanismo documentado usó smoke público fijado por máquina.
+`evidence/production-release-f19.json`. Recuperación: artefacto db69 compatible
+según preflight, usando de nuevo el release guardado y verificando ledger actual;
+no restaurar base ni sobrescribir despliegues posteriores. Handoff anotado en memoria.
+
+Cloudflare f19 `fa76ec18-b275-42e7-842e-18cd54c26c16` SUCCESS. Después #426
+se integró como `a81e48ea9e68b495562ae1f6592654c043dc97eb`; la web pública
+ya coincide en todos sus assets con su deployment `93ae1f5b-b0c1-43af-b25e-291fb845f18e`.
+No se revierte esta entrega independiente. API observada f19; es estado separado.
+
+Apple: confirmación explícita del titular sobre derechos de terceros guardada y
+leída por API (`USES_THIRD_PARTY_CONTENT`); categoría Music, precio gratuito y
+disponibilidad175 regiones tras release. App Privacy publicada,19 tipos vinculados
+a identidad/sin tracking, según código+manifiestos IPA. iOS1.0.1(19) enviado:
+App Review **WAITING_FOR_REVIEW**, TestFlight externo **WAITING_FOR_BETA_REVIEW**.
+`evidence/ios19-store-submitted.json` y `ios19-beta-submission.jsonl`. No publicación
+pública ni aprobación acreditada. Condición no-comerciante permanece activa.
+
+Android1.0.1(10) pasa de draft a rollout completo de Alpha por API; readback
+`evidence/android-alpha-release10.json`. Console confirma comprobaciones previas
+y cambios en revisión, incluyendo lista68. No se acredita disponibilidad nueva;
+cero invitaciones enviadas aún. Se mantienen82 contactos previstos (14 requieren
+cuenta Google) y1dirección inválida excluida; nunca publicar la audiencia privada.
+
+#429: revisión encuentra inicialización de pago sin cliente utilizable; se verifica
+SDK antes de reservar, se conserva entrada al fallar, se permite cancelar y se
+frenan respuestas antiguas/doble envío.17pruebas component/logic pasan; modelo
+CheckoutReadiness221estados distintos,3propiedades y liveness condicional pasan,
+3controles negativos detectan sus invariantes. Runner TLC1.7.2/Alloy6.2.0 completo
+aprobado. Nombres únicos de regiones/progresos ES/EN y locales FullCalendar
+registrados; botón pagar localizado. Build/lint/typecheck pasan,364882bytes gzip
+con5preloads dentro del presupuesto. Verificación de navegador del sucesor en curso.
+
+Manager/Engineer/Artist/Accounting/Teacher:198llegadas por rol,99rutas×320/1280,
+sesión/backend/PostgreSQL17 reales; cero axe/pageerror/5xx/overflow.28llegadas
+focalizadas tienen cero axe/pageerror/overflow; integración Google Calendar devuelve
+500 por OAuth no configurado en entorno aislado, pendiente de verificación real.
+No acredita acciones, combinaciones de roles, estados ni accesibilidad con lector.
+La prueba de bundle sin `VITE_API_BASE=/api` consultó rutas raíz del servidor
+estático y falló; se corrige el harness, sin contar ese intento como defecto/producto
+o evidencia positiva. No hubo escritura productiva en esa ejecución local.
+
+Siguiente: terminar regresiones de navegador y gates, publicar #429/resolver5hilos,
+renovar revisión independiente si GitHub la descarta; continuar cobertura inicial.
+Tiendas requieren decisiones externas; producción Google exige12personas/14días.
+
+## Continuación — 2026-09-18 04:18 UTC
+
+#422 fusionada por merge normal como `f19bb8855e8a9bc5b73ee4c3199c631540eb0df9`:
+head209b21b07, revisión independiente exacta, todos los checks aplicables aprobados,
+nueve hilos resueltos. La API asíncrona de GitHub confirmó el SHA; el CLI normal
+rechazó la PR por pertenecer a un stack. El sucesor209 añade traducción de errores
+de transporte en confirmación de recuperación;10 casos ES/EN,5 perfiles/3 motores
+pasan y confirman eliminación del token de la URL. #429 integra ese merge y su
+base pasa a main. Backend productivo aún db69: Build Image35306320944 en curso;
+no confundir merge con despliegue. Continúa coordinación del release guardado.
+
+Bundle operacional dbf548172: build/typecheck y presupuesto364618 bytes gzip/5preloads
+pasan. Manager:198 llegadas(99rutas×320/1280), sesión/backend/PostgreSQL17 reales,
+cero axe/overflow/pageerror/5xx. `evidence/manager-runtime-dbf.json`. Engineer en curso;
+las llegadas no certifican todas las acciones, estados, permisos de recursos ni WCAG.
+
+Android: CSV derivado de90 credenciales activas→83direcciones únicas con sintaxis
+válida; Play rechaza1dominio y14cuentas Google inexistentes. Se crea lista68, se
+selecciona para Alpha preservando las listas1+11. Publishing overview indica lista
+en revisión. Draft10 sustituye sólo borrador vacío8 y conserva activo4;
+`evidence/android-alpha-draft10.json`. Cero invitaciones enviadas todavía:82cuentas
+contactables,14 necesitan indicar/asociar una cuenta Google. No publicar PII.
+
+Apple: usuario declara inexistentes groserías/alcohol-drogas/contenido sexual-violento;
+cuestionario guardado/readback200, UGC/social/publicación de mensajes declarados
+presentes. Enlaces privacidad/borrado guardados. Build19 interno IN_BETA_TESTING,
+externo READY_FOR_BETA_SUBMISSION; no revisión externa enviada. Credencial AppReview
+existente comprobada por login real y simulador; dos capturas actuales procesadas.
+Se revisaron manifiestos reales del IPA19 (`evidence/ios19-privacy-manifests.json`),
+no sólo dependencias; AppPrivacy sigue en preparación. No publicación pública.
+
+Fuentes primarias consultadas2026-09-18: [Apple edades](https://developer.apple.com/help/app-store-connect/reference/app-information/age-ratings-values-and-definitions),
+[Apple privacidad](https://developer.apple.com/app-store/app-privacy-details/) y
+[Stripe SDK](https://support.stripe.com/questions/stripe-mobile-sdk-privacy-details).
+La clasificación separa frecuencia editorial confirmada por titular de funciones
+observadas; la privacidad incluye SDKs y vínculo de datos a identidad.
+
 ## Revisión de fallos de acceso y correo — 2026-09-18 03:40 UTC
 
 Dos observaciones posteriores a3def67665 se reparan en este sucesor: API de auth
@@ -18,6 +108,25 @@ sólo los dos correos de curso usan «Ver detalles del curso». Compilación Sta
 --fast y8 Hspec/100 QuickCheck de recuperación pasan. No hubo cambio de modelos
 ni de transiciones; los gates formales del nuevo head deberán terminar igualmente.
 Aprobación3def preservada como histórica; el nuevo código exige revisión exacta.
+
+## Verificación adicional — 2026-09-18 03:38 UTC
+
+- Recepción:198 llegadas a99 rutas×320/1280, sesión/API/PostgreSQL17 reales,
+  cero axe y errores de página; se conservan denegaciones según autorización.
+  Evidencia operational-reception-after.json. No sustituye otros estados/roles.
+- Reconciliados doce IDs históricos sin rehacer fixes: ocho web ya contenidos
+  en maindb69, cuatro nativos en móvil1ec9160/PR94.9 suites/47 pruebas web y
+  4 suites/60 móviles pasan. Sus límites de runtime/producción siguen explícitos.
+- Apple: capturas reales de simulador19/source1ec,1320×2868RGB, sin edición,
+  procesadas COMPLETE:2f053679-4332-4145-aef5-17a8ecd2b020 y
+  d877801c-3fc0-415b-8215-7766e0f01980; set1204e861-3128-48fb-bfae-e358b30a9ec3.
+- Play: servicio activo y envío exitoso; build10 internal DRAFT, sin testers
+  asignados a ese canal. Closed testing existente tiene sólo1 inscrito; Google
+  exige12 durante14 días consecutivos para solicitar producción. Este bloqueo
+  humano es distinto del permiso API ya resuelto. Notas ES/EN preparadas.
+- #4223def67665 recibió aprobación exacta; nueva revisión señaló localización
+  de fallos de login y CTA genérico de email. Reparación/test en su worktree;
+  no se fusiona ni despliega con discusiones o checks pendientes.
 
 ## Actualización de gates y tiendas — 2026-09-18 03:28 UTC
 
@@ -39,6 +148,35 @@ vuelta en borrador1.0.1 PREPARE_FOR_SUBMISSION. Capturas/declaraciones/revisión
 publicación siguen pendientes. Simulador source1ec9160 builddd963682 también
 FINISHED, SHA25639109632b00852cc4c162ce8b4331440f520d035972a3ec93ddbe07c42ff3d07;
 no se confunde con distribución de tienda. Backend productivo permanece db69.
+
+## Cobertura operativa y tiendas — 2026-09-18 03:15 UTC
+
+El sucesor operativo conserva IDs y añade UX022–028 confirmados por navegador:
+scroll con teclado, nombres de controles/carga, contraste claro, alertas estrechas,
+SDK de pago opcional, landmarks y objetivos táctiles. Código dccd66606 integrado con
+#4226479e0350 mediante d4f720e51.198 casos admin y198 customer,99rutas×2anchos;
+28 repeticiones focalizadas finales sin axe. Estos son casos de llegada inicial,
+no aceptación de todos los estados ni certificación WCAG.15 pruebas existentes,
+lint y build pasan; el bundle integrado d4f720e51 usa364500bytes gzip/5preloads y sus28 casos
+focalizados pasan. Se normalizó coverage.csv a CSV estándar:411 filas/8columnas,
+roundtrip verificado, sin perder evidencia ni definiciones JSON de permisos.
+Se excluye como evidencia de persistencia el bundle intermedio mal configurado.
+
+Play Console observado: cuenta7746420275596660022, com.tdf.records ya en Closed
+testing. La cuenta de servicio de EAS faltaba por completo; ahora se añadió y se
+leyó estado Active con acceso sólo a TDF. Seis permisos solicitados por Expo más
+los tres permisos de lectura/políticas/enlaces que Play implica automáticamente;
+Admin, finanzas, pedidos y respuestas a reseñas permanecen desmarcados. Envío del
+build10 actualizado:f22acacc-5d30-4659-9078-a58f056f859b en ejecución; no publicación
+inferida. iOS19 subido vía7233bd21-1d94-424c-b792-c0234f497949; falta verificar
+processing y actualizar asociación del borrador. Simulador del mismo source:
+dd963682-9ce6-442b-a7a9-6d178860c15e solicitado tras fallo TLS de upload; no se
+redujo integridad/validación. Maestro en dispositivo6.9 tuvo XCTest killed antes
+de iniciar; no se acredita QA por ese intento.
+
+#4226479e0350 tiene las tres discusiones resueltas, CI en ejecución y requiere
+renovar aprobación independiente. Producción sigue db69 según el último release
+verificado. No compete con el operador de identidad ni inicia otro rollout aún.
 
 ## Checkpoint de continuación — 2026-09-18 03:10 UTC
 
@@ -488,3 +626,71 @@ which adds only generated experiment declarations to notification main5faeeed; i
 does not import the separate provider-linking#97 runtime merely to obtain these types.
 TypeScript43native tests and offline Metro pass; this declarations-only change does
 not require rebuilding signed binaries. Store review/publication remains separate.
+### Radio and modal layering (UX-260917-030)
+
+Initial checkout retry runtime found the global radio layer at1400 intercepting
+the modal footer after its error expands. The screenshot is a real compiled-bundle
+reproduction, synthetic event/payment transport. All three radio surfaces now use
+theme.zIndex.appBar. [MUI primary documentation](https://mui.com/material-ui/customization/z-index/)
+consulted2026-09-18 specifies appBar1100,modal1300,snackbar1400; reusing the theme
+keeps application controls below the modal. No audio change, provider or charge.
+
+Integrated main a81 in68581b8f, preserving merge ancestry. Actual .gitmodules/tree
+pins published mobile30686143f3108c6e2fe0ccbff016f570d2ef51f6, descendant of1ec
+with generated contract changes only; existing native19/10 artifacts remain source1ec.
+#429 sixth review identifies duplicate activity load labels, corrected distinctly.
+Student198 arrivals: one real unnamed progress in /mis-clasificados; four directory
+load states now named. Includes before evidence, follow-up runtime pending.
+Remaining historical booking/marketplace/onboarding/campaign suites34tests pass.
+
+### Verified review successor — 2026-09-18 05:03 UTC
+
+Integrated b9a654f9b production bundle: TypeScript/build budget364975gzip/5preloads
+pass.17checkout component/logic tests pass, including session switch while SDK is
+pending.10durable Playwright ES/EN cases on desktop/phone/tablet+Firefox+WebKit
+pass: readiness failure retains input,0intents, ordinary retry/cancel clicks remain
+unobscured by radio. Screenshots/trace on failure remain configured in the repository.
+Six ES/EN calendar/board/activity named-region cases pass with actual isolated API
+and locale response fixture; initial English attempts inherited real account Spanish
+preference, corrected fixture explicitly, not a product failure.
+Public production web a81: English login, signup dialog/legal links, recovery/token
+removal pass with storage allowed and denied;0pageerrors, no account/password mutation.
+Evidence files distinguish synthetic checkout/locale responses from production reads.
+
+Four slow-response ES/EN browser checks verify distinct activity loading names and
+named directory profile loading. `evidence/operational-loading-es-en.json`.
+Local integrated catalog gate, repository-quality and final affected-source lint pass.
+
+### Reservation cancellation review — 2026-09-18 05:24 UTC
+
+All applicable CI checks for60d754aab passed and its independent approval remains
+recorded, but new threadPRRT_kwDOQPdUrM6joQEq blocks merge. Confirmed regression:
+Cancel while `createPaymentIntent` is pending abandons the returned reservation.
+The focused regression failed on that head. Cancellation remains available during
+SDK loading; all dialog close paths now wait once reservation dispatch begins.
+19 component/logic tests, affected lint and TypeScript/production build pass,
+364991 gzip bytes/5preloads. CheckoutCancellation adds explicit dispatch/response
+states, named safety properties, conditional liveness and an unsafe negative control.
+No real payment was made. External interruption and transport ambiguity are outside
+this small model, as documented in the formal record.
+
+ReadOnly and Intern each completed198 real isolated API arrivals without observed
+axe/page errors or overflow. StudioManager198 produced two observations under review:
+transient button contrast on /label/artistas and unnamed teacher loading. These are
+not acceptance for every role combination, resource action, native state or assistive
+technology. Google still shows Android10 and the68-account list in review; no tester
+email has been sent. Apple19 remains submitted, not public availability.
+
+Current bundle rerun:10/10 browser cases pass; unsafe cancellation configuration
+produces the named abandoned-reservation counterexample. Full pinned TLC1.7.2/Alloy6.2.0 runner passed, including the four checkout
+negative controls; no merge or release of this successor is claimed.
+
+### Payment confirmation review — 2026-09-18
+
+PRRT_kwDOQPdUrM6jofR3 confirms a second cancellation boundary: while Stripe confirms
+a payment, Escape/backdrop could invalidate its successful completion. The parent
+now guards that phase and the child prevents duplicate confirmation before React's
+next render.21component/logic tests pass, including delayed success/callback once
+and provider rejection recovery. The model now has8distinct states, explicit payment
+confirmation, NoLostPayment and its negative control. TypeScript/production build
+passes at364988gzip/5preloads. No real charge or broad server recovery proof.
