@@ -73,7 +73,7 @@ export default function DirectoryManagePage() {
   });
 
   return (
-    <Container component="main" id="main-content" maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       <Stack spacing={3}>
         <Box>
           <Typography component="h1" variant="h3" fontWeight={900}>Mis perfiles y clasificados</Typography>

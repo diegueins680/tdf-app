@@ -643,7 +643,7 @@ export default function CalendarSyncPage() {
             </Typography>
             <Chip label={`${events.length}`} size="small" />
           </Stack>
-          {eventsQuery.isLoading && <LinearProgress />}
+          {eventsQuery.isLoading && <LinearProgress aria-label="Cargando eventos del calendario" />}
           {eventsErrorMessage && <Alert severity="error">{eventsErrorMessage}</Alert>}
           <Divider />
           <Stack spacing={1.5}>

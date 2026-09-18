@@ -910,6 +910,7 @@ const openDialogForRange = (start: Date, end: Date) => {
             nowIndicator
             timeZone={zone}
             locale={locale}
+            buttonIcons={false}
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',

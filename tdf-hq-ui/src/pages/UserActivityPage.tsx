@@ -169,7 +169,7 @@ export default function UserActivityPage() {
 
       {(activityQuery.isLoading || hasActivity) && (
         <Paper>
-          <TableContainer>
+          <TableContainer tabIndex={0} role="region" aria-label="Actividad de usuarios">
             <Table size="small" aria-label="Resumen de actividad por usuario">
               <TableHead>
                 <TableRow>
@@ -183,7 +183,7 @@ export default function UserActivityPage() {
                 {activityQuery.isLoading && (
                   <TableRow>
                     <TableCell colSpan={4} align="center">
-                      <CircularProgress size={24} />
+                      <CircularProgress size={24} aria-label="Cargando actividad" />
                     </TableCell>
                   </TableRow>
                 )}
@@ -229,7 +229,7 @@ export default function UserActivityPage() {
             items={activities}
             pagination={{ itemLabel: 'acciones', initialRowsPerPage: 25, resetKey: limit }}
             renderItems={(visibleActivities) => (
-              <TableContainer>
+              <TableContainer tabIndex={0} role="region" aria-label="Actividad de usuarios">
                 <Table size="small" aria-label="Actividad reciente">
                   <TableHead>
                     <TableRow>
@@ -244,7 +244,7 @@ export default function UserActivityPage() {
                     {activityQuery.isLoading && (
                       <TableRow>
                         <TableCell colSpan={5} align="center">
-                          <CircularProgress size={24} />
+                          <CircularProgress size={24} aria-label="Cargando actividad" />
                         </TableCell>
                       </TableRow>
                     )}
