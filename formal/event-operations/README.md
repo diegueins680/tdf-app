@@ -246,3 +246,9 @@ returns500; the corrected executable must pass16 first visits, mixed settings/vi
 separate accounts, denied access and revoked tokens. Test hosts/databases are restricted
 to local/CI isolated databases. Tool versions remain TLC1.7.2/Alloy6.2.0 as pinned above.
 Execution results and limits are recorded in the canonical audit checkpoint.
+
+Executed2026-09-18: NavigationVisit33generated/16distinct states, depth5, all
+listed invariants and conditional liveness pass. Legacy negative reaches the named
+NoFailedVisits counterexample (two reads, insertion, duplicate insertion). The full
+formal runner passes, including all existing negative controls and Alloy checks.
+The pinned TLA+ release artifact is1.7.2; its runtime reports TLC2 engine2.17.

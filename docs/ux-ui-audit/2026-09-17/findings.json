@@ -1233,7 +1233,7 @@
     "verificationMethod": "Actual executable HTTP/PostgreSQL controlled interleaving, TLC finite-state concurrency model with legacy negative control.",
     "status": "in progress",
     "implementationStatus": "Atomic upsert implemented in isolated branch audit/ux-navigation-concurrency-20260918; build pending. No schema/API changes.",
-    "verificationStatus": "Negative runtime reproduced before fix; corrected binary and model runs pending.",
+    "verificationStatus": "Controlled old-binary HTTP/PostgreSQL failure reproduced. Full pinned formal runner PASS: TLC engine2.17 (artifact release1.7.2), NavigationVisit16distinct/33generated/depth5, safety and conditional liveness; legacy negative violates NoFailedVisits.14 CI pipeline tests pass. Corrected executable HTTP gate pending in CI; local compile stopped for host load/concurrent other-operator Stack.",
     "mergeStatus": "not merged",
     "releaseStatus": "not deployed"
   }
