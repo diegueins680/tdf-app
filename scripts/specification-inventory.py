@@ -79,6 +79,20 @@ def generate():
                                      "statement": line.strip(), "source": f"specs.yaml:{number}",
                                      "status": "inferred", "deliveryScope": "Legacy v1 candidate; approval/supersession unresolved",
                                      "verification": "open", "gap": "YAML line is discovery evidence; contextual interpretation and approval remain required"})
+        if relative == "docs/payments/ecuador-payment-platform-audit-2026-09-09.md":
+            # Approval is local to this embedded ADR, not the surrounding research report.
+            section = re.search(r"(?ms)^### ADR-0200 .*?(?=^## 6\.)", source)
+            if not section or "**Status:** accepted for implementation." not in section[0]:
+                raise SystemExit("ADR-0200 authority changed; review extraction and applicability")
+            invariants = re.search(r"(?ms)^### Invariants\n(.*?)(?=^### )", section[0])
+            if not invariants:
+                raise SystemExit("ADR-0200 invariants missing; review extraction")
+            for number, statement in re.findall(r"(?m)^(\d+)\. (.+)$", invariants[1]):
+                requirements.append({"id": "ADR-0200-INV-" + number.zfill(2),
+                                     "statement": statement, "source": relative + "#invariants",
+                                     "status": "approved", "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+                                     "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+                                     "verification": "open", "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"})
         if relative == "docs/event-operations/gap-matrix.md":
             for line in source.splitlines():
                 cells = [x.strip() for x in line.split('|')]

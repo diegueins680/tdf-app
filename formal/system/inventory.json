@@ -129,6 +129,7 @@
       "scripts/lib/ui-static-audit.mjs",
       "scripts/lib/ux-quality-audit.mjs",
       "scripts/lib/verification-evidence.mjs",
+      "scripts/mail-deliverability-monitor.py",
       "scripts/meta-app-review-packet.mjs",
       "scripts/mobile-publishing-admin-audit.sh",
       "scripts/mobile-workspace-ready.mjs",
@@ -271,11 +272,13 @@
       "scripts/test-studio-internship-audit-api-e2e.mjs",
       "scripts/test-studio-internship-audit-api-e2e.sh",
       "scripts/test-studio-internship-audit-migration.sh",
+      "scripts/test-trial-identity.sh",
       "scripts/test-unified-checkout-migration.sh",
       "scripts/test-user-experiment-assignment-migration.sh",
       "scripts/test-user-onboarding-progress-migration.sh",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
+      "scripts/test_mail_deliverability_monitor.py",
       "scripts/ui-static-audit.mjs",
       "scripts/upsert-course.mjs",
       "scripts/ux-audit-inventory.mjs",
@@ -829,6 +832,7 @@
       "tdf-hq-ui/src/pages/SocialInboxPage.test.tsx",
       "tdf-hq-ui/src/pages/SocialInboxPage.tsx",
       "tdf-hq-ui/src/pages/SocialPage.tsx",
+      "tdf-hq-ui/src/pages/StudentCreationDialogs.test.tsx",
       "tdf-hq-ui/src/pages/SystemPage.tsx",
       "tdf-hq-ui/src/pages/SystemStatusPage.tsx",
       "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
@@ -1052,6 +1056,7 @@
       "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
       "tdf-hq/docs/openapi/reviews.yaml",
       "tdf-hq/docs/openapi/social-v2.yaml",
+      "tdf-hq/docs/openapi/trials-identity.yaml",
       "tdf-hq/docs/openapi/user-roles.yaml",
       "tdf-hq/docs/service_marketplace_formal_spec.md",
       "tdf-hq/migrations/0001_create_social_events.sql",
@@ -1304,6 +1309,8 @@
       "tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql",
       "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
       "tdf-hq/sql/2026-09-17_identity_reconciliation_rollback.sql",
+      "tdf-hq/sql/2026-09-18_ads_identity_requests.sql",
+      "tdf-hq/sql/2026-09-18_ads_identity_requests_rollback.sql",
       "tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql",
       "tdf-hq/sql/2026-09-18_course_identity_requests.sql",
       "tdf-hq/sql/2026-09-18_course_identity_requests_rollback.sql",
@@ -1314,6 +1321,8 @@
       "tdf-hq/sql/2026-09-18_notification_navigation_rollback.sql",
       "tdf-hq/sql/2026-09-18_provider_subject_identity.sql",
       "tdf-hq/sql/2026-09-18_provider_subject_identity_rollback.sql",
+      "tdf-hq/sql/2026-09-18_trial_identity_requests.sql",
+      "tdf-hq/sql/2026-09-18_trial_identity_requests_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -1430,6 +1439,7 @@
       "tdf-hq/src/TDF/Directory/Policy.hs",
       "tdf-hq/src/TDF/Distribution/StateMachine.hs",
       "tdf-hq/src/TDF/Email.hs",
+      "tdf-hq/src/TDF/Email/Headers.hs",
       "tdf-hq/src/TDF/Email/Service.hs",
       "tdf-hq/src/TDF/FeatureRegistry.hs",
       "tdf-hq/src/TDF/Handlers/InputList.hs",
@@ -1546,6 +1556,7 @@
       "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
       "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
       "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+      "tdf-hq/test/TDF/EmailHeadersSpec.hs",
       "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
       "tdf-hq/test/TDF/Operations/ModelSpec.hs",
@@ -1565,6 +1576,7 @@
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
+      "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
       "tdf-hq/test/fixtures/ddex/ern-v432/album-valid.xml",
@@ -2382,6 +2394,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/identity/trial-prevention.md",
+      "sha256": "b0a494e1007a87e2e6741e01abf958f1f82ab3faad58118e23488ce871f191be",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/internationalization.md",
       "sha256": "77698b26f560047cf36f22c69128d23347f23bc718f0267750adca712fae79e0",
       "authority": "inferred",
@@ -2792,6 +2811,13 @@
       "sha256": "d620cc07268a6e9364ba4fdb959b56b12a6857288d26c5253b2e54685868f321",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/operations/mail-deliverability-2026-09-18.md",
+      "sha256": "c7f2e69803c035f7a55bf51373f976aaef5b2f47f36e783f6591a51b39626ef7",
+      "authority": "inferred",
+      "authorityBasis": "Estado: diagnóstico y correcciones verificables, **no resolución completa del spam**.",
       "kind": "requirement-candidate"
     },
     {
@@ -4644,7 +4670,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1c04ec8da211564f649f5cbae6b453546279150a11bef980a3f88dae1f60a932",
+      "sha256": "7091285429fb238ad2e628fe1ff58b1551bb8f578c6dbe0078266da7e7c519b2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -5613,6 +5639,106 @@
       "deliveryScope": "Historical event roadmap; do not classify absence as current defect without applicability",
       "verification": "open",
       "gap": "See existing domain traceability matrix and current code; historical classification is not current execution evidence"
+    },
+    {
+      "id": "ADR-0200-INV-01",
+      "statement": "All money is signed integer minor units plus ISO currency; provider decimal strings are parsed/serialized only in adapters.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
+    },
+    {
+      "id": "ADR-0200-INV-02",
+      "statement": "A browser return, app resume, redirect query, mock or customer screenshot is never payment evidence.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
+    },
+    {
+      "id": "ADR-0200-INV-03",
+      "statement": "Provider, environment, merchant, internal order, provider resource, amount and currency are immutable bindings.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
+    },
+    {
+      "id": "ADR-0200-INV-04",
+      "statement": "`authorized` is not `captured`; `voided` is not `refunded`; fulfillment begins only after authoritative capture and domain checks.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
+    },
+    {
+      "id": "ADR-0200-INV-05",
+      "statement": "Only one successful attempt may settle a checkout. A transport timeout or unknown response is ambiguous and freezes cross-provider fallback until reconciled.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
+    },
+    {
+      "id": "ADR-0200-INV-06",
+      "statement": "Refund uses the provider/capture of origin. Partial totals cannot exceed captured funds.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
+    },
+    {
+      "id": "ADR-0200-INV-07",
+      "statement": "Marketplace funds remain with a contracted provider-managed account structure; TDF records liabilities but does not invent custody.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
+    },
+    {
+      "id": "ADR-0200-INV-08",
+      "statement": "Payout request and approval actors differ. Paid requires a bound provider payout ID and completion evidence.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
+    },
+    {
+      "id": "ADR-0200-INV-09",
+      "statement": "Raw PAN, track data and CVV never enter TDF APIs, databases or logs. Vault references are not reusable as credentials outside the provider contract.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
+    },
+    {
+      "id": "ADR-0200-INV-10",
+      "statement": "Payment and payout history, amount components, settlement allocations and audit evidence are append-only.",
+      "source": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md#invariants",
+      "status": "approved",
+      "authorityBasis": "Embedded ADR-0200: accepted for implementation",
+      "deliveryScope": "Canonical payment core; provider activation and future business flows retain their separate delivery gates",
+      "verification": "open",
+      "gap": "Arithmetic slice traced in requirements.json; remaining clauses require implementation correspondence"
     },
     {
       "id": "LEGACY-8d8256fc15f9",

@@ -54,6 +54,12 @@ explicitly retain gaps; their discovery does not establish a semantic formal spe
 [requirements.json](requirements.json) contains the initial correction obligations and traceability.
 Existing formal artifacts stay under `formal/event-operations` and `formal/social`.
 
+The embedded accepted ADR-0200 in the dated payment audit contributes ten invariant requirements.
+Its approval is scoped to that ADR; the surrounding provider research is not promoted to policy.
+Latest integrated main at this checkpoint: `7635a5f325b9f08e129498317fecd606dfd36dc6`
+(identity dependency #439 and mail corrections included). GitHub correctly rejected the prior
+inventory when its synthetic merge added those sources; regeneration retains that fail-closed gate.
+
 | Domain | Canonical existing sources | Actual implementation boundary | Verification status in this audit |
 |---|---|---|---|
 | Web | `tdf-hq-ui/src/routes`, `App.tsx`, OpenAPI, domain UX/contract documents | React/Vite entry, API clients, session context, page actions | Discovered; component/browser correspondence obligations open outside monetary change |
