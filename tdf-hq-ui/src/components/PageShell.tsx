@@ -43,9 +43,6 @@ export default function PageShell({
     <Stack spacing={4}>
       <Box
         sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
           bgcolor: 'background.default',
           pt: { xs: 2, md: 3 },
           pb: 2,

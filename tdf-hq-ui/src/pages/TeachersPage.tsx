@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -187,6 +188,7 @@ const buildClassesFromDTO = (classes: ClassSessionDTO[]): ClassRow[] =>
   }));
 
 export default function TeachersPage() {
+  const { t } = useTranslation();
   useDocumentTitle('Escuela / Profesores');
   const qc = useQueryClient();
   const subjectsQuery = useQuery({
@@ -395,7 +397,7 @@ export default function TeachersPage() {
         </Grid>
       </Paper>
 
-      {loading && <LinearProgress />}
+      {loading && <LinearProgress aria-label={t('auditAccessibility.loadingTeachers')} />}
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>

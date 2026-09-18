@@ -1,0 +1,69 @@
+{
+  "observedAt": "2026-09-18T08:43:27.494153+00:00",
+  "tools": {
+    "java": "21.0.12.1+1",
+    "tlaRelease": "1.7.2",
+    "tlcEngine": "2.17",
+    "alloy": "6.2.0"
+  },
+  "bounds": "two machines, finite recovery decisions and one concurrent binding; weak fairness only of recovery steps",
+  "results": [
+    {
+      "configuration": "ProviderRollback",
+      "expectedCounterexample": false,
+      "counts": [
+        74,
+        38,
+        0
+      ]
+    },
+    {
+      "configuration": "ProviderRollbackCompatible",
+      "expectedCounterexample": false,
+      "counts": [
+        64,
+        31,
+        0
+      ]
+    },
+    {
+      "configuration": "ProviderRollbackMixed",
+      "expectedCounterexample": false,
+      "counts": [
+        70,
+        35,
+        0
+      ]
+    },
+    {
+      "configuration": "ProviderRollbackForward",
+      "expectedCounterexample": false,
+      "counts": [
+        74,
+        38,
+        0
+      ]
+    },
+    {
+      "configuration": "ProviderRollbackUnsafe",
+      "expectedCounterexample": true,
+      "counts": [
+        14,
+        12,
+        5
+      ]
+    },
+    {
+      "configuration": "ProviderRollbackPartial",
+      "expectedCounterexample": true,
+      "property": "StoppedFleetSafe",
+      "counts": [
+        25,
+        18,
+        5
+      ]
+    }
+  ],
+  "conformance": "74 release tests pass, including the actual fleet recovery loop, both canary choices/all prior combinations, continued attempts after injected recovery failure, no recovery before deployment. Full pinned TLA+/Alloy runner passed, including both recovery negative controls.",
+  "limits": "No production failure induced; ancestry assumes reviewed commits preserve auth contract. Model does not certify token validation or cloud availability. StoppedFleetSafe assumes successful compatible recovery commands; runtime cloud failures are recorded. Temporary mixed rollout/recovery intervals remain possible and are not certified safe by this model."
+}
