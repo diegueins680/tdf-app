@@ -12,15 +12,16 @@ import Data.Either (isLeft)
 import Data.Int (Int64)
 import Data.List (isInfixOf)
 import Data.Text (Text)
-import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool)
+import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool, toSqlKey, toPersistValue)
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Servant (Handler, ServerError, errHTTPCode, runHandler)
 import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.Config (AppConfig(..), loadConfig)
 import TDF.DB (Env(..))
+import qualified TDF.ModelsExtra as ME
 import qualified TDF.Routes.Courses as C
-import TDF.Server (createCourseRegistrationInScope)
+import TDF.Server (createCourseRegistrationInScope, courseEmailSentWithinLast24Hours)
 import qualified TDF.Server.CourseCheckout as Checkout
 
 spec :: Spec
@@ -56,6 +57,20 @@ spec = describe "course-identity-postgresql" $ do
         zipWith (-) after before `shouldBe` [1,1,1,1,1]
         submit pool "public-course" "course-concurrent-request" payload `shouldReturn` Right (head ids)
         snapshot pool `shouldReturn` after
+      it "allows each shared-email registration its own confirmation while suppressing its retries" $ \pool -> do
+        Right firstId <- submit pool "public-course" "course-confirmation-first" payload
+        Right secondId <- submit pool "public-course" "course-confirmation-second" payload
+        runSqlPool (rawExecute "INSERT INTO course_email_event(course_slug,registration_id,recipient_email,event_type,status,created_at) VALUES ('identity-test-course',?,'course-identity@example.test','registration_confirmation','sent',now())" [toPersistValue (toSqlKey firstId :: ME.CourseRegistrationId)]) pool
+        cfg <- loadConfig
+        let recent rid = runHandler $ runReaderT
+              (courseEmailSentWithinLast24Hours (toSqlKey rid) "course-identity@example.test") (Env pool cfg)
+        first <- recent firstId
+        second <- recent secondId
+        either (const False) id first `shouldBe` True
+        either (const True) id second `shouldBe` False
+        before <- scalar pool "SELECT count(*) FROM course_email_event"
+        submit pool "public-course" "course-confirmation-first" payload `shouldReturn` Right firstId
+        scalar pool "SELECT count(*) FROM course_email_event" `shouldReturn` before
       it "blocks changed accepted payloads without adding records" $ \pool -> do
         before <- snapshot pool
         submit pool "public-course" "course-concurrent-request" (payload { C.fullName = Just "Changed" }) `shouldReturn` Left 409
