@@ -1339,6 +1339,16 @@
       "reviewed": true
     },
     {
+      "id": "f9819fa4b81bdd8f3f21",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+      "reviewed": true
+    },
+    {
       "id": "915967d05f3593fea628",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -13794,6 +13804,69 @@
       "reviewed": true
     },
     {
+      "id": "60abc703b46c2eb74530",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing receipt states can bypass identity review, repeat side effects or lose rollback evidence.",
+      "justification": "These are persisted transaction receipt states for review, explicit separation, attestation, application and undo. They are a closed maintenance protocol, not an editable business catalog. Whole-group evidence and dependency revalidation guard execution; history and rollback guards preserve evidence.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "identity-reconciliation-2026-09-17",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
+        "values": [
+          "review",
+          "separate",
+          "confirmed",
+          "applied",
+          "reverted"
+        ],
+        "validation": "scripts/test-identity-reconciliation.sh",
+        "authoritativeModel": "identity_reconciliation_case.status"
+      }
+    },
+    {
+      "id": "3ad9915d69339318f9ff",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
+      "justification": "Reviewed 2026-09-18: AuthErrorCode union in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "reviewed": true
+    },
+    {
+      "id": "4b3f6f86992b9c64f7a3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
+      "justification": "Reviewed 2026-09-18: error.code translation switch in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "reviewed": true
+    },
+    {
+      "id": "3af2c7276922c616b2d7",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Ordered migration IDs and paths are deployment execution mechanics. The original 105 entries and applied SQL checksums remain unchanged. The final forward migration adds model-declared Party dependency and archive guards, including legacy reviewers and approvers without foreign keys. Introduction-commit ancestry remains enforced.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "identity-reconciliation-2026-09-17",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 106
+      }
+    },
+    {
       "id": "21babc54d68f0c44d55e",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -13859,36 +13932,6 @@
         "name": "notification.nTargetType",
         "valueCount": 9
       }
-    },
-    {
-      "id": "f9819fa4b81bdd8f3f21",
-      "classification": "dynamic-business-catalog",
-      "disposition": "retain-in-code",
-      "specializedModel": "navigation_item",
-      "priority": "P3-retain",
-      "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
-      "reviewed": true
-    },
-    {
-      "id": "3ad9915d69339318f9ff",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: AuthErrorCode union in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
-      "reviewed": true
-    },
-    {
-      "id": "4b3f6f86992b9c64f7a3",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: error.code translation switch in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
-      "reviewed": true
     }
   ]
 }

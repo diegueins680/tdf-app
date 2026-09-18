@@ -2006,6 +2006,16 @@ paths:
       summary: Create party
       description: Creates a person or organization in the CRM.
       operationId: createParty
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: Stable request key scoped to the authenticated actor. Reuse on retries with the same body; a changed body returns 409. Contact attributes never establish identity.
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 128
+            pattern: '^[A-Za-z0-9_-]+$'
       security:
         - bearerAuth: [ ]
       requestBody:

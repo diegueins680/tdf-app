@@ -15,7 +15,8 @@ const omitNullPartyUpdateFields = (body: PartyUpdate): PartyUpdate =>
 
 export const Parties = {
   list: () => get<PartyDTO[]>('/parties'),
-  create: (body: PartyCreate) => post<PartyDTO>('/parties', body),
+  create: (body: PartyCreate, requestKey?: string) => post<PartyDTO>('/parties', body,
+    requestKey ? { headers: { 'Idempotency-Key': requestKey } } : {}),
   getOne: (id: number) => get<PartyDTO>(`/parties/${requirePositiveInteger(id, 'id')}`),
   update: (id: number, body: PartyUpdate) =>
     put<PartyDTO>(`/parties/${requirePositiveInteger(id, 'id')}`, omitNullPartyUpdateFields(body)),

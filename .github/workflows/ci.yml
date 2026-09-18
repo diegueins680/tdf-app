@@ -145,6 +145,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        # Opt in to mobile; web hosts use .gitmodules' update=none default.
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
         with:
           submodules: recursive
 
@@ -240,11 +245,26 @@ jobs:
           createdb -h postgres -U postgres tdf_hq_merch_runtime_test
           ./scripts/test-artist-merch-runtime.sh
 
+      - name: Verify reversible identity reconciliation
+        env:
+          PGPASSWORD: postgres
+          TDF_IDENTITY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_identity_reconciliation_test
+        run: |
+          createdb -h postgres -U postgres tdf_identity_reconciliation_test
+          bash scripts/test-identity-reconciliation.sh
+          node --test scripts/__tests__/identity-reconciliation.test.mjs
+
       - name: Verify automatic migrations against the production schema
         env:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-automatic-migrations-production-schema.sh
+
+      - name: Verify contact HTTP concurrency, authorization, archival and rollback
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_IDENTITY_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: node scripts/__tests__/identity-http-runtime.mjs
 
       - name: Verify artist claim preparation concurrency and privacy
         env:
@@ -303,6 +323,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        # Opt in to mobile; web hosts use .gitmodules' update=none default.
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
         with:
           submodules: recursive
 

@@ -45,7 +45,7 @@ This is a monorepo containing three main applications:
 - Calendar integration
 - **Offline support**: Schedule viewing, package balances, and booking mutations work offline with automatic sync
 
-**Note:** This is a Git submodule. Run `git submodule update --init --recursive` after cloning.
+**Note:** This is a Git submodule. Run `git submodule update --init --checkout --recursive` after cloning.
 
 [→ Mobile Documentation](MOBILE_APP.md)
 
@@ -130,9 +130,9 @@ make logs    # View logs
 
 ## 📦 Submodules & Backups
 
-- `tdf-mobile/` is tracked as a Git submodule (Expo app). After cloning, run `git submodule update --init --recursive` (or clone with `--recursive`) so `tdf-mobile` pulls the correct commit.
+- `tdf-mobile/` is tracked as a Git submodule (Expo app). After cloning, run `git submodule update --init --checkout --recursive` so `tdf-mobile` pulls the correct commit.
 - Local UI snapshots live under `tdf-hq-ui.backup.*` and are ignored by Git. They are useful for experimentation but should never be committed or referenced by CI.
-- Any time the root repo is moved to a new machine or CI provider, repeat the submodule init step; otherwise builds that traverse the tree (Cloudflare/Vercel) will fail looking for `tdf-mobile`.
+- Mobile checkout is opt-in (`update = none` in `.gitmodules`). Web deployments (Cloudflare/Vercel) need only `tdf-hq-ui` and skip the mobile repository. Mobile development requires repository access and the explicit `--checkout` command above; `git clone --recursive` alone leaves mobile unpopulated.
 
 ## 📋 Project Structure
 
@@ -270,6 +270,8 @@ cd tdf-hq && stack build --copy-bins
 | **Vercel** | `tdf-hq-ui` | `npm install` | `npm run build` | `dist` | Framework preset: Vite. Same env vars as above. |
 
 > Tip: when deploying the UI, match the backend URL (`VITE_API_BASE`) with your API domain so CORS succeeds. For Cloudflare, the repo root stays `.` and the build script (`npm run build:ui`) emits the UI in `tdf-hq-ui/dist`.
+
+Cloudflare submodule authentication failures occur before the build command runs. The committed `.gitmodules` setting skips mobile during default recursive checkout. Deploy a commit containing this setting; retrying an older commit will still use its old configuration. GitHub Actions jobs that require mobile explicitly override this default. See [Git submodule update configuration](https://git-scm.com/docs/gitmodules).
 
 ## 🔐 Environment Variables
 

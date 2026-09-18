@@ -38,7 +38,7 @@
 - Seeding endpoint is for development only; remove/guard before release.
 
 ## Submodules & Backups
-- `tdf-mobile/` is a Git submodule. When cloning or pulling, run `git submodule update --init --recursive` so the Expo app is available locally and for CI. Deployments that inspect the tree (Cloudflare Pages, Vercel) will fail if the submodule isn’t initialized.
+- `tdf-mobile/` is a Git submodule. When cloning or pulling, run `git submodule update --init --checkout --recursive` so the Expo app is available locally and for CI. Mobile CI uses an explicit checkout; web deployments on Cloudflare Pages and Vercel omit the mobile repository.
 - UI snapshots such as `tdf-hq-ui.backup.*` are intentionally ignored in `.gitignore`. Treat them as personal sandboxes—never reference them from build scripts or CI.
 
 ## Deployment Runbooks

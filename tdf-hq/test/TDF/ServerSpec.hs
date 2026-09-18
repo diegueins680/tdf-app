@@ -1001,6 +1001,7 @@ spec = describe "TDF.Server helpers" $ do
                             runReaderT
                                 ( createParty
                                     (mkUser [Admin])
+                                    Nothing
                                     ( DTO.PartyCreate
                                         Nothing
                                         rawDisplayName
