@@ -11486,6 +11486,16 @@ components:
         thumbnailUrl:
           type: string
           format: uri
+        availability:
+          type: string
+          enum: [available, unavailable]
+          description: Absent when provider availability has not been verified.
+        availabilityReason:
+          type: string
+          description: Verified provider reason, independent of image loading failures.
+        verifiedAt:
+          type: string
+          format: date-time
         relationKind:
           type: string
         primary:

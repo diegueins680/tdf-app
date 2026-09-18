@@ -349,8 +349,8 @@ const artistImageFor = (artist: ArtistProfileDTO, index: number, recordsImages: 
   FALLBACK_ARTIST_IMAGE.url;
 
 const primaryRecordsImage = (resources: RecordsResourceDTO[]): string | null =>
-  resources.find((resource) => resource.primary && resource.thumbnailUrl)?.thumbnailUrl ??
-  resources.find((resource) => resource.thumbnailUrl)?.thumbnailUrl ??
+  resources.find((resource) => resource.primary && resource.availability !== 'unavailable' && resource.thumbnailUrl)?.thumbnailUrl ??
+  resources.find((resource) => resource.availability !== 'unavailable' && resource.thumbnailUrl)?.thumbnailUrl ??
   null;
 
 const artistSummaryFor = (artist: ArtistProfileDTO) => {
