@@ -1,0 +1,41 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: all concurrent first visits succeed
++ actual - expected
+... Skipped lines
+
+  [
++   500,
+    200,
+    200,
+    200,
+    200,
+    200,
+...
+    200,
+-   200
+  ]
+
+    at file:///Users/diegosaa/GitHub/tdf-app-ux-navigation/scripts/__tests__/navigation-http-runtime.mjs:86:10
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    500, 200, 200, 200,
+    200, 200, 200, 200,
+    200, 200, 200, 200,
+    200, 200, 200, 200
+  ],
+  expected: [
+    200, 200, 200, 200,
+    200, 200, 200, 200,
+    200, 200, 200, 200,
+    200, 200, 200, 200
+  ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.8.0

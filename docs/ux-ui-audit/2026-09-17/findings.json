@@ -1264,5 +1264,52 @@
     "verificationStatus": "Hosted validate/Datadog PASS;83suites486cases plus final12 focused cases, TypeScript, lint, release checks PASS. Corrected EAS simulator4696e1b9 FINISHED; actual artifact execution pending.",
     "mergeStatus": "mobile PR101draft; parent not merged",
     "releaseStatus": "not deployed or published"
+  },
+  {
+    "id": "UX-260917-031",
+    "kind": "confirmed",
+    "title": "Concurrent first navigation visits fail with HTTP500",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "authorized navigation / recent destinations / multiple tabs",
+    "roles": "all authorized accounts; observed Maintenance",
+    "surface": "POST /navigation/preferences/{featureId}/visit",
+    "evidence": "Initial actual isolated Maintenance crawl /pipelines at320px returned500. Backend log23505 names feature_navigation_preferences_party_feature_unique. Controlled PostgreSQL EXCLUSIVE-lock regression lets two initial reads see no row; old handler returns500 among16 requests. Only synthetic local data used.",
+    "userImpact": "Recent-destination persistence can fail when tabs or redirects record the first visit concurrently.",
+    "rootCause": "recordVisit performs getBy then insert without a conflict-safe write.",
+    "proposedChange": "Atomic unique-key upsert creates one row and increments count without overwriting favorites or pin settings.",
+    "dependencies": [],
+    "acceptanceCriteria": "16 controlled concurrent first visits all200, one row/count16; concurrent settings plus8 visits preserve settings/count24; other account count starts1; denied/revoked requests write nothing.",
+    "verificationMethod": "Actual executable HTTP/PostgreSQL controlled interleaving, TLC finite-state concurrency model with legacy negative control.",
+    "status": "in progress",
+    "implementationStatus": "Atomic upsert implemented in isolated branch audit/ux-navigation-concurrency-20260918; build pending. No schema/API changes.",
+    "verificationStatus": "Hosted corrected binary passed controlled16 concurrent first visits, exact1:16 count and second-account isolation. The subsequent settings PUT failed400, revealing UX034 wire mismatch. Full HTTP gate remains pending after correction; previous TLC33generated/16distinct and unsafe35distinct counterexample remain applicable, unchanged model.",
+    "mergeStatus": "not merged",
+    "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-034",
+    "kind": "confirmed",
+    "title": "Navigation favorites and pins reject the published web payload",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "authorized return visit / favorite and pin navigation",
+    "roles": "authorized web users",
+    "surface": "NavigationPreferenceUpdate JSON decoder / navigationPreferences web client",
+    "evidence": "Hosted actual HTTP/PG gate35315995605 line90 returns400 for favorite/pinned/pinOrder; isolated actual HTTP repeat also400 with unknown fields. Web and OpenAPI use these unprefixed keys; generic strict decoder previously required npu-prefixed names.",
+    "userImpact": "Users cannot persist navigation favorites and pins through the supported web client.",
+    "rootCause": "Missing dtoCamelDrop3 in strict NavigationPreferenceUpdate FromJSON.",
+    "proposedChange": "Accept canonical unprefixed fields and retain strict legacy-prefixed decoding; reject mixed/unknown fields.",
+    "dependencies": [
+      "UX-260917-031",
+      "PR #432"
+    ],
+    "acceptanceCriteria": "Canonical and prior prefixed payloads persist the same preferences; mixed/unknown fields rejected, account authority unchanged; concurrent visits preserve settings and exact counts.",
+    "verificationMethod": "Generated JSON roundtrip property, explicit negative decode cases and actual HTTP/PostgreSQL mixed visit/settings gate. Existing NavigationVisit CountsMatchAccepted/SettingsPreserved model maps to upsert update lists; model scope does not prove arbitrary decoding.",
+    "status": "implemented",
+    "implementationStatus": "Strict canonical decoder with legacy fallback in TDF.DTO; no schema/API schema change.",
+    "verificationStatus": "Before failure confirmed by actual400. Corrected decoder unit/generative and full hosted HTTP execution pending; node syntax and diff checks pass.",
+    "mergeStatus": "not merged",
+    "releaseStatus": "not deployed"
   }
 ]
