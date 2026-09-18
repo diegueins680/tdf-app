@@ -81,21 +81,22 @@ ignore accepted receipts and repeat creation or account grants, so an empty-tabl
 permits falling back to it. The same mixed-fleet recovery lane upgrades untouched incompatible
 replicas after a canary failure and records incomplete recovery.
 
-For the first combined release, the separately built recovery candidate is
-`bdd9e24bddaaa96e2da72d75041b1e1b20236e04`. It preserves all 113 migrations and the identity
-writer contracts, and its backend, PostgreSQL and browser checks passed. Its image must finish
-the existing Build Image workflow and resolve to an immutable digest before preflight can
-accept `--recovery-sha`. It predates the registration-specific confirmation-email throttle fix;
-if recovery is used, inspect skipped acknowledgements for separate attendees sharing an email.
-Do not resend blindly. Both source commits must be incorporated into protected main before
-production execution. Schema and operation-specific merge undo remain separate from application
-recovery; never discard provider bindings, accepted receipts, or later unrelated edits.
+For the combined release, the verified recovery candidate is
+`98a561a9446a1c51e627f6ad5a48737fe5122d85` (Build Image run 35370722046).
+It preserves all 113 migrations and the identity writer contracts, including the
+registration-specific confirmation-email throttle. Its backend, PostgreSQL,
+browser and image checks passed. It predates the mail delivery observability
+changes in main; if recovery is used, investigate delivery with the existing mail
+logs rather than assuming the newer message headers are available. Do not resend
+blindly or discard provider bindings, accepted receipts, or unrelated edits.
 
-For the pinned `98a561a9446a1c51e627f6ad5a48737fe5122d85` application release,
-use a clean checkout of the reviewed runner-only commit
-`9fd718923895f331b505ea8850a0b525be4b8039`, after its inclusion in protected main.
-Its only difference from the application target is `scripts/production-release.mjs`,
-which satisfies the existing release checkout guard. Run `plan`, then `preflight`,
-then `release` with that target and the compatible recovery SHA above. The final
-documentation/test commit is not a supported checkout for releasing this older
-pinned application target. Do not widen the checkout allowlist to bypass this guard.
+The application target `7635a5f325b9f08e129498317fecd606dfd36dc6` includes the
+mail changes and must pass the existing Build Image workflow and staging checks.
+Use clean runner-only checkout `a72374b94a082320ac68737cdd21936fef90bd9a`, after
+its inclusion in protected main. Its only difference from the application target
+is `scripts/production-release.mjs`, satisfying the existing checkout guard.
+Run `plan`, then `preflight`, then `release` with the target and recovery SHA above.
+The final documentation/test checkout is not supported for releasing this older
+pinned application target. Do not widen the checkout allowlist. Both images must
+resolve to verified immutable digests before production execution. Operation-specific
+merge undo remains separate from application recovery.
