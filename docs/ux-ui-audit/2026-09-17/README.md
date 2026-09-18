@@ -5,7 +5,7 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
-## Checkpoint verificado — 2026-09-18 18:34 UTC
+## Checkpoint verificado — 2026-09-18 18:58 UTC
 
 Este bloque sustituye los estados históricos inferiores. #450 está fusionado como
 `3f0a56c0ded55fa9525dc80c895505ffcb069449`. Cloudflare `8f01e9e1` y la web pública
@@ -13,13 +13,17 @@ coincidieron; seis casos reales en tres motores verificaron Marketplace con
 almacenamiento denegado, búsqueda y recarga, sin errores ni infracciones axe.
 UX007 queda desplegado. [Evidencia y límites](evidence/marketplace-storage-deployment.json).
 
-La API continúa en `e1a825bda26dbb16b1c732e551cc4880d5626943` (comprobación
-18:09 UTC). El release guardado terminó a las 16:02 UTC: 110 migraciones, dos
-máquinas saludables y lease liberado. La recuperación conserva la imagen compatible
-`5c11577a5` y el snapshot `vs_LRqNAqabQP5Upg7NwLqaVPX`; no se deben restaurar
-binarios antiguos de autenticación ni borrar migraciones.
-[Recibo](evidence/release-e1-verification.json). El intermedio #436 de otro operador
-no debe desplegarse por separado; su integración final tiene coordinación propia.
+La API pública devuelve `ab9bbacc9da845b6bfe70ac3fda2ace44f17c918` y
+salud/DB correctas a las 18:53 UTC, después del release independiente de correo.
+[Observación de sólo lectura](evidence/current-api-mail-release.json). El release UX
+anterior `e1a825bda` terminó a las 16:02 UTC con 110 migraciones y dos máquinas
+saludables; su [recibo](evidence/release-e1-verification.json) sigue siendo histórico.
+El operador de correo registra finalización a las 18:45 UTC, snapshot
+`vs_RzLjpLR7DqVsLLZkDZJyV4` y recuperación compatible `e1a825bda`.
+Antes de otra mutación, renovar el lease y consultar su registro de release;
+no restaurar `e1` sin causa ni binarios antiguos de autenticación, ni borrar migraciones.
+#439 ya está fusionado en `7635a5f`, pero su despliegue corresponde a ese operador.
+Este parent móvil/documental no requiere desplegar el backend.
 
 **GitHub Actions gratuito produce iOS firmado.** Los workflows móviles #105–114
 están fusionados hasta `2a0e5a99535d9ef199a3e3464a660192f882f72b`. Se utilizan
@@ -63,7 +67,7 @@ las etiquetas iOS fuera de la barra para permitir su altura completa. Pasaron
 510 pruebas, los gates de CI y siete casos focalizados; las imágenes y el árbol
 accesible del simulador muestran cinco pestañas y ningún auxiliar expuesto.
 En Samsung, el prototipo QA mantiene completas las etiquetas a 1×/2×; se restauró
-la preferencia original. Ese prototipo verifica presentación, no autenticación.
+la preferencia original. La primera ejecución de ese prototipo sólo verificó presentación; la comprobación posterior de sesión se distingue abajo.
 El APK aislado completo 46b1 sí pasó acceso, seguimiento persistente y sesión al
 reabrir en Samsung. [Recibo](evidence/android-physical-46b1.json).
 El Samsung volvió por ADB a las 18:29 UTC. La comprobación del APK QA instalado
@@ -73,7 +77,8 @@ se restauró font_scale1.0 y la instalación personal permanece idéntica.
 [Comprobación adicional](evidence/android-reconnect-verification.json). El
 simulador temporal de esta auditoría se eliminó después de conservar su evidencia
 para resolver la falta de espacio que interrumpió la primera descarga Android17. Sigue
-faltando el iPhone físico para Google OAuth y no se acredita lectura humana con
+faltando el iPhone físico para Google OAuth: el usuario confirma que no dispone de uno.
+La publicación iOS permanece MANUAL. No se acredita lectura humana con
 VoiceOver/TalkBack ni rendimiento de campo.
 
 El parent #454 prepara el pin `2a0e5a9`, con contratos generados idénticos a `90ca`
@@ -82,9 +87,31 @@ production/store usen GitHub y elimina el número iOS usado que estaba prellenad
 Las diferencias posteriores a las fuentes de ambos binarios sólo afectan workflows,
 documentación y scripts npm; código de app, nativo, dependencias y metadatos de
 ejecución son idénticos. [Comparación](evidence/mobile-artifact-pin-equivalence.json).
-El parent aún no está fusionado.
-Siguiente acción: verificar el envío de Android 17 y las revisiones de tiendas,
-actualizar este checkpoint y completar su revisión independiente.
+El parent aún no está fusionado. Integra `main` hasta `7635a5f` preservando su
+ancestría. La regeneración contra el contrato actual no modifica los tipos móviles,
+que ya contenían las adiciones de clases; coinciden con web y pasa release:check.
+[Recibo de regeneración](evidence/current-contract-parity.json).
+No hace falta otro build móvil por esta conciliación documental/de contratos.
+Se sincronizaron los estados obsoletos de los hallazgos y las páginas estáticas;
+[la evidencia histórica](evidence/status-reconciliation.json) conserva lo sustituido.
+El head anterior `b22d3e99b` completó CI (2.193 pruebas web, 510 móviles,
+recorridos persona, contratos y catálogo) y Cloudflare. Vercel rechazó su preview
+opcional por cuota diaria; no se cuenta como aprobado ni se altera el control.
+La eliminación del token en la URL de recuperación pasó en tres motores contra
+producción sin envío de formulario; no se observaron eventos de analítica, por lo
+que su privacidad autenticada sigue pendiente. [Límites](evidence/production-reset-privacy.json).
+El cambio de cuenta con cierre de sesión en la misma pestaña pasó en tres motores
+con cuentas/API/PostgreSQL aislados y borradores sintéticos: sin datos heredados y
+sesión nula confirmada. [Recibo](evidence/shared-tab-account-privacy.json).
+El nuevo head deberá completar sus propios gates y revisión independiente.
+Siguiente acción: cerrar las dos observaciones de revisión, completar los gates y
+la aprobación del parent #454, fusionarlo y verificar su despliegue web automático.
+En tiendas, comprobar el resultado de revisión de Android 17 y su disponibilidad
+para testers, y la revisión de iOS 25 manteniendo el bloqueo de publicación física.
+Las comprobaciones actuales de [Apple](evidence/ios25-review-recheck.json) y
+[Play Console](evidence/android17-review-recheck.json) mantienen esos estados.
+Los envíos ya completados no deben repetirse. La inscripción de diez testers
+adicionales y los catorce días efectivos requieren participación humana real.
 La auditoría integral conserva 69 hallazgos y 412 filas; continúa pendiente la
 cobertura de recursos poblados, combinaciones de roles, estados, lectores y
 plataformas indicados en coverage.csv. Inventario y pruebas parciales no equivalen
