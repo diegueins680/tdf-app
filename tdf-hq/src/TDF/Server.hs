@@ -9286,7 +9286,7 @@ createParty user requestKey req = do
         [Single pid] -> getEntity (toSqlKey pid)
         _ -> pure Nothing
   case result of
-    Left (sqlError :: SqlError)
+    Left sqlError
       | sqlState sqlError `elem` ["22023", "55000"] ->
           throwError err409 { errBody = "This contact request has changed or was archived. Review the contact before retrying." }
       | otherwise -> throwError err500 { errBody = "Contact creation failed" }

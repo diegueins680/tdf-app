@@ -27,6 +27,8 @@ credentials, contact attributes or proof documents into PRs, Git or general repo
 Use the existing Fly database access workflow with `scripts/identity-reconciliation.mjs`:
 
 ```sh
+node scripts/identity-reconciliation.mjs --command inventory \
+  --db-app APP --database DATABASE --output /private/path/inventory.json
 node scripts/identity-reconciliation.mjs --command summary --inventory /private/path/inventory.json
 node scripts/identity-reconciliation.mjs --command queue --inventory /private/path/inventory.json \
   --db-app APP --database DATABASE --output /private/path/queue.json
@@ -46,6 +48,11 @@ ordered Party snapshots, and an evidence object containing:
 - `evidence_reference`: an access-controlled reference to the actual verified evidence;
 - `member_ids`: the complete ascending set of Party IDs covered by that assertion;
 - `external_reference_review`: `no-unresolved-references`, only after inspecting non-scalar and external dependencies.
+
+Apply the documented decision with `--command review --case CASE_UUID --decision-file PRIVATE_JSON`
+and the same database/output arguments. The decision file includes `status`, `reviewer_party_id`,
+`reason`, `evidence`, and `expected_fingerprint` from a fresh dry run. It locks the member rows and
+rejects stale review evidence. A confirmed decision still cannot bypass execution blockers.
 
 These are operator attestations, not cryptographically verified documents. Do not manufacture
 proof by copying shared contact fields into the subject. Missing authoritative proof remains a
