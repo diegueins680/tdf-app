@@ -695,15 +695,17 @@ for (const locale of ['es', 'en']) {
     await page.goto('/reset?redirect=%2Ffans');
     await expect(page.getByRole('heading', { name: en ? 'Incomplete link' : 'Enlace incompleto' })).toBeVisible();
     const recovery = page.getByRole('link', { name: en ? 'Request a new link' : 'Solicitar nuevo enlace', exact: true });
-    await expect(recovery).toHaveAttribute('href', '/login?redirect=%2Ffans&recover=1');
+    await expect(recovery).toHaveAttribute('href', `/login?redirect=%2Ffans&recover=1&lang=${locale}`);
     await expectNoSeriousAxeViolations(page, testInfo);
     await recovery.click();
     const dialog = page.getByRole('dialog', { name: en ? 'Recover access' : 'Recuperar acceso' });
     await expect(dialog).toBeVisible();
     await expect(page).toHaveURL(/redirect=%2Ffans&recover=1/);
     let requestedDestination;
+    let requestedLocale;
     await page.route(/\/v1\/password-reset(?:\?.*)?$/, route => {
       requestedDestination = new URL(route.request().url()).searchParams.get('redirect');
+      requestedLocale = new URL(route.request().url()).searchParams.get('locale');
       expect(route.request().postDataJSON()).toEqual({ email: 'locale@persona.test' });
       return route.abort('failed');
     });
@@ -713,6 +715,7 @@ for (const locale of ['es', 'en']) {
     await expect(dialog.getByRole('alert')).toContainText(en ? 'Check your connection and try again' : 'Revisa tu conexión e inténtalo de nuevo');
     await expect(email).toHaveValue('locale@persona.test');
     expect(requestedDestination).toBe('/fans');
+    expect(requestedLocale).toBe(locale);
     await expect(page.locator('#root')).toHaveAttribute('aria-hidden', 'true');
     await expect(dialog).toHaveAttribute('aria-modal', 'true');
     for (let step = 0; step < 5; step += 1) {
@@ -725,7 +728,7 @@ for (const locale of ['es', 'en']) {
     await page.screenshot({ path: testInfo.outputPath(`recovery-${locale}.png`), fullPage: true });
     await dialog.getByRole('button', { name: en ? 'Close' : 'Cerrar', exact: true }).click();
     await expect(dialog).not.toBeVisible();
-    await expect(page).toHaveURL(/\/login\?redirect=%2Ffans$/);
+    await expect(page).toHaveURL(new RegExp(`/login\\?redirect=%2Ffans&lang=${locale}$`));
     await expect(page.locator('#root')).not.toHaveAttribute('aria-hidden', 'true');
     await expectNoSeriousAxeViolations(page, testInfo);
   });
