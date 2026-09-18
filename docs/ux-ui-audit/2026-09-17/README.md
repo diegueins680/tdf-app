@@ -481,3 +481,10 @@ actual PostgreSQL concurrency evidence. Pre-integration build/Hspec2578(0fail,1P
 pending), HTTP/PG,65release controls and full formal runner pass. Post-integration
 checks, mobile companion merge, root review/merge and guarded paused deployment
 remain outstanding. This finding is not accepted or released yet.
+
+Mobile companion#98 passed validate/Datadog and merged after a fresh thread/head/base
+check. Parent intentionally pins published/tested34971c451d443fd4805d91f57ac310a732497dd8,
+which adds only generated experiment declarations to notification main5faeeed; it
+does not import the separate provider-linking#97 runtime merely to obtain these types.
+TypeScript43native tests and offline Metro pass; this declarations-only change does
+not require rebuilding signed binaries. Store review/publication remains separate.
