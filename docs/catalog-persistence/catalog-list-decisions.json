@@ -13848,7 +13848,7 @@
       "id": "60abc703b46c2eb74530",
       "classification": "genuine-technical-constant",
       "disposition": "retain-authoritative-schema",
-      "specializedModel": "identity_reconciliation_case.status",
+      "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Changing receipt states can bypass identity review, repeat side effects or lose rollback evidence.",
       "justification": "These are persisted transaction receipt states for review, explicit separation, attestation, application and undo. They are a closed maintenance protocol, not an editable business catalog. Whole-group evidence and dependency revalidation guard execution; history and rollback guards preserve evidence.",
@@ -13864,7 +13864,8 @@
           "applied",
           "reverted"
         ],
-        "validation": "scripts/test-identity-reconciliation.sh"
+        "validation": "scripts/test-identity-reconciliation.sh",
+        "authoritativeModel": "identity_reconciliation_case.status"
       }
     }
   ]
