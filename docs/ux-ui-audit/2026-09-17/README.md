@@ -839,3 +839,15 @@ Checkpoint 2026-09-18 07:56 UTC (supersedes earlier store next actions):
 Next: verify mobile#102 actual Android/iOS cold-start evidence, integrate only the already-required provider contract/tab fixes/cold-start repair, qualify and publish that source before advancing the parent gitlink; rerun affected gates and obtain any exact-head approval required by protection. #432 corrected HTTP/generative CI is still running; its9213 independent approval is current. Continue isolated native progress verification when host storage permits.
 
 Additional initial coverage:92 missing-resource public arrivals across23 parameterized routes, ES/EN and320/1280px, completed against the actual isolated backend and dabb production bundle. No axe violations, horizontal overflow, page errors or HTTP5xx were observed. Evidence public-dynamic-missing-runtime.json; populated resources/actions, complete copy translation and other state combinations remain separate.
+
+Historical navigation gate note:
+Navigation HTTP gate35315995605 passed all16 controlled concurrent visits and
+second-account isolation, then failed400 on settings. This confirmed UX034:
+web/OpenAPI send favorite/pinned/pinOrder but the decoder accepted only npu-prefixed
+record names. The successor accepts both strict schemas, rejects mixed/unknown
+keys, and adds generated roundtrips plus actual HTTP compatibility/authority cases.
+Full corrected HTTP gate is pending; no merge/release claim. NavigationVisit model
+and its meaningful unsafe counterexample are unchanged; new wire tests connect the
+existing SettingsPreserved property to the actual handler.
+
+Current navigation status: #432 merged5c11577a5d31f079b3e070a7810a6b04a48d99f4 at08:06:26UTC after exact9213 approval/all gates. Corrected actual HTTP/PostgreSQL and generated schema tests pass. Build Image35322697541 pending; release blocked until provider-identity recovery cannot restore an email-authorizing legacy binary. No production mutation by this increment.

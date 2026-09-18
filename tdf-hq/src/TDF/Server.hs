@@ -3877,28 +3877,24 @@ navigationPreferencesServer user =
       now <- liftIO getCurrentTime
       let featureIdValue = registryFeatureId feature
           unique = ME.UniqueFeatureNavigationPreference (auPartyId user) featureIdValue
-      entity <- runDB $ do
-        existing <- getBy unique
-        case existing of
-          Nothing -> do
-            preferenceId <- insert ME.FeatureNavigationPreference
-              { ME.featureNavigationPreferencePartyId = auPartyId user
-              , ME.featureNavigationPreferenceFeatureId = featureIdValue
-              , ME.featureNavigationPreferenceFavorite = False
-              , ME.featureNavigationPreferencePinned = False
-              , ME.featureNavigationPreferencePinOrder = Nothing
-              , ME.featureNavigationPreferenceLastVisitedAt = Just now
-              , ME.featureNavigationPreferenceUseCount = 1
-              , ME.featureNavigationPreferenceUpdatedAt = now
-              }
-            getJustEntity preferenceId
-          Just (Entity preferenceId _) -> do
-            update preferenceId
-              [ ME.FeatureNavigationPreferenceLastVisitedAt =. Just now
-              , ME.FeatureNavigationPreferenceUseCount +=. 1
-              , ME.FeatureNavigationPreferenceUpdatedAt =. now
-              ]
-            getJustEntity preferenceId
+      -- A first visit may arrive concurrently from multiple tabs or devices.
+      -- The unique-key upsert creates once and increments under the DB row lock;
+      -- visit tracking never overwrites the account's favorites or pin settings.
+      entity <- runDB $ upsertBy unique
+        ME.FeatureNavigationPreference
+          { ME.featureNavigationPreferencePartyId = auPartyId user
+          , ME.featureNavigationPreferenceFeatureId = featureIdValue
+          , ME.featureNavigationPreferenceFavorite = False
+          , ME.featureNavigationPreferencePinned = False
+          , ME.featureNavigationPreferencePinOrder = Nothing
+          , ME.featureNavigationPreferenceLastVisitedAt = Just now
+          , ME.featureNavigationPreferenceUseCount = 1
+          , ME.featureNavigationPreferenceUpdatedAt = now
+          }
+        [ ME.FeatureNavigationPreferenceLastVisitedAt =. Just now
+        , ME.FeatureNavigationPreferenceUseCount +=. 1
+        , ME.FeatureNavigationPreferenceUpdatedAt =. now
+        ]
       pure (navigationPreferenceToDTO entity)
 
     visiblePreference modules entity@(Entity _ preferenceValue) = do
