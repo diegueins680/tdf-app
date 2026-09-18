@@ -6605,6 +6605,8 @@ createCourseRegistrationInScope :: Text -> Text -> Maybe Text -> CourseRegistrat
 createCourseRegistrationInScope namespace rawSlug mRequestKey payload@CourseRegistrationRequest{..} = do
   requestKey <- either (throwError . marketplaceCheckoutBadRequest) pure $
     ServiceStorefront.validateIdempotencyKey mRequestKey
+  unless (T.all (\ch -> ch <= '\x7f' && (isAlphaNum ch || ch == '-' || ch == '_')) requestKey) $
+    throwBadRequest "Course Idempotency-Key must contain only ASCII letters, digits, hyphens or underscores"
   metaRaw <- loadCourseMetadata rawSlug
   let Courses.CourseMetadata{ Courses.slug = metaSlug
                             , Courses.sessions = metaSessions
@@ -6638,6 +6640,10 @@ createCourseRegistrationInScope namespace rawSlug mRequestKey payload@CourseRegi
       [(Single existingId, Single True, Single existingStatus)] -> pure (toSqlKey existingId, existingStatus, False)
       [(_, Single False, _)] -> liftIO $ throwIO err409 { errBody = "This registration changed after an earlier send. Review the saved registration before starting another submission." }
       [] -> do
+          when (namespace == "public-course") $ do
+            existingCheckout <- rawSql "SELECT registration_id FROM course_registration_checkout_runtime WHERE create_idempotency_key=?"
+              [PersistText requestKey] :: SqlPersistT IO [Single Int64]
+            unless (null existingCheckout) $ liftIO $ throwIO err409 { errBody = "A checkout already exists for this request. Retry to load its saved result." }
           either (liftIO . throwIO) pure $ validateCourseRegistrationSeatAvailability metaRemaining Nothing
           partyResult <- ensurePartyForCourseRegistrationDb nameClean normalizedEmail phoneClean now
           partyId <- either (liftIO . throwIO) pure partyResult

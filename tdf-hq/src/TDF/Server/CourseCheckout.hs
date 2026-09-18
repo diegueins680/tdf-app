@@ -25,7 +25,7 @@ import qualified Data.ByteArray.Encoding as BAE
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isAlphaNum, isAscii, isControl, isSpace)
 import           Data.Int (Int64)
-import           Data.Maybe (fromMaybe)
+import           Data.Maybe (fromMaybe, isNothing)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -258,15 +258,54 @@ createCourseCheckoutRegistration
   -> Courses.CourseRegistrationRequest
   -> AppM Courses.CourseCheckoutResponse
 createCourseCheckoutRegistration legacyRegistration rawSlug mIdempotency request = do
+  slugVal <- either throwError pure (normalizeSlug rawSlug)
+  key <- either (throwError . badRequestError) pure $
+    ServiceStorefront.validateIdempotencyKey mIdempotency
+  savedResult <- runDB (lookupCourseSourceReceipt slugVal key (TE.decodeUtf8 (BL.toStrict (encode request))))
+  saved <- either throwError pure savedResult
+  case saved of
+    Just registrationKey -> loadCourseSourceResponse slugVal key registrationKey
+    Nothing -> createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug (Just key) request
+
+lookupCourseSourceReceipt :: Text -> Text -> Text -> SqlPersistT IO (Either ServerError (Maybe ME.CourseRegistrationId))
+lookupCourseSourceReceipt slugVal key payload = do
+  rows <- (rawSql "SELECT registration_id, request_payload=?::jsonb FROM identity_course_registration_request WHERE request_scope=? AND request_key=?"
+    [PersistText payload, PersistText ("public-course:" <> slugVal), PersistText key]
+    :: SqlPersistT IO [(Single Int64, Single Bool)])
+  case rows of
+    [(Single registrationId, Single True)] -> pure (Right (Just (toSqlKey registrationId)))
+    [(_, Single False)] -> pure (Left (conflictError "This registration request was already saved with different details"))
+    [] -> pure (Right Nothing)
+    _ -> pure (Left (internalError "Course request identity requires review"))
+
+loadCourseSourceResponse :: Text -> Text -> ME.CourseRegistrationId -> AppM Courses.CourseCheckoutResponse
+loadCourseSourceResponse slugVal key registrationKey = do
+  runtime <- runDB (loadCourseCheckoutRuntimeView registrationKey)
+  case runtime of
+    Just _ -> loadCourseCheckoutDTO registrationKey (Just (sha256Text ("course-order-lookup:" <> key)))
+    Nothing -> do
+      registration <- runDB (get registrationKey) >>= maybe (throwError err404) pure
+      pure $ courseCheckoutUnavailableResponse slugVal
+        (Courses.CourseRegistrationResponse (fromSqlKey registrationKey) (ME.courseRegistrationStatus registration))
+
+createCourseCheckoutRegistrationUnrecorded
+  :: (Text -> Maybe Text -> Courses.CourseRegistrationRequest -> AppM Courses.CourseRegistrationResponse)
+  -> Text
+  -> Maybe Text
+  -> Courses.CourseRegistrationRequest
+  -> AppM Courses.CourseCheckoutResponse
+createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempotency request = do
   let Courses.CourseRegistrationRequest
         _ _ _ registrationSource _ registrationUtm _ = request
   slugVal <- either throwError pure (normalizeSlug rawSlug)
   checkoutEnvironment <- loadCheckoutEnvironment
   domainEnabled <- runDB $
     Checkout.domainEnabledForEnvironment checkoutEnvironment "courses"
-  if not domainEnabled
-    then courseCheckoutUnavailableResponse slugVal
-      <$> legacyRegistration rawSlug mIdempotency request
+  existingCheckout <- maybe (pure Nothing) lookupCourseCheckoutIdempotency mIdempotency
+  if not domainEnabled && isNothing existingCheckout
+    then do
+      saved <- legacyRegistration rawSlug mIdempotency request
+      loadCourseSourceResponse slugVal (fromMaybe "" mIdempotency) (toSqlKey (Courses.id saved))
     else do
       unless (Courses.termsAccepted request == Just True) $
         throwError (badRequestError
@@ -328,13 +367,15 @@ createCourseCheckoutRegistration legacyRegistration rawSlug mIdempotency request
           | otherwise -> throwError (conflictError
               "Idempotency key was already used for a different course checkout")
         Nothing -> do
+          unless (T.all (\ch -> isAscii ch && (isAlphaNum ch || ch == '-' || ch == '_')) idempotencyKey) $
+            throwError (badRequestError "Course Idempotency-Key must contain only ASCII letters, digits, hyphens or underscores")
           result <- createCourseCheckoutTransaction
             checkoutEnvironment now holdExpiresAt idempotencyKey requestHash
-            lookupHash buyerName buyerEmail buyerPhone sourceClean howHeardClean
+            lookupHash (TE.decodeUtf8 (BL.toStrict (encode request))) buyerName buyerEmail buyerPhone sourceClean howHeardClean
             utmSourceVal utmMediumVal utmCampaignVal utmContentVal
             courseEntity policy price
           registrationKey <- either throwError pure result
-          loadCourseCheckoutDTO registrationKey (Just lookupToken)
+          loadCourseSourceResponse slugVal idempotencyKey registrationKey
   where
     cleanUtm fieldName = normalizeOptionalText fieldName 256
 
@@ -362,6 +403,7 @@ createCourseCheckoutTransaction
   -> Text
   -> Text
   -> Text
+  -> Text
   -> Maybe Text
   -> Text
   -> Maybe Text
@@ -374,7 +416,7 @@ createCourseCheckoutTransaction
   -> CourseDomain.CoursePriceBreakdown
   -> AppM (Either ServerError ME.CourseRegistrationId)
 createCourseCheckoutTransaction
-    checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
+    checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash requestPayload
     buyerName buyerEmail buyerPhone sourceClean howHeardClean
     utmSourceVal utmMediumVal utmCampaignVal utmContentVal
     (Entity courseKey course) policy price = do
@@ -392,6 +434,13 @@ createCourseCheckoutTransaction
         _ -> liftIO (throwIO exception)
   where
     transactionBody = do
+      _ <- (rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+        [PersistText ("public-course:" <> Trials.courseSlug course <> ":" <> idempotencyKey)] :: SqlPersistT IO [Single Int64])
+      saved <- lookupCourseSourceReceipt (Trials.courseSlug course) idempotencyKey requestPayload
+      case saved of
+        Left err -> pure (Left err)
+        Right prior -> maybe lookupOrCreate (pure . Right) prior
+    lookupOrCreate = do
       _ <- (rawSql
         "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
         [PersistText ("course-checkout:" <> idempotencyKey)]
@@ -418,43 +467,27 @@ createCourseCheckoutTransaction
       _ <- (rawSql "SELECT course_checkout_expire_holds(?, ?)"
         [PersistUTCTime now, toPersistValue courseKey]
         :: SqlPersistT IO [Single Int])
-      duplicates <- (rawSql
-        "SELECT registration.id\
-        \ FROM course_registration registration\
-        \ JOIN course_registration_checkout_runtime runtime\
-        \   ON runtime.registration_id = registration.id\
-        \ WHERE runtime.course_id = ? AND lower(registration.email) = lower(?)\
-        \ AND runtime.enrollment_status IN (\
-        \   'seat_held','enrolled','transfer_requested','completed'\
-        \ ) AND (runtime.enrollment_status <> 'seat_held' OR runtime.hold_expires_at > ?)\
-        \ LIMIT 1"
-        [toPersistValue courseKey, PersistText buyerEmail, PersistUTCTime now]
-        :: SqlPersistT IO [Single Int64])
-      if not (null duplicates)
-        then pure (Left (conflictError
-          "This attendee already has an active seat or enrollment for the course"))
-        else do
-          occupiedRows <- (rawSql
-            "SELECT (\
-            \ SELECT count(*) FROM course_registration_checkout_runtime runtime\
-            \ WHERE runtime.course_id = ? AND (\
-            \   runtime.enrollment_status IN ('enrolled','transfer_requested','completed')\
-            \   OR (runtime.enrollment_status = 'seat_held' AND runtime.hold_expires_at > ?)\
-            \ )) + (\
-            \ SELECT count(*) FROM course_registration registration\
-            \ WHERE registration.course_slug = ? AND registration.status = 'paid'\
-            \ AND NOT EXISTS (SELECT 1 FROM course_registration_checkout_runtime runtime\
-            \   WHERE runtime.registration_id = registration.id))"
-            [ toPersistValue courseKey
-            , PersistUTCTime now
-            , PersistText (Trials.courseSlug course)
-            ] :: SqlPersistT IO [Single Int64])
-          let occupied = case occupiedRows of
-                [Single value] -> value
-                _ -> fromIntegral (Trials.courseCapacity course)
-          if occupied >= fromIntegral (Trials.courseCapacity course)
-            then pure (Left (conflictError "No course seats remain"))
-            else createRegistration
+      occupiedRows <- (rawSql
+        "SELECT (\
+        \ SELECT count(*) FROM course_registration_checkout_runtime runtime\
+        \ WHERE runtime.course_id = ? AND (\
+        \   runtime.enrollment_status IN ('enrolled','transfer_requested','completed')\
+        \   OR (runtime.enrollment_status = 'seat_held' AND runtime.hold_expires_at > ?)\
+        \ )) + (\
+        \ SELECT count(*) FROM course_registration registration\
+        \ WHERE registration.course_slug = ? AND registration.status = 'paid'\
+        \ AND NOT EXISTS (SELECT 1 FROM course_registration_checkout_runtime runtime\
+        \   WHERE runtime.registration_id = registration.id))"
+        [ toPersistValue courseKey
+        , PersistUTCTime now
+        , PersistText (Trials.courseSlug course)
+        ] :: SqlPersistT IO [Single Int64])
+      let occupied = case occupiedRows of
+            [Single value] -> value
+            _ -> fromIntegral (Trials.courseCapacity course)
+      if occupied >= fromIntegral (Trials.courseCapacity course)
+        then pure (Left (conflictError "No course seats remain"))
+        else createRegistration
     createRegistration = do
       registrationKey <- insert ME.CourseRegistration
         { ME.courseRegistrationCourseSlug = Trials.courseSlug course
@@ -546,6 +579,8 @@ createCourseCheckoutTransaction
         \) VALUES (?, NULL, 'seat_held', 'system', 'checkout_created',\
         \ 'Atomic expiring seat hold created; payment and enrollment remain separate')"
         [toPersistValue registrationKey]
+      rawExecute "INSERT INTO identity_course_registration_request(request_scope,request_key,request_payload,registration_id) VALUES (?,?,?::jsonb,?)"
+        [PersistText ("public-course:" <> Trials.courseSlug course), PersistText idempotencyKey, PersistText requestPayload, toPersistValue registrationKey]
       pure (Right registrationKey)
 
 loadCourseCheckoutRuntimeView

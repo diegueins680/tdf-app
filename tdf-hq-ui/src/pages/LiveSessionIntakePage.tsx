@@ -26,6 +26,7 @@ import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 import { useSession } from '../session/SessionContext';
+import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 
 interface MusicianEntry {
@@ -84,9 +85,10 @@ export interface LiveSessionIntakeFormProps {
   variant?: 'internal' | 'public';
   accessCode?: string;
   draftOwner?: number;
+  canReuseContacts?: boolean;
 }
 
-export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftOwner }: LiveSessionIntakeFormProps) {
+export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftOwner, canReuseContacts = false }: LiveSessionIntakeFormProps) {
   const [submissionKey, setSubmissionKey] = useState<string>(() => crypto.randomUUID());
   const qc = useQueryClient();
   const authority = useRef({ accessCode, generation: 0 });
@@ -221,7 +223,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       for (const entry of musicians) {
         if (!entry.name.trim() && !entry.partyId) continue;
 
-        const partyId = variant === 'public' ? undefined : entry.partyId;
+        const partyId = variant === 'internal' && canReuseContacts ? entry.partyId : undefined;
 
         const instagramNote = asNullableString(entry.instagram)
           ? `Instagram: ${entry.instagram.trim().startsWith('@') ? entry.instagram.trim() : `@${entry.instagram.trim()}`}`
@@ -460,7 +462,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
                 </Stack>
 
                 <Grid container spacing={2}>
-                  {variant === 'internal' && <Grid item xs={12} md={6}>
+                  {variant === 'internal' && canReuseContacts && <Grid item xs={12} md={6}>
                     <PartySelector
                       value={musician.partyId ? {
                         partyId: musician.partyId, partyType: 'person', displayName: musician.name || 'Contacto asignado',
@@ -544,7 +546,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
                     </Grid>
                   ) : (
                     <Grid item xs={12}>
-                      <Chip label="Se creará usuario y contacto automáticamente" color="info" size="small" />
+                      <Chip label="Se creará un contacto para esta sesión" color="info" size="small" />
                     </Grid>
                   )}
                 </Grid>
@@ -715,5 +717,5 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
 
 export default function LiveSessionIntakePage() {
   const { session } = useSession();
-  return <LiveSessionIntakeForm key={session?.partyId ?? 'anonymous'} variant="internal" draftOwner={session?.partyId} />;
+  return <LiveSessionIntakeForm key={session?.partyId ?? 'anonymous'} variant="internal" draftOwner={session?.partyId} canReuseContacts={buildAccessibleModuleSet(session?.roles, session?.modules).has('crm')} />;
 }
