@@ -570,6 +570,11 @@
       "id": "2026-09-18_calendar_runtime_schema",
       "path": "tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql",
       "introducedBy": "49ff02de5ade1b8923f099c22af0bbf57350a078"
+    },
+    {
+      "id": "2026-09-18_records_resource_availability",
+      "path": "tdf-hq/sql/2026-09-18_records_resource_availability.sql",
+      "introducedBy": "bec94317473fa8f2016ba165b5813a391c81b9ac"
     }
   ]
 }

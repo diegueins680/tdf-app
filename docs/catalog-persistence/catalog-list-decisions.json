@@ -13932,6 +13932,16 @@
         "name": "CHECK IN",
         "valueCount": 2
       }
+    },
+    {
+      "id": "3132324a47dd683db58c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-with-justification",
+      "specializedModel": "record_external_resource verified provider availability",
+      "priority": "P2",
+      "risk": "Confusing image transport failure with a verified provider removal.",
+      "justification": "Two provider availability wire states; absence means unverified. This is a protocol outcome, not an administrator-editable business catalog.",
+      "reviewed": true
     }
   ]
 }
