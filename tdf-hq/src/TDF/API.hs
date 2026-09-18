@@ -475,6 +475,7 @@ type FanSecureAPI =
   :<|> "me" :> "notifications" :>
          ( QueryParam "unreadOnly" Bool :> Get '[JSON] [NotificationDTO]
       :<|> "count" :> Get '[JSON] NotificationCountDTO
+      :<|> Capture "notifId" Int64 :> Get '[JSON] NotificationDTO
       :<|> Capture "notifId" Int64 :> "read" :> Post '[JSON] NoContent
       :<|> "read-all" :> Post '[JSON] NoContent
          )
@@ -544,6 +545,7 @@ type AccessRequestsAPI =
        Get '[JSON] [FeatureAccessRequestDTO]
   :<|> ReqBody '[JSON] FeatureAccessRequestCreate :> Post '[JSON] FeatureAccessRequestDTO
   :<|> "review" :> QueryParam "status" Text :> Get '[JSON] [FeatureAccessRequestDTO]
+  :<|> Capture "requestId" Int64 :> Get '[JSON] Value
   :<|> Capture "requestId" Int64 :> "decision"
          :> ReqBody '[JSON] FeatureAccessRequestDecision
          :> Patch '[JSON] FeatureAccessRequestDTO

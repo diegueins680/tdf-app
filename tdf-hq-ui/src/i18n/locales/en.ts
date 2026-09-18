@@ -189,6 +189,7 @@ const en = {
     codebase: 'Codebase',
   },
   notifications: {
+    readError: 'The notification could not be marked as read. Open it again to retry.',
     title: 'Notifications',
     markAll: 'Mark all read',
     markAllLoading: 'Marking…',
