@@ -883,6 +883,7 @@ export default function TdfDomoCampaignPage() {
                 >
                   <LinearProgress
                     variant="determinate"
+                    aria-label="Avance del calendario de campaña"
                     value={(completedCalendarCount / CONTENT_CALENDAR.length) * 100}
                     sx={{ height: 8, borderRadius: 999 }}
                   />
@@ -945,6 +946,7 @@ export default function TdfDomoCampaignPage() {
                 >
                   <LinearProgress
                     variant="determinate"
+                    aria-label="Videos de campaña publicados"
                     value={(completedAssetCount / VIDEO_ASSETS.length) * 100}
                     sx={{ height: 8, borderRadius: 999 }}
                   />
@@ -987,8 +989,8 @@ export default function TdfDomoCampaignPage() {
                                     const status = event.target.value;
                                     updateAsset(asset.id, { status: isCreativeAssetStatus(status) ? status : 'pendiente' });
                                   }}
-                                  inputProps={{
-                                    'aria-labelledby': `video-${asset.id}-label video-status-column`,
+                                  SelectProps={{
+                                    labelId: `video-${asset.id}-label video-status-column`,
                                   }}
                                   fullWidth
                                 >

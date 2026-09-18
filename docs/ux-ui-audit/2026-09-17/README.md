@@ -669,3 +669,55 @@ next render.21component/logic tests pass, including delayed success/callback onc
 and provider rejection recovery. The model now has8distinct states, explicit payment
 confirmation, NoLostPayment and its negative control. TypeScript/production build
 passes at364988gzip/5preloads. No real charge or broad server recovery proof.
+
+### Remaining initial coverage and web release — 2026-09-18
+
+PR #429 merged normally as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after
+exact-head independent approval, applicable CI and resolved review threads. Cloudflare
+c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched at06:10UTC.
+Ten ES/EN checkout cases passed on the deployed bundle across five profiles and
+Chromium/Firefox/WebKit. Transport was synthetic, with zero payment intents; this
+proves released UI readiness/retry/cancellation, not real card settlement. No duplicate
+backend deployment was needed for this frontend-only increment.
+
+A11Y-01 remained defective despite its historical source labels: MUI inputProps named
+the hidden input, while each visible combobox announced only its value. SelectProps.labelId
+now names each visible status using its row and column, alongside the selected value.
+Calendar/creative progress indicators also have names. The actual320/1280 browser
+probe confirmed the defect and corrected accessible tree. [MUI Select API](https://mui.com/material-ui/api/select/)
+and [WCAG name/role/value](https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html)
+were consulted2026-09-18 and checked against the installed MUI implementation.
+
+The same keyboard probe confirmed UX-260917-032: PageShell's sticky header completely
+covered both the first status and notes focus at320/1280. The shared content heading
+now scrolls in normal flow; application navigation remains available. Actual after
+hit-testing reaches both focused controls, with screenshots before/after. The durable
+campaign regression covers all five tabs, row/column names, menu/Escape/next-field
+keyboard interaction, focus visibility, axe and reflow. These checks do not substitute
+for a human screen-reader session or prove all WCAG criteria.
+
+Remaining role arrivals exposed more UX-260917-023 loading indicators: teachers,
+teacher agenda, DDEX inbox, services/revisions, reports and conversations. All eight
+additional loaders (including message loading) now have distinct ES/EN names. Fourteen
+delayed-response cases pass against the actual isolated session/backend, using only
+locale overrides and a synthetic read-only thread for message loading. No messages,
+campaigns or budgets were submitted. Final TypeScript/build passes365423gzip initial
+JavaScript with five preloads, below the existing410KiB budget; affected lint passes.
+No representative field performance data or physical-device validation is claimed.
+
+Apple read-only API at06:23 confirms version1.0.1/build19 VALID and WAITING_FOR_REVIEW;
+external TestFlight remains WAITING_FOR_BETA_REVIEW. Play's actual publishing overview
+still shows Android10 full Alpha rollout and added tester list in review. The82 prepared
+invitations have not been sent; verified tester access is still required first. The
+separate notification operator owns the4b0 backend rollout and builds20/11. Preserve
+that release coordination and the current Apple review; do not withdraw or duplicate it.
+
+Final campaign runtime:10/10 cases pass across five profiles and three engines,
+each checking five tabs. The initial synthetic fixture403 lacked the real scheduling
+module; corrected fixture authority before acceptance. MUI's documented accessible
+name includes its current value, now correctly asserted. Earlier runs interrupted
+for shared-host pressure are not counted as passes. Final14 ES/EN loading cases also
+pass. Remaining-role evidence records completed198-case fixtures without claiming
+unexecuted actions/states. Transient pipeline-tab focus and label-button contrast
+observations did not recur after settling on either viewport; they remain hypotheses.
+A confirmed actual navigation500 has its own focused successor PR #432/UX-260917-031.
