@@ -57,6 +57,14 @@ La cobertura inicial de411 entradas continúa abierta; no se limita a las PR act
   SHA256 del archivo8e1a446a49bbc84915f300b206945e4614566692dfc8ab5fd562bfc93a641e55.
   Sus recorridos actuales están en ejecución; no acredita dispositivo físico.
 
+Conciliación de concurrencia: el bot publicó775934f75 sobre#422 durante el push.
+Su filtro artist/band contradecía el contrato artist-only ya aprobado en#406.
+Se conserva su atribución mediante merge, se reutilizan sus fixtures person-only,
+mixed y canonical-person, y se conserva el handler exacto de main. La prueba
+HTTP/PostgreSQL17 ampliada pasa: no selecciona bandas/personas, no elude un
+canonical inválido, mantiene idempotencia y no concede gestión. Evidencia
+[e2e de conciliación](evidence/artist-claim-kind-union-http.log).
+
 Siguiente acción: publicar el incremento integrado de#422 y observar sus gates;
 continuar cobertura autenticada/operativa y QA nativa mientras se obtiene revisión
 exacta y se completan requisitos de tienda. No reenviar Android sin cambio confirmado.

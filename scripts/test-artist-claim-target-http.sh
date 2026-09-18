@@ -53,7 +53,29 @@ UPDATE directory_profile artist SET canonical_profile_id=band.id
  WHERE p.display_name='Claim target canonical band fixture' AND band.profile_kind='band'
  AND artist.subject_party_id=p.id AND artist.profile_kind='artist';
 SQL
-TDF_CLAIM_TARGET_IDS=$(claim_psql -Atc "SELECT json_object_agg(display_name,id) FROM party WHERE display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture');") \
+claim_psql <<'SQL' >/dev/null
+-- A Party may own a person profile alongside a distinct artist or band profile.
+INSERT INTO party(display_name,is_org,created_at) VALUES
+ ('Claim target person-only fixture',false,now()),('Claim target mixed fixture',false,now()),
+ ('Claim target band fixture',false,now()),('Claim target wrong-canonical fixture',false,now());
+INSERT INTO artist_profile(artist_party_id,slug,created_at)
+ SELECT id,'claim-kind-'||id,now() FROM party WHERE display_name IN
+ ('Claim target person-only fixture','Claim target mixed fixture','Claim target band fixture','Claim target wrong-canonical fixture');
+INSERT INTO directory_profile(subject_party_id,profile_kind,public_name,slug,profile_status,visibility)
+ SELECT id,CASE WHEN display_name='Claim target band fixture' THEN 'band' ELSE 'artist' END,
+ 'PRIVATE ARTIST NAME','claim-kind-artist-'||id,'draft','private'
+ FROM party WHERE display_name IN ('Claim target mixed fixture','Claim target band fixture','Claim target wrong-canonical fixture');
+INSERT INTO directory_profile(subject_party_id,profile_kind,public_name,slug,profile_status,visibility,updated_at)
+ SELECT id,'person','PRIVATE PERSON NAME','claim-kind-person-'||id,'draft','private',now()+interval '1 minute'
+ FROM party WHERE display_name IN ('Claim target person-only fixture','Claim target mixed fixture','Claim target wrong-canonical fixture');
+UPDATE directory_profile source SET canonical_profile_id=target.id
+ FROM directory_profile target WHERE source.subject_party_id=target.subject_party_id
+ AND source.slug LIKE 'claim-kind-artist-%' AND target.slug LIKE 'claim-kind-person-%'
+ AND source.subject_party_id=(SELECT id FROM party WHERE display_name='Claim target wrong-canonical fixture');
+SQL
+TDF_CLAIM_TARGET_EXPECTED=$(claim_psql -Atc "SELECT json_object_agg(p.display_name,d.id) FROM directory_profile d JOIN party p ON p.id=d.subject_party_id WHERE p.display_name='Claim target mixed fixture' AND d.profile_kind='artist';") \
+TDF_CLAIM_TARGET_FORBIDDEN=$(claim_psql -Atc "SELECT coalesce(json_agg(id),'[]') FROM directory_profile WHERE profile_kind<>'artist' OR canonical_profile_id IS NOT NULL;") \
+TDF_CLAIM_TARGET_IDS=$(claim_psql -Atc "SELECT json_object_agg(display_name,id) FROM party WHERE display_name LIKE 'Claim target % fixture';") \
 TDF_CLAIM_TARGET_BASE="http://127.0.0.1:$TDF_CLAIM_HTTP_PORT" \
  node "$TDF_CLAIM_ROOT/scripts/__tests__/artist-claim-target-runtime.mjs"
 claim_psql <<'SQL' >/dev/null
@@ -63,6 +85,8 @@ DO $$ BEGIN
  ASSERT NOT EXISTS(SELECT 1 FROM directory_profile_manager m JOIN directory_profile d ON d.id=m.profile_id JOIN party p ON p.id=d.subject_party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture')), 'preparation granted management';
  ASSERT NOT EXISTS(SELECT 1 FROM user_credential c JOIN party p ON p.id=c.party_id WHERE p.display_name IN ('Claim target fresh fixture','Claim target draft fixture','Claim target blocked fixture','Claim target canonical band fixture')), 'preparation created artist credentials';
  ASSERT (SELECT count(*)=1 FROM directory_claim c JOIN directory_profile d ON d.id=c.profile_id JOIN party p ON p.id=d.subject_party_id WHERE p.display_name='Claim target fresh fixture' AND c.status='submitted'), 'claim was duplicated or approved';
+ ASSERT (SELECT count(*)=3 FROM directory_profile d JOIN party p ON p.id=d.subject_party_id WHERE p.display_name IN ('Claim target person-only fixture','Claim target mixed fixture','Claim target band fixture','Claim target wrong-canonical fixture') AND d.profile_kind='artist' AND d.canonical_profile_id IS NULL AND d.visibility='private' AND d.profile_status='draft'), 'wrong profile kind, canonical target or visibility';
+ ASSERT NOT EXISTS(SELECT 1 FROM directory_profile_manager m JOIN directory_profile d ON d.id=m.profile_id WHERE d.slug LIKE 'claim-kind-%'), 'profile preparation changed ownership';
  ASSERT NOT EXISTS(SELECT 1 FROM directory_claim c JOIN directory_profile d ON d.id=c.profile_id JOIN party p ON p.id=d.subject_party_id WHERE p.display_name LIKE 'Claim target % fixture' AND d.profile_kind<>'artist'), 'claim targeted non-artist resource';
 END $$;
 SQL
