@@ -4,7 +4,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import BoltIcon from '@mui/icons-material/Bolt';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link as RouterLink, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSession, getActiveSession, SESSION_STORAGE_KEY } from '../session/SessionContext';
 import { parsePositiveSafeInt } from '../utils/ids';
 import { Fans } from '../api/fans';
@@ -32,13 +32,15 @@ const buildArtistLoginLink = (claimArtistId: number | null) => {
 export default function ArtistOnboardingPage() {
   const { session, login } = useSession();
   const navigate = useNavigate();
+  const location = useLocation();
   const mounted = useRef(true);
-  const flight = useRef<typeof session>(null);
-  const context = useRef({ session, generation: 0 });
-  if (context.current.session !== session) {
-    context.current = { session, generation: context.current.generation + 1 };
+  const flight = useRef<number | null>(null);
+  const context = useRef({ session, routeKey: location.key, generation: 0 });
+  if (context.current.session !== session || context.current.routeKey !== location.key) {
+    context.current = { session, routeKey: location.key, generation: context.current.generation + 1 };
   }
-  const isCurrent = () => mounted.current && context.current.session === session
+  const generation = context.current.generation;
+  const isCurrent = () => context.current.generation === generation && mounted.current && context.current.session === session
     && getActiveSession() === session;
   useEffect(() => {
     mounted.current = true;
@@ -47,13 +49,13 @@ export default function ArtistOnboardingPage() {
   useEffect(() => {
     setActivating(false);
     setActivationError(null);
-  }, [session]);
+  }, [session, location.key]);
   const [activating, setActivating] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
 
   const activateProfile = async () => {
-    if (!session?.partyId || flight.current === session || !isCurrent() || claimArtistId !== null) return;
-    flight.current = session;
+    if (!session?.partyId || flight.current === generation || !isCurrent() || claimArtistId !== null) return;
+    flight.current = generation;
     const partyId = session.partyId;
     setActivating(true);
     setActivationError(null);
@@ -76,7 +78,7 @@ export default function ArtistOnboardingPage() {
     } catch (error) {
       if (isCurrent()) setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Inténtalo de nuevo.');
     } finally {
-      if (flight.current === session) flight.current = null;
+      if (flight.current === generation) flight.current = null;
       if (isCurrent()) setActivating(false);
     }
   };

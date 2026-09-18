@@ -196,24 +196,24 @@
   {
     "id": "UX-260917-013",
     "kind": "confirmed",
-    "title": "Artist activation loses persisted success with denied storage and accepts stale same-account responses",
+    "title": "Artist activation accepts stale session or route responses and depends on optional storage",
     "severity": "high",
     "confidence": "high",
     "journey": "artist activation and verified existing-artist management",
     "roles": "authenticated Customer and Artist",
     "surface": "ArtistOnboardingPage and ArtistClaimPanel",
-    "evidence": "Two new component regressions failed on published 2813737f6: denied sessionStorage prevents editor navigation; same-account credential rotation accepts an old session result. Original seven tests still passed.",
+    "evidence": "Two new component regressions failed on published 2813737f6: denied sessionStorage prevents editor navigation; same-account credential rotation accepts an old session result. Original seven tests still passed. Review discussion_r4042801092 reproduced navigation-away-and-back races at both activation and session refresh boundaries: 2 new tests failed before the route-generation guard and all 13 activation tests pass after.",
     "userImpact": "A created profile appears failed; old asynchronous results can overwrite the current session or confirm an old claim.",
-    "rootCause": "Optional browser storage is read without a guard and session authority checks only partyId.",
-    "proposedChange": "Fence operations by current session object/generation and component lifetime, preserve single-flight behavior, require confirmed Artist authority, and fall back to memory when storage is denied. Remount claim panel by opaque session generation.",
+    "rootCause": "Optional browser storage is read without a guard and session authority checks only partyId. Same mounted route can switch claim context without changing the session.",
+    "proposedChange": "Fence operations by current session object/generation and component lifetime, preserve single-flight behavior, require confirmed Artist authority, and fall back to memory when storage is denied. Remount claim panel by opaque session generation. Increment generation on React Router location key changes, including ABA navigation; key flight ownership by generation.",
     "dependencies": [
       "root PR #406"
     ],
-    "acceptanceCriteria": "No old-session result applies after rotation/account change/unmount; no browser storage requirement for a confirmed activation; claims remain pending verified review; no identity transfer.",
+    "acceptanceCriteria": "No old-session result applies after rotation/account change/unmount; no browser storage requirement for a confirmed activation; claims remain pending verified review; no identity transfer. A previous activation cannot override a newly selected claim or a later return to activation.",
     "verificationMethod": "Two activation regressions failed before repair (7 preexisting passed); malformed claim receipt also failed before validation. Final 18/18 component tests pass. Current event formal runner passed safety/liveness/negative controls and Alloy; CurrentContext/SingleFlight/TerminalOnly map to session identity, flight guard and validated receipts. Model bounds and assumptions remain those of fanhub-onboarding.md; does not prove artist database or authorization.",
     "status": "implemented",
-    "implementationStatus": "local repair after published integration 2813737f6",
-    "verificationStatus": "18 focused tests, typecheck and lint passed; catalog classified new synthetic fixture; exact-head CI pending",
+    "implementationStatus": "Route and session generation fence, memory fallback and authoritative Artist session checks implemented; see PR406 follow-up commit.",
+    "verificationStatus": "13 activation tests, TypeScript, full UI lint and23 CI contracts pass. Full pinned TLC/Alloy runner passes; ArtistActivation15 states with safety/liveness and named negative control. Exact new head CI/review pending.",
     "mergeStatus": "pending",
     "releaseStatus": "not deployed"
   },
@@ -238,7 +238,7 @@
     "verificationMethod": "ArtistClaimTarget TLC safety/liveness and unsafe-lock counterexample; 8-way real HTTP/PostgreSQL conformance; component retry/session/receipt tests. Execution results recorded in artist-management-claims.md.",
     "status": "implemented",
     "implementationStatus": "Additive preparation API, per-artist transaction lock, minimal projection and UI retry; mobile contract c63290b published in PR90",
-    "verificationStatus": "Earlier head passed concurrency/privacy checks; expanded multi-profile negative HTTP fixture reproduced wrong-resource selection. Filter/canonical guard and ArtistClaimKind model added; positive build/runtime verification pending.",
+    "verificationStatus": "Expanded real HTTP/PostgreSQL17 positive fixture passes after full Stack/GHC9.10.3 build. Negative old binary returns200 instead of expected404. Hosted backend quality 35293357409/job/105440820017 passes the same fixture. ArtistClaimKind TLC and negative control pass. All hosted checks passed7411a2a.",
     "mergeStatus": "pending",
     "releaseStatus": "not deployed"
   }

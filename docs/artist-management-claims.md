@@ -87,3 +87,17 @@ for a blocked artist with a newer band). Positive execution is recorded below.
 filter and canonical guard. Termination assumes one fair atomic transaction.
 The unfiltered/unguarded negative model must violate `OnlyArtist`. This model
 does not claim to verify canonical graph integrity or administrator decisions.
+
+
+### Review follow-up: route context and profile kind (2026-09-18 UTC)
+
+The expanded real HTTP/PostgreSQL17 fixture now passes against the rebuilt backend
+and hosted backend-quality job105440820017 (run35293357409, head7411a2a).
+The old binary fails the blocked-artist-with-newer-band case (200 instead of404).
+Source and canonical target must both be artist profiles; no ownership is granted.
+
+Review4042801092 additionally reproduced activation/claim-route races at each await:
+two negative component tests failed, then13 activation tests passed with a generation
+that includes session identity and location.key. Leaving and returning does not revive
+a pending activation. See formal/event-operations/ArtistActivation.tla and its documented
+fairness/bounds; the negative configuration removes the generation fence.
