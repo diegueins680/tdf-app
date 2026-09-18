@@ -9578,6 +9578,10 @@ export interface components {
         GoogleLoginRequest: {
             /** @description Google ID token returned by Google Identity Services */
             idToken: string;
+            /** @description Must be explicitly true, with current terms acceptance, to create a new account for an unbound Google subject. Omission never creates an account. */
+            createNewAccount?: boolean;
+            /** @description Explicitly connect the verified Google identity using the existing TDF account credentials. No account or permission is merged. */
+            linkAccount?: components["schemas"]["LoginRequest"];
             /** @description Optional consent to receive TDF product and marketing updates when creating an account. */
             marketingOptIn?: boolean;
             /** @description Account terms acceptance when Google is used from signup. */

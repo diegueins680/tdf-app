@@ -1009,6 +1009,8 @@ instance FromJSON LoginRequest where
 
 data GoogleLoginRequest = GoogleLoginRequest
   { idToken :: Text
+  , createNewAccount :: Maybe Bool
+  , linkAccount :: Maybe LoginRequest
   , marketingOptIn :: Maybe Bool
   , termsAccepted :: Maybe Bool
   , termsVersion :: Maybe Text
@@ -1016,7 +1018,7 @@ data GoogleLoginRequest = GoogleLoginRequest
   } deriving (Show, Generic)
 instance FromJSON GoogleLoginRequest where
   parseJSON value = do
-    rejectNullOptionalFields "GoogleLoginRequest" ["onboardingIntent"] value
+    rejectNullOptionalFields "GoogleLoginRequest" ["onboardingIntent", "linkAccount", "createNewAccount"] value
     genericParseJSON strictDecodeOptions value
 
 data SignupRequest = SignupRequest

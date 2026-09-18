@@ -38,6 +38,7 @@ import TDF.ServerAuth
   , validateGoogleIdTokenInput
   , validateLoginRequest
   , validateGoogleIdTokenInfo
+  , validateGoogleTokenExpiry
   , validatePasswordChangeUsernameInput
   , validatePasswordResetToken
   , validateSignupArtistClaimEmail
@@ -419,9 +420,11 @@ signupTermsAcceptanceSpec = describe "validateSignupTermsAcceptance" $ do
 googleAccountCreationTermsSpec :: Spec
 googleAccountCreationTermsSpec = describe "validateGoogleAccountCreationTerms" $ do
   it "allows provisioning only when the Google request carries accepted versioned terms" $ do
-    validateGoogleAccountCreationTerms (Just "tdf-account-terms-v1") `shouldBe` Right ()
-    validateGoogleAccountCreationTerms (Just "unknown-terms-v9") `shouldSatisfy` isLeft
-    validateGoogleAccountCreationTerms Nothing `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms (Just True) (Just "tdf-account-terms-v1") `shouldBe` Right ()
+    validateGoogleAccountCreationTerms (Just True) (Just "unknown-terms-v9") `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms (Just True) Nothing `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms Nothing (Just "tdf-account-terms-v1") `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms (Just False) (Just "tdf-account-terms-v1") `shouldSatisfy` isLeft
 
 signupPhoneSpec :: Spec
 signupPhoneSpec = describe "validateOptionalSignupPhone" $ do
@@ -624,7 +627,7 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
         canonicalJson emailVerified =
           "{\"aud\":\"client-id\",\"email\":\"ada@example.com\","
             <> "\"sub\":\"google-sub-1\",\"iss\":\"https://accounts.google.com\","
-            <> "\"email_verified\":" <> emailVerified <> "}"
+            <> "\"exp\":\"4102444800\",\"email_verified\":" <> emailVerified <> "}"
         assertRejected raw expectedMessage =
           case decodeTokenInfo raw of
             Left err ->
@@ -652,10 +655,18 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
       (canonicalJson "\"yes\"")
       "email_verified must be a boolean"
 
+  it "rejects expired provider tokens including the exact expiration boundary" $ do
+    let epoch = UTCTime (fromGregorian 1970 1 1) 0
+    validateGoogleTokenExpiry (addUTCTime 100 epoch) googleTokenInfo { gitExp = 99 } `shouldSatisfy` isLeft
+    validateGoogleTokenExpiry (addUTCTime 100 epoch) googleTokenInfo { gitExp = 100 } `shouldSatisfy` isLeft
+    validateGoogleTokenExpiry (addUTCTime 100 epoch) googleTokenInfo { gitExp = 101 } `shouldBe` Right ()
+
   it "normalizes Google emails only after rejecting invalid token email shapes" $ do
     case validateGoogleIdTokenInfo (Just "client-id") googleTokenInfo of
       Right profile -> do
         gpEmail profile `shouldBe` "ada@example.com"
+        gpSubject profile `shouldBe` "google-sub-1"
+        gpIssuer profile `shouldBe` "https://accounts.google.com"
         gpName profile `shouldBe` Just "Ada Lovelace"
       Left err ->
         expectationFailure ("Expected valid Google token info, got " <> T.unpack err)
@@ -780,6 +791,7 @@ googleTokenInfo =
     , gitName = Just " Ada Lovelace "
     , gitPicture = Nothing
     , gitSub = "google-sub-1"
+    , gitExp = 4102444800
     , gitIss = Just "https://accounts.google.com"
     }
 
