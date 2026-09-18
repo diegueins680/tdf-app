@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -187,6 +188,7 @@ export default function ChatPage() {
 }
 
 function ChatWorkspace() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { session } = useSession();
   const location = useLocation();
@@ -498,7 +500,7 @@ function ChatWorkspace() {
             <Divider />
             {threadsLoading ? (
               <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-                <CircularProgress size={24} />
+                <CircularProgress size={24} aria-label={t('auditAccessibility.loadingConversations')} />
               </Box>
             ) : threadsError ? (
               <Box sx={{ p: 2 }}>
@@ -614,7 +616,7 @@ function ChatWorkspace() {
             <Box sx={{ flex: 1, overflowY: 'auto', pr: 1, minHeight: 240 }}>
               {messagesLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                  <CircularProgress size={24} />
+                  <CircularProgress size={24} aria-label={t('auditAccessibility.loadingMessages')} />
                 </Box>
               ) : messagesError ? (
                 <Alert

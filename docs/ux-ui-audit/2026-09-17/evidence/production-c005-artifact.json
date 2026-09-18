@@ -1,0 +1,32 @@
+{
+  "observedAt": "2026-09-18T06:10:07.873532+00:00",
+  "sha": "c00578da58d3a2a4541fceb08a6d1c463318d8a1",
+  "deployment": "c44d424e-3e93-4215-90b7-06a1fa8ffb5b",
+  "pages": [
+    {
+      "url": "https://tdf-app.pages.dev",
+      "assets": [
+        "/assets/index-BCdc5pQ7.js",
+        "/assets/react-vendor-s3czTHiP.js",
+        "/assets/tanstack-ByjpnR1t.js",
+        "/assets/mui-BkTjoAS1.js",
+        "/assets/router-CZIUCrU9.js",
+        "/assets/vendor-Bc2UTHvs.js",
+        "/assets/index-CQ48aJZ2.css"
+      ]
+    },
+    {
+      "url": "https://c44d424e.tdf-app.pages.dev",
+      "assets": [
+        "/assets/index-BCdc5pQ7.js",
+        "/assets/react-vendor-s3czTHiP.js",
+        "/assets/tanstack-ByjpnR1t.js",
+        "/assets/mui-BkTjoAS1.js",
+        "/assets/router-CZIUCrU9.js",
+        "/assets/vendor-Bc2UTHvs.js",
+        "/assets/index-CQ48aJZ2.css"
+      ]
+    }
+  ],
+  "assetsMatch": true
+}

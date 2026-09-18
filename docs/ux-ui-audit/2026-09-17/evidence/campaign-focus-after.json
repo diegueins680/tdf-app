@@ -1,0 +1,344 @@
+[
+  {
+    "width": 320,
+    "controls": [
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-1-label video-status-column :r23:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-1-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-2-label video-status-column :r26:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-2-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-3-label video-status-column :r29:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-3-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-4-label video-status-column :r2c:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-4-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-5-label video-status-column :r2f:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-5-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-6-label video-status-column :r2i:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-6-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-7-label video-status-column :r2l:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-7-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-8-label video-status-column :r2o:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-8-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-9-label video-status-column :r2r:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-9-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-10-label video-status-column :r2u:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-10-label video-notes-column",
+        "type": "text"
+      }
+    ],
+    "firstFocus": {
+      "role": "combobox",
+      "labelledby": "video-1-label video-status-column :r23:",
+      "rect": {
+        "x": 95.9375,
+        "y": 126.0625,
+        "width": 128,
+        "height": 38.5625,
+        "centerVisible": true,
+        "occluder": "DIV"
+      }
+    },
+    "nextFocus": {
+      "tag": "INPUT",
+      "labelledby": "video-1-label video-notes-column",
+      "rect": {
+        "x": 65.9375,
+        "y": 126.0625,
+        "width": 188,
+        "height": 38.5625,
+        "centerVisible": true,
+        "occluder": "INPUT"
+      }
+    },
+    "snapshot": "- region \"Seguimiento de creativos\":\n  - table:\n    - rowgroup:\n      - row \"Video Rol Uso Fases Estado Notas\":\n        - columnheader \"Video\"\n        - columnheader \"Rol\"\n        - columnheader \"Uso\"\n        - columnheader \"Fases\"\n        - columnheader \"Estado\"\n        - columnheader \"Notas\"\n    - rowgroup:\n      - row \"Video 1 La Convocatoria Anuncio principal Lanzamiento Teaser Lanzamiento Estado Pendiente Notas\":\n        - rowheader \"Video 1 La Convocatoria\":\n          - paragraph: Video 1\n          - paragraph: La Convocatoria\n        - cell \"Anuncio principal\"\n        - cell \"Lanzamiento\"\n        - cell \"Teaser Lanzamiento\"\n        - cell \"Video 1 La Convocatoria Estado Pendiente\":\n          - combobox \"Video 1 La Convocatoria Estado Pendiente\": Pendiente\n        - cell \"Video 1 La Convocatoria Notas\":\n          - textbox \"Video 1 La Convocatoria Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 2 Tu música merece esto Aspiracional Reels + retargeting Deseo Estado Pendiente Notas\":\n        - rowheader \"Video 2 Tu música merece esto\":\n          - paragraph: Video 2\n          - paragraph: Tu música merece esto\n        - cell \"Aspiracional\"\n        - cell \"Reels + retargeting\"\n        - cell \"Deseo\"\n        - cell \"Video 2 Tu música merece esto Estado Pendiente\":\n          - combobox \"Video 2 Tu música merece esto Estado Pendiente\": Pendiente\n        - cell \"Video 2 Tu música merece esto Notas\":\n          - textbox \"Video 2 Tu música merece esto Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 3 Tienes 30 minutos Urgencia Últimos días Cierre Estado Pendiente Notas\":\n        - rowheader \"Video 3 Tienes 30 minutos\":\n          - paragraph: Video 3\n          - paragraph: Tienes 30 minutos\n        - cell \"Urgencia\"\n        - cell \"Últimos días\"\n        - cell \"Cierre\"\n        - cell \"Video 3 Tienes 30 minutos Estado Pendiente\":\n          - combobox \"Video 3 Tienes 30 minutos Estado Pendiente\": Pendiente\n        - cell \"Video 3 Tienes 30 minutos Notas\":\n          - textbox \"Video 3 Tienes 30 minutos Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 4 El escenario perfecto Emoción / branding Teaser Teaser Estado Pendiente Notas\":\n        - rowheader \"Video 4 El escenario perfecto\":\n          - paragraph: Video 4\n          - paragraph: El escenario perfecto\n        - cell \"Emoción / branding\"\n        - cell \"Teaser\"\n        - cell \"Teaser\"\n        - cell \"Video 4 El escenario perfecto Estado Pendiente\":\n          - combobox \"Video 4 El escenario perfecto Estado Pendiente\": Pendiente\n        - cell \"Video 4 El escenario perfecto Notas\":\n          - textbox \"Video 4 El escenario perfecto Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 5 Detrás de cámaras Credibilidad técnica Consideración Deseo Estado Pendiente Notas\":\n        - rowheader \"Video 5 Detrás de cámaras\":\n          - paragraph: Video 5\n          - paragraph: Detrás de cámaras\n        - cell \"Credibilidad técnica\"\n        - cell \"Consideración\"\n        - cell \"Deseo\"\n        - cell \"Video 5 Detrás de cámaras Estado Pendiente\":\n          - combobox \"Video 5 Detrás de cámaras Estado Pendiente\": Pendiente\n        - cell \"Video 5 Detrás de cámaras Notas\":\n          - textbox \"Video 5 Detrás de cámaras Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 6 Desde cualquier rincón del Ecuador Alcance nacional Lanzamiento Lanzamiento Estado Pendiente Notas\":\n        - rowheader \"Video 6 Desde cualquier rincón del Ecuador\":\n          - paragraph: Video 6\n          - paragraph: Desde cualquier rincón del Ecuador\n        - cell \"Alcance nacional\"\n        - cell \"Lanzamiento\"\n        - cell \"Lanzamiento\"\n        - cell \"Video 6 Desde cualquier rincón del Ecuador Estado Pendiente\":\n          - combobox \"Video 6 Desde cualquier rincón del Ecuador Estado Pendiente\": Pendiente\n        - cell \"Video 6 Desde cualquier rincón del Ecuador Notas\":\n          - textbox \"Video 6 Desde cualquier rincón del Ecuador Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 7 No es un videoclip Diferenciación Anuncio educativo Deseo Estado Pendiente Notas\":\n        - rowheader \"Video 7 No es un videoclip\":\n          - paragraph: Video 7\n          - paragraph: No es un videoclip\n        - cell \"Diferenciación\"\n        - cell \"Anuncio educativo\"\n        - cell \"Deseo\"\n        - cell \"Video 7 No es un videoclip Estado Pendiente\":\n          - combobox \"Video 7 No es un videoclip Estado Pendiente\": Pendiente\n        - cell \"Video 7 No es un videoclip Notas\":\n          - textbox \"Video 7 No es un videoclip Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 8 Haz que te descubran Resultado / oportunidad Retargeting Cierre Estado Pendiente Notas\":\n        - rowheader \"Video 8 Haz que te descubran\":\n          - paragraph: Video 8\n          - paragraph: Haz que te descubran\n        - cell \"Resultado / oportunidad\"\n        - cell \"Retargeting\"\n        - cell \"Cierre\"\n        - cell \"Video 8 Haz que te descubran Estado Pendiente\":\n          - combobox \"Video 8 Haz que te descubran Estado Pendiente\": Pendiente\n        - cell \"Video 8 Haz que te descubran Notas\":\n          - textbox \"Video 8 Haz que te descubran Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 9 Todo incluido Oferta clara Conversión Deseo Estado Pendiente Notas\":\n        - rowheader \"Video 9 Todo incluido\":\n          - paragraph: Video 9\n          - paragraph: Todo incluido\n        - cell \"Oferta clara\"\n        - cell \"Conversión\"\n        - cell \"Deseo\"\n        - cell \"Video 9 Todo incluido Estado Pendiente\":\n          - combobox \"Video 9 Todo incluido Estado Pendiente\": Pendiente\n        - cell \"Video 9 Todo incluido Notas\":\n          - textbox \"Video 9 Todo incluido Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 10 Convocatoria abierta Trailer hero Pauta principal Lanzamiento Cierre Estado Pendiente Notas\":\n        - rowheader \"Video 10 Convocatoria abierta\":\n          - paragraph: Video 10\n          - paragraph: Convocatoria abierta\n        - cell \"Trailer hero\"\n        - cell \"Pauta principal\"\n        - cell \"Lanzamiento Cierre\"\n        - cell \"Video 10 Convocatoria abierta Estado Pendiente\":\n          - combobox \"Video 10 Convocatoria abierta Estado Pendiente\": Pendiente\n        - cell \"Video 10 Convocatoria abierta Notas\":\n          - textbox \"Video 10 Convocatoria abierta Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente",
+    "violations": []
+  },
+  {
+    "width": 1280,
+    "controls": [
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-1-label video-status-column :r2r:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-1-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-2-label video-status-column :r2u:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-2-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-3-label video-status-column :r31:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-3-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-4-label video-status-column :r34:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-4-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-5-label video-status-column :r37:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-5-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-6-label video-status-column :r3a:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-6-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-7-label video-status-column :r3d:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-7-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-8-label video-status-column :r3g:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-8-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-9-label video-status-column :r3j:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-9-label video-notes-column",
+        "type": "text"
+      },
+      {
+        "tag": "DIV",
+        "role": "combobox",
+        "label": null,
+        "labelledby": "video-10-label video-status-column :r3m:",
+        "type": null
+      },
+      {
+        "tag": "INPUT",
+        "role": null,
+        "label": null,
+        "labelledby": "video-10-label video-notes-column",
+        "type": "text"
+      }
+    ],
+    "firstFocus": {
+      "role": "combobox",
+      "labelledby": "video-1-label video-status-column :r2r:",
+      "rect": {
+        "x": 847.9375,
+        "y": 133.84375,
+        "width": 128,
+        "height": 38.5625,
+        "centerVisible": true,
+        "occluder": "DIV"
+      }
+    },
+    "nextFocus": {
+      "tag": "INPUT",
+      "labelledby": "video-1-label video-notes-column",
+      "rect": {
+        "x": 989.9375,
+        "y": 133.84375,
+        "width": 188,
+        "height": 38.5625,
+        "centerVisible": true,
+        "occluder": "INPUT"
+      }
+    },
+    "snapshot": "- region \"Seguimiento de creativos\":\n  - table:\n    - rowgroup:\n      - row \"Video Rol Uso Fases Estado Notas\":\n        - columnheader \"Video\"\n        - columnheader \"Rol\"\n        - columnheader \"Uso\"\n        - columnheader \"Fases\"\n        - columnheader \"Estado\"\n        - columnheader \"Notas\"\n    - rowgroup:\n      - row \"Video 1 La Convocatoria Anuncio principal Lanzamiento Teaser Lanzamiento Estado Pendiente Notas\":\n        - rowheader \"Video 1 La Convocatoria\":\n          - paragraph: Video 1\n          - paragraph: La Convocatoria\n        - cell \"Anuncio principal\"\n        - cell \"Lanzamiento\"\n        - cell \"Teaser Lanzamiento\"\n        - cell \"Video 1 La Convocatoria Estado Pendiente\":\n          - combobox \"Video 1 La Convocatoria Estado Pendiente\": Pendiente\n        - cell \"Video 1 La Convocatoria Notas\":\n          - textbox \"Video 1 La Convocatoria Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 2 Tu música merece esto Aspiracional Reels + retargeting Deseo Estado Pendiente Notas\":\n        - rowheader \"Video 2 Tu música merece esto\":\n          - paragraph: Video 2\n          - paragraph: Tu música merece esto\n        - cell \"Aspiracional\"\n        - cell \"Reels + retargeting\"\n        - cell \"Deseo\"\n        - cell \"Video 2 Tu música merece esto Estado Pendiente\":\n          - combobox \"Video 2 Tu música merece esto Estado Pendiente\": Pendiente\n        - cell \"Video 2 Tu música merece esto Notas\":\n          - textbox \"Video 2 Tu música merece esto Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 3 Tienes 30 minutos Urgencia Últimos días Cierre Estado Pendiente Notas\":\n        - rowheader \"Video 3 Tienes 30 minutos\":\n          - paragraph: Video 3\n          - paragraph: Tienes 30 minutos\n        - cell \"Urgencia\"\n        - cell \"Últimos días\"\n        - cell \"Cierre\"\n        - cell \"Video 3 Tienes 30 minutos Estado Pendiente\":\n          - combobox \"Video 3 Tienes 30 minutos Estado Pendiente\": Pendiente\n        - cell \"Video 3 Tienes 30 minutos Notas\":\n          - textbox \"Video 3 Tienes 30 minutos Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 4 El escenario perfecto Emoción / branding Teaser Teaser Estado Pendiente Notas\":\n        - rowheader \"Video 4 El escenario perfecto\":\n          - paragraph: Video 4\n          - paragraph: El escenario perfecto\n        - cell \"Emoción / branding\"\n        - cell \"Teaser\"\n        - cell \"Teaser\"\n        - cell \"Video 4 El escenario perfecto Estado Pendiente\":\n          - combobox \"Video 4 El escenario perfecto Estado Pendiente\": Pendiente\n        - cell \"Video 4 El escenario perfecto Notas\":\n          - textbox \"Video 4 El escenario perfecto Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 5 Detrás de cámaras Credibilidad técnica Consideración Deseo Estado Pendiente Notas\":\n        - rowheader \"Video 5 Detrás de cámaras\":\n          - paragraph: Video 5\n          - paragraph: Detrás de cámaras\n        - cell \"Credibilidad técnica\"\n        - cell \"Consideración\"\n        - cell \"Deseo\"\n        - cell \"Video 5 Detrás de cámaras Estado Pendiente\":\n          - combobox \"Video 5 Detrás de cámaras Estado Pendiente\": Pendiente\n        - cell \"Video 5 Detrás de cámaras Notas\":\n          - textbox \"Video 5 Detrás de cámaras Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 6 Desde cualquier rincón del Ecuador Alcance nacional Lanzamiento Lanzamiento Estado Pendiente Notas\":\n        - rowheader \"Video 6 Desde cualquier rincón del Ecuador\":\n          - paragraph: Video 6\n          - paragraph: Desde cualquier rincón del Ecuador\n        - cell \"Alcance nacional\"\n        - cell \"Lanzamiento\"\n        - cell \"Lanzamiento\"\n        - cell \"Video 6 Desde cualquier rincón del Ecuador Estado Pendiente\":\n          - combobox \"Video 6 Desde cualquier rincón del Ecuador Estado Pendiente\": Pendiente\n        - cell \"Video 6 Desde cualquier rincón del Ecuador Notas\":\n          - textbox \"Video 6 Desde cualquier rincón del Ecuador Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 7 No es un videoclip Diferenciación Anuncio educativo Deseo Estado Pendiente Notas\":\n        - rowheader \"Video 7 No es un videoclip\":\n          - paragraph: Video 7\n          - paragraph: No es un videoclip\n        - cell \"Diferenciación\"\n        - cell \"Anuncio educativo\"\n        - cell \"Deseo\"\n        - cell \"Video 7 No es un videoclip Estado Pendiente\":\n          - combobox \"Video 7 No es un videoclip Estado Pendiente\": Pendiente\n        - cell \"Video 7 No es un videoclip Notas\":\n          - textbox \"Video 7 No es un videoclip Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 8 Haz que te descubran Resultado / oportunidad Retargeting Cierre Estado Pendiente Notas\":\n        - rowheader \"Video 8 Haz que te descubran\":\n          - paragraph: Video 8\n          - paragraph: Haz que te descubran\n        - cell \"Resultado / oportunidad\"\n        - cell \"Retargeting\"\n        - cell \"Cierre\"\n        - cell \"Video 8 Haz que te descubran Estado Pendiente\":\n          - combobox \"Video 8 Haz que te descubran Estado Pendiente\": Pendiente\n        - cell \"Video 8 Haz que te descubran Notas\":\n          - textbox \"Video 8 Haz que te descubran Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 9 Todo incluido Oferta clara Conversión Deseo Estado Pendiente Notas\":\n        - rowheader \"Video 9 Todo incluido\":\n          - paragraph: Video 9\n          - paragraph: Todo incluido\n        - cell \"Oferta clara\"\n        - cell \"Conversión\"\n        - cell \"Deseo\"\n        - cell \"Video 9 Todo incluido Estado Pendiente\":\n          - combobox \"Video 9 Todo incluido Estado Pendiente\": Pendiente\n        - cell \"Video 9 Todo incluido Notas\":\n          - textbox \"Video 9 Todo incluido Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente\n      - row \"Video 10 Convocatoria abierta Trailer hero Pauta principal Lanzamiento Cierre Estado Pendiente Notas\":\n        - rowheader \"Video 10 Convocatoria abierta\":\n          - paragraph: Video 10\n          - paragraph: Convocatoria abierta\n        - cell \"Trailer hero\"\n        - cell \"Pauta principal\"\n        - cell \"Lanzamiento Cierre\"\n        - cell \"Video 10 Convocatoria abierta Estado Pendiente\":\n          - combobox \"Video 10 Convocatoria abierta Estado Pendiente\": Pendiente\n        - cell \"Video 10 Convocatoria abierta Notas\":\n          - textbox \"Video 10 Convocatoria abierta Notas\":\n            - /placeholder: Hook, corte, pauta, pendiente",
+    "violations": []
+  }
+]
