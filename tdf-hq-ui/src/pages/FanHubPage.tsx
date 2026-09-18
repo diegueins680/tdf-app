@@ -771,7 +771,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       />
       <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
         <Stack spacing={1}>
-          <Typography variant="h3" fontWeight={700}>
+          <Typography variant="h3" fontWeight={700} color="text.primary">
             {isHomeManagerView ? 'Inicio — Gestión del hub' : cmsPayload?.heroTitle ?? 'Comunidad — Conecta con tus artistas'}
           </Typography>
           <Typography variant="body1" color="text.secondary">
@@ -939,7 +939,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <PlayArrowIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={700}>Lanzamientos activos</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Lanzamientos activos</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Publica, corrige enlaces a plataformas y revisa qué lanzamientos ya están listos para salir al hub.
@@ -968,7 +968,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <EditIcon color="success" />
-                      <Typography variant="subtitle1" fontWeight={700}>Artistas y perfil</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Artistas y perfil</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Ajusta bio, portada y slugs desde el panel del sello sin perder el contexto del inicio.
@@ -997,7 +997,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <StorefrontIcon color="info" />
-                      <Typography variant="subtitle1" fontWeight={700}>CMS y visibilidad</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">CMS y visibilidad</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Cambia hero, texto y bloques visibles del hub antes de revisar cómo sale en público.
@@ -1026,7 +1026,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <EventAvailableIcon color="secondary" />
-                      <Typography variant="subtitle1" fontWeight={700}>Reservas y activaciones</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Reservas y activaciones</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Revisa el flujo público de reservas y mantén a mano los accesos a sesiones y radio.
@@ -1061,7 +1061,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <EventAvailableIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={700}>Experiencias y reservas</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Experiencias y reservas</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Agenda sesiones privadas, escuchas guiadas o transmisiones con tus artistas favoritos.
@@ -1093,7 +1093,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <WorkspacePremiumIcon color="success" />
-                      <Typography variant="subtitle1" fontWeight={700}>Membresías y niveles</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Membresías y niveles</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Accede a beneficios, lanzamientos anticipados y contenido exclusivo por artista.
@@ -1127,7 +1127,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <StorefrontIcon color="info" />
-                      <Typography variant="subtitle1" fontWeight={700}>Tienda</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Tienda</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Compra merch, paquetes digitales y ediciones limitadas directo del artista o del sello.
@@ -1156,7 +1156,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <RadioIcon color="secondary" />
-                      <Typography variant="subtitle1" fontWeight={700}>Radio y audio</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Radio y audio</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Únete a transmisiones en vivo o escucha la radio curada mientras sigues artistas.
@@ -1293,7 +1293,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           }}
                         >
                           <Stack spacing={1}>
-                            <Typography variant="subtitle1" fontWeight={700}>
+                            <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                               {action.title}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
@@ -1332,7 +1332,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                                 <Stack direction="row" spacing={1.5} alignItems="center">
                                   <Avatar src={getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ?? undefined} alt={artist.apDisplayName} />
                                   <Box>
-                                    <Typography variant="subtitle1" fontWeight={700}>
+                                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                                       {artist.apDisplayName}
                                     </Typography>
                                     {artist.apCity && (
@@ -1757,7 +1757,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           <Card sx={{ p: 3, borderRadius: 3 }}>
             <Stack spacing={1.5} alignItems="center" textAlign="center">
               <CircularProgress size={22} aria-label="Cargando artistas" />
-              <Typography variant="subtitle1" fontWeight={700}>
+              <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                 Cargando catálogo de artistas
               </Typography>
               <Typography variant="body2" color="text.secondary">

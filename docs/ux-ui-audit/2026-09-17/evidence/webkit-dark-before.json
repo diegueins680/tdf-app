@@ -1,0 +1,38 @@
+[
+  {
+    "id": "color-contrast",
+    "impact": "serious",
+    "nodes": [
+      {
+        "target": [
+          "h3"
+        ],
+        "summary": "Fix any of the following:\n  Element has insufficient color contrast of 1.04 (foreground color: #111113, background color: #0a0a0f, font size: 21.0pt (28px), font weight: bold). Expected contrast ratio of 3:1"
+      },
+      {
+        "target": [
+          ".css-2ux9ag.MuiBox-root:nth-child(1) > .css-1pdfqii.MuiStack-root > .css-1qftbaz.MuiStack-root > .css-0.MuiBox-root > .MuiTypography-subtitle1.css-1jf5w4m"
+        ],
+        "summary": "Fix any of the following:\n  Element has insufficient color contrast of 1.01 (foreground color: #111113, background color: #12121a, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+      },
+      {
+        "target": [
+          ".css-2ux9ag.MuiBox-root:nth-child(2) > .css-1pdfqii.MuiStack-root > .css-1qftbaz.MuiStack-root > .css-0.MuiBox-root > .MuiTypography-subtitle1.css-1jf5w4m"
+        ],
+        "summary": "Fix any of the following:\n  Element has insufficient color contrast of 1.01 (foreground color: #111113, background color: #12121a, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+      },
+      {
+        "target": [
+          ".css-2ux9ag.MuiBox-root:nth-child(3) > .css-1pdfqii.MuiStack-root > .css-1qftbaz.MuiStack-root > .css-0.MuiBox-root > .MuiTypography-subtitle1.css-1jf5w4m"
+        ],
+        "summary": "Fix any of the following:\n  Element has insufficient color contrast of 1.01 (foreground color: #111113, background color: #12121a, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+      },
+      {
+        "target": [
+          ".MuiTypography-subtitle2"
+        ],
+        "summary": "Fix any of the following:\n  Element has insufficient color contrast of 1.01 (foreground color: #111113, background color: #12121a, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+      }
+    ]
+  }
+]

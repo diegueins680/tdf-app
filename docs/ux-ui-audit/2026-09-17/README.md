@@ -5,50 +5,68 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
-## Checkpoint de continuación — 2026-09-18 01:24 UTC
+## Checkpoint de continuación — 2026-09-18 02:04 UTC
 
-**PARTIALLY COMPLETE.** Los bloques siguientes son históricos cuando contradigan
-este checkpoint. Main remoto continúa437fdddea907ba7a20b8626242bf2aed108d6789.
-No se ha ejecutado una nueva mutación backend de producción en esta continuación.
+**PARTIALLY COMPLETE.** Este bloque sustituye estados históricos contradictorios.
+La cobertura inicial de411 entradas continúa abierta; no se limita a las PR activas.
 
-- #406 publicado7411a2a: todos los checks aplicables pasan, incluida la fixture
-  HTTP/PostgreSQL17 ampliada que impide reclamar una banda de la misma Party.
-  La revisión posterior4042801092 detectó una carrera de navegación; reparación
-  local con13 pruebas de activación pasando y un modelo específico en verificación.
-  Requiere publicar, renovar aprobación exacta y gates antes de fusionar.
-- #422 publicado8c2e5f9: checks aplicables pasan. Hay correcciones locales de
-  accesibilidad pública y recorrido invitado→registro→seguir; no atribuirlas a ese
-  head ni a producción. Las pruebas actuales focalizadas43/43 pasan. La matriz
-  previa del bundle integrado ya pasó onboarding persistido en tres motores,
-  dos temas,320/390/834/1280px y200%texto; nuevas correcciones requieren repetir
-  los recorridos afectados. Ninguna de estas pruebas usa producción ni SMTP.
-- Se observaron84 combinaciones de42 rutas públicas/320 y1280px contra backend
-  aislado. Persisten filas de cobertura autenticada/operativa/native sin ejecutar;
-  esta muestra no cierra la cobertura411 ni certifica WCAG.
-- Móvilmain fac7c2cfac14db1b81883e184764be7f7d28716a contieneefa2555c5400dfa736bc95a12414a790b82adda5,
-  que es el gitlink de#422 y la fuente de ambos builds STORE FINISHED.
-  Android1.0.1(9):1fbcb51e-b035-4ba9-a6f5-b244bf67bae3.
-  iOS1.0.1(18):154bc17c-ff2d-4f87-b383-75973ee25824.
-- El usuario confirmó acuerdos Apple Developer y permisos Play guardados.
-  Reintentos reales: iOS3123c73b-1dc8-4c8e-a373-4958575a640d sigueERRORED403
-  FORBIDDEN.REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED (job01:21:35UTC);
-  Android656ce093-dbb9-4990-9b1e-8df40398f54a sigueERRORED por permisos.
-  Apple key configurada tieneADMIN y equipoDiego Saa83J23NPXG7; no se imprimieron
-  claves. Cuenta Android confirmada:tdf-drive-sync@tdf-records-477016.iam.gserviceaccount.com.
-  Se solicitó estado exacto de acuerdos y completar permisos de Expo para borradores,
-  pruebas y presencia de tienda. La guía inicial omitía permisos; corregida con la
-  fuente oficial. Ningún envío acredita upload, revisión, rollout o publicación.
-- El navegador conectado no puede abrirse porque su perfil está ocupado; no se
-  cerró ni reutilizó el perfil ajeno. Playwright aislado sigue disponible.
+- #406: aprobación independiente exacta de912f8326b, todos los gates aplicables
+  y cero hilos pendientes; fusionada sin squash como
+  `db69e0534e87ffcb9b3ccf3a856a7fc85e839f16` a01:34:52UTC. Incluye el filtro que
+  excluye bandas de las reclamaciones y la protección de activación contra ABA de
+  sesión/navegación.13 pruebas de componente, HTTP/PostgreSQL17 y modelos TLC
+  con controles negativos pasan. Identidades separadas y revisión de titularidad
+  permanecen obligatorias.
+- #422 integra main mediante merge31f92a2c5; incorpora la intención invitado→
+  registro→confirmación de seguimiento, validación Live Session mediante /session
+  y UX015–020. Web:216 suites/2074 pruebas;43 focalizadas; typecheck/build/lint
+  y quality:repo aprobados. El último cambio de color conserva5 preloads/364315
+  bytes gzip, bajo410KiB. El head publicado anterior8c2e5f9 no contiene todo esto;
+  la entrega nueva requiere sus propios gates y aprobación independiente.
+- Bundle de producción contra backend/PostgreSQL17 aislados:84 casos de42 rutas
+  públicas a320/1280px sin axe, overflow, pageerror ni5xx. Recorrido final en
+  Chromium/Firefox/WebKit: signup real, follow, completion autoritativa, reload,
+  teclado, dos temas, cuatro anchos y200%texto; cero violaciones axe/pageerror.
+  WebKit había conservado texto oscuro tras cambiar de tema; reparación focalizada
+  en Typography y evidencia antes/después. No es certificación WCAG, SMTP/OAuth,
+  cobertura de todos los roles ni medida de rendimiento de campo.
+- Producción: Build Image35295902009 SUCCESS y release protegido terminado a
+  02:03:41UTC. Ambas máquinas sirviendo db69e053, db/status ok. Imagen inmutable
+  `sha256:bf94f72ea7c45ff30a2fad939179f80592a8eacd51ea02a42f9891c5e7d4df76`.
+  Snapshot `vs_alV97Vxv1gacAOlLxK3OGM`, volumenvol_re89q7o0w7ynpx1r,
+  creado01:43:42UTC. Preflight, ledger/checksums, esquema, lease, canary y rolling
+  aprobados; no rollback. Flags existentes conservados. El túnel Fly falló;
+  el mecanismo documentado verificó HTTP público fijado a cada máquina. Webmain
+  db69 tiene Cloudflare check84bed2dd-9730-473e-b96f-a4c2f620065b SUCCESS.
+  Observación posterior y pruebas de journeys productivos se registran aparte.
+- Móvil: gitlink de#422 y ambos builds STORE provienen de
+  `efa2555c5400dfa736bc95a12414a790b82adda5`, ya contenido en mainfac7c2.
+  Main móvil actual50e680a añade sólo una cabecera opcional de tipos generados
+  (PR#92, otro workstream); no se importa ni se atribuye a los artefactos existentes.
+  Android1.0.1(9), build1fbcb51e-b035-4ba9-a6f5-b244bf67bae3, sigue sin envío
+  exitoso:656ce093-dbb9-4990-9b1e-8df40398f54a falló permisos. El usuario dijo
+  «Los completaré» para la lista corregida Expo; falta confirmación de ese cambio.
+- iOS1.0.1(18), build154bc17c-ff2d-4f87-b383-75973ee25824, subido mediante
+  EASd3c2977f-c136-4c03-81c8-51ecbc8c110f. Apple build
+  f72c49ae-2da2-4beb-b0eb-a26bdef674b2 VALID y enlazado al borrador1.0.1;
+  descripción/keywords/URLs es-MX guardados y releídos. Free Apps Agreement
+  Active observado en Business del equipo83J23NPXG7. Estado PREPARE_FOR_SUBMISSION:
+  faltan capturas, cuestionario de edad, privacidad, acceso de revisión y requisitos
+  de distribución aplicables. No revisión enviada ni publicación. Simulador de
+  fuenteefa build efc9a326-c925-4aa0-9176-767efbc845e0 FINISHED e instalado;
+  SHA256 del archivo8e1a446a49bbc84915f300b206945e4614566692dfc8ab5fd562bfc93a641e55.
+  Sus recorridos actuales están en ejecución; no acredita dispositivo físico.
 
-Siguiente acción: terminar gates locales/publicar la reparación de#406, integrar
-sin squash en#422, registrar hallazgos nuevos y evidencia antes/después, cerrar
-revisiones y gates exactos; continuar cobertura independiente. Después, release
-backend guardado y web compatible, y distribución móvil cuando los proveedores
-confirmen acceso. No reenviar repetidamente sin cambio de estado o diagnóstico.
+Siguiente acción: publicar el incremento integrado de#422 y observar sus gates;
+continuar cobertura autenticada/operativa y QA nativa mientras se obtiene revisión
+exacta y se completan requisitos de tienda. No reenviar Android sin cambio confirmado.
+Para recuperar backend usar el informe del release y la imagen previa compatible;
+no reescribir migraciones ni restaurar binarios incompatibles. Snapshot con retención
+5d; el rollback no se ejercitó porque no hubo fallo.
 
-Fuentes consultadas18SepUTC: [permisos EAS/Play](https://github.com/expo/fyi/blob/main/creating-google-service-account.md)
-y [estados de acuerdos Apple](https://developer.apple.com/help/app-store-connect/manage-agreements/view-agreements-status).
+Fuentes primarias: [permisos Expo/Play](https://github.com/expo/fyi/blob/main/creating-google-service-account.md),
+[acuerdos Apple](https://developer.apple.com/help/app-store-connect/manage-agreements/view-agreements-status),
+[builds de Apple](https://developer.apple.com/documentation/appstoreconnectapi/get-v1-builds).
 
 ## Actualización verificada — 2026-09-18 00:36 UTC
 
