@@ -1,0 +1,2 @@
+{"observedAt":"2026-09-18T11:36:53.505Z","status":200,"kind":"storeVersions","data":[{"id":"df5500ae-e7a2-4b3c-8de9-e06869733bde","versionString":"1.0.1","appStoreState":"WAITING_FOR_REVIEW","appVersionState":"WAITING_FOR_REVIEW","releaseType":"AFTER_APPROVAL","earliestReleaseDate":null}]}
+{"observedAt":"2026-09-18T11:36:53.682Z","status":200,"kind":"build22","data":[],"beta":[]}

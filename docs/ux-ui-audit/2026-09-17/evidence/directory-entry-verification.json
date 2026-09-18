@@ -1,0 +1,283 @@
+{
+  "date": "2026-09-18",
+  "baseline": "2ce7a1a0d275ecc65924b5df68bc39cd7a373b1d",
+  "componentTests": {
+    "originalStorageFailures": 3,
+    "originalSessionFailures": 3,
+    "finalPassed": 18,
+    "includesExistingFirstValueHelperTests": 7
+  },
+  "browser": {
+    "transport": "synthetic read-only API; actual production bundle; no production mutation",
+    "baseline": {
+      "stats": {
+        "startTime": "2026-09-18T12:21:57.640Z",
+        "duration": 23176.765000000003,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "title": "Directory remains searchable when city storage denies getter @critical",
+          "project": "chromium-phone",
+          "status": "unexpected",
+          "results": [
+            {
+              "status": "failed",
+              "duration": 9332
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getItem @critical",
+          "project": "chromium-phone",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 2032
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies setItem @critical",
+          "project": "chromium-phone",
+          "status": "unexpected",
+          "results": [
+            {
+              "status": "failed",
+              "duration": 9214
+            }
+          ]
+        }
+      ],
+      "note": "Explicit city bypasses getItem read: that case already passed. Getter/setItem fail. No-URL getItem baseline fails in component test."
+    },
+    "final": {
+      "stats": {
+        "startTime": "2026-09-18T12:22:22.344Z",
+        "duration": 44790.864,
+        "expected": 15,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "title": "Directory remains searchable when city storage denies getter @critical",
+          "project": "chromium-desktop",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 1965
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getItem @critical",
+          "project": "chromium-desktop",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 1735
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies setItem @critical",
+          "project": "chromium-desktop",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 1657
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getter @critical",
+          "project": "chromium-phone",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 2056
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getItem @critical",
+          "project": "chromium-phone",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 2292
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies setItem @critical",
+          "project": "chromium-phone",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 2272
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getter @critical",
+          "project": "chromium-tablet",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 2396
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getItem @critical",
+          "project": "chromium-tablet",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 1960
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies setItem @critical",
+          "project": "chromium-tablet",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 1845
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getter @critical",
+          "project": "firefox-critical",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 4500
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getItem @critical",
+          "project": "firefox-critical",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 3041
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies setItem @critical",
+          "project": "firefox-critical",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 3111
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getter @critical",
+          "project": "webkit-critical",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 3476
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies getItem @critical",
+          "project": "webkit-critical",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 2514
+            }
+          ]
+        },
+        {
+          "title": "Directory remains searchable when city storage denies setItem @critical",
+          "project": "webkit-critical",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 2561
+            }
+          ]
+        }
+      ]
+    },
+    "excluded": "Initial broad selector matched absolute worktree path; interrupted, not passing evidence."
+  },
+  "model": {
+    "tool": "TLC1.7.2",
+    "generated": 356,
+    "distinct": 208,
+    "depth": 9,
+    "unsafeDispatchGenerated": 29,
+    "unsafeReceiptGenerated": 63,
+    "fullPinnedTlcAlloy": "PASS"
+  },
+  "build": {
+    "initialGzipBytes": 365639,
+    "preloads": 5,
+    "typescript": "PASS",
+    "lint": "PASS"
+  },
+  "catalog": {
+    "pinnedMobile": "4122bb75e9c550eaf5ed7ee81b89ee5188938271",
+    "reviewedCandidates": 1138,
+    "strict": "PASS"
+  },
+  "limits": [
+    "No physical screen reader",
+    "No field performance",
+    "No new backend persistence proof from browser mocks",
+    "Pending merge/release; remaining directory localization coverage"
+  ],
+  "sourceHashes": {
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "f12b8065fe17618ec11df36e1d4ec77404803fb4f568ac514819a369ed3fc6a4",
+    "formal/event-operations/DirectoryFavoriteAuthority.tla": "4b4f5fb17e1f76f184faa76b9b8af020e2675ba39a288bc659bb70fdde7bfa5a"
+  },
+  "reviewFollowup": {
+    "review": "https://github.com/diegueins680/tdf-app/pull/447#discussion_r4046711715",
+    "behavior": "Successful current-session favorites refresh clears the mutation error; failed refresh retains it.",
+    "focusedTestsPassed": 19,
+    "browserStats": {
+      "startTime": "2026-09-18T12:33:53.051Z",
+      "duration": 64431.657,
+      "expected": 5,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "browserTransport": "Spanish branch of bilingual fixture script against final directory safety bundle; five profiles, three engines; no production requests. Equivalent ES-only test retained as directory-favorite-recovery.spec.mjs.",
+    "buildInitialGzip": 365647,
+    "sourceSha256": "5b36f353413dff3e74512e249a7203179121072bf94396b3d63205d5bce4825e"
+  }
+}

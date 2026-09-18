@@ -1,0 +1,66 @@
+[
+  {
+    "route": "/social/events/900000001",
+    "width": 320,
+    "language": "es",
+    "observedLanguage": "es",
+    "scenario": "absent-resource/anonymous",
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/social/events/900000001",
+    "width": 1280,
+    "language": "es",
+    "observedLanguage": "es",
+    "scenario": "absent-resource/anonymous",
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/social/events/900000001",
+    "width": 320,
+    "language": "en",
+    "observedLanguage": "en",
+    "scenario": "absent-resource/anonymous",
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/social/events/900000001",
+    "width": 1280,
+    "language": "en",
+    "observedLanguage": "en",
+    "scenario": "absent-resource/anonymous",
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  }
+]

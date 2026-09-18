@@ -1,0 +1,20 @@
+{
+  "observedAt": "2026-09-18T07:38:54.133136+00:00",
+  "authorizedAudience": 82,
+  "smtpAccepted": 80,
+  "smtpRejected": 2,
+  "ambiguous": 0,
+  "notAttempted": 0,
+  "deliveryOrReadVerified": false,
+  "actualTesterOptInVerified": false,
+  "duplicateResend": 0,
+  "invalidDomainExcluded": 1,
+  "reservedAddressesExcluded": 2,
+  "recognizedGoogleList": 68,
+  "needsGoogleAccountRecipients": 14,
+  "track": "alpha",
+  "versionCode": 10,
+  "availability": "Actual Play Console active Alpha10, saved selected list68 plus existing1/11; evidence read before send",
+  "privateLedger": "Stored locally with owner-only permissions; no audience committed",
+  "nextAction": "Correct the2 SMTP-rejected addresses and1 invalid-domain address before any further attempt; process Google-account replies and real12testers/14days."
+}

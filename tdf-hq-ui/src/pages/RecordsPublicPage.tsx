@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useContactCreation } from '../hooks/useContactCreation';
 import { logger } from '../utils/logger';
 import {
@@ -1000,6 +1001,7 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
 );
 
 export default function RecordsPublicPage() {
+  const { t } = useTranslation();
   const recordsFeedQuery = useQuery({
     queryKey: ['records-feed', 'es'],
     queryFn: () => Records.getFeed('es'),
@@ -1262,7 +1264,7 @@ export default function RecordsPublicPage() {
           </Stack>
           {recordingsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
-              <CircularProgress size={20} color="inherit" />
+              <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedRecordings')} />
               <Typography variant="body2">Cargando grabaciones publicadas…</Typography>
             </Stack>
           ) : recordingsError ? (
@@ -1302,7 +1304,7 @@ export default function RecordsPublicPage() {
           </Stack>
           {releasesLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
-              <CircularProgress size={20} color="inherit" />
+              <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedReleases')} />
               <Typography variant="body2">Cargando lanzamientos publicados…</Typography>
             </Stack>
           ) : releasesError ? (
@@ -1343,7 +1345,7 @@ export default function RecordsPublicPage() {
           </Stack>
           {sessionsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
-              <CircularProgress size={20} color="inherit" />
+              <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedSessions')} />
               <Typography variant="body2">Cargando sesiones publicadas…</Typography>
             </Stack>
           ) : sessionsError ? (

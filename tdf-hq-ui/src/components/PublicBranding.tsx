@@ -110,7 +110,16 @@ export default function PublicBranding({
   }, [location.search]);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{
+      minHeight: '100vh',
+      bgcolor: 'background.default',
+      // Long words and translated labels must remain readable when the user
+      // enlarges browser text; clipping the page would hide those controls.
+      overflowWrap: 'anywhere',
+      '& .MuiButton-root': { whiteSpace: 'normal' },
+      '& .MuiChip-root': { maxWidth: '100%', height: 'auto', minHeight: 32 },
+      '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 },
+    }}>
       <Box
         component="a"
         href="#main-content"
@@ -142,8 +151,8 @@ export default function PublicBranding({
           }}
         >
           <Container maxWidth="xl">
-            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
                 <Box
                   component={RouterLink}
                   to="/tdf"
@@ -191,7 +200,7 @@ export default function PublicBranding({
                   ))}
                 </Stack>
               </Stack>
-              <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ maxWidth: '100%', minWidth: 0 }}>
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (
@@ -242,7 +251,7 @@ export default function PublicBranding({
         id="main-content"
         tabIndex={-1}
         maxWidth="xl"
-        sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, outline: 'none' }}
+        sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, minWidth: 0, outline: 'none' }}
       >
         {showInstagramEntryLinks && <InstagramEntryLinks />}
         {children}

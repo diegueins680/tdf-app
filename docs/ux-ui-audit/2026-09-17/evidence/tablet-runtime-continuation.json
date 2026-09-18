@@ -1,0 +1,7527 @@
+{
+  "observedAt": "2026-09-18T10:49:37.162700+00:00",
+  "frontendSource": "dabb773a2 / production bundle at isolated18677",
+  "backend": "actual isolated PostgreSQL17 / old38256cf API; not production",
+  "cases": [
+    {
+      "route": "/",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/instagram",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/ig",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tdf",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/comercio",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/commerce",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribucion",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribution",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/sobre-tdf",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inicio",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/buscar",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/fans",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mi-artista",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mi-artista",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/crear",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/artista/crear",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace",
+      "title": "Marketplace · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tiendas",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tiendas",
+      "title": "Merch de artistas · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/services/mixing-mastering",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/pago-datafast",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/google-drive/callback",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/google-drive/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/instagram/callback",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/instagram/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-dic-2025",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-abr-2026",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/trials",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/trials",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/live-sessions/registro",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/live-sessions/registro",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/feedback",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/feedback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/privacidad",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/privacidad",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/apelaciones",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/apelaciones",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reputacion/como-se-calcula",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reputacion/como-se-calcula",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/consentimiento",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/consentimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/ok",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/ok",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/records",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/records",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/donar",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/donar",
+      "title": "Donaciones · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reservar",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/dj-booth",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar/dj-booth",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/domo-del-pululahua",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/login",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/login",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reset",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reset",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/herramientas/creador-musical",
+      "width": 768,
+      "language": "es",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/herramientas/creador-musical",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/instagram",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/ig",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tdf",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/comercio",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/commerce",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribucion",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribution",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/sobre-tdf",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inicio",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/buscar",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/fans",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mi-artista",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mi-artista",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/crear",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/artista/crear",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace",
+      "title": "Marketplace · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tiendas",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tiendas",
+      "title": "Artist merch · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/services/mixing-mastering",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/pago-datafast",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/google-drive/callback",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/google-drive/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/instagram/callback",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/instagram/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-dic-2025",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-abr-2026",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/trials",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/trials",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/live-sessions/registro",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/live-sessions/registro",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/feedback",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/feedback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/privacidad",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/privacidad",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/apelaciones",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/apelaciones",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reputacion/como-se-calcula",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reputacion/como-se-calcula",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/consentimiento",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/consentimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/ok",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/ok",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/records",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/records",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/donar",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/donar",
+      "title": "Donaciones · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reservar",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/dj-booth",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar/dj-booth",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/domo-del-pululahua",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/login",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/login",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reset",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reset",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/herramientas/creador-musical",
+      "width": 768,
+      "language": "en",
+      "engine": "chromium",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/herramientas/creador-musical",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/instagram",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/ig",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tdf",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/comercio",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/commerce",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribucion",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribution",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/sobre-tdf",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inicio",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/buscar",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/fans",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mi-artista",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mi-artista",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/crear",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/artista/crear",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace",
+      "title": "Marketplace · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tiendas",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tiendas",
+      "title": "Merch de artistas · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/services/mixing-mastering",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/pago-datafast",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/google-drive/callback",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/google-drive/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/instagram/callback",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/instagram/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-dic-2025",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-abr-2026",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/trials",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/trials",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/live-sessions/registro",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/live-sessions/registro",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/feedback",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/feedback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/privacidad",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/privacidad",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/apelaciones",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/apelaciones",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reputacion/como-se-calcula",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reputacion/como-se-calcula",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/consentimiento",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/consentimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/ok",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/ok",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/records",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/records",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/donar",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/donar",
+      "title": "Donaciones · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reservar",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/dj-booth",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar/dj-booth",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/domo-del-pululahua",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/login",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/login",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reset",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reset",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/herramientas/creador-musical",
+      "width": 768,
+      "language": "es",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/herramientas/creador-musical",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/instagram",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/ig",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tdf",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/comercio",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/commerce",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribucion",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribution",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/sobre-tdf",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inicio",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/buscar",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/fans",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mi-artista",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mi-artista",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/crear",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/artista/crear",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace",
+      "title": "Marketplace · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tiendas",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tiendas",
+      "title": "Artist merch · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/services/mixing-mastering",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/pago-datafast",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/google-drive/callback",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/google-drive/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/instagram/callback",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/instagram/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-dic-2025",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-abr-2026",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/trials",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/trials",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/live-sessions/registro",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/live-sessions/registro",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/feedback",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/feedback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/privacidad",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/privacidad",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/apelaciones",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/apelaciones",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reputacion/como-se-calcula",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reputacion/como-se-calcula",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/consentimiento",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/consentimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/ok",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/ok",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/records",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/records",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/donar",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/donar",
+      "title": "Donaciones · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reservar",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/dj-booth",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar/dj-booth",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/domo-del-pululahua",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/login",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/login",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reset",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reset",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/herramientas/creador-musical",
+      "width": 768,
+      "language": "en",
+      "engine": "firefox",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/herramientas/creador-musical",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/instagram",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/ig",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tdf",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/comercio",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/commerce",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribucion",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribution",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/sobre-tdf",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inicio",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/buscar",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/fans",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mi-artista",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mi-artista",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/crear",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/artista/crear",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace",
+      "title": "Marketplace · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tiendas",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tiendas",
+      "title": "Merch de artistas · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/services/mixing-mastering",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/pago-datafast",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/google-drive/callback",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/google-drive/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/instagram/callback",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/instagram/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-dic-2025",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-abr-2026",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/trials",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/trials",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/live-sessions/registro",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/live-sessions/registro",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/feedback",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/feedback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/privacidad",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/privacidad",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/apelaciones",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/apelaciones",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reputacion/como-se-calcula",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reputacion/como-se-calcula",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/consentimiento",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/consentimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/ok",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/ok",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/records",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/records",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/donar",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/donar",
+      "title": "Donaciones · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reservar",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/dj-booth",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar/dj-booth",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/domo-del-pululahua",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/login",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/login",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reset",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reset",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/herramientas/creador-musical",
+      "width": 768,
+      "language": "es",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/herramientas/creador-musical",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/instagram",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/ig",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tdf",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/comercio",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/commerce",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/comercio",
+      "title": "Servicios TDF · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribucion",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/distribution",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/distribucion",
+      "title": "Distribución musical · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/sobre-tdf",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tdf",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inicio",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/buscar",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/buscar",
+      "title": "Directorio y clasificados musicales · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/fans",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mi-artista",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mi-artista",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/crear",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/artista/crear",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace",
+      "title": "Marketplace · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tiendas",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/tiendas",
+      "title": "Artist merch · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/services/mixing-mastering",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/mezcla-mastering",
+      "title": "Mezcla y Masterización · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/pago-datafast",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/marketplace/pago-datafast",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/google-drive/callback",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/google-drive/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/oauth/instagram/callback",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/oauth/instagram/callback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-dic-2025",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/produccion-musical-abr-2026",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/curso/produccion-musical-jun-2026",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/trials",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/trials",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/live-sessions/registro",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/live-sessions/registro",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/feedback",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/feedback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/privacidad",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/privacidad",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/apelaciones",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/apelaciones",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reputacion/como-se-calcula",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reputacion/como-se-calcula",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/consentimiento",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/consentimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/whatsapp/ok",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/whatsapp/ok",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/records",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/records",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/donar",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/donar",
+      "title": "Donaciones · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reservar",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/dj-booth",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservar/dj-booth",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/dj-booth",
+      "title": "Reservar · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/domo-del-pululahua",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/domo-del-pululahua",
+      "title": "Domo del Pululahua · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/login",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/login",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reset",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/reset",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/herramientas/creador-musical",
+      "width": 768,
+      "language": "en",
+      "engine": "webkit",
+      "scenario": "isolated-production-bundle/public-tablet-arrival",
+      "finalPath": "/herramientas/creador-musical",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/parties",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/contactos",
+      "title": "CRM / Contactos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Contactos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/bookings",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "14 – 20 sept 2026"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/pipelines",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/pipelines",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Pipelines"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/kanban",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/pipelines",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Pipelines"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/contactos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/contactos",
+      "title": "CRM / Contactos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Contactos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/system",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/preferencias",
+      "title": "Configuración / Sistema · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Estado del sistema"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/admin/roles",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/roles-permisos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/operacion/control",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion/control",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/dashboard/operations",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/dashboard/operations",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/mis-clasificados",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/mis-clasificados",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Mis perfiles y clasificados"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/admin/directorio",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/directorio",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Confianza y moderación del directorio"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/mi-profesor",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/mi-profesor",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/reputation/preferences",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/reputation/preferences",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/reputation/consents",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/reputation/consents",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/merch/reputacion/preferencias",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/merch/reputacion/preferencias",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/admin/merch/reputacion",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/merch/reputacion",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/social",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social",
+      "title": "Social · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/social/instagram",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/instagram",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/social/inbox",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/inbox",
+      "title": "Social / Bandeja · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/social/eventos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/eventos",
+      "title": "Social / Eventos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/social/eventos/nuevo",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/eventos/nuevo",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Crear evento",
+        "Detalles opcionalesDescripción, capacidad, precio, tickets y visibilidad"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/social/eventos-descubiertos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/eventos-descubiertos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/chat",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/chat",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/docs",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/docs",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Documentación"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/manual",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/manual",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/acerca",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/acerca",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/seguridad",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/seguridad",
+      "title": "Configuración / Seguridad · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/solicitudes-acceso",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/solicitudes-acceso",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Solicitudes de acceso"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/solicitudes-acceso/nueva",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/solicitudes-acceso/nueva",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Solicitar acceso"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/solicitudes-acceso/revision",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/solicitudes-acceso/revision",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Revisar solicitudes de acceso"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/practicas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/practicas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/feedback/interno",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/feedback/interno",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Reportes internos de pruebas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/admin/diagnosticos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/diagnosticos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/admin/commerce/provider-events",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/commerce/provider-events",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Eventos de pago"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/admin/merch",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/merch",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Revisión del piloto de merch",
+        "Solicitudes de vendedores",
+        "Autorización de reembolsos",
+        "Disputas del proveedor",
+        "Productos pendientes de revisión",
+        "Soporte y revisión financiera",
+        "Liquidaciones manuales a vendedores",
+        "1. Preparar liquidación"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/admin/artistas-enriquecimiento",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/artistas-enriquecimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Enriquecimiento de artistas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/admin/artists/enrichment",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/artists/enrichment",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Enriquecimiento de artistas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/herramientas/chatkit",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/herramientas/chatkit",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/herramientas/tidal-agent",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/herramientas/tidal-agent",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/herramientas/token-admin",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/herramientas/token-admin",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/crm",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/contactos",
+      "title": "CRM / Contactos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Contactos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/crm/contactos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/contactos",
+      "title": "CRM / Contactos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Contactos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/crm/empresas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/empresas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Empresas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/crm/leads",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/leads",
+      "title": "CRM / Leads · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "CRM / Leads"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/estudio",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "14 – 20 sept 2026"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/estudio/calendario",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "14 – 20 sept 2026"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/estudio/salas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/salas",
+      "title": "Estudio / Salas · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Salas y recursos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/estudio/ordenes",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/ordenes",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Sesiones"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/estudio/servicios",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/servicios",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/estudio/pipelines",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/pipelines",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Pipelines"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/estudio/live-sessions",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/live-sessions",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/estudio/campanas/tdf-sessions-domo",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/campanas/tdf-sessions-domo",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "TDF Sessions x Domo Pululahua",
+        "30 minutos. 4 cámaras. Un cráter. Tu banda."
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/estudio/reportes",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/reportes",
+      "title": "Finanzas / Reportes · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Reportes"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/label",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/artistas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Artistas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/label/artistas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/artistas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Artistas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/label/proyectos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/proyectos",
+      "title": "Label / Proyectos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Proyectos del label"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/label/releases",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/releases",
+      "title": "Label / Lanzamientos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/label/assets",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/assets",
+      "title": "Label / Activos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/label/tracks",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/tracks",
+      "title": "Label / Pistas · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/label/ddex",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/ddex",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/label/ddex/partners",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/ddex/partners",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/escuela",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela/trial-lessons",
+      "title": "Escuela / Clases de prueba · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/escuela/profesores",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela/profesores",
+      "title": "Escuela / Profesores · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/escuela/clases",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela/clases",
+      "title": "Escuela / Clases · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/escuela/trial-lessons",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela/trial-lessons",
+      "title": "Escuela / Clases de prueba · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/escuela/trial-queue",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela/trial-queue",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/finanzas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas/pagos",
+      "title": "Finanzas / Pagos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/finanzas/pagos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas/pagos",
+      "title": "Finanzas / Pagos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/finanzas/creador-reporte-cuenta",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas/creador-reporte-cuenta",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Creador de reportes de cuenta"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/finanzas/reporte-esteban-munoz",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas/reporte-esteban-munoz",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Reporte Esteban Muñoz",
+        "$420,00"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/finanzas/reporte-david-celaya",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas/reporte-david-celaya",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Reporte de cuenta David Celaya",
+        "$225,00"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/operacion",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion/inventario",
+      "title": "Operación / Inventario · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Inventario de equipo"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/operacion/inventario",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion/inventario",
+      "title": "Operación / Inventario · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Inventario de equipo"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/operacion/ordenes-marketplace",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion/ordenes-marketplace",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/operacion/reservas-equipo",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion/reservas-equipo",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/mi-tienda",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/mi-tienda",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Piloto de merch para artistas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/roles-permisos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/catalogos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Catálogos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/catalogos/radio-auto-stop",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/radio-auto-stop",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/catalogos/apariencia",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/apariencia",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Catálogo de apariencia"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/catalogos/feedback",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/feedback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Catálogos de feedback"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/catalogos/reacciones",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/reacciones",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Reacciones de momentos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/catalogos/reacciones-contenido",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/reacciones-contenido",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Reacciones de contenido"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/catalogos/insignias-creadores",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/insignias-creadores",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Insignias de creadores"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/inscripciones-curso",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/inscripciones-curso",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/cursos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/cursos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/usuarios-admin",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/usuarios-admin",
+      "title": "Configuración / Usuarios · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/estado",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/estado",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/actividad",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/actividad",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Actividad de usuarios"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/logs",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/logs",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Logs del servidor"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/brain",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/brain",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/roles-permisos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/roles-permisos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [
+        {
+          "path": "/api/calendar/v1/config",
+          "status": 500
+        },
+        {
+          "path": "/api/calendar/v1/events",
+          "status": 500
+        },
+        {
+          "path": "/api/calendar/v1/config",
+          "status": 500
+        },
+        {
+          "path": "/api/calendar/v1/events",
+          "status": 500
+        }
+      ],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/cms",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/cms",
+      "title": "Configuración / CMS · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/campanas-automaticas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/campanas-automaticas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Campañas automáticas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/fuentes-eventos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/fuentes-eventos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/whatsapp-consentimiento",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/whatsapp-consentimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/opciones-ux",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/opciones-ux",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "route": "/configuracion/preferencias",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/preferencias",
+      "title": "Configuración / Sistema · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Estado del sistema"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/parties",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/contactos",
+      "title": "CRM / Contactos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Contactos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/bookings",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/bookings",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/pipelines",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/pipelines",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/kanban",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/kanban",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/contactos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/contactos",
+      "title": "CRM / Contactos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Contactos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/system",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/system",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/admin/roles",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/roles",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/operacion/control",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion/control",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/dashboard/operations",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/dashboard/operations",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/mis-clasificados",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/mis-clasificados",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Mis perfiles y clasificados"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/admin/directorio",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/directorio",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/mi-profesor",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/mi-profesor",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/reputation/preferences",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/reputation/preferences",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/reputation/consents",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/reputation/consents",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/merch/reputacion/preferencias",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/merch/reputacion/preferencias",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/admin/merch/reputacion",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/merch/reputacion",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/social",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social",
+      "title": "Social · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/social/instagram",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/instagram",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/social/inbox",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/inbox",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/social/eventos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/eventos",
+      "title": "Social / Eventos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/social/eventos/nuevo",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/eventos/nuevo",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Crear evento",
+        "Detalles opcionalesDescripción, capacidad, precio, tickets y visibilidad"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/social/eventos-descubiertos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/social/eventos-descubiertos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/chat",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/chat",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/docs",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/docs",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Documentación"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/manual",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/manual",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/acerca",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/acerca",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/seguridad",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/seguridad",
+      "title": "Configuración / Seguridad · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/solicitudes-acceso",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/solicitudes-acceso",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Solicitudes de acceso"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/solicitudes-acceso/nueva",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/solicitudes-acceso/nueva",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Solicitar acceso"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/solicitudes-acceso/revision",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/solicitudes-acceso/revision",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/practicas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/practicas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/feedback/interno",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/feedback/interno",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/admin/diagnosticos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/diagnosticos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/admin/commerce/provider-events",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/commerce/provider-events",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/admin/merch",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/merch",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/admin/artistas-enriquecimiento",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/artistas-enriquecimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/admin/artists/enrichment",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/admin/artists/enrichment",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/herramientas/chatkit",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/herramientas/chatkit",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/herramientas/tidal-agent",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/herramientas/tidal-agent",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/herramientas/token-admin",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/herramientas/token-admin",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/crm",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/contactos",
+      "title": "CRM / Contactos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Contactos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/crm/contactos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/contactos",
+      "title": "CRM / Contactos · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Contactos"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/crm/empresas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/empresas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Empresas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/crm/leads",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/crm/leads",
+      "title": "CRM / Leads · TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "CRM / Leads"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/estudio",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/estudio/calendario",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/estudio/salas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/salas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/estudio/ordenes",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/ordenes",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/estudio/servicios",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/servicios",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/estudio/pipelines",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/pipelines",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/estudio/live-sessions",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/live-sessions",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/estudio/campanas/tdf-sessions-domo",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/campanas/tdf-sessions-domo",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/estudio/reportes",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/estudio/reportes",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/label",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/label/artistas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/artistas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/label/proyectos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/proyectos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/label/releases",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/releases",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/label/assets",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/assets",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/label/tracks",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/tracks",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/label/ddex",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/ddex",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/label/ddex/partners",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/label/ddex/partners",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/escuela",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/escuela/profesores",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela/profesores",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/escuela/clases",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela/clases",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/escuela/trial-lessons",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela/trial-lessons",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/escuela/trial-queue",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/escuela/trial-queue",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/finanzas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/finanzas/pagos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas/pagos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/finanzas/creador-reporte-cuenta",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas/creador-reporte-cuenta",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/finanzas/reporte-esteban-munoz",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas/reporte-esteban-munoz",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/finanzas/reporte-david-celaya",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/finanzas/reporte-david-celaya",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/operacion",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/operacion/inventario",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion/inventario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/operacion/ordenes-marketplace",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion/ordenes-marketplace",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/operacion/reservas-equipo",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/operacion/reservas-equipo",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/mi-tienda",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/mi-tienda",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "Piloto de merch para artistas"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/catalogos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/catalogos/radio-auto-stop",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/radio-auto-stop",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/catalogos/apariencia",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/apariencia",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/catalogos/feedback",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/feedback",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/catalogos/reacciones",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/reacciones",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/catalogos/reacciones-contenido",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/reacciones-contenido",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/catalogos/insignias-creadores",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/catalogos/insignias-creadores",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/inscripciones-curso",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/inscripciones-curso",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/cursos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/cursos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/usuarios-admin",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/usuarios-admin",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/estado",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/estado",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/actividad",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/actividad",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/logs",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/logs",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/brain",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/brain",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/roles-permisos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/roles-permisos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/integraciones/calendario",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/integraciones/calendario",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/cms",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/cms",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/campanas-automaticas",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/campanas-automaticas",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/fuentes-eventos",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/fuentes-eventos",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/whatsapp-consentimiento",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/whatsapp-consentimiento",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/opciones-ux",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/opciones-ux",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    },
+    {
+      "role": "read-only",
+      "route": "/configuracion/preferencias",
+      "width": 768,
+      "scenario": "isolated-production-bundle/protected-tablet-arrival",
+      "finalPath": "/configuracion/preferencias",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "errors": [],
+      "failures": [],
+      "headings": [
+        "No tienes permiso para abrir esta sección"
+      ],
+      "violations": []
+    }
+  ],
+  "limits": "Arrival/empty/denial only. Does not certify populated workflows, native tablets, screen readers or all role combinations. Admin calendar500 confirmed missing tables also by read-only production schema query; pending040."
+}

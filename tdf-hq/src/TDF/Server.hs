@@ -15843,14 +15843,23 @@ listMarketplace = do
           selectList
             [ME.MarketplaceListingActive ==. True]
             [Asc ME.MarketplaceListingTitle]
-        forM listings $ \(Entity lid listing) -> do
-          mAsset <- get (ME.marketplaceListingAssetId listing)
-          pure (lid, listing, mAsset)
-  rows <- liftIO $ flip runSqlPool envPool loadListings
+        if null listings
+          then pure ([], Map.empty)
+          else do
+            assets <- getMany (map (ME.marketplaceListingAssetId . entityVal) listings)
+            rentalTerms <- loadPublicMarketplaceRentalTerms (map entityKey listings)
+            pure
+              ( [ (lid, listing, Map.lookup (ME.marketplaceListingAssetId listing) assets)
+                | Entity lid listing <- listings
+                ]
+              , rentalTerms
+              )
+      renderListings (rows, rentalTerms) =
+        fmap catMaybes $ forM rows $ \row@(lid, _, _) ->
+          toMarketplaceDTOWithTerms assetsBase (Map.lookup (toPathPiece lid) rentalTerms) row
+  loaded@(rows, _) <- liftIO $ flip runSqlPool envPool loadListings
   if not (null rows)
-    then do
-      dtos <- forM rows (toMarketplaceDTO assetsBase)
-      pure (catMaybes dtos)
+    then renderListings loaded
     else if seedDatabase envConfig
     then do
       -- Auto-publish demo inventory so the public marketplace is never empty.
@@ -15858,8 +15867,7 @@ listMarketplace = do
         seedInventoryAssets
         seedMarketplaceListings
       seeded <- liftIO $ flip runSqlPool envPool loadListings
-      dtos <- forM seeded (toMarketplaceDTO assetsBase)
-      pure (catMaybes dtos)
+      renderListings seeded
     else
       pure []
 
@@ -15976,10 +15984,21 @@ toMarketplaceDTO
   -> (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
   -> AppM (Maybe MarketplaceItemDTO)
 toMarketplaceDTO _ (_, _, Nothing) = pure Nothing
-toMarketplaceDTO assetsBase (lid, listing, Just asset) = do
-  mPhoto <- liftIO $ resolveMarketplacePhotoUrl assetsBase (ME.assetPhotoUrl asset)
+toMarketplaceDTO assetsBase row@(lid, _, _) = do
   Env{ envPool } <- ask
   mRentalTerms <- liftIO $ flip runSqlPool envPool $ loadActiveMarketplaceRentalTerms lid
+  toMarketplaceDTOWithTerms assetsBase mRentalTerms row
+
+-- The public collection loads these inputs in bulk; item/checkout callers retain
+-- the same authoritative per-listing terms query and DTO construction.
+toMarketplaceDTOWithTerms
+  :: Text
+  -> Maybe MarketplaceRentalTerms
+  -> (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
+  -> AppM (Maybe MarketplaceItemDTO)
+toMarketplaceDTOWithTerms _ _ (_, _, Nothing) = pure Nothing
+toMarketplaceDTOWithTerms assetsBase mRentalTerms (lid, listing, Just asset) = do
+  mPhoto <- liftIO $ resolveMarketplacePhotoUrl assetsBase (ME.assetPhotoUrl asset)
   let listedPrice = maybe
         (ME.marketplaceListingPriceUsdCents listing)
         mrtDailyRateCents
@@ -16032,6 +16051,42 @@ data MarketplaceRentalTerms = MarketplaceRentalTerms
   , mrtTermsVersion :: Text
   , mrtTermsSummary :: Text
   } deriving (Eq, Show)
+
+-- Bind the already selected listing IDs. Re-reading listing.active under READ
+-- COMMITTED could remove approved terms after concurrent fulfillment deactivates
+-- an asset, causing a selected rental to fall back to its base price.
+loadPublicMarketplaceRentalTerms :: [Key ME.MarketplaceListing] -> SqlPersistT IO (Map.Map Text MarketplaceRentalTerms)
+loadPublicMarketplaceRentalTerms [] = pure Map.empty
+loadPublicMarketplaceRentalTerms listingIds = do
+  let placeholders = T.intercalate "," (replicate (length listingIds) "?::uuid")
+  rows <- (rawSql
+    ("SELECT CAST(t.listing_id AS TEXT), t.daily_rate_usd_cents, t.weekly_rate_usd_cents, t.security_deposit_usd_cents," <>
+     " t.late_fee_usd_cents, t.min_days, t.max_days, t.cancellation_window_hours, t.timezone, t.terms_version, t.terms_summary" <>
+     " FROM marketplace_rental_listing_terms t" <>
+     " WHERE t.listing_id IN (" <> placeholders <> ") AND t.active AND t.approved_at IS NOT NULL")
+    (map (PersistText . toPathPiece) listingIds)
+    :: SqlPersistT IO
+      [( Single Text, Single Int64, Single (Maybe Int64), Single Int64, Single Int64
+       , Single Int, Single Int, Single Int, Single Text, Single Text, Single Text
+       )])
+  pure $ Map.fromList
+    [ (listingId, MarketplaceRentalTerms
+        { mrtDailyRateCents = fromIntegral dailyRate
+        , mrtWeeklyRateCents = fromIntegral <$> weeklyRate
+        , mrtSecurityDepositCents = fromIntegral securityDeposit
+        , mrtLateFeeCents = fromIntegral lateFee
+        , mrtMinDays = minDays
+        , mrtMaxDays = maxDays
+        , mrtCancellationWindowHours = cancellationWindowHours
+        , mrtTimezone = timezone
+        , mrtTermsVersion = termsVersion
+        , mrtTermsSummary = termsSummary
+        })
+    | ( Single listingId, Single dailyRate, Single weeklyRate, Single securityDeposit, Single lateFee
+      , Single minDays, Single maxDays, Single cancellationWindowHours, Single timezone, Single termsVersion
+      , Single termsSummary
+      ) <- rows
+    ]
 
 loadActiveMarketplaceRentalTerms
   :: Key ME.MarketplaceListing

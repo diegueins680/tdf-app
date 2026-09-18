@@ -317,3 +317,61 @@ perform no machine recovery. The executable model abstracts verified immutable
 artifacts and trusted commit ancestry. It does not prove identity-token validation,
 the cloud provider, or whole-system availability. Exact executions are in the
 canonical UX audit record.
+
+## Optional private-token cache recovery (2026-09-18)
+
+`OptionalTokenRecovery` checks32initial scenarios,96generated/distinct states (depth3).
+No invented/missing token can dispatch a request; tracking fragments take precedence.
+Weakly fair resolve/dispatch ensure recovery terminates when storage returns or throws.
+Unsafe storage (84states) violates liveness; cache-first mutation (41states) violates
+fragment precedence. This is client token-presence conformance, not server permission
+or payment-settlement verification. [Evidence and limits](../../docs/ux-ui-audit/2026-09-17/storage-boundaries.md).
+### Marketplace catalog selection consistency
+
+`MarketplaceCatalogRead.tla` models one listing, approved/unapproved immutable terms,
+selection, concurrent sale deactivation, the terms read and response rendering. Both
+approved and unapproved configurations explore13generated/11distinct states, depth5;
+SelectedRentalKeepsApprovedTerms, UnapprovedTermsNotUsed and NoUnselectedListing hold.
+RequestFinishes assumes weak fairness for selection/read/render; provider/database
+outages and changing term approval are not modeled. Terminal quiescence is expected.
+The unsafe active-listing join produces the named price-fallback counterexample in
+11states: select→deactivate→read terms→render. The full pinned TLC/Alloy suite passes.
+
+Implementation: bind the IDs already selected into the batch's parameterized IN
+query, with an empty-list guard, retaining approved/active term filters. Actual HTTP
+regression interleaves a second PostgreSQL connection after selected listings have
+reached the handler and before the terms read. It reproduces10001 instead of2001
+minor units on the old code, then preserves2001/terms on the corrected handler; the
+next request excludes the deactivated row. Query count stays5 with80generated
+fixtures. This does not certify checkout/fulfillment transactions or claim snapshot
+isolation for every returned asset field.
+### Calendar connection and OAuth return
+
+`CalendarConnection.tla` bounds one returned code, two automatic dispatch attempts,
+three session occurrences (including A→B→A), and success/failure responses. TLC
+explores 27 generated / 21 distinct states, depth 5. `AtMostOneAutomaticExchange`,
+`OnlyPersistedConnection`, and `CurrentSessionReceipt` pass. `RequestSettles` assumes
+weak fairness of the combined successful/failed response; a permanently unavailable
+network is outside that liveness assumption. Terminal quiescent states are expected,
+so deadlock checking is disabled explicitly; safety and temporal properties remain
+enabled. Three unsafe configurations separately reproduce replay (9 states), a
+storage-derived connection claim (3 states), and a stale session receipt (11 states;
+see the executable output for the exact exploration).
+
+Mapping: CalendarSyncPage consumes/removes the URL code before queued dispatch;
+a synchronous busy guard also prevents duplicate clicks. Session occurrences remount
+the form and partition query caches, with mounted/current-session checks immediately
+before response effects. Only the selected calendar's API configuration establishes
+its saved connection. React tests cover replay/error/retry, StrictMode, logout before
+render, A→B→A, cache races, and persisted timestamps. The model abstracts provider
+exchange/persistence, selected-calendar identities and query-library scheduling; those
+require HTTP and component/browser conformance tests. It does not prove Google OAuth
+consent, token revocation, server authorization or arbitrary calendar handlers.
+## Directory favorite authority (2026-09-18)
+
+`DirectoryFavoriteAuthority` bounds one read/save request, three session occurrences,
+lagging render and unmount. TLC checks356 generated/208distinct states (depth9),
+current-session dispatch/receipt and authoritative persistence. Weak fairness assumes
+dispatch and eventual success/failure response; terminal quiescence is permitted.
+Unsafe dispatch/receipt variants must violate their named invariants (29/63states).
+[Implementation, counterexamples and limits](../../docs/ux-ui-audit/2026-09-17/directory-entry.md).
