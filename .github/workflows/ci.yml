@@ -259,6 +259,13 @@ jobs:
           PGPASSWORD: postgres
         run: sh scripts/test-live-intake-identity.sh
 
+      - name: Verify marketplace contact identity and evidence retries
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-marketplace-contact-identity.sh
+
       - name: Verify reversible identity reconciliation
         env:
           PGPASSWORD: postgres

@@ -1001,7 +1001,7 @@ spec = describe "TDF.Server helpers" $ do
                             runReaderT
                                 ( createParty
                                     (mkUser [Admin])
-                                    Nothing
+                                    (Just "invalid-display-name-fixture")
                                     ( DTO.PartyCreate
                                         Nothing
                                         rawDisplayName
