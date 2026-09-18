@@ -74,3 +74,16 @@ states for the new model with safety and conditional liveness; the no-lock negat
 control violated UniqueTarget in7 states. The complete existing TLC/Alloy6.2.0 runner
 also passed its expected controls. No production claim or new native artifact is
 claimed by these isolated tests.
+
+Review follow-up (discussion_r4042542142): the same Party may own both a core
+artist directory twin and a newer band. Preparation now selects only `artist`
+source profiles and separately requires the canonical target to remain `artist`.
+A blocked artist cannot be bypassed by selecting its band's unblocked profile;
+a canonical link to a different kind fails closed without a replacement twin.
+The expanded real HTTP fixture reproduced the old behavior (200 instead of404
+for a blocked artist with a newer band). Positive execution is recorded below.
+`ArtistClaimKind.tla` exhaustively bounds source/canonical kinds to artist/band;
+`OnlyArtist` and `NoWrongSourceReuse` connect these predicates to the SQL source
+filter and canonical guard. Termination assumes one fair atomic transaction.
+The unfiltered/unguarded negative model must violate `OnlyArtist`. This model
+does not claim to verify canonical graph integrity or administrator decisions.

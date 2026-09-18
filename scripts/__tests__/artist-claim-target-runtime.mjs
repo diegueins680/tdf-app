@@ -20,6 +20,7 @@ const draft = await fetch(path(ids['Claim target draft fixture']), { method: 'PU
 assert.equal(draft.status, 200);
 assert.equal((await draft.json()).name, 'Claim target draft fixture', 'private directory name must not leak');
 assert.equal((await fetch(path(ids['Claim target blocked fixture']), { method: 'PUT', headers })).status, 404);
+assert.equal((await fetch(path(ids['Claim target canonical band fixture']), { method: 'PUT', headers })).status, 404, 'canonical resolution cannot switch resource kind');
 assert.equal((await fetch(path(-1), { method: 'PUT', headers })).status, 404);
 const claim = async () => {
   const response = await fetch(`${base}/directory/claims`, {
@@ -33,4 +34,4 @@ const first = await claim();
 assert.equal(first.status, 'submitted');
 assert.equal(first.profileId, prepared[0].id);
 assert.deepEqual(await claim(), first, 'retry must preserve the original persisted receipt');
-console.log('Artist claim targets: authenticated preparation, concurrent reuse, draft privacy, blocked denial, persisted idempotent claim passed.');
+console.log('Artist claim targets: authenticated preparation, concurrent reuse, draft privacy, blocked denial, non-artist exclusion, canonical kind denial, persisted idempotent claim passed.');
