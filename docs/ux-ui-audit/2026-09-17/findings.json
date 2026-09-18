@@ -771,11 +771,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Contract distinguishes signup from sign-in/new device and survives refresh/account switch. **Deferred; not reactivated.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
-    "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
-    "releaseStatus": "Per-finding deployment/publication verification pending"
+    "status": "implemented",
+    "implementationStatus": "Focused successor b62895313 ports missing API/config/handlers from8c2960874 and both-arm tests3f1e6f3; existing model/DTO/migration retained. Adds progress-row serialization and post-lock clock, canonical OpenAPI paths and paused release guard. Integrated current main4b0bc6ed7 as0ebdb180d; experiment remains disabled.",
+    "verificationStatus": "Pre-integration: Stack9.10.3 --fast build;2578Hspec examples0fail1PG-onlypending; actual isolated HTTP/PostgreSQL paused/no-write,16concurrent assignments/exposures, account isolation, completion/expiry lock contention and revocation pass. Full pinned TLC/Alloy runner and3experiment negative controls pass.43native conformance tests pass after two initial5-second timeouts under host contention; no test timeout/assertion weakened. Post-main integration checks pending.",
+    "mergeStatus": "Focused successor not yet merged; mobile generated contract companion pending publication.",
+    "releaseStatus": "No new deployment or experiment activation. Production already has original migration/checksum and0assignments at05:13UTC; current release ownership must be rechecked."
   },
   {
     "id": "I18N-01",

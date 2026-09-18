@@ -83,7 +83,7 @@ import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, toPersistValue, update, upsert, upsertBy, (=.), (==.), (<=.), (>=.), (<-.))
 import Database.PostgreSQL.Simple (SqlError (..))
-import Database.Persist.Sql (Single (..), fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
+import Database.Persist.Sql (Single (..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
 import Network.HTTP.Client (Manager, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import Network.HTTP.Types.Status (statusCode)
@@ -462,6 +462,8 @@ sessionServer =
   :<|> updateOnboardingIntent
   :<|> completeOnboarding
   :<|> reconcileOnboarding
+  :<|> currentExperimentAssignment
+  :<|> recordExperimentExposure
 
 onboardingIntentValues :: Set.Set Text
 onboardingIntentValues = Set.fromList
@@ -507,6 +509,18 @@ validateOnboardingValue fieldName allowed raw =
 newUserOnboardingWindow :: NominalDiffTime
 newUserOnboardingWindow = 24 * 60 * 60
 
+singleFeatureOnboardingExperimentId :: Text
+singleFeatureOnboardingExperimentId = "single-feature-onboarding-v1"
+
+singleFeatureOnboardingExperimentVersion :: Int
+singleFeatureOnboardingExperimentVersion = 1
+
+experimentVariantForParty :: PartyId -> Text
+experimentVariantForParty partyIdValue =
+  if fromSqlKey partyIdValue `mod` 2 == 0
+    then "treatment_singlefeature"
+    else "control"
+
 isOnboardingEligible :: UTCTime -> Maybe UTCTime -> Maybe UTCTime -> Bool
 isOnboardingEligible now mSignupAt mCompletedAt =
   isNothing mCompletedAt
@@ -539,6 +553,174 @@ onboardingProgressToDTO now mProgress =
       , firstValueCompletedAt = userOnboardingProgressFirstValueCompletedAt stored
       , updatedAt = Just (userOnboardingProgressUpdatedAt stored)
       }
+
+pausedExperimentAssignment :: Bool -> ExperimentAssignmentDTO
+pausedExperimentAssignment enabledValue =
+  ExperimentAssignmentDTO
+    { experimentId = singleFeatureOnboardingExperimentId
+    , experimentVersion = singleFeatureOnboardingExperimentVersion
+    , experimentEnabled = enabledValue
+    , experimentEligible = False
+    , variant = "control"
+    , assignedAt = Nothing
+    , eligibleUntil = Nothing
+    , exposedAt = Nothing
+    , newlyAssigned = False
+    }
+
+experimentAssignmentToDTO
+  :: Bool
+  -> Bool
+  -> Bool
+  -> UserExperimentAssignment
+  -> ExperimentAssignmentDTO
+experimentAssignmentToDTO enabledValue eligibleValue newlyAssignedValue stored =
+  ExperimentAssignmentDTO
+    { experimentId = userExperimentAssignmentExperimentId stored
+    , experimentVersion = userExperimentAssignmentExperimentVersion stored
+    , experimentEnabled = enabledValue
+    , experimentEligible = eligibleValue
+    , variant = userExperimentAssignmentVariant stored
+    , assignedAt = Just (userExperimentAssignmentAssignedAt stored)
+    , eligibleUntil = Just (userExperimentAssignmentEligibleUntil stored)
+    , exposedAt = userExperimentAssignmentExposedAt stored
+    , newlyAssigned = newlyAssignedValue
+    }
+
+resolveExperimentAssignment
+  :: Bool
+  -> PartyId
+  -> UTCTime
+  -> SqlPersistT IO ExperimentAssignmentDTO
+resolveExperimentAssignment enabledValue partyIdValue now
+  | not enabledValue = pure (pausedExperimentAssignment False)
+  | otherwise = do
+      mProgress <- getBy (UniqueUserOnboardingProgress partyIdValue)
+      let progressEligible = case entityVal <$> mProgress of
+            Just progress ->
+              isOnboardingEligible
+                now
+                (userOnboardingProgressSignupCompletedAt progress)
+                (userOnboardingProgressCompletedAt progress)
+            Nothing -> False
+          mSignupAt = mProgress >>= userOnboardingProgressSignupCompletedAt . entityVal
+      existing <- getBy
+        ( UniqueUserExperimentAssignment
+            partyIdValue
+            singleFeatureOnboardingExperimentId
+            singleFeatureOnboardingExperimentVersion
+        )
+      case (existing, mSignupAt, progressEligible) of
+        (Just (Entity _ stored), _, _) ->
+          pure $ experimentAssignmentToDTO
+            True
+            (progressEligible && now <= userExperimentAssignmentEligibleUntil stored)
+            False
+            stored
+        (Nothing, Just signupAt, True) -> do
+          let eligibleUntilValue = addUTCTime newUserOnboardingWindow signupAt
+              assignmentValue =
+                UserExperimentAssignment
+                  { userExperimentAssignmentPartyId = partyIdValue
+                  , userExperimentAssignmentExperimentId = singleFeatureOnboardingExperimentId
+                  , userExperimentAssignmentExperimentVersion = singleFeatureOnboardingExperimentVersion
+                  , userExperimentAssignmentVariant = experimentVariantForParty partyIdValue
+                  , userExperimentAssignmentAssignedAt = now
+                  , userExperimentAssignmentEligibleUntil = eligibleUntilValue
+                  , userExperimentAssignmentExposedAt = Nothing
+                  }
+          inserted <- insertUnique assignmentValue
+          stored <- getBy
+            ( UniqueUserExperimentAssignment
+                partyIdValue
+                singleFeatureOnboardingExperimentId
+                singleFeatureOnboardingExperimentVersion
+            )
+          pure $ case stored of
+            Just (Entity _ value) ->
+              experimentAssignmentToDTO True True (isJust inserted) value
+            Nothing -> pausedExperimentAssignment True
+        _ -> pure (pausedExperimentAssignment True)
+
+-- Serialize assignment/exposure with completion on the same persisted progress row.
+-- The no-op update is portable to PostgreSQL and SQLite and acquires the write lock
+-- without overwriting signup, completion, intent, or timestamps. Paused requests
+-- perform no writes. Read the clock after waiting for the lock so expired cohorts
+-- cannot be admitted using a timestamp captured before contention.
+withExperimentProgress
+  :: Bool
+  -> PartyId
+  -> (UTCTime -> SqlPersistT IO a)
+  -> SqlPersistT IO a
+withExperimentProgress enabledValue partyIdValue action = do
+  when enabledValue $
+    rawExecute
+      "UPDATE user_onboarding_progress SET party_id = party_id WHERE party_id = ?"
+      [toPersistValue partyIdValue]
+  now <- liftIO getCurrentTime
+  action now
+
+requireSupportedExperiment :: Text -> AppM ()
+requireSupportedExperiment rawExperimentId =
+  unless (T.strip rawExperimentId == singleFeatureOnboardingExperimentId) $
+    throwError err404 {errBody = "Experiment not found"}
+
+currentExperimentAssignment
+  :: Maybe Text
+  -> Maybe Text
+  -> Text
+  -> AppM ExperimentAssignmentDTO
+currentExperimentAssignment mAuthorizationHeader mCookieHeader rawExperimentId = do
+  requireSupportedExperiment rawExperimentId
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  let enabled = singleFeatureOnboardingExperimentEnabled cfg
+  liftIO $ flip runSqlPool pool $
+    withExperimentProgress enabled (auPartyId user) $
+      resolveExperimentAssignment enabled (auPartyId user)
+
+recordExperimentExposure
+  :: Maybe Text
+  -> Maybe Text
+  -> Text
+  -> AppM ExperimentExposureResult
+recordExperimentExposure mAuthorizationHeader mCookieHeader rawExperimentId = do
+  requireSupportedExperiment rawExperimentId
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  (assignmentValue, newlyExposedValue) <- liftIO $ flip runSqlPool pool $
+   withExperimentProgress (singleFeatureOnboardingExperimentEnabled cfg) (auPartyId user) $ \now -> do
+    resolved <- resolveExperimentAssignment
+      (singleFeatureOnboardingExperimentEnabled cfg)
+      (auPartyId user)
+      now
+    if not (experimentEnabled resolved && experimentEligible resolved)
+      then pure (resolved, False)
+      else do
+        changed <- updateWhereCount
+          [ UserExperimentAssignmentPartyId ==. auPartyId user
+          , UserExperimentAssignmentExperimentId ==. singleFeatureOnboardingExperimentId
+          , UserExperimentAssignmentExperimentVersion ==. singleFeatureOnboardingExperimentVersion
+          , UserExperimentAssignmentExposedAt ==. Nothing
+          , UserExperimentAssignmentEligibleUntil >=. now
+          ]
+          [UserExperimentAssignmentExposedAt =. Just now]
+        refreshed <- getBy
+          ( UniqueUserExperimentAssignment
+              (auPartyId user)
+              singleFeatureOnboardingExperimentId
+              singleFeatureOnboardingExperimentVersion
+          )
+        pure
+          ( maybe resolved
+              (\(Entity _ stored) -> experimentAssignmentToDTO True True False stored)
+              refreshed
+          , changed == 1
+          )
+  pure ExperimentExposureResult
+    { assignment = assignmentValue
+    , newlyExposed = newlyExposedValue
+    }
 
 initialOnboardingProgress
   :: PartyId
