@@ -64,6 +64,15 @@ spec = describe "live-intake-identity-postgresql" $ do
           changed <- submit pool member "changed-request-identity" (payload { lsiBandName = "Changed" })
           fmap (const 200) (either (Left . errHTTPCode) Right changed) `shouldBe` Left 409
           counts pool `shouldReturn` [4,1,1,1,1,0,0]
+        it "replays an accepted receipt without revalidating a removed catalog choice" $ \pool -> do
+          submit pool member "retired-catalog-request" payload `shouldReturn` Right NoContent
+          -- Seed the immutable accepted receipt as it existed before the catalog
+          -- disappeared. This fixture intentionally has no catalog tables: any
+          -- catalog lookup during replay is a regression, not a valid new write.
+          runSqlPool (rawExecute "UPDATE identity_live_intake_request SET request_payload=jsonb_set(request_payload,'{primaryGenreId}',to_jsonb('00000000-0000-0000-0000-000000000099'::text))" []) pool
+          let accepted = payload { lsiPrimaryGenreId = Just "00000000-0000-0000-0000-000000000099" }
+          submit pool member "retired-catalog-request" accepted `shouldReturn` Right NoContent
+          counts pool `shouldReturn` [4,1,1,1,1,0,0]
         it "scopes request identity to the actor" $ \pool -> do
           submit pool member "same-request-different-actors" payload `shouldReturn` Right NoContent
           submit pool admin "same-request-different-actors" payload `shouldReturn` Right NoContent
@@ -98,6 +107,14 @@ spec = describe "live-intake-identity-postgresql" $ do
               case paths of
                 [Single stored] -> do
                   BS.readFile (T.unpack stored) `shouldReturn` "synthetic rider"
+                  removeFile (T.unpack stored)
+                  submit pool member "rider-storage-request" body `shouldReturn` Right NoContent
+                  BS.readFile (T.unpack stored) `shouldReturn` "synthetic rider"
+                  BS.writeFile (T.unpack stored) "conflicting bytes"
+                  conflict <- submit pool member "rider-storage-request" body
+                  either errHTTPCode (const 200) conflict `shouldBe` 409
+                  BS.readFile (T.unpack stored) `shouldReturn` "conflicting bytes"
+                  counts pool `shouldReturn` [4,1,1,1,1,0,0]
                   removeFile (T.unpack stored)
                 _ -> expectationFailure "Expected one persisted rider"
         it "rejects missing submission identity before creating any records" $ \pool -> do
