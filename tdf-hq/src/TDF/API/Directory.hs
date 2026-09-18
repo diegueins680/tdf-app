@@ -313,6 +313,7 @@ type DirectoryProtectedAPI = "directory" :>
     :<|> "favorites" :> Capture "targetKind" Text :> Capture "targetId" Text :> Delete '[JSON] NoContent
     :<|> "saved-searches" :> Get '[JSON] [Value]
     :<|> "saved-searches" :> RequiredIdempotency :> ReqBody '[JSON] SavedSearchCreateRequest :> PostCreated '[JSON] Value
+    :<|> "artist-claim-targets" :> Capture "partyId" Int64 :> Put '[JSON] Value
     :<|> "claims" :> RequiredIdempotency :> ReqBody '[JSON] ClaimCreateRequest :> PostCreated '[JSON] Value
     :<|> "verifications" :> RequiredIdempotency :> ReqBody '[JSON] VerificationCreateRequest :> PostCreated '[JSON] Value
     :<|> "reports" :> RequiredIdempotency :> ReqBody '[JSON] ReportCreateRequest :> PostCreated '[JSON] Value

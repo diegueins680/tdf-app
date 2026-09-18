@@ -380,6 +380,7 @@ directoryProtectedServer user =
   :<|> removeFavorite user
   :<|> listSavedSearches user
   :<|> createSavedSearch user
+  :<|> prepareArtistClaim user
   :<|> createClaim user
   :<|> createVerification user
   :<|> createReport user
@@ -1183,6 +1184,43 @@ createSavedSearch user idempotency request@SavedSearchCreateRequest
   let queryText=decodeJsonText canonicalQuery
   runDB $ rawExecute "INSERT INTO directory_saved_search(id,account_party_id,name,canonical_query,query_hash,alerts_enabled,alert_frequency) VALUES (?,?,?,?::jsonb,encode(digest(?,'sha256'),'hex'),?,?) ON CONFLICT(account_party_id,query_hash) DO UPDATE SET name=EXCLUDED.name,alerts_enabled=EXCLUDED.alerts_enabled,alert_frequency=EXCLUDED.alert_frequency,updated_at=now()" [toPersistValue savedId,toPersistValue (auPartyId user),PersistText (T.strip name),PersistText queryText,PersistText queryText,PersistBool alertsEnabled,PersistText alertFrequency]
   jsonOne err500 "SELECT jsonb_build_object('id',id,'name',name,'canonicalQuery',canonical_query,'alertsEnabled',alerts_enabled,'alertFrequency',alert_frequency) FROM directory_saved_search WHERE account_party_id=? AND query_hash=encode(digest(?,'sha256'),'hex')" [toPersistValue (auPartyId user),PersistText queryText]
+
+-- Authenticated, naturally idempotent preparation, not a management grant.
+-- Serialize on the existing core artist before looking up/inserting the twin.
+-- Never publish a draft or disclose its private fields to the claimant.
+prepareArtistClaim :: AuthedUser -> Int64 -> AppM Value
+prepareArtistClaim _user partyId = do
+  result <- runDB $ do
+    artists <- rawSql
+      "SELECT party.display_name FROM party JOIN artist_profile artist ON artist.artist_party_id=party.id WHERE party.id=? FOR UPDATE OF party"
+      [PersistInt64 partyId] :: SqlPersistT IO [Single Text]
+    case artists of
+      [] -> pure Nothing
+      Single artistName : _ -> do
+        targets <- rawSql
+          ( "SELECT resolved.id::text FROM directory_profile source JOIN directory_profile resolved "
+         <> "ON resolved.id=coalesce(source.canonical_profile_id,source.id) "
+         <> "WHERE source.subject_party_id=? ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1" )
+          [PersistInt64 partyId] :: SqlPersistT IO [Single Text]
+        targetId <- case targets of
+          Single existing : _ -> pure existing
+          [] -> do
+            freshId <- liftIO nextRandom
+            let freshText = UUID.toText freshId
+            rawExecute
+              ( "INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,profile_status,visibility,public_contact_enabled) "
+             <> "VALUES (?,?,'artist',?,?,'draft','private',false)" )
+              [toPersistValue freshId,PersistInt64 partyId,PersistText (T.take 160 artistName),PersistText ("artist-claim-" <> freshText)]
+            pure freshText
+        -- Existing suspended/archived/moderated records remain blocked; a new
+        -- twin is not created as a way around their state.
+        allowed <- rawSql
+          "SELECT id::text FROM directory_profile WHERE id=?::uuid AND profile_status NOT IN ('suspended','archived','merged') AND moderation_status<>'blocked'"
+          [PersistText targetId] :: SqlPersistT IO [Single Text]
+        pure $ case allowed of
+          [] -> Nothing
+          _ -> Just (object ["id" .= targetId, "name" .= artistName])
+  maybe (throwError err404) pure result
 
 createClaim user idempotency request@ClaimCreateRequest{profileId,claimType,evidence} = do
   unless (claimType `Set.member` Set.fromList ["profile","organization","venue","administration","credit"]) $

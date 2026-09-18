@@ -14,6 +14,7 @@ export default function ArtistClaimPanel({ artistId, accountPartyId }: {
   const [evidence, setEvidence] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [attempt, setAttempt] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const request = useRef<{ evidence: string; key: string } | null>(null);
@@ -26,13 +27,15 @@ export default function ArtistClaimPanel({ artistId, accountPartyId }: {
   useEffect(() => {
     active.current = true;
     let cancelled = false;
-    void Directory.profileByParty(artistId).then((value) => {
+    setLoading(true);
+    setError(null);
+    void Directory.prepareArtistClaim(artistId).then((value) => {
       if (!cancelled && isCurrent()) setProfile(value);
     }).catch(() => {
-      if (!cancelled && isCurrent()) setError('No encontramos un perfil público disponible para reclamar. Tu sesión sigue activa.');
+      if (!cancelled && isCurrent()) setError('No pudimos preparar la solicitud para este artista. Tu sesión sigue activa.');
     }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; active.current = false; };
-  }, [artistId, accountPartyId, isCurrent]);
+  }, [artistId, accountPartyId, isCurrent, attempt]);
 
   const submit = async () => {
     const description = evidence.trim();
@@ -76,6 +79,7 @@ export default function ArtistClaimPanel({ artistId, accountPartyId }: {
       </Alert>
       {loading && <Typography role="status">Buscando el perfil del artista…</Typography>}
       {error && <Alert severity="error">{error}</Alert>}
+      {!loading && !profile && <Button onClick={() => setAttempt(value => value + 1)}>Reintentar</Button>}
       {submitted ? (
         <Alert severity="success">
           Solicitud registrada para revisión. El acceso requiere una aprobación verificada.

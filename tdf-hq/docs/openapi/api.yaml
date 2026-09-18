@@ -5834,6 +5834,7 @@ paths:
   /directory/favorites: { $ref: './directory.yaml#/paths/~1directory~1favorites' }
   /directory/favorites/{targetKind}/{targetId}: { $ref: './directory.yaml#/paths/~1directory~1favorites~1{targetKind}~1{targetId}' }
   /directory/saved-searches: { $ref: './directory.yaml#/paths/~1directory~1saved-searches' }
+  /directory/artist-claim-targets/{partyId}: { $ref: './directory.yaml#/paths/~1directory~1artist-claim-targets~1{partyId}' }
   /directory/claims: { $ref: './directory.yaml#/paths/~1directory~1claims' }
   /directory/verifications: { $ref: './directory.yaml#/paths/~1directory~1verifications' }
   /directory/reports: { $ref: './directory.yaml#/paths/~1directory~1reports' }

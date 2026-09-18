@@ -9,8 +9,8 @@ const login = jest.fn();
 const logout = jest.fn();
 const activate = jest.fn<() => Promise<unknown>>();
 const get = jest.fn<() => Promise<unknown>>();
-const profileByParty = jest.fn<() => Promise<unknown>>();
-jest.unstable_mockModule('../api/directory', () => ({ Directory: { profileByParty } }));
+const prepareArtistClaim = jest.fn<() => Promise<unknown>>();
+jest.unstable_mockModule('../api/directory', () => ({ Directory: { prepareArtistClaim } }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session, login, logout }),
@@ -38,7 +38,7 @@ beforeEach(() => {
   session = { username: 'artist', displayName: 'Artist', partyId: 42, roles: ['Customer'] };
   activate.mockResolvedValue({ apArtistId: 42 });
   get.mockResolvedValue({ ...session, roles: ['Customer', 'Artist'] });
-  profileByParty.mockResolvedValue({ id: '00000000-0000-4000-8000-000000000077', name: 'Artista importado' });
+  prepareArtistClaim.mockResolvedValue({ id: '00000000-0000-4000-8000-000000000077', name: 'Artista importado' });
 });
 
 it('activates a customer profile immediately, refreshes server roles and opens the editor', async () => {
