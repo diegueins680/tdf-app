@@ -5071,6 +5071,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/directory/artist-claim-targets/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Prepare a core artist for a reviewed management claim
+         * @description Authenticated, idempotent preparation. Reuses an existing canonical directory target or creates a private draft under a per-artist lock. Returns only an opaque target ID and the core artist public name. Does not publish, grant permissions, or transfer identity. Archived, suspended and blocked targets are denied.
+         */
+        put: operations["prepareArtistManagementClaim"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/claims": {
         parameters: {
             query?: never;
@@ -23308,6 +23328,46 @@ export interface operations {
         responses: {
             /** @description Idempotent saved search; alert deliveries are deduplicated by result version */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    prepareArtistManagementClaim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted claim target; no management access granted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist unavailable for claims */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

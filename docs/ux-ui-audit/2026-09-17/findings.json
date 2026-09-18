@@ -216,5 +216,30 @@
     "verificationStatus": "18 focused tests, typecheck and lint passed; catalog classified new synthetic fixture; exact-head CI pending",
     "mergeStatus": "pending",
     "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-014",
+    "kind": "confirmed",
+    "title": "Core artists without a published directory twin cannot receive management claims",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "existing account requests verified management of an existing artist",
+    "roles": "authenticated Customer and Artist",
+    "surface": "ArtistClaimPanel; Directory protected API",
+    "evidence": "Review discussion_r4042389907; enrichment inserts artist_profile after the one-time backfill while publicProfileByParty requires a published twin. Draft twins also return 404.",
+    "userImpact": "A valid advertised claim journey cannot reach its evidence form.",
+    "rootCause": "Public discovery projection incorrectly used as the prerequisite for private reviewed management requests.",
+    "proposedChange": "Authenticated idempotent preparation reuses a canonical twin or creates a private draft; locked per core artist, minimal public-name projection, no manager or identity transfer. Existing blocked/archived/suspended states remain unavailable.",
+    "dependencies": [
+      "root PR #406",
+      "compatible backend before new web API use"
+    ],
+    "acceptanceCriteria": "Post-backfill and draft artists reach evidence form; concurrent preparation creates at most one twin; no private directory fields, publication, permissions or credentials; same-evidence retries retain persisted claim receipt.",
+    "verificationMethod": "ArtistClaimTarget TLC safety/liveness and unsafe-lock counterexample; 8-way real HTTP/PostgreSQL conformance; component retry/session/receipt tests. Execution results recorded in artist-management-claims.md.",
+    "status": "implemented",
+    "implementationStatus": "Additive preparation API, per-artist transaction lock, minimal projection and UI retry; mobile contract c63290b published in PR90",
+    "verificationStatus": "Complete Stack build, real PostgreSQL17 migration/idempotency + HTTP concurrency/privacy/receipt checks passed; 25 UI tests, typecheck/lint/catalog/14 CI-pipeline tests and TLC49 states/negative control passed; hosted exact-head gates pending",
+    "mergeStatus": "pending",
+    "releaseStatus": "not deployed"
   }
 ]

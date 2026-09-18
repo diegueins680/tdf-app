@@ -4,9 +4,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 let session = { partyId: 42, apiToken: 'synthetic-original' };
-const profileByParty = jest.fn<(id: number) => Promise<{ id: string; name: string }>>();
+const prepareArtistClaim = jest.fn<(id: number) => Promise<{ id: string; name: string }>>();
 const claim = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-jest.unstable_mockModule('../api/directory', () => ({ Directory: { profileByParty, claim } }));
+jest.unstable_mockModule('../api/directory', () => ({ Directory: { prepareArtistClaim, claim } }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ getActiveSession: () => session }));
 const { default: ArtistClaimPanel } = await import('./ArtistClaimPanel');
 const profile = { id: '00000000-0000-4000-8000-000000000077', name: 'Artista importado' };
@@ -20,7 +20,7 @@ const fill = async () => {
 beforeEach(() => {
   jest.clearAllMocks();
   session = { partyId: 42, apiToken: 'synthetic-original' };
-  profileByParty.mockResolvedValue(profile);
+  prepareArtistClaim.mockResolvedValue(profile);
   claim.mockResolvedValue(receipt);
 });
 
@@ -29,7 +29,7 @@ it('submits evidence for the resolved profile without claiming immediate access'
   await fill();
   fireEvent.click(screen.getByRole('button', { name: 'Solicitar administración del perfil' }));
   await screen.findByText(/El acceso requiere una aprobación verificada/);
-  expect(profileByParty).toHaveBeenCalledWith(77);
+  expect(prepareArtistClaim).toHaveBeenCalledWith(77);
   expect(claim).toHaveBeenCalledWith({ profileId: profile.id, claimType: 'administration', evidence: [{ description }] }, expect.any(String));
   expect(screen.getByRole('link', { name: 'Mis perfiles y clasificados' })).toHaveAttribute('href', '/mis-clasificados');
 });
@@ -47,10 +47,10 @@ it('requires evidence and keeps the same idempotency key after an uncertain resp
   expect(claim.mock.calls[1]).toEqual(claim.mock.calls[0]);
 });
 
-it('does not invent a profile or submit a claim when public resolution fails', async () => {
-  profileByParty.mockRejectedValue(new Error('404'));
+it('does not invent a profile or submit a claim when claim preparation fails', async () => {
+  prepareArtistClaim.mockRejectedValue(new Error('404'));
   show();
-  await screen.findByText(/No encontramos un perfil público/);
+  await screen.findByText(/No pudimos preparar la solicitud/);
   expect(screen.queryByRole('button', { name: 'Solicitar administración del perfil' })).not.toBeInTheDocument();
   expect(claim).not.toHaveBeenCalled();
 });
@@ -97,4 +97,14 @@ it('keeps evidence and offers retry when an HTTP success lacks a persisted claim
   await screen.findByText(/Puedes reintentar sin cerrar tu sesión/);
   expect(screen.getByDisplayValue(description)).toBeInTheDocument();
   expect(screen.queryByText(/Solicitud registrada para revisión/)).not.toBeInTheDocument();
+});
+
+
+it('retries preparation without discarding the session or creating a claim', async () => {
+  prepareArtistClaim.mockRejectedValueOnce(new Error('temporarily unavailable'));
+  show();
+  fireEvent.click(await screen.findByRole('button', { name: 'Reintentar' }));
+  await screen.findByText(profile.name);
+  expect(prepareArtistClaim).toHaveBeenCalledTimes(2);
+  expect(claim).not.toHaveBeenCalled();
 });

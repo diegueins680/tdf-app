@@ -94,6 +94,9 @@ run_negative_tlc FanHubOnboardingContext.cfg fanhub-context 'Invariant CurrentCo
 run_negative_tlc FanHubOnboardingFlight.cfg fanhub-flight 'Invariant SingleFlight is violated' FanHubOnboarding.tla
 run_negative_tlc FanHubOnboardingTerminal.cfg fanhub-terminal 'Invariant TerminalOnly is violated' FanHubOnboarding.tla
 
+run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
+run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+
 scenario_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
   -c 0 -s sat4j -t none -o "${run_root}/alloy-scenario" EventStructure.als 2>&1)"
 printf '%s\n' "${scenario_output}"

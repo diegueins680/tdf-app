@@ -95,3 +95,9 @@ describe('web music directory canonical API', () => {
     expect(mockPost).toHaveBeenCalledWith('/directory/admin/merges', request, { headers: { 'Idempotency-Key': 'profile-merge-retry-1' } });
   });
 });
+
+
+it('prepares a reviewed artist target using an authenticated idempotent operation', async () => {
+  await Directory.prepareArtistClaim(77);
+  expect(mockPut).toHaveBeenCalledWith('/directory/artist-claim-targets/77', {});
+});
