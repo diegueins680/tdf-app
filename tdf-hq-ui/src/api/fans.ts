@@ -190,6 +190,7 @@ export const Fans = {
   },
 
   // Notifications
+  getNotification: async (id: number) => (await read(`/fans/me/notifications/${id}`)) as NotificationDTO,
   listNotifications: async (unreadOnly?: boolean) => {
     const notificationsQuery = unreadOnly ? '?unreadOnly=true' : '';
     try {

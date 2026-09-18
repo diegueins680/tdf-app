@@ -1,0 +1,50 @@
+# Notification navigation audit and delivery
+
+Scope: existing in-app notifications and existing external/mobile entry points. Base: root `437fdddea`, mobile `fac7c2c`. Work is isolated from the shared dirty checkout. Delivery is **in progress**, not yet merged or deployed. User requested a separate release from authentication PR #422; its final merged contracts must be integrated before deployment.
+
+| Notification types | Stable target | Web destination | Current permission | Unresolved/stale fallback |
+| --- | --- | --- | --- | --- |
+| `artist_liked` (new fan) | Actual follower Party ID; `party_profile` | `/perfil/:partyId` | Current authenticated social-profile visibility, including modeled blocks/closure | Unavailable profile + home; historical recipient-ID payloads are never mistaken for the follower |
+| `access_request_submitted`, `access_request_review`, `access_request_decided` | Request ID | `/solicitudes-acceso?request=:id` | Requester or currently compatible reviewer; own requests cannot be self-reviewed | Same privacy-preserving unavailable state for missing/denied; authorized handled requests retain status/details/history |
+| `event_logistics_route` | Event ID + activity ID | `/social/eventos/:id/logistica?activity=:activity` | Existing event/logistics read/edit scope | Current authorized schedule; explain a removed activity |
+| `internship_audit_assigned`, `internship_midpoint_reached`, `internship_assignment_blocked`, `internship_final_ready` | Audit plan UUID | `/practicas/auditorias/:id` | Existing assignee/team audit authorization | Audit workflow/unavailable state |
+| `internal_feedback_received`, `internal_feedback_needs_information`, `internal_feedback_ready_for_retest`, `internal_feedback_closed`, `internal_feedback_reopened`, `internal_feedback_state_changed`, `internal_feedback_information_response`, `internal_feedback_retest_recorded` | Internal report UUID | `/feedback/interno/:id` | Existing reporter/team report authorization | Internal feedback workflow/unavailable state |
+| `directory.application` | Application UUID | `/mis-clasificados?application=:id` | Current application author participant | Unavailable + managed profiles/classifieds |
+| `directory.invitation` | Invitation UUID | `/mis-clasificados?invitation=:id` | Existing participant authorization | Unavailable + managed profiles; current handled status remains visible |
+| `directory.review-created` | Review UUID | `/mis-clasificados?review=:id` | Current canonical subject manager and published review | Unavailable + managed profiles |
+| `directory.saved-search-match` | Delivery UUID → saved search + exact result | `/mis-clasificados?alert=:id` | Saved-search owner and current canonical public result projection | Unavailable + managed profiles; no stale private search-document exposure |
+| `reaction_received`, `post_trending`, `weekly_top` | No active producer found; legacy schemas only | Recipient-owned notification detail | Current recipient only | Original notification context + home; do not invent post/club identity |
+| Unknown / incomplete payload | Notification ID only | `/notificaciones/:id` | Current recipient only | Explicit missing-reference state and suitable workflow link |
+
+## Entry-point findings
+
+- Web has one notification list: `NotificationBell`, paginated within the dropdown. No separate existing general inbox or browser push/service-worker click handler was found. Opening the dropdown only reads the list; explicit “mark all” remains separate.
+- `Notification` stores recipient, type, display text, optional integer target, read state and timestamp. Additive nullable `target_key` supports UUID resources and logistics activity context. No arbitrary payload URL is accepted.
+- Read/list/count APIs are authenticated and recipient-bound. The new per-notification GET permits resolving notifications beyond the 50-item list window. Resource authorization remains in the destination API.
+- Logistics email is actually sent by `Cron.hs`; its URL now carries the activity ID as well as the event. Following it does not confirm travel or otherwise mutate logistics.
+- Internship/feedback outboxes retain report/plan identities, but no dispatcher consuming `intern_audit_notification_outbox.dispatched_at` was found. Directory alert email/push delivery statuses are initialized disabled. Merchant/operations outboxes and payment-provider webhooks are separate workflows, not general notification-click surfaces; no new sender or business action is enabled.
+- Mobile had URL handling (initial URL and foreground listener) and Expo push registration, but no notification-response consumer or general inbox. The new authenticated `/notifications?notificationId=` landing supports default Expo taps and `tdf://notification/:id`, waits for router readiness, and resolves recipient-owned API data. Follower profiles and specific access requests display natively; other workflow links open their exact authorized TDF web destination. No session token is placed in a link or transferred to a browser.
+- Mobile sign-in preserves the notification/request query via its existing `currentRouteReturnTo` path. Web uses existing sanitized login recovery. Native cold-start handling is tested separately from actual store availability.
+
+## History and migration
+
+`2026-09-18_notification_navigation.sql` is additive and registered in the established production migration manifest. Recovery uses exact follow engagement-event actor/target/timestamp or an unambiguous audit outbox recipient/template/transaction timestamp, and explicit directory delivery notification foreign keys. It never parses display text, guesses from a current follower roster, or matches names. Ambiguous or absent evidence stays unresolved.
+
+A dedicated journal retains previous and derived target fields. Reapply and rollback use guarded comparisons. Rollback restores historical targets while retaining newly produced UUID references, read states, text and notification rows; the nullable column is intentionally retained so a code rollback cannot destroy history. The original type-constraint expression is journaled and widened only for already implemented producers; rollback restores it only when current notification history still satisfies it. No old migration is rewritten. Directory alerts resolve canonical profile IDs through the existing public projection; no generic Party merge or ownership transfer is introduced.
+
+## Interaction and action boundaries
+
+Rows are links with visible focus and touch targets. Their href resolves through the recipient-owned notification landing so new-tab/context-menu activation also persists individual read state; ordinary activation navigates directly to the known resource. Normal activation closes the dropdown; modified clicks preserve browser behavior. Read persistence runs independently of navigation and does not optimistically decrement counts. Errors remain visible and unconfirmed. Notification/request/directory reads do not approve, reject, cancel, grant access, send messages, accept applications, or confirm travel. Existing mutation buttons retain their server authorization; request self-review is suppressed in returned capabilities.
+
+## Validation and release evidence
+
+- Backend full Stack suite: **2,569 tests passed**. Recipient-scoped GET/read counts, authenticated HTTP, expired sessions, handled-request authorization, no automatic decisions covered. A final rerun after making expired-state rendering read-only is pending.
+- Web focused suite: **33 tests passed**, including direct notification links, missing/foreign records, follower identity, nonblocking failed reads, native modified links, pending/handled requests, malicious identities, legacy payloads, and login return paths.
+- Browser production bundle: **15/15 passed** on desktop/phone/tablet Chromium, Firefox, and WebKit. Verified keyboard/touch follower navigation, failed-read persistence, handled request context, axe critical/serious findings absent on request detail, expired sign-in return, denied fallback, and no business-action requests. Added real middle-click/new-tab coverage; final 20-case run pending.
+- Native focused routing/response/screen suite: **10 passed**. Full suite first run: 465 passed/3 failed (resource-contention auth timeout; pre-auth-release generated registry mismatch; a new test garbage-collection setting). Those three suites rerun after corrections: **43/43 passed**. Native cold/warm response handling, router readiness, deduplication, unsafe metadata, follower identity, pending/handled requests, denied/legacy records and read failures covered.
+- Mobile release assets/lint/typecheck/config validation passed; isolated Expo Metro starts successfully on port8097. Existing EAS authentication confirmed. Mobile draft PR: https://github.com/diegueins680/TDF-mobile/pull/93 (`8b1158b`). No new signed build or store submission yet.
+- PostgreSQL migration tests passed: reliable recovery, ambiguous evidence, repeated apply/rollback, original constraint preservation, new UUID/read/text history retention, and exact saved-search delivery links.
+- Full production-shaped schema migration/startup/idempotency rehearsal passed twice (isolated PostgreSQL16; CI uses PostgreSQL17). Initial harness used a libpq string that the backend rejects; rerun used the required PostgreSQL URI.
+- Production release contract tests: **60/60 passed**. Full web suite: **214 suites / 2,065 tests passed**. Final generated-contract integration, remote CI, independent PR review, merge and deployment remain pending.
+
+Use a normal merge commit to retain migration introduction commit `3cf19c64bd60610059af6c26ec40104093be21c5` in production ancestry. If the established release instead squash-merges, register the resulting squash SHA in the required follow-up before invoking the guarded deployment lane. Never bypass the migration ancestry or review gates.

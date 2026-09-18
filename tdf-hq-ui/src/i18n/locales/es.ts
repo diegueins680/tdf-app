@@ -187,6 +187,7 @@ const es = {
     codebase: 'Código base',
   },
   notifications: {
+    readError: 'No se pudo marcar la notificación como leída. Puedes abrirla de nuevo para reintentar.',
     title: 'Notificaciones',
     markAll: 'Leer todo',
     markAllLoading: 'Marcando…',

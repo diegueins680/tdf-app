@@ -556,7 +556,7 @@
       "reviewed": true
     },
     {
-      "id": "a950e16c3a9f40f18fa3",
+      "id": "08cca8d606421e71d37e",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -565,16 +565,13 @@
       "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "directory-privacy-repair-2026-09-17",
+      "reviewBatch": "notification-navigation-2026-09-17",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 103,
-        "consumerCount": 36,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
+        "valueCount": 104
       }
     },
     {
@@ -12697,7 +12694,7 @@
       "reviewed": true
     },
     {
-      "id": "ffb84e8fd3972fd0730d",
+      "id": "21babc54d68f0c44d55e",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -12706,16 +12703,13 @@
       "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "notification-navigation-2026-09-17",
       "evidence": {
         "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "line": 55,
         "kind": "array",
         "name": "mobileFeatureRegistry",
-        "valueCount": 144,
-        "consumerCount": 5,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
+        "valueCount": 156
       }
     },
     {
@@ -13179,27 +13173,25 @@
       "reviewed": true
     },
     {
-      "id": "82e3ab110124708c621c",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
-      "priority": "P1-cross-platform",
-      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
-      "justification": "Onboarding intents are cross-client product choices whose identifiers, labels, order, and availability require one governed source.",
-      "reviewed": true
-    },
-    {
-      "id": "29021a526fad50de4bf4",
+      "id": "12abca4fa517da75ad03",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
       "priority": "P1-cross-platform",
       "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
       "justification": "Onboarding intent labels and ordering are user-visible cross-client product data and must follow the governed intent registry.",
-      "reviewed": true
+      "reviewed": true,
+      "reviewBatch": "notification-navigation-2026-09-17",
+      "evidence": {
+        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+        "line": 76,
+        "kind": "array",
+        "name": "ONBOARDING_INTENT_OPTIONS",
+        "valueCount": 6
+      }
     },
     {
-      "id": "34d5f2f94d1a165783ba",
+      "id": "3b37706d3daff89e8890",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "onboarding_intent, onboarding_first_value, user_onboarding_progress",
@@ -13208,27 +13200,13 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "notification-navigation-2026-09-17",
       "evidence": {
         "file": "tdf-mobile/src/lib/onboardingIntent.ts",
-        "line": 118,
+        "line": 391,
         "kind": "switch-cases",
         "name": "intent",
-        "valueCount": 6,
-        "consumerCount": 243,
-        "exactDuplicateIds": [
-          "dc2478eb86deaac6aed4",
-          "9ebf2e096eeddbecfa52",
-          "05cf100aa2fff2a7c8ad",
-          "3022d9364dbbe18e8bbb",
-          "82e3ab110124708c621c"
-        ],
-        "similarCandidateIds": [
-          "dc2478eb86deaac6aed4",
-          "9ebf2e096eeddbecfa52",
-          "05cf100aa2fff2a7c8ad",
-          "3022d9364dbbe18e8bbb"
-        ]
+        "valueCount": 6
       }
     },
     {
@@ -13775,6 +13753,36 @@
       "risk": "Changing this synthetic session DTO fixture can stop session-boundary regression tests from representing the application contract.",
       "justification": "Reviewed 2026-09-17: FanHubPage.audit.test.tsx sessionMock contains fixed SessionUser property names (username, displayName, roles, modules, partyId). It is test input, not a selectable role catalog, grant authority or persisted business list. Production role/permission definitions are unchanged.",
       "reviewed": true
+    },
+    {
+      "id": "90b7090b2e3e6abfa3fb",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Arbitrary URLs or display-name matching could disclose or navigate to the wrong target.",
+      "justification": "This exhaustive dispatch maps persisted target kinds to fixed internal routes. It grants no resource permission and cannot create selectable business values.",
+      "reviewed": true,
+      "reviewBatch": "notification-navigation-2026-09-17"
+    },
+    {
+      "id": "2ba2e67d7a36352dcf50",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true,
+      "reviewMethod": "deterministic-policy-v3",
+      "reviewBatch": "notification-navigation-2026-09-17",
+      "evidence": {
+        "file": "tdf-mobile/app/merch/preferences.tsx",
+        "line": 13,
+        "kind": "literal-union",
+        "name": "SubjectKind",
+        "valueCount": 2
+      }
     }
   ]
 }

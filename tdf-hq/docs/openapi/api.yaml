@@ -6071,6 +6071,88 @@ paths:
         '404': { description: Quote not found or lookup token does not match }
         '409': { description: Provider binding mismatch or verified payment arrived after hold expiry }
         '502': { description: PayPal capture or immutable payment fields could not be verified }
+  /fans/me/notifications:
+    get:
+      tags: [Notifications]
+      operationId: listNotifications
+      summary: List up to 50 recent notifications owned by the current account
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: unreadOnly, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: Recipient-owned notification history
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Notification' } }
+        '401': { description: Authentication required }
+  /fans/me/notifications/{notificationId}:
+    get:
+      tags: [Notifications]
+      operationId: getNotification
+      summary: Read one recipient-owned notification without marking it as read
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: notificationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '200':
+          description: Notification with stable target identity when retained
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Notification' }
+        '401': { description: Authentication required }
+        '404': { description: Notification unavailable to this account }
+  /fans/me/notifications/{notificationId}/read:
+    post:
+      tags: [Notifications]
+      operationId: markNotificationRead
+      summary: Mark only an activated recipient-owned notification as read
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: notificationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '204': { description: Read state persisted }
+        '401': { description: Authentication required }
+  /access-requests/{requestId}:
+    get:
+      tags: [Access requests]
+      operationId: getFeatureAccessRequest
+      summary: Read the specific request in its current lifecycle state
+      description: Visible only to its requester or a currently authorized reviewer. Navigation does not approve, reject, cancel or provision access.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: requestId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '200':
+          description: Current details and actor-specific capabilities; actions still reauthorize on the server
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [request, canReview, canCancel]
+                properties:
+                  request: { $ref: '#/components/schemas/FeatureAccessRequest' }
+                  canReview: { type: boolean }
+                  canCancel: { type: boolean }
+        '401': { description: Authentication required }
+        '404': { description: Request unavailable to this account }
+  /directory/notification-context/{kind}/{targetId}:
+    get:
+      tags: [Directory]
+      operationId: getDirectoryNotificationContext
+      summary: Read a specific notification target with current resource authorization
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: kind, in: path, required: true, schema: { type: string, enum: [application, invitation, review, alert] } }
+        - { name: targetId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Scoped application, invitation, review or currently public saved-search result
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '401': { description: Authentication required }
+        '404': { description: Resource unavailable to this account }
   /access-requests:
     get:
       tags: [Access requests]
@@ -7180,6 +7262,19 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    Notification:
+      type: object
+      required: [nId, nType, nTitle, nBody, nIsRead, nCreatedAt]
+      properties:
+        nId: { type: integer, format: int64 }
+        nType: { type: string }
+        nTitle: { type: string }
+        nBody: { type: string }
+        nTargetType: { type: string, nullable: true }
+        nTargetId: { type: integer, format: int64, nullable: true }
+        nTargetKey: { type: string, nullable: true, description: Stable UUID of the target or logistics activity; never a URL }
+        nIsRead: { type: boolean }
+        nCreatedAt: { type: string, format: date-time }
     MerchReputationSummary:
       type: object
       required: [subjectKind, state]

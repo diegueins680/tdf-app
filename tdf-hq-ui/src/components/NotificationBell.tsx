@@ -1,17 +1,19 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Badge, IconButton, Popover, List, ListItemButton, ListItemText, Typography,
-  Stack, Button, Divider, Box, CircularProgress,
+  Stack, Button, Divider, Box, CircularProgress, Alert, Snackbar,
 } from '@mui/material';
-import { Notifications as NotificationsIcon, DoneAll as DoneAllIcon } from '@mui/icons-material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Fans } from '../api/fans';
 import type { NotificationDTO } from '../api/types';
 import LazyPaginatedList from './LazyPaginatedList';
 import { NOTIFICATION_BELL_CONTRACTS } from './NotificationBell.contracts';
-import { notificationTargetPath } from './notificationTarget';
+import { notificationLink, notificationTargetPath } from './notificationTarget';
+import { useSession } from '../session/SessionContext';
 
 interface TargetEvent {
   currentTarget: HTMLElement;
@@ -33,25 +35,34 @@ function focusSoon(getTarget: () => HTMLElement | null): void {
 export default function NotificationBell() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { session } = useSession();
+  const accountId = session?.partyId;
+  const [readError, setReadError] = useState(false);
+  useEffect(() => {
+    const showReadError = () => setReadError(true);
+    window.addEventListener('tdf-notification-read-error', showReadError);
+    return () => window.removeEventListener('tdf-notification-read-error', showReadError);
+  }, []);
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState(null as HTMLElement | null);
   const triggerRef = useRef(null as HTMLButtonElement | null);
   const headingRef = useRef(null as HTMLHeadingElement | null);
 
   const countQuery = useQuery({
-    queryKey: ['notification-count'],
+    queryKey: ['notification-count', accountId],
     queryFn: () => Fans.getNotificationCount(),
     refetchInterval: NOTIFICATION_BELL_CONTRACTS.countRefetchIntervalMs,
   });
 
   const listQuery = useQuery({
-    queryKey: ['notifications'],
+    queryKey: ['notifications', accountId],
     queryFn: () => Fans.listNotifications(),
     enabled: Boolean(anchorEl),
   });
 
   const markReadMut = useMutation({
     mutationFn: (notifId: number) => Fans.markNotificationRead(notifId),
+    onError: () => setReadError(true),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['notifications'] });
       void qc.invalidateQueries({ queryKey: ['notification-count'] });
@@ -60,6 +71,7 @@ export default function NotificationBell() {
 
   const markAllMut = useMutation({
     mutationFn: () => Fans.markAllNotificationsRead(),
+    onError: () => setReadError(true),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['notifications'] });
       void qc.invalidateQueries({ queryKey: ['notification-count'] });
@@ -70,7 +82,6 @@ export default function NotificationBell() {
   const notifications: NotificationDTO[] = listQuery.data ?? [];
   const isListLoading = listQuery.isLoading || (listQuery.isFetching && notifications.length === 0);
   const isEmpty = !isListLoading && notifications.length === 0;
-  const pendingReadId = markReadMut.isPending ? markReadMut.variables : undefined;
   const copy = {
     title: t('notifications.title'),
     markAll: t('notifications.markAll'),
@@ -110,33 +121,14 @@ export default function NotificationBell() {
     focusAfterMarkAll();
   };
 
-  const focusAfterMarkRead = (notification: NotificationDTO, target: HTMLElement) => {
-    const destinationPath = notificationTargetPath(notification);
-    if (notification.nIsRead || markReadMut.isPending) {
-      if (destinationPath) {
-        setAnchorEl(null);
-        navigate(destinationPath);
-      } else {
-        focusSoon(() => target);
-      }
-      return;
+  const activate = (notification: NotificationDTO, event: MouseEvent<HTMLElement>) => {
+    if (event.button !== 0 && event.button !== 1) return;
+    if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+      event.preventDefault();
+      if (!notification.nIsRead) markReadMut.mutate(notification.nId);
+      setAnchorEl(null);
+      navigate(notificationTargetPath(notification) ?? notificationLink(notification), { state: { activatedNotificationId: notification.nId } });
     }
-    markReadMut.mutate(notification.nId, {
-      onSettled: () => {
-        if (destinationPath) {
-          setAnchorEl(null);
-          navigate(destinationPath);
-        } else {
-          focusSoon(() => target);
-        }
-      },
-    });
-  };
-
-  const focusAfterMarkReadKeyDown = (event: KeyboardTargetEvent, notification: NotificationDTO) => {
-    if (!isActivationKey(event.key)) return;
-    event.preventDefault();
-    focusAfterMarkRead(notification, event.currentTarget);
   };
 
   const focus = {
@@ -145,8 +137,6 @@ export default function NotificationBell() {
     afterClose: focusAfterClose,
     afterMarkAll: focusAfterMarkAll,
     afterMarkAllKeyDown: focusAfterMarkAllKeyDown,
-    afterMarkRead: focusAfterMarkRead,
-    afterMarkReadKeyDown: focusAfterMarkReadKeyDown,
   };
 
   return (
@@ -248,11 +238,12 @@ export default function NotificationBell() {
                 {visibleNotifications.map((n) => (
                   <ListItemButton
                     key={n.nId}
-                    onClick={(event) => focus.afterMarkRead(n, event.currentTarget)}
-                    onKeyDown={(event) => focus.afterMarkReadKeyDown(event, n)}
-                    disabled={pendingReadId === n.nId}
-                    aria-busy={pendingReadId === n.nId ? true : undefined}
-                    sx={{ bgcolor: n.nIsRead ? 'transparent' : 'action.hover' }}
+                    component={RouterLink}
+                    to={notificationLink(n)}
+                    onClick={(event) => activate(n, event)}
+                    onAuxClick={(event) => activate(n, event)}
+                    sx={{ bgcolor: n.nIsRead ? 'transparent' : 'action.hover', minHeight: 44,
+                      '&:focus-visible': { outline: '3px solid', outlineColor: 'primary.main', outlineOffset: -3 } }}
                   >
                     <ListItemText
                       primary={n.nTitle}
@@ -272,6 +263,9 @@ export default function NotificationBell() {
           />
         )}
       </Popover>
+      <Snackbar open={readError} onClose={() => setReadError(false)}>
+        <Alert severity="warning" onClose={() => setReadError(false)}>{t('notifications.readError')}</Alert>
+      </Snackbar>
     </>
   );
 }

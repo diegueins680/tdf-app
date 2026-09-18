@@ -525,6 +525,11 @@
       "id": "2026-09-17_directory_event_privacy_composition",
       "path": "tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql",
       "introducedBy": "9ddd014b9d6a897d15608d9d23f4445c4c7118eb"
+    },
+    {
+      "id": "2026-09-18_notification_navigation",
+      "path": "tdf-hq/sql/2026-09-18_notification_navigation.sql",
+      "introducedBy": "3cf19c64bd60610059af6c26ec40104093be21c5"
     }
   ]
 }

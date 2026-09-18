@@ -25,7 +25,7 @@ import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Database.Persist
     ( Entity(..), Key, PersistValue(PersistText), count, get, insert, insert_, insertKey
-    , selectList, toPersistValue, (==.)
+    , selectList, toPersistValue, update, (=.), (==.)
     )
 import Database.Persist.Sql
     ( SqlPersistT

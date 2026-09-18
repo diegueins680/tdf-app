@@ -37,6 +37,7 @@ import {
   getFeatureById,
   type FeatureAction,
 } from '../features/featureRegistry';
+import { positiveNotificationId } from '../components/notificationTarget';
 import { useSession } from '../session/SessionContext';
 
 const supportedActions = new Set<FeatureAction>([
@@ -185,6 +186,37 @@ function History({ request }: { request: FeatureAccessRequestDTO }) {
 }
 
 export default function AccessRequestsPage() {
+  const [params] = useSearchParams();
+  if (params.has('request')) return <AccessRequestDetail requestId={params.get('request')} />;
+  return <AccessRequestList />;
+}
+
+function AccessRequestDetail({ requestId }: { requestId: string | null }) {
+  const { locale, text } = useAccessCopy();
+  const { session } = useSession();
+  const client = useQueryClient();
+  const id = requestId && /^\d+$/.test(requestId) ? positiveNotificationId(Number(requestId)) : null;
+  const query = useQuery({ queryKey: ['access-requests', session?.partyId, 'detail', id],
+    queryFn: () => AccessRequests.get(Number(id)), enabled: Boolean(id), retry: false });
+  const cancel = useMutation({ mutationFn: () => AccessRequests.cancel(Number(id)),
+    onSuccess: () => { void client.invalidateQueries({ queryKey: ['access-requests'] }); } });
+  const detail = query.isError ? undefined : query.data;
+  return <Stack spacing={3}>
+    <Typography component="h1" variant="h4">{text.requestReference}{id ? ` #${id}` : ''}</Typography>
+    {query.isPending && id ? <CircularProgress /> : null}
+    {(!id || query.isError) && <Alert severity="info">{locale === 'en'
+      ? 'This request is unavailable to your account. It may no longer exist or your access may have changed.'
+      : 'Esta solicitud no está disponible para tu cuenta. Puede que ya no exista o que tu acceso haya cambiado.'}</Alert>}
+    {detail && <ReviewCard request={detail.request} canReview={detail.canReview}
+      onChanged={() => { void client.invalidateQueries({ queryKey: ['access-requests'] }); }} />}
+    {detail?.canCancel && detail.request.status === 'pending' && <Button color="error"
+      disabled={cancel.isPending} onClick={() => cancel.mutate()}>{text.cancel}</Button>}
+    {cancel.isError && <Alert severity="error">{text.loadError}</Alert>}
+    <Button component={RouterLink} to="/solicitudes-acceso">{text.back}</Button>
+  </Stack>;
+}
+
+function AccessRequestList() {
   const { locale, text } = useAccessCopy();
   const queryClient = useQueryClient();
   const requestsQuery = useQuery({ queryKey: ['access-requests', 'mine'], queryFn: AccessRequests.listMine });
@@ -348,7 +380,7 @@ export function NewAccessRequestPage() {
   );
 }
 
-function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO; onChanged: () => void }) {
+function ReviewCard({ request, onChanged, canReview = true }: { request: FeatureAccessRequestDTO; onChanged: () => void; canReview?: boolean }) {
   const { locale, text } = useAccessCopy();
   const [notes, setNotes] = useState('');
   const decisionMutation = useMutation({
@@ -373,11 +405,13 @@ function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO; 
       <CardContent>
         <Typography variant="h6" component="h2">{requestTitle(request, locale)}</Typography>
         <Typography>{text.requestReference}: #{request.id}</Typography>
+        <Chip label={text[request.status]} color={statusTone[request.status]} />
+        <Typography>{text.requested}: {formatDate(request.requestedAt, locale)}</Typography>
         <Typography>{text.requester}: {requesterName(request, locale)}</Typography>
         <Typography>{text.action}: {request.action}</Typography>
         <Typography color="text.secondary">{text.currentContext}: {context.join(', ') || '—'}</Typography>
         {request.justification ? <Alert severity="info" sx={{ mt: 2 }}>{request.justification}</Alert> : null}
-        {request.status === 'pending' ? (
+        {canReview && request.status === 'pending' ? (
           <TextField
             label={text.reviewerNote}
             value={notes}
@@ -394,7 +428,7 @@ function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO; 
         {decisionMutation.isError ? <Alert severity="error" sx={{ mt: 2 }}>{decisionMutation.error.message}</Alert> : null}
         <History request={request} />
       </CardContent>
-      {request.status === 'pending' ? (
+      {canReview && request.status === 'pending' ? (
         <CardActions sx={{ flexWrap: 'wrap', gap: 1 }}>
           <Button
             variant="contained"
