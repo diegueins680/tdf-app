@@ -52,3 +52,14 @@ Review follow-ups: resolver-only and generator-only changes now select the mobil
 Use a normal merge commit to retain migration introduction commit `3cf19c64bd60610059af6c26ec40104093be21c5` in production ancestry. If the established release instead squash-merges, register the resulting squash SHA in the required follow-up before invoking the guarded deployment lane. Never bypass the migration ancestry or review gates.
 
 Read-only production preflight confirmed the reported new-fan notification has exactly one matching stored follow engagement event. Its payload currently points at the recipient; the journaled migration can recover the actual follower without interpreting the display name. No production data was changed during this audit.
+
+
+## Native first-launch follow-up (2026-09-18)
+
+Mobile PR [#102](https://github.com/diegueins680/TDF-mobile/pull/102) merged normally as `0c1ee7f3387875496afadf930cb71b29c9edde99`, after exact-head Mobile Validate and Datadog checks passed. This pin preserves the current main authentication and API contracts while adding the notification fix; it does not include the separate draft onboarding PR #104.
+
+The root navigator stays mounted while session restoration and current permissions guard its screens. The notification alias still resolves through native-intent handling. Android build 11's actual first-launch Expo Router loop was reproduced twice; the fixed runtime passes three signed-out device cases (fresh notification, cold request, warm notification) on both the final iOS simulator artifact and a physical Samsung SM-S928B / Android 16. Router tests separately verify exact return destinations during session restoration. No credentials or business actions were submitted by these tests.
+
+The Samsung's existing Play installation was preserved. Physical QA used a separately signed `com.tdf.records.notificationqa` APK with identical application code; package-specific Google OAuth and FCM are not qualified by this result. The user's Google-sign-in attempt in that temporary app returned the expected configuration error because its package/signing identity is not registered. That result must not be reported as a successful authentication test or as evidence about the Play app. See the [mobile verification record](https://github.com/diegueins680/TDF-mobile/blob/870020b/docs/notification-cold-start-2026-09-18.md) for artifact IDs, checksums, and limitations.
+
+Store release remains a separate step: do not promote known failing Android build 11 or older build 12 without this fix. Preserve Alpha 10 and Apple build 19's separate review. Google Play internal testing has only the user-selected **TDF Registered Users Sep 2026 (68 people)** list, saved and verified after reload. Final store artifacts and availability require their own verification; this source pin alone does not establish delivery.
