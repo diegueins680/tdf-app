@@ -1,0 +1,135 @@
+{
+  "observedAt": "2026-09-18T16:33:11.052000+00:00",
+  "rootSHA": "e1a825bda26dbb16b1c732e551cc4880d5626943",
+  "pullRequest": "https://github.com/diegueins680/tdf-app/pull/449",
+  "mergedAt": "2026-09-18T15:42:09Z",
+  "containedPRs": [
+    435,
+    442,
+    443,
+    444,
+    445,
+    446,
+    447,
+    448
+  ],
+  "backend": {
+    "status": "complete",
+    "startedAt": "2026-09-18T15:57:48.633Z",
+    "finishedAt": "2026-09-18T16:02:10.553Z",
+    "sha": "e1a825bda26dbb16b1c732e551cc4880d5626943",
+    "image": "diegueins680/tdf-hq:e1a825bda26dbb16b1c732e551cc4880d5626943",
+    "canaryMachine": "0807ee9cd34668",
+    "remainingMachines": [
+      "3d8d2500c67168"
+    ],
+    "rollbacks": []
+  },
+  "snapshot": {
+    "id": "vs_LRqNAqabQP5Upg7NwLqaVPX",
+    "createdAt": "2026-09-18T15:52:22Z",
+    "sha256": "b330b4ec00e770e7dbdfbd8badb1f1f1059cfffbfad43eb7fb48e0d326e59adf",
+    "retentionDays": 5
+  },
+  "recovery": {
+    "qualifiedPreviousSHA": "5c11577a5d31f079b3e070a7810a6b04a48d99f4",
+    "mechanism": "documented guarded runner, compatible authentication/schema only",
+    "migrationLedgerEntries": 110,
+    "activeLeasesAfterRelease": 0,
+    "calendarTablesPresent": true,
+    "transportLimit": "Fly agent WireGuard tunnel failed; documented pinned public fallback passed both machines."
+  },
+  "web": {
+    "url": "https://tdf-app.pages.dev",
+    "deploymentId": "061e1fe4-97d8-431c-aeb9-24b90c53a98b",
+    "htmlSHA256": "0cbe4c01951ed49815f6f57e111f007bea71771637b082a3dea81dd44c2574cb",
+    "immutableAndPublicHTMLMatch": true
+  },
+  "httpObservation": {
+    "observedAt": "2026-09-18T16:17:59.629400+00:00",
+    "rows": [
+      {
+        "path": "/health",
+        "httpAndSeconds": "200 0.324606",
+        "shape": "dict",
+        "items": null,
+        "payload": {
+          "db": "ok",
+          "status": "ok"
+        }
+      },
+      {
+        "path": "/version",
+        "httpAndSeconds": "200 0.330628",
+        "shape": "dict",
+        "items": null,
+        "payload": {
+          "buildTime": "2026-09-18T15:42:08Z",
+          "commit": "e1a825bda26dbb16b1c732e551cc4880d5626943",
+          "name": "tdf-hq",
+          "version": "0.1.0.0"
+        }
+      },
+      {
+        "path": "/marketplace",
+        "httpAndSeconds": "200 1.406763",
+        "shape": "list",
+        "items": 57
+      },
+      {
+        "path": "/records/feed?locale=es",
+        "httpAndSeconds": "200 5.640258",
+        "shape": "dict",
+        "items": null
+      },
+      {
+        "path": "/records/feed?locale=en",
+        "httpAndSeconds": "200 5.581669",
+        "shape": "dict",
+        "items": null
+      }
+    ],
+    "limits": "One sequential curl sample per endpoint, not field performance or a sustained error window"
+  },
+  "demoReadOnly": {
+    "observedAt": "2026-09-18T16:17:57.176Z",
+    "authority": "Existing App Review demo account; credentials never logged",
+    "loginStatus": 200,
+    "roles": [
+      "Customer",
+      "Fan"
+    ],
+    "rows": [
+      {
+        "path": "/session",
+        "status": 200,
+        "elapsedMs": 2288,
+        "payloadShape": "object"
+      },
+      {
+        "path": "/session/onboarding",
+        "status": 200,
+        "elapsedMs": 1784,
+        "payloadShape": "object"
+      },
+      {
+        "path": "/calendar/v1/config",
+        "status": 403,
+        "elapsedMs": 1291,
+        "payloadShape": "null"
+      },
+      {
+        "path": "/calendar/v1/events",
+        "status": 403,
+        "elapsedMs": 1472,
+        "payloadShape": "null"
+      }
+    ]
+  },
+  "limits": [
+    "Public timings are individual lab samples, not field percentiles.",
+    "Demo Customer/Fan verifies 403 for admin calendar; no production Admin consent/Google synchronization claim.",
+    "Production Marketplace storage denial exposed remaining UX-260917-007; not accepted as fully repaired.",
+    "Physical iPhone OAuth and store publication remain pending."
+  ]
+}

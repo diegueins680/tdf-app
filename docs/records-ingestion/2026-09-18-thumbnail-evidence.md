@@ -89,13 +89,13 @@ No key value belongs in this repository or client bundles.
 
 A read-only official API traversal of uploads playlist `UUx9Jpaw_XDrMtIdzWYlU51g`
 completed one page: 39 listed identities, 39 metadata responses, 38 eligible public
-videos, one nonpublic item excluded. Two eligible uploads (`0hYDXQ5hWfo` and
+recordings, one public upcoming broadcast excluded. Two eligible uploads (`0hYDXQ5hWfo` and
 `0W4KdgkQD5w`) are absent from the canonical feed. The two removed identities
 are absent from the accessible playlist. This is an inventory, not a completed
 persisted backfill or evidence of scheduled execution. Data API duration for
 Pt. 2 is `PT15M3S`; the watch-page player reported 902 seconds. The official
-metadata takes precedence. Do not publish the raw inventory containing the
-nonpublic item.
+metadata takes precedence. The excluded upcoming item is not a completed recording and must not be
+imported into that collection.
 
 Provider references: [channels.list](https://developers.google.com/youtube/v3/docs/channels/list),
 [playlistItems.list](https://developers.google.com/youtube/v3/docs/playlistItems/list),

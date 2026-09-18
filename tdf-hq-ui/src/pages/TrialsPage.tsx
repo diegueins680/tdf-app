@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -143,9 +143,17 @@ export default function TrialsPage() {
     enabled: typeof subjectId === 'number',
   });
 
+  const identityRequestKey = useRef<string | null>(null);
+  const identityRequestPending = useRef(false);
   const requestMutation = useMutation({
-    mutationFn: Trials.createRequest,
+    mutationFn: (payload: Parameters<typeof Trials.createRequest>[0]) => {
+      identityRequestPending.current = true;
+      identityRequestKey.current ??= crypto.randomUUID();
+      return Trials.createRequest(payload, identityRequestKey.current);
+    },
+    onSettled: () => { identityRequestPending.current = false; },
     onSuccess: () => {
+      identityRequestKey.current = null;
       setSlotInputs(createEmptySlotInputs());
       setVisibleSlotCount(1);
     },

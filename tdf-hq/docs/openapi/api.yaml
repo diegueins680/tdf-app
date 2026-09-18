@@ -9,6 +9,12 @@ servers:
     description: Development server
 
 paths:
+  /trials/v1/signup:
+    $ref: './trials-identity.yaml#/paths/~1trials~1v1~1signup'
+  /trials/v1/trial-requests:
+    $ref: './trials-identity.yaml#/paths/~1trials~1v1~1trial-requests'
+  /trials/v1/students:
+    $ref: './trials-identity.yaml#/paths/~1trials~1v1~1students'
   /social/v2/me:
     $ref: ./social-v2.yaml#/paths/~1social~1v2~1me
   /social/v2/relationships/{partyId}:
