@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -425,6 +426,7 @@ const fireCartMetaEvent = () => {
 };
 
 export default function MarketplacePage() {
+  const { t } = useTranslation();
   useMetaTags({
     title: 'Marketplace',
     description: 'Descubre equipos, instrumentos y servicios disponibles en TDF Records.',
@@ -1680,7 +1682,7 @@ export default function MarketplacePage() {
 
         {listingsQuery.isLoading && (
           <Box display="flex" justifyContent="center">
-            <CircularProgress />
+            <CircularProgress aria-label={t('auditAccessibility.loadingMarketplace')} />
           </Box>
         )}
 

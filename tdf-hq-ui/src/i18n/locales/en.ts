@@ -2,6 +2,12 @@ import authEntry from './authEntry.en';
 const en = {
   authEntry,
   auditAccessibility: {
+    loadingFeaturedArtists: 'Loading featured artists',
+    loadingMarketplace: 'Loading marketplace products',
+    loadingPublishedRecordings: 'Loading published recordings',
+    loadingPublishedReleases: 'Loading published releases',
+    loadingPublishedSessions: 'Loading published sessions',
+
     loadingReports: 'Loading reports',
     loadingConversations: 'Loading conversations',
     loadingMessages: 'Loading messages',
