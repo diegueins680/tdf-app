@@ -97,6 +97,18 @@ if __name__ == "__main__":
     if sys.argv[1:] not in ([], ["--check"]):
         raise SystemExit("Usage: specification-inventory.py [--check]")
     rendered = json.dumps(generate(), ensure_ascii=False, indent=2) + "\n"
+    register = json.loads((ROOT / "formal/system/requirements.json").read_text())
+    ids = set()
+    for requirement in register["requirements"]:
+        for key in ("id", "statement", "authority", "source", "property", "contract", "implementation", "verification", "evidence", "status"):
+            if not requirement.get(key):
+                raise SystemExit(f"Missing traceability field {key}: {requirement.get('id')}")
+        if requirement["id"] in ids:
+            raise SystemExit("Duplicate requirement ID: " + requirement["id"])
+        ids.add(requirement["id"])
+        for reference in [requirement["contract"], *requirement["implementation"]]:
+            if not (ROOT / reference).is_file():
+                raise SystemExit("Missing traceability target: " + reference)
     if sys.argv[1:] == ["--check"]:
         if not OUTPUT.exists() or OUTPUT.read_text() != rendered:
             raise SystemExit("Specification discovery index is stale; regenerate and review its changes")

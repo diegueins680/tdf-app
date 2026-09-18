@@ -1,0 +1,16 @@
+{
+  "observedDate": "2026-09-18",
+  "sharedCheckoutRevision": "17a33eca11d585d84435af85340beece9b51d14e",
+  "sharedCheckoutDirty": true,
+  "initialLiveMain": "2d7b7c7aeef810c81944f0f9417d561dc7df016b",
+  "mobileGitlink": "90cae070446df6c740e9e8f25a034f3deb12c5c7",
+  "observations": [
+    {"command": "gh api repos/diegueins680/tdf-app/branches/main/protection", "requiredApprovals": 1, "dismissStaleReviews": true, "requiredConversationResolution": true},
+    {"command": "gh api repos/diegueins680/tdf-app/rulesets/9478019", "name": "Rulz", "enforcement": "active", "rules": ["deletion", "non_fast_forward"]},
+    {"command": "flyctl status --app tdf-hq --json", "sourceRevision": "e1a825bda26dbb16b1c732e551cc4880d5626943", "imageDigest": "sha256:fa0f3fb1c60f164eebdeb5aadf82a5c77a0ed79a1a909fb6884e7bba18f42321", "health": "passing", "discoveryEnabled": true, "discoveryAutoPublish": true},
+    {"command": "curl --fail --silent https://tdf-hq.fly.dev/health", "response": {"db":"ok","status":"ok"}},
+    {"command": "gh api repos/diegueins680/tdf-app/deployments/6528597196/statuses", "state": "success", "environment": "Production", "revision": "2d7b7c7aeef810c81944f0f9417d561dc7df016b"},
+    {"command": "gh api repos/diegueins680/tdf-mobile/contents/eas.json?ref=90cae070446df6c740e9e8f25a034f3deb12c5c7", "androidSubmission": {"track":"internal","releaseStatus":"draft"}, "actualStorePublication": "not-observed"}
+  ],
+  "limitations": "Sanitized transcription of completed read-only tool observations, not a signed provider receipt or a deployment by this task. Live state can change. Exact mobile source/runtime and store access are not fully qualified."
+}

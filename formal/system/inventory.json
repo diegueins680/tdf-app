@@ -232,6 +232,7 @@
       "scripts/test-checkout-event-refund-runtime-migration.sh",
       "scripts/test-contextual-reputation-worker-migration.sh",
       "scripts/test-course-checkout-runtime-migration.sh",
+      "scripts/test-course-identity.sh",
       "scripts/test-ddex-partner-legacy-compatibility.sh",
       "scripts/test-directory-event-visibility-migration.sh",
       "scripts/test-distribution-accounting-migration.sh",
@@ -1304,6 +1305,8 @@
       "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
       "tdf-hq/sql/2026-09-17_identity_reconciliation_rollback.sql",
       "tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql",
+      "tdf-hq/sql/2026-09-18_course_identity_requests.sql",
+      "tdf-hq/sql/2026-09-18_course_identity_requests_rollback.sql",
       "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql",
       "tdf-hq/sql/2026-09-18_live_intake_idempotency.sql",
       "tdf-hq/sql/2026-09-18_live_intake_idempotency_rollback.sql",
@@ -1539,6 +1542,7 @@
       "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
       "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
+      "tdf-hq/test/TDF/CourseIdentitySpec.hs",
       "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
       "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
       "tdf-hq/test/TDF/Directory/PolicySpec.hs",
@@ -2338,6 +2342,13 @@
     {
       "path": "docs/identity/2026-09-17-status.md",
       "sha256": "e63db9748ef04bff4ca2f850fd6781f9a8fdb01976b725cd846834f75b4184d5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/identity/course-prevention.md",
+      "sha256": "32e7d6ce699424b59183bfdb53417e88174a1bddf8b984d84016894d4f8f84a9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -3177,7 +3188,7 @@
     },
     {
       "path": "docs/ux-ui-audit/2026-09-17/README.md",
-      "sha256": "875923e133d63b4cd01b212195a1c7b38b817622149e60739c07e70da6658411",
+      "sha256": "942aff8af7cc15bdb51010b86ba42f49fac9dde48bd4eafed1a33a590d4315fb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -3220,6 +3231,13 @@
     {
       "path": "docs/ux-ui-audit/2026-09-17/locale-recovery.md",
       "sha256": "c98e0956e2c2ca5f466e5fe57d70c2fc532a20c32ca01d167031ac50d0027d03",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/ux-ui-audit/2026-09-17/marketplace-storage.md",
+      "sha256": "6789e9362939d260a32628e454bdaada008b32f48022f09592b5752a9cef982c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -3969,6 +3987,34 @@
     {
       "path": "formal/event-operations/MarketplaceCatalogReadUnsafe.cfg",
       "sha256": "b587fffc7ea24317ee296ec32eb327a5c5859991fa5a2d1d153b1cc17a326be5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MarketplaceStorage.cfg",
+      "sha256": "de412df32334b3881b2ff47dfc07fbed13931a9d192ae92794fe1db190470a89",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MarketplaceStorage.tla",
+      "sha256": "709d0cd9beb3cb7960a38e30058d526685f31c956aa53ce36c37c9903e5d7886",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MarketplaceStorageUnsafeCache.cfg",
+      "sha256": "93cae28b05efede0510fa8510995cb319cea14955ef0c17cd1d347ca57d222b4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MarketplaceStorageUnsafeKey.cfg",
+      "sha256": "55ca8fa62d91f10d763e85954a048a1da46bdcfad6548c07ea6b6daf29842a85",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -7408,6 +7454,43 @@
         "INVARIANTS SelectedRentalKeepsApprovedTerms UnapprovedTermsNotUsed NoUnselectedListing",
         "PROPERTY RequestFinishes",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MarketplaceStorage.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS CatchOptionalStorage = TRUE",
+        "          RequireDurableKey = TRUE",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS NoDispatchWithoutDurableKey NoStorageExceptionEscapes",
+        "PROPERTY BrowsingAvailable"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MarketplaceStorageUnsafeCache.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS CatchOptionalStorage = FALSE",
+        "          RequireDurableKey = TRUE",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANT NoStorageExceptionEscapes"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MarketplaceStorageUnsafeKey.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS CatchOptionalStorage = TRUE",
+        "          RequireDurableKey = FALSE",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANT NoDispatchWithoutDurableKey"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
