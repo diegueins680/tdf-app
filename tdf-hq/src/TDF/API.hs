@@ -102,7 +102,7 @@ type InputListSeedAPI =
 type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
 type AdsPublicAPI =
-       "ads" :> "inquiry" :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] AdsInquiryOut
+       "ads" :> "inquiry" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] AdsInquiryOut
   :<|> "ads" :> "assist" :> ReqBody '[JSON] AdsAssistRequest :> Post '[JSON] AdsAssistResponse
 
 type AdsAdminAPI =
@@ -1036,6 +1036,8 @@ data AdsInquiry = AdsInquiry
   , aiMessage :: Maybe Text
   , aiChannel :: Maybe Text
   } deriving (Show, Generic)
+instance ToJSON AdsInquiry where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 2 }
 instance FromJSON AdsInquiry where
   parseJSON raw = do
     withObject "AdsInquiry" rejectNullInquiryFallbacks raw
@@ -1078,6 +1080,8 @@ data AdsInquiryOut = AdsInquiryOut
   } deriving (Show, Generic)
 instance ToJSON AdsInquiryOut where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+instance FromJSON AdsInquiryOut where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
 
 data CmsContentIn = CmsContentIn
   { cciContentId :: Text
