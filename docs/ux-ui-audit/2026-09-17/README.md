@@ -601,6 +601,31 @@ El artefacto iOS acce0957-ec70-40a6-8f9e-8192db3b7839 de fuente 74d784ceb366a320
 
 PR #422 pasó los gates exactos f36a6391c tras repetir sólo los jobs fallidos de instalación nativa transitoria; el log de navegador acredita 66 aprobados/10 omitidos, incluidos los diez casos ES/EN. PR #421 ya tiene backend-quality y quality SUCCESS en 19d8dc830 y aprobación independiente de tdfrecords sobre ese SHA; el merge sigue retenido por coordinación de producción. El usuario reiteró que el otro despliegue continúa: ningún merge que dispare producción ni mutación productiva por esta entrega.
 
+### EXP-01 contract recovery — 2026-09-18
+
+Current source lacked the experiment routes/config/handlers already consumed by the
+mobile client. Models, DTOs, migration and recorded production migration existed;
+this was an integration gap, not a request to launch the experiment. Focusedb62895313
+restores the historical contract, adds serialized authoritative eligibility, and
+keeps deployment false. Original migration/checksum/introduction commits are intact.
+Current main4b0bc6ed7 (#428) was merged normally as0ebdb180d before regenerating the
+mobile contract, preserving the newer notification endpoints. The initial generated
+mobile diff would have removed274notification lines and was discarded; the integrated
+schema adds only116experiment lines. Existing mobile19/10 source1ec artifacts are
+unchanged by TypeScript-only contract declarations.
+
+See the formal README and experiment-http-runtime.mjs for bounded properties and
+actual PostgreSQL concurrency evidence. Pre-integration build/Hspec2578(0fail,1PG-only
+pending), HTTP/PG,65release controls and full formal runner pass. Post-integration
+checks, mobile companion merge, root review/merge and guarded paused deployment
+remain outstanding. This finding is not accepted or released yet.
+
+Mobile companion#98 passed validate/Datadog and merged after a fresh thread/head/base
+check. Parent intentionally pins published/tested34971c451d443fd4805d91f57ac310a732497dd8,
+which adds only generated experiment declarations to notification main5faeeed; it
+does not import the separate provider-linking#97 runtime merely to obtain these types.
+TypeScript43native tests and offline Metro pass; this declarations-only change does
+not require rebuilding signed binaries. Store review/publication remains separate.
 ### Radio and modal layering (UX-260917-030)
 
 Initial checkout retry runtime found the global radio layer at1400 intercepting

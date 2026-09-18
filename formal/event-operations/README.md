@@ -174,6 +174,40 @@ mechanisms, and an actual isolated HTTP/PostgreSQL browser test checks code-acco
 persistence while a different cookie account remains signed in. Optional nested
 null handling is covered by multipart parser contract tests, not this state model.
 
+## Paused onboarding experiment contract — EXP-01
+
+ExperimentAuthority.tla bounds two account identities and three requests (two share
+one account). Assignment/exposure is one transaction under the progress-row lock;
+completion/expiry can occur before acquisition or after commit, never through the
+held row. Enabled and paused configurations check AccountAndEligibilityAuthority,
+ExposureAtMostOnce, PausedDoesNotWrite and ExposureHasAssignment. RequestsSettle
+assumes weak fairness of lock acquisition/commit, finite requests and eventual DB
+availability. The enabled configuration explores876distinct/1920generated states,
+depth12. Three negative controls remove locked eligibility, idempotent exposure or
+account binding and must produce the named invariant counterexample.
+
+TLC1.7.2 and Alloy6.2.0 are checksum-pinned by the existing runner. The complete
+runner passed before integration of main4b0bc6ed7. The model assumes a valid server
+authentication decision at request admission; it does not certify revocation during
+an already admitted transaction, credential storage, arbitrary handlers, mobile UI,
+statistical validity, production performance or unbounded executions.
+
+Implementation: requireSessionUser supplies Party authority; withExperimentProgress
+locks the stored progress row before reading eligibility and the clock. The existing
+unique account/experiment/version key and exposedAt compare-and-set preserve stable
+assignment and at-most-once exposure. Paused requests bypass locking/writes. The
+historical8c2960874handlers and3f1e6f3both-arm regression were ported narrowly; their
+existing migration and recorded introduction ancestry are unchanged.
+
+Conformance: scripts/__tests__/experiment-http-runtime.mjs runs two isolated backend
+processes against PostgreSQL. It verifies paused/no-write state, returning-device
+accounts without signup markers, completed/expired accounts, 16 concurrent assignment
+requests and16exposures, account isolation, revoked tokens and no granted roles.
+A second SQL connection holds completion/expiry changes while the actual handler is
+observed waiting for that row lock; afterward neither exposure nor expired assignment
+is accepted. SQLite tests separately cover both variants and paused configuration.
+The experiment remains disabled; deployment tooling rejects activation and verifies
+the effective flag. No experiment launch or conversion claim is authorized here.
 ## Checkout readiness — UX-260917-026 / PR #429
 
 `CheckoutReadiness.tla` models two request slots and generations 0..2, an open/closed
