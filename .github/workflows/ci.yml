@@ -203,6 +203,8 @@ jobs:
         with:
           path: .stack-root
           key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+          restore-keys: |
+            stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Restore incremental backend objects
         uses: actions/cache@v6
@@ -214,6 +216,13 @@ jobs:
 
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
+
+      - name: Verify artist self-service transactions and migration
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: ./scripts/test-artist-self-service.sh
 
       - name: Verify social session revocation and model-derived HTTP fixtures
         env:
@@ -236,6 +245,12 @@ jobs:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-automatic-migrations-production-schema.sh
+
+      - name: Verify artist claim preparation concurrency and privacy
+        env:
+          TDF_CLAIM_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_CLAIM_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: bash scripts/test-artist-claim-target-http.sh
 
       - name: Exercise public booking HTTP idempotency and resource conflicts
         env:

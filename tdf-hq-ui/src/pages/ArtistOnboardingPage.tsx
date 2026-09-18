@@ -3,11 +3,14 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import BoltIcon from '@mui/icons-material/Bolt';
-import { useMemo } from 'react';
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
-import { useSession } from '../session/SessionContext';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link as RouterLink, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import { useSession, getActiveSession, SESSION_STORAGE_KEY } from '../session/SessionContext';
 import { parsePositiveSafeInt } from '../utils/ids';
-import { accessRequestPath, getFeatureById } from '../features/featureRegistry';
+import { Fans } from '../api/fans';
+import { get } from '../api/client';
+import type { SessionResponseDTO } from '../api/session';
+import ArtistClaimPanel from '../components/ArtistClaimPanel';
 
 const buildArtistSignupLink = (claimArtistId: number | null) => {
   const params = new URLSearchParams();
@@ -20,19 +23,65 @@ const buildArtistSignupLink = (claimArtistId: number | null) => {
   return `/login?${params.toString()}`;
 };
 
-const buildArtistLoginLink = () => {
+const buildArtistLoginLink = (claimArtistId: number | null) => {
   const params = new URLSearchParams();
-  params.set('redirect', '/mi-artista');
+  params.set('redirect', claimArtistId === null ? '/mi-artista' : `/artista/crear?claimArtistId=${claimArtistId}`);
   return `/login?${params.toString()}`;
 };
 
-const artistAccessRequest = () => {
-  const feature = getFeatureById('artist.onboarding');
-  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';
-};
-
 export default function ArtistOnboardingPage() {
-  const { session } = useSession();
+  const { session, login } = useSession();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const mounted = useRef(true);
+  const flight = useRef<number | null>(null);
+  const context = useRef({ session, routeKey: location.key, generation: 0 });
+  if (context.current.session !== session || context.current.routeKey !== location.key) {
+    context.current = { session, routeKey: location.key, generation: context.current.generation + 1 };
+  }
+  const generation = context.current.generation;
+  const isCurrent = () => context.current.generation === generation && mounted.current && context.current.session === session
+    && getActiveSession() === session;
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  useEffect(() => {
+    setActivating(false);
+    setActivationError(null);
+  }, [session, location.key]);
+  const [activating, setActivating] = useState(false);
+  const [activationError, setActivationError] = useState<string | null>(null);
+
+  const activateProfile = async () => {
+    if (!session?.partyId || flight.current === generation || !isCurrent() || claimArtistId !== null) return;
+    flight.current = generation;
+    const partyId = session.partyId;
+    setActivating(true);
+    setActivationError(null);
+    try {
+      await Fans.activateMyArtistProfile();
+      if (!isCurrent()) return;
+      const refreshed = await get<SessionResponseDTO>('/session');
+      if (!isCurrent()) return;
+      if (refreshed?.partyId !== partyId || !refreshed.roles?.includes('Artist')) {
+        throw new Error('No pudimos confirmar tu acceso de artista. Inténtalo de nuevo.');
+      }
+      let remember = false;
+      try { remember = !window.sessionStorage.getItem(SESSION_STORAGE_KEY); } catch {
+        // Browser persistence is optional; keep this confirmed session in memory.
+      }
+      login({ ...refreshed, apiToken: session.apiToken }, {
+        remember,
+      });
+      navigate('/mi-artista');
+    } catch (error) {
+      if (isCurrent()) setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Inténtalo de nuevo.');
+    } finally {
+      if (flight.current === generation) flight.current = null;
+      if (isCurrent()) setActivating(false);
+    }
+  };
   const [searchParams] = useSearchParams();
 
   const claimArtistId = useMemo(() => {
@@ -99,26 +148,33 @@ export default function ArtistOnboardingPage() {
           </Stack>
         </Box>
 
-        {session?.partyId && (
+        {session?.partyId && claimArtistId !== null && (
+          <ArtistClaimPanel key={`${context.current.generation}:${session.partyId}:${claimArtistId}`}
+            artistId={claimArtistId} accountPartyId={session.partyId} />
+        )}
+
+        {session?.partyId && claimArtistId === null && (
           <Alert
-            severity={hasArtistRole ? 'success' : 'warning'}
+            severity={hasArtistRole ? 'success' : 'info'}
             action={
               hasArtistRole ? (
                 <Button color="inherit" size="small" component={RouterLink} to="/mi-artista">
                   Ir a mi perfil
                 </Button>
               ) : (
-                <Button color="inherit" size="small" component={RouterLink} to={artistAccessRequest()}>
-                  Solicitar acceso
+                <Button color="inherit" size="small" onClick={() => void activateProfile()} disabled={activating}>
+                  {activating ? 'Creando…' : 'Crear mi perfil'}
                 </Button>
               )
             }
           >
             {hasArtistRole
               ? 'Ya tienes una sesión activa. Puedes editar tu perfil de artista ahora.'
-              : 'Tu cuenta está activa. Para crear un perfil de artista, envía una solicitud revisada o reclama un perfil existente con correo verificable.'}
+              : 'Tu cuenta está activa. Crea tu perfil de artista ahora, sin esperar aprobación.'}
           </Alert>
         )}
+
+        {activationError && <Alert severity="error">{activationError}</Alert>}
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <Card variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
@@ -139,24 +195,30 @@ export default function ArtistOnboardingPage() {
                   Te llevamos directo al portal para completar tu perfil y publicarlo en tu URL.
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    component={RouterLink}
-                    to={buildArtistSignupLink(claimArtistId)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Crear mi perfil de artista
-                  </Button>
-                  <Button
+                  {session?.partyId && claimArtistId !== null ? (
+                    <Typography color="text.secondary">
+                      Envía las pruebas en el formulario de administración. No necesitas otra cuenta.
+                    </Typography>
+                  ) : session?.partyId ? (
+                    <Button variant="contained" size="large" disabled={activating}
+                      onClick={() => hasArtistRole ? navigate('/mi-artista') : void activateProfile()}>
+                      {activating ? 'Creando…' : hasArtistRole ? 'Editar mi perfil de artista' : 'Crear mi perfil de artista'}
+                    </Button>
+                  ) : (
+                    <Button variant="contained" size="large" component={RouterLink}
+                      to={buildArtistSignupLink(claimArtistId)} sx={{ textTransform: 'none' }}>
+                      Crear mi perfil de artista
+                    </Button>
+                  )}
+                  {!session?.partyId && <Button
                     variant="outlined"
                     size="large"
                     component={RouterLink}
-                    to={buildArtistLoginLink()}
+                    to={buildArtistLoginLink(claimArtistId)}
                     sx={{ textTransform: 'none' }}
                   >
                     Ya tengo cuenta
-                  </Button>
+                  </Button>}
                 </Stack>
               </Stack>
             </CardContent>

@@ -80,7 +80,9 @@ describe('featureRegistry', () => {
   it('uses the exact action associated with actionable routes', () => {
     const actionSession = { authenticated: true, roles: ['Fan', 'Customer'], modules: ['Packages'] };
     expect(evaluateFeatureAccess('artist.onboarding', actionSession, 'view').state).toBe('allowed');
-    expect(evaluateFeatureAccess('artist.onboarding', actionSession, 'create').state).not.toBe('allowed');
+    expect(evaluateFeatureAccess('artist.onboarding', actionSession, 'create').state).toBe('allowed');
+    expect(evaluateFeatureAccess('artist.onboarding', { authenticated: false }, 'create').state).not.toBe('allowed');
+    expect(getFeatureByPath('/artista/crear')?.accessRequestEligible).toBe(false);
     expect(getFeatureByPath('/artista/crear')?.routeAction).toBe('create');
   });
 

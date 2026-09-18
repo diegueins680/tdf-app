@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 import {
   captureContextualReputationGate,
+  captureEventDiscoveryGates,
   runtimeEnvBlockers,
 } from '../production-release.mjs';
 import {
@@ -1246,4 +1247,64 @@ test('buildDeployPlan validates Fly safety settings before producing a release p
     ),
     /RUN_MIGRATIONS|migration/i,
   );
+});
+
+
+test('discovery gates are captured from a coherent fleet without enabling or disabling either flag', () => {
+  for (const enabled of [false, true]) {
+    for (const autoPublish of [false, true]) {
+      const values = {
+        EVENT_DISCOVERY_ENABLED: String(enabled),
+        EVENT_DISCOVERY_AUTO_PUBLISH: String(autoPublish),
+      };
+      const rows = [{ machineId: 'a', values }, { machineId: 'b', values: { ...values } }];
+      const gates = captureEventDiscoveryGates(rows);
+      assert.deepEqual(gates, { eventDiscoveryEnabled: enabled, eventDiscoveryAutoPublish: autoPublish });
+      const args = buildMachineDeployArgs({ app: 'tdf-hq', image: releaseImage, sha: normalizedReleaseSha, ...gates });
+      assert.ok(args.includes(`EVENT_DISCOVERY_ENABLED=${enabled}`));
+      assert.ok(args.includes(`EVENT_DISCOVERY_AUTO_PUBLISH=${autoPublish}`));
+      assert.equal(args.filter((arg) => arg.startsWith('EVENT_DISCOVERY_ENABLED=')).length, 1);
+      assert.equal(args.filter((arg) => arg.startsWith('EVENT_DISCOVERY_AUTO_PUBLISH=')).length, 1);
+    }
+  }
+});
+
+test('discovery preflight rejects inconsistent, unset or malformed fleet gates', () => {
+  const values = { EVENT_DISCOVERY_ENABLED: 'true', EVENT_DISCOVERY_AUTO_PUBLISH: 'true' };
+  assert.throws(() => captureEventDiscoveryGates([]), /same boolean EVENT_DISCOVERY_ENABLED/);
+  assert.throws(() => captureEventDiscoveryGates([{ values: {} }]), /same boolean EVENT_DISCOVERY_ENABLED/);
+  assert.throws(() => captureEventDiscoveryGates([{ values }, { values: { ...values, EVENT_DISCOVERY_ENABLED: 'false' } }]), /same boolean EVENT_DISCOVERY_ENABLED/);
+  assert.throws(() => captureEventDiscoveryGates([{ values }, { values: { ...values, EVENT_DISCOVERY_AUTO_PUBLISH: 'false' } }]), /same boolean EVENT_DISCOVERY_AUTO_PUBLISH/);
+  assert.throws(() => captureEventDiscoveryGates([{ values: { ...values, EVENT_DISCOVERY_AUTO_PUBLISH: 'yes' } }]), /same boolean EVENT_DISCOVERY_AUTO_PUBLISH/);
+});
+
+test('runtime checks accept captured discovery settings and reject subsequent drift', () => {
+  const values = {
+    RUN_MIGRATIONS: 'false', AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
+    CONTEXTUAL_REPUTATION_ENABLED: 'false', REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
+    REPUTATION_AGGREGATION_ENVIRONMENT: 'production', REPUTATION_AGGREGATION_MODE: 'simulation',
+    EVENT_DISCOVERY_ENABLED: 'true', EVENT_DISCOVERY_AUTO_PUBLISH: 'true', DEFAULT_LOCALE: 'es',
+  };
+  const rows = [{ machineId: 'a', values }];
+  const gates = captureEventDiscoveryGates(rows);
+  assert.deepEqual(runtimeEnvBlockers(rows, gates), []);
+  assert.equal(runtimeEnvBlockers(rows).length, 2);
+  const changed = [{ machineId: 'a', values: { ...values, EVENT_DISCOVERY_AUTO_PUBLISH: 'false' } }];
+  assert.match(runtimeEnvBlockers(changed, gates)[0], /EVENT_DISCOVERY_AUTO_PUBLISH/);
+  assert.throws(() => runtimeEnvBlockers(rows, { eventDiscoveryEnabled: 'true' }), /must be a boolean/);
+  assert.throws(() => buildMachineDeployArgs({ app: 'tdf-hq', image: releaseImage, sha: normalizedReleaseSha, eventDiscoveryAutoPublish: 'false' }), /must be booleans/);
+});
+
+test('release planning preserves captured discovery gates for canary, remaining machines and rollback', () => {
+  const steps = buildReleaseSteps({
+    sha: normalizedReleaseSha, image: releaseImage, canaryMachineId: 'canary', remainingMachineIds: ['remaining'],
+    previousImage: 'registry.example/tdf@sha256:' + 'a'.repeat(64), previousSha: 'b'.repeat(40),
+    previousContextualReputationEnabled: false, eventDiscoveryEnabled: true, eventDiscoveryAutoPublish: true,
+  });
+  const commands = steps.flatMap((step) => [step.command, ...(step.onFailure ?? []).map((failure) => failure.command)]).filter(Boolean);
+  assert.equal(commands.length, 3);
+  for (const command of commands) {
+    assert.ok(command.includes('EVENT_DISCOVERY_ENABLED=true'));
+    assert.ok(command.includes('EVENT_DISCOVERY_AUTO_PUBLISH=true'));
+  }
 });

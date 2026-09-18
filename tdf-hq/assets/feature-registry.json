@@ -365,11 +365,11 @@
       "navigationGroup": "people",
       "icon": "person-add",
       "breadcrumb": ["community"],
-      "requiredAuth": "optional",
-      "permissions": { "discover": {}, "view": {}, "create": { "rolesAny": ["Admin", "Artist", "Artista"] } },
+      "requiredAuth": "authenticated",
+      "permissions": { "discover": {}, "view": {}, "create": {} },
       "routeAction": "create",
       "mobilePresentation": { "kind": "native", "destination": "/createArtistProfile", "documentedException": null },
-      "accessRequestEligible": true
+      "accessRequestEligible": false
     },
     {
       "id": "marketplace",

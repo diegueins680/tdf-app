@@ -450,6 +450,12 @@ export default function LoginPage() {
 
   const handleGoogleCredential = useCallback(
     async (credentialResponse: { credential?: string }) => {
+      // The Google login contract cannot claim an existing artist. Keep the
+      // selected claim in the email signup form, including late popup callbacks.
+      if (claimArtistId !== null) {
+        setSignupFeedback({ type: 'info', message: 'Para reclamar el perfil seleccionado, completa este formulario con el correo asociado al artista.' });
+        return;
+      }
       if (servicePreparing) {
         const message = servicePreparingMessage;
         if (signupDialogOpen) {
@@ -531,7 +537,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, googleLoginMutation, login, navigate, openSignupDialog, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
+    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, openSignupDialog, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
   );
 
   useEffect(() => {
@@ -1344,7 +1350,12 @@ export default function LoginPage() {
                 </Typography>
               )}
             />
-            {googleClientId && termsAccepted && (
+            {claimArtistId !== null && (
+              <Alert severity="info">
+                Para reclamar el perfil seleccionado, completa este formulario con el correo asociado al artista.
+              </Alert>
+            )}
+            {googleClientId && termsAccepted && claimArtistId === null && (
               <Stack spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
                   Crear e ingresar con Google
