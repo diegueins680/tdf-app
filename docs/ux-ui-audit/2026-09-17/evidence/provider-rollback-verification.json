@@ -1,0 +1,59 @@
+{
+  "observedAt": "2026-09-18T08:26:55.526697+00:00",
+  "tools": {
+    "java": "21.0.12.1+1",
+    "tlaRelease": "1.7.2",
+    "tlcEngine": "2.17",
+    "alloy": "6.2.0"
+  },
+  "bounds": "two machines, finite recovery decisions and one concurrent binding; weak fairness only of recovery steps",
+  "results": [
+    {
+      "configuration": "ProviderRollback",
+      "expectedCounterexample": false,
+      "counts": [
+        52,
+        30,
+        0
+      ]
+    },
+    {
+      "configuration": "ProviderRollbackCompatible",
+      "expectedCounterexample": false,
+      "counts": [
+        64,
+        31,
+        0
+      ]
+    },
+    {
+      "configuration": "ProviderRollbackMixed",
+      "expectedCounterexample": false,
+      "counts": [
+        59,
+        31,
+        0
+      ]
+    },
+    {
+      "configuration": "ProviderRollbackForward",
+      "expectedCounterexample": false,
+      "counts": [
+        52,
+        30,
+        0
+      ]
+    },
+    {
+      "configuration": "ProviderRollbackUnsafe",
+      "expectedCounterexample": true,
+      "counts": [
+        14,
+        12,
+        5
+      ]
+    }
+  ],
+  "conformance": "71 release tests pass including guarded deploy callback boundary, prior/current source IDs, all two-machine orders/combinations/retries; local read-only plan accepts5c115/f1ff and rejects2f01 with differing migrations",
+  "limits": "No production failure induced; ancestry assumes reviewed commits preserve auth contract. Model does not certify token validation or cloud availability."
+}

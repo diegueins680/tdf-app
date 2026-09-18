@@ -286,3 +286,26 @@ listed invariants and conditional liveness pass. Legacy negative reaches the nam
 NoFailedVisits counterexample (two reads, insertion, duplicate insertion). The full
 formal runner passes, including all existing negative controls and Alloy checks.
 The pinned TLA+ release artifact is1.7.2; its runtime reports TLC2 engine2.17.
+
+### Provider identity release recovery
+
+`ProviderRollback.tla` models two machines, additive migration, canary/fleet
+deployment, an arbitrary concurrent provider binding, verification failure and
+per-machine recovery. Four configurations enumerate legacy, compatible and
+mixed prior binaries plus a compatible fallback from a legacy fleet. `PriorSafe`
+is the verified candidate chosen for recovery; `InitialSafe` describes the original
+fleet independently. `NoUnsafeRestoration` and `ModernNeverDowngrades` prohibit
+restoring legacy email authority on any touched machine. `BindingPreserved`
+forbids clearing established bindings. `RecoveryDecisionSettles` requires each
+pending recovery attempt and its completion step to be weakly fair; it promises
+a recorded compatible rollback or blocked decision, not eventual service health.
+No fairness of deployment or external availability is assumed.
+
+The unsafe configuration reproduces the former unconditional rollback and must
+violate `NoUnsafeRestoration`. `withCompatibleRollback` is the implementation
+boundary before the actual deploy command. `provider-rollback.test.mjs` exercises
+that boundary, the real prior/current commit identifiers, missing history, both
+machine orders, all four prior combinations and repeated recovery attempts.
+The executable model abstracts verified immutable artifacts and trusted commit
+ancestry. It does not prove identity-token validation, the cloud provider, or
+whole-system availability. Exact executions are in the canonical UX audit record.

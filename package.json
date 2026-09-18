@@ -49,7 +49,7 @@
     "verify:auto-loop": "node scripts/verify-improvement-loop.mjs",
     "test:auto-loop": "node --test scripts/__tests__/continuous-improvement-loop.test.mjs",
     "test:formal": "node --test scripts/__tests__/formal-methods-audit.test.mjs",
-    "test:production-release": "node --test scripts/__tests__/production-entrypoint.test.mjs scripts/__tests__/production-release.test.mjs",
+    "test:production-release": "node --test scripts/__tests__/production-entrypoint.test.mjs scripts/__tests__/production-release.test.mjs scripts/__tests__/provider-rollback.test.mjs",
     "test:ci-pipeline": "node --test scripts/__tests__/ci-change-scope.test.mjs scripts/__tests__/ci-pipeline.test.mjs",
     "test:instagram-token-workflows": "node --test scripts/__tests__/instagram-token-workflows.test.mjs",
     "test:catalog-list-audit": "node --test scripts/__tests__/catalog-list-audit.test.mjs",

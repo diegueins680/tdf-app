@@ -1311,5 +1311,31 @@
     "verificationStatus": "Before failure confirmed by actual400. Corrected decoder unit/generative and full hosted HTTP execution pending; node syntax and diff checks pass.",
     "mergeStatus": "not merged",
     "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-036",
+    "kind": "confirmed",
+    "title": "Release rollback can restore legacy Google email authority",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "authentication / release failure / recovery",
+    "roles": "Google-authenticated accounts and release operator",
+    "surface": "scripts/production-release.mjs rollbackMachine",
+    "evidence": "After main430 adds issuer/subject binding, the existing canary/fleet failure path still deploys captured prior2f01 unconditionally. docs/identity/provider-prevention.md explicitly prohibits restoring email-only authorization. No production rollback incident is asserted. ProviderRollbackUnsafe models that exact unconditional command and must produce a named counterexample.",
+    "userImpact": "A failed rollout can restore weaker identity authorization after accounts have established verified provider bindings.",
+    "rootCause": "Schema remains additive/compatible at SQL level, but previous-binary authentication semantics are no longer safe; runner has no semantic rollback floor.",
+    "proposedChange": "Gate recovery deploy by reviewed authentication ancestry. Block preflight without compatible prior or explicit verified ancestor fallback with identical migration manifest/SQL; retain operational flags/bindings.",
+    "dependencies": [
+      "provider430",
+      "guarded next backend release",
+      "independent review and model/runtime conformance checks"
+    ],
+    "acceptanceCriteria": "Legacy/unknown recovery cannot execute a deploy callback. Compatible prior or explicit immutable fallback is verified before mutation; schema manifests/checksums match; reports identify recovery policy and preserve canary failure.",
+    "verificationMethod": "ProviderRollback TLC legacy/compatible/mixed two-machine models, unsafe negative control, executable boundary tests including two machine orders/all prior combinations/retries/missing history, existing release contract tests.",
+    "status": "implemented",
+    "implementationStatus": "withCompatibleRollback and selectRecoveryTarget gate actual deploy; --recovery-sha accepts only distinct reviewed ancestors with identical migration manifests/expanded SQL. Preflight verifies immutable artifacts and blocks without safe recovery.",
+    "verificationStatus": "71 release tests pass; four final TLC configurations and named unsafe counterexample pass (evidence/provider-rollback-verification.json). Existing full formal runner passed; final extended hosted gate pending. Local plan accepts5c115/f1ff, rejects2f01 migration mismatch; no cloud failure induced.",
+    "mergeStatus": "Not merged; focused successor being prepared from5c11577a5",
+    "releaseStatus": "No production mutation; block next provider-containing release until reviewed recovery guard is merged and verified."
   }
 ]
