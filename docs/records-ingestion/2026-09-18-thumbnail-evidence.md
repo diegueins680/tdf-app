@@ -84,7 +84,10 @@ separate implementation work. No activation is claimed by this repair.
 After explicit authorization, enabled YouTube Data API v3 in the existing Google
 Cloud project `tdf-records-477016` and created the server credential named
 `TDF Records video ingestion server`, restricted to that API. It is stored as
-Fly secret `YOUTUBE_API_KEY` for `tdf-hq`, staged pending the guarded deployment.
+Fly secret `YOUTUBE_API_KEY` for `tdf-hq`. It was initially staged; the existing
+deployment of revision `ab9bbacc9da845b6bfe70ac3fda2ace44f17c918` subsequently
+delivered it. Fly reports Deployed and presence-only checks passed on both ORD
+and LAX replicas. This does not enable scheduled ingestion.
 No key value belongs in this repository or client bundles.
 
 A read-only official API traversal of uploads playlist `UUx9Jpaw_XDrMtIdzWYlU51g`
@@ -112,6 +115,7 @@ provider HTML, which includes request tracking values.
 Register the new migration with its introducing commit in the existing manifest;
 use normal independent review, CI and the guarded backend release process.
 Frontend deployment follows the existing main/Cloudflare workflow. Verify the
-resulting API statuses and browser rendering after rollout. Production has not
-been modified by the investigation or local tests. Implementation, successful
+resulting API statuses and browser rendering after rollout. The production
+catalog has not been modified by this investigation or local tests; only the
+separately authorized provider credential has been configured. Implementation, successful
 local tests, CI, merge, deployment and scheduled execution are separate gates.

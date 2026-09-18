@@ -46,6 +46,18 @@ describe('resource thumbnails', () => {
     rerender(<RecordThumbnail resource={{ ...youtube }} title="Federico" />);
     expect(screen.getByRole('img', { name: 'Miniatura no disponible' })).toBeTruthy();
   });
+  it('advances overview artwork after an unverified primary video fails at runtime', () => {
+    const secondary = { providerCode: 'vimeo', externalCode: '123', thumbnailUrl: 'https://cdn.example.org/recording-art.jpg' };
+    const { rerender } = render(<RecordThumbnail resource={youtube} fallbackResources={[youtube, secondary]} title="Recording overview" />);
+    fireEvent.error(screen.getByRole('img', { name: 'Recording overview' }));
+    fireEvent.error(screen.getByRole('img', { name: 'Recording overview' }));
+    expect(screen.getByRole('img', { name: 'Recording overview' }).getAttribute('src')).toBe(secondary.thumbnailUrl);
+    fireEvent.load(screen.getByRole('img', { name: 'Recording overview' }));
+    rerender(<RecordThumbnail resource={{ ...youtube }} fallbackResources={[{ ...youtube }, { ...secondary }]} title="Recording overview" />);
+    expect(screen.getByRole('img', { name: 'Recording overview' }).getAttribute('src')).toBe(secondary.thumbnailUrl);
+    fireEvent.error(screen.getByRole('img', { name: 'Recording overview' }));
+    expect(screen.getByRole('img', { name: 'Miniatura no disponible' })).toBeTruthy();
+  });
   it('rejects a decoded 200 placeholder and keeps the working comparison image', () => {
     render(<RecordThumbnail resource={youtube} title="Federico" />);
     const image = screen.getByRole('img', { name: 'Federico' });
