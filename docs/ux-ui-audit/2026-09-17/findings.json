@@ -136,7 +136,7 @@
     "releaseStatus": "Auth/public navigation and Spanish policy translations implemented in #422 successor;20/20 bilingual production-bundle cases and mobile458 tests pass. Whole-platform bilingual coverage remains open.",
     "status": "in progress",
     "implementationStatus": "in progress",
-    "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending.",
+    "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained.",
     "mergeStatus": "pending"
   },
   {
@@ -989,6 +989,30 @@
     "implementationStatus": "local repair",
     "verificationStatus": "33 multipart Hspec examples pass, preserving contradictory alias rejection. Web wire omission regression passes. Real browser writes with old strict backend; new compiled backend direct HTTP200 persists owner50,1 musician and1 song with null optionals in isolated PostgreSQL17.",
     "mergeStatus": "pending",
+    "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-029",
+    "kind": "confirmed",
+    "title": "Generic transactional emails incorrectly label account/order links as course details",
+    "severity": "low",
+    "confidence": "high",
+    "journey": "Account welcome and transactional email return",
+    "roles": "email recipients",
+    "surface": "TDF.Email buildMail plain-text and HTML CTA",
+    "evidence": "Review of6479e0350 identified shared builder default changed to course-specific CTA; actual call sites include account,order,booking,ticket and waitlist senders.",
+    "userImpact": "Link wording describes an unrelated course and obscures the destination.",
+    "rootCause": "Localized recovery refactor reused a course-specific label as the shared default.",
+    "proposedChange": "Restore generic Ver detalles default and supply course wording only at the two course senders.",
+    "dependencies": [
+      "PR #422"
+    ],
+    "acceptanceCriteria": "Shared transactional builder uses generic CTA; course senders explicitly retain course CTA; localized password reset unchanged.",
+    "verificationMethod": "Call-site inspection, Stack/GHC9.10.3 build and existing passwordReset Hspec/QuickCheck regression. No claim of real mailbox delivery.",
+    "status": "implemented",
+    "implementationStatus": "Focused Email.hs fix in current#422 successor",
+    "verificationStatus": "Stack --fast test passwordReset:8 examples/100generated pass; module rebuilt. SMTP/rendered mailbox not executed.",
+    "mergeStatus": "pending exact-head CI/review",
     "releaseStatus": "not deployed"
   }
 ]

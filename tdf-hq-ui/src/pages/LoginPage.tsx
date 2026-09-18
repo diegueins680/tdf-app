@@ -1,3 +1,4 @@
+import { authErrorMessage } from '../utils/authErrorMessage';
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
@@ -402,8 +403,7 @@ export default function LoginPage() {
       navigate(targetPath, { replace: true });
     } catch (error) {
       captureGrowthEvent(analytics, 'login_failed', { route: '/login', method: 'password' });
-      const message = error instanceof Error ? error.message : t('authEntry.loginError');
-      setFormError(message.trim() === '' ? t('authEntry.loginError') : message);
+      setFormError(authErrorMessage(error, t, 'authEntry.loginError'));
     }
   };
 
@@ -519,7 +519,7 @@ export default function LoginPage() {
           setSignupFeedback({ type: 'info', message: t('authEntry.consentPrompt') });
           return;
         }
-        const message = err instanceof Error ? err.message : t('authEntry.googleLoginError');
+        const message = authErrorMessage(err, t, 'authEntry.googleLoginError');
         captureGrowthEvent(analytics, signupDialogOpen ? 'signup_failed' : 'login_failed', {
           route: '/login',
           method: 'google',
@@ -771,7 +771,7 @@ export default function LoginPage() {
       captureGrowthEvent(analytics, 'signup_failed', { route: '/login', method: 'password', intent: signupIntent ?? 'general' });
       setSignupFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : t('authEntry.signupError'),
+        message: authErrorMessage(err, t, 'authEntry.signupError'),
       });
     }
   };

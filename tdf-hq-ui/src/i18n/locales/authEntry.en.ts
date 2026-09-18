@@ -1,5 +1,9 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  "networkError": "Could not connect to the service. Check your connection and try again.",
+  "timeoutError": "The request took too long. Check your connection and try again.",
+  "invalidCredentials": "Incorrect username or password. Check your details and try again.",
+
   "consentPrompt": "This Google account is not registered with TDF yet. Review and accept the terms and privacy policy, then continue with Google to create it.",
   "intentEvents": "discover events",
   "intentFollow": "follow artists",

@@ -1,5 +1,9 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  "networkError": "No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.",
+  "timeoutError": "La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.",
+  "invalidCredentials": "Credenciales inválidas. Revisa tus datos e inténtalo de nuevo.",
+
   "consentPrompt": "Esta cuenta de Google todavía no está registrada en TDF. Revisa y acepta los términos y la política de privacidad; después vuelve a continuar con Google para crearla.",
   "intentEvents": "descubrir eventos",
   "intentFollow": "seguir artistas",
