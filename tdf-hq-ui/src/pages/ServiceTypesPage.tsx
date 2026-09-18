@@ -314,11 +314,11 @@ export default function ServiceTypesPage() {
   );
 
   return (
-    <Box sx={{ color: '#e2e8f0' }}>
+    <Box sx={{ color: 'text.primary' }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.5} mb={2}>
         <Stack spacing={0.75}>
           <Typography variant="h5" fontWeight={800}>Catálogo de servicios</Typography>
-          <Typography variant="body2" color="rgba(226,232,240,0.75)">
+          <Typography variant="body2" color="text.secondary">
             Ofertas canónicas y borradores versionados. Publicar exige revisión; la agenda sólo escribe IDs aprobados.
           </Typography>
         </Stack>

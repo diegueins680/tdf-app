@@ -23,6 +23,10 @@ import {
   Chip,
 } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
+import esCalendar from '@fullcalendar/core/locales/es';
+import frCalendar from '@fullcalendar/core/locales/fr';
+import deCalendar from '@fullcalendar/core/locales/de';
+import ptCalendar from '@fullcalendar/core/locales/pt';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -914,7 +918,9 @@ const openDialogForRange = (start: Date, end: Date) => {
             events={events}
             nowIndicator
             timeZone={zone}
+            locales={[esCalendar, frCalendar, deCalendar, ptCalendar]}
             locale={locale}
+            buttonIcons={false}
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',

@@ -222,6 +222,21 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
           button: { textTransform: 'none', fontWeight: 600, letterSpacing: '0.01em' },
         },
         components: {
+          MuiAlert: {
+            styleOverrides: {
+              root: { '@media (max-width: 599.95px)': { flexWrap: 'wrap' } },
+              message: {
+                minWidth: 0,
+                overflowWrap: 'anywhere',
+                '@media (max-width: 599.95px)': { flex: '1 1 calc(100% - 44px)' },
+              },
+              action: {
+                '@media (max-width: 599.95px)': {
+                  flexBasis: '100%', marginLeft: 0, marginRight: 0, paddingLeft: 34, paddingTop: 0,
+                },
+              },
+            },
+          },
           MuiPaper: {
             styleOverrides: {
               root: {

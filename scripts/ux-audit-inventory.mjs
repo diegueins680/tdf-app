@@ -9,7 +9,7 @@ const out = path.resolve(process.argv[2] ?? 'docs/ux-ui-audit/2026-09-17');
 await fs.mkdir(out, { recursive: true });
 const read = (file) => fs.readFile(path.join(root, file), 'utf8');
 const sha = (cwd) => execFileSync('git', ['rev-parse', 'HEAD'], { cwd, encoding: 'utf8' }).trim();
-const csv = (rows) => rows.map(row => row.map(value => JSON.stringify(String(value ?? ''))).join(',')).join('\n') + '\n';
+const csv = (rows) => rows.map(row => row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\n') + '\n';
 const files = (cwd, args) => execFileSync('git', ['ls-files', ...args], { cwd, encoding: 'utf8' }).trim().split('\n').filter(Boolean);
 const sourceRoutes = [];
 for (const file of ['tdf-hq-ui/src/routes/publicRoutes.tsx', 'tdf-hq-ui/src/routes/protectedRoutes.tsx']) {

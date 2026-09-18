@@ -64,6 +64,8 @@ run_tlc() {
 cd "${MODEL_DIR}"
 
 # Keep TLC sequential: 1.7.2 materializes standard modules through a shared temp location.
+run_tlc ExperimentAuthority.tla ExperimentAuthority.cfg experiment-authority
+run_tlc ExperimentAuthority.tla ExperimentAuthorityPaused.cfg experiment-paused
 run_tlc EventLifecycle.tla EventLifecycle.cfg event-lifecycle
 run_tlc EventLifecycle.tla EventLifecycleBoundaries.cfg event-lifecycle-boundaries
 
@@ -77,6 +79,9 @@ run_negative_tlc() {
     exit 1
   fi
 }
+run_negative_tlc ExperimentAuthorityStale.cfg experiment-stale 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
+run_negative_tlc ExperimentAuthorityDuplicate.cfg experiment-duplicate 'Invariant ExposureAtMostOnce is violated' ExperimentAuthority.tla
+run_negative_tlc ExperimentAuthorityAccount.cfg experiment-account 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
 run_negative_tlc EventLifecycleUnsafeFinance.cfg unsafe-finance 'Invariant AcceptedAuditIsAuthorized is violated'
 run_negative_tlc EventLifecycleUnsafeArchive.cfg unsafe-archive 'Invariant AcceptedAuditIsAuthorized is violated'
 run_negative_tlc EventLifecycleUnsafeAudit.cfg unsafe-audit 'Action property AuditAppendOnly is violated'
@@ -85,6 +90,13 @@ run_tlc ReservationRace.tla ReservationOverride.cfg reservation-override
 run_tlc InvitationSafety.tla InvitationSafety.cfg invitation
 run_tlc TaskRaci.tla TaskRaci.cfg task-raci
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
+run_tlc CheckoutReadiness.tla CheckoutReadiness.cfg checkout-readiness
+run_tlc CheckoutCancellation.tla CheckoutCancellation.cfg checkout-cancellation
+run_negative_tlc CheckoutCancellationUnsafe.cfg checkout-cancellation-unsafe 'Invariant NoAbandonedReservation is violated' CheckoutCancellation.tla
+run_negative_tlc CheckoutCancellationPaymentUnsafe.cfg checkout-payment-unsafe 'Invariant NoLostPayment is violated' CheckoutCancellation.tla
+run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invariant ReadyBeforeReservation is violated' CheckoutReadiness.tla
+run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
+run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
 run_tlc OperationalLiveness.tla OperationalLiveness.cfg operational-liveness
 run_tlc FanHubOnboarding.tla FanHubOnboarding.cfg fanhub-onboarding
 run_tlc FanHubOnboarding.tla FanHubOnboardingLiveness.cfg fanhub-liveness

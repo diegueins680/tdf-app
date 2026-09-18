@@ -1,0 +1,602 @@
+{
+  "status": "complete",
+  "startedAt": "2026-09-18T04:34:31.840Z",
+  "sha": "f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
+  "image": "diegueins680/tdf-hq:f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
+  "migrations": [
+    {
+      "id": "2026-07-12_ticketing_runtime_schema",
+      "path": "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
+      "checksum": "778ed4cbe300a6050e875d0f31137670930d497bdcfd1ad58d1baed0c097a4c7"
+    },
+    {
+      "id": "2026-07-12_ticket_checkout_idempotency",
+      "path": "tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql",
+      "checksum": "1ecccba9ae0a0d6ae0cbe52df539e6cbf8049e111093a7c579d8b73169e13a28"
+    },
+    {
+      "id": "2026-07-12_event_discovery_imports",
+      "path": "tdf-hq/sql/2026-07-12_event_discovery_imports.sql",
+      "checksum": "bec7e569f1b09a85f0bb50b88dd1fda8c4ad2132313209c9e979810e6f1e9475"
+    },
+    {
+      "id": "2026-07-15_social_sync_runtime_schema",
+      "path": "tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql",
+      "checksum": "8a1ece3ed4799a11e358c3b7645296f37f26db04009f3766b67d4919e586a2e3"
+    },
+    {
+      "id": "2026-07-15_social_discovery_reviews",
+      "path": "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
+      "checksum": "e14e59e1bf80f8a19907db02a38c83d08721463054b37002892790be8d91c2b8"
+    },
+    {
+      "id": "2026-07-21_event_logistics",
+      "path": "tdf-hq/sql/2026-07-21_event_logistics.sql",
+      "checksum": "25da8ffd43a21468a443633c519db9a49b0642222d6e7d8c68141eb70c1cc780"
+    },
+    {
+      "id": "2026-07-29_campaign_automation",
+      "path": "tdf-hq/sql/2026-07-29_campaign_automation.sql",
+      "checksum": "32ad57c4bf39e24bd1a6d1b6a1c51e6561989494ba880b3ee75300e3d12b31b8"
+    },
+    {
+      "id": "2026-07-30_event_city_subscriptions",
+      "path": "tdf-hq/sql/2026-07-30_event_city_subscriptions.sql",
+      "checksum": "571360b49944b6146505d9aaff8c4bb7fc9ddc5702cd2a5fa2b7b316d47828a0"
+    },
+    {
+      "id": "2026-08-02_ddex_catalog_core",
+      "path": "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
+      "checksum": "e2103b4e08e1e64f9ba3ae2da2fd158f90d6516ef600040e2e53a66f8520f099"
+    },
+    {
+      "id": "2026-08-04_service_storefront",
+      "path": "tdf-hq/sql/2026-08-04_service_storefront.sql",
+      "checksum": "de2a6d4edb4f651ad8cd8712bee0cdd0228ee260e75ddd97fb2571017764fe24"
+    },
+    {
+      "id": "2026-08-05_platform_internationalization",
+      "path": "tdf-hq/sql/2026-08-05_platform_internationalization.sql",
+      "checksum": "e0014984b3351c481b81c8e6c44ab98d6cf8bc73b2ce0db01ad0aa5888ac45be"
+    },
+    {
+      "id": "2026-08-05_artist_promotion_slots",
+      "path": "tdf-hq/sql/2026-08-05_artist_promotion_slots.sql",
+      "checksum": "d0621170eafa63f9063a0569e432fb54863b5c846e6f788a5dfba0c66619e849"
+    },
+    {
+      "id": "2026-08-05_artist_enrichment",
+      "path": "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
+      "checksum": "d30f97b8adadaaca5ce418653fa7afed2efa6aeec48032cc2900a121f7f6a79a"
+    },
+    {
+      "id": "2026-08-06_feature_access_requests",
+      "path": "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
+      "checksum": "b6837b8063370ad4316c089f6c4a43033e08d38a0fe0e9b2ea21f4f20fdbe55b"
+    },
+    {
+      "id": "2026-08-06_feature_navigation_preferences",
+      "path": "tdf-hq/sql/2026-08-06_feature_navigation_preferences.sql",
+      "checksum": "6c423c374b3af28493aa131fd8e4614d9261d3ceb8f9935bdcb50b0df59becc1"
+    },
+    {
+      "id": "2026-08-09_admin_operations_control_center",
+      "path": "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+      "checksum": "38bb4dbd9368562c8b78eff933ced68df3bf7c6d65e32d14d7403bf61e6126cb"
+    },
+    {
+      "id": "2026-08-13_service_storefront_phase0_hardening",
+      "path": "tdf-hq/sql/2026-08-13_service_storefront_phase0_hardening.sql",
+      "checksum": "7541ba81474ae699a6de2849ace0baad3623bc7dbffb285d70d611b17ea50b0b"
+    },
+    {
+      "id": "2026-08-14_catalog_canonical_schema",
+      "path": "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
+      "checksum": "1d493409f9188fa71e949eb3856c5f70cbe59417cdc7adb0abfcbe8607b8552d"
+    },
+    {
+      "id": "2026-08-14_catalog_consumer_expand",
+      "path": "tdf-hq/sql/2026-08-14_catalog_consumer_expand.sql",
+      "checksum": "2699878e425fe52876551d7a7d7783d44224d5cb1ada0e07652a6ecc7e65c9a2"
+    },
+    {
+      "id": "2026-08-14_catalog_integrity",
+      "path": "tdf-hq/sql/2026-08-14_catalog_integrity.sql",
+      "checksum": "4a856fb813417e2e87aed286b1b664d54cbda004ffb1c44baed89f4b4901571b"
+    },
+    {
+      "id": "2026-08-14_catalog_foundation_seed",
+      "path": "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+      "checksum": "368befc23a89167c1b8778e448d0d734a7b250ee77b68d653135601cb4ae0d80"
+    },
+    {
+      "id": "2026-08-16_catalog_locale_preference_resume",
+      "path": "tdf-hq/sql/2026-08-16_catalog_locale_preference_resume.sql",
+      "checksum": "fb8e2e067936cc72db08d4754f5a8d9c7daf5a0ee895aae84899d62b61f48bd9"
+    },
+    {
+      "id": "2026-08-16_catalog_transitional_writer_resume",
+      "path": "tdf-hq/sql/2026-08-16_catalog_transitional_writer_resume.sql",
+      "checksum": "6b44512cff1abd69268f92e88cd3bc9252719515a85ec29b422483606b3dc1b9"
+    },
+    {
+      "id": "2026-08-07_catalog_backfill_apply",
+      "path": "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
+      "checksum": "aaeec0516e3c8dc994bb0e0f12d0cbb1cf97c5453164f232393c52d52da1561b"
+    },
+    {
+      "id": "2026-08-07_label_project_notes_backfill_apply",
+      "path": "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
+      "checksum": "63aeabf9e0cdd1c8acca585968c50b4ad890815d05fe4bc081e224676b156ccc"
+    },
+    {
+      "id": "2026-08-07_records_cms_backfill_apply",
+      "path": "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
+      "checksum": "230441ac16d53f2e78355db01ec2a1b44e0363a7233037da8ef4cc2f461e891f"
+    },
+    {
+      "id": "2026-08-11_instrument_input_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_instrument_input_cutover_apply.sql",
+      "checksum": "b0d83592604d0c34a87de60fec6fc1c35d2a69d669f4fb2e6e0f00e346043b4e"
+    },
+    {
+      "id": "2026-08-11_feedback_catalog_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_apply.sql",
+      "checksum": "2cd277b795752d964e239549f1349f8e7718dd8a9392a93b7c2e626ba87ae87d"
+    },
+    {
+      "id": "2026-08-11_pipeline_workflow_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_apply.sql",
+      "checksum": "d937b2564cc95391bf151af01290a08c381551e6ae42bbf94e0f80292bf10e20"
+    },
+    {
+      "id": "2026-08-11_social_event_type_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_social_event_type_cutover_apply.sql",
+      "checksum": "f73a57f30ef3d0140ed6405787c68b693422b5fc04f23cf2be121661a8b8e8ed"
+    },
+    {
+      "id": "2026-08-11_social_event_workflow_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
+      "checksum": "6d0be08f0c2bc8c9e6f5598fea0f5027d9f7ef9fe9825d8329d1942eb7a2b315"
+    },
+    {
+      "id": "2026-08-12_event_moment_reaction_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
+      "checksum": "873b6c80c5bfe1d4ee9a0dcb6d65b24831e8378236b53750bf5954c6d7236558"
+    },
+    {
+      "id": "2026-08-12_content_reaction_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+      "checksum": "e1e9695dd4fd6982fde4bd4c94a863445f45223054a1d842fe62db210c19012e"
+    },
+    {
+      "id": "2026-08-12_creator_badge_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_creator_badge_cutover_apply.sql",
+      "checksum": "e496cfeb441a12eb61caa61a34aceb6607463807c1745f81db6760242a43c459"
+    },
+    {
+      "id": "2026-08-12_ddex_reference_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
+      "checksum": "221d2deac6769f811695be468435c15dd86997223c598137f798ecbd605ddc7a"
+    },
+    {
+      "id": "2026-08-12_ddex_validation_reference_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql",
+      "checksum": "427cf999dbf5095bb4165290643bad196cc52e8d033db6bc53b3252dcd189686"
+    },
+    {
+      "id": "2026-08-12_ddex_operational_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
+      "checksum": "42b4a6ed803985f18cfe49b82562af0c24c29573dd2ddbe15636345bd34d2287"
+    },
+    {
+      "id": "2026-08-13_unified_checkout_core",
+      "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+      "checksum": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0"
+    },
+    {
+      "id": "2026-08-13_distribution_accounting_core",
+      "path": "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
+      "checksum": "ab983f7af3b192e6425b29096e800f7095ef185d288a0f639a280d1a5e361278"
+    },
+    {
+      "id": "2026-08-13_versioned_revenue_products",
+      "path": "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
+      "checksum": "e2f4da860660ad277b2c8e8eb5a970f3bbedcd0671233c6fd1dcefcf066a9378"
+    },
+    {
+      "id": "2026-08-13_distribution_product_seeds",
+      "path": "tdf-hq/sql/2026-08-13_distribution_product_seeds.sql",
+      "checksum": "d5d7b05c5fc361dc104a265c4c2a19666dfe99bc236e948068d33ed194eb0924"
+    },
+    {
+      "id": "2026-08-14_service_storefront_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql",
+      "checksum": "52709c99601560fd073cf1b3a4e83c09283e07d70fb30c9421b63e924d7c7938"
+    },
+    {
+      "id": "2026-08-14_checkout_event_refund_runtime",
+      "path": "tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql",
+      "checksum": "0503bca976e4244707e75c7cd7ac7c795c304e826112f95ca10b23b0247e4bcd"
+    },
+    {
+      "id": "2026-08-14_provider_event_operations",
+      "path": "tdf-hq/sql/2026-08-14_provider_event_operations.sql",
+      "checksum": "1a7aced70428987f4d9e5b642b619d5e77526de3e593e1eaf9f44a2213b6a298"
+    },
+    {
+      "id": "2026-08-15_marketplace_sale_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
+      "checksum": "cd4e6684229eeda18ec1190ce87936fd24ee0fdde0991b9003ccb3a2d3cb5b17"
+    },
+    {
+      "id": "2026-08-15_marketplace_rental_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
+      "checksum": "d779764613fa1ea62651c406ca585cde96f5aab0c291007841602dd229ad8df5"
+    },
+    {
+      "id": "2026-08-16_service_booking_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
+      "checksum": "f292cb6c1723dd1a7e4e679f1c4d458da13598aa68be92d32146a19ec3fdd3da"
+    },
+    {
+      "id": "2026-08-17_service_booking_provider_actions",
+      "path": "tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql",
+      "checksum": "da34dfe9c194cf47b111a6a8d7c589326885f8058e911b29d5f0c49a01ebfbad"
+    },
+    {
+      "id": "2026-08-17_service_booking_manual_payments",
+      "path": "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
+      "checksum": "057cc2f473e68b7128ec18aaa40d5e3baad5b82c32e1e1930e14bf75d2c27022"
+    },
+    {
+      "id": "2026-08-16_event_research_ingestion",
+      "path": "tdf-hq/sql/2026-08-16_event_research_ingestion.sql",
+      "checksum": "b57cfb74c9f37d6e8858f65984753a9dc7fb5dfd80eacdb156ee98c3663afa38"
+    },
+    {
+      "id": "2026-08-14_music_directory_core",
+      "path": "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+      "checksum": "0918c16a03bf181ce88ca470a9549af5f2942abcdb3b5881d66c7cf8647197ef"
+    },
+    {
+      "id": "2026-08-16_music_directory_verified_reviews",
+      "path": "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
+      "checksum": "fd60c9f954e90f9439292a435267d80ad9d77d5d7680037e978b065a45a01d6a"
+    },
+    {
+      "id": "2026-08-17_marketplace_customer_requests_and_deposit_settlement",
+      "path": "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
+      "checksum": "5978cac3e9a4b1a3f40fd54c9407d8f48beb904f3517c890cef67d5e0c3eb8cd"
+    },
+    {
+      "id": "2026-08-17_course_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
+      "checksum": "b2ade436a442e92a1d3ad9b6d74dafd5effc5ea4e86fae233f382bb957ad8f7e"
+    },
+    {
+      "id": "2026-08-17_social_event_optional_end",
+      "path": "tdf-hq/sql/2026-08-17_social_event_optional_end.sql",
+      "checksum": "d93f56137cea393a343a9ba1b3976f062c4958c84abd3290f2ab8c1c49add347"
+    },
+    {
+      "id": "2026-08-18_ddex_partner_legacy_compatibility",
+      "path": "tdf-hq/sql/2026-08-18_ddex_partner_legacy_compatibility.sql",
+      "checksum": "e9a82c6697653a8adbdd628cd34ecb1a86265d8d6e04a9cf16d88e9354eb637f"
+    },
+    {
+      "id": "2026-08-18_public_ticket_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
+      "checksum": "720a7e4397ffee8748eb56910d555f613b62353d41c1b84d6f5c9ac52a4ad1b2"
+    },
+    {
+      "id": "2026-08-18_domo_quote_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-18_domo_quote_checkout_runtime.sql",
+      "checksum": "6ee69bd485349c8a7f7c35e2e894aaf14af4c22ea8e59364a847d2f5c0d239ea"
+    },
+    {
+      "id": "2026-08-18_music_directory_profile_images",
+      "path": "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
+      "checksum": "63dd690b595584c057c87278d8ee9e3d22607b59d127100b0267b736cb3c5312"
+    },
+    {
+      "id": "2026-08-18_music_directory_profile_image_host_compatibility",
+      "path": "tdf-hq/sql/2026-08-18_music_directory_profile_image_host_compatibility.sql",
+      "checksum": "6af15b13ef52fcead41265aea25454a4a278125a76ded988a60b3733bc07a168"
+    },
+    {
+      "id": "2026-08-20_verified_experience_reviews",
+      "path": "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+      "checksum": "2bc6982f3bb9cce070bf189799f21ea6e87cd68aa25db98143b3b876b46f76a8"
+    },
+    {
+      "id": "2026-08-21_studio_internship_audit",
+      "path": "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
+      "checksum": "a5949ddd72d8468f738443abc5e97f1bd7541fb24d69df0024bc0655f5dd1457"
+    },
+    {
+      "id": "2026-08-24_ticket_qr_constraint_compatibility",
+      "path": "tdf-hq/sql/2026-08-24_ticket_qr_constraint_compatibility.sql",
+      "checksum": "46b0e396fd79a8908b4c927c6c4e8870b85fabf6c8bf6cb56bbe4052f68ca926"
+    },
+    {
+      "id": "2026-08-24_studio_audit_completion_exception",
+      "path": "tdf-hq/sql/2026-08-24_studio_audit_completion_exception.sql",
+      "checksum": "1e2b2544ee9e955c94b40fd12bb64d9de64a1a19492caab182e1e99db0c813a4"
+    },
+    {
+      "id": "2026-08-24_studio_audit_historical_failure_gate",
+      "path": "tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql",
+      "checksum": "9547485f79f8df7951f4010151a254c8ecf2331e4298fb2d012e4b09614de73c"
+    },
+    {
+      "id": "2026-09-08_studio_audit_historical_failure_gate_repair",
+      "path": "tdf-hq/sql/2026-09-08_studio_audit_historical_failure_gate_repair.sql",
+      "checksum": "38f1d5cd7a9cc8a8db85c2173aed87259365168fcae058b9909d8c3212132816"
+    },
+    {
+      "id": "2026-08-25_commerce_trigger_row_binding_compatibility",
+      "path": "tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql",
+      "checksum": "aeb6a4d19d753b60366aa7638c3babcf139cb0f2172e624128d07ccec4b3729a"
+    },
+    {
+      "id": "2026-08-25_distribution_trigger_row_binding_compatibility",
+      "path": "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql",
+      "checksum": "70a6cc10ac204e199dfa974f690944b3a4fc505132675e066bca2c52307f3f03"
+    },
+    {
+      "id": "2026-08-26_music_directory_profile_media_reconciliation",
+      "path": "tdf-hq/sql/2026-08-26_music_directory_profile_media_reconciliation.sql",
+      "checksum": "d35d8be11ade53be7c8c78b9e3473aa21196c4bfe883f528abef736842b9be6c"
+    },
+    {
+      "id": "2026-09-02_party_selector_search_indexes",
+      "path": "tdf-hq/sql/2026-09-02_party_selector_search_indexes.sql",
+      "checksum": "0eba757c9d7ae68ae4096b7ba5ff6f90b895297377846e136a256237354c092a"
+    },
+    {
+      "id": "2026-09-01_contextual_reputation",
+      "path": "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
+      "checksum": "a13d15eb9e322a268db2e2b7fc35b4ee8516378eb5143bb1c504a8f6d1f50772"
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_integrity",
+      "path": "tdf-hq/sql/2026-09-04_contextual_reputation_integrity.sql",
+      "checksum": "9af5bd44c8525400de7044ebf64a7c78945b13b0b033a05ab23e6af8e4100367"
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_legacy_signals",
+      "path": "tdf-hq/sql/2026-09-04_contextual_reputation_legacy_signals.sql",
+      "checksum": "29aee8a914607b77a6cbdc059f9911d596abafc6786ebedf708be81fe30b3ff5"
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_private_preferences",
+      "path": "tdf-hq/sql/2026-09-04_contextual_reputation_private_preferences.sql",
+      "checksum": "c925815ed9ac87df01b21d80861f5958a417a418febba552cc1bc15ee2681742"
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_category_safety",
+      "path": "tdf-hq/sql/2026-09-04_contextual_reputation_category_safety.sql",
+      "checksum": "ae9730f74b5118237c8b3e76f13a6c83e65d4bccdf45d5e8334448aba93c837e"
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_preference_save",
+      "path": "tdf-hq/sql/2026-09-04_contextual_reputation_preference_save.sql",
+      "checksum": "e67a4546ce0bfdda0870495bd2cd040e3874a7776e5a50e1968cf841ed9d030a"
+    },
+    {
+      "id": "2026-09-04_party_selector_trigram_indexes",
+      "path": "tdf-hq/sql/2026-09-04_party_selector_trigram_indexes.sql",
+      "checksum": "896b95b61fcbd43a763f3b632cd0be6564cf856282b2e805a1c99beaf33d1ded"
+    },
+    {
+      "id": "2026-09-04_party_selector_punctuation_indexes",
+      "path": "tdf-hq/sql/2026-09-04_party_selector_punctuation_indexes.sql",
+      "checksum": "b01908cd0246dbef37d3fff09c50750cca0fc85b8c5938bd4d274d17e46dcd9a"
+    },
+    {
+      "id": "2026-09-04_access_request_notification_types",
+      "path": "tdf-hq/sql/2026-09-04_access_request_notification_types.sql",
+      "checksum": "a2eede1722ecfa4decd054755a3f871902808ec2bca5dcf8413d9b9b7c644d1e"
+    },
+    {
+      "id": "2026-09-08_notification_notif_type_not_null_repair",
+      "path": "tdf-hq/sql/2026-09-08_notification_notif_type_not_null_repair.sql",
+      "checksum": "f83049fb3f27f4d57ac2c5594849ec10cef83b847363a25e76712f9369d2cf5d"
+    },
+    {
+      "id": "2026-09-08_notification_notif_type_text_compatibility",
+      "path": "tdf-hq/sql/2026-09-08_notification_notif_type_text_compatibility.sql",
+      "checksum": "e495d71e1f6553735351d58edd65afbb4cb0a5aaa841112937c3b068faeec204"
+    },
+    {
+      "id": "2026-09-05_party_selector_username_diacritic_indexes",
+      "path": "tdf-hq/sql/2026-09-05_party_selector_username_diacritic_indexes.sql",
+      "checksum": "204003ca9b90becb4423d518d2a1e59a8fbfd07159cecac916f95ed7a0a153ed"
+    },
+    {
+      "id": "2026-09-05_contextual_reputation_preference_rounding",
+      "path": "tdf-hq/sql/2026-09-05_contextual_reputation_preference_rounding.sql",
+      "checksum": "a8cf5d676c95a1ef6bee033afd3a3faf0453d6050a70248b048315974506f8ec"
+    },
+    {
+      "id": "2026-09-06_contextual_reputation_staging_worker",
+      "path": "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+      "checksum": "5ec11f453dddf2b167c79f4d54ac7ec677591f8c2f9fa7bb2a9bc389878a6959"
+    },
+    {
+      "id": "2026-09-07_contextual_reputation_invalidation_repair",
+      "path": "tdf-hq/sql/2026-09-07_contextual_reputation_invalidation_repair.sql",
+      "checksum": "2ca422b24d0fe51875b876e97ade6044d2012d0c2c1e041cb612ec094366dce5"
+    },
+    {
+      "id": "2026-09-07_contextual_reputation_consent",
+      "path": "tdf-hq/sql/2026-09-07_contextual_reputation_consent.sql",
+      "checksum": "fde258fbaeb83d502cffee06f746e5ea3a8b68508bc4f494270bd41fc2de37d0"
+    },
+    {
+      "id": "2026-09-06_records_youtube_catalog",
+      "path": "tdf-hq/sql/2026-09-06_records_youtube_catalog.sql",
+      "checksum": "fe7167bdbaac443a470ea4138abd9375b5ebc07d29f5a57ada75f7d7123f6f4f"
+    },
+    {
+      "id": "2026-09-07_service_storefront_package_bounds_repair",
+      "path": "tdf-hq/sql/2026-09-07_service_storefront_package_bounds_repair.sql",
+      "checksum": "7192ceef0e203f46d0eea8d53f944f0c9fd2e6664213c181a3c12a244bdd107b"
+    },
+    {
+      "id": "2026-09-07_catalog_slug_alias_integrity_revalidation",
+      "path": "tdf-hq/sql/2026-09-07_catalog_slug_alias_integrity_revalidation.sql",
+      "checksum": "ceca33c1065687232be5fab7ebbf4809ac5db01bf0395c552f6c3aa0c0c33a13"
+    },
+    {
+      "id": "2026-09-06_user_onboarding_progress",
+      "path": "tdf-hq/sql/2026-09-06_user_onboarding_progress.sql",
+      "checksum": "2c84193c29966646de029c27b0ff1a29d231ebafa9db77e56d42b6d4c753ad57"
+    },
+    {
+      "id": "2026-09-07_user_experiment_assignment",
+      "path": "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
+      "checksum": "9df89a8a9e917251e1233987412d5193ace2eb38013af4024a94d187db4b4449"
+    },
+    {
+      "id": "2026-09-07_directory_event_visibility_and_favorite_evidence",
+      "path": "tdf-hq/sql/2026-09-07_directory_event_visibility_and_favorite_evidence.sql",
+      "checksum": "c1e7c7a10ee51952501643ba96b058d5ce12cd002ad803c007f3c9b7e56fd181"
+    },
+    {
+      "id": "2026-09-07_artist_merch_storefronts",
+      "path": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
+      "checksum": "699100a59dc180e12cc0c13d5053a6aab002c9ff891672411ac6ea3d67f771db"
+    },
+    {
+      "id": "2026-09-08_event_rsvp_identity_privacy_feed",
+      "path": "tdf-hq/sql/2026-09-08_event_rsvp_identity_privacy_feed.sql",
+      "checksum": "fa1704e8458096dbfe341aad100d0c209dbc28c48597646a3353c4aa0d3307fe"
+    },
+    {
+      "id": "2026-09-08_merch_reputation",
+      "path": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
+      "checksum": "1acbc5b863b2f496d5f79d1034ca5d3e175ab6973da2ae44bc09da129151fa36"
+    },
+    {
+      "id": "2026-09-09_music_directory_suppressed_event_privacy",
+      "path": "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
+      "checksum": "33f89f61c2552cacc6c4842ac8513d6b518a7b342115a9b1cde3f01a76926712"
+    },
+    {
+      "id": "2026-09-10_contextual_reputation_pilot_cohort",
+      "path": "tdf-hq/sql/2026-09-10_contextual_reputation_pilot_cohort.sql",
+      "checksum": "1698fe37adc350979fe71b123e3f56e880ff2c2c6346933bef9c9b1db119c09c"
+    },
+    {
+      "id": "2026-09-09_experience_review_ticket_buyer_type_repair",
+      "path": "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
+      "checksum": "a1143215bc14aaba417f319319172bc3d0858f1d129a4d24ce162dd7e5bf31fc"
+    },
+    {
+      "id": "2026-09-10_party_selector_rate_limit_scopes",
+      "path": "tdf-hq/sql/2026-09-10_party_selector_rate_limit_scopes.sql",
+      "checksum": "450d8e121017a044a80b2e1bf7fdd4ccbc19e8e1aaa8b70d9fdf5367d2c0d82b"
+    },
+    {
+      "id": "2026-09-09_public_booking_tentative_idempotency",
+      "path": "tdf-hq/sql/2026-09-09_public_booking_tentative_idempotency.sql",
+      "checksum": "6e3b50079a66e131dd21ea3c1f43a285ebacd7b41c524e22d3fd0061c7b84215"
+    },
+    {
+      "id": "2026-09-09_canonical_payment_lifecycle",
+      "path": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+      "checksum": "c9c77ac7f1f8d4fe2efd8ad72dd76c9609cf5c2b93d7704af83400d2acf8e506"
+    },
+    {
+      "id": "2026-09-10_payment_attempt_intent_binding",
+      "path": "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
+      "checksum": "31167db71edf0be5c3e391858c5be140ff2a9497b1701863b5e549e93d620016"
+    },
+    {
+      "id": "2026-09-17_directory_event_privacy_composition",
+      "path": "tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql",
+      "checksum": "52d27c9cc86c6ef90c0719e30d0a56e40d21a914d0af9711d5dc6c80105614de"
+    },
+    {
+      "id": "2026-09-16_artist_self_service",
+      "path": "tdf-hq/sql/2026-09-16_artist_self_service.sql",
+      "checksum": "38a5bce02a98389729d9778498826b1a85b6aeaa18c473a9befa6ad5a9fc6c5e"
+    }
+  ],
+  "canaryMachine": "0807ee9cd34668",
+  "remainingMachines": [
+    "3d8d2500c67168"
+  ],
+  "rollbacks": [],
+  "rollout": [
+    {
+      "machineId": "3d8d2500c67168",
+      "health": {
+        "db": "ok",
+        "status": "ok"
+      },
+      "version": {
+        "buildTime": "2026-09-18T04:16:06Z",
+        "commit": "f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      },
+      "smokePath": "public-fallback"
+    }
+  ],
+  "resolvedImage": "diegueins680/tdf-hq@sha256:ebf4d755ff87d866782540791433a6fdbcbfb7629deaac95e93ac6e3889c792d",
+  "acceptableImageDigests": [
+    "sha256:ebf4d755ff87d866782540791433a6fdbcbfb7629deaac95e93ac6e3889c792d",
+    "sha256:a3e5721f0454e5041e007eb5c7a1f07a2418302570330ce5c629827fb4ca299a"
+  ],
+  "securityEmergencyReadiness": {
+    "kind": "security-emergency-readiness",
+    "schemaMode": "canonical",
+    "transactionReadOnly": "on",
+    "requiredIndependentPaths": 2,
+    "activeEmergencyAssignments": 3,
+    "distinctAssignedParties": 3,
+    "authenticatableParties": 2,
+    "legacyAuthenticatableParties": 2,
+    "coherentLegacyTargetRoles": 1,
+    "databaseCoherentPaths": 2,
+    "preMigrationReady": true,
+    "databaseReady": true,
+    "manualIndependentLoginVerificationRequired": true,
+    "capturedAt": "2026-09-18T04:35:25.129464+00:00"
+  },
+  "canary": {
+    "machineId": "0807ee9cd34668",
+    "health": {
+      "db": "ok",
+      "status": "ok"
+    },
+    "version": {
+      "buildTime": "2026-09-18T04:16:06Z",
+      "commit": "f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "smokePath": "public-fallback"
+  },
+  "fleet": {
+    "machines": [
+      "0807ee9cd34668",
+      "3d8d2500c67168"
+    ],
+    "health": {
+      "db": "ok",
+      "status": "ok"
+    },
+    "version": {
+      "buildTime": "2026-09-18T04:16:06Z",
+      "commit": "f19bb8855e8a9bc5b73ee4c3199c631540eb0df9",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    }
+  },
+  "finishedAt": "2026-09-18T04:38:48.668Z",
+  "reportPath": "artifacts/releases/production-release-f19bb8855e8a9bc5b73ee4c3199c631540eb0df9-2026-09-18T04-38-53.653Z-8ea88bcd-d858-4843-8b35-95d32a7749be.json"
+}

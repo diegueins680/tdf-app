@@ -189,7 +189,7 @@ export default function ArtistEnrichmentReviewPage() {
       )}
     >
       <Stack spacing={3}>
-        {(overviewQuery.isLoading || overviewQuery.isFetching || runMutation.isPending) && <LinearProgress />}
+        {(overviewQuery.isLoading || overviewQuery.isFetching || runMutation.isPending) && <LinearProgress aria-label="Cargando revisión de artistas" />}
         {overviewQuery.error && <Alert severity="error">No se pudo cargar la cola de enriquecimiento.</Alert>}
         {mutationError && <Alert severity="error">{mutationError instanceof Error ? mutationError.message : 'La operación falló.'}</Alert>}
         {notice && <Alert severity="success" onClose={() => setNotice(null)}>{notice}</Alert>}

@@ -827,7 +827,7 @@ export default function TdfDomoCampaignPage() {
                 </Section>
 
                 <Section title="Distribución de presupuesto" subtitle="Recomendación base: emoción visual, explicación técnica y cierre con urgencia." icon={<PaidIcon />}>
-                  <TableContainer>
+                  <TableContainer tabIndex={0} role="region" aria-label="Distribución de presupuesto">
                     <Table size="small">
                       <TableHead>
                         <TableRow>
@@ -948,7 +948,7 @@ export default function TdfDomoCampaignPage() {
                     value={(completedAssetCount / VIDEO_ASSETS.length) * 100}
                     sx={{ height: 8, borderRadius: 999 }}
                   />
-                  <TableContainer>
+                  <TableContainer tabIndex={0} role="region" aria-label="Seguimiento de creativos">
                     <Table size="small">
                       <TableHead>
                         <TableRow>

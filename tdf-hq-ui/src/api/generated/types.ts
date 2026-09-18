@@ -677,6 +677,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/session/experiments/{experimentId}/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentId: "single-feature-onboarding-v1";
+            };
+            cookie?: never;
+        };
+        /**
+         * Read the current account experiment assignment
+         * @description Uses authenticated Party authority and persisted signup/completion eligibility. Disabled by default; paused responses do not assign or record exposure. No roles or permissions are granted. Assignment is versioned and exposure is idempotent.
+         */
+        get: operations["getExperimentAssignment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/experiments/{experimentId}/exposure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentId: "single-feature-onboarding-v1";
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record the current account experiment exposure
+         * @description Uses authenticated Party authority and persisted signup/completion eligibility. Disabled by default; paused responses do not assign or record exposure. No roles or permissions are granted. Assignment is versioned and exposure is idempotent.
+         */
+        post: operations["recordExperimentExposure"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/courses/{slug}": {
         parameters: {
             query?: never;
@@ -14731,6 +14775,78 @@ export interface operations {
             };
             /** @description Authentication required */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getExperimentAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentId: "single-feature-onboarding-v1";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current experiment state, including a paused control response when disabled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentAssignment"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported experiment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordExperimentExposure: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentId: "single-feature-onboarding-v1";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current experiment state, including a paused control response when disabled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentExposureResult"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported experiment */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
