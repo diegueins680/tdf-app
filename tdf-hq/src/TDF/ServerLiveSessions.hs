@@ -111,9 +111,6 @@ liveSessionsServer user = intakeHandler
           validateLiveSessionOptionalEmail "contactEmail" (lsiContactEmail payload)
       either throwError pure $
         validateLiveSessionMusicianCount (lsiMusicians payload)
-      primaryGenreKey <- traverse resolvePublishedGenre (lsiPrimaryGenreId payload)
-      musicianInstruments <- mapM (traverse resolvePublishedInstrument . lsmInstrumentId) (lsiMusicians payload)
-
       now <- liftIO getCurrentTime
       rider <- traverse readRiderFile (lsiRider payload)
       resolvedSongOrders <-
@@ -133,12 +130,19 @@ liveSessionsServer user = intakeHandler
           [PersistText ("live-intake:" <> T.pack (show (fromSqlKey (auPartyId user))) <> ":" <> key)] :: SqlPersistT IO [Single Int64]
         riderDigest <- traverse (digestBytes . snd) rider
         let body = TE.decodeUtf8 (BL.toStrict (encode (liveSessionRequestPayload payload (fst <$> rider) riderDigest)))
-        previous <- rawSql "SELECT request_payload = ?::jsonb FROM identity_live_intake_request WHERE actor_party_id=? AND request_key=?"
+        previous <- rawSql "SELECT r.request_payload = ?::jsonb, i.rider_path FROM identity_live_intake_request r JOIN live_session_intake i ON i.id=r.intake_id WHERE r.actor_party_id=? AND r.request_key=?"
           [PersistText body, toPersistValue (auPartyId user), PersistText key]
         case previous of
-          [Single True] -> pure NoContent
-          [Single False] -> liftIO $ throwIO err409 { errBody = "This submission changed after an earlier send. Review the saved intake before starting another submission." }
-          [] -> createIntake key body now bandName acceptedTermsVersion contactEmail primaryGenreKey musicianInstruments resolvedSongOrders rider riderDigest payload
+          [(Single True, Single storedPath)] -> do
+            restoredPath <- storeRequestRider key rider riderDigest
+            unless (restoredPath == storedPath) $
+              liftIO $ throwIO err409 { errBody = "The saved rider reference needs administrative review" }
+            pure NoContent
+          [(Single False, _)] -> liftIO $ throwIO err409 { errBody = "This submission changed after an earlier send. Review the saved intake before starting another submission." }
+          [] -> do
+            primaryGenreKey <- traverse resolvePublishedGenre (lsiPrimaryGenreId payload)
+            musicianInstruments <- mapM (traverse resolvePublishedInstrument . lsmInstrumentId) (lsiMusicians payload)
+            createIntake key body now bandName acceptedTermsVersion contactEmail primaryGenreKey musicianInstruments resolvedSongOrders rider riderDigest payload
           _ -> liftIO $ throwIO err500 { errBody = "Could not resolve intake request" }
         ) pool) (\(sqlError :: SqlError) ->
           if sqlState sqlError == "55000"
@@ -148,11 +152,7 @@ liveSessionsServer user = intakeHandler
 
     createIntake key body now bandName acceptedTermsVersion contactEmail primaryGenreKey musicianInstruments resolvedSongOrders rider riderDigest payload = do
       preparedMusicians <- zipWithM (ensureMusician now) musicianInstruments (lsiMusicians payload)
-      riderPath <- case (rider, riderDigest) of
-        (Just (safeName, bytes), Just contentHash) -> do
-          pathHash <- digestBytes (BL.fromStrict (TE.encodeUtf8 (T.pack (show (fromSqlKey (auPartyId user))) <> ":" <> key <> ":" <> contentHash)))
-          Just <$> liftIO (storeRiderFile pathHash safeName bytes)
-        _ -> pure Nothing
+      riderPath <- storeRequestRider key rider riderDigest
       intakeId <- insert ME.LiveSessionIntake
         { ME.liveSessionIntakeBandName     = bandName
         , ME.liveSessionIntakeBandDescription = lsiBandDescription payload
@@ -207,6 +207,13 @@ liveSessionsServer user = intakeHandler
         [toPersistValue (auPartyId user), PersistText key, PersistText body, toPersistValue intakeId]
       pure NoContent
 
+    storeRequestRider key rider riderDigest =
+      case (rider, riderDigest) of
+        (Just (safeName, bytes), Just contentHash) -> do
+          pathHash <- digestBytes (BL.fromStrict (TE.encodeUtf8 (T.pack (show (fromSqlKey (auPartyId user))) <> ":" <> key <> ":" <> contentHash)))
+          Just <$> liftIO (storeRiderFile pathHash safeName bytes)
+        _ -> pure Nothing
+
     ensureMusician
       :: UTCTime
       -> Maybe (Catalog.InstrumentId, Text)
@@ -249,14 +256,14 @@ liveSessionsServer user = intakeHandler
       -- Intake registers a contact, not authentication, privileges, or consent.
       pure (partyKey, mEmail, fst <$> instrumentRef)
 
-    resolvePublishedGenre :: Text -> m Catalog.GenreId
+    resolvePublishedGenre :: Text -> SqlPersistT IO Catalog.GenreId
     resolvePublishedGenre rawId = do
       genreKey <-
         maybe
-          (throwError err400 { errBody = "primaryGenreId must be a valid catalog UUID" })
+          (liftIO $ throwIO err400 { errBody = "primaryGenreId must be a valid catalog UUID" })
           pure
           (fromPathPiece (T.strip rawId))
-      valid <- withPool $ do
+      valid <- do
         item <- get genreKey
         case item of
           Nothing -> pure False
@@ -268,17 +275,17 @@ liveSessionsServer user = intakeHandler
                 && maybe False ((== "published") . Catalog.workflowStateCode) state
                 && maybe False (\definition -> Catalog.catalogDefinitionActive definition && Catalog.catalogDefinitionCode definition == "genres") catalog
       unless valid $
-        throwError err400 { errBody = "primaryGenreId must reference an active published genre" }
+        liftIO $ throwIO err400 { errBody = "primaryGenreId must reference an active published genre" }
       pure genreKey
 
-    resolvePublishedInstrument :: Text -> m (Catalog.InstrumentId, Text)
+    resolvePublishedInstrument :: Text -> SqlPersistT IO (Catalog.InstrumentId, Text)
     resolvePublishedInstrument rawId = do
       instrumentKey <-
         maybe
-          (throwError err400 { errBody = "instrumentId must be a valid catalog UUID" })
+          (liftIO $ throwIO err400 { errBody = "instrumentId must be a valid catalog UUID" })
           pure
           (fromPathPiece (T.strip rawId))
-      result <- withPool $ do
+      result <- do
         item <- get instrumentKey
         case item of
           Nothing -> pure Nothing
@@ -292,7 +299,7 @@ liveSessionsServer user = intakeHandler
                 then Just (Catalog.instrumentNameEs instrument)
                 else Nothing
       label <- maybe
-        (throwError err400 { errBody = "instrumentId must reference an active published instrument" })
+        (liftIO $ throwIO err400 { errBody = "instrumentId must reference an active published instrument" })
         pure
         result
       pure (instrumentKey, label)
@@ -622,11 +629,3 @@ sanitizeLiveSessionRiderFileName rawName =
       | ch == '.' || ch == '-' || ch == '_' = ch
       | ch == ' ' = '-'
       | otherwise = '-'
-
-withPool
-  :: (MonadReader Env m, MonadIO m)
-  => SqlPersistT IO a
-  -> m a
-withPool action = do
-  pool <- asks envPool
-  liftIO (runSqlPool action pool)

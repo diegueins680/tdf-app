@@ -1,5 +1,5 @@
 import { useContactCreation } from '../hooks/useContactCreation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Typography,
   Stack,
@@ -69,6 +69,8 @@ interface LeadCreateDialogProps {
 
 function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
   const contactCreation = useContactCreation();
+  const creationPending = useRef(false);
+  const requestClose = () => { if (!creationPending.current) onClose(); };
   const qc = useQueryClient();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -99,14 +101,17 @@ function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
       onClose();
     },
     onError: (err) => setError(err.message),
+    onSettled: () => { creationPending.current = false; },
   });
 
   const handleSubmit = () => {
+    if (creationPending.current) return;
     if (!name.trim()) {
       setError('Nombre requerido');
       return;
     }
     setError(null);
+    creationPending.current = true;
     mutation.mutate({
       cDisplayName: name.trim(),
       cIsOrg: false,
@@ -117,7 +122,7 @@ function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={requestClose} fullWidth maxWidth="sm">
       <DialogTitle>Nuevo lead</DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
@@ -154,7 +159,7 @@ function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={requestClose} disabled={mutation.isPending}>Cancelar</Button>
         <Button onClick={handleSubmit} variant="contained" disabled={mutation.isPending}>
           Crear
         </Button>
