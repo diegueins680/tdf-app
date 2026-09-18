@@ -462,3 +462,22 @@ El usuario volvió a confirmar que el despliegue paralelo sigue en curso: contin
 El artefacto iOS acce0957-ec70-40a6-8f9e-8192db3b7839 de fuente 74d784ceb366a3200c1f68ceb6082ef0ba9e2b7c se extrajo, instaló y arrancó en el simulador aislado TDF-UX-Audit-20260917 (iPhone 16, iOS 18.3, UDID 70262ECC-FDDB-470A-A73B-4776FAE364C1). [Captura inspeccionada](evidence/ios-74d784c-first-launch.png): bienvenida en inglés según idioma inicial del dispositivo, selector Español/English y acciones crear cuenta/acceder. No se ejecutó registro, OAuth ni lector de pantalla. Se apagó este simulador cuando el disco cayó a 87 MB; la siguiente lectura tras limpieza muestra 6,3 GiB, aún inferior a 10 GB. No se borraron archivos ajenos. Maestro está disponible; idb carece de idb_companion. Android, dispositivos físicos y publicación siguen pendientes.
 
 PR #422 pasó los gates exactos f36a6391c tras repetir sólo los jobs fallidos de instalación nativa transitoria; el log de navegador acredita 66 aprobados/10 omitidos, incluidos los diez casos ES/EN. PR #421 ya tiene backend-quality y quality SUCCESS en 19d8dc830 y aprobación independiente de tdfrecords sobre ese SHA; el merge sigue retenido por coordinación de producción. El usuario reiteró que el otro despliegue continúa: ningún merge que dispare producción ni mutación productiva por esta entrega.
+
+### EXP-01 contract recovery — 2026-09-18
+
+Current source lacked the experiment routes/config/handlers already consumed by the
+mobile client. Models, DTOs, migration and recorded production migration existed;
+this was an integration gap, not a request to launch the experiment. Focusedb62895313
+restores the historical contract, adds serialized authoritative eligibility, and
+keeps deployment false. Original migration/checksum/introduction commits are intact.
+Current main4b0bc6ed7 (#428) was merged normally as0ebdb180d before regenerating the
+mobile contract, preserving the newer notification endpoints. The initial generated
+mobile diff would have removed274notification lines and was discarded; the integrated
+schema adds only116experiment lines. Existing mobile19/10 source1ec artifacts are
+unchanged by TypeScript-only contract declarations.
+
+See the formal README and experiment-http-runtime.mjs for bounded properties and
+actual PostgreSQL concurrency evidence. Pre-integration build/Hspec2578(0fail,1PG-only
+pending), HTTP/PG,65release controls and full formal runner pass. Post-integration
+checks, mobile companion merge, root review/merge and guarded paused deployment
+remain outstanding. This finding is not accepted or released yet.

@@ -1,0 +1,2 @@
+Experiment HTTP/PostgreSQL: paused/no-write, signup eligibility, account isolation, 16 concurrent assignments/exposures, completion/expiry lock contention and revocation passed.
+Isolated evidence: /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/tdf-experiment-http-FCsKPS
