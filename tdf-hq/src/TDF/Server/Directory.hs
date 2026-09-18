@@ -1200,7 +1200,7 @@ prepareArtistClaim _user partyId = do
         targets <- rawSql
           ( "SELECT resolved.id::text FROM directory_profile source JOIN directory_profile resolved "
          <> "ON resolved.id=coalesce(source.canonical_profile_id,source.id) "
-         <> "WHERE source.subject_party_id=? ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1" )
+         <> "WHERE source.subject_party_id=? AND source.profile_kind IN ('artist','band') AND resolved.profile_kind IN ('artist','band') ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1" )
           [PersistInt64 partyId] :: SqlPersistT IO [Single Text]
         targetId <- case targets of
           Single existing : _ -> pure existing
