@@ -309,7 +309,11 @@ export default function ClassesPage() {
     setStudentDialogOpen(true);
   };
   const closeStudentDialog = () => {
-    if (!identityRequestPending.current) setStudentDialogOpen(false);
+    if (identityRequestPending.current || studentMutation.isPending) return;
+    if (identityRequestKey.current && !window.confirm('Una solicitud anterior podría haberse guardado. Comprueba su estado antes de crear otra. ¿Descartar este formulario e iniciar otra solicitud?')) return;
+    identityRequestKey.current = null;
+    studentMutation.reset();
+    setStudentDialogOpen(false);
   };
 
   const handleDateChange = (value: string, minutesFallback: number) => {
@@ -718,6 +722,8 @@ export default function ClassesPage() {
             variant="contained"
             onClick={() => {
               void (async () => {
+                if (identityRequestPending.current) return;
+                identityRequestPending.current = true;
                 const payload = {
                   fullName: studentForm.fullName.trim(),
                   email: studentForm.email.trim(),

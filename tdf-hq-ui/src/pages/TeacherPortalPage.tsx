@@ -856,6 +856,14 @@ export default function TeacherPortalPage() {
     );
   }
 
+  const closeStudentDialog = () => {
+    if (identityRequestPending.current || createStudentMutation.isPending) return;
+    if (identityRequestKey.current && !window.confirm('Una solicitud anterior podría haberse guardado. Comprueba su estado antes de crear otra. ¿Descartar este formulario e iniciar otra solicitud?')) return;
+    identityRequestKey.current = null;
+    createStudentMutation.reset();
+    setStudentDialogOpen(false);
+  };
+
   const openCreateStudent = () => {
     setStudentDialogError(null);
     setStudentForm({ fullName: '', email: '', phone: '' });
@@ -942,6 +950,8 @@ export default function TeacherPortalPage() {
       setStudentDialogError('Completa nombre y correo.');
       return;
     }
+    if (identityRequestPending.current) return;
+    identityRequestPending.current = true;
     try {
       await createStudentMutation.mutateAsync({
         fullName,
@@ -1444,10 +1454,7 @@ export default function TeacherPortalPage() {
 
       <Dialog
         open={studentDialogOpen}
-        onClose={() => {
-          setStudentDialogOpen(false);
-          setStudentDialogError(null);
-        }}
+        onClose={closeStudentDialog}
         fullWidth
         maxWidth="sm"
       >
@@ -1476,7 +1483,7 @@ export default function TeacherPortalPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setStudentDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={closeStudentDialog} disabled={createStudentMutation.isPending}>Cancelar</Button>
           <Button
             variant="contained"
             onClick={() => void submitStudent()}
