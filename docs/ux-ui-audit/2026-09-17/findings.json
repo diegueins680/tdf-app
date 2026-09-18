@@ -1363,5 +1363,31 @@
     "verificationStatus": "54 corrected browser cases PASS:zeroaxeviolations,zero200%textoverflow,zeroerrors; Chromium/Firefox keyboardTab, explicit legacyfocusoutline. ProductionbuildPASS, allfivechangedstaticassets byte-identical tosource. InitialJS365648gzipbytes/5preloads withinbudget. Before/afterevidence recorded; WebKit defaultTabskipslinks, no manualreaderclaim.",
     "mergeStatus": "Not merged; focused PR being prepared",
     "releaseStatus": "Not deployed"
+  },
+  {
+    "id": "UX-260917-039",
+    "kind": "confirmed",
+    "title": "Public catalog database round trips exceed the web request deadline",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "anonymous arrival / marketplace inventory and Records discovery",
+    "roles": "anonymous and authenticated web visitors",
+    "surface": "GET /marketplace; GET /records/feed; public client 30-second deadline",
+    "evidence": "Production 5c11577a5: marketplace200 after38.924s, repeat15s timeout with zero bytes; Records200 after10.566s and repeat10.249s. /health200 in0.299s. Actual isolated HTTP/PostgreSQL before/after and query-budget negative control in public-catalog-readiness.md.",
+    "userImpact": "Marketplace arrival can abort before the listing response; Records content remains loading for seconds despite a healthy health endpoint.",
+    "rootCause": "Marketplace loads each asset and approved rental terms sequentially, including a new transaction per listing. Records runs every fixed collection/dependency read in its own transaction. Remote database round trips accumulate.",
+    "proposedChange": "Batch public listing assets and approved terms; use one transaction for the fixed Records feed reads. Preserve item/checkout authority, publication filters, wire contract and operational flags.",
+    "dependencies": [
+      "independent review",
+      "required backend/CI checks",
+      "immutable image and guarded compatible backend release"
+    ],
+    "acceptanceCriteria": "80 generated listing cases retain active filtering, prices, approved terms and detail parity with bounded SQL executions independent of item count. Records published collections and wire shape remain identical. Required checks pass and the deployed public journeys complete within the existing client deadline. No field-percentile claim without representative field data.",
+    "verificationMethod": "Actual isolated HTTP/PostgreSQL with a TCP protocol observer counting catalog transactions, excluding independent workers; generated listing combinations, list/detail parity and published collection SQL oracle. Old binary is a meaningful negative control. Full backend tests and existing formal/release gates; read-only query grouping adds no consequential state transition.",
+    "status": "verification pending",
+    "implementationStatus": "Public list uses getMany and one approved-terms join, preserving shared DTO rendering. Records fixed reads share one transaction; locale and missing publication-state guards unchanged. No migration/cache/API shape change.",
+    "verificationStatus": "Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Full stack tests running; production-after pending. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted.",
+    "mergeStatus": "Not merged; focused successor being prepared on main2ce7a1a0d.",
+    "releaseStatus": "Not deployed; production remains5c until live evidence establishes a later revision."
   }
 ]

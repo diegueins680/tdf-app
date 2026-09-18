@@ -360,92 +360,95 @@ loadRecordsFeed requestedLocale = do
   Entity workflowKey _ <- maybe (throwError err503 { errBody = "Catalog publication workflow is unavailable" }) pure workflowRow
   publishedStateRow <- runDB (getBy (M.UniqueWorkflowStateCode workflowKey "published"))
   Entity publishedStateKey _ <- maybe (throwError err503 { errBody = "Published catalog state is unavailable" }) pure publishedStateRow
-  collections <- runDB $ selectList
-    [ M.EditorialCollectionCollectionType <-. ["release", "recording", "session"]
-    , M.EditorialCollectionActive ==. True
-    , M.EditorialCollectionWorkflowStateId ==. publishedStateKey
-    ]
-    [Asc M.EditorialCollectionSortOrder]
-  let collectionKeys = map entityKey collections
-      collectionKeysByKind kind = map entityKey (filter ((== kind) . M.editorialCollectionCollectionType . entityVal) collections)
-  collectionResources <- runDB $ selectList
-    [M.CollectionExternalResourceCollectionId <-. collectionKeys]
-    [Asc M.CollectionExternalResourceSortOrder]
-  releaseMemberships <- runDB $ selectList
-    [M.CollectionReleaseCollectionId <-. collectionKeysByKind "release"]
-    [Asc M.CollectionReleaseSortOrder, LimitTo 200]
-  recordingMemberships <- runDB $ selectList
-    [M.CollectionRecordingCollectionId <-. collectionKeysByKind "recording"]
-    [Asc M.CollectionRecordingSortOrder, LimitTo 200]
-  sessionMemberships <- runDB $ selectList
-    [M.CollectionSessionCollectionId <-. collectionKeysByKind "session"]
-    [Asc M.CollectionSessionSortOrder, LimitTo 200]
-  let releaseKeys = map (M.collectionReleaseReleaseId . entityVal) releaseMemberships
-      recordingKeys = map (M.collectionRecordingRecordingId . entityVal) recordingMemberships
-      sessionKeys = map (M.collectionSessionSessionId . entityVal) sessionMemberships
-  releases <- runDB $ selectList
-    [ M.RecordReleaseId <-. releaseKeys
-    , M.RecordReleaseActive ==. True
-    , M.RecordReleaseWorkflowStateId ==. publishedStateKey
-    ] []
-  recordings <- runDB $ selectList
-    [ M.RecordingId <-. recordingKeys
-    , M.RecordingActive ==. True
-    , M.RecordingWorkflowStateId ==. publishedStateKey
-    ] []
-  sessions <- runDB $ selectList
-    [ M.RecordingSessionId <-. sessionKeys
-    , M.RecordingSessionActive ==. True
-    , M.RecordingSessionWorkflowStateId ==. publishedStateKey
-    ] []
-  releaseContributors <- runDB $ selectList [M.ReleaseContributorReleaseId <-. releaseKeys] [Asc M.ReleaseContributorSortOrder]
-  recordingContributors <- runDB $ selectList [M.RecordingContributorRecordingId <-. recordingKeys] [Asc M.RecordingContributorSortOrder]
-  sessionContributors <- runDB $ selectList [M.SessionContributorSessionId <-. sessionKeys] [Asc M.SessionContributorSortOrder]
-  releaseResources <- runDB $ selectList [M.ReleaseExternalResourceReleaseId <-. releaseKeys] [Asc M.ReleaseExternalResourceSortOrder]
-  recordingResources <- runDB $ selectList [M.RecordingExternalResourceRecordingId <-. recordingKeys] [Asc M.RecordingExternalResourceSortOrder]
-  sessionResources <- runDB $ selectList [M.SessionExternalResourceSessionId <-. sessionKeys] [Asc M.SessionExternalResourceSortOrder]
-  let contributorKeys = nub
-        ( map (M.releaseContributorContributorId . entityVal) releaseContributors
-       <> map (M.recordingContributorContributorId . entityVal) recordingContributors
-       <> map (M.sessionContributorContributorId . entityVal) sessionContributors
-        )
-      resourceKeys = nub
-        ( map (M.collectionExternalResourceResourceId . entityVal) collectionResources
-       <> map (M.releaseExternalResourceResourceId . entityVal) releaseResources
-       <> map (M.recordingExternalResourceResourceId . entityVal) recordingResources
-       <> map (M.sessionExternalResourceResourceId . entityVal) sessionResources
-        )
-  contributors <- runDB $ selectList [M.RecordContributorId <-. contributorKeys, M.RecordContributorActive ==. True] []
-  resources <- runDB $ selectList [M.RecordExternalResourceId <-. resourceKeys, M.RecordExternalResourceActive ==. True] []
-  let providerKeys = nub (map (M.recordExternalResourceProviderId . entityVal) resources)
-  providers <- runDB $ selectList [M.ExternalProviderId <-. providerKeys, M.ExternalProviderActive ==. True] []
-  let contributorMap = Map.fromList [(entityKey row, row) | row <- contributors]
-      resourceMap = Map.fromList [(entityKey row, row) | row <- resources]
-      providerMap = Map.fromList [(entityKey row, row) | row <- providers]
-      releaseOrder = Map.fromList [(M.collectionReleaseReleaseId row, M.collectionReleaseSortOrder row) | Entity _ row <- releaseMemberships]
-      recordingOrder = Map.fromList [(M.collectionRecordingRecordingId row, M.collectionRecordingSortOrder row) | Entity _ row <- recordingMemberships]
-      sessionOrder = Map.fromList [(M.collectionSessionSessionId row, M.collectionSessionSortOrder row) | Entity _ row <- sessionMemberships]
-      orderedReleases = sortOn (\row -> Map.findWithDefault maxBound (entityKey row) releaseOrder) releases
-      orderedRecordings = sortOn (\row -> Map.findWithDefault maxBound (entityKey row) recordingOrder) recordings
-      orderedSessions = sortOn (\row -> Map.findWithDefault maxBound (entityKey row) sessionOrder) sessions
-      releaseDTOFor row = recordsReleaseDTO locale contributorMap resourceMap providerMap releaseContributors releaseResources releaseOrder row
-      recordingDTOFor row = recordsRecordingDTO locale contributorMap resourceMap providerMap recordingContributors recordingResources recordingOrder row
-      sessionDTOFor row = recordsSessionDTO locale contributorMap resourceMap providerMap sessionContributors sessionResources sessionOrder row
-      collectionDTOFor row = recordsCollectionDTO locale resourceMap providerMap collectionResources row
-      versionTotal =
-        sum (map (fromIntegral . M.editorialCollectionVersion . entityVal) collections)
-          + sum (map (fromIntegral . M.recordReleaseVersion . entityVal) releases)
-          + sum (map (fromIntegral . M.recordingVersion . entityVal) recordings)
-          + sum (map (fromIntegral . M.recordingSessionVersion . entityVal) sessions)
-          + sum (map (fromIntegral . M.recordExternalResourceVersion . entityVal) resources)
-  pure RecordsFeedDTO
-    { rfLocale = locale
-    , rfRevision = max 1 versionTotal
-    , rfCollections = map collectionDTOFor collections
-    , rfReleases = map releaseDTOFor orderedReleases
-    , rfRecordings = map recordingDTOFor orderedRecordings
-    , rfSessions = map sessionDTOFor orderedSessions
-    }
+  -- Keep the fixed feed reads in one transaction instead of one BEGIN/COMMIT
+  -- pair per query; publication filters, limits and DTO construction are unchanged.
+  runDB $ do
+    collections <- selectList
+      [ M.EditorialCollectionCollectionType <-. ["release", "recording", "session"]
+      , M.EditorialCollectionActive ==. True
+      , M.EditorialCollectionWorkflowStateId ==. publishedStateKey
+      ]
+      [Asc M.EditorialCollectionSortOrder]
+    let collectionKeys = map entityKey collections
+        collectionKeysByKind kind = map entityKey (filter ((== kind) . M.editorialCollectionCollectionType . entityVal) collections)
+    collectionResources <- selectList
+      [M.CollectionExternalResourceCollectionId <-. collectionKeys]
+      [Asc M.CollectionExternalResourceSortOrder]
+    releaseMemberships <- selectList
+      [M.CollectionReleaseCollectionId <-. collectionKeysByKind "release"]
+      [Asc M.CollectionReleaseSortOrder, LimitTo 200]
+    recordingMemberships <- selectList
+      [M.CollectionRecordingCollectionId <-. collectionKeysByKind "recording"]
+      [Asc M.CollectionRecordingSortOrder, LimitTo 200]
+    sessionMemberships <- selectList
+      [M.CollectionSessionCollectionId <-. collectionKeysByKind "session"]
+      [Asc M.CollectionSessionSortOrder, LimitTo 200]
+    let releaseKeys = map (M.collectionReleaseReleaseId . entityVal) releaseMemberships
+        recordingKeys = map (M.collectionRecordingRecordingId . entityVal) recordingMemberships
+        sessionKeys = map (M.collectionSessionSessionId . entityVal) sessionMemberships
+    releases <- selectList
+      [ M.RecordReleaseId <-. releaseKeys
+      , M.RecordReleaseActive ==. True
+      , M.RecordReleaseWorkflowStateId ==. publishedStateKey
+      ] []
+    recordings <- selectList
+      [ M.RecordingId <-. recordingKeys
+      , M.RecordingActive ==. True
+      , M.RecordingWorkflowStateId ==. publishedStateKey
+      ] []
+    sessions <- selectList
+      [ M.RecordingSessionId <-. sessionKeys
+      , M.RecordingSessionActive ==. True
+      , M.RecordingSessionWorkflowStateId ==. publishedStateKey
+      ] []
+    releaseContributors <- selectList [M.ReleaseContributorReleaseId <-. releaseKeys] [Asc M.ReleaseContributorSortOrder]
+    recordingContributors <- selectList [M.RecordingContributorRecordingId <-. recordingKeys] [Asc M.RecordingContributorSortOrder]
+    sessionContributors <- selectList [M.SessionContributorSessionId <-. sessionKeys] [Asc M.SessionContributorSortOrder]
+    releaseResources <- selectList [M.ReleaseExternalResourceReleaseId <-. releaseKeys] [Asc M.ReleaseExternalResourceSortOrder]
+    recordingResources <- selectList [M.RecordingExternalResourceRecordingId <-. recordingKeys] [Asc M.RecordingExternalResourceSortOrder]
+    sessionResources <- selectList [M.SessionExternalResourceSessionId <-. sessionKeys] [Asc M.SessionExternalResourceSortOrder]
+    let contributorKeys = nub
+          ( map (M.releaseContributorContributorId . entityVal) releaseContributors
+         <> map (M.recordingContributorContributorId . entityVal) recordingContributors
+         <> map (M.sessionContributorContributorId . entityVal) sessionContributors
+          )
+        resourceKeys = nub
+          ( map (M.collectionExternalResourceResourceId . entityVal) collectionResources
+         <> map (M.releaseExternalResourceResourceId . entityVal) releaseResources
+         <> map (M.recordingExternalResourceResourceId . entityVal) recordingResources
+         <> map (M.sessionExternalResourceResourceId . entityVal) sessionResources
+          )
+    contributors <- selectList [M.RecordContributorId <-. contributorKeys, M.RecordContributorActive ==. True] []
+    resources <- selectList [M.RecordExternalResourceId <-. resourceKeys, M.RecordExternalResourceActive ==. True] []
+    let providerKeys = nub (map (M.recordExternalResourceProviderId . entityVal) resources)
+    providers <- selectList [M.ExternalProviderId <-. providerKeys, M.ExternalProviderActive ==. True] []
+    let contributorMap = Map.fromList [(entityKey row, row) | row <- contributors]
+        resourceMap = Map.fromList [(entityKey row, row) | row <- resources]
+        providerMap = Map.fromList [(entityKey row, row) | row <- providers]
+        releaseOrder = Map.fromList [(M.collectionReleaseReleaseId row, M.collectionReleaseSortOrder row) | Entity _ row <- releaseMemberships]
+        recordingOrder = Map.fromList [(M.collectionRecordingRecordingId row, M.collectionRecordingSortOrder row) | Entity _ row <- recordingMemberships]
+        sessionOrder = Map.fromList [(M.collectionSessionSessionId row, M.collectionSessionSortOrder row) | Entity _ row <- sessionMemberships]
+        orderedReleases = sortOn (\row -> Map.findWithDefault maxBound (entityKey row) releaseOrder) releases
+        orderedRecordings = sortOn (\row -> Map.findWithDefault maxBound (entityKey row) recordingOrder) recordings
+        orderedSessions = sortOn (\row -> Map.findWithDefault maxBound (entityKey row) sessionOrder) sessions
+        releaseDTOFor row = recordsReleaseDTO locale contributorMap resourceMap providerMap releaseContributors releaseResources releaseOrder row
+        recordingDTOFor row = recordsRecordingDTO locale contributorMap resourceMap providerMap recordingContributors recordingResources recordingOrder row
+        sessionDTOFor row = recordsSessionDTO locale contributorMap resourceMap providerMap sessionContributors sessionResources sessionOrder row
+        collectionDTOFor row = recordsCollectionDTO locale resourceMap providerMap collectionResources row
+        versionTotal =
+          sum (map (fromIntegral . M.editorialCollectionVersion . entityVal) collections)
+            + sum (map (fromIntegral . M.recordReleaseVersion . entityVal) releases)
+            + sum (map (fromIntegral . M.recordingVersion . entityVal) recordings)
+            + sum (map (fromIntegral . M.recordingSessionVersion . entityVal) sessions)
+            + sum (map (fromIntegral . M.recordExternalResourceVersion . entityVal) resources)
+    pure RecordsFeedDTO
+      { rfLocale = locale
+      , rfRevision = max 1 versionTotal
+      , rfCollections = map collectionDTOFor collections
+      , rfReleases = map releaseDTOFor orderedReleases
+      , rfRecordings = map recordingDTOFor orderedRecordings
+      , rfSessions = map sessionDTOFor orderedSessions
+      }
 
 recordsCollectionDTO
   :: Text

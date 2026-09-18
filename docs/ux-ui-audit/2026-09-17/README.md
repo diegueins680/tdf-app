@@ -791,3 +791,13 @@ UX036 verification:71 release tests pass; final TLC legacy/compatible/mixed/forw
 Review follow-up for #438: recovering only the canary could leave untouched legacy replicas serving email authority. The actual outer recovery loop now includes all unsafe replicas once any deploy was attempted, continues after individual recovery failures and records each failure. Before any deploy attempt it leaves the fleet unchanged. Added StoppedFleetSafe and a negative configuration reproducing the partial-fleet gap; this explicitly extends the earlier model boundary. Local74release tests pass; revised formal/hosted evidence and renewed approval remain required.
 
 2026-09-18 initial static-page coverage:54cases across9pages/3engines/320+1280px exposed UX038 lowcontrast and200%textreflow. Focused CSS repair passes all54 withzeroaxe/errors/overflow; Chromium/Firefox keyboardTabworks, WebKitdefaultTabprefskipslinks (notclaimed). Nine existingcoverage rows updated; canonical before/afterreceipts/screenshots included. Consulted primary W3C explanations on2026-09-18: https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html (normal textminimum4.5:1) and https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html (linksneednon-color cues). Darkerblue+underlines address these observedfailures; policywordingunchanged. No claimofwholeplatformWCAGconformance.
+
+
+### Public catalog readiness continuation — 18 September, 10:24 UTC
+
+Confirmed UX-260917-039: actual marketplace latency exceeds the existing30s client
+deadline, while health is green. The focused query batching fix and real PostgreSQL
+negative/positive evidence are in [public-catalog-readiness.md](public-catalog-readiness.md).
+Compilation and HTTP contracts pass; full backend/hosted checks, review, merge and
+guarded release verification remain pending. This is an acceptance blocker for the
+existing public arrival journey, not a new feature workstream.
