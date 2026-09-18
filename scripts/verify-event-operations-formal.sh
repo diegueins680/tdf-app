@@ -79,6 +79,9 @@ run_negative_tlc() {
     exit 1
   fi
 }
+run_tlc DirectoryFavoriteAuthority.tla DirectoryFavoriteAuthority.cfg directory-favorite-authority
+run_negative_tlc DirectoryFavoriteAuthorityUnsafeDispatch.cfg directory-favorite-dispatch 'Invariant AuthorizedDispatch is violated' DirectoryFavoriteAuthority.tla
+run_negative_tlc DirectoryFavoriteAuthorityUnsafeReceipt.cfg directory-favorite-receipt 'Invariant CurrentSessionReceipt is violated' DirectoryFavoriteAuthority.tla
 run_negative_tlc ExperimentAuthorityStale.cfg experiment-stale 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityDuplicate.cfg experiment-duplicate 'Invariant ExposureAtMostOnce is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityAccount.cfg experiment-account 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla

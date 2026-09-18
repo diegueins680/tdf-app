@@ -317,3 +317,12 @@ perform no machine recovery. The executable model abstracts verified immutable
 artifacts and trusted commit ancestry. It does not prove identity-token validation,
 the cloud provider, or whole-system availability. Exact executions are in the
 canonical UX audit record.
+
+## Directory favorite authority (2026-09-18)
+
+`DirectoryFavoriteAuthority` bounds one read/save request, three session occurrences,
+lagging render and unmount. TLC checks356 generated/208distinct states (depth9),
+current-session dispatch/receipt and authoritative persistence. Weak fairness assumes
+dispatch and eventual success/failure response; terminal quiescence is permitted.
+Unsafe dispatch/receipt variants must violate their named invariants (29/63states).
+[Implementation, counterexamples and limits](../../docs/ux-ui-audit/2026-09-17/directory-entry.md).
