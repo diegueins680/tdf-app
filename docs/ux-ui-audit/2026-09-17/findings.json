@@ -1214,5 +1214,27 @@
     "verificationStatus": "10 durable ES/EN Playwright cases pass on5profiles/3engines at integrated b9a654f9b, unforced clicks retry/cancel and0payment intents. Compiled bundle; synthetic transport. Not real Stripe settlement.",
     "mergeStatus": "PR #429 successor pending",
     "releaseStatus": "not deployed"
+  },
+  {
+    "id": "UX-260917-031",
+    "kind": "confirmed",
+    "title": "Concurrent first navigation visits fail with HTTP500",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "authorized navigation / recent destinations / multiple tabs",
+    "roles": "all authorized accounts; observed Maintenance",
+    "surface": "POST /navigation/preferences/{featureId}/visit",
+    "evidence": "Initial actual isolated Maintenance crawl /pipelines at320px returned500. Backend log23505 names feature_navigation_preferences_party_feature_unique. Controlled PostgreSQL EXCLUSIVE-lock regression lets two initial reads see no row; old handler returns500 among16 requests. Only synthetic local data used.",
+    "userImpact": "Recent-destination persistence can fail when tabs or redirects record the first visit concurrently.",
+    "rootCause": "recordVisit performs getBy then insert without a conflict-safe write.",
+    "proposedChange": "Atomic unique-key upsert creates one row and increments count without overwriting favorites or pin settings.",
+    "dependencies": [],
+    "acceptanceCriteria": "16 controlled concurrent first visits all200, one row/count16; concurrent settings plus8 visits preserve settings/count24; other account count starts1; denied/revoked requests write nothing.",
+    "verificationMethod": "Actual executable HTTP/PostgreSQL controlled interleaving, TLC finite-state concurrency model with legacy negative control.",
+    "status": "in progress",
+    "implementationStatus": "Atomic upsert implemented in isolated branch audit/ux-navigation-concurrency-20260918; build pending. No schema/API changes.",
+    "verificationStatus": "Negative runtime reproduced before fix; corrected binary and model runs pending.",
+    "mergeStatus": "not merged",
+    "releaseStatus": "not deployed"
   }
 ]

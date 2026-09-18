@@ -226,3 +226,23 @@ The additional component regression reproduced duplicate confirmation before the
 fix and verifies Escape/backdrop suppression and one successful order callback;
 another verifies rejection recovery. The fixed-context and eventual-response limits
 above still apply; no real card, provider settlement or background recovery is proved.
+
+## Concurrent recent navigation — UX-260917-031
+
+NavigationVisit.tla models two accounts and three requests (two for one account),
+plus one concurrent settings update. Atomic upsert linearizes insertion/increment;
+NoFailedVisits, CountsMatchAccepted and SettingsPreserved require no duplicate-key
+failure, exact per-account counts, and unchanged independent preferences. AllSettle
+assumes weak fairness of each finite DB operation and eventual DB availability.
+The unsafe configuration separates lookup/insertion and must violate NoFailedVisits.
+This model assumes valid account authority supplied by authentication; it does not
+prove credential validation, exactly-once network retry or timestamp ordering.
+Each accepted HTTP visit intentionally increments; requests have no idempotency key.
+
+Conformance is scripts/__tests__/navigation-http-runtime.mjs: real isolated PostgreSQL
+and the actual compiled handler. A table write lock permits both legacy reads before
+insertion, then is released only after two DB waiters are observed. The old binary
+returns500; the corrected executable must pass16 first visits, mixed settings/visits,
+separate accounts, denied access and revoked tokens. Test hosts/databases are restricted
+to local/CI isolated databases. Tool versions remain TLC1.7.2/Alloy6.2.0 as pinned above.
+Execution results and limits are recorded in the canonical audit checkpoint.
