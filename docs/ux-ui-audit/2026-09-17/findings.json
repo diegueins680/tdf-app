@@ -1389,5 +1389,31 @@
     "verificationStatus": "74 release tests pass. Four TLC configurations pass (38/31/35/38 distinct states); unsafe rollback and partial-fleet recovery yield the named counterexamples. Full pinned TLA+/Alloy runner passed. No cloud failure induced; hosted checks required on revised head.",
     "mergeStatus": "PR438 merged499e8be7b8edaccbbd46a4d763e4c3b6326b4d92 after exact35172083a approval and all applicable checks; review thread resolved.",
     "releaseStatus": "No production mutation; block next provider-containing release until reviewed recovery guard is merged and verified."
+  },
+  {
+    "id": "UX-260917-038",
+    "kind": "confirmed",
+    "title": "Public legal/support pages have low-contrast links and lose reflow at large text",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "public privacy, terms, account/data deletion and mobile support",
+    "roles": "anonymous; low vision and keyboard users",
+    "surface": "four legacy InstG policy HTML files; mobile-app shared stylesheet",
+    "evidence": "Nine served static pages ×3browser engines ×320/1280px. Baseline54cases:24contrast/link-indicator violations across four legacy pages, no normal-width overflow. Actual200%text exposed overflow on all nine pages. First direct-source harness omitted CSS MIME for mobile pages; those target-size observations were discarded and repeated with correct CSS before confirming reflow.",
+    "userImpact": "Policy links and deletion contacts are hard to distinguish; enlarged text requires horizontal scrolling.",
+    "rootCause": "Blue accent3.32:1 on white and2.92:1 on badge; inline links rely on color; unbreakable text and horizontal mobile header exceed narrow screens at200%text.",
+    "proposedChange": "Darker established blue accent, persistent underlines and visible focus on legacy policy links; wrap long text and stack mobile support header on phones. Legal wording and endpoints unchanged.",
+    "dependencies": [
+      "independent review",
+      "required web checks",
+      "Cloudflare production publication"
+    ],
+    "acceptanceCriteria": "All54cases have zero applicable axe violations/page errors/overflow atnormal or200%text. Keyboard focus remains visible. Published static bytes match reviewed source.",
+    "verificationMethod": "Actual static files served overHTTP with correct MIME; Chromium/Firefox/WebKit axe WCAG2.2AA tags and text-resize geometry; keyboard Tab in Chromium/Firefox. WebKit default Tab skipslinks, so do not claim full keyboard/reader coverage. CSS-only behavior does not need a new authentication model.",
+    "status": "implemented",
+    "implementationStatus": "Focused CSS changes; no policy translation/content or API changes.",
+    "verificationStatus": "54 corrected browser cases PASS:zeroaxeviolations,zero200%textoverflow,zeroerrors; Chromium/Firefox keyboardTab, explicit legacyfocusoutline. ProductionbuildPASS, allfivechangedstaticassets byte-identical tosource. InitialJS365648gzipbytes/5preloads withinbudget. Before/afterevidence recorded; WebKit defaultTabskipslinks, no manualreaderclaim.",
+    "mergeStatus": "Not merged; focused PR being prepared",
+    "releaseStatus": "Not deployed"
   }
 ]
