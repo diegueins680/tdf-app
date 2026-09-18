@@ -60,7 +60,9 @@ ordered Party snapshots, and an evidence object containing:
 Apply the documented decision with `--command review --case CASE_UUID --decision-file PRIVATE_JSON`
 and the same database/output arguments. The decision file includes `status`, `reviewer_party_id`,
 `reason`, `evidence`, and `expected_fingerprint` from a fresh dry run. It locks the member rows and
-rejects stale review evidence. A confirmed decision still cannot bypass execution blockers.
+rejects stale review evidence. Cases can be reviewed again before any merge or link; every prior
+review is retained in the private evidence history. Once an operation exists, review changes are
+rejected. A confirmed decision still cannot bypass execution blockers.
 
 These are operator attestations, not cryptographically verified documents. Do not manufacture
 proof by copying shared contact fields into the subject. Missing authoritative proof remains a

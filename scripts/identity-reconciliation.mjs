@@ -45,13 +45,21 @@ if (values.command === 'inventory') {
   const key = sqlText(caseId);
   sql = `DO $review$ DECLARE plan jsonb; BEGIN
     PERFORM pg_advisory_xact_lock(hashtextextended('identity-reconciliation',0));
-    PERFORM 1 FROM identity_reconciliation_case WHERE id=${key}::uuid AND status='review' FOR UPDATE;
-    IF NOT FOUND THEN RAISE EXCEPTION 'case is not awaiting review'; END IF;
+    PERFORM 1 FROM identity_reconciliation_case WHERE id=${key}::uuid AND status IN ('review','confirmed','separate') FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'case is not available for review'; END IF;
+    IF EXISTS(SELECT 1 FROM identity_merge_history WHERE case_id=${key}::uuid)
+      OR EXISTS(SELECT 1 FROM identity_complementary_link WHERE case_id=${key}::uuid) THEN
+      RAISE EXCEPTION 'executed case review is immutable';
+    END IF;
     PERFORM 1 FROM party WHERE id IN (SELECT unnest(member_ids) FROM identity_reconciliation_case WHERE id=${key}::uuid) ORDER BY id FOR UPDATE;
     plan:=identity_merge_plan(${key}::uuid);
     IF plan->>'fingerprint' IS DISTINCT FROM ${sqlText(decision.expected_fingerprint)} THEN RAISE EXCEPTION 'review evidence changed'; END IF;
     UPDATE identity_reconciliation_case SET status=${sqlText(decision.status)},reviewed_by=${decision.reviewer_party_id},
-      reviewed_at=now(),reason=${sqlText(decision.reason)},evidence=${sqlText(JSON.stringify(decision.evidence))}::jsonb,
+      reviewed_at=now(),reason=${sqlText(decision.reason)},
+      evidence=(${sqlText(JSON.stringify(decision.evidence))}::jsonb-'review_history') || jsonb_build_object('review_history',
+        coalesce(evidence->'review_history','[]'::jsonb) || CASE WHEN reviewed_by IS NULL THEN '[]'::jsonb ELSE
+          jsonb_build_array(jsonb_build_object('status',status,'reviewed_by',reviewed_by,'reviewed_at',reviewed_at,
+            'reason',reason,'evidence',evidence-'review_history','before_parties',before_parties)) END),
       before_parties=plan->'before' WHERE id=${key}::uuid;
   END $review$;
   SELECT identity_merge_plan(${key}::uuid);`;
