@@ -13848,22 +13848,22 @@
       "reviewed": true
     },
     {
-      "id": "eca67f06b24bad7056ef",
+      "id": "d2fc4238cfdd71cb9ebe",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Ordered immutable migration IDs and introduction commits are release execution mechanics. Preserve all prior109entries and append the existing calendar runtime tables, introduced in ancestor49ff02de5. No applied migration/checksum is rewritten; recovery retains these additive tables and authorized data.",
+      "justification": "Ordered immutable migrations are release execution mechanics. Preserve the existing 110 entries and append the additive verified resource availability repair. No applied migration is rewritten; the introducing commit remains an ancestor for guarded deployment.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "ux-calendar-runtime-2026-09-18",
+      "reviewBatch": "records-availability-2026-09-18",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 109
+        "valueCount": 111
       }
     },
     {
@@ -13941,6 +13941,16 @@
       "priority": "P2",
       "risk": "Confusing image transport failure with a verified provider removal.",
       "justification": "Two provider availability wire states; absence means unverified. This is a protocol outcome, not an administrator-editable business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "a9c73756efd19ff890eb",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown status must not be mistaken for verified removal.",
+      "justification": "Database constraint for verified provider availability mirrors the optional API wire outcome; absent means unknown. This is not an editable business catalog.",
       "reviewed": true
     }
   ]

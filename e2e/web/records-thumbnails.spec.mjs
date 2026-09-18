@@ -1,7 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 
 // Synthetic content exists only inside this browser test; no provider/account writes.
-const image = (width, height) => `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="purple"/></svg>`;
+const validImage = readFileSync(new URL('./fixtures/thumbnail-valid.png', import.meta.url));
+const placeholderImage = readFileSync(new URL('./fixtures/thumbnail-placeholder.png', import.meta.url));
 async function fixture(page, baseURL, verified) {
   const requests = [];
   const videos = [
@@ -21,11 +23,11 @@ async function fixture(page, baseURL, verified) {
     const request = route.request(); const url = new URL(request.url());
     if (url.hostname === 'i.ytimg.com') {
       requests.push(url.pathname);
-      if (url.pathname.includes('f2BabxM1Pjc')) return route.fulfill({ contentType: 'image/svg+xml', body: image(480, 360) });
+      if (url.pathname.includes('f2BabxM1Pjc')) return route.fulfill({ contentType: 'image/png', body: validImage });
       if (url.pathname.includes('ooPsIHsikYU') && url.pathname.endsWith('hqdefault.jpg')) {
-        return route.fulfill({ contentType: 'image/svg+xml', body: image(120, 90) });
+        return route.fulfill({ contentType: 'image/png', body: placeholderImage });
       }
-      return route.fulfill({ status: 404, contentType: 'image/svg+xml', body: image(120, 90) });
+      return route.fulfill({ status: 404, contentType: 'image/png', body: placeholderImage });
     }
     if (url.pathname === '/records/feed') return route.fulfill({ json: { locale: 'es', revision: 1, collections: [], releases: [], sessions: [], recordings } });
     if (['fetch', 'xhr'].includes(request.resourceType())) {
@@ -41,6 +43,9 @@ async function fixture(page, baseURL, verified) {
 test('Records handles failed images and decoded placeholders with bounded requests @critical', async ({ page, baseURL }) => {
   const requests = await fixture(page, baseURL, false);
   await page.goto('/records#releases');
+  // WebKit defers offscreen lazy images: exercise compact previews before cards.
+  await page.getByText('Videos recientes', { exact: true }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole('heading', { name: 'Videos recientes', exact: true }).locator('../..').getByRole('img', { name: 'Miniatura no disponible' })).toHaveCount(2);
   await page.getByText('Grabaciones recientes', { exact: true }).scrollIntoViewIfNeeded();
   await expect(page.getByRole('img', { name: 'Miniatura no disponible' })).toHaveCount(4);
   const control = page.locator('img[alt="Federico Molinari @ TDF Electro Sessions"]').last();
