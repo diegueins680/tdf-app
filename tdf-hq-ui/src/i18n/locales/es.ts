@@ -2,6 +2,9 @@ import authEntry from './authEntry.es';
 const es = {
   authEntry,
   auditAccessibility: {
+    loadingActivitySummary: 'Cargando resumen por usuario',
+    loadingRecentActivity: 'Cargando actividad reciente',
+
     loadingProfiles: 'Cargando perfiles',
     loadingClassifieds: 'Cargando clasificados',
     loadingApplications: 'Cargando postulaciones',

@@ -185,7 +185,7 @@ export default function UserActivityPage() {
                 {activityQuery.isLoading && (
                   <TableRow>
                     <TableCell colSpan={4} align="center">
-                      <CircularProgress size={24} aria-label="Cargando actividad" />
+                      <CircularProgress size={24} aria-label={t('auditAccessibility.loadingActivitySummary')} />
                     </TableCell>
                   </TableRow>
                 )}
@@ -246,7 +246,7 @@ export default function UserActivityPage() {
                     {activityQuery.isLoading && (
                       <TableRow>
                         <TableCell colSpan={5} align="center">
-                          <CircularProgress size={24} aria-label="Cargando actividad" />
+                          <CircularProgress size={24} aria-label={t('auditAccessibility.loadingRecentActivity')} />
                         </TableCell>
                       </TableRow>
                     )}

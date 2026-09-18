@@ -609,3 +609,11 @@ reproduction, synthetic event/payment transport. All three radio surfaces now us
 theme.zIndex.appBar. [MUI primary documentation](https://mui.com/material-ui/customization/z-index/)
 consulted2026-09-18 specifies appBar1100,modal1300,snackbar1400; reusing the theme
 keeps application controls below the modal. No audio change, provider or charge.
+
+Integrated main a81 in68581b8f, preserving merge ancestry. Actual .gitmodules/tree
+pins published mobile30686143f3108c6e2fe0ccbff016f570d2ef51f6, descendant of1ec
+with generated contract changes only; existing native19/10 artifacts remain source1ec.
+#429 sixth review identifies duplicate activity load labels, corrected distinctly.
+Student198 arrivals: one real unnamed progress in /mis-clasificados; four directory
+load states now named. Includes before evidence, follow-up runtime pending.
+Remaining historical booking/marketplace/onboarding/campaign suites34tests pass.

@@ -2,6 +2,9 @@ import authEntry from './authEntry.en';
 const en = {
   authEntry,
   auditAccessibility: {
+    loadingActivitySummary: 'Loading summary by user',
+    loadingRecentActivity: 'Loading recent activity',
+
     loadingProfiles: 'Loading profiles',
     loadingClassifieds: 'Loading classifieds',
     loadingApplications: 'Loading applications',

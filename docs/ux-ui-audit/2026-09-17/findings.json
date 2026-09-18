@@ -569,10 +569,10 @@
     "dependencies": [],
     "acceptanceCriteria": "No-quote completion exposes no staff destination; quote-backed completion still links to public tracking. **Implemented and unit/runtime-verified with synthetic fixtures.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
+    "status": "merged",
     "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
+    "verificationStatus": "Current PublicBookingPage/MarketplacePage plus onboarding/campaign suites:34 tests pass. No staff calendar in no-quote receipt; no fake-contact empty marketplace. Current full production journey still pending.",
+    "mergeStatus": "Current main a81 contains historical fix; source and focused tests rechecked",
     "releaseStatus": "Per-finding deployment/publication verification pending"
   },
   {
@@ -591,10 +591,10 @@
     "dependencies": [],
     "acceptanceCriteria": "Empty state makes no notification claim and collects no contact data; useful public alternatives remain. **Implemented and unit/runtime-verified.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "verification pending",
+    "status": "merged",
     "implementationStatus": "Historical implementation/deferment recorded in original report; successor code must be reconciled individually, not restarted.",
-    "verificationStatus": "Historical-to-current reconciliation pending except linked active finding evidence; do not infer present defect from old deferred label.",
-    "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
+    "verificationStatus": "Current PublicBookingPage/MarketplacePage plus onboarding/campaign suites:34 tests pass. No staff calendar in no-quote receipt; no fake-contact empty marketplace. Current full production journey still pending.",
+    "mergeStatus": "Current main a81 contains historical fix; source and focused tests rechecked",
     "releaseStatus": "Per-finding deployment/publication verification pending"
   },
   {
@@ -1037,7 +1037,7 @@
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
     "status": "implemented",
     "implementationStatus": "dccd66606; integrated with#422 in d4f720e51; review follow-up distinguishes region/progress names, registers calendar locales and gates payment-intent creation on SDK readiness",
-    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage.",
+    "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Focused slow-response verification pending.",
     "mergeStatus": "PR #429 open; successor after review corrections pending exact-head gates/review",
     "releaseStatus": "not deployed"
   },
