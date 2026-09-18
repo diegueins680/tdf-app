@@ -16159,7 +16159,10 @@ export interface operations {
     createParty: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Stable request key scoped to the authenticated actor. Reuse on retries with the same body; a changed body returns 409. Contact attributes never establish identity. */
+                "Idempotency-Key"?: string;
+            };
             path?: never;
             cookie?: never;
         };

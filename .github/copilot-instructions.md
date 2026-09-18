@@ -134,4 +134,4 @@ npm install         # Install all workspace dependencies
 - **Workspaces**: Run commands from correct directory (root for npm workspaces, `tdf-hq/` for Stack)
 - **Currency precision**: Always use integer cents, never floating-point dollars
 - **Time zones**: Respect `VITE_TZ`/`EXPO_PUBLIC_TZ` settings for consistent display
-- **Submodules**: Run `git submodule update --init --recursive` after cloning or pulling mobile app changes
+- **Submodules**: Run `git submodule update --init --checkout --recursive` after cloning or pulling mobile app changes

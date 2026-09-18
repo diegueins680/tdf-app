@@ -9028,9 +9028,9 @@ searchParties user rawQuery rawContext rawScopeId rawKind accountOnly excluded r
       normalizedUsername = partySelectorNormalizedUsernameSql
       nameSql
         | publicDiscovery =
-            "SELECT ?? FROM party WHERE " <> normalizedDisplayName <> " LIKE ? ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
+            "SELECT ?? FROM party WHERE NOT EXISTS (SELECT 1 FROM identity_party_archive a WHERE a.party_id=party.id) AND " <> normalizedDisplayName <> " LIKE ? ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
         | otherwise =
-            "SELECT ?? FROM party WHERE (" <> normalizedDisplayName <> " LIKE ? OR " <> normalizedLegalName <> " LIKE ?) ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 WHEN " <> normalizedLegalName <> " = ? THEN 1 ELSE 2 END, id ASC LIMIT 401"
+            "SELECT ?? FROM party WHERE NOT EXISTS (SELECT 1 FROM identity_party_archive a WHERE a.party_id=party.id) AND (" <> normalizedDisplayName <> " LIKE ? OR " <> normalizedLegalName <> " LIKE ?) ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 WHEN " <> normalizedLegalName <> " = ? THEN 1 ELSE 2 END, id ASC LIMIT 401"
       usernameSql =
         "SELECT ?? FROM user_credential WHERE id > 0 AND " <> normalizedUsername <> " LIKE ? AND active = TRUE ORDER BY CASE WHEN " <> normalizedUsername <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
   (parties, credentials, fanProfiles, engineerPartyIds) <- liftIO $ flip runSqlPool pool $ do
@@ -9305,16 +9305,19 @@ listParties user mLimit mOffset = do
   Env pool _ <- ask
   (limit, offset) <- either throwError pure (validatePartyListPagination mLimit mOffset)
   (entities, accountIds) <- liftIO $ flip runSqlPool pool $ do
-    parts <- selectList [] [Asc PartyId, LimitTo limit, OffsetBy offset]
+    parts <- rawSql "SELECT ?? FROM party WHERE NOT EXISTS (SELECT 1 FROM identity_party_archive a WHERE a.party_id=party.id) ORDER BY id LIMIT ? OFFSET ?" [toPersistValue limit, toPersistValue offset]
     let partyIds = map entityKey parts
     creds <- selectList [UserCredentialPartyId <-. partyIds] []
     let accountSet = Set.fromList (map (userCredentialPartyId . entityVal) creds)
     pure (parts, accountSet)
   pure (map (\ent -> toPartyDTO (Set.member (entityKey ent) accountIds) ent) entities)
 
-createParty :: AuthedUser -> PartyCreate -> AppM PartyDTO
-createParty user req = do
+createParty :: AuthedUser -> Maybe Text -> PartyCreate -> AppM PartyDTO
+createParty user requestKey req = do
   requireModule user ModuleCRM
+  for_ requestKey $ \key ->
+    unless (T.length key >= 16 && T.length key <= 128 && T.all (\ch -> ch <= '\x7f' && (isAlphaNum ch || ch == '-' || ch == '_')) key) $
+      throwError err400 { errBody = "Idempotency-Key must contain 16-128 ASCII letters, digits, hyphens or underscores" }
   displayNameVal <- either throwError pure (validatePartyDisplayName (cDisplayName req))
   primaryEmailVal <- either throwError pure (validatePartyPrimaryEmail (cPrimaryEmail req))
   Env pool _ <- ask
@@ -9335,8 +9338,30 @@ createParty user req = do
           , partyCountryId = Nothing
           , partyCreatedAt = now
           }
-  pid <- liftIO $ flip runSqlPool pool $ insert p
-  pure $ toPartyDTO False (Entity pid p)
+  result <- liftIO $ try $ flip runSqlPool pool $ case requestKey of
+    Nothing -> do
+      pid <- insert p
+      pure (Just (Entity pid p))
+    Just key -> do
+      let body = object
+            [ "display_name" .= displayNameVal, "legal_name" .= cLegalName req
+            , "is_org" .= cIsOrg req, "tax_id" .= cTaxId req
+            , "primary_email" .= primaryEmailVal, "primary_phone" .= cPrimaryPhone req
+            , "whatsapp" .= cWhatsapp req, "instagram" .= cInstagram req
+            , "emergency_contact" .= cEmergencyContact req, "notes" .= cNotes req
+            ]
+      ids <- rawSql "SELECT identity_create_contact(?, ?, ?::jsonb)"
+        [toPersistValue (auPartyId user), PersistText key, PersistText (TE.decodeUtf8 (BL.toStrict (encode body)))]
+      case ids of
+        [Single pid] -> getEntity (toSqlKey pid)
+        _ -> pure Nothing
+  case result of
+    Left sqlError
+      | sqlState sqlError `elem` ["22023", "55000"] ->
+          throwError err409 { errBody = "This contact request has changed or was archived. Review the contact before retrying." }
+      | otherwise -> throwError err500 { errBody = "Contact creation failed" }
+    Right Nothing -> throwError err500 { errBody = "Contact creation failed" }
+    Right (Just ent) -> getParty user (fromSqlKey (entityKey ent))
 
 getParty :: AuthedUser -> Int64 -> AppM PartyDTO
 getParty user pidI = do
@@ -9344,7 +9369,11 @@ getParty user pidI = do
   pidValid <- either throwError pure (validatePositiveIdField "partyId" pidI)
   Env pool _ <- ask
   let pid = toSqlKey pidValid :: Key Party
-  mp <- liftIO $ flip runSqlPool pool $ getEntity pid
+  mp <- liftIO $ flip runSqlPool pool $ do
+    mappings <- rawSql "SELECT canonical_party_id FROM identity_party_archive WHERE party_id=?" [toPersistValue pid]
+    case mappings of
+      [Single canonicalId] -> getEntity (toSqlKey canonicalId)
+      _ -> getEntity pid
   case mp of
     Nothing -> throwError err404
     Just ent -> do
@@ -9361,7 +9390,7 @@ updateParty user pidI req = do
   primaryEmailUpdate <- either throwError pure (validatePartyPrimaryEmailUpdate (uPrimaryEmail req))
   Env pool _ <- ask
   let pid = toSqlKey pidValid :: Key Party
-  liftIO $ flip runSqlPool pool $ do
+  result <- liftIO $ try $ flip runSqlPool pool $ do
     mp <- get pid
     case mp of
       Nothing -> pure ()
@@ -9379,7 +9408,12 @@ updateParty user pidI req = do
               , partyNotes            = maybe (partyNotes p) Just       (uNotes req)
               }
         replace pid p'
-  getParty user pidValid
+  case result of
+    Left sqlError
+      | sqlState sqlError == "55000" ->
+          throwError err409 { errBody = "This contact was archived. Open its current record before editing." }
+      | otherwise -> throwError err500 { errBody = "Contact update failed" }
+    Right () -> getParty user pidValid
 
 validatePartyDisplayName :: Text -> Either ServerError Text
 validatePartyDisplayName rawDisplayName =
@@ -15245,7 +15279,7 @@ maxChatKitExpiryAnchorChars = 64
 
 isChatKitExpiryAnchorChar :: Char -> Bool
 isChatKitExpiryAnchorChar ch =
-  isAscii ch && (isAlphaNum ch || ch `elem` ("_-" :: String))
+  ch <= '\x7f' && (isAlphaNum ch || ch `elem` ("_-" :: String))
 
 rejectNullChatKitExpiryField :: Text -> Object -> Parser ()
 rejectNullChatKitExpiryField fieldName expiresAfter =

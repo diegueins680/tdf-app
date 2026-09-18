@@ -6,7 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import type { PartyCreate, PartyDTO, PartyUpdate } from '../api/types';
 
 const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
-const createPartyMock = jest.fn<(body: PartyCreate) => Promise<PartyDTO>>();
+const createPartyMock = jest.fn<(body: PartyCreate, requestKey?: string) => Promise<PartyDTO>>();
 const updatePartyMock = jest.fn<(id: number, body: PartyUpdate) => Promise<PartyDTO | null>>();
 const canAccessPathMock = jest.fn<() => boolean>();
 const createUserMock = jest.fn<(payload: { partyId: number; username?: string }) => Promise<null>>();
@@ -14,7 +14,7 @@ const createUserMock = jest.fn<(payload: { partyId: number; username?: string })
 jest.unstable_mockModule('../api/parties', () => ({
   Parties: {
     list: () => listPartiesMock(),
-    create: (body: PartyCreate) => createPartyMock(body),
+    create: (body: PartyCreate, key?: string) => createPartyMock(body, key),
     update: (id: number, body: PartyUpdate) => updatePartyMock(id, body),
   },
 }));
@@ -327,6 +327,37 @@ describe('PartiesPage', () => {
     } finally {
       await cleanup();
     }
+  });
+
+  it('reuses the contact request key after a failed response', async () => {
+    createPartyMock.mockRejectedValue(new Error('Connection interrupted'));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(getButtonsByText(document.body, 'Nuevo contacto')).toHaveLength(1));
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Nuevo contacto')[0]!);
+        await flushPromises();
+      });
+      const input = getInputByLabelText(document.body, 'Nombre / Display');
+      await act(async () => {
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+        setter.call(input, 'Retry contact');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        await flushPromises();
+      });
+      const submit = () => getButtonsByText(document.body, 'Crear')[0]!;
+      await act(async () => { clickButton(submit()); await flushPromises(); });
+      await waitForExpectation(() => expect(createPartyMock).toHaveBeenCalledTimes(1));
+      await waitForExpectation(() => expect(document.body.textContent).toContain('Connection interrupted'));
+      await act(async () => { clickButton(submit()); await flushPromises(); });
+      await waitForExpectation(() => expect(createPartyMock).toHaveBeenCalledTimes(2));
+      const firstKey = createPartyMock.mock.calls[0]![1];
+      expect(firstKey).toMatch(/^[A-Za-z0-9_-]{16,128}$/);
+      expect(createPartyMock.mock.calls[1]![1]).toBe(firstKey);
+    } finally { await cleanup(); }
   });
 
   it('uses one plain-language company indicator and one combined contact column', async () => {

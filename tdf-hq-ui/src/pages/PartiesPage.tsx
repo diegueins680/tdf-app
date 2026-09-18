@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -94,15 +94,26 @@ type CreatePartyFormData = z.infer<typeof createPartySchema>;
 function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
   const [isOrg, setIsOrg] = useState(false);
+  const creationRequest = useRef<{ body: string; key: string } | null>(null);
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CreatePartyFormData>({
     resolver: zodResolver(createPartySchema),
     defaultValues: { name: '' },
   });
 
   const mutation = useMutation<PartyDTO, Error, PartyCreate>({
-    mutationFn: (body) => Parties.create(body),
+    mutationFn: (body) => {
+      const serialized = JSON.stringify(body);
+      if (creationRequest.current?.body !== serialized) {
+        creationRequest.current = {
+          body: serialized,
+          key: globalThis.crypto?.randomUUID?.() ?? `contact-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        };
+      }
+      return Parties.create(body, creationRequest.current.key);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['parties'] });
+      creationRequest.current = null;
       reset();
       onClose();
     },
