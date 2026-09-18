@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-18T13:19:25.317Z",
+  "generatedAt": "2026-09-18T17:26:57.676Z",
   "repositoryRoot": ".",
-  "filesScanned": 1588,
+  "filesScanned": 1590,
   "candidateCount": 1138,
   "byClassification": {
     "dynamic-business-catalog": 741,
@@ -3690,7 +3690,7 @@
       "lines": [
         124
       ],
-      "consumerCount": 211,
+      "consumerCount": 212,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -3866,13 +3866,13 @@
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
         "scripts/test-live-intake-identity.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-provider-identity.sh",
-        "scripts/test-public-ticket-checkout-runtime-migration.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh"
+        "scripts/test-public-ticket-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -3934,7 +3934,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 702,
+      "consumerCount": 704,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4222,7 +4222,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 702,
+      "consumerCount": 704,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5343,7 +5343,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 702,
+      "consumerCount": 704,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5682,7 +5682,7 @@
       "lines": [
         167
       ],
-      "consumerCount": 172,
+      "consumerCount": 173,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -5844,6 +5844,7 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-live-intake-identity.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
         "scripts/ui-static-audit.mjs",
         "scripts/verify-improvement-loop.mjs"
@@ -6154,7 +6155,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 171,
+      "consumerCount": 172,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -6289,6 +6290,7 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-live-intake-identity.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-party-selector-rate-limit-scope-migration.sh",
         "scripts/test-provider-identity.sh",
         "scripts/ui-static-audit.mjs",
@@ -10953,7 +10955,7 @@
       "lines": [
         136
       ],
-      "consumerCount": 145,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -11091,6 +11093,7 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-live-intake-identity.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
         "scripts/ui-static-audit.mjs",
         "scripts/verify-improvement-loop.mjs"
@@ -11338,7 +11341,7 @@
       "lines": [
         96
       ],
-      "consumerCount": 142,
+      "consumerCount": 143,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -11473,6 +11476,7 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-live-intake-identity.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
         "scripts/ui-static-audit.mjs",
         "scripts/verify-improvement-loop.mjs"
@@ -11535,7 +11539,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 170,
+      "consumerCount": 171,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -11670,6 +11674,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-live-intake-identity.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
         "scripts/ui-static-audit.mjs",
         "scripts/verify-improvement-loop.mjs"
@@ -12655,7 +12660,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 151,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -12776,6 +12781,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -15004,7 +15010,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 119,
+      "consumerCount": 120,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -15117,6 +15123,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -15853,7 +15860,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 553,
+      "consumerCount": 554,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17098,7 +17105,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 437,
+      "consumerCount": 439,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -18262,7 +18269,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 149,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -18387,6 +18394,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-unified-checkout-migration.sh",
@@ -18768,7 +18776,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 422,
+      "consumerCount": 424,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -20920,7 +20928,7 @@
       "lines": [
         77
       ],
-      "consumerCount": 260,
+      "consumerCount": 262,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -21106,12 +21114,14 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
         "scripts/test-event-research-ingestion-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-provider-identity.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
@@ -21578,7 +21588,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 422,
+      "consumerCount": 424,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -24994,7 +25004,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 414,
+      "consumerCount": 416,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -28135,7 +28145,7 @@
       "lines": [
         49
       ],
-      "consumerCount": 150,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -28256,6 +28266,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -31658,7 +31669,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 574,
+      "consumerCount": 576,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -32077,7 +32088,7 @@
       "lines": [
         206
       ],
-      "consumerCount": 151,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -32206,6 +32217,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -35904,7 +35916,7 @@
         108,
         110
       ],
-      "consumerCount": 174,
+      "consumerCount": 175,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -35946,6 +35958,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -36104,7 +36117,7 @@
       "lines": [
         108
       ],
-      "consumerCount": 249,
+      "consumerCount": 250,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -36277,6 +36290,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh",
@@ -36334,7 +36348,7 @@
         108,
         110
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -38843,7 +38857,7 @@
       "lines": [
         388
       ],
-      "consumerCount": 704,
+      "consumerCount": 706,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -39586,7 +39600,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 574,
+      "consumerCount": 576,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -40748,7 +40762,7 @@
       "lines": [
         212
       ],
-      "consumerCount": 48,
+      "consumerCount": 49,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -40773,6 +40787,7 @@
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/TrialLessonsPage.tsx",
         "tdf-hq-ui/src/pages/internAuditPlanLogic.test.ts",
@@ -41358,7 +41373,7 @@
       "lines": [
         58
       ],
-      "consumerCount": 136,
+      "consumerCount": 138,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -41478,6 +41493,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -42519,7 +42535,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 52,
+      "consumerCount": 53,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -42573,6 +42589,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -42621,7 +42638,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 27,
+      "consumerCount": 28,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
@@ -42653,6 +42670,7 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/build-catalog-decisions.mjs",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh"
@@ -42706,7 +42724,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 55,
+      "consumerCount": 56,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -42762,6 +42780,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/identity-reconciliation.mjs",
         "scripts/lib/identity-inventory.sql",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -42819,7 +42838,7 @@
       "lines": [
         133
       ],
-      "consumerCount": 55,
+      "consumerCount": 56,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -42875,6 +42894,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/identity-reconciliation.mjs",
         "scripts/lib/identity-inventory.sql",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -43032,7 +43052,7 @@
       "lines": [
         152
       ],
-      "consumerCount": 32,
+      "consumerCount": 33,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime_rollback.sql",
@@ -43067,6 +43087,7 @@
       ],
       "automationConsumers": [
         "scripts/build-catalog-decisions.mjs",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -43150,7 +43171,7 @@
       "lines": [
         1237
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -43244,6 +43265,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -43302,7 +43324,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 148,
+      "consumerCount": 150,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -43428,6 +43450,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -43469,7 +43492,7 @@
       "domain": "payments-finance",
       "kind": "literal-union",
       "name": "MarketplacePaymentMethod",
-      "line": 180,
+      "line": 181,
       "values": [
         "stripe",
         "contact",
@@ -43479,7 +43502,7 @@
       "valueCount": 4,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        180
+        181
       ],
       "consumerCount": 78,
       "backendConsumers": [
@@ -43601,7 +43624,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "method",
-      "line": 183,
+      "line": 184,
       "values": [
         "stripe",
         "card",
@@ -43611,10 +43634,10 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        183,
-        198
+        184,
+        199
       ],
-      "consumerCount": 190,
+      "consumerCount": 191,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -43836,7 +43859,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "object-registry",
       "name": "DEFAULT_MARKETPLACE_VIEW_STATE",
-      "line": 242,
+      "line": 243,
       "values": [
         "search",
         "category",
@@ -43848,7 +43871,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        242
+        243
       ],
       "consumerCount": 42,
       "backendConsumers": [
@@ -43928,7 +43951,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "sort",
-      "line": 1034,
+      "line": 1035,
       "values": [
         "relevance",
         "price-asc",
@@ -43938,7 +43961,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1034
+        1035
       ],
       "consumerCount": 235,
       "backendConsumers": [
@@ -44165,7 +44188,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 1749,
+      "line": 1750,
       "values": [
         "all",
         "relevance",
@@ -44179,7 +44202,7 @@
       "valueCount": 8,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        1749
+        1750
       ],
       "consumerCount": 8,
       "backendConsumers": [
@@ -44453,7 +44476,7 @@
       "lines": [
         137
       ],
-      "consumerCount": 152,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -44580,6 +44603,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
@@ -45050,7 +45074,7 @@
         100,
         109
       ],
-      "consumerCount": 279,
+      "consumerCount": 280,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -45234,13 +45258,13 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-notification-alert-context.mjs",
         "scripts/test-notification-navigation-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-phase0-migration.sh",
         "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/test-verified-experience-reviews-migration.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/test-verified-experience-reviews-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/cms.test.ts",
@@ -46881,7 +46905,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 574,
+      "consumerCount": 576,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -47176,7 +47200,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 574,
+      "consumerCount": 576,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -47470,7 +47494,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 119,
+      "consumerCount": 120,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -47583,6 +47607,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -47858,7 +47883,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 709,
+      "consumerCount": 711,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -48453,7 +48478,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 574,
+      "consumerCount": 576,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -51744,7 +51769,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 422,
+      "consumerCount": 424,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -53261,7 +53286,7 @@
       "lines": [
         26
       ],
-      "consumerCount": 38,
+      "consumerCount": 39,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_dry_run.sql",
@@ -53283,6 +53308,7 @@
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
         "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
@@ -56576,7 +56602,7 @@
       "lines": [
         88
       ],
-      "consumerCount": 273,
+      "consumerCount": 274,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -57038,7 +57064,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 143,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57175,6 +57201,7 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-live-intake-identity.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
         "scripts/ui-static-audit.mjs",
         "scripts/verify-improvement-loop.mjs"
@@ -57432,7 +57459,7 @@
         1182,
         1284
       ],
-      "consumerCount": 194,
+      "consumerCount": 195,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57591,6 +57618,7 @@
         "scripts/test-event-research-ingestion-migration.sh",
         "scripts/test-feature-migrations.sh",
         "scripts/test-live-intake-identity.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
@@ -57598,8 +57626,7 @@
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-phase0-migration.sh",
         "scripts/test-social-event-optional-end-migration.sh",
-        "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/test-unified-checkout-migration.sh"
+        "scripts/test-studio-internship-audit-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/deploy-stripe-ticketing.sh",
@@ -57892,7 +57919,7 @@
       "lines": [
         5584
       ],
-      "consumerCount": 235,
+      "consumerCount": 236,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58060,13 +58087,13 @@
         "scripts/test-event-research-ingestion-migration.sh",
         "scripts/test-feature-migrations.sh",
         "scripts/test-live-intake-identity.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh",
-        "scripts/test-provider-event-operations-migration.sh"
+        "scripts/test-music-directory-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/deploy-stripe-ticketing.sh",
@@ -58350,7 +58377,7 @@
       "lines": [
         7693
       ],
-      "consumerCount": 112,
+      "consumerCount": 113,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
@@ -58609,7 +58636,7 @@
       "lines": [
         8036
       ],
-      "consumerCount": 95,
+      "consumerCount": 96,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -58656,6 +58683,7 @@
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -58765,7 +58793,7 @@
       "lines": [
         8091
       ],
-      "consumerCount": 150,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -58894,6 +58922,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
@@ -58954,7 +58983,7 @@
       "lines": [
         8178
       ],
-      "consumerCount": 125,
+      "consumerCount": 127,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -59070,6 +59099,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -59259,7 +59289,7 @@
         8298,
         8435
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
@@ -59368,6 +59398,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -59711,7 +59742,7 @@
       "lines": [
         8764
       ],
-      "consumerCount": 55,
+      "consumerCount": 56,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -59768,6 +59799,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -59825,7 +59857,7 @@
       "lines": [
         8779
       ],
-      "consumerCount": 51,
+      "consumerCount": 52,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql",
@@ -59877,6 +59909,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -60062,7 +60095,7 @@
       "lines": [
         8922
       ],
-      "consumerCount": 55,
+      "consumerCount": 56,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -60119,6 +60152,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -60181,7 +60215,7 @@
       "lines": [
         8934
       ],
-      "consumerCount": 57,
+      "consumerCount": 58,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -60239,6 +60273,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/identity-reconciliation.mjs",
         "scripts/lib/identity-inventory.sql",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -60386,7 +60421,7 @@
       "lines": [
         10117
       ],
-      "consumerCount": 702,
+      "consumerCount": 704,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -61201,7 +61236,7 @@
       "lines": [
         10500
       ],
-      "consumerCount": 703,
+      "consumerCount": 705,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -61554,7 +61589,7 @@
       "lines": [
         11454
       ],
-      "consumerCount": 307,
+      "consumerCount": 308,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -61746,11 +61781,11 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-notification-alert-context.mjs",
         "scripts/test-notification-navigation-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
-        "scripts/test-service-storefront-phase0-migration.sh",
-        "scripts/test-studio-internship-audit-migration.sh"
+        "scripts/test-service-storefront-phase0-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/cms.test.ts",
@@ -61807,7 +61842,7 @@
       "lines": [
         11469
       ],
-      "consumerCount": 282,
+      "consumerCount": 283,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -61991,13 +62026,13 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-notification-alert-context.mjs",
         "scripts/test-notification-navigation-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-phase0-migration.sh",
         "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/test-verified-experience-reviews-migration.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/test-verified-experience-reviews-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/cms.test.ts",
@@ -62053,7 +62088,7 @@
       "lines": [
         11501
       ],
-      "consumerCount": 288,
+      "consumerCount": 289,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -62240,12 +62275,12 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-notification-alert-context.mjs",
         "scripts/test-notification-navigation-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-phase0-migration.sh",
-        "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/test-verified-experience-reviews-migration.sh"
+        "scripts/test-studio-internship-audit-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/cms.test.ts",
@@ -62449,7 +62484,7 @@
       "lines": [
         12380
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -62866,7 +62901,7 @@
         12929,
         12981
       ],
-      "consumerCount": 702,
+      "consumerCount": 704,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -63163,7 +63198,7 @@
       "lines": [
         12953
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
@@ -63272,6 +63307,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -63738,7 +63774,7 @@
       "lines": [
         13843
       ],
-      "consumerCount": 151,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -63860,6 +63896,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -63915,7 +63952,7 @@
       "lines": [
         13963
       ],
-      "consumerCount": 192,
+      "consumerCount": 194,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -64068,6 +64105,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh",
@@ -65101,7 +65139,7 @@
       "lines": [
         85
       ],
-      "consumerCount": 59,
+      "consumerCount": 60,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -65165,6 +65203,7 @@
         "scripts/lib/production-release.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh"
@@ -65415,7 +65454,7 @@
       "lines": [
         58
       ],
-      "consumerCount": 149,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -65541,6 +65580,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-unified-checkout-migration.sh",
@@ -66197,7 +66237,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 120,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -66312,6 +66352,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -66473,7 +66514,7 @@
       "lines": [
         43
       ],
-      "consumerCount": 57,
+      "consumerCount": 58,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -66533,6 +66574,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-directory-event-visibility-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -68136,7 +68178,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 123,
+      "consumerCount": 124,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -68300,7 +68342,7 @@
       "lines": [
         137
       ],
-      "consumerCount": 140,
+      "consumerCount": 142,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -68422,6 +68464,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -68725,7 +68768,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 140,
+      "consumerCount": 142,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -68847,6 +68890,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -69103,7 +69147,7 @@
       "lines": [
         21
       ],
-      "consumerCount": 151,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -69226,6 +69270,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -70308,7 +70353,7 @@
       "lines": [
         364
       ],
-      "consumerCount": 81,
+      "consumerCount": 82,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -70346,6 +70391,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
       ],
@@ -70438,7 +70484,7 @@
       "lines": [
         390
       ],
-      "consumerCount": 151,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -70561,6 +70607,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -71384,7 +71431,7 @@
         164,
         288
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -71474,6 +71521,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -71768,7 +71816,7 @@
       "lines": [
         181
       ],
-      "consumerCount": 36,
+      "consumerCount": 37,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql",
@@ -71804,6 +71852,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -71850,7 +71899,7 @@
       "lines": [
         182
       ],
-      "consumerCount": 109,
+      "consumerCount": 110,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -71897,6 +71946,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -72015,7 +72065,7 @@
       "lines": [
         197
       ],
-      "consumerCount": 109,
+      "consumerCount": 110,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -72062,6 +72112,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -72620,7 +72671,7 @@
         277,
         278
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -72782,7 +72833,7 @@
       "lines": [
         279
       ],
-      "consumerCount": 116,
+      "consumerCount": 117,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -72832,8 +72883,8 @@
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-        "tdf-hq/test/integration/artist_self_service_fixture.sql"
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
@@ -72992,7 +73043,7 @@
       "lines": [
         290
       ],
-      "consumerCount": 141,
+      "consumerCount": 142,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -73115,6 +73166,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
@@ -73163,7 +73215,7 @@
       "lines": [
         301
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -73286,6 +73338,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
@@ -73337,7 +73390,7 @@
       "lines": [
         19
       ],
-      "consumerCount": 140,
+      "consumerCount": 142,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -73459,6 +73512,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -73518,7 +73572,7 @@
       "lines": [
         25
       ],
-      "consumerCount": 137,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -73640,6 +73694,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -73840,7 +73895,7 @@
       "lines": [
         53
       ],
-      "consumerCount": 101,
+      "consumerCount": 102,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -73931,6 +73986,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -73983,7 +74039,7 @@
         126,
         142
       ],
-      "consumerCount": 87,
+      "consumerCount": 88,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -74067,6 +74123,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -74120,7 +74177,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -74202,6 +74259,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -74258,7 +74316,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 64,
+      "consumerCount": 65,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -74323,6 +74381,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -74371,7 +74430,7 @@
       "lines": [
         110
       ],
-      "consumerCount": 104,
+      "consumerCount": 106,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -74459,6 +74518,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -74638,7 +74698,7 @@
       "lines": [
         165
       ],
-      "consumerCount": 150,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -74768,6 +74828,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
@@ -74895,7 +74956,7 @@
       "lines": [
         210
       ],
-      "consumerCount": 151,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -75020,9 +75081,11 @@
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
@@ -75465,7 +75528,7 @@
       "lines": [
         345
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -75555,6 +75618,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -75723,7 +75787,7 @@
       "lines": [
         43
       ],
-      "consumerCount": 140,
+      "consumerCount": 142,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -75845,6 +75909,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -75897,7 +75962,7 @@
       "lines": [
         49
       ],
-      "consumerCount": 137,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -76019,6 +76084,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -76612,7 +76678,7 @@
       "lines": [
         89
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -76694,6 +76760,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -76748,7 +76815,7 @@
       "lines": [
         98
       ],
-      "consumerCount": 87,
+      "consumerCount": 88,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -76832,6 +76899,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -77759,7 +77827,7 @@
         398,
         406
       ],
-      "consumerCount": 141,
+      "consumerCount": 142,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -78027,7 +78095,7 @@
       "lines": [
         428
       ],
-      "consumerCount": 146,
+      "consumerCount": 148,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -78153,6 +78221,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -78393,7 +78462,7 @@
       "lines": [
         551
       ],
-      "consumerCount": 106,
+      "consumerCount": 107,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -78444,7 +78513,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
         "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
-        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
@@ -78629,7 +78698,7 @@
       "lines": [
         565
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -78743,6 +78812,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -78839,7 +78909,7 @@
       "lines": [
         621
       ],
-      "consumerCount": 140,
+      "consumerCount": 141,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
@@ -79154,7 +79224,7 @@
       "lines": [
         690
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -79192,6 +79262,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
       ],
@@ -79292,7 +79363,7 @@
       "lines": [
         710
       ],
-      "consumerCount": 123,
+      "consumerCount": 124,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -80100,7 +80171,7 @@
       "lines": [
         817
       ],
-      "consumerCount": 151,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -80229,6 +80300,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -80377,7 +80449,7 @@
       "lines": [
         854
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -81148,7 +81220,7 @@
       "lines": [
         921
       ],
-      "consumerCount": 34,
+      "consumerCount": 35,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_rollback.sql",
@@ -81163,6 +81235,7 @@
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/MerchReputation.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
       "webConsumers": [
@@ -81543,7 +81616,7 @@
       "lines": [
         70
       ],
-      "consumerCount": 28,
+      "consumerCount": 29,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
@@ -81576,6 +81649,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh"
@@ -81631,7 +81705,7 @@
       "lines": [
         71
       ],
-      "consumerCount": 56,
+      "consumerCount": 57,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -81688,6 +81762,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/identity-reconciliation.mjs",
         "scripts/lib/identity-inventory.sql",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -81741,7 +81816,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 48,
+      "consumerCount": 49,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql",
@@ -81790,6 +81865,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -82009,7 +82085,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 28,
+      "consumerCount": 29,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
@@ -82042,6 +82118,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh"
@@ -82098,7 +82175,7 @@
         44,
         49
       ],
-      "consumerCount": 53,
+      "consumerCount": 54,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -82153,6 +82230,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -83074,7 +83152,7 @@
       "lines": [
         29
       ],
-      "consumerCount": 123,
+      "consumerCount": 124,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -83190,6 +83268,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -83247,7 +83326,7 @@
       "lines": [
         69
       ],
-      "consumerCount": 81,
+      "consumerCount": 82,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -83329,6 +83408,7 @@
         "scripts/operations-load-test.mjs",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-event-operations-foundation-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -83379,7 +83459,7 @@
       "lines": [
         74
       ],
-      "consumerCount": 95,
+      "consumerCount": 96,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -83472,6 +83552,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -83529,7 +83610,7 @@
       "lines": [
         77
       ],
-      "consumerCount": 90,
+      "consumerCount": 91,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -83618,6 +83699,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -83912,7 +83994,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 123,
+      "consumerCount": 124,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -84028,6 +84110,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -84187,7 +84270,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 95,
+      "consumerCount": 96,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -84280,6 +84363,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -84339,7 +84423,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 90,
+      "consumerCount": 91,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -84428,6 +84512,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -84727,7 +84812,7 @@
       "lines": [
         31
       ],
-      "consumerCount": 149,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -84855,6 +84940,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -85012,7 +85098,7 @@
       "lines": [
         305
       ],
-      "consumerCount": 43,
+      "consumerCount": 44,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -85060,6 +85146,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh"
@@ -85102,7 +85189,7 @@
       "lines": [
         310
       ],
-      "consumerCount": 120,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -85824,7 +85911,7 @@
       "lines": [
         20
       ],
-      "consumerCount": 123,
+      "consumerCount": 124,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -85940,6 +86027,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -86092,7 +86180,7 @@
       "lines": [
         64
       ],
-      "consumerCount": 95,
+      "consumerCount": 96,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -86185,6 +86273,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -86862,7 +86951,7 @@
         32,
         159
       ],
-      "consumerCount": 40,
+      "consumerCount": 41,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -86883,6 +86972,7 @@
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/TrialLessonsPage.tsx",
         "tdf-hq-ui/src/pages/internAuditPlanLogic.test.ts",
@@ -88058,7 +88148,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 103,
+      "consumerCount": 104,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -88105,6 +88195,7 @@
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/ServerFanClubSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
@@ -88352,7 +88443,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 46,
+      "consumerCount": 47,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -88373,6 +88464,7 @@
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
@@ -89286,7 +89378,7 @@
       "lines": [
         104
       ],
-      "consumerCount": 65,
+      "consumerCount": 66,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -89321,6 +89413,7 @@
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
@@ -89404,7 +89497,7 @@
       "lines": [
         116
       ],
-      "consumerCount": 37,
+      "consumerCount": 38,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
@@ -89426,6 +89519,7 @@
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql"
@@ -90004,7 +90098,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 149,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -90133,6 +90227,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -90650,7 +90745,7 @@
       "lines": [
         205
       ],
-      "consumerCount": 112,
+      "consumerCount": 113,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
@@ -90701,7 +90796,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-        "tdf-hq/test/TDF/Server/EventResearchSpec.hs"
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
@@ -91189,7 +91284,7 @@
       "lines": [
         285
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -91227,6 +91322,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
       ],
@@ -91897,7 +91993,7 @@
       "lines": [
         378
       ],
-      "consumerCount": 164,
+      "consumerCount": 166,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -92032,6 +92128,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
@@ -92154,7 +92251,7 @@
       "lines": [
         380
       ],
-      "consumerCount": 144,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -92285,6 +92382,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -92928,7 +93026,7 @@
       "lines": [
         491
       ],
-      "consumerCount": 95,
+      "consumerCount": 96,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -92974,6 +93072,7 @@
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -93081,7 +93180,7 @@
       "lines": [
         495
       ],
-      "consumerCount": 93,
+      "consumerCount": 94,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -93127,6 +93226,7 @@
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -93232,7 +93332,7 @@
       "lines": [
         542
       ],
-      "consumerCount": 125,
+      "consumerCount": 127,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -93349,6 +93449,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -93399,7 +93500,7 @@
       "lines": [
         543
       ],
-      "consumerCount": 116,
+      "consumerCount": 117,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -93511,6 +93612,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -93558,7 +93660,7 @@
       "lines": [
         606
       ],
-      "consumerCount": 135,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -93599,6 +93701,7 @@
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -95382,7 +95485,7 @@
       "lines": [
         483
       ],
-      "consumerCount": 151,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -95510,6 +95613,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
@@ -95688,7 +95792,7 @@
       "lines": [
         551
       ],
-      "consumerCount": 135,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -95729,6 +95833,7 @@
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -95999,7 +96104,7 @@
       "lines": [
         790
       ],
-      "consumerCount": 32,
+      "consumerCount": 33,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
@@ -96034,6 +96139,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -97039,7 +97145,7 @@
       "lines": [
         1190
       ],
-      "consumerCount": 58,
+      "consumerCount": 59,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -97098,6 +97204,7 @@
         "scripts/social/generate-relationship-read-cases.py",
         "scripts/social/mutation-tests.sql",
         "scripts/social/test-postgres.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
@@ -97344,7 +97451,7 @@
       "lines": [
         1228
       ],
-      "consumerCount": 63,
+      "consumerCount": 64,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -97408,6 +97515,7 @@
         "scripts/social/generate-relationship-read-cases.py",
         "scripts/social/mutation-tests.sql",
         "scripts/social/test-postgres.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
@@ -97793,7 +97901,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -97875,6 +97983,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -97936,7 +98045,7 @@
       "lines": [
         79
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -98018,6 +98127,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -98083,7 +98193,7 @@
       "lines": [
         12
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -98165,6 +98275,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -98226,7 +98337,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -98308,6 +98419,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -98369,7 +98481,7 @@
         90,
         242
       ],
-      "consumerCount": 82,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -98451,6 +98563,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -98509,7 +98622,7 @@
         345,
         362
       ],
-      "consumerCount": 87,
+      "consumerCount": 88,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -98593,6 +98706,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -98795,7 +98909,7 @@
       "lines": [
         35
       ],
-      "consumerCount": 151,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -98930,6 +99044,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-notification-alert-context.mjs",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
@@ -99651,7 +99766,7 @@
       "lines": [
         145
       ],
-      "consumerCount": 45,
+      "consumerCount": 46,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
@@ -99677,6 +99792,7 @@
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql"
@@ -99744,7 +99860,7 @@
       "lines": [
         160
       ],
-      "consumerCount": 37,
+      "consumerCount": 38,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
@@ -99766,6 +99882,7 @@
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql"
@@ -100451,7 +100568,7 @@
       "lines": [
         299
       ],
-      "consumerCount": 136,
+      "consumerCount": 137,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -100574,6 +100691,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -100619,7 +100737,7 @@
       "lines": [
         313
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -100740,6 +100858,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -101571,7 +101690,7 @@
         16,
         76
       ],
-      "consumerCount": 167,
+      "consumerCount": 168,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -101706,6 +101825,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
@@ -102023,7 +102143,7 @@
       "lines": [
         261
       ],
-      "consumerCount": 108,
+      "consumerCount": 109,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -102070,6 +102190,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -102182,7 +102303,7 @@
       "lines": [
         282
       ],
-      "consumerCount": 109,
+      "consumerCount": 110,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -102229,6 +102350,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -104293,7 +104415,7 @@
       "lines": [
         131
       ],
-      "consumerCount": 92,
+      "consumerCount": 93,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -104339,6 +104461,7 @@
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -105205,7 +105328,7 @@
       "lines": [
         29
       ],
-      "consumerCount": 49,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
@@ -105259,6 +105382,7 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-phase0-migration.sh"
@@ -105304,7 +105428,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 23,
+      "consumerCount": 24,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -105334,7 +105458,9 @@
         "tdf-mobile/src/lib/serviceCatalogSnapshot.test.ts",
         "tdf-mobile/src/lib/serviceCatalogSnapshot.ts"
       ],
-      "automationConsumers": [],
+      "automationConsumers": [
+        "scripts/test-public-booking-http-concurrency.sh"
+      ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/services.test.ts",
@@ -107089,7 +107215,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16737,
+      "line": 16724,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -107097,7 +107223,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16737
+        16724
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -107137,7 +107263,7 @@
       "lines": [
         1189
       ],
-      "consumerCount": 94,
+      "consumerCount": 95,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -107183,6 +107309,7 @@
         "tdf-hq/src/TDF/ServerInternships.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/artist_self_service_fixture.sql"
@@ -107292,7 +107419,7 @@
       "lines": [
         1229
       ],
-      "consumerCount": 149,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -107421,6 +107548,7 @@
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
@@ -107481,7 +107609,7 @@
       "lines": [
         1713
       ],
-      "consumerCount": 124,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -107597,6 +107725,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -107685,7 +107814,7 @@
       "lines": [
         1021
       ],
-      "consumerCount": 46,
+      "consumerCount": 47,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_registration_stripe_pi.sql",
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
@@ -107731,6 +107860,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
@@ -109236,7 +109366,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 136,
+      "consumerCount": 138,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -109357,6 +109487,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -109761,7 +109892,7 @@
       "lines": [
         212
       ],
-      "consumerCount": 151,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -109884,6 +110015,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -110048,7 +110180,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 690,
+      "line": 691,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -110060,7 +110192,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        690
+        691
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -110450,7 +110582,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 187,
+      "consumerCount": 189,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -110594,6 +110726,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-stripe-integration.sh",
@@ -110791,7 +110924,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 322,
+      "consumerCount": 325,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -110846,6 +110979,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/.env.example",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
@@ -110893,8 +111027,7 @@
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.sort.test.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx"
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -111090,7 +111223,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 574,
+      "consumerCount": 576,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -112043,7 +112176,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 151,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -112164,6 +112297,7 @@
         "scripts/test-marketplace-operations-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-versioned-revenue-products-migration.sh"
@@ -112743,7 +112877,7 @@
       "lines": [
         1178
       ],
-      "consumerCount": 702,
+      "consumerCount": 704,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -118596,7 +118730,7 @@
       "lines": [
         391
       ],
-      "consumerCount": 273,
+      "consumerCount": 274,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",

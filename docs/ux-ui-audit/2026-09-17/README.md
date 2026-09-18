@@ -5,50 +5,52 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
-## Checkpoint verificado — 2026-09-18 16:34 UTC
+## Checkpoint verificado — 2026-09-18 17:24 UTC
 
-Este bloque sustituye los estados de los checkpoints históricos inferiores.
-#449 está fusionado como `e1a825bda26dbb16b1c732e551cc4880d5626943` desde15:42UTC;
-435 y442–448 quedaron incorporados conservando sus commits. El backend terminó
-el release guardado a16:02:10UTC, sin rollback: ambas máquinas saludables,110
-migraciones, tablas de calendario presentes y lease liberado. Imagen inmutable
-`sha256:637b749539975072aa78efd2180ce42438e81dc95f768f1c6b9e3557d3ed3a3f`.
-Web pública e1 coincide con Cloudflare `061e1fe4-97d8-431c-aeb9-24b90c53a98b`.
-[Recibo de release, snapshot y recuperación compatible](evidence/release-e1-verification.json).
-Se verificaron lectura pública y login/sesión/onboarding con la cuenta App Review
-legítima; Customer/Fan recibe403 al calendario administrativo. No se afirma un
-consentimiento Google administrativo ni revocación real. Las latencias son muestras
-de laboratorio individuales, no percentiles de campo.
+Este bloque sustituye estados históricos inferiores. La API sigue en
+`e1a825bda26dbb16b1c732e551cc4880d5626943`, release guardado completado16:02UTC
+con110 migraciones, dos máquinas saludables y lease liberado. Recuperación:
+imagen compatible5c11577a5 verificada, snapshotvs_LRqNAqabQP5Upg7NwLqaVPX;
+no restaurar binarios de autenticación antiguos ni borrar migraciones.
+[Recibo de backend](evidence/release-e1-verification.json). No desplegar el
+intermedio de otro operador436; su integración final mantiene coordinación propia.
 
-La observación posterior confirmó un pendiente de UX007: Marketplace aún cae
-cuando se bloquea almacenamiento. [La continuación](marketplace-storage.md) pasa
-23 pruebas,30 casos distintos en tres motores y el conjunto formal, pero todavía
-requiere revisión independiente, CI, merge y despliegue. No reemplaza las demás
-entradas de007 ya publicadas ni relaja la idempotencia de pedidos.
+#450 ya está fusionado como `3f0a56c0ded55fa9525dc80c895505ffcb069449`.
+Cloudflare8f01e9e1 y web pública coinciden; seis casos reales en tres motores
+verifican Marketplace con almacenamiento denegado, búsqueda y recarga, sin errores
+ni infracciones axe. [Evidencia y límites](evidence/marketplace-storage-deployment.json).
+UX007 queda desplegado; no se infiere cobertura completa de todos los recorridos.
 
-El usuario entregó la coordinación de tiendas. Apple1.0.1 fue cambiado y leído
-como `MANUAL`/`WAITING_FOR_REVIEW` a15:51UTC; una aprobación no publicará sola la
-versión antigua. Continúa pendiente el iPhone físico para Google OAuth. Play
-muestra Alpha10 disponible a testers; a13:45 seguía1de12 inscritos para14días.
-No se repiten las80 invitaciones aceptadas previamente ni se inventa inscripción.
+**GitHub Actions gratuito ya produce iOS firmado.** Mobile105–108 fusionados;
+run35370877715 pasó y produjo1.0.1(23), source751d261fd, SDK26.2,
+SHA2566d5b3c3a2b658314b7c04db1719a522f5e54d964d0029444471ff4754fad9cbe.
+Apple validó el archivo sin errores17:18UTC; todavía no está subido a TestFlight.
+[Recibo](evidence/ios-github23-artifact.json). Se conservaron los intentos fallidos
+por entorno Jest y serialización CocoaPods/JSON; no se relajó Podfile.lock.
+No se contrató Starter; el usuario eligió GitHub antes de pagar. Expo confirma
+Free15/15 en ambos sistemas; Android firmado también se prepara en GitHub estándar.
 
-El usuario eligió GitHub Actions gratuito y sustituyó Starter antes de pagar.
-No se contrató plan. Mobile#105 está fusionado en `a72ee5be1e66bad9d1a23e2d67a2e693ff3ce613`:
-runner estándar macos-15/Xcode26.2, certificados existentes cifrados y environment
-restringido a main, IPA con recibo y sin publicación automática. Primer run
-35368454882: Xcode y dependencias pasan;1de507 pruebas falla por variables de
-producción capturadas en el fixture Jest. #106 `7e709dc` aísla ese proceso;
-cuatro pruebas afectadas locales y CI pasan. Archivo firmado aún pendiente.
-Android15 `96622c14-8ac2-4780-aa25-903ef788ae88` y QA
-`46b1cca1-f38e-4105-b9c4-68947bcdd52d` siguen construyéndose. QA4602 usó un perfil
-incorrecto con API de producción: queda excluido de la aceptación aislada; el
-Samsung está conectado y sólo se usará `com.tdf.records.uxaudit`.
+El Samsung físico confirmó seguir a un artista, persistencia y sesión al reabrir
+el APK aislado correcto46b1; [recibo](evidence/android-physical-46b1.json).
+Android15/90ca ya fue subido y validado en Play; Alpha indica **in review**,
+no disponibilidad aún. [Estado](evidence/android15-review-state.json). Las80
+invitaciones previas no se repiten; sigue pendiente el requisito humano12testers/14días.
+Apple1.0.1 quedó MANUAL/WAITING_FOR_REVIEW: la versión antigua no se publica sola.
+El Google OAuth físico en iPhone continúa sin ejecutar por falta de dispositivo.
 
-Siguientes acciones: fusionar106 tras refrescar gates y ejecutar iOS23; verificar
-los artefactos Android antes de instalar/subir; publicar la continuación007 para
-revisión; mantener la cobertura inicial faltante y la publicación móvil abiertas.
-No actualizar el gitlink90ca sólo para obtener archivos de CI: el producto de105/106
-es idéntico; registrar el SHA exacto del artefacto nuevo cuando exista.
+La ampliación de texto real al200% confirmó etiquetas nativas truncadas (UX033).
+Mobile109 corrige altura/wrapping sin limitar la preferencia;508pruebas/releasecheck
+y CI pasan, merge3647203bb20198ce7727b928492963f2ece20cd1. El prototipo nativo
+firmado muestra etiquetas completas; se restauró font_scale1.0. Ese prototipo no
+califica autenticación ni distribución. El Samsung se desconectó después. iOS24
+run35373472132 está construyéndose; Android sucesor pendiente. Parent prepara pin364
+con contratos generados idénticos a90ca, todavía sin merge del nuevo checkpoint.
+
+Siguiente acción: verificar artefacto24 y distribución de prueba, finalizar el
+build Android gratuito, publicar el pin/checkpoint y completar cobertura inicial
+pendiente (recursos poblados/roles/estados, lectores, dispositivos y rendimiento).
+La auditoría conserva69hallazgos y412filas de cobertura; inventario no equivale
+a verificación. Los bloqueos físicos y de tiendas no prueban finalización.
 
 ## Integración de release — 2026-09-18 13:31 UTC
 

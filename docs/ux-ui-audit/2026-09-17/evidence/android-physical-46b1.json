@@ -1,0 +1,50 @@
+{
+  "observedAt": "2026-09-18T16:44:44.521695+00:00",
+  "device": "Samsung SM-S928B Android16 physical USB",
+  "package": "com.tdf.records.uxaudit",
+  "artifact": {
+    "id": "46b1cca1-f38e-4105-b9c4-68947bcdd52d",
+    "sourceSHA": "6f8a998ed0fbc997e84770fea3d8e0c9edb3fe8e",
+    "bytes": 175818010,
+    "sha256": "2d8a2dde58150f340e3a0a43c53c23d7db335348163cf847d176b915521cf8cd",
+    "embeddedIsolatedAPI": true,
+    "hermesIsolatedAPI": true,
+    "package": "com.tdf.records.uxaudit"
+  },
+  "steps": [
+    "actual native login with isolated synthetic C",
+    "dismiss Samsung Pass without saving",
+    "follow canonical artist",
+    "stop and cold reopen",
+    "persisted session and follow visible"
+  ],
+  "apiReadback": [
+    {
+      "path": "/session",
+      "status": 200
+    },
+    {
+      "path": "/fans/me/follows",
+      "status": 200,
+      "followCount": 1
+    },
+    {
+      "path": "/session/onboarding",
+      "status": 200
+    }
+  ],
+  "personalAppUnchanged": true,
+  "personalPackageMetadata": [
+    "versionCode=4 minSdk=24 targetSdk=36",
+    "versionName=1.0.1",
+    "lastUpdateTime=2026-06-18 14:38:15",
+    "firstInstallTime=2026-06-18 14:38:15"
+  ],
+  "maestroExit": 0,
+  "limits": [
+    "First attempt blocked by system Samsung Pass dialog; next selector used iOS tab description and was corrected to actual Android labels.",
+    "No Google OAuth qualification for unregistered QA package",
+    "No physical iOS verification",
+    "No Play production availability claim"
+  ]
+}
