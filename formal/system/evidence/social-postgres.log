@@ -1,0 +1,215 @@
+aecfa5d0b0aa127f4bc0292bbddbda8df658c2bb5cf462df6fbc56cb639ad3f9 tdf-hq/sql/2026-09-14_social_v2_foundation.sql
+ea1d941af3fc9fb92f419f52214a632618858c6949e86d1006c4b829944d0b0a tdf-hq/sql/2026-09-14_social_v2_pause.sql
+e5bb2face01092b2081c98f5c0b6c295f5a05c09615a48a3fd43f868a1bad041 tdf-hq/sql/2026-09-14_social_v2_read_models.sql
+faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52 tdf-hq/sql/2026-09-15_social_v2_chat_api.sql
+8f86bc3c25209d6f56987dd3f84123e2be4fd78e3a9ee9876075ca1077a1864c tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql
+4231193428a903b7086074c756527ae639e70a3d1ea691aaabeb6e9b778efc8f tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql
+3513ce902cb3200f1062d1c5fbf83074e689db77032b00ad5adfa301e34b88a7 tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql
+57f22962516b1a14cd43e2da231380e1df7c20a89ee1760383a0d3d960851f54 tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql
+b2730a6269ade87f9b2368e9e14ee8f9ae11ee10755444af63ae37e24f1cee2f tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+INSERT 0 0
+NOTICE:  relation "social_v2_preference" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_pair" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_command" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+UPDATE 1
+DO
+DO
+BEGIN
+UPDATE 1
+COMMIT
+DO
+BEGIN
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+INSERT 0 0
+NOTICE:  relation "social_v2_preference" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_pair" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_command" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+BEGIN
+NOTICE:  column "publication_position" of relation "social_v2_runtime" already exists, skipping
+ALTER TABLE
+NOTICE:  relation "social_v2_publication" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_club_artist" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_officer_actor" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_visible_post_club" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+DO
+UPDATE 1
+ social_v2_publish_batch 
+-------------------------
+                       4
+(1 row)
+
+DO
+UPDATE 1
+INSERT 0 1
+ social_v2_publish_batch 
+-------------------------
+                       1
+(1 row)
+
+DO
+DELETE 1
+DO
+DELETE 1
+DO
+INSERT 0 1
+                    social_v2_preferences                    
+-------------------------------------------------------------
+ {"revision": 1, "discoverable": true, "personalized": true}
+(1 row)
+
+DO
+DO
+DO
+                  ?column?                  
+--------------------------------------------
+ PASS: 30 TLC-generated consent transitions
+(1 row)
+
+BEGIN
+INSERT 0 4
+INSERT 0 4
+DO
+ROLLBACK
+                                                  ?column?                                                  
+------------------------------------------------------------------------------------------------------------
+ PASS: directed follows, retries, revocation, 60-command budget, uniqueness, foreign keys, block constraint
+(1 row)
+
+BEGIN
+                 measure                 | violations 
+-----------------------------------------+------------
+ blocked pairs retaining consent/follows |          0
+ closed accounts retaining active edges  |          0
+ orphan relationship endpoints           |          0
+ publication order above counter         |          0
+(4 rows)
+
+ pending_publications 
+----------------------
+                    0
+(1 row)
+
+ connected_pair_stock 
+----------------------
+                    0
+(1 row)
+
+COMMIT
+PASS: feed ordering, eligibility, edits, deletion, backdated publish, revocation, discovery opt-out/exclusions
+PASS: additive reapply, denied defaults, consent, retry, block race, preferences, closure, pause preserves new writes

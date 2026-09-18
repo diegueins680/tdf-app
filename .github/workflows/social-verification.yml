@@ -1,23 +1,10 @@
 name: Social formal and persistence verification
 on:
   pull_request:
-    paths:
-      - 'formal/social/**'
-      - 'scripts/social/**'
-      - 'tdf-hq/sql/*social_v2*'
-      - 'tdf-hq/src/TDF/Social/**'
-      - 'tdf-hq/src/TDF/API/Chat.hs'
-      - 'tdf-hq/src/TDF/API/FanFollowing.hs'
-      - 'tdf-hq/src/TDF/API/SocialProfiles.hs'
-      - 'tdf-hq/src/TDF/API/SocialRelationships.hs'
-      - 'tdf-hq-ui/src/features/social/**'
-      - 'tdf-hq-ui/src/api/socialV2*'
-      - 'tdf-hq-ui/src/pages/SocialPage.tsx'
-      - 'tdf-hq-ui/src/pages/ChatPage*'
-      - 'tdf-hq-ui/src/hooks/useChatUnreadCount.ts'
-      - 'tdf-hq-ui/src/utils/chatReadState*'
-      - 'tdf-hq/docs/openapi/social-v2.yaml'
-      - '.github/workflows/social-verification.yml'
+  push:
+    branches: [main]
+  schedule:
+    - cron: '43 5 * * 1'
   workflow_dispatch:
 permissions:
   contents: read

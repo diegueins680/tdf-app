@@ -30,6 +30,14 @@ successful negative persisted balance. No production financial loss or exploit i
 No schema change, data cleanup, provider activation, real charge/refund or mobile feature is needed
 for these repairs. Additional confirmed defects require a recorded scope addition.
 
+Call-site qualification: `transitionPayment` is called by the implemented
+`PaymentIntentStore.transitionPaymentIntent` adapter, but no current HTTP/worker caller of that
+adapter was discovered. The repaired library is actual repository implementation; it does not
+establish that deployed checkout/provider paths use it. No new adapter activation is introduced.
+D02 also includes the social workflow: its old PR-only path filters missed shared authentication
+and configuration dependencies and provided no main/scheduled revalidation. Both formal workflows
+now use conservative all-change triggers, with a regression requiring those triggers.
+
 ## Authority and provenance
 
 1. Current explicit user instructions govern this audit and its authorized delivery.
@@ -162,3 +170,6 @@ until its correspondence is reviewed. CI runs inventory/admission/SMT and existi
 models on all PRs/main plus weekly; backend CI runs the actual-module oracle and Hspec suite.
 
 See [payment-arithmetic.md](payment-arithmetic.md) for the exact proof boundary and trusted base.
+Sanitized local receipts are under [evidence/](evidence/), each attributed to its analyzed revision
+and source hashes. Hosted integration/release state is tracked in
+[PR #455](https://github.com/diegueins680/tdf-app/pull/455); a local receipt is not a merge or release.

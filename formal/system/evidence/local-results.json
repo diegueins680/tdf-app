@@ -1,0 +1,44 @@
+{
+  "baselineRevision": "2d7b7c7aeef810c81944f0f9417d561dc7df016b",
+  "verifiedImplementationRevision": "1cfd1ba8c4a7e501487e006877a17101c7adb341",
+  "baselineModuleSha256": "acedc79f7c1cc9f7be248b04246eedf17c9e45d73d4f32974164268d24084fb2",
+  "repairedModuleSha256": "f3b3183fc1a089b71c135b5fc6e7ca4ef370e6e42b376230815a82a9ae5b7b03",
+  "commands": [
+    {
+      "command": "stack exec -- runghc -i -i/BASELINE_MODULE_TREE formal/system/evidence/PaymentCounterexample.hs",
+      "result": "completed; printed two negative Right balances and True modular ledger balance",
+      "exitCode": 0
+    },
+    {
+      "command": "cd tdf-hq && stack exec -- runghc -isrc test/PaymentArithmeticProbe.hs",
+      "result": "400 transition and 512 ledger cases passed",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run quality:repo",
+      "result": "passed on integrated checkout; hosted gate also passed at 1cfd1ba8c",
+      "exitCode": 0
+    },
+    {
+      "command": "scripts/social/check*model*.sh (sequential)",
+      "result": "all eight existing runners completed with required named negative controls",
+      "exitCode": 0
+    },
+    {
+      "command": "TDF_SOCIAL_NATIVE=1 bash scripts/social/test-postgres.sh",
+      "result": "actual isolated PostgreSQL fixture passed",
+      "exitCode": 0
+    },
+    {
+      "command": "TLC ConsentTraces + generate-model-cases.py + diff against scripts/social/model-cases.sql",
+      "result": "30 assertions from 32 checked states, byte-identical to executed SQL assertions",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Payment persistence adapter has no discovered current HTTP/worker caller; no live payment outage claim",
+    "Source-derived SMT proves only recognized arithmetic under documented preconditions and trusted translation",
+    "Social database tests are fixture/trace evidence, not unrestricted SQL refinement",
+    "Release/merge and whole-system formal completion remain separate and pending"
+  ]
+}

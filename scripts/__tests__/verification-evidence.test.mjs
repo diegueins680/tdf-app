@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import { classifyExecution } from '../lib/verification-evidence.mjs';
 
 test('success requires completed execution, exact source stability and completion evidence', () => {
@@ -15,4 +16,15 @@ test('success requires completed execution, exact source stability and completio
         if (passes) accepted++;
       }
   assert.equal(accepted, 1);
+});
+
+test('both formal workflows revalidate on PRs, main integration and schedule without path omissions', () => {
+  for (const name of ['event-operations-formal.yml', 'social-verification.yml']) {
+    const source = readFileSync(new URL(`../../.github/workflows/${name}`, import.meta.url), 'utf8');
+    assert.match(source, /^  pull_request:/m);
+    assert.match(source, /^  push:\n    branches: \[main\]/m);
+    assert.match(source, /^  schedule:/m);
+    assert.doesNotMatch(source, /^\s+paths(?:-ignore)?:/m);
+    assert.doesNotMatch(source, /continue-on-error/);
+  }
 });

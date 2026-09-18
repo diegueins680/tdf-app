@@ -5,6 +5,10 @@ Authority: accepted ADR 0101 (verified partial captures/refunds), 0102 (integer 
 Implementation: `tdf-hq/src/TDF/Commerce/StateMachine.hs`; caller:
 `tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs:transitionPaymentIntent`.
 
+Call-site search found no current HTTP handler/worker importing that persistence adapter.
+The claim is about the implemented library/adapter, not active provider-handler arithmetic.
+Production payment path correspondence remains open; this repair does not activate a future path.
+
 ## Counterexample and correction
 
 With `M = 9223372036854775807`, current count 1 and increment M, old capture/refund helpers
