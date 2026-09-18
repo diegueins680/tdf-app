@@ -122,8 +122,8 @@ notifyArtist actor artist now = do
     [PersistInt64 (fromSqlKey actor)] :: SqlPersistT IO [Single Text]
   let name = case rows of [Single value] -> value; _ -> "Un fan"
   insert_ (Notification artist "artist_liked" "Nuevo fan"
-    (name<>" empezó a seguir tu perfil.") (Just "artist")
-    (Just (fromIntegral (fromSqlKey artist))) False now)
+    (name<>" empezó a seguir tu perfil.") (Just "party_profile")
+    (Just (fromIntegral (fromSqlKey actor))) Nothing False now)
 
 -- Called only in the never-activated, no-canonical-state compatibility stage.
 -- Do not enumerate members at all once this side effect is retired.

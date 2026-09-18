@@ -82,6 +82,9 @@ fanEffectsSpec env = before_ reset $ describe "artist-follow production handler,
     storedEdges >>= (`shouldBe` [1,2,3,4])
     [Single body] <- run (rawSql "SELECT body FROM notification" [])
     (body::Text) `shouldBe` "Synthetic 1 empezó a seguir tu perfil."
+    [ (Single kind, Single target) ] <- run (rawSql "SELECT target_type,target_id FROM notification" [])
+    (kind::Text) `shouldBe` "party_profile"
+    (target::Int) `shouldBe` 1
     sql "UPDATE fan_follow SET created_at='2026-01-01T23:00:00Z'" []
     r2 <- call "synthetic-1" "5"
     field "ffStartedAt" r2 `shouldBe` Just (String "2026-01-01")

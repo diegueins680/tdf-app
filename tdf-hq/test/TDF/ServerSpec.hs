@@ -12,6 +12,10 @@ import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Int (Int64)
+import qualified Network.HTTP.Client as NotificationHTTP
+import Network.HTTP.Types.Status (statusCode)
+import Network.Wai.Handler.Warp (testWithApplication)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -133,6 +137,7 @@ import TDF.DTO
     , CreateInvoiceLineReq (..)
     )
 import qualified TDF.DTO as DTO
+import qualified TDF.Server as NotificationServer
 import TDF.Server
     ( MarketplaceCartTotalsState(..)
     , DriveApiResp(..)
@@ -730,6 +735,77 @@ isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    describe "notification navigation reads" $ do
+        it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
+            withNotificationFixture $ \env _ _ requestId notificationId ->
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    let fetch path authenticated = do
+                            base <- NotificationHTTP.parseRequest ("http://127.0.0.1:" <> show port <> path)
+                            NotificationHTTP.httpLbs (base { NotificationHTTP.requestHeaders =
+                                [("Authorization","Bearer google-token") | authenticated] }) manager
+                    notification <- fetch ("/fans/me/notifications/" <> show notificationId) True
+                    statusCode (NotificationHTTP.responseStatus notification) `shouldBe` 200
+                    BL8.unpack (NotificationHTTP.responseBody notification) `shouldContain` "party_profile"
+                    request <- fetch ("/access-requests/" <> show requestId) True
+                    statusCode (NotificationHTTP.responseStatus request) `shouldBe` 200
+                    BL8.unpack (NotificationHTTP.responseBody request) `shouldContain` "approved"
+                    anonymous <- fetch ("/access-requests/" <> show requestId) False
+                    statusCode (NotificationHTTP.responseStatus anonymous) `shouldBe` 401
+                    runSqlPool (rawExecute "UPDATE api_token SET active=0 WHERE token='google-token'" []) (envPool env)
+                    expired <- fetch ("/access-requests/" <> show requestId) True
+                    statusCode (NotificationHTTP.responseStatus expired) `shouldBe` 401
+        it "returns follower identity and recipient-scoped history without marking it read" $
+            withNotificationFixture $ \env owner outsider requestId notificationId -> do
+                let run action = runHandler (runReaderT action env)
+                result <- run (NotificationServer.notifGet owner notificationId)
+                case result of
+                    Right dto -> do
+                        DTO.nTargetId dto `shouldBe` Just (fromSqlKey (auPartyId outsider))
+                        DTO.nTargetType dto `shouldBe` Just "party_profile"
+                        DTO.nIsRead dto `shouldBe` False
+                    Left err -> expectationFailure (show err)
+                denied <- run (NotificationServer.notifGet outsider notificationId)
+                either (\err -> errHTTPCode err `shouldBe` 404) (const (expectationFailure "other recipient read notification")) denied
+                _ <- run (NotificationServer.notifMarkRead outsider notificationId)
+                unread <- run (NotificationServer.notifCount owner)
+                fmap DTO.ncUnread unread `shouldBe` Right 1
+                _ <- run (NotificationServer.notifMarkRead owner notificationId)
+                readCount <- run (NotificationServer.notifCount owner)
+                fmap DTO.ncUnread readCount `shouldBe` Right 0
+                requestId `shouldSatisfy` (>0)
+        it "shows current handled request status, rechecks reviewer scope, and performs no decision" $
+            withNotificationFixture $ \env owner outsider requestId _ -> do
+                let run action = runHandler (runReaderT action env)
+                    detail user = let _ :<|> _ :<|> _ :<|> handler :<|> _ :<|> _ = NotificationServer.accessRequestsServer user in handler
+                own <- run (detail owner requestId)
+                case own of
+                    Right value -> do
+                        BL8.unpack (A.encode value) `shouldContain` "approved"
+                        BL8.unpack (A.encode value) `shouldContain` "canReview\":false"
+                    Left err -> expectationFailure (show err)
+                denied <- run (detail outsider requestId)
+                either (\err -> errHTTPCode err `shouldBe` 404) (const (expectationFailure "unauthorized request read")) denied
+                missing <- run (detail owner (requestId+1000))
+                either (\err -> errHTTPCode err `shouldBe` 404) (const (expectationFailure "missing request disclosed")) missing
+                reviewed <- run (detail (outsider { auRoles=[Admin], auModules=modulesForRoles [Admin] }) requestId)
+                case reviewed of
+                    Right value -> BL8.unpack (A.encode value) `shouldContain` "canReview\":true"
+                    Left err -> expectationFailure (show err)
+                stored <- runSqlPool (get (toSqlKey requestId :: ME.FeatureAccessRequestId)) (envPool env)
+                fmap ME.featureAccessRequestStatus stored `shouldBe` Just "approved"
+                historyCount <- runSqlPool (count [ME.FeatureAccessRequestHistoryRequestId ==. toSqlKey requestId]) (envPool env)
+                historyCount `shouldBe` 0
+                runSqlPool (update (toSqlKey requestId :: ME.FeatureAccessRequestId)
+                    [ME.FeatureAccessRequestStatus =. "pending", ME.FeatureAccessRequestExpiresAt =. Just (UTCTime (fromGregorian 2020 1 1) 0)]) (envPool env)
+                expired <- run (detail owner requestId)
+                case expired of
+                    Right value -> BL8.unpack (A.encode value) `shouldContain` "expired"
+                    Left err -> expectationFailure (show err)
+                unchanged <- runSqlPool (get (toSqlKey requestId :: ME.FeatureAccessRequestId)) (envPool env)
+                fmap ME.featureAccessRequestStatus unchanged `shouldBe` Just "pending"
+                afterRead <- runSqlPool (count [ME.FeatureAccessRequestHistoryRequestId ==. toSqlKey requestId]) (envPool env)
+                afterRead `shouldBe` 0
     describe "Academy enrollment request contract" $ do
         it "normalizes allowed academy roles before persistence" $ do
             Academy.validateAcademyRole " Artist " `shouldBe` Right "artist"
@@ -16286,3 +16362,18 @@ initializePackageSchema = do
         \\"active\" BOOLEAN NOT NULL\
         \)"
         []
+
+withNotificationFixture :: (Env -> AuthedUser -> AuthedUser -> Int64 -> Int64 -> IO a) -> IO a
+withNotificationFixture action = runNoLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeAuthSchema pool
+    (otherId, ownerId) <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+    now <- liftIO getCurrentTime
+    (requestId, notificationId) <- liftIO $ flip runSqlPool pool $ do
+        rawExecute "CREATE TABLE notification(id INTEGER PRIMARY KEY,recipient_party_id INTEGER,notif_type TEXT,title TEXT,body TEXT,target_type TEXT,target_id INTEGER,target_key TEXT,is_read BOOLEAN,created_at TIMESTAMP)" []
+        rawExecute "CREATE TABLE feature_access_request_history(id INTEGER PRIMARY KEY,request_id INTEGER,actor_party_id INTEGER,transition TEXT,from_status TEXT,to_status TEXT,note TEXT,created_at TIMESTAMP)" []
+        request <- insert (ME.FeatureAccessRequest ownerId "label.ddex.inbox" "view" "[]" "[]" (Just "specific request") "approved" "label-reviewers" Nothing (Just "already handled") now now (Just now) Nothing Nothing)
+        notification <- insert (M.Notification ownerId "artist_liked" "Nuevo fan" "Display text must not determine identity" (Just "party_profile") (Just (fromIntegral (fromSqlKey otherId))) Nothing False now)
+        pure (fromSqlKey request,fromSqlKey notification)
+    liftIO $ action (Env pool (marketplaceTestConfig False))
+        ((mkUser [Customer]) {auPartyId=ownerId}) ((mkUser [Customer]) {auPartyId=otherId}) requestId notificationId

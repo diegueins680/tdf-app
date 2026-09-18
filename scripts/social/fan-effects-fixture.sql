@@ -9,7 +9,7 @@ CREATE TABLE fan_club_member_profile(id bigserial PRIMARY KEY,party_id bigint RE
 CREATE TABLE engagement_event(id bigserial PRIMARY KEY,actor_party_id bigint,target_artist_id bigint,
   entity_type text,entity_id integer,event_type text,metadata text,created_at timestamptz);
 CREATE TABLE notification(id bigserial PRIMARY KEY,recipient_party_id bigint,notif_type text,title text,
-  body text,target_type text,target_id integer,is_read boolean,created_at timestamptz);
+  body text,target_type text,target_id integer,target_key text,is_read boolean,created_at timestamptz);
 ALTER TABLE security_role
   ADD COLUMN code text, ADD COLUMN name_es text, ADD COLUMN name_en text,
   ADD COLUMN description_es text, ADD COLUMN description_en text, ADD COLUMN sort_order integer DEFAULT 0,
