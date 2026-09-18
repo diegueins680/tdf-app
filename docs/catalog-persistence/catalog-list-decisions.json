@@ -13915,16 +13915,6 @@
       }
     },
     {
-      "id": "faf664611d7ab0aa954d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
-      "reviewed": true
-    },
-    {
       "id": "02464a57896073665826",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
