@@ -17,21 +17,26 @@ performed to reproduce this; the actual decision function was executed without a
 
 ## Contract and implementation correspondence
 
-Let `R(M)` be `minimumIdentityCommit` for target migration manifest M, and `A(r,c)` the trusted
+The canonical implementation is reused from concurrent PR #453, source
+`261bfdfbbdab0520b35725a72b776f160b608dd3`, rather than maintaining a competing floor policy.
+The initial audit-only snapshot floors in `evidence/identity-recovery.json` are historical and
+superseded by the domain's reviewed writer floors below. Those earlier floors unnecessarily
+required later merge commits; actual writer provenance supplies a more precise boundary.
+
+Let `R(M)` be `requiredIdentityCommit` for target migration manifest M, and `A(r,c)` the trusted
 Git ancestry predicate. The actual `rollbackCompatibility` admits candidate c exactly when
 `R(M) = null` or `A(R(M), c)`. Missing Git history/errors propagate as failure.
 
 | Target migration present (strongest first) | Required reviewed implementation snapshot |
 |---|---|
-| trial or ads request receipts | `d7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e` |
-| course request receipts | `418c0da63a8a95639866f1e92619e6a00b7640c4` |
-| intake idempotency | `497286e82ca4d6a52cdf2b52e7fa8d65e92e0711` |
+| course, trial or ads request receipts | `6eab8592744015124b0162ce9e9361f51a04f538` |
+| intake idempotency | `02115f7d1b0786f3cdd4287a9466dd22682f603b` |
 | provider subject identity | `c53b33e7ef868fb7b64f876199ed66be0f617efc` |
 | none | no identity floor from these contracts |
 
 These are implementation snapshots, not SQL-introduction commits. Actual Git ancestry checks
-confirm that each later snapshot includes the earlier floor. The full target includes the final
-trial/ads snapshot, also carrying the guest-booking corrections. The minimum is used by dry-run
+confirm that each later writer snapshot includes the earlier floor. The full target includes
+the trial/ads writer, also carrying the guest-booking corrections. The minimum is used by dry-run
 reporting, remote preflight, fallback validation and the final pre-deploy guard. A prior failing
 this predicate requires a distinct reviewed, immutable fallback with the same migration manifest
 and SQL checksums. Existing recovery handles every unsafe replica after a deploy attempt.

@@ -32,6 +32,9 @@ No schema change, data cleanup, provider activation, real charge/refund or mobil
 for these repairs. Additional confirmed defects require a recorded scope addition.
 SYS-D05 is that recorded addition: deployment of this integrated target would otherwise retain
 an automatic recovery path that violates its already-approved identity contracts.
+Its canonical implementation reuses concurrent PR #453 (`261bfdfbb`), replacing this audit's
+duplicate snapshot-floor policy with the domain's precise writer provenance. Main's PR #457
+also supplies the existing WebKit recovery-dialog route fix; browser release gates remain intact.
 
 Call-site qualification: `transitionPayment` is called by the implemented
 `PaymentIntentStore.transitionPaymentIntent` adapter, but no current HTTP/worker caller of that
