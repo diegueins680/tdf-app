@@ -5,6 +5,51 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Checkpoint verificado — 2026-09-18 16:34 UTC
+
+Este bloque sustituye los estados de los checkpoints históricos inferiores.
+#449 está fusionado como `e1a825bda26dbb16b1c732e551cc4880d5626943` desde15:42UTC;
+435 y442–448 quedaron incorporados conservando sus commits. El backend terminó
+el release guardado a16:02:10UTC, sin rollback: ambas máquinas saludables,110
+migraciones, tablas de calendario presentes y lease liberado. Imagen inmutable
+`sha256:637b749539975072aa78efd2180ce42438e81dc95f768f1c6b9e3557d3ed3a3f`.
+Web pública e1 coincide con Cloudflare `061e1fe4-97d8-431c-aeb9-24b90c53a98b`.
+[Recibo de release, snapshot y recuperación compatible](evidence/release-e1-verification.json).
+Se verificaron lectura pública y login/sesión/onboarding con la cuenta App Review
+legítima; Customer/Fan recibe403 al calendario administrativo. No se afirma un
+consentimiento Google administrativo ni revocación real. Las latencias son muestras
+de laboratorio individuales, no percentiles de campo.
+
+La observación posterior confirmó un pendiente de UX007: Marketplace aún cae
+cuando se bloquea almacenamiento. [La continuación](marketplace-storage.md) pasa
+23 pruebas,30 casos distintos en tres motores y el conjunto formal, pero todavía
+requiere revisión independiente, CI, merge y despliegue. No reemplaza las demás
+entradas de007 ya publicadas ni relaja la idempotencia de pedidos.
+
+El usuario entregó la coordinación de tiendas. Apple1.0.1 fue cambiado y leído
+como `MANUAL`/`WAITING_FOR_REVIEW` a15:51UTC; una aprobación no publicará sola la
+versión antigua. Continúa pendiente el iPhone físico para Google OAuth. Play
+muestra Alpha10 disponible a testers; a13:45 seguía1de12 inscritos para14días.
+No se repiten las80 invitaciones aceptadas previamente ni se inventa inscripción.
+
+El usuario eligió GitHub Actions gratuito y sustituyó Starter antes de pagar.
+No se contrató plan. Mobile#105 está fusionado en `a72ee5be1e66bad9d1a23e2d67a2e693ff3ce613`:
+runner estándar macos-15/Xcode26.2, certificados existentes cifrados y environment
+restringido a main, IPA con recibo y sin publicación automática. Primer run
+35368454882: Xcode y dependencias pasan;1de507 pruebas falla por variables de
+producción capturadas en el fixture Jest. #106 `7e709dc` aísla ese proceso;
+cuatro pruebas afectadas locales y CI pasan. Archivo firmado aún pendiente.
+Android15 `96622c14-8ac2-4780-aa25-903ef788ae88` y QA
+`46b1cca1-f38e-4105-b9c4-68947bcdd52d` siguen construyéndose. QA4602 usó un perfil
+incorrecto con API de producción: queda excluido de la aceptación aislada; el
+Samsung está conectado y sólo se usará `com.tdf.records.uxaudit`.
+
+Siguientes acciones: fusionar106 tras refrescar gates y ejecutar iOS23; verificar
+los artefactos Android antes de instalar/subir; publicar la continuación007 para
+revisión; mantener la cobertura inicial faltante y la publicación móvil abiertas.
+No actualizar el gitlink90ca sólo para obtener archivos de CI: el producto de105/106
+es idéntico; registrar el SHA exacto del artefacto nuevo cuando exista.
+
 ## Integración de release — 2026-09-18 13:31 UTC
 
 La rama `audit/ux-release-integration-20260918` reúne únicamente los incrementos
