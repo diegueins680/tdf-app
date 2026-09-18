@@ -933,3 +933,11 @@ Tablet continuation18September:450actual arrival cases added in evidence/tablet-
 
 11:05UTC: mobile104 sourcea785c998 merged90cae070 with507tests/85suites and hosted gates. Actual final localproductionHermes/iOS coldreturn pluspersistedfollow PASS; new042marker dependency fixed/modelchecked9states. See native-landing.md. EAS iOS quota blocks a new cloud/signedartifact; phone disconnected, Android1c92predates042. Root442/443allapplicablechecks green but independentreviewpending; calendar444checks/reviewpending with one migration fingerprint metadata repair. No new production/storedeployment claimed.
 2026-09-18 public production acceptance extends existingUX023:84anonymousarrivalcases on deployed5d49f61fa produced12missing-progress-name observations across /tdf aliases,/marketplace,/records at320/1280. No new unrelatedworkstream. Five loader names now use distinct ES/EN translations.18 controlledpending-GET cases on the production bundle (3pages×2languages×Chromium/Firefox/WebKit) pass, asserting actualhtml language and expected names;TypeScript/lint/buildpass,365762gzipbytes/5preloads within410KiB. Retained public-production-arrivals-5d49.json and public-loading-names-after.json. Hold /fans/artists,/marketplace,/records/feed GET responses to reproduce. First harness incorrectly used obsolete tdf-locale key; its English claims were discarded and corrected totdf-hq-ui/locale with actual-language assertion. No manualscreen-reader or fieldperformance claim. Focused successor awaitingreview/CI/publication; noAPI/persistence/payment change.
+### Public catalog readiness continuation — 18 September, 10:24 UTC
+
+Confirmed UX-260917-039: actual marketplace latency exceeds the existing30s client
+deadline, while health is green. The focused query batching fix and real PostgreSQL
+negative/positive evidence are in [public-catalog-readiness.md](public-catalog-readiness.md).
+Compilation and HTTP contracts pass; full backend/hosted checks, review, merge and
+guarded release verification remain pending. This is an acceptance blocker for the
+existing public arrival journey, not a new feature workstream.

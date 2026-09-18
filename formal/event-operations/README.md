@@ -326,3 +326,22 @@ Weakly fair resolve/dispatch ensure recovery terminates when storage returns or 
 Unsafe storage (84states) violates liveness; cache-first mutation (41states) violates
 fragment precedence. This is client token-presence conformance, not server permission
 or payment-settlement verification. [Evidence and limits](../../docs/ux-ui-audit/2026-09-17/storage-boundaries.md).
+### Marketplace catalog selection consistency
+
+`MarketplaceCatalogRead.tla` models one listing, approved/unapproved immutable terms,
+selection, concurrent sale deactivation, the terms read and response rendering. Both
+approved and unapproved configurations explore13generated/11distinct states, depth5;
+SelectedRentalKeepsApprovedTerms, UnapprovedTermsNotUsed and NoUnselectedListing hold.
+RequestFinishes assumes weak fairness for selection/read/render; provider/database
+outages and changing term approval are not modeled. Terminal quiescence is expected.
+The unsafe active-listing join produces the named price-fallback counterexample in
+11states: select→deactivate→read terms→render. The full pinned TLC/Alloy suite passes.
+
+Implementation: bind the IDs already selected into the batch's parameterized IN
+query, with an empty-list guard, retaining approved/active term filters. Actual HTTP
+regression interleaves a second PostgreSQL connection after selected listings have
+reached the handler and before the terms read. It reproduces10001 instead of2001
+minor units on the old code, then preserves2001/terms on the corrected handler; the
+next request excludes the deactivated row. Query count stays5 with80generated
+fixtures. This does not certify checkout/fulfillment transactions or claim snapshot
+isolation for every returned asset field.

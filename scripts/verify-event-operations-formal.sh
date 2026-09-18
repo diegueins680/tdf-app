@@ -88,6 +88,9 @@ run_negative_tlc NativeLandingMarkerOnly.cfg native-landing-marker-only 'Invaria
 run_negative_tlc NativeArtistFollowNamespace.cfg native-artist-namespace 'Invariant SuccessfulFollowQualifies is violated' NativeArtistFollow.tla
 run_negative_tlc NativeArtistFollowSession.cfg native-artist-session 'Invariant CurrentSession is violated' NativeArtistFollow.tla
 
+run_tlc MarketplaceCatalogRead.tla MarketplaceCatalogRead.cfg marketplace-catalog-read
+run_tlc MarketplaceCatalogRead.tla MarketplaceCatalogReadUnapproved.cfg marketplace-catalog-unapproved
+run_negative_tlc MarketplaceCatalogReadUnsafe.cfg marketplace-catalog-unsafe 'Invariant SelectedRentalKeepsApprovedTerms is violated' MarketplaceCatalogRead.tla
 run_negative_tlc ExperimentAuthorityStale.cfg experiment-stale 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityDuplicate.cfg experiment-duplicate 'Invariant ExposureAtMostOnce is violated' ExperimentAuthority.tla
 run_negative_tlc ExperimentAuthorityAccount.cfg experiment-account 'Invariant AccountAndEligibilityAuthority is violated' ExperimentAuthority.tla
