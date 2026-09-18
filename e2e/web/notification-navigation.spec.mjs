@@ -82,10 +82,10 @@ test('expired session retains notification destination and denied target stays p
   expect(state.actions.filter(a => a.path.startsWith('/access-requests'))).toEqual([]);
 });
 
-test('middle-click opens the recipient-owned notification in a new tab and preserves the original page @critical', async ({ page, baseURL }) => {
+test('standard new-tab activation resolves the owned notification and preserves the original page @critical', async ({ page, baseURL, browserName }) => {
   const state = await fixture(page, baseURL);
   await page.goto('/solicitudes-acceso?request=17'); await openBell(page);
-  const [target] = await Promise.all([page.context().waitForEvent('page'), page.getByRole('link', { name: /Nuevo fan/ }).click({ button: 'middle' })]);
+  const [target] = await Promise.all([page.context().waitForEvent('page'), page.getByRole('link', { name: /Nuevo fan/ }).click(browserName === 'webkit' ? { modifiers: ['ControlOrMeta'] } : { button: 'middle' })]);
   await expect(target).toHaveURL(/\/perfil\/7$/);
   await expect(target.getByText('Actual follower', { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/\/solicitudes-acceso\?request=17$/);

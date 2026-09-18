@@ -1,6 +1,6 @@
 # Notification navigation audit and delivery
 
-Scope: existing in-app notifications and existing external/mobile entry points. Base: root `437fdddea`, mobile `fac7c2c`. Work is isolated from the shared dirty checkout. Delivery is **in progress**, not yet merged or deployed. User requested a separate release from authentication PR #422; its final merged contracts must be integrated before deployment.
+Scope: existing in-app notifications and existing external/mobile entry points. Original base: root `437fdddea`, mobile `fac7c2c`; integrated released main `db69e0534` and mobile `50e680a` without combining the notification release with #422. Work is isolated from the shared dirty checkout. Delivery is **in progress**, not yet merged or deployed. User requested a separate release from authentication PR #422; its final merged contracts must be integrated before deployment.
 
 | Notification types | Stable target | Web destination | Current permission | Unresolved/stale fallback |
 | --- | --- | --- | --- | --- |
@@ -38,9 +38,9 @@ Rows are links with visible focus and touch targets. Their href resolves through
 
 ## Validation and release evidence
 
-- Backend full Stack suite: **2,569 tests passed**. Recipient-scoped GET/read counts, authenticated HTTP, expired sessions, handled-request authorization, no automatic decisions covered. A final rerun after making expired-state rendering read-only is pending.
+- Backend full Stack suite: **2,569 tests passed**. Recipient-scoped GET/read counts, authenticated HTTP, expired sessions, handled-request authorization, no automatic decisions covered. The full rerun after making expired-state rendering read-only also passed.
 - Web focused suite: **33 tests passed**, including direct notification links, missing/foreign records, follower identity, nonblocking failed reads, native modified links, pending/handled requests, malicious identities, legacy payloads, and login return paths.
-- Browser production bundle: **15/15 passed** on desktop/phone/tablet Chromium, Firefox, and WebKit. Verified keyboard/touch follower navigation, failed-read persistence, handled request context, axe critical/serious findings absent on request detail, expired sign-in return, denied fallback, and no business-action requests. Added real middle-click/new-tab coverage; final 20-case run pending.
+- Browser production bundle: **15/15 passed** on desktop/phone/tablet Chromium, Firefox, and WebKit. Verified keyboard/touch follower navigation, failed-read persistence, handled request context, axe critical/serious findings absent on request detail, expired sign-in return, denied fallback, and no business-action requests. Additional new-tab coverage passed in Chromium desktop/phone/tablet and Firefox via middle click, and WebKit via its standard modified click (WebKit does not open a tab for the synthetic middle-click gesture).
 - Native focused routing/response/screen suite: **10 passed**. Full suite first run: 465 passed/3 failed (resource-contention auth timeout; pre-auth-release generated registry mismatch; a new test garbage-collection setting). Those three suites rerun after corrections: **43/43 passed**. Native cold/warm response handling, router readiness, deduplication, unsafe metadata, follower identity, pending/handled requests, denied/legacy records and read failures covered.
 - Mobile release assets/lint/typecheck/config validation passed; isolated Expo Metro starts successfully on port8097. Existing EAS authentication confirmed. Mobile draft PR: https://github.com/diegueins680/TDF-mobile/pull/93 (`8b1158b`). No new signed build or store submission yet.
 - PostgreSQL migration tests passed: reliable recovery, ambiguous evidence, repeated apply/rollback, original constraint preservation, new UUID/read/text history retention, and exact saved-search delivery links.
