@@ -1,0 +1,1391 @@
+{
+  "date": "2026-09-18",
+  "baseline": "2ce7a1a0d275ecc65924b5df68bc39cd7a373b1d",
+  "before": [
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Todavía no hay calendario configurado. Conecta Google Calendar para activar el diagnóstico de sincronización.Conectar calendario",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getter",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [],
+      "alerts": [
+        "No pudimos cargar esta vista.Recarga la página para usar la versión más reciente de TDF Records.Si el problema persiste, vuelve al inicio o contacta a soporte.Ir al inicioRecargar"
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getter",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [],
+      "alerts": [
+        "No pudimos cargar esta vista.Recarga la página para usar la versión más reciente de TDF Records.Si el problema persiste, vuelve al inicio o contacta a soporte.Ir al inicioRecargar"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getter",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [],
+      "alerts": [
+        "No pudimos cargar esta vista.Recarga la página para usar la versión más reciente de TDF Records.Si el problema persiste, vuelve al inicio o contacta a soporte.Ir al inicioRecargar"
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getter",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [],
+      "alerts": [
+        "No pudimos cargar esta vista.Recarga la página para usar la versión más reciente de TDF Records.Si el problema persiste, vuelve al inicio o contacta a soporte.Ir al inicioRecargar"
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [],
+      "alerts": [
+        "No pudimos cargar esta vista.Recarga la página para usar la versión más reciente de TDF Records.Si el problema persiste, vuelve al inicio o contacta a soporte.Ir al inicioRecargar"
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [],
+      "alerts": [
+        "No pudimos cargar esta vista.Recarga la página para usar la versión más reciente de TDF Records.Si el problema persiste, vuelve al inicio o contacta a soporte.Ir al inicioRecargar"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [],
+      "alerts": [
+        "No pudimos cargar esta vista.Recarga la página para usar la versión más reciente de TDF Records.Si el problema persiste, vuelve al inicio o contacta a soporte.Ir al inicioRecargar"
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [],
+      "alerts": [
+        "No pudimos cargar esta vista.Recarga la página para usar la versión más reciente de TDF Records.Si el problema persiste, vuelve al inicio o contacta a soporte.Ir al inicioRecargar"
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Todavía no hay calendario configurado. Conecta Google Calendar para activar el diagnóstico de sincronización.Conectar calendario",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [],
+      "alerts": [
+        "Algo salió al cargar esta sección.Puedes reintentar o volver al inicio.ReintentarIr al inicio"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token"
+    }
+  ],
+  "intermediateFailed": [
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getter",
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(!alerts.some(t=>/No pudimos cargar esta vista|Algo salió al cargar/.test(t)))\n",
+      "errors": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getter",
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(!alerts.some(t=>/No pudimos cargar esta vista|Algo salió al cargar/.test(t)))\n",
+      "errors": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getter",
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(!alerts.some(t=>/No pudimos cargar esta vista|Algo salió al cargar/.test(t)))\n",
+      "errors": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getter",
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(!alerts.some(t=>/No pudimos cargar esta vista|Algo salió al cargar/.test(t)))\n",
+      "errors": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getItem",
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(!alerts.some(t=>/No pudimos cargar esta vista|Algo salió al cargar/.test(t)))\n",
+      "errors": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getItem",
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(!alerts.some(t=>/No pudimos cargar esta vista|Algo salió al cargar/.test(t)))\n",
+      "errors": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getItem",
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(!alerts.some(t=>/No pudimos cargar esta vista|Algo salió al cargar/.test(t)))\n",
+      "errors": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getItem",
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(!alerts.some(t=>/No pudimos cargar esta vista|Algo salió al cargar/.test(t)))\n",
+      "errors": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    }
+  ],
+  "radioCounterexample": [
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getter",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [
+        "SecurityError: Synthetic optional storage denial",
+        "Unhandled route render failure SecurityError: Synthetic optional storage denial \n    at Lo (http://127.0.0.1:18713/assets/RadioWidget-VJgq7IYw.js:1:8177)\n    at Suspense\n    at Ns (http://127.0.0.1:18713/assets/index-DvieEv1p.js:2:232769)\n    at $i (http://127.0.0.1:18713/assets/index-DvieEv1p.js:2:18681)\n    at zs\n    at gl (http://127.0.0.1:18713/assets/index-DvieEv1p.js:2:307021)\n    at ol (http://127.0.0.1:18713/assets/index-DvieEv1p.js:2:302648)\n    at Pi (http://127.0.0.1:18713/assets/index-DvieEv1p.js:2:12574)\n    at zt (http://127.0.0.1:18713/assets/router-CZIUCrU9.js:3:7996)\n    at Tr (http://127.0.0.1:18713/assets/router-CZIUCrU9.js:3:18164)\n    at bl (http://127.0.0.1:18713/assets/index-DvieEv1p.js:2:308390)\n    at qv (http://127.0.0.1:18713/assets/mui-BkTjoAS1.js:2:9008)\n    at $g (http://127.0.0.1:18713/assets/mui-BkTjoAS1.js:2:8759)\n    at wg (http://127.0.0.1:18713/assets/mui-BkTjoAS1.js:2:8412)\n    at Xv (http://127.0.0.1:18713/assets/mui-BkTjoAS1.js:2:9913)\n    at ax (http://127.0.0.1:18713/assets/mui-BkTjoAS1.js:37:16944)\n    at s2 (http://127.0.0.1:18713/assets/mui-BkTjoAS1.js:37:17902)\n    at el (http://127.0.0.1:18713/assets/index-DvieEv1p.js:2:294099)\n    at ue (http://127.0.0.1:18713/assets/tanstack-ByjpnR1t.js:1:35640)"
+      ],
+      "headings": [],
+      "alerts": [
+        "No pudimos cargar esta vista.Recarga la página para usar la versión más reciente de TDF Records.Si el problema persiste, vuelve al inicio o contacta a soporte.Ir al inicioRecargar"
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    }
+  ],
+  "final": [
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "allowed",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getter",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getter",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getter",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getter",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getItem",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getItem",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getItem",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getItem",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "setItem",
+      "engine": "chromium",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "allowed",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "allowed",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "allowed",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "allowed",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getter",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getter",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getter",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getter",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getItem",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getItem",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getItem",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getItem",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "setItem",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "setItem",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "setItem",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "setItem",
+      "engine": "firefox",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "allowed",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "allowed",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "allowed",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "allowed",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getter",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getter",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getter",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getter",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "getItem",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "getItem",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "getItem",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "getItem",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/admin/diagnosticos",
+      "operation": "setItem",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Diagnóstico",
+        "Variables de entorno críticas",
+        "Sincronización de calendario",
+        "Auto respuestas sociales"
+      ],
+      "alerts": [
+        "Faltan: VITE_PAYPAL_CLIENT_ID, VITE_CHATKIT_WORKFLOW_ID",
+        "Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.",
+        "Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal."
+      ],
+      "errors": [],
+      "finalPath": "/admin/diagnosticos",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/escuela/trial-lessons",
+      "operation": "setItem",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Trial lessons",
+        "Primeros pasos"
+      ],
+      "alerts": [
+        "Primeros pasosAún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario, profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.Ajustar fechas"
+      ],
+      "errors": [],
+      "finalPath": "/escuela/trial-lessons",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pago-datafast?orderId=synthetic-audit-order&resourcePath=synthetic-status",
+      "operation": "setItem",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "Verificación Datafast",
+        "TDF Records"
+      ],
+      "alerts": [
+        "Faltan los datos privados necesarios para verificar esta operación."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pago-datafast",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "operation": "setItem",
+      "engine": "webkit",
+      "width": 768,
+      "consoleErrors": [],
+      "headings": [
+        "TDF Records"
+      ],
+      "alerts": [
+        "Este enlace no incluye la clave privada de seguimiento. Usa el enlace original o solicita ayuda a TDF."
+      ],
+      "errors": [],
+      "finalPath": "/mezcla-mastering/pedido/synthetic-audit-order",
+      "transport": "Actual isolated signup/session/Admin role and read-only APIs; no payment/provider call permitted without lookup token",
+      "providerMutations": []
+    }
+  ],
+  "anonymousBrowserPageFixStats": {
+    "startTime": "2026-09-18T12:55:54.772Z",
+    "duration": 27354.558999999997,
+    "expected": 20,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "focusedTests": 40,
+  "trialDateEditFollowup": {
+    "passed": 7,
+    "scope": "Three storage-denial variants edit a date and assert the resulting API query."
+  },
+  "model": {
+    "generated": 96,
+    "distinct": 96,
+    "depth": 3,
+    "unsafeStorageStates": 84,
+    "unsafeFragmentStates": 41,
+    "fullPinnedSuite": "PASS"
+  },
+  "build": {
+    "typescript": "PASS",
+    "lint": "PASS",
+    "initialGzipBytes": 365673,
+    "preloads": 5
+  },
+  "catalog": {
+    "candidates": 1138,
+    "pinnedMobile": "4122bb75e9c550eaf5ed7ee81b89ee5188938271",
+    "strict": "PASS"
+  },
+  "sourceHashes": {
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "5a03a68ea34c02dc4f1bb49787b461d0adcd13f0a2f8625094dcaca92036e756",
+    "tdf-hq-ui/src/utils/optionalBrowserStorage.ts": "60d33eb028dc08410c187b0febb99a886397876352c9a1b99c76c2e29b5d0abf"
+  }
+}

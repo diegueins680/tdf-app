@@ -1,3 +1,4 @@
+import { readOptionalBrowserStorage } from '../utils/optionalBrowserStorage';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
@@ -12,7 +13,7 @@ export default function ServiceDatafastReturnPage() {
   const orderNumber = useMemo(() => queryParam('orderId'), []);
   const resourcePath = useMemo(() => queryParam('resourcePath') || queryParam('id'), []);
   const lookupToken = useMemo(
-    () => (typeof window === 'undefined' ? '' : sessionStorage.getItem(`tdf-service-order:${orderNumber}`)?.trim() ?? ''),
+    () => (typeof window === 'undefined' ? '' : readOptionalBrowserStorage('session', `tdf-service-order:${orderNumber}`)?.trim() ?? ''),
     [orderNumber],
   );
   const [order, setOrder] = useState<ServiceStorefrontOrderDTO | null>(null);

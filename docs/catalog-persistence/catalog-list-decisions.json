@@ -13156,15 +13156,13 @@
     },
     {
       "id": "bffc5decb0aa4633b170",
-      "classification": "genuine-technical-constant",
+      "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Reviewed the merged mobile navigation contract: these five fixed Expo tab route names, icons, and localization title keys define rendering and routing. The added titleKey enables labels to follow the current locale; it does not grant access or encode an editable business catalog. Route authorization remains separate.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "identity-mobile-contract-integration-2026-09-18"
+      "justification": "Manually reviewed2026-09-18: published qualified mobile104merge90cae070 includes the five fixed native tab destinations and reactive translated title keys from101. These names/icons/title slots are dispatch configuration, not editable business data. Final507tests and actual iOS five-tab coldreturn/follow evidence pass; physical/store publication is tracked separately.",
+      "reviewed": true
     },
     {
       "id": "60990a5df11b7a72f4d0",
@@ -13917,25 +13915,6 @@
       }
     },
     {
-      "id": "7fc0b407943863e0233c",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Reviewed the ordered 112-entry migration registry. Preserve prior immutable entries and append source-scoped ad inquiry receipts with guarded notification dispatch. This is release execution metadata; accepted receipts forbid destructive rollback.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "identity-trial-prevention-2026-09-18",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 112
-      }
-    },
-    {
       "id": "a3f2349267abdd1d7d29",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -13952,6 +13931,25 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3
+      }
+    },
+    {
+      "id": "1bf1f85ee995771aa455",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Reviewed the ordered 113-entry release registry. Preserve the approved main calendar migration and all immutable introduction commits; append course, trial and ad inquiry receipts. This is executable release metadata, not editable business data.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "identity-trial-prevention-2026-09-18",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 113
       }
     }
   ]

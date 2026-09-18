@@ -20,7 +20,7 @@ The handwritten `Ads.submit` client requires the caller to supply it; there is
 currently no bundled form calling that method. Existing external clients missing
 the key receive 400 before any records or replies are created.
 
-Migration 112 stores an operator-only receipt for the contact and lead, with the
+Migration `2026-09-18_ads_identity_requests` stores an operator-only receipt for the contact and lead, with the
 accepted payload, response and notification state. Shared details never select
 an existing account or grant student access. Concurrent retries serialize in one
 transaction; changed accepted payloads return 409. The receipt reserves external

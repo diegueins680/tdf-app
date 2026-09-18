@@ -698,6 +698,62 @@ DECLARE
   ticketing_table TEXT;
   enrichment_table TEXT;
 BEGIN
+  IF to_regclass('public.google_calendar_config') IS NULL
+     OR to_regclass('public.google_calendar_event') IS NULL THEN
+    RAISE EXCEPTION 'Calendar runtime relations are missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('google_calendar_config', 'id', 'bigint', 'NO'),
+      ('google_calendar_config', 'owner_id', 'bigint', 'YES'),
+      ('google_calendar_config', 'calendar_id', 'character varying', 'NO'),
+      ('google_calendar_config', 'access_token', 'character varying', 'YES'),
+      ('google_calendar_config', 'refresh_token', 'character varying', 'YES'),
+      ('google_calendar_config', 'token_type', 'character varying', 'YES'),
+      ('google_calendar_config', 'token_expires_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_config', 'sync_cursor', 'character varying', 'YES'),
+      ('google_calendar_config', 'synced_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_config', 'created_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_config', 'updated_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_event', 'id', 'bigint', 'NO'),
+      ('google_calendar_event', 'calendar_id', 'character varying', 'NO'),
+      ('google_calendar_event', 'google_id', 'character varying', 'NO'),
+      ('google_calendar_event', 'status', 'character varying', 'NO'),
+      ('google_calendar_event', 'summary', 'character varying', 'YES'),
+      ('google_calendar_event', 'description', 'character varying', 'YES'),
+      ('google_calendar_event', 'location', 'character varying', 'YES'),
+      ('google_calendar_event', 'start_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'end_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'updated_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'html_link', 'character varying', 'YES'),
+      ('google_calendar_event', 'attendees', 'character varying', 'YES'),
+      ('google_calendar_event', 'raw_payload', 'character varying', 'YES'),
+      ('google_calendar_event', 'created_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_event', 'updated_local', 'timestamp with time zone', 'NO')
+    ) expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns actual
+      ON actual.table_schema='public' AND actual.table_name=expected.table_name
+      AND actual.column_name=expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type<>expected.data_type
+      OR actual.is_nullable<>expected.is_nullable
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgrelid='public.google_calendar_config'::regclass
+      AND tgname='identity_archive_reference_guard' AND NOT tgisinternal
+      AND tgfoid='identity_reject_archived_reference()'::regprocedure AND tgenabled='O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_config'::regclass
+      AND contype='u' AND pg_get_constraintdef(oid)='UNIQUE (calendar_id)'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_event'::regclass
+      AND contype='u' AND pg_get_constraintdef(oid)='UNIQUE (calendar_id, google_id)'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_config'::regclass
+      AND contype='f' AND confrelid='public.party'::regclass AND convalidated
+      AND conkey=ARRAY[(SELECT attnum FROM pg_attribute
+        WHERE attrelid='public.google_calendar_config'::regclass AND attname='owner_id')]
+  ) THEN
+    RAISE EXCEPTION 'Calendar runtime columns or archived-owner guard are incompatible';
+  END IF;
   IF to_regclass('public.notification') IS NULL THEN
     RAISE EXCEPTION 'The notification relation is missing';
   END IF;

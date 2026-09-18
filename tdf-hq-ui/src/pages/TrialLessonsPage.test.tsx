@@ -236,6 +236,33 @@ describe('TrialLessonsPage', () => {
     }
   });
 
+  it.each(['getter', 'getItem', 'setItem'] as const)('keeps lesson filters usable when optional storage denies %s', async (operation) => {
+    const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage')!;
+    const deny = () => { throw new DOMException('Denied', 'SecurityError'); };
+    const spy = operation === 'getter' ? undefined : jest.spyOn(Storage.prototype, operation).mockImplementation(deny);
+    if (operation === 'getter') Object.defineProperty(window, 'localStorage', { configurable: true, get: deny });
+    const container = document.createElement('div'); document.body.appendChild(container);
+    let cleanup = async () => { container.remove(); };
+    try {
+      ({ cleanup } = await renderPage(container));
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Trial lessons');
+        expect(container.textContent).toContain('Nueva clase');
+        expect(listClassSessionsMock).toHaveBeenCalledWith(expect.objectContaining({ from: expect.any(String), to: expect.any(String) }));
+      });
+      await waitForExpectation(() => expect(hasButton(container, 'Ajustar fechas')).toBe(true));
+      await clickButton(container, 'Ajustar fechas');
+      const from = container.querySelector<HTMLInputElement>('input[type="datetime-local"]')!;
+      expect(from).not.toBeNull();
+      const changed = '2020-01-02T10:30';
+      await act(async () => { fireEvent.change(from, { target: { value: changed } }); });
+      await waitForExpectation(() => expect(listClassSessionsMock).toHaveBeenLastCalledWith(expect.objectContaining({ from: new Date(changed).toISOString() })));
+      expect(from.value).toBe(changed);
+    } finally {
+      await cleanup(); Object.defineProperty(window, 'localStorage', descriptor); spy?.mockRestore();
+    }
+  });
+
   it('replaces the empty export action with first-run guidance when there are no trial lessons', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

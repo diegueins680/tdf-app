@@ -1,0 +1,87 @@
+{
+  "observedAt": "2026-09-18T09:24:52.030053+00:00",
+  "source": "5d49f61fa68000abb188bf6d9bb19a3bce035aec",
+  "deployment": "3980085d-58af-4a1c-87b8-491e211d8a69",
+  "assets": [
+    {
+      "path": "/privacy.html",
+      "expectedSHA256": "9d5fd58b762f6b5cf8198c0a2ef2c8a29ad994bd7565d5b5009420039ecb6819",
+      "urls": [
+        {
+          "url": "https://3980085d.tdf-app.pages.dev/privacy.html",
+          "sha256": "9d5fd58b762f6b5cf8198c0a2ef2c8a29ad994bd7565d5b5009420039ecb6819",
+          "matches": true
+        },
+        {
+          "url": "https://tdf-app.pages.dev/privacy.html",
+          "sha256": "9d5fd58b762f6b5cf8198c0a2ef2c8a29ad994bd7565d5b5009420039ecb6819",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "path": "/terms.html",
+      "expectedSHA256": "1da3b383fca43f56822785fd3200507036962d9d9d2f5904b3502114b021001a",
+      "urls": [
+        {
+          "url": "https://3980085d.tdf-app.pages.dev/terms.html",
+          "sha256": "1da3b383fca43f56822785fd3200507036962d9d9d2f5904b3502114b021001a",
+          "matches": true
+        },
+        {
+          "url": "https://tdf-app.pages.dev/terms.html",
+          "sha256": "1da3b383fca43f56822785fd3200507036962d9d9d2f5904b3502114b021001a",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "path": "/data-deletion.html",
+      "expectedSHA256": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
+      "urls": [
+        {
+          "url": "https://3980085d.tdf-app.pages.dev/data-deletion.html",
+          "sha256": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
+          "matches": true
+        },
+        {
+          "url": "https://tdf-app.pages.dev/data-deletion.html",
+          "sha256": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "path": "/deauthorize.html",
+      "expectedSHA256": "de147edc06aff69a7b8236736dc720d59a3f24e0295ba4c2858609766d6ab5de",
+      "urls": [
+        {
+          "url": "https://3980085d.tdf-app.pages.dev/deauthorize.html",
+          "sha256": "de147edc06aff69a7b8236736dc720d59a3f24e0295ba4c2858609766d6ab5de",
+          "matches": true
+        },
+        {
+          "url": "https://tdf-app.pages.dev/deauthorize.html",
+          "sha256": "de147edc06aff69a7b8236736dc720d59a3f24e0295ba4c2858609766d6ab5de",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "path": "/mobile-app/styles.css",
+      "expectedSHA256": "bad1328d567dad6814d3f937d81554869eb3f2878b14fcc51e301f36f1a884f9",
+      "urls": [
+        {
+          "url": "https://3980085d.tdf-app.pages.dev/mobile-app/styles.css",
+          "sha256": "bad1328d567dad6814d3f937d81554869eb3f2878b14fcc51e301f36f1a884f9",
+          "matches": true
+        },
+        {
+          "url": "https://tdf-app.pages.dev/mobile-app/styles.css",
+          "sha256": "bad1328d567dad6814d3f937d81554869eb3f2878b14fcc51e301f36f1a884f9",
+          "matches": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-09-18T11:40:24.764771+00:00",
+  "transport": "curl; initial urllib 403 is not counted as a health observation",
+  "apiVersion": {
+    "buildTime": "2026-09-18T08:06:26Z",
+    "commit": "5c11577a5d31f079b3e070a7810a6b04a48d99f4",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "apiHealth": {
+    "db": "ok",
+    "status": "ok"
+  },
+  "publicWeb": {
+    "url": "https://tdf-app.pages.dev/",
+    "sha256": "5ac99e04996e85f688e43ac48878cc3dd93fdf0cb9c4f755d7afd59e484ad9c0"
+  },
+  "immutableWeb": {
+    "url": "https://a3c035c1.tdf-app.pages.dev/",
+    "sha256": "5ac99e04996e85f688e43ac48878cc3dd93fdf0cb9c4f755d7afd59e484ad9c0"
+  }
+}

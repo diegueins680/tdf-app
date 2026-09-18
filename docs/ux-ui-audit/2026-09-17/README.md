@@ -5,6 +5,170 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Integración de release — 2026-09-18 13:31 UTC
+
+La rama `audit/ux-release-integration-20260918` reúne únicamente los incrementos
+pendientes de esta auditoría:435,442–448 y la continuación de almacenamiento
+`dd9633c1d`. Todos sus heads están contenidos por merges normales en `ecd360723`;
+se conservan la autoría, la referencia móvil publicada90ca y la introducción49ff
+necesaria para la migración110. Los PR anteriores siguen abiertos hasta verificar y
+fusionar la integración; no se cierra ni incorpora otro trabajo de notificaciones.
+Una sola revisión independiente del head final sustituirá las ocho rondas pendientes.
+**Todavía no está fusionada ni desplegada.**
+
+La integración incorpora búsqueda ES/EN y recuperación de favoritos, errores de
+compartir/cancelar, controles públicos accesibles, texto ampliado, catálogo eficiente,
+calendario con estado persistido y protección ante almacenamiento opcional denegado.
+La continuación007 también protege la radio compartida: corregir únicamente las
+páginas no bastaba porque RadioWidget aún podía sustituir toda la vista por un error.
+El diagnóstico remite al calendario autorizado en lugar de afirmar una conexión a
+partir de preferencias locales. No se inventan tokens ni se confirman pagos sin ellos.
+
+Verificación conjunta: TypeScript/lint/build pasan;368211 bytes gzip iniciales y cinco
+precargas (límite419840/ocho). Pasan74 pruebas de release,25 de CI, inventario estricto
+1138/1588 con JSON/CSV coherentes, contratos HTTP/PostgreSQL de catálogo y calendario,
+y el conjunto real TLC/Alloy con controles negativos. Hay90 casos controlados de
+navegador cualificados (89 del primer run y el caso fallido por disco repetido),48
+casos con sesión real aislada y18 de carga ES/EN en tres motores. La suite web total
+pasa2185 pruebas en224 suites, sin fallos (349s; sin caché). Las primeras
+corridas afectadas por ENOSPC quedan excluidas; sólo se retiraron cachés regenerables
+propias y descargas antiguas, conservando fuentes, ejecutables y evidencias.
+[Recibo conjunto y límites](evidence/release-integration-verification.json).
+
+Producción sigue en API5c11577a5, saludable con base de datos, y web2ce7a1a0d;
+440 ya está desplegado. La migración110 y estos incrementos requieren revisión,
+CI aplicable y release guardado: snapshot previo, artefacto inmutable, lease,
+canary, contrato de recuperación compatible y verificación funcional posterior.
+No borrar las nuevas tablas ni restaurar una imagen incompatible con autenticación.
+
+La publicación móvil sigue pendiente:90ca está en el repositorio, no en las tiendas
+como release final cualificado. El APK QA4602 está disponible, pero no hay Android
+ni iPhone físico conectado; falta Google OAuth físico en iOS y capacidad para el
+build corregido. La última consulta Apple12:44 conserva WAITING_FOR_REVIEW y
+AFTER_APPROVAL; se necesita el handoff de coordinación de tiendas antes de competir
+con el operador activo. Una compilación terminada no acredita ese handoff.
+
+La cobertura inicial integral continúa abierta: recursos poblados, combinaciones de
+roles, estados restantes de interrupción/offline/sesión, lector de pantalla manual,
+dispositivos físicos y rendimiento de campo. Las hipótesis de almacenamiento durante
+checkout/RSVP no se convierten en defectos confirmados sin reproducción y sin verificar
+idempotencia y recuperación. Próximo paso ejecutable: publicar el head único, comprobar CI/revisiones y fusionar
+sólo con aprobación independiente válida para ese head.
+
+## Continuación verificada — 2026-09-18 12:44 UTC
+
+Este bloque sustituye los estados históricos inferiores, conservando sus evidencias.
+La última consulta remota mantiene main raíz `2ce7a1a0d275ecc65924b5df68bc39cd7a373b1d`
+y móvil `90cae070446df6c740e9e8f25a034f3deb12c5c7`. El gitlink publicado de main
+sigue en `4122bb75e9c550eaf5ed7ee81b89ee5188938271`; #435 propone90ca.
+La API pública devuelve `/version=5c11577a5d31f079b3e070a7810a6b04a48d99f4`
+y `/health` con status/db OK. La última verificación de assets web identifica2ce
+en Cloudflare `a3c035c1-2b7b-4398-80fb-8ef0b9258da2` (recibo en #435).
+No se ha ejecutado una nueva mutación de producción durante estas correcciones.
+
+Incrementos publicados y aún sin aprobación independiente:
+
+| PR | Head | Estado observado |
+|---|---|---|
+| [435](https://github.com/diegueins680/tdf-app/pull/435) | de177c858 | Pin móvil90ca, evidencia nativa y catálogo regenerado; gates aplicables completos |
+| [442](https://github.com/diegueins680/tdf-app/pull/442) | 1aa708a00 | Nombres ES/EN de carga pública; gates aplicables completos |
+| [443](https://github.com/diegueins680/tdf-app/pull/443) | 1d4143f78 | Catálogo sin N+1 y tarifa preservada ante desactivación concurrente; HTTP/PG real y modelos; gates completos |
+| [444](https://github.com/diegueins680/tdf-app/pull/444) | 9497be8f4 | Esquema de calendario110 y preferencias opcionales; gates completos |
+| [445](https://github.com/diegueins680/tdf-app/pull/445) | 563dafa42 | Retorno OAuth único y estado persistido de calendario; depende444; gates completos |
+| [446](https://github.com/diegueins680/tdf-app/pull/446) | f92b9947d | Texto público ampliado y navegación accesible; gates completos |
+| [447](https://github.com/diegueins680/tdf-app/pull/447) | c7124f906 | Directorio sin dependencia del almacenamiento; guardados aislados por sesión; persona E2E aún ejecutándose |
+
+Vercel informa límite de builds en varios heads. Es un contexto externo no requerido;
+no equivale a fallo de Cloudflare, ni se declara verde. La protección mantiene una
+aprobación independiente y descarta revisiones obsoletas; ningún PR está fusionado por
+estar verde. Revisiones concretas de443/444/445/435/447 atendidas con evidencia; renovar
+head/base, discusiones, checks y aprobaciones antes de cada merge.
+
+Este sucesor del directorio conserva447 e implementa la continuación deUX006 yUX047:
+idioma de búsqueda/errores/mapa y recuperación de compartir.26pruebas y10recorridos
+ES/EN pasan; paquete inicial367923gzip/fivepreloads. Ver
+[directory-language-sharing.md](directory-language-sharing.md) y su recibo. Al integrar
+las ramas, combinar las entradas existentes por ID:435 contiene los hallazgos nativos
+y de calendario pendientes,446 añade045,447 añade046 y este sucesor añade047. No
+reemplazar el registro completo con una copia antigua de otra rama.
+
+Apple consultado12:44: versión1.0.1 sigue WAITING_FOR_REVIEW y AFTER_APPROVAL;
+build21 VALID/IN_BETA_TESTING, external READY_FOR_BETA_SUBMISSION. Build22 no aparece
+en esa consulta de App Store Connect aunque EAS sí terminó su artefacto. Sigue pendiente
+el handoff de coordinación de tiendas del otro operador antes de modificar la liberación.
+La cuota EAS iOS Free impidió crear el build de la corrección90ca; no hay nuevo artefacto
+iOS firmado de esa fuente ni publicación final. Android QA4602 final está descargado y
+validado, paquete aislado `com.tdf.records.uxaudit`, pero ADB no muestra dispositivos.
+No se ha instalado ni ejecutado ese APK final. Las apps personal y notificationqa siguen
+intactas. Se mantiene pendiente el gate Google OAuth en iPhone físico, no certificable
+por el simulador. Los recibos nativos completos y la lista de invitaciones permanecen
+versionados en435; no confundir aceptación SMTP con inscripción o entrega.
+
+Siguiente paso de release: aprobar los heads vigentes; fusionar incrementos elegibles
+con merge normal,444 antes445,447 antes este sucesor y móvil publicado antes435. Para
+backend, verificar lease/ledger actual y usar runner con438: snapshot, plan/compatibilidad,
+artefacto inmutable, recuperación compatible de todas las réplicas, canary y smoke.
+Preservar el commit de introducción de la migración49ff02de5; no squash. Las observaciones
+12:44 no renuevan automáticamente un lease ni autorizan competir con otro release.
+
+Continúa sin completarse la cobertura inicial integral: estados con recursos poblados,
+combinaciones de roles, verificación manual de lector de pantalla, dispositivos físicos,
+distribución final y métricas de campo. Los recorridos controlados no certifican esos
+ámbitos. Próxima verificación independiente: contrastar las hipótesis de almacenamiento
+restantes en diagnóstico/clases y retorno/seguimiento de servicios antes de exigir cambios.
+
+## Checkpoint histórico — 2026-09-18 11:40 UTC
+
+Este apartado sustituye los estados históricos de abajo. La auditoría sigue
+**PARTIALLY COMPLETE**; quedan cobertura de acciones/estados y publicación nativa,
+además de las revisiones y releases indicados.
+
+- **Producción:** API `5c11577a5d31f079b3e070a7810a6b04a48d99f4`, health/DB OK.
+  Web `2ce7a1a0d275ecc65924b5df68bc39cd7a373b1d`, deployment Cloudflare
+  `a3c035c1-2b7b-4398-80fb-8ef0b9258da2`; HTML público idéntico al inmutable.
+  Recibo: `evidence/release-observation-current.json`. No nuevo despliegue backend.
+- **#440 / UX038 terminado en web:** merge `5d49f61fa`,54 casos productivos,
+  tres motores, contraste/reflujo corregidos; política legal sin cambios.
+- **#442 / UX023:** head `1aa708a00`, checks aplicables aprobados, falta revisión.
+  **#443 / UX039:** head `641876c76`, mismos gates; catálogo reduce consultas reales
+  de259/60 a5/28,2587 ejemplos backend pasan (3 pendientes preexistentes).
+- **#444 / UX040–041:** head `9497be8f4`, checks aprobados, falta revisión.
+  Esquema de calendario ausente confirmado por consulta productiva de sólo lectura;
+  migración aditiva110 y almacenamiento opcional corregidos. Preservar introducción
+  `49ff02de5` mediante merge normal. **#445 / UX043–044:** `563dafa42`, sucesor
+  dependiente,14 pruebas y9 recorridos en tres motores pasan; TLC21 estados y tres
+  contraejemplos pasan. CI/revisión pendientes. Evita el bucle de26–30 canjes de un
+  código y los mensajes falsos de conexión; no ejecutó OAuth real ni revocación.
+- **Móvil:** #104 fusionada como `90cae070446df6c740e9e8f25a034f3deb12c5c7`,
+ 507 pruebas/85 suites y release check aprobados. #435 fija este commit publicado
+  y compatible; main aún fija4122bb75. iOS local conserva sesión/seguimiento al
+  reabrir; modelos de sesión/retorno y controles negativos aprobados.
+- **Android final aislado:** build `4602aa55`, APK verificado (recibo versionado),
+  pendiente de instalar porque ADB no detecta el Samsung. Sólo usar el paquete
+  `com.tdf.records.uxaudit`; conservar app personal y QA de otro operador.
+- **Apple:** nuevo build iOS bloqueado por cuota EAS; no se compró un plan.
+  No hay iPhone físico disponible para la prueba de Google exigida por la guía.
+  iOS21 sigue VALID/IN_BETA_TESTING; no es la corrección final. App Review1.0.1
+  sigue WAITING_FOR_REVIEW y **AFTER_APPROVAL**: el build antiguo podría publicarse
+  automáticamente. Se pidió traspaso de coordinación de tiendas para pasar a release
+  manual sin competir con el otro operador; aún no hay traspaso ni cambio confirmado.
+  Referencia primaria consultada18septiembre: [opciones de publicación de Apple](https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/select-an-app-store-version-release-option).
+- Los builds de otro operador Android14/iOS22 (`0c1ee7f`) terminaron, pero excluyen
+  #104. Su finalización no prueba envío, revisión, publicación ni cierre de coordinación.
+  La invitación autorizada permanece80 aceptados por SMTP/2 rechazados/0 ambiguos;
+  no implica entrega, inscripción ni cumplimiento de12 testers/14 días de Play.
+
+**Orden ejecutable:** fusionar #442/#443/#444 sólo tras sus revisiones exactas;
+revalidar #445 sobre #444 fusionada. Publicar web automáticamente y comprobarla.
+Para backend: renovar snapshot, compatibilidad de ledger/esquema, imagen inmutable,
+lease y canary mediante el runner corregido de #438; conservar flags actuales y
+recuperación compatible. No restaurar binarios anteriores a la autoridad Google
+corregida ni eliminar las nuevas tablas en rollback. Calificar APK4602 en el Samsung
+cuando vuelva a estar disponible; resolver capacidad iOS y prueba física, coordinar
+la selección de builds finales y completar tiendas. Mantener explícitas las acciones,
+recursos poblados, combinaciones de roles, lector de pantalla y métricas de campo
+que aún no tienen evidencia; las450 llegadas nuevas de tablet no las sustituyen.
+
 ## Continuación — 2026-09-18 04:52 UTC
 
 Release guardado #422 `f19bb8855e8a9bc5b73ee4c3199c631540eb0df9` completado
@@ -775,6 +939,72 @@ The nearest-scroll correction passes10 local cases in five profiles/three engine
 production build365428gzip and affected lint pass. Linux CI must confirm the same
 regression on the successor head. Synthetic fixtures prevent campaign submissions.
 
+## Checkpoint — 2026-09-18 07:36 UTC
+
+#431 is deployed as2f01b20b0c2a2e2088570c3dc5deba6197266452 through the guarded
+release lane: complete07:32:24Z, both machines healthy on the immutable artifact,
+107migration ledger rows, no lease remaining and no rollback. Fresh snapshot
+vs_OzXgpX4lyQnsnqNk2YZ6Vb9 completed07:25:22Z. Existing discovery/autopublish
+settings remain true; onboarding experiment remains false. Actual legitimate demo
+GETs return200 for persisted onboarding and paused assignment, with no assignment
+or exposure; production assignment table remains empty. Public health/version
+still match07:36UTC. Rollback reference is the prior compatible4b0 image captured
+in the guarded report; no SQL rollback is needed for this contract-only release.
+
+#433 merged6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval,
+all applicable checks and no unresolved threads. Cloudflare345dbb80 succeeded;
+public assets match the immutable deployment. Ten production-bundle campaign
+cases pass in5profiles/3engines; transport is synthetic. Final local bundle365447
+bytes gzip remains below410KiB. The earlier Firefox axe timeout under simulator
+pressure passed unchanged after the owned simulator was shut down.
+
+Mobile101 mergedebec681092ba12a9f8a58019e35ae52a6949eb6f. This increment pins
+published source667193e15517ecb087fbbacf6041b1296814da78, preserving the349 API
+contract and excluding unrelated provider/intake runtime changes from mobile main.
+The actual afbd simulator artifact has identical application code; authenticated
+return/relaunch and ES→EN→ES visible-tab labels passed, Spanish restored. Source
+667 adds only the durable flow/evidence. iOS21 artifact0771998e is built and verified,
+submissionc06c203d scheduled; Android12d16877f8 is building. These are separate
+from Apple19 still waiting for App Review/beta review and Android10 now active in
+Alpha. No current accessibility-fix store publication or human reader/device claim.
+
+Play Console now verifies Alpha10 active in177regions and the saved68-person
+registered-user list selected alongside the prior1/11 lists. Current active-account
+recipient set matches the prior83 after reserved-address exclusions. The authorized
+82-recipient invitation run is in progress with per-recipient receipts; never retry
+an ambiguous DATA result or resend an accepted message. Private audience stays off
+Git. Real12-person/14-day testing and production access remain external gates.
+
+#432 successor9213b1334 also repairs UX034: actual HTTP proved web preference keys
+were rejected by the strict decoder. Canonical/legacy schema compatibility and
+negative/generative cases are implemented; hosted corrected HTTP gate and renewed
+exact-head review remain required. Do not claim the earlier failed gate passed.
+Coverage remains bounded:31-role static arrivals, targeted actual isolated journeys,
+models and controlled browser cases are not every dynamic resource/state, physical
+platform, human screen-reader session or representative field-performance evidence.
+
+Invitation batch completed07:38:54UTC:80SMTP-accepted,2recipient-address rejections,
+0ambiguous and0unattempted among82 intended recipients. One invalid-domain and two
+reserved addresses were excluded earlier. No accepted invitation was resent. The
+private ledger/audience and retry safeguards are durably stored with owner-only
+permissions; delivery, reading, enrollment and actual testing are not inferred.
+iOS21 submissionc06c203d FINISHED (upload), not App Review/publication. Android12
+buildd16877f8 FINISHED; signed AAB verification and submissionc41e9287 both completed. Play confirms versionCode12 and the exact local SHA-256; the internal release remains draft. No Alpha12 rollout or public availability is claimed.
+
+
+Checkpoint 2026-09-18 07:56 UTC (supersedes earlier store next actions):
+- Root main advanced to f1ff05e6f (#430); its mobile pin7b7ecaf includes explicit Google account creation/linking. #435 must preserve that current contract when reconciling its667 tab fixes; do not downgrade to667 or import the unrelated intake stack. Exact06d5 independent approval and all applicable gates passed, but the gitlink now conflicts and one checkpoint review needs correction.
+- Android12 Play readback matches AAB SHA-2561beade7326ad630b1e83038ff495dd50fc149c9e4696144d1087798887fdb541. iOS21 is VALID/IN_BETA_TESTING, build5ebb79bf-8bf0-4802-9dff-42239c97afbb. These are upload/beta states, not public publication.
+- NEW release blocker UX035: another operator reproduced an Android11 fresh-install protected-notification-link crash (Maximum update depth exceeded). Source667 retains the identical RootLayout from224, so Android12/iOS21 promotion is held pending candidate mobile#102 and platform runtime verification. An iOS crash is not asserted. Alpha10 and Apple19 existing reviews stay untouched.
+- The user asked this operator to perform the physical iPhone Google flow. Fresh xcrun xctrace/devicectl discovery found only this Mac and simulators, no attached physical device. The existing physical-production gate cannot be executed here; no request to repeat credentials or a previously established absence.
+- Native cross-device persistence preparation uses an isolated simulator-only configuration targeting localhost18631/PostgreSQL test data. The first archive/upload failed ENOSPC before EAS accepted a build; no simulator execution is claimed. Preserve production demo sessions and do not send them to the isolated API.
+- Invitation completion remains80SMTP-accepted/2recipient-refused/0ambiguous/0unattempted of82, one invalid-domain excluded. The private correction list contains the three unusable addresses, never committed. No enrollment or delivery inference.
+
+Next: verify mobile#102 actual Android/iOS cold-start evidence, integrate only the already-required provider contract/tab fixes/cold-start repair, qualify and publish that source before advancing the parent gitlink; rerun affected gates and obtain any exact-head approval required by protection. #432 corrected HTTP/generative CI is still running; its9213 independent approval is current. Continue isolated native progress verification when host storage permits.
+
+Additional initial coverage:92 missing-resource public arrivals across23 parameterized routes, ES/EN and320/1280px, completed against the actual isolated backend and dabb production bundle. No axe violations, horizontal overflow, page errors or HTTP5xx were observed. Evidence public-dynamic-missing-runtime.json; populated resources/actions, complete copy translation and other state combinations remain separate.
+
+Historical navigation gate note:
 Navigation HTTP gate35315995605 passed all16 controlled concurrent visits and
 second-account isolation, then failed400 on settings. This confirmed UX034:
 web/OpenAPI send favorite/pinned/pinOrder but the decoder accepted only npu-prefixed
@@ -784,6 +1014,10 @@ Full corrected HTTP gate is pending; no merge/release claim. NavigationVisit mod
 and its meaningful unsafe counterexample are unchanged; new wire tests connect the
 existing SettingsPreserved property to the actual handler.
 
+Current navigation status: #432 merged5c11577a5d31f079b3e070a7810a6b04a48d99f4 at08:06:26UTC after exact9213 approval/all gates. Corrected actual HTTP/PostgreSQL and generated schema tests pass. Build Image35322697541 pending; release blocked until provider-identity recovery cannot restore an email-authorizing legacy binary. No production mutation by this increment.
+
+2026-09-18 native cross-device checkpoint: actual isolated iOS follow exposed UX037 (wrong artist namespace). Mobile #10460fccd5 now uses the existing FanHub contract. Native follow/reopen and real web reload persist one authoritative completion; accountA is unchanged.498tests/releasecheck plus final10focusedtests pass; see native-canonical-follow receipts and before/after images. #104 retains #102 as a runtime dependency; no Android/physicalGoogle/store qualification is implied. Root #438 merged499e8be7b with74tests/fullmodels and exact35172083a approval; provider production rollout still waits for immutablef1ff recovery image35323829378. Backend remains2f01 at08:51readback.
+
 Release acceptance blocker UX-260917-036 (2026-09-18): #432 merged5c11577a5 after actual navigation HTTP/PostgreSQL gates and exact9213 approval. That merge includes provider430. The prior runner can restore2f01 on a failed canary, reverting subject-bound Google authority to email lookup. A focused guard now checks reviewed commit ancestry before the actual rollback command and requires compatible prior or explicit verified recovery artifact before mutation; no binding-table count, historical migration rewrite or permission change. This is a validated recovery-path defect, not an observed production rollback. Required tests/model negative controls and review remain explicit before deployment.
 
 UX036 verification:71 release tests pass; final TLC legacy/compatible/mixed/forward configurations pass, unsafe rollback produces NoUnsafeRestoration counterexample. Evidence provider-rollback-verification.json. Provider-only recovery imagef1ff pipeline35323829378 builds separately from main5c115 pipeline35322697541. No deployment until review/checks and both immutable artifacts are ready.
@@ -791,3 +1025,32 @@ UX036 verification:71 release tests pass; final TLC legacy/compatible/mixed/forw
 Review follow-up for #438: recovering only the canary could leave untouched legacy replicas serving email authority. The actual outer recovery loop now includes all unsafe replicas once any deploy was attempted, continues after individual recovery failures and records each failure. Before any deploy attempt it leaves the fleet unchanged. Added StoppedFleetSafe and a negative configuration reproducing the partial-fleet gap; this explicitly extends the earlier model boundary. Local74release tests pass; revised formal/hosted evidence and renewed approval remain required.
 
 2026-09-18 initial static-page coverage:54cases across9pages/3engines/320+1280px exposed UX038 lowcontrast and200%textreflow. Focused CSS repair passes all54 withzeroaxe/errors/overflow; Chromium/Firefox keyboardTabworks, WebKitdefaultTabprefskipslinks (notclaimed). Nine existingcoverage rows updated; canonical before/afterreceipts/screenshots included. Consulted primary W3C explanations on2026-09-18: https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html (normal textminimum4.5:1) and https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html (linksneednon-color cues). Darkerblue+underlines address these observedfailures; policywordingunchanged. No claimofwholeplatformWCAGconformance.
+
+
+Checkpoint 2026-09-18 09:24 UTC (supersedes stale deployment and next-action entries): #440 merged5d49f61fa after exact8f1972654 approval/all applicable checks; Cloudflare automatic publication is being verified. The identity operator already completed backend5c11577a5 at09:02:21UTC. Both machines were verified on the immutable image;108ledger/lease0 and later health/version readback pass. UX did not duplicate the rollout. That operator used old5c tooling and no recovery occurred; reviewed438 recovery execution must not be attributed to it. Published supported tooling-onlyfcc037848 now passes actual read-only preflight with compatible immutablef1ff fallback. Pre-release dump hash verified; UX snapshot09:06:52 is explicitly post-release. See evidence/provider-navigation-production.json for flags, timings and observation limits.
+
+Coverage reconciliation resolves nested route ancestors using the actual TypeScript AST and exact declaration matching despite shifted line numbers.112 old inventory-only rows now link existing arrival observations;175 declarations have matching evidence,13 do not. A missing notification declaration was added, bringing the CSV to412rows. evidence/route-coverage-reconciliation.json preserves exact case indices/roles/widths and failures, without converting arrival/denial/absent-resource checks into full journey verification. Protected dynamic absent-resource checks are continuing. Mobile10460fccd5 remains draft pending102/platform qualification; isolated Android QA buildca296399 uses separate packagecom.tdf.records.uxaudit and isolated backend to preserve the user's personal installation. Physical iOS Google and final store publication remain open.
+
+09:29 UTC UX038 release verified: Cloudflare3980085d published merge5d49f61fa. All5 changed static assets match reviewed bytes at immutable and production URLs;54 actual production Chromium/Firefox/WebKit cases pass with zero axe violations, page errors or normal/200% text overflow. Cloudflare correctly redirects .html paths to pretty URLs. Source and legal wording remain those reviewed in440. Evidence: static-pages-production-artifact.json and static-pages-production-runtime.json.
+
+09:38 UTC: initial route-arrival reconciliation now links188/189 declarations (the remaining one is the non-navigable Shell wrapper).52 additional actual cases:12 protected absent-resource routes ×Admin/ReadOnly ×320/1280 in Spanish, plus public legacy wildcard ES/EN atbothwidths; zeroaxe/errors/overflow/HTTP5xx. This does not close populated-resource/state, role-combination, tablet, reader or native coverage gaps. New authoritative session-occurrence regression for037 is fixed in publishedmobile09649d6;499tests/TypeScript/lint plus fullpinnedformalrunnerPASS with meaningful namespace/ABAnegativecontrols. See native-artist-follow.md. AndroidfinalQA10d5b607building, Samsung disconnected09:36; no personalappmutation. Mobile102merged0c1ee7f with actualiOS+physicalAndroidnotification proof. No productionstorebuild/publication bythisincrement.
+
+09:51 UTC evidence correction: delayed-loader verification revealed the obsolete tdf-locale harness key did not switch the initial language. The original public-dynamic requested-English rows are preserved as superseded evidence, not relabeled. All46English absent-resource cases were rerun with the actual tdf-hq-ui/locale key and html lang assertion; zeroaxe/errors/HTTP5xx/overflow. Canonical92case receipt now combines original46Spanish +verified46English. Four legacy-wildcard rows retain their original requested-language limitation pending English retest.435 catalog gate also diagnosed precisely: the current7b7 gitlink has the old five-tab renderer fingerprint; the stale667translation fingerprint was replaced by reviewed actual7b7technical constant. This must be reconciled again when the qualified104gitlink advances.
+
+2026-09-18T09:50:44.724675+00:00: all4legacy-wildcard cases rerun with actual-language assertions; ES/EN redirects and arrival checks pass. This closes the preceding harness-language limitation for that receipt.
+
+
+Tablet continuation18September:450actual arrival cases added in evidence/tablet-runtime-continuation.json:252public ES/EN inthreeengines plus198Admin/ReadOnly Chromium at768px. Allpublic andReadOnly casespassed. OneAdmincalendar route returned500; read-only production schema inspection confirms both calendar tables absent. Focused additive repair040 is being prepared; no external Googleaccount connected. These are arrival/empty/denial observations, not all workflow states or manual reader verification.
+
+
+11:05UTC: mobile104 sourcea785c998 merged90cae070 with507tests/85suites and hosted gates. Actual final localproductionHermes/iOS coldreturn pluspersistedfollow PASS; new042marker dependency fixed/modelchecked9states. See native-landing.md. EAS iOS quota blocks a new cloud/signedartifact; phone disconnected, Android1c92predates042. Root442/443allapplicablechecks green but independentreviewpending; calendar444checks/reviewpending with one migration fingerprint metadata repair. No new production/storedeployment claimed.
+2026-09-18 public production acceptance extends existingUX023:84anonymousarrivalcases on deployed5d49f61fa produced12missing-progress-name observations across /tdf aliases,/marketplace,/records at320/1280. No new unrelatedworkstream. Five loader names now use distinct ES/EN translations.18 controlledpending-GET cases on the production bundle (3pages×2languages×Chromium/Firefox/WebKit) pass, asserting actualhtml language and expected names;TypeScript/lint/buildpass,365762gzipbytes/5preloads within410KiB. Retained public-production-arrivals-5d49.json and public-loading-names-after.json. Hold /fans/artists,/marketplace,/records/feed GET responses to reproduce. First harness incorrectly used obsolete tdf-locale key; its English claims were discarded and corrected totdf-hq-ui/locale with actual-language assertion. No manualscreen-reader or fieldperformance claim. Focused successor awaitingreview/CI/publication; noAPI/persistence/payment change.
+### Public catalog readiness continuation — 18 September, 10:24 UTC
+
+Confirmed UX-260917-039: actual marketplace latency exceeds the existing30s client
+deadline, while health is green. The focused query batching fix and real PostgreSQL
+negative/positive evidence are in [public-catalog-readiness.md](public-catalog-readiness.md).
+Compilation and HTTP contracts pass; full backend/hosted checks, review, merge and
+guarded release verification remain pending. This is an acceptance blocker for the
+existing public arrival journey, not a new feature workstream.
+Calendar continuation18September: confirmed040missingruntime schema and041optionalstorage failure have a focused compatible repair. See [calendar-runtime-readiness.md](calendar-runtime-readiness.md) for realPG/HTTP/browser evidence, immutable migration introduction ancestry and recovery. Review/CI/merge/release remain pending; no external Googlecalendar accessed.

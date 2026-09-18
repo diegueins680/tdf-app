@@ -1,7 +1,11 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import esDirectory from '../i18n/locales/directorySearch.es';
+import enDirectory from '../i18n/locales/directorySearch.en';
 import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { act, Component, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -56,6 +60,7 @@ jest.unstable_mockModule('../api/directory', () => ({
 }));
 jest.unstable_mockModule('../session/SessionContext', () => ({
   getStoredSessionToken: () => null,
+  getActiveSession: () => sessionFixture,
   useSession: () => ({ session: sessionFixture }),
 }));
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
@@ -64,18 +69,228 @@ jest.unstable_mockModule('../analytics/posthog', () => ({ getAnalyticsClient: ()
 jest.unstable_mockModule('../analytics/onboardingProgress', () => ({ captureFirstValueOnce: captureFirstValueOnceMock }));
 jest.unstable_mockModule('../api/client', () => ({ API_BASE_URL: 'https://tdf-hq.fly.dev' }));
 
+await i18n.use(initReactI18next).init({ lng: 'es', fallbackLng: 'es', interpolation: { escapeValue: false }, resources: { es: { translation: { directorySearch: esDirectory } }, en: { translation: { directorySearch: enDirectory } } } });
+
 const { default: DirectorySearchPage } = await import('./DirectorySearchPage');
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+class ArrivalBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? <p role="alert">Arrival failed</p> : this.props.children; }
+}
+
 describe('DirectorySearchPage', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('es');
     jest.clearAllMocks();
     window.localStorage.clear();
     window.localStorage.setItem('tdf.directory.cityId', '22222222-2222-4222-8222-222222222222');
     sessionFixture = null;
     searchMock.mockResolvedValue(searchResponse);
     favoritesMock.mockResolvedValue([]);
+  });
+
+  it.each(['getter', 'getItem', 'setItem'] as const)('keeps public search usable when optional city storage denies %s', async (operation) => {
+    const storageDescriptor = Object.getOwnPropertyDescriptor(window, 'localStorage')!;
+    const denial = () => { throw new DOMException('Storage denied', 'SecurityError'); };
+    const storageSpy = operation === 'getter' ? undefined : jest.spyOn(Storage.prototype, operation).mockImplementation(denial);
+    if (operation === 'getter') Object.defineProperty(window, 'localStorage', { configurable: true, get: denial });
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => {
+        root.render(<ArrivalBoundary><QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/buscar?q=music']}><DirectorySearchPage /></MemoryRouter>
+        </QueryClientProvider></ArrivalBoundary>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
+      expect(container.querySelector('input')?.value).toBe('music');
+      expect(container.textContent).not.toContain('Arrival failed');
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'music' }));
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+      Object.defineProperty(window, 'localStorage', storageDescriptor);
+      storageSpy?.mockRestore();
+      consoleSpy.mockRestore();
+    }
+  });
+
+  it.each(['before-dispatch', 'before-response', 'same-party-return'] as const)('rejects obsolete favorite authority %s', async (scenario) => {
+    sessionFixture = { partyId: 42 };
+    searchMock.mockResolvedValue(eventSearchResponse);
+    let finish!: () => void;
+    addFavoriteMock.mockImplementationOnce(() => new Promise<void>((resolve) => { finish = resolve; }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const render = async () => { await act(async () => {
+      root.render(<QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/buscar?entityType=event']}><DirectorySearchPage /></MemoryRouter>
+      </QueryClientProvider>);
+    }); };
+    try {
+      await render();
+      const saveButton = await waitFor(() => {
+        const button = container.querySelector<HTMLButtonElement>('[aria-label="Guardar Synthetic Event en tu cuenta"]');
+        expect(button?.disabled).toBe(false);
+        return button!;
+      });
+      if (scenario === 'before-dispatch') sessionFixture = null;
+      await act(async () => { fireEvent.click(saveButton); });
+      if (scenario === 'before-dispatch') {
+        expect(addFavoriteMock).not.toHaveBeenCalled();
+      } else {
+        await waitFor(() => expect(addFavoriteMock).toHaveBeenCalledTimes(1));
+        sessionFixture = { partyId: 84 };
+        if (scenario === 'same-party-return') {
+          await render();
+          sessionFixture = { partyId: 42 };
+          await render();
+        }
+        await act(async () => { finish(); await new Promise((resolve) => setTimeout(resolve, 20)); });
+        expect(captureFirstValueOnceMock).not.toHaveBeenCalled();
+        expect(analyticsCaptureMock).not.toHaveBeenCalledWith('feature_favorite_changed', expect.anything());
+        expect(container.querySelector('[aria-label="Quitar Synthetic Event de tus guardados"]')).toBeNull();
+      }
+    } finally {
+      finish?.();
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+      addFavoriteMock.mockReset().mockResolvedValue(undefined);
+    }
+  });
+
+  it('keeps the new session isolated from a late favorites read for the same party', async () => {
+    sessionFixture = { partyId: 42 };
+    searchMock.mockResolvedValue(eventSearchResponse);
+    let finish!: (value: never[]) => void;
+    favoritesMock.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const render = async () => { await act(async () => {
+      root.render(<QueryClientProvider client={queryClient}><MemoryRouter><DirectorySearchPage /></MemoryRouter></QueryClientProvider>);
+    }); };
+    try {
+      await render();
+      await waitFor(() => expect(favoritesMock).toHaveBeenCalledTimes(1));
+      sessionFixture = { partyId: 84 }; await render();
+      sessionFixture = { partyId: 42 }; await render();
+      await act(async () => { finish([{ targetKind: 'event', targetId: '42', createdAt: '', result: null }] as never[]); });
+      await waitFor(() => expect(container.querySelector<HTMLButtonElement>('[aria-label="Guardar Synthetic Event en tu cuenta"]')?.disabled).toBe(false));
+      expect(container.querySelector('[aria-label="Quitar Synthetic Event de tus guardados"]')).toBeNull();
+    } finally {
+      await act(async () => root.unmount()); container.remove(); queryClient.clear();
+    }
+  });
+
+  it.each([false, true])('offers an authoritative refresh after an ambiguous favorite failure (refresh fails first: %s)', async (failRefreshFirst) => {
+    sessionFixture = { partyId: 42 };
+    searchMock.mockResolvedValue(eventSearchResponse);
+    addFavoriteMock.mockRejectedValueOnce(new Error('Connection interrupted after dispatch'));
+    favoritesMock.mockResolvedValueOnce([]).mockResolvedValue([{ targetKind: 'event', targetId: '42', createdAt: '', result: null }]);
+    if (failRefreshFirst) favoritesMock.mockRejectedValueOnce(new Error('Synthetic refresh unavailable'));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => { root.render(<QueryClientProvider client={queryClient}><MemoryRouter><DirectorySearchPage /></MemoryRouter></QueryClientProvider>); });
+      const save = await waitFor(() => {
+        const button = container.querySelector<HTMLButtonElement>('[aria-label="Guardar Synthetic Event en tu cuenta"]');
+        expect(button?.disabled).toBe(false); return button!;
+      });
+      fireEvent.click(save);
+      const refresh = await waitFor(() => {
+        expect(container.textContent).toContain('No pudimos confirmar el cambio');
+        return Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Consultar guardados')!;
+      });
+      expect(container.textContent).not.toContain('Tu cuenta no cambió');
+      fireEvent.click(refresh);
+      if (failRefreshFirst) {
+        await waitFor(() => expect(container.textContent).toContain('No pudimos consultar tus guardados'));
+        expect(container.textContent).toContain('No pudimos confirmar el cambio');
+        fireEvent.click(refresh);
+      }
+      await waitFor(() => expect(container.querySelector('[aria-label="Quitar Synthetic Event de tus guardados"]')?.getAttribute('aria-pressed')).toBe('true'));
+      await waitFor(() => expect(container.textContent).not.toContain('No pudimos confirmar el cambio'));
+      expect(addFavoriteMock).toHaveBeenCalledTimes(1);
+      expect(captureFirstValueOnceMock).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount()); container.remove(); queryClient.clear();
+    }
+  });
+
+  it.each(['native', 'cancel', 'denied', 'clipboard', 'clipboard-denied', 'unavailable'] as const)('settles public sharing with accurate feedback: %s', async (scenario) => {
+    const shareDescriptor = Object.getOwnPropertyDescriptor(navigator, 'share');
+    const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    const nativeShare = jest.fn(async () => {
+      if (scenario === 'cancel') throw new DOMException('Cancelled', 'AbortError');
+      if (scenario === 'denied') throw new DOMException('Denied', 'NotAllowedError');
+    });
+    const writeText = jest.fn(async () => {
+      if (scenario === 'clipboard-denied') throw new DOMException('Denied', 'NotAllowedError');
+    });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: ['native', 'cancel', 'denied'].includes(scenario) ? nativeShare : undefined });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: scenario === 'unavailable' ? undefined : { writeText } });
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => { root.render(<QueryClientProvider client={queryClient}><MemoryRouter><DirectorySearchPage /></MemoryRouter></QueryClientProvider>); });
+      const share = await waitFor(() => {
+        const button = Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Compartir');
+        expect(button).toBeDefined(); return button!;
+      });
+      await act(async () => { fireEvent.click(share); });
+      const expected = scenario === 'native' ? 'Acción de compartir completada.' : scenario === 'cancel' ? 'El contenido no se compartió.' : scenario === 'clipboard' ? 'Enlace copiado.' : 'No se pudo compartir el enlace.';
+      await waitFor(() => expect(container.textContent).toContain(expected));
+      if (scenario === 'clipboard') expect(writeText).toHaveBeenCalledWith('http://localhost/directorio/synthetic-bassist');
+      if (scenario === 'native') expect(nativeShare).toHaveBeenCalledWith(expect.objectContaining({ title: 'Synthetic Bassist', url: 'http://localhost/directorio/synthetic-bassist' }));
+      if (['cancel', 'denied', 'clipboard-denied', 'unavailable'].includes(scenario)) {
+        expect(container.textContent).not.toContain('Enlace copiado.');
+        expect(container.textContent).not.toContain('Acción de compartir completada.');
+      }
+      expect(share.disabled).toBe(false);
+    } finally {
+      await act(async () => root.unmount()); container.remove(); queryClient.clear();
+      if (shareDescriptor) Object.defineProperty(navigator, 'share', shareDescriptor); else Reflect.deleteProperty(navigator, 'share');
+      if (clipboardDescriptor) Object.defineProperty(navigator, 'clipboard', clipboardDescriptor); else Reflect.deleteProperty(navigator, 'clipboard');
+    }
+  });
+
+  it('uses English copy and accessible names while preserving query and public identities across language changes', async () => {
+    await i18n.changeLanguage('en');
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => { root.render(<QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/buscar?q=music']}><DirectorySearchPage /></MemoryRouter>
+      </QueryClientProvider>); });
+      await waitFor(() => expect(container.textContent).toContain('Find the people and opportunities that make music'));
+      expect(container.querySelector('input')?.value).toBe('music');
+      expect(container.textContent).toContain('Service');
+      expect(container.textContent).toContain('Organic results');
+      await waitFor(() => expect(container.querySelector('img[alt="Photo of Synthetic Bassist"]')).not.toBeNull());
+      expect(container.textContent).toContain('Fixture público de prueba.');
+      expect(container.textContent).toContain('Quito');
+      await act(async () => { await i18n.changeLanguage('es'); });
+      expect(container.textContent).toContain('Encuentra a la gente y las oportunidades que hacen música');
+      expect(container.querySelector('input')?.value).toBe('music');
+      expect(container.querySelector('img[alt="Foto de Synthetic Bassist"]')).not.toBeNull();
+    } finally {
+      await act(async () => root.unmount()); container.remove(); queryClient.clear();
+    }
   });
 
   it('renders the public Quito-first search as the dominant accessible experience', async () => {
@@ -187,6 +402,8 @@ describe('DirectorySearchPage', () => {
           expect.objectContaining({ capture: analyticsCaptureMock }),
           42,
           'event_saved',
+          undefined,
+          expect.any(Function),
         );
       });
     } finally {

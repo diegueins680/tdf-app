@@ -125,13 +125,6 @@ const hasSingleSocialMessageState = (stats: MessageStats) => {
 };
 
 const CALENDAR_SYNC_PATH = '/configuracion/integraciones/calendario';
-const CALENDAR_SYNC_PENDING_COPY = 'Aún no se registra una sincronización.';
-
-const normalizeStoredDiagnosticValue = (value: string | null) => {
-  const trimmed = value?.trim();
-  return trimmed && trimmed.length > 0 ? trimmed : null;
-};
-
 const formatChannelList = (labels: readonly string[]) => {
   if (labels.length <= 1) return labels[0] ?? '';
   if (labels.length === 2) return `${labels[0]} y ${labels[1]}`;
@@ -143,13 +136,6 @@ export default function AdminDiagnosticsPage() {
     typeof window !== 'undefined'
       ? ((window as typeof window & { __MISSING_ENV__?: string[] }).__MISSING_ENV__ ?? [])
       : [];
-  const calendarId = typeof window !== 'undefined'
-    ? normalizeStoredDiagnosticValue(window.localStorage.getItem('calendar-sync.calendarId'))
-    : null;
-  const lastSyncAt = typeof window !== 'undefined'
-    ? normalizeStoredDiagnosticValue(window.localStorage.getItem('calendar-sync.lastSyncAt'))
-    : null;
-  const hasCalendarSyncState = Boolean(calendarId) || Boolean(lastSyncAt);
   const instagramQuery = useQuery({
     queryKey: ['social-inbox', 'instagram'],
     queryFn: () => SocialInboxAPI.listInstagramMessages({ direction: 'incoming' }),
@@ -226,49 +212,12 @@ export default function AdminDiagnosticsPage() {
       </Paper>
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Typography variant="h6">Sincronización de calendario</Typography>
-        {hasCalendarSyncState ? (
-          <>
-            {calendarId && (
-              <Typography variant="body2" color="text.secondary">
-                Calendar ID: {calendarId}
-              </Typography>
-            )}
-            {lastSyncAt ? (
-              <Typography variant="body2" color="text.secondary">
-                Última sincronización: {lastSyncAt}
-              </Typography>
-            ) : (
-              <Typography variant="body2" color="text.secondary" data-testid="admin-diagnostics-calendar-sync-pending">
-                {CALENDAR_SYNC_PENDING_COPY}
-              </Typography>
-            )}
-          </>
-        ) : (
-          <Alert
-            severity="info"
-            variant="outlined"
-            sx={{ mt: 1 }}
-            data-testid="admin-diagnostics-calendar-empty"
-            action={(
-              <Button color="inherit" size="small" component={RouterLink} to={CALENDAR_SYNC_PATH}>
-                Conectar calendario
-              </Button>
-            )}
-          >
-            Todavía no hay calendario configurado. Conecta Google Calendar para activar el diagnóstico de sincronización.
-          </Alert>
-        )}
-        {hasCalendarSyncState && (
-          <Button
-            variant="outlined"
-            size="small"
-            component={RouterLink}
-            to={CALENDAR_SYNC_PATH}
-            sx={{ mt: 1 }}
-          >
-            Abrir sincronización
-          </Button>
-        )}
+        <Alert severity="info" variant="outlined" sx={{ mt: 1 }} data-testid="admin-diagnostics-calendar-authority">
+          Consulta la conexión y la última sincronización confirmadas por el servidor en la página de calendario.
+        </Alert>
+        <Button variant="outlined" size="small" component={RouterLink} to={CALENDAR_SYNC_PATH} sx={{ mt: 1 }}>
+          Ver estado del calendario
+        </Button>
       </Paper>
       {socialQueryErrors.length > 0 && (
         <Stack spacing={1}>

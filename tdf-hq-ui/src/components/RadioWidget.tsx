@@ -1,3 +1,4 @@
+import { readOptionalBrowserStorage, writeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, useCallback, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
@@ -197,7 +198,7 @@ export default function RadioWidget() {
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [miniBarDismissed, setMiniBarDismissed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem('radio-mini-dismissed') === '1';
+    return readOptionalBrowserStorage('local', 'radio-mini-dismissed') === '1';
   });
   const [importing, setImporting] = useState(false);
   const [editName, setEditName] = useState('');
@@ -208,7 +209,7 @@ export default function RadioWidget() {
   // Start minimized by default; respect previous user choice if stored.
   const [miniBarVisible, setMiniBarVisible] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
-    const saved = window.localStorage.getItem('radio-mini-visible');
+    const saved = readOptionalBrowserStorage('local', 'radio-mini-visible');
     if (saved === '0') return false;
     if (saved === '1') return true;
     return true; // default minimized to reduce initial noise
@@ -216,11 +217,11 @@ export default function RadioWidget() {
   const [loginMiniBarHost, setLoginMiniBarHost] = useState<HTMLElement | null>(null);
   const [pinned, setPinned] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem('radio-pinned') === '1';
+    return readOptionalBrowserStorage('local', 'radio-pinned') === '1';
   });
   const [showAdvanced, setShowAdvanced] = useState(() => {
     if (typeof window === 'undefined') return false;
-    const stored = window.localStorage.getItem('radio-show-advanced');
+    const stored = readOptionalBrowserStorage('local', 'radio-show-advanced');
     if (stored === '1') return true;
     if (stored === '0') return false;
     return false; // default to simple mode
@@ -249,7 +250,7 @@ export default function RadioWidget() {
   const [selectedAudioInput, setSelectedAudioInput] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
     try {
-      return window.localStorage.getItem(LAST_AUDIO_INPUT_KEY) ?? '';
+      return readOptionalBrowserStorage('local', LAST_AUDIO_INPUT_KEY) ?? '';
     } catch {
       return '';
     }
@@ -271,7 +272,7 @@ export default function RadioWidget() {
   const [recentStations, setRecentStations] = useState<Station[]>([]);
   const [muteOnLoad, setMuteOnLoad] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem('radio-mute-on-load') === '1';
+    return readOptionalBrowserStorage('local', 'radio-mute-on-load') === '1';
   });
   const sizeOptions = {
     compact: { width: { xs: '95%', sm: 340 }, bodyHeight: '55vh' },
@@ -288,13 +289,13 @@ export default function RadioWidget() {
   };
   const [panelSize, setPanelSize] = useState<PanelSize>(() => {
     if (typeof window === 'undefined') return 'cozy';
-    const stored = parsePanelSize(window.localStorage.getItem('radio-panel-size'));
+    const stored = parsePanelSize(readOptionalBrowserStorage('local', 'radio-panel-size'));
     if (stored) return stored;
     return 'cozy';
   });
   useEffect(() => {
     try {
-      window.localStorage.setItem('radio-panel-size', panelSize);
+      writeOptionalBrowserPreference('radio-panel-size', panelSize);
     } catch {
       // ignore
     }
@@ -306,7 +307,7 @@ export default function RadioWidget() {
   const [expanded, setExpanded] = useState(false);
   const [activeId, setActiveId] = useState<string>(() => {
     if (typeof window === 'undefined') return EMPTY_STATION.id;
-    const stored = window.localStorage.getItem('radio-active-id');
+    const stored = readOptionalBrowserStorage('local', 'radio-active-id');
     return stored ?? EMPTY_STATION.id;
   });
   const [isPlaying, setIsPlaying] = useState(false);
@@ -315,7 +316,7 @@ export default function RadioWidget() {
   const [nowPlayingTitle, setNowPlayingTitle] = useState<string | null>(null);
   const [volume, setVolume] = useState<number>(() => {
     if (typeof window === 'undefined') return 0.8;
-    const raw = window.localStorage.getItem('radio-volume');
+    const raw = readOptionalBrowserStorage('local', 'radio-volume');
     const parsed = raw ? Number(raw) : NaN;
     if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 1) return parsed;
     return 0.8;
@@ -378,7 +379,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-expanded', expanded ? '1' : '0');
+      writeOptionalBrowserPreference('radio-expanded', expanded ? '1' : '0');
     } catch {
       // ignore
     }
@@ -386,7 +387,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-pinned', pinned ? '1' : '0');
+      writeOptionalBrowserPreference('radio-pinned', pinned ? '1' : '0');
     } catch {
       // ignore
     }
@@ -394,7 +395,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-show-advanced', showAdvanced ? '1' : '0');
+      writeOptionalBrowserPreference('radio-show-advanced', showAdvanced ? '1' : '0');
     } catch {
       // ignore
     }
@@ -402,7 +403,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-mute-on-load', muteOnLoad ? '1' : '0');
+      writeOptionalBrowserPreference('radio-mute-on-load', muteOnLoad ? '1' : '0');
     } catch {
       // ignore
     }
@@ -414,7 +415,7 @@ export default function RadioWidget() {
     }
     if (typeof window !== 'undefined') {
       try {
-        window.localStorage.setItem('radio-volume', volume.toString());
+        writeOptionalBrowserPreference('radio-volume', volume.toString());
       } catch {
         // ignore
       }
@@ -447,7 +448,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const stored = window.localStorage.getItem(LAST_AUDIO_INPUT_KEY);
+      const stored = readOptionalBrowserStorage('local', LAST_AUDIO_INPUT_KEY);
       if (stored && !selectedAudioInput) {
         setSelectedAudioInput(stored);
       }
@@ -460,7 +461,7 @@ export default function RadioWidget() {
     if (typeof window === 'undefined') return;
     if (!selectedAudioInput) return;
     try {
-      window.localStorage.setItem(LAST_AUDIO_INPUT_KEY, selectedAudioInput);
+      writeOptionalBrowserPreference(LAST_AUDIO_INPUT_KEY, selectedAudioInput);
     } catch {
       // ignore
     }
@@ -516,21 +517,21 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const favRaw = window.localStorage.getItem('radio-favorites');
+      const favRaw = readOptionalBrowserStorage('local', 'radio-favorites');
       if (favRaw) {
         const parsed = JSON.parse(favRaw);
         if (Array.isArray(parsed)) {
           setFavoriteKeys(parsed.filter((item): item is string => typeof item === 'string'));
         }
       }
-      const hidRaw = window.localStorage.getItem('radio-hidden');
+      const hidRaw = readOptionalBrowserStorage('local', 'radio-hidden');
       if (hidRaw) {
         const parsed = JSON.parse(hidRaw);
         if (Array.isArray(parsed)) {
           setHiddenKeys(parsed.filter((item): item is string => typeof item === 'string'));
         }
       }
-      const favFilter = window.localStorage.getItem('radio-show-favorites');
+      const favFilter = readOptionalBrowserStorage('local', 'radio-show-favorites');
       if (favFilter) setShowFavoritesOnly(favFilter === '1');
     } catch {
       // ignore
@@ -540,9 +541,9 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-favorites', JSON.stringify(favoriteKeys));
-      window.localStorage.setItem('radio-hidden', JSON.stringify(hiddenKeys));
-      window.localStorage.setItem('radio-show-favorites', showFavoritesOnly ? '1' : '0');
+      writeOptionalBrowserPreference('radio-favorites', JSON.stringify(favoriteKeys));
+      writeOptionalBrowserPreference('radio-hidden', JSON.stringify(hiddenKeys));
+      writeOptionalBrowserPreference('radio-show-favorites', showFavoritesOnly ? '1' : '0');
     } catch {
       // ignore
     }
@@ -662,7 +663,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-active-id', activeId);
+      writeOptionalBrowserPreference('radio-active-id', activeId);
     } catch {
       // ignore
     }
@@ -749,7 +750,7 @@ export default function RadioWidget() {
   // Hydrate initial position
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const fromStorage = window.localStorage.getItem('radio-position');
+    const fromStorage = readOptionalBrowserStorage('local', 'radio-position');
     if (fromStorage) {
       try {
         const parsed = JSON.parse(fromStorage) as { x: number; y: number };
@@ -771,7 +772,7 @@ export default function RadioWidget() {
     const initial = clampPosition(width - 320, height - 320);
     setPosition(initial);
     try {
-      window.localStorage.setItem('radio-position', JSON.stringify(initial));
+      writeOptionalBrowserPreference('radio-position', JSON.stringify(initial));
     } catch {
       // ignore
     }
@@ -827,7 +828,7 @@ export default function RadioWidget() {
       const next = clampPosition(e.clientX - dragState.current.offsetX, e.clientY - dragState.current.offsetY);
       setPosition(next);
       try {
-        window.localStorage.setItem('radio-position', JSON.stringify(next));
+        writeOptionalBrowserPreference('radio-position', JSON.stringify(next));
       } catch {
         // ignore storage errors
       }
@@ -848,7 +849,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const rawStations = window.localStorage.getItem('radio-stations');
+      const rawStations = readOptionalBrowserStorage('local', 'radio-stations');
       if (rawStations) {
         const parsedStations: Station[] = JSON.parse(rawStations);
         setCustomStations(
@@ -859,7 +860,7 @@ export default function RadioWidget() {
           })),
         );
       }
-      const raw = window.localStorage.getItem('radio-prompts');
+      const raw = readOptionalBrowserStorage('local', 'radio-prompts');
       if (!raw) return;
       const saved: Record<string, Prompt[]> = JSON.parse(raw);
       setPromptState((prev) => ({ ...prev, ...saved }));
@@ -867,7 +868,7 @@ export default function RadioWidget() {
       // ignore parse errors
     }
     try {
-      const rawSettings = window.localStorage.getItem('radio-settings');
+      const rawSettings = readOptionalBrowserStorage('local', 'radio-settings');
       if (rawSettings) {
         const parsed = JSON.parse(rawSettings) as { stationId?: string; playOnLoad?: boolean; muted?: boolean };
         if (parsed.stationId) setActiveId(parsed.stationId);
@@ -883,7 +884,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-prompts', JSON.stringify(promptState));
+      writeOptionalBrowserPreference('radio-prompts', JSON.stringify(promptState));
     } catch {
       // ignore quota errors
     }
@@ -897,9 +898,9 @@ export default function RadioWidget() {
         playOnLoad: isPlaying,
         muted,
       };
-      window.localStorage.setItem('radio-settings', JSON.stringify(settings));
+      writeOptionalBrowserPreference('radio-settings', JSON.stringify(settings));
       const persistentStations = customStations.filter((station) => !station.torrentFile);
-      window.localStorage.setItem('radio-stations', JSON.stringify(persistentStations));
+      writeOptionalBrowserPreference('radio-stations', JSON.stringify(persistentStations));
     } catch {
       // ignore
     }
@@ -1793,7 +1794,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-mini-visible', miniBarVisible ? '1' : '0');
+      writeOptionalBrowserPreference('radio-mini-visible', miniBarVisible ? '1' : '0');
     } catch {
       // ignore persistence issues
     }
@@ -1801,7 +1802,7 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-mini-dismissed', miniBarDismissed ? '1' : '0');
+      writeOptionalBrowserPreference('radio-mini-dismissed', miniBarDismissed ? '1' : '0');
     } catch {
       // ignore
     }
@@ -2015,7 +2016,7 @@ export default function RadioWidget() {
                   e.key === 'ArrowUp' ? p.y - step : e.key === 'ArrowDown' ? p.y + step : p.y,
                 );
                 try {
-                  window.localStorage.setItem('radio-position', JSON.stringify(next));
+                  writeOptionalBrowserPreference('radio-position', JSON.stringify(next));
                 } catch {
                   // ignore
                 }

@@ -508,10 +508,11 @@ function ArtistCarousel({
   profileAction: string;
   recordsImages: string[];
 }) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: COLOR_TEXT_SECONDARY_STRONG }}>
-        <CircularProgress size={LOADING_SPINNER_SIZE_PX} color="inherit" />
+        <CircularProgress size={LOADING_SPINNER_SIZE_PX} color="inherit" aria-label={t('auditAccessibility.loadingFeaturedArtists')} />
         <Typography>Cargando artistas destacados...</Typography>
       </Stack>
     );
