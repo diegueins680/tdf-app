@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-09-18T17:25:42.521266+00:00",
+  "rootMergeSHA": "3f0a56c0ded55fa9525dc80c895505ffcb069449",
+  "pr": 450,
+  "cloudflareDeployment": "8f01e9e1-b524-4691-ac41-5e85ababf99a",
+  "publicURL": "https://tdf-app.pages.dev/",
+  "publicMatchesImmutable": true,
+  "htmlSHA256": "33fe65d1c71097d96958ed4f28e4cf028514ccbbfddf55c6f4ba720131f3d201",
+  "backendSHA": "e1a825bda26dbb16b1c732e551cc4880d5626943",
+  "browserCases": 6,
+  "browserEvidence": "marketplace-storage-production.json",
+  "limits": [
+    "First production probe expected an off-page catalog item before filtering; excluded. Corrected first-page selector and six actual production cases passed.",
+    "Read-only browsing/search/reload; no real cart/order/payment.",
+    "Spanish actual UI, three engines320/1280, no human screen-reader or field performance claim.",
+    "Backend was not redeployed for the UI correction."
+  ]
+}

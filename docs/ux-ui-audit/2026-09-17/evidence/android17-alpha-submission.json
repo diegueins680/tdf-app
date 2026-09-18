@@ -1,0 +1,109 @@
+{
+  "observedAt": "2026-09-18T18:18:42.612Z",
+  "package": "com.tdf.records",
+  "track": {
+    "track": "alpha",
+    "releases": [
+      {
+        "name": "1.0.1 (17) - TDF accesibilidad y seguimiento",
+        "versionCodes": [
+          "17"
+        ],
+        "releaseNotes": [
+          {
+            "language": "es-419",
+            "text": "Texto ampliado legible en la navegación. Mejoras en el seguimiento de artistas y la sesión al volver a abrir la app. Las notificaciones abren el perfil o recurso correspondiente. Se conserva el destino elegido al iniciar sesión."
+          },
+          {
+            "language": "en-US",
+            "text": "Readable navigation with larger text. Improved artist following and session restoration when reopening the app. Notifications open the related profile or resource. Sign-in preserves the intended destination."
+          }
+        ],
+        "status": "completed"
+      }
+    ]
+  },
+  "bundle": {
+    "versionCode": 17,
+    "sha1": "1953179ff05515f643f8c1a1e6f3781f1aa5a54a",
+    "sha256": "8ce174bd20d95ebf4c84cdbf505a3ce9aecf26b3ffed8bbb2bc8436c3a942b4f"
+  },
+  "artifact": {
+    "sourceSHA": "c2a4cb289dbc9bc52de98c6eac8a6ca81c0cfeae",
+    "runId": "35376997735",
+    "package": "com.tdf.records",
+    "version": "1.0.1",
+    "build": "17",
+    "sha256": "8ce174bd20d95ebf4c84cdbf505a3ce9aecf26b3ffed8bbb2bc8436c3a942b4f",
+    "bytes": 108572547,
+    "certificateSHA256": "34e42cebcd7bca3e6df710bd8bb10a2c76ca69e21dd8e1247a3d43a662cb2432",
+    "signatureVerified": true,
+    "embeddedProductionAPI": true,
+    "publication": "not uploaded or submitted",
+    "independentLocalVerification": "Passed SHA256, JAR signature, existing upload certificate, bundletool actual manifest/package/version/non-debuggable, ZIP CRC and embedded production config/Hermes."
+  },
+  "validated": true,
+  "committed": true,
+  "submittedForReview": true,
+  "storeReviewApprovalVerified": false,
+  "availableToTestersVerified": false,
+  "publicProductionAvailabilityVerified": false,
+  "before": [
+    {
+      "track": "production"
+    },
+    {
+      "track": "beta"
+    },
+    {
+      "track": "alpha",
+      "releases": [
+        {
+          "name": "1.0.1 (15) - TDF onboarding y seguimiento",
+          "versionCodes": [
+            "15"
+          ],
+          "releaseNotes": [
+            {
+              "language": "es-419",
+              "text": "Mejoras en el seguimiento de artistas y la sesión al volver a abrir la app. Las notificaciones abren el perfil o recurso correspondiente. Se conserva el destino elegido al iniciar sesión."
+            },
+            {
+              "language": "en-US",
+              "text": "Improved artist following and session restoration when reopening the app. Notifications open the related profile or resource. Sign-in preserves the intended destination."
+            }
+          ],
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "track": "internal",
+      "releases": [
+        {
+          "name": "1.0.1 (11) - Notification navigation",
+          "versionCodes": [
+            "12"
+          ],
+          "releaseNotes": [
+            {
+              "language": "en-US",
+              "text": "Notifications now open the follower profile, access request, or related resource they refer to. Links preserve your destination through sign-in and show current request status. Opening a notification does not approve requests or change permissions."
+            }
+          ],
+          "status": "draft"
+        },
+        {
+          "name": "1.0.1 (8) - Internal test",
+          "releaseNotes": [
+            {
+              "language": "en-US",
+              "text": "Internal testing build for TDF Records 1.0.1.\n\nIncludes Android release configuration updates, Expo SDK 54 compatibility fixes, and stability improvements across bookings, events, venues, inventory, pipelines, and social tools."
+            }
+          ],
+          "status": "completed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "observedAt": "2026-09-18T18:53:28.205270+00:00",
+  "mutations": false,
+  "version": {
+    "buildTime": "2026-09-18T17:08:13Z",
+    "commit": "ab9bbacc9da845b6bfe70ac3fda2ace44f17c918",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "health": {
+    "db": "ok",
+    "status": "ok"
+  },
+  "scope": "Read-only public API observation; the separate mail operator released ab9. This does not certify its fleet, migrations or all journeys."
+}

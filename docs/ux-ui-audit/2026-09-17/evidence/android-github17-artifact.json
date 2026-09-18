@@ -1,0 +1,14 @@
+{
+  "sourceSHA": "c2a4cb289dbc9bc52de98c6eac8a6ca81c0cfeae",
+  "runId": "35376997735",
+  "package": "com.tdf.records",
+  "version": "1.0.1",
+  "build": "17",
+  "sha256": "8ce174bd20d95ebf4c84cdbf505a3ce9aecf26b3ffed8bbb2bc8436c3a942b4f",
+  "bytes": 108572547,
+  "certificateSHA256": "34e42cebcd7bca3e6df710bd8bb10a2c76ca69e21dd8e1247a3d43a662cb2432",
+  "signatureVerified": true,
+  "embeddedProductionAPI": true,
+  "publication": "not uploaded or submitted",
+  "independentLocalVerification": "Passed SHA256, JAR signature, existing upload certificate, bundletool actual manifest/package/version/non-debuggable, ZIP CRC and embedded production config/Hermes."
+}

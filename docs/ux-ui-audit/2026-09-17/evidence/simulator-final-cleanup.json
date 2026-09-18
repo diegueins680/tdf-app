@@ -1,0 +1,9 @@
+{
+  "observedAt": "2026-09-18T18:15:50.730766+00:00",
+  "device": "77D6F1CA-D073-4539-A54A-5A07E3304BD6",
+  "name": "TDF-UX-Final-20260918",
+  "stateBefore": "Shutdown",
+  "action": "Deleted only audit-created ephemeral simulator after preserving screenshots, geometry, source bundles and test receipts",
+  "reason": "Shared host disk exhaustion prevented downloading signed Android17 artifact",
+  "personalDevicesChanged": false
+}
