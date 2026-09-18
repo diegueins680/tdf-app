@@ -1363,5 +1363,45 @@
     "verificationStatus": "54 corrected browser cases PASS:zeroaxeviolations,zero200%textoverflow,zeroerrors; Chromium/Firefox keyboardTab, explicit legacyfocusoutline. ProductionbuildPASS, allfivechangedstaticassets byte-identical tosource. InitialJS365648gzipbytes/5preloads withinbudget. Before/afterevidence recorded; WebKit defaultTabskipslinks, no manualreaderclaim.",
     "mergeStatus": "Not merged; focused PR being prepared",
     "releaseStatus": "Not deployed"
+  },
+  {
+    "id": "UX-260917-045",
+    "kind": "confirmed",
+    "title": "Enlarged public text pushes navigation and content outside the viewport",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "Public arrival, navigation and marketplace sorting with enlarged browser text",
+    "roles": [
+      "anonymous",
+      "public authenticated shell uses the same component"
+    ],
+    "surface": "PublicBranding and Marketplace sorting Select",
+    "status": "implemented",
+    "evidence": "Real Firefox default font16→32px doubles heading35.2→70.4px/login14→28px and expands320px document to531px. Separate84-case computed-font stress finds60 overflows. Versioned before/after screenshot and receipts.",
+    "rootCause": "Non-wrapping header groups, unbreakable long words/chip labels and intrinsic sort-control width.",
+    "userImpact": "Low-vision visitors lose readable text or navigation off-screen and need horizontal scrolling through ordinary public content.",
+    "acceptanceCriteria": "Keep enlarged text and all navigation reachable at320px; preserve menu keyboard focus; wrapping sort label/options; ES/EN cases and actual browser font preferences without page overflow.",
+    "implementationStatus": "Wrap header groups with flex gap; inherit emergency word wrapping, allow multiline buttons/chips without clipping the page; constrain marketplace sort control and wrap its options.",
+    "verificationMethod": "Actual Firefox font preference before/after;84 real isolated API browser arrival/stress cases;40 controlled keyboard/menu E2E cases;6 existing component tests;TypeScript/lint/build. No authority or consequential state transition changes; formal source gate remains required through CI.",
+    "verificationStatus": "84 final ES/EN cases PASS, zero axe/page errors/overflow;40 focused keyboard cases pass in three engines/five profiles at320px. Actual Firefox16/32font at320/768/1280 fits; initial JS365727gzip/5preloads under budget. Harness failures disclosed in evidence/public-text-reflow.json.",
+    "mergeStatus": "Focused reflow PR being prepared; no merge.",
+    "releaseStatus": "Not deployed.",
+    "dependencies": [
+      "required checks",
+      "independent review",
+      "Cloudflare production publication and verification"
+    ],
+    "sources": [
+      {
+        "url": "https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html",
+        "accessed": "2026-09-18",
+        "implication": "Enlargement must preserve content and controls; native Firefox preference confirms an actual supported mechanism."
+      },
+      {
+        "url": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html",
+        "accessed": "2026-09-18",
+        "implication": "Ordinary content should fit320CSSpx without two-dimensional scrolling; contained tab strip remains independently scrollable."
+      }
+    ]
   }
 ]

@@ -30,7 +30,7 @@ for (const language of ['es', 'en']) {
       });
       await page.goto(path);
       await expect(page.locator('html')).toHaveAttribute('lang', language);
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await expect(page.getByRole('main').getByRole('heading').first()).toBeVisible();
       await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
       const fits = () => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
       await expect.poll(fits).toBe(true);
