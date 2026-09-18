@@ -13,3 +13,8 @@ export function writeOptionalBrowserPreference(key: string, value: string): void
   try { window.localStorage.setItem(key, value); }
   catch { /* The active form retains its in-memory preference. */ }
 }
+
+export function removeOptionalBrowserPreference(key: string): void {
+  try { window.localStorage.removeItem(key); }
+  catch { /* React state and the server remain authoritative for active data. */ }
+}
