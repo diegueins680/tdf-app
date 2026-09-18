@@ -5,6 +5,27 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Actualización de gates y tiendas — 2026-09-18 03:28 UTC
+
+La aprobación independiente de #4226479e0350 quedó verificada, pero CI
+35302282394 detectó diez fallos de una expectativa E2E antigua: el enlace de
+recuperación ahora conserva `lang`. La corrección cambia sólo esa prueba: comprueba
+idioma en el enlace, en la petición del correo y al cerrar el diálogo, además del
+destino y cuerpo compatibles. Los diez casos ES/EN en cinco perfiles y tres motores
+pasan localmente con el bundle de producción. La revisión y CI del sucesor siguen
+siendo necesarias; no se vuelve a ejecutar un fallo determinista sin corregirlo.
+
+Play Console confirma cuenta de servicio Active y sólo app com.tdf.records,
+seis permisos de publicación solicitados y tres implícitos, sin admin/finanzas.
+Android envío f22acacc-5d30-4659-9078-a58f056f859b FINISHED: build1.0.1(10),
+canal internal, estado DRAFT. No equivale a rollout ni disponibilidad pública.
+iOS envío7233bd21-1d94-424c-b792-c0234f497949 FINISHED; Apple build
+`da874897-8526-480d-96ae-044cf075d491` VALID, versión19, asociado y leído de
+vuelta en borrador1.0.1 PREPARE_FOR_SUBMISSION. Capturas/declaraciones/revisión y
+publicación siguen pendientes. Simulador source1ec9160 builddd963682 también
+FINISHED, SHA25639109632b00852cc4c162ce8b4331440f520d035972a3ec93ddbe07c42ff3d07;
+no se confunde con distribución de tienda. Backend productivo permanece db69.
+
 ## Checkpoint de continuación — 2026-09-18 03:10 UTC
 
 **PARTIALLY COMPLETE.** #422 f935ba1e6 recibió aprobación exacta y todos sus
