@@ -130,6 +130,7 @@ executable tdf-hq-exe
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.Services.YouTube
     TDF.SocialEventLifecycle
     TDF.Services.EventLogisticsRoutes
     TDF.Services.Stripe
@@ -453,8 +454,10 @@ test-suite tdf-hq-test
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.Services.YouTube
     TDF.Services.EventLogisticsRoutes
     TDF.Services.EventDiscoverySpec
+    TDF.Services.YouTubeSpec
     TDF.Server.EventResearchSpec
     TDF.Services.InstagramSync
     TDF.Services.Stripe
