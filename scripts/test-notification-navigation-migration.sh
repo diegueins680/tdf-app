@@ -57,4 +57,5 @@ DO $$ BEGIN
  IF NOT EXISTS(SELECT 1 FROM directory_alert_delivery d JOIN notification n ON n.id=d.internal_notification_id AND n.target_key=d.id::text WHERE n.recipient_party_id=5 AND d.result_id='00000000-0000-0000-0000-000000000021') THEN RAISE EXCEPTION 'alert lacks exact result relationship'; END IF;
 END $$;
 SQL
+node "$repo_root/scripts/test-notification-alert-context.mjs" "$notification_test_db"
 echo 'Notification identity, ambiguous legacy, idempotency, rollback and history checks passed.'
