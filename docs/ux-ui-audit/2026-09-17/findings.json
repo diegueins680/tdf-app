@@ -126,17 +126,17 @@
     "journey": "arrival/authentication/first useful action",
     "roles": "anonymous and all authenticated roles",
     "surface": "Selected English language is inconsistent across public authentication",
-    "evidence": "LoginPage, ResetPasswordPage and PublicBranding retain hard-coded Spanish; login catalog has only dialog titles.",
+    "evidence": "LoginPage, ResetPasswordPage and PublicBranding retain hard-coded Spanish; login catalog has only dialog titles. 2026-09-18: actual English directory arrival retained Spanish title/heading/controls; see directory-language-sharing.md.",
     "userImpact": "English-speaking visitors encounter mixed-language arrival and recovery.",
     "rootCause": "Partial localization outside existing catalogs.",
     "proposedChange": "Translate remaining controls/messages through current catalogs, retaining Spanish default and policy versions.",
     "dependencies": [],
     "acceptanceCriteria": "Entire arrival/login/signup/reset/navigation journey follows selected es/en, including errors and screen-reader names.",
     "verificationMethod": "Source inventory plus bilingual browser/native task scripts.",
-    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
+    "releaseStatus": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation. Directory follow-up not yet merged/deployed.",
     "status": "merged",
-    "implementationStatus": "in progress",
-    "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained.",
+    "implementationStatus": "Authentication previously merged; directory ES/EN catalog, metadata, taxonomy locale and accessible labels implemented in focused successor.",
+    "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained. Directory:26 focused tests and10 ES/EN production-bundle journeys in3engines/5profiles pass; public identities and query retained.",
     "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
   {
@@ -1388,5 +1388,38 @@
     ],
     "mergeStatus": "Focused PR pending creation; no merge.",
     "releaseStatus": "Not deployed."
+  },
+  {
+    "id": "UX-260917-047",
+    "kind": "confirmed",
+    "title": "Directory sharing leaves cancellations and clipboard failures unhandled",
+    "severity": "medium",
+    "confidence": "high",
+    "journey": "Public discovery → share a result → cancel or recover",
+    "roles": "Anonymous and authenticated public visitors",
+    "surface": "DirectorySearchPage ResultCard share control",
+    "status": "implemented",
+    "evidence": "Real old-bundle browser with rejected native share promise emits unhandled page error; no success/error/cancel feedback existed. Versioned receipt retains failing case.",
+    "rootCause": "Discarded async promise with no catch or outcome state; clipboard capability assumed.",
+    "userImpact": "Visitors cannot tell whether the link was copied or recover when sharing is denied/unavailable; ordinary cancellation raises an uncaught error.",
+    "acceptanceCriteria": "Handle cancellation and permission/capability failures without uncaught errors; show copied only after confirmed browser write; retain explicit retry/manual detail option; ES/EN accessible feedback.",
+    "implementationStatus": "Localized terminal feedback, capability checks, caught rejections and pending-operation guard; no automatic copy/retry after cancellation.",
+    "verificationMethod": "Six component capability/outcome combinations and10 bilingual production-bundle browser journeys with controlled platform APIs.",
+    "verificationStatus": "26 focused tests,10 browser cases,TypeScript/lint/build/strict catalog pass. No actual OS share-sheet delivery claim.",
+    "dependencies": [
+      "PR447",
+      "independent review",
+      "applicable CI",
+      "Cloudflare publication and production verification"
+    ],
+    "mergeStatus": "Focused successor pending creation; no merge.",
+    "releaseStatus": "Not deployed.",
+    "sources": [
+      {
+        "url": "https://www.w3.org/TR/web-share/",
+        "accessed": "2026-09-18",
+        "implication": "Handle share promise rejection; AbortError covers cancelled/no-target flow. Browser acknowledgement is not recipient-delivery evidence."
+      }
+    ]
   }
 ]

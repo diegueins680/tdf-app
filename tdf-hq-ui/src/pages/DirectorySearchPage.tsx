@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   Autocomplete,
@@ -67,11 +68,11 @@ const DIRECTORY_IMAGE_FALLBACKS: Record<DirectoryEntityType, string> = {
 
 const CITY_STORAGE_KEY = 'tdf.directory.cityId';
 const ENTITY_LABELS: Record<DirectoryEntityType | 'all', string> = {
-  all: 'Todo',
-  profile: 'Perfiles',
-  classified: 'Clasificados',
-  event: 'Eventos',
-  venue: 'Venues',
+  all: 'directorySearch.entityAll',
+  profile: 'directorySearch.entityProfile',
+  classified: 'directorySearch.entityClassified',
+  event: 'directorySearch.entityEvent',
+  venue: 'directorySearch.entityVenue',
 };
 
 const resultPath = (item: DirectorySearchItem) => {
@@ -82,6 +83,8 @@ const resultPath = (item: DirectorySearchItem) => {
 };
 
 export default function DirectorySearchPage() {
+  const { t, i18n } = useTranslation();
+  const language = i18n.resolvedLanguage?.startsWith('es') ? 'es' : 'en';
   const location = useLocation();
   const navigate = useNavigate();
   const { session } = useSession();
@@ -118,21 +121,21 @@ export default function DirectorySearchPage() {
   const [view, setView] = useState<'list' | 'grid' | 'map'>('list');
 
   useMetaTags({
-    title: query ? `${query} en el directorio musical` : 'Directorio y clasificados musicales',
-    description: 'Encuentra músicos, profesionales, bandas, servicios, eventos, venues y oportunidades por ciudad en Ecuador y Latinoamérica.',
+    title: query ? t('directorySearch.searchTitle', { query }) : t('directorySearch.title'),
+    description: t('directorySearch.description'),
     canonical: `${window.location.origin}/buscar`,
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'SearchResultsPage',
-      name: 'Directorio y Clasificados Musicales TDF',
+      name: t('directorySearch.structuredName'),
       url: `${window.location.origin}/buscar`,
-      inLanguage: 'es',
+      inLanguage: language,
     },
   });
 
   const taxonomies = useQuery({
-    queryKey: ['directory', 'taxonomies', 'es'],
-    queryFn: () => Directory.taxonomies('es'),
+    queryKey: ['directory', 'taxonomies', language],
+    queryFn: () => Directory.taxonomies(language),
     staleTime: 30 * 60 * 1000,
   });
 
@@ -186,9 +189,9 @@ export default function DirectorySearchPage() {
     queryKey: favoritesQueryKey,
     queryFn: async () => {
       const ownerPartyId = session?.partyId;
-      if (ownerPartyId === undefined || !isActiveParty(ownerPartyId)) throw new Error('Sesión cambiada');
+      if (ownerPartyId === undefined || !isActiveParty(ownerPartyId)) throw new Error(t('directorySearch.sessionChanged'));
       const saved = await Directory.favorites();
-      if (!isActiveParty(ownerPartyId)) throw new Error('Sesión cambiada');
+      if (!isActiveParty(ownerPartyId)) throw new Error(t('directorySearch.sessionChanged'));
       return saved;
     },
     enabled: Boolean(session?.partyId),
@@ -205,6 +208,12 @@ export default function DirectorySearchPage() {
       : favorites.isError
         ? 'error'
         : 'ready';
+  const refreshFavorites = async (): Promise<boolean> => {
+    const ownerPartyId = session?.partyId;
+    if (ownerPartyId === undefined || !isActiveParty(ownerPartyId)) return false;
+    const result = await favorites.refetch();
+    return result.isSuccess && isActiveParty(ownerPartyId);
+  };
   const updateFavoriteCache = (
     expectedPartyId: number,
     item: DirectorySearchItem,
@@ -258,15 +267,15 @@ export default function DirectorySearchPage() {
   const locate = () => {
     setGeoMessage(null);
     if (!navigator.geolocation) {
-      setGeoMessage('Este dispositivo no ofrece geolocalización. Puedes elegir una ciudad manualmente.');
+      setGeoMessage('directorySearch.locationUnavailable');
       return;
     }
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         setCoordinates({ latitude: coords.latitude, longitude: coords.longitude });
-        setGeoMessage('Ubicación usada solo para esta búsqueda; TDF no la guarda en tu perfil.');
+        setGeoMessage('directorySearch.locationUsed');
       },
-      () => setGeoMessage('No se obtuvo tu ubicación. Puedes seguir buscando por ciudad.'),
+      () => setGeoMessage('directorySearch.locationFailed'),
       { enableHighAccuracy: false, timeout: 8_000, maximumAge: 10 * 60 * 1000 },
     );
   };
@@ -283,12 +292,12 @@ export default function DirectorySearchPage() {
       <Box sx={{ background: 'linear-gradient(135deg, #17112d 0%, #3b1d66 52%, #0e6470 100%)', color: 'white', py: { xs: 6, md: 10 } }}>
         <Container maxWidth="lg">
           <Stack spacing={3} maxWidth={900}>
-            <Chip label="Ecuador · Quito · Latinoamérica" sx={{ alignSelf: 'flex-start', bgcolor: 'rgba(255,255,255,.14)', color: 'white' }} />
+            <Chip label={t('directorySearch.region')} sx={{ alignSelf: 'flex-start', bgcolor: 'rgba(255,255,255,.14)', color: 'white' }} />
             <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '4rem' } }}>
-              Encuentra a la gente y las oportunidades que hacen música
+              {t('directorySearch.heading')}
             </Typography>
             <Typography variant="h6" sx={{ maxWidth: 760, color: 'rgba(255,255,255,.82)' }}>
-              Profesionales, artistas, bandas, venues, eventos, servicios y clasificados, primero por ciudad y cercanía.
+              {t('directorySearch.intro')}
             </Typography>
             <Paper component="form" onSubmit={submitSearch} elevation={8} sx={{ p: 1.5, borderRadius: 3 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
@@ -298,27 +307,27 @@ export default function DirectorySearchPage() {
                   options={(suggestions.data ?? []).map((option) => option.label)}
                   inputValue={draftQuery}
                   onInputChange={(_, value) => setDraftQuery(value)}
-                  renderInput={(params) => <TextField {...params} label="¿Qué necesitas?" placeholder="Bajista, productor, estudio, concierto…" inputProps={{ ...params.inputProps, maxLength: 160 }} />}
+                  renderInput={(params) => <TextField {...params} label={t('directorySearch.queryLabel')} placeholder={t('directorySearch.queryPlaceholder')} inputProps={{ ...params.inputProps, maxLength: 160 }} />}
                 />
                 <FormControl sx={{ minWidth: { sm: 220 } }}>
-                  <InputLabel id="directory-city-label">Ciudad</InputLabel>
-                  <Select labelId="directory-city-label" label="Ciudad" value={citySelectValue} onChange={(event) => { setCoordinates(null); setCityId(event.target.value); }}>
-                    {coordinates && <MenuItem value="__nearby">Cerca de mí</MenuItem>}
+                  <InputLabel id="directory-city-label">{t('directorySearch.city')}</InputLabel>
+                  <Select labelId="directory-city-label" label={t('directorySearch.city')} value={citySelectValue} onChange={(event) => { setCoordinates(null); setCityId(event.target.value); }}>
+                    {coordinates && <MenuItem value="__nearby">{t('directorySearch.nearby')}</MenuItem>}
                     {(taxonomies.data?.cities ?? []).map((city) => <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>)}
                   </Select>
                 </FormControl>
-                <Button type="submit" variant="contained" size="large" startIcon={<SearchIcon />} sx={{ minWidth: 140 }}>Buscar</Button>
+                <Button type="submit" variant="contained" size="large" startIcon={<SearchIcon />} sx={{ minWidth: 140 }}>{t('directorySearch.search')}</Button>
               </Stack>
             </Paper>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
               <Button color="inherit" variant="outlined" startIcon={<MyLocationIcon />} onClick={locate} sx={{ alignSelf: 'flex-start', borderColor: 'rgba(255,255,255,.5)' }}>
-                Usar mi ubicación
+                {t('directorySearch.useLocation')}
               </Button>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,.75)' }}>
-                Solo con tu permiso. Las ubicaciones privadas nunca se muestran.
+                {t('directorySearch.locationPrivacy')}
               </Typography>
             </Stack>
-            {geoMessage && <Alert severity={coordinates ? 'success' : 'info'}>{geoMessage}</Alert>}
+            {geoMessage && <Alert severity={coordinates ? 'success' : 'info'}>{t(geoMessage)}</Alert>}
           </Stack>
         </Container>
       </Box>
@@ -328,79 +337,79 @@ export default function DirectorySearchPage() {
           <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
               <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="directory-profession-label">Profesión</InputLabel>
-                <Select labelId="directory-profession-label" label="Profesión" value={professionId} onChange={(event) => setProfessionId(event.target.value)}>
-                  <MenuItem value="">Todas</MenuItem>
+                <InputLabel id="directory-profession-label">{t('directorySearch.profession')}</InputLabel>
+                <Select labelId="directory-profession-label" label={t('directorySearch.profession')} value={professionId} onChange={(event) => setProfessionId(event.target.value)}>
+                  <MenuItem value="">{t('directorySearch.allFeminine')}</MenuItem>
                   {(taxonomies.data?.professions ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
                 </Select>
               </FormControl>
               <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="directory-service-label">Servicio</InputLabel>
-                <Select labelId="directory-service-label" label="Servicio" value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
-                  <MenuItem value="">Todos</MenuItem>
+                <InputLabel id="directory-service-label">{t('directorySearch.service')}</InputLabel>
+                <Select labelId="directory-service-label" label={t('directorySearch.service')} value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
+                  <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
                   {(taxonomies.data?.serviceOfferings ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
                 </Select>
               </FormControl>
               <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="directory-instrument-label">Instrumento</InputLabel>
-                <Select labelId="directory-instrument-label" label="Instrumento" value={instrumentId} onChange={(event) => setInstrumentId(event.target.value)}>
-                  <MenuItem value="">Todos</MenuItem>
+                <InputLabel id="directory-instrument-label">{t('directorySearch.instrument')}</InputLabel>
+                <Select labelId="directory-instrument-label" label={t('directorySearch.instrument')} value={instrumentId} onChange={(event) => setInstrumentId(event.target.value)}>
+                  <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
                   {(taxonomies.data?.instruments ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
                 </Select>
               </FormControl>
               <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="directory-genre-label">Género</InputLabel>
-                <Select labelId="directory-genre-label" label="Género" value={genreId} onChange={(event) => setGenreId(event.target.value)}>
-                  <MenuItem value="">Todos</MenuItem>
+                <InputLabel id="directory-genre-label">{t('directorySearch.genre')}</InputLabel>
+                <Select labelId="directory-genre-label" label={t('directorySearch.genre')} value={genreId} onChange={(event) => setGenreId(event.target.value)}>
+                  <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
                   {(taxonomies.data?.genres ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
                 </Select>
               </FormControl>
-              {coordinates && <TextField size="small" type="number" label="Radio (km)" value={radiusKm} onChange={(event) => setRadiusKm(Math.min(500, Math.max(1, Number(event.target.value))))} inputProps={{ min: 1, max: 500 }} sx={{ width: 140 }} />}
-              <FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="Remoto" />
-              <FormControlLabel control={<Switch checked={available} onChange={(event) => setAvailable(event.target.checked)} />} label="Disponible" />
-              <Button onClick={() => { setProfessionId(''); setServiceId(''); setInstrumentId(''); setGenreId(''); setRemote(false); setAvailable(false); }}>Limpiar filtros</Button>
+              {coordinates && <TextField size="small" type="number" label={t('directorySearch.radius')} value={radiusKm} onChange={(event) => setRadiusKm(Math.min(500, Math.max(1, Number(event.target.value))))} inputProps={{ min: 1, max: 500 }} sx={{ width: 140 }} />}
+              <FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label={t('directorySearch.remote')} />
+              <FormControlLabel control={<Switch checked={available} onChange={(event) => setAvailable(event.target.checked)} />} label={t('directorySearch.available')} />
+              <Button onClick={() => { setProfessionId(''); setServiceId(''); setInstrumentId(''); setGenreId(''); setRemote(false); setAvailable(false); }}>{t('directorySearch.clearFilters')}</Button>
             </Stack>
           </Paper>
 
           {favorites.isError && session?.partyId ? (
             <Alert
               severity="warning"
-              action={<Button onClick={() => { void favorites.refetch(); }}>Reintentar</Button>}
+              action={<Button onClick={() => { void favorites.refetch(); }}>{t('directorySearch.retry')}</Button>}
             >
-              No pudimos consultar tus guardados. Tus eventos siguen en tu cuenta; vuelve a intentarlo para actualizarlos.
+              {t('directorySearch.favoritesReadError')}
             </Alert>
           ) : null}
 
           <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}>
-            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && value in ENTITY_LABELS) setEntityType(value as DirectoryEntityType | 'all'); }} variant="scrollable" aria-label="Tipos de resultado">
+            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && value in ENTITY_LABELS) setEntityType(value as DirectoryEntityType | 'all'); }} variant="scrollable" aria-label={t('directorySearch.resultTypes')}>
               {(Object.keys(ENTITY_LABELS) as (DirectoryEntityType | 'all')[]).map((type) => (
-                <Tab key={type} value={type} label={`${ENTITY_LABELS[type]}${type === 'all' ? facets?.total ? ` (${facets.total})` : '' : facets?.entityTypes[type] != null ? ` (${facets.entityTypes[type]})` : ''}`} />
+                <Tab key={type} value={type} label={`${t(ENTITY_LABELS[type])}${type === 'all' ? facets?.total ? ` (${facets.total})` : '' : facets?.entityTypes[type] != null ? ` (${facets.entityTypes[type]})` : ''}`} />
               ))}
             </Tabs>
-            <ToggleButtonGroup exclusive size="small" value={view} onChange={(_, value: unknown) => { if (value === 'list' || value === 'grid' || value === 'map') setView(value); }} aria-label="Vista de resultados">
-              <ToggleButton value="list" aria-label="Lista"><ViewListIcon /></ToggleButton>
-              <ToggleButton value="grid" aria-label="Cuadrícula"><GridViewIcon /></ToggleButton>
-              <ToggleButton value="map" aria-label="Mapa"><MapIcon /></ToggleButton>
+            <ToggleButtonGroup exclusive size="small" value={view} onChange={(_, value: unknown) => { if (value === 'list' || value === 'grid' || value === 'map') setView(value); }} aria-label={t('directorySearch.resultView')}>
+              <ToggleButton value="list" aria-label={t('directorySearch.list')}><ViewListIcon /></ToggleButton>
+              <ToggleButton value="grid" aria-label={t('directorySearch.grid')}><GridViewIcon /></ToggleButton>
+              <ToggleButton value="map" aria-label={t('directorySearch.map')}><MapIcon /></ToggleButton>
             </ToggleButtonGroup>
           </Stack>
 
           {sponsored.length > 0 && (
             <Box component="section" aria-labelledby="sponsored-heading">
-              <Typography id="sponsored-heading" variant="overline">Patrocinados</Typography>
-              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout="list" isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={() => { if (session?.partyId && isActiveParty(session.partyId)) void favorites.refetch(); }} isActiveParty={isActiveParty} />)}</Stack>
+              <Typography id="sponsored-heading" variant="overline">{t('directorySearch.sponsoredPlural')}</Typography>
+              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout="list" isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={refreshFavorites} isActiveParty={isActiveParty} />)}</Stack>
             </Box>
           )}
 
-          <Typography component="h2" variant="h5" fontWeight={800}>Resultados orgánicos · {facets?.total ?? items.length}</Typography>
+          <Typography component="h2" variant="h5" fontWeight={800}>{t('directorySearch.organicResults', { count: facets?.total ?? items.length })}</Typography>
 
-          {results.isLoading ? <Stack alignItems="center" py={8}><CircularProgress aria-label="Buscando resultados" /><Typography mt={2}>Buscando en TDF…</Typography></Stack> : null}
-          {results.isError ? <Alert severity="error" action={<Button onClick={() => { void results.refetch(); }}>Reintentar</Button>}>No se pudo completar la búsqueda.</Alert> : null}
+          {results.isLoading ? <Stack alignItems="center" py={8}><CircularProgress aria-label={t('directorySearch.searchingLabel')} /><Typography mt={2}>{t('directorySearch.searching')}</Typography></Stack> : null}
+          {results.isError ? <Alert severity="error" action={<Button onClick={() => { void results.refetch(); }}>{t('directorySearch.retry')}</Button>}>{t('directorySearch.searchError')}</Alert> : null}
           {!results.isLoading && !results.isError && items.length === 0 ? (
             <Paper variant="outlined" sx={{ p: 5, textAlign: 'center', borderRadius: 3 }}>
-              <Typography variant="h5" fontWeight={800}>Todavía no hay coincidencias</Typography>
-              <Typography color="text.secondary" mt={1}>Amplía la ciudad o el radio, prueba un sinónimo o quita un filtro.</Typography>
+              <Typography variant="h5" fontWeight={800}>{t('directorySearch.emptyTitle')}</Typography>
+              <Typography color="text.secondary" mt={1}>{t('directorySearch.emptyHelp')}</Typography>
               <Stack direction="row" justifyContent="center" gap={1} mt={3} flexWrap="wrap">
-                {['músico', 'productor', 'estudio', 'concierto'].map((value) => <Chip key={value} label={value} onClick={() => { setDraftQuery(value); setQuery(value); }} clickable />)}
+                {[t('directorySearch.hintMusician'), t('directorySearch.hintProducer'), t('directorySearch.hintStudio'), t('directorySearch.hintConcert')].map((value) => <Chip key={value} label={value} onClick={() => { setDraftQuery(value); setQuery(value); }} clickable />)}
               </Stack>
             </Paper>
           ) : null}
@@ -408,10 +417,10 @@ export default function DirectorySearchPage() {
           {view === 'map' && items.length > 0 ? <OpenStreetMapResults items={items} /> : null}
           {view !== 'map' && items.length > 0 ? (
             <Box sx={{ display: 'grid', gridTemplateColumns: view === 'grid' ? { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' } : '1fr', gap: 2 }}>
-              {items.map((item) => <ResultCard key={`${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout={view === 'grid' ? 'grid' : 'list'} isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={() => { if (session?.partyId && isActiveParty(session.partyId)) void favorites.refetch(); }} isActiveParty={isActiveParty} />)}
+              {items.map((item) => <ResultCard key={`${generation}-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout={view === 'grid' ? 'grid' : 'list'} isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} onRefreshFavorites={refreshFavorites} isActiveParty={isActiveParty} />)}
             </Box>
           ) : null}
-          {results.hasNextPage && <Button variant="outlined" size="large" onClick={() => { void results.fetchNextPage(); }} disabled={results.isFetchingNextPage} sx={{ alignSelf: 'center' }}>{results.isFetchingNextPage ? 'Cargando…' : 'Ver más resultados'}</Button>}
+          {results.hasNextPage && <Button variant="outlined" size="large" onClick={() => { void results.fetchNextPage(); }} disabled={results.isFetchingNextPage} sx={{ alignSelf: 'center' }}>{results.isFetchingNextPage ? t('directorySearch.loadingMore') : t('directorySearch.loadMore')}</Button>}
         </Stack>
       </Container>
     </Box>
@@ -434,15 +443,16 @@ function ResultCard({
   isFavorite: boolean;
   favoriteAvailability: 'unauthenticated' | 'loading' | 'error' | 'ready';
   onFavoriteChanged: (partyId: number, item: DirectorySearchItem, saved: boolean) => void;
-  onRefreshFavorites: () => void;
+  onRefreshFavorites: () => Promise<boolean>;
   isActiveParty: (partyId: number) => boolean;
 }) {
+  const { t } = useTranslation();
   const path = resultPath(item);
   const fallbackImageUrl = new URL(DIRECTORY_IMAGE_FALLBACKS[item.type], window.location.origin).toString();
   const imageUrl = resolveImageUrl(item.imageUrl) ?? fallbackImageUrl;
   const favorite = useMutation({
     mutationFn: async ({ ownerPartyId, saved }: { ownerPartyId: number; saved: boolean }) => {
-      if (!isActiveParty(ownerPartyId)) throw new Error('Sesión cambiada');
+      if (!isActiveParty(ownerPartyId)) throw new Error(t('directorySearch.sessionChanged'));
       if (saved) await Directory.addFavorite(item.type, item.id);
       else await Directory.removeFavorite(item.type, item.id);
       return { ownerPartyId, saved };
@@ -462,10 +472,29 @@ function ResultCard({
       }
     },
   });
+  const shareBusy = useRef(false);
+  const [shareStatus, setShareStatus] = useState<'idle' | 'pending' | 'copied' | 'completed' | 'cancelled' | 'error'>('idle');
   const share = async () => {
+    if (shareBusy.current) return;
+    shareBusy.current = true;
+    setShareStatus('pending');
     const url = `${window.location.origin}${path}`;
-    if (navigator.share) await navigator.share({ title: item.title, text: item.summary ?? undefined, url });
-    else await navigator.clipboard.writeText(url);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: item.title, text: item.summary ?? undefined, url });
+        setShareStatus('completed');
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setShareStatus('copied');
+      } else {
+        setShareStatus('error');
+      }
+    } catch (error) {
+      const cancelled = typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError';
+      setShareStatus(cancelled ? 'cancelled' : 'error');
+    } finally {
+      shareBusy.current = false;
+    }
   };
   return (
     <Card
@@ -480,7 +509,7 @@ function ResultCard({
       <CardMedia
         component="img"
         image={imageUrl}
-        alt={item.imageUrl ? `Foto de ${item.title}` : `Imagen de referencia de ${item.title}`}
+        alt={item.imageUrl ? t('directorySearch.photo', { title: item.title }) : t('directorySearch.fallbackPhoto', { title: item.title })}
         loading="lazy"
         onError={(event) => {
           if (event.currentTarget.src !== fallbackImageUrl) event.currentTarget.src = fallbackImageUrl;
@@ -499,11 +528,11 @@ function ResultCard({
           <Stack direction="row" justifyContent="space-between" gap={2}>
             <Box>
               <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-                <Chip size="small" label={ENTITY_LABELS[item.type]} />
+                <Chip size="small" label={t(ENTITY_LABELS[item.type])} />
                 {item.sponsored && (
                   <Chip
                     size="small"
-                    label={item.sponsorDisclosure ?? 'Patrocinado'}
+                    label={item.sponsorDisclosure ?? t('directorySearch.sponsored')}
                     sx={{ bgcolor: '#7a3e00', color: '#fff' }}
                   />
                 )}
@@ -513,15 +542,15 @@ function ResultCard({
             </Box>
             {item.location.distanceKm != null && <Chip label={`≈ ${item.location.distanceKm} km`} color="primary" variant="outlined" />}
           </Stack>
-          <Typography mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? 'Abre el resultado para conocer más.'}</Typography>
+          <Typography mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? t('directorySearch.summaryFallback')}</Typography>
           <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
             {item.location.city && <Chip size="small" label={`${item.location.city}${item.location.countryCode ? `, ${item.location.countryCode}` : ''}`} />}
-            {item.location.precision && <Chip size="small" variant="outlined" label={`Ubicación ${item.location.precision === 'city' ? 'aproximada' : item.location.precision}`} />}
+            {item.location.precision && <Chip size="small" variant="outlined" label={item.location.precision === 'city' ? t('directorySearch.approximateLocation') : t('directorySearch.locationPrecision', { precision: item.location.precision })} />}
           </Stack>
         </CardContent>
         <CardActions sx={{ px: 2, pb: 2, flexWrap: 'wrap' }}>
-          <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>Ver detalle</Button>
-          <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
+          <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>{t('directorySearch.detail')}</Button>
+          <Button onClick={() => { void share(); }} disabled={shareStatus === 'pending'} aria-busy={shareStatus === 'pending' || undefined} startIcon={<ShareIcon />}>{t(shareStatus === 'pending' ? 'directorySearch.sharePending' : 'directorySearch.share')}</Button>
           {partyId ? (
             <Button
               onClick={() => { if (isActiveParty(partyId)) favorite.mutate({ ownerPartyId: partyId, saved: !isFavorite }); }}
@@ -529,27 +558,32 @@ function ResultCard({
               startIcon={isFavorite ? <BookmarkIcon /> : <BookmarkBorderIcon />}
               aria-pressed={isFavorite}
               aria-busy={favorite.isPending || undefined}
-              aria-label={isFavorite ? `Quitar ${item.title} de tus guardados` : `Guardar ${item.title} en tu cuenta`}
+              aria-label={isFavorite ? t('directorySearch.removeLabel', { title: item.title }) : t('directorySearch.saveLabel', { title: item.title })}
             >
               {favorite.isPending
-                ? 'Actualizando…'
+                ? t('directorySearch.updating')
                 : favoriteAvailability === 'loading'
-                  ? 'Consultando…'
+                  ? t('directorySearch.checking')
                   : favoriteAvailability === 'error'
-                    ? 'Guardados no disponibles'
+                    ? t('directorySearch.favoritesUnavailable')
                     : isFavorite
-                      ? 'Quitar guardado'
-                      : 'Guardar'}
+                      ? t('directorySearch.unsave')
+                      : t('directorySearch.save')}
             </Button>
           ) : (
             <Button component={RouterLink} to={`${buildLoginRedirectPath(path)}${item.type === 'event' ? '&intent=events' : ''}`} startIcon={<LoginIcon />}>
-              {item.type === 'event' ? 'Ingresar para guardar' : 'Ingresar para contactar'}
+              {item.type === 'event' ? t('directorySearch.loginSave') : t('directorySearch.loginContact')}
             </Button>
           )}
         </CardActions>
+        {shareStatus !== 'idle' && shareStatus !== 'pending' && (
+          <Alert severity={shareStatus === 'error' ? 'error' : shareStatus === 'cancelled' ? 'info' : 'success'} role={shareStatus === 'error' ? 'alert' : 'status'} sx={{ mx: 2, mb: 2 }}>
+            {t(shareStatus === 'copied' ? 'directorySearch.shareCopied' : shareStatus === 'completed' ? 'directorySearch.shareCompleted' : shareStatus === 'cancelled' ? 'directorySearch.shareCancelled' : 'directorySearch.shareError')}
+          </Alert>
+        )}
         {favorite.isError ? (
-          <Alert severity="error" sx={{ mx: 2, mb: 2 }} action={<Button onClick={onRefreshFavorites}>Consultar guardados</Button>}>
-            No pudimos confirmar el cambio de este resultado. Vuelve a consultar tus guardados antes de intentarlo otra vez.
+          <Alert severity="error" sx={{ mx: 2, mb: 2 }} action={<Button onClick={() => { void onRefreshFavorites().then((refreshed) => { if (refreshed && partyId !== undefined && isActiveParty(partyId)) favorite.reset(); }); }}>{t('directorySearch.refreshFavorites')}</Button>}>
+            {t('directorySearch.favoriteError')}
           </Alert>
         ) : null}
       </Box>

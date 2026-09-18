@@ -1,6 +1,8 @@
+import directorySearch from './directorySearch.en';
 import authEntry from './authEntry.en';
 const en = {
   authEntry,
+  directorySearch,
   auditAccessibility: {
     loadingReports: 'Loading reports',
     loadingConversations: 'Loading conversations',
