@@ -34,7 +34,9 @@ import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, to
 import Database.Persist.Sqlite (createSqlitePool)
 import qualified Network.HTTP.Client as HTTP
 import Network.Wai (defaultRequest)
-import Network.Wai.Internal (Request (..))
+import qualified Network.Wai as Wai
+import qualified Network.HTTP.Types as HTTPTypes
+import Network.Wai.Internal (Request (..), ResponseReceived (..))
 import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import Servant.Server.Internal.Handler (runHandler)
@@ -7655,6 +7657,25 @@ main = hspec $ do
                 , ("DISABLE_DEFAULT_CORS", Nothing)
                 ]
                 "CORS_DISABLE_DEFAULTS must be a boolean CORS flag"
+
+    describe "CORS contact request idempotency" $ do
+        it "permits the actor-scoped request header from an allowed web origin" $ do
+            middleware <- corsPolicy
+            let preflight = defaultRequest
+                    { requestMethod = "OPTIONS"
+                    , requestHeaders =
+                        [ ("Origin", "https://tdfui.pages.dev")
+                        , ("Access-Control-Request-Method", "POST")
+                        , ("Access-Control-Request-Headers", "authorization,content-type,idempotency-key")
+                        ]
+                    }
+                application _ respond = respond (Wai.responseLBS HTTPTypes.status200 [] "")
+            _ <- middleware application preflight $ \response -> do
+                Wai.responseStatus response `shouldBe` HTTPTypes.status200
+                let allowed = fromMaybe "" (lookup "Access-Control-Allow-Headers" (Wai.responseHeaders response))
+                allowed `shouldSatisfy` BS.isInfixOf "idempotency-key"
+                pure ResponseReceived
+            pure ()
 
     describe "CORS trusted preview origins" $ do
         it "allows only the known TDF Pages projects and their preview subdomains" $ do

@@ -13796,22 +13796,22 @@
       }
     },
     {
-      "id": "cedbc4f84ceef2965f77",
+      "id": "0c429bcb2b0a96f64bcb",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Ordered migration identifiers and script paths remain deployment execution mechanics, with applied revisions persisted in the ledger. This manifest preserves all 103 main entries unchanged and adds the independently reviewed artist policy after them. Directory privacy view composition and artist policy touch independent objects; both are retained with unchanged SQL. All 104 introduction SHAs are ancestors containing their registered path.",
+      "justification": "Ordered migration identifiers and script paths are deployment execution mechanics. All 104 dependency entries are unchanged; identity reconciliation is appended last so its archive guards inspect the complete prior schema. Introduction SHAs and applied checksums remain enforced by the release lane. Supersedes manifest-only fingerprint cedbc4f84ceef2965f77 after addition of the identity migration.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "artist-directory-integration-2026-09-17",
+      "reviewBatch": "identity-reconciliation-2026-09-17",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 104
+        "valueCount": 105
       }
     },
     {
@@ -13843,6 +13843,29 @@
       "risk": "Fixture property drift would weaken current-session regression coverage.",
       "justification": "Reviewed 2026-09-17: ArtistClaimPanel.test.tsx session has the fixed SessionUser contract keys partyId and apiToken. Values are synthetic; it is not a role/grant or user-selectable catalog.",
       "reviewed": true
+    },
+    {
+      "id": "60abc703b46c2eb74530",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "identity_reconciliation_case.status",
+      "priority": "P1-integrity",
+      "risk": "Changing receipt states can bypass identity review, repeat side effects or lose rollback evidence.",
+      "justification": "These are persisted transaction receipt states for review, explicit separation, attestation, application and undo. They are a closed maintenance protocol, not an editable business catalog. Whole-group evidence and dependency revalidation guard execution; history and rollback guards preserve evidence.",
+      "reviewed": true,
+      "reviewMethod": "source-and-model-review",
+      "reviewBatch": "identity-reconciliation-2026-09-17",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
+        "values": [
+          "review",
+          "separate",
+          "confirmed",
+          "applied",
+          "reverted"
+        ],
+        "validation": "scripts/test-identity-reconciliation.sh"
+      }
     }
   ]
 }
