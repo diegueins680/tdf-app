@@ -683,7 +683,7 @@
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
     "status": "verification pending",
     "implementationStatus": "Server-owned session onboarding contract already implemented; UX-012 adds frontend current-session fences. No new contract project required.",
-    "verificationStatus": "Actual isolated HTTP two-account test passed persistence/idempotence/logout/isolation; three-engine actual signup→follow→reload passed. Native cross-device and production observations remain pending.",
+    "verificationStatus": "Actual isolated iOS18.3 simulator: password login/reopen, logout/account switch pass. UX037 exposed social-event/FanHub follow mismatch. Corrected Hermes production bundle: nativeB first follow and restart persist; actual webB sees follow and completed onboarding after reload; accountA completedAt unchanged. Final native artifact/Android/physical Google gates remain explicit.",
     "mergeStatus": "Determine per-finding containment in current main; no branch cleanup authorized.",
     "releaseStatus": "Per-finding deployment/publication verification pending"
   },
@@ -1337,5 +1337,31 @@
     "verificationStatus": "CI35319379339 SUCCESS:2584examples0fail1pending,15focused, actual HTTP/PostgreSQL controlled16concurrent visits/count24/settings/canonical+legacy/mixed+unknown/isolation/revocation passed. Formal NavigationVisit/unsafe negative verified.",
     "mergeStatus": "Normal merge5c11577a5d31f079b3e070a7810a6b04a48d99f4; exact9213 approved and all applicable gates passed; zero review threads.",
     "releaseStatus": "Automatic image35322697541 building; production remains2f01. Release also contains430; recovery compatibility guard required before production."
+  },
+  {
+    "id": "UX-260917-037",
+    "kind": "confirmed",
+    "title": "Native artist onboarding writes a different follow contract from FanHub",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "signup / follow artist / persisted completion / return on web and native",
+    "roles": "authenticated new Fan and returning account",
+    "surface": "mobile social screen; canonical FanHub API boundary",
+    "evidence": "Actual iOS18.3 SE simulator, EAS native binary5c6fb225/source3c72536 and isolated HTTP/PostgreSQL API38256cf: native social-event artist follow persists, but FanHub follows stay empty and onboarding completion returns200 newlyCompleted=false/progress.completedAt=null. See evidence/native-canonical-follow-negative.json. The original native row also overflows on a long artist name.",
+    "userImpact": "The first useful native action is absent from FanHub and cannot complete authoritative onboarding. Native local-only following display is lost on restart.",
+    "rootCause": "Native onboarding uses social-events artist namespace and local followedArtistIds; server completion recognizes canonical FanHub engagement evidence.",
+    "proposedChange": "Use existing FanHub catalog and follow APIs for onboarding; read persisted follows keyed by current Party, reject stale-account mutations/results and wrap long names. Keep social-event artist APIs for their own journeys.",
+    "dependencies": [
+      "mobile102 runtime qualification",
+      "final supported native artifact verification",
+      "parent mobile reference and distribution"
+    ],
+    "acceptanceCriteria": "Native first follow is visible in FanHub, completes authoritative onboarding once, survives app restart and web reload, and cannot change another account. Long names retain the action within the screen.",
+    "verificationMethod": "Actual isolated native Hermes production bundle + HTTP/PostgreSQL + actual web production bundle; contract/component tests and existing FanHubOnboarding current-session/persisted-receipt model conformance.",
+    "status": "implemented",
+    "implementationStatus": "Mobile PR #104 source60fccd5 uses canonical FanHub catalog/follow contract; Party-scoped server query and owner fences replace local-only follow state; long names wrap and people network is labeled.",
+    "verificationStatus": "498 tests and complete native release check passed; final heading-only edit10focusedtests passed. Actual iOS18.3 simulator Hermes bundle entry-1672408e67b2eae14653ee1f2d7c9f00.hbc SHA256b28593cc6926264eaf6b4385f7d5fb7cd9eece0b85a5fce88d077c4b942c355c passed persisted-follow/reopen/network-label assertions. Prior functionally identical bundle nativeB→webB first-follow/completion/reload passed; accountA completion unchanged. Actual isolated backend38256cf/PostgreSQL17, native shellEAS5c6fb225. Not Android, physical Google OAuth or final signed store artifact evidence.",
+    "mergeStatus": "Draft mobile #104 published60fccd5; depends on #102 runtime qualification and final integrated gates.",
+    "releaseStatus": "Hold native promotion until corrected source and final qualified artifacts are published."
   }
 ]
