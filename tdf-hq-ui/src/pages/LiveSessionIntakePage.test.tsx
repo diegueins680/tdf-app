@@ -76,3 +76,11 @@ it('sends new internal musicians atomically without pre-creating contacts or acc
  expect(create).not.toHaveBeenCalled(); expect(update).not.toHaveBeenCalled(); expect(createUser).not.toHaveBeenCalled();
  expect(submit.mock.calls[0]?.[2]).toEqual(expect.any(String));
 });
+
+it.each([false, true])('offers existing-contact reuse only with CRM access (%s)', (canReuseContacts) => {
+ const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+ render(<QueryClientProvider client={client}><LiveSessionIntakeForm variant="internal" draftOwner={17} canReuseContacts={canReuseContacts} /></QueryClientProvider>);
+ expect(Boolean(screen.queryByText('Private contact selector'))).toBe(canReuseContacts);
+ expect(screen.getByText('Se creará un contacto para esta sesión')).toBeInTheDocument();
+ expect(screen.queryByText('Se creará usuario y contacto automáticamente')).not.toBeInTheDocument();
+});
