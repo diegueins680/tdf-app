@@ -774,3 +774,12 @@ variant1.0.1/build1 does not prove App Store build19 acceptance.
 The nearest-scroll correction passes10 local cases in five profiles/three engines;
 production build365428gzip and affected lint pass. Linux CI must confirm the same
 regression on the successor head. Synthetic fixtures prevent campaign submissions.
+
+Navigation HTTP gate35315995605 passed all16 controlled concurrent visits and
+second-account isolation, then failed400 on settings. This confirmed UX034:
+web/OpenAPI send favorite/pinned/pinOrder but the decoder accepted only npu-prefixed
+record names. The successor accepts both strict schemas, rejects mixed/unknown
+keys, and adds generated roundtrips plus actual HTTP compatibility/authority cases.
+Full corrected HTTP gate is pending; no merge/release claim. NavigationVisit model
+and its meaningful unsafe counterexample are unchanged; new wire tests connect the
+existing SettingsPreserved property to the actual handler.

@@ -88,6 +88,9 @@ try {
   assert.equal((await request(b.token)).value.useCount, 1, 'separate account starts its own count');
   const settings = { favorite: true, pinned: true, pinOrder: 3 };
   assert.equal((await request(a.token, 'PUT', '', settings)).status, 200);
+  assert.equal((await request(a.token, 'PUT', '', { npuFavorite: true, npuPinned: true, npuPinOrder: 3 })).status, 200, 'legacy wire contract remains accepted');
+  assert.equal((await request(a.token, 'PUT', '', { ...settings, npuFavorite: false })).status, 400, 'mixed schemas are rejected');
+  assert.equal((await request(a.token, 'PUT', '', { ...settings, partyId: b.id })).status, 400, 'caller cannot choose another account');
   const mixed = await Promise.all(Array.from({ length: 16 }, (_, i) => i % 2 ? request(a.token) : request(a.token, 'PUT', '', settings)));
   assert.ok(mixed.every(r => r.status === 200));
   const stored = JSON.parse(sql(`SELECT row_to_json(p) FROM feature_navigation_preferences p WHERE party_id=${a.id}`));

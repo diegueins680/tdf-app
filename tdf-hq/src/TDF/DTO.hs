@@ -5,6 +5,7 @@
 module TDF.DTO where
 
 import           GHC.Generics (Generic)
+import           Control.Applicative ((<|>))
 import           Data.Aeson
   ( Options
   , ToJSON(..)
@@ -1212,7 +1213,12 @@ data NavigationPreferenceUpdate = NavigationPreferenceUpdate
   } deriving (Show, Generic)
 
 instance FromJSON NavigationPreferenceUpdate where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value =
+    genericParseJSON strictDecodeOptions { fieldLabelModifier = dtoCamelDrop 3 } value
+      -- Preserve previously accepted prefixed payloads while web and OpenAPI
+      -- use the canonical unprefixed contract. Both forms reject unknown or
+      -- mixed fields rather than silently ignoring a preference update.
+      <|> genericParseJSON strictDecodeOptions value
 
 data NavigationPreferenceDTO = NavigationPreferenceDTO
   { npFeatureId     :: Text

@@ -3,7 +3,7 @@
 
 module TDF.APITypesSpec (spec) where
 
-import Data.Aeson (eitherDecode, object, toJSON, (.=))
+import Data.Aeson (eitherDecode, encode, object, toJSON, (.=))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Maybe (isJust)
@@ -11,6 +11,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Time (fromGregorian)
 import Test.Hspec
+import Test.QuickCheck (property)
 
 import qualified TDF.API as API
 import qualified TDF.API.Calendar as Calendar
@@ -64,6 +65,31 @@ import TDF.Trials.DTO (TrialRequestIn (..))
 
 spec :: Spec
 spec = do
+    describe "NavigationPreferenceUpdate wire compatibility" $ do
+        it "preserves generated preference values in both supported wire forms" $ property $
+            let roundtrip :: Bool -> Bool -> Maybe Int -> Bool
+                roundtrip favorite pinned pinOrder =
+                    let fields value = (DTO.npuFavorite value, DTO.npuPinned value, DTO.npuPinOrder value)
+                        canonical = object ["favorite" .= favorite, "pinned" .= pinned, "pinOrder" .= pinOrder]
+                        legacy = object ["npuFavorite" .= favorite, "npuPinned" .= pinned, "npuPinOrder" .= pinOrder]
+                    in all (\value -> fmap fields (eitherDecode (encode value)) == Right (favorite, pinned, pinOrder)) [canonical, legacy]
+            in roundtrip
+        it "accepts the web contract and preserves the legacy prefixed form" $ do
+            let fields value = (DTO.npuFavorite value, DTO.npuPinned value, DTO.npuPinOrder value)
+            fmap fields (eitherDecode "{\"favorite\":true,\"pinned\":true,\"pinOrder\":3}")
+                `shouldBe` Right (True, True, Just 3)
+            fmap fields (eitherDecode "{\"npuFavorite\":true,\"npuPinned\":true,\"npuPinOrder\":3}")
+                `shouldBe` Right (True, True, Just 3)
+        it "rejects mixed, unknown and incorrectly typed fields" $ do
+            let rejected payload = case eitherDecode payload :: Either String DTO.NavigationPreferenceUpdate of
+                    Left _ -> True
+                    Right _ -> False
+            map rejected
+                [ "{\"favorite\":true,\"pinned\":true,\"pinOrder\":3,\"npuFavorite\":false}"
+                , "{\"favorite\":true,\"pinned\":true,\"pinOrder\":3,\"partyId\":17}"
+                , "{\"favorite\":\"true\",\"pinned\":true,\"pinOrder\":3}"
+                ] `shouldBe` [True, True, True]
+
     describe "PartyFollowDTO selector-safe identity" $ do
         it "serializes canonical ids with only the two minimal display names" $ do
             let payload = DTO.PartyFollowDTO
