@@ -13848,16 +13848,16 @@
       "reviewed": true
     },
     {
-      "id": "6575f00697f8dc105583",
+      "id": "eca67f06b24bad7056ef",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Ordered migration IDs and introduction commits are release execution mechanics. Preserve the first 108 entries and append actor-scoped intake receipts. No existing migration or checksum is rewritten; the receipt migration has an ancestor introduction commit and refuses destructive rollback after use.",
+      "justification": "Ordered immutable migration IDs and introduction commits are release execution mechanics. Preserve all prior109entries and append the existing calendar runtime tables, introduced in ancestor49ff02de5. No applied migration/checksum is rewritten; recovery retains these additive tables and authorized data.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "identity-intake-prevention-2026-09-18",
+      "reviewBatch": "ux-calendar-runtime-2026-09-18",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,

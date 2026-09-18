@@ -941,3 +941,4 @@ negative/positive evidence are in [public-catalog-readiness.md](public-catalog-r
 Compilation and HTTP contracts pass; full backend/hosted checks, review, merge and
 guarded release verification remain pending. This is an acceptance blocker for the
 existing public arrival journey, not a new feature workstream.
+Calendar continuation18September: confirmed040missingruntime schema and041optionalstorage failure have a focused compatible repair. See [calendar-runtime-readiness.md](calendar-runtime-readiness.md) for realPG/HTTP/browser evidence, immutable migration introduction ancestry and recovery. Review/CI/merge/release remain pending; no external Googlecalendar accessed.

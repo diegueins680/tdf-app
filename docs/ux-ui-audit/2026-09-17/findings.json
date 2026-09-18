@@ -1480,7 +1480,7 @@
       "guarded backend release and web deployment"
     ],
     "status": "implemented",
-    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.",
+    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.\nRelated increment evidence: Not merged; focused calendar runtime PR being prepared.",
     "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
     "id": "UX-260917-040",
     "title": "Existing admin calendar API has no production runtime tables",
@@ -1506,7 +1506,7 @@
       "guarded backend release and web deployment"
     ],
     "status": "implemented",
-    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.",
+    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.\nRelated increment evidence: Not merged; focused calendar runtime PR being prepared.",
     "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
     "id": "UX-260917-041",
     "title": "Calendar optional preference storage failure replaces the form with an error boundary",
