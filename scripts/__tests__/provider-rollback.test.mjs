@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseArgs, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
+import { parseArgs, recoverReleaseMachines, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
 
 const legacy = '2f01b20b0c2a2e2088570c3dc5deba6197266452';
 const modern = '5c11577a5d31f079b3e070a7810a6b04a48d99f4';
@@ -69,4 +69,40 @@ test('bounded conformance: mixed machine histories, failure order and retries ne
       assert.equal(deployed.length, priors.filter(sha => sha === modern).length * 2);
     }
   }
+});
+
+
+test('canary failure recovers untouched legacy replicas and all touched replicas', async () => {
+  for (let mask = 0; mask < 4; mask++) {
+    const machines = [0, 1].map(id => ({ id, releaseSnapshot: { rollbackPolicy: { compatible: Boolean(mask & (1 << id)) } } }));
+    for (const canary of [0, 1]) {
+      const writes = [];
+      const result = await recoverReleaseMachines(machines, new Set([canary]), async machine => {
+        writes.push(machine.id);
+        return { machineId: machine.id };
+      });
+      const expected = machines.filter(m => m.id === canary || !m.releaseSnapshot.rollbackPolicy.compatible).map(m => m.id).reverse();
+      assert.deepEqual(writes, expected);
+      assert.equal(result.rollbacks.length, expected.length);
+      assert.deepEqual(result.errors, []);
+    }
+  }
+});
+
+test('recovery attempts every required replica despite a failure and records incomplete recovery', async () => {
+  const machines = [0, 1].map(id => ({ id, releaseSnapshot: { rollbackPolicy: { compatible: false } } }));
+  const attempted = [];
+  const result = await recoverReleaseMachines(machines, new Set([0]), async machine => {
+    attempted.push(machine.id);
+    if (machine.id === 1) throw new Error('provider unavailable');
+    return { machineId: 0 };
+  });
+  assert.deepEqual(attempted, [1, 0]);
+  assert.deepEqual(result.errors, [{ machineId: 1, error: 'provider unavailable' }]);
+  assert.deepEqual(result.rollbacks, [{ machineId: 0 }]);
+});
+
+test('pre-deployment failure does not mutate the untouched fleet', async () => {
+  const machines = [{ id: 0, releaseSnapshot: { rollbackPolicy: { compatible: false } } }];
+  assert.deepEqual(await recoverReleaseMachines(machines, new Set(), () => assert.fail('no deploy attempt')), { rollbacks: [], errors: [] });
 });

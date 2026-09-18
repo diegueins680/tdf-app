@@ -1,6 +1,6 @@
 ------------------------ MODULE ProviderRollback ------------------------
 EXTENDS Naturals, FiniteSets
-CONSTANTS Unsafe, PriorSafe, InitialSafe
+CONSTANTS Unsafe, PriorSafe, InitialSafe, RecoverUntouched
 Machines == {1, 2}
 VARIABLES safe, touched, phase, outcome, bound
 vars == <<safe, touched, phase, outcome, bound>>
@@ -26,16 +26,17 @@ Bind == /\ phase # "ready" /\ ~bound
 Fail == /\ phase \in {"deploy", "complete"} /\ touched # {}
         /\ phase' = "rollback"
         /\ UNCHANGED <<safe, touched, outcome, bound>>
-Rollback(m) == /\ phase = "rollback" /\ m \in touched
+RecoveryMachines == IF RecoverUntouched THEN touched \cup (Machines \ InitialSafe) ELSE touched
+Rollback(m) == /\ phase = "rollback" /\ m \in RecoveryMachines
                /\ outcome[m] = "pending"
                /\ IF Unsafe \/ m \in PriorSafe
                      THEN /\ safe' = [safe EXCEPT ![m] = m \in PriorSafe]
                           /\ outcome' = [outcome EXCEPT ![m] = "restored"]
-                     ELSE /\ safe' = safe
-                          /\ outcome' = [outcome EXCEPT ![m] = "blocked"]
+                     ELSE /\ safe' = [safe EXCEPT ![m] = TRUE]
+                          /\ outcome' = [outcome EXCEPT ![m] = "restored"]
                /\ UNCHANGED <<touched, phase, bound>>
 Finish == /\ phase = "rollback"
-          /\ \A m \in touched : outcome[m] # "pending"
+          /\ \A m \in RecoveryMachines : outcome[m] # "pending"
           /\ phase' = "stopped"
           /\ UNCHANGED <<safe, touched, outcome, bound>>
 Next == Migrate \/ Bind \/ Fail \/ Finish
@@ -44,6 +45,7 @@ Spec == Init /\ [][Next]_vars /\ WF_vars(Finish)
         /\ (\A m \in Machines : WF_vars(Rollback(m)))
 NoUnsafeRestoration == \A m \in Machines : outcome[m] = "restored" => safe[m]
 ModernNeverDowngrades == \A m \in touched : safe[m]
+StoppedFleetSafe == phase = "stopped" => \A m \in Machines : safe[m]
 BindingPreserved == [][bound => bound']_bound
 RecoveryDecisionSettles == (phase = "rollback") ~> (phase = "stopped")
 =============================================================================

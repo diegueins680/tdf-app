@@ -1330,12 +1330,12 @@
       "guarded next backend release",
       "independent review and model/runtime conformance checks"
     ],
-    "acceptanceCriteria": "Legacy/unknown recovery cannot execute a deploy callback. Compatible prior or explicit immutable fallback is verified before mutation; schema manifests/checksums match; reports identify recovery policy and preserve canary failure.",
+    "acceptanceCriteria": "Legacy/unknown recovery cannot execute a deploy callback. Compatible prior or explicit immutable fallback is verified before mutation; schema manifests/checksums match; reports identify recovery policy and preserve canary failure. After any deploy attempt, failure recovery includes untouched unsafe replicas; individual recovery errors cannot prevent attempts on remaining replicas and cannot count as verified recovery.",
     "verificationMethod": "ProviderRollback TLC legacy/compatible/mixed two-machine models, unsafe negative control, executable boundary tests including two machine orders/all prior combinations/retries/missing history, existing release contract tests.",
     "status": "implemented",
-    "implementationStatus": "withCompatibleRollback and selectRecoveryTarget gate actual deploy; --recovery-sha accepts only distinct reviewed ancestors with identical migration manifests/expanded SQL. Preflight verifies immutable artifacts and blocks without safe recovery.",
-    "verificationStatus": "71 release tests pass; four final TLC configurations and named unsafe counterexample pass (evidence/provider-rollback-verification.json). Existing full formal runner passed; final extended hosted gate pending. Local plan accepts5c115/f1ff, rejects2f01 migration mismatch; no cloud failure induced.",
-    "mergeStatus": "Not merged; focused successor being prepared from5c11577a5",
+    "implementationStatus": "withCompatibleRollback and selectRecoveryTarget gate actual deploy; --recovery-sha accepts only distinct reviewed ancestors with identical migration manifests/expanded SQL. Preflight verifies immutable artifacts and blocks without safe recovery. recoverReleaseMachines handles the actual canary/fleet catch, includes untouched unsafe replicas and records per-machine failures.",
+    "verificationStatus": "74 release tests pass. Four TLC configurations pass (38/31/35/38 distinct states); unsafe rollback and partial-fleet recovery yield the named counterexamples. Full pinned TLA+/Alloy runner passed. No cloud failure induced; hosted checks required on revised head.",
+    "mergeStatus": "PR #438; review identified partial-fleet recovery defect on approved3ad97a31e. Focused correction requires renewed exact-head review/checks.",
     "releaseStatus": "No production mutation; block next provider-containing release until reviewed recovery guard is merged and verified."
   }
 ]

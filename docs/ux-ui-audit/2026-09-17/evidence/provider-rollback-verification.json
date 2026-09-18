@@ -1,5 +1,5 @@
 {
-  "observedAt": "2026-09-18T08:26:55.526697+00:00",
+  "observedAt": "2026-09-18T08:43:27.494153+00:00",
   "tools": {
     "java": "21.0.12.1+1",
     "tlaRelease": "1.7.2",
@@ -12,8 +12,8 @@
       "configuration": "ProviderRollback",
       "expectedCounterexample": false,
       "counts": [
-        52,
-        30,
+        74,
+        38,
         0
       ]
     },
@@ -30,8 +30,8 @@
       "configuration": "ProviderRollbackMixed",
       "expectedCounterexample": false,
       "counts": [
-        59,
-        31,
+        70,
+        35,
         0
       ]
     },
@@ -39,8 +39,8 @@
       "configuration": "ProviderRollbackForward",
       "expectedCounterexample": false,
       "counts": [
-        52,
-        30,
+        74,
+        38,
         0
       ]
     },
@@ -52,8 +52,18 @@
         12,
         5
       ]
+    },
+    {
+      "configuration": "ProviderRollbackPartial",
+      "expectedCounterexample": true,
+      "property": "StoppedFleetSafe",
+      "counts": [
+        25,
+        18,
+        5
+      ]
     }
   ],
-  "conformance": "71 release tests pass including guarded deploy callback boundary, prior/current source IDs, all two-machine orders/combinations/retries; local read-only plan accepts5c115/f1ff and rejects2f01 with differing migrations",
-  "limits": "No production failure induced; ancestry assumes reviewed commits preserve auth contract. Model does not certify token validation or cloud availability."
+  "conformance": "74 release tests pass, including the actual fleet recovery loop, both canary choices/all prior combinations, continued attempts after injected recovery failure, no recovery before deployment. Full pinned TLA+/Alloy runner passed, including both recovery negative controls.",
+  "limits": "No production failure induced; ancestry assumes reviewed commits preserve auth contract. Model does not certify token validation or cloud availability. StoppedFleetSafe assumes successful compatible recovery commands; runtime cloud failures are recorded. Temporary mixed rollout/recovery intervals remain possible and are not certified safe by this model."
 }

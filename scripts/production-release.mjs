@@ -745,6 +745,26 @@ export function selectRecoveryTarget(snapshot, fallback) {
   return fallback;
 }
 
+export async function recoverReleaseMachines(originalMachines, touchedMachines, recover) {
+  const rollbacks = [];
+  const errors = [];
+  // Before any deploy attempt there can be no new provider authority from this
+  // release. Once a canary could serve traffic, every legacy replica must move
+  // forward too, even if rollout never reached it. Keep attempting the rest
+  // when one recovery fails; report failures instead of claiming fleet safety.
+  if (touchedMachines.size === 0) return { rollbacks, errors };
+  const required = [...originalMachines].reverse().filter(machine =>
+    touchedMachines.has(machine.id) || machine.releaseSnapshot.rollbackPolicy?.compatible === false);
+  for (const machine of required) {
+    try {
+      rollbacks.push(await recover(machine));
+    } catch (error) {
+      errors.push({ machineId: machine.id, error: error.message });
+    }
+  }
+  return { rollbacks, errors };
+}
+
 async function rollbackMachine(context, machine) {
   const { image, sha, acceptableImageDigests } = selectRecoveryTarget(machine.releaseSnapshot, context.recoveryArtifact);
   if (!image || !sha) throw new Error(`Cannot construct rollback for Machine ${machine.id}.`);
@@ -1025,9 +1045,7 @@ async function executeRelease(context) {
       report.canary = await verifyTargetMachine(context, canary.id);
     } catch (error) {
       report.canaryVerificationError = error.message;
-      report.rollbacks.push(await rollbackMachine(context, canary));
-      touchedMachines.delete(canary.id);
-      throw new Error(`Canary verification failed and was rolled back: ${error.message}`, { cause: error });
+      throw new Error(`Canary verification failed; compatible fleet recovery required: ${error.message}`, { cause: error });
     }
 
     for (const machine of remaining) {
@@ -1069,15 +1087,10 @@ async function executeRelease(context) {
       report.reportPath = await writeReport(context, report);
       return report;
     }
-    const rollbackErrors = [];
-    for (const machine of [...originalMachines].reverse().filter(({ id }) => touchedMachines.has(id))) {
-      try {
-        report.rollbacks.push(await rollbackMachine(context, machine));
-      } catch (rollbackError) {
-        rollbackErrors.push({ machineId: machine.id, error: rollbackError.message });
-      }
-    }
-    report.rollbackErrors = rollbackErrors;
+    const recovery = await recoverReleaseMachines(originalMachines, touchedMachines,
+      machine => rollbackMachine(context, machine));
+    report.rollbacks.push(...recovery.rollbacks);
+    report.rollbackErrors = recovery.errors;
     if (leaseHeld) {
       try {
         await releaseReleaseLease(context, leaseToken);
