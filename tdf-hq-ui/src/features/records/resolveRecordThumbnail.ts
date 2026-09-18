@@ -5,6 +5,13 @@ export type ThumbnailResource = Pick<RecordsResourceDTO,
 
 const youtubeImageHosts = new Set(['i.ytimg.com', 'img.youtube.com']);
 
+/** Choose artwork only among resources belonging to this same catalog item. */
+export function primaryRecordsResource(resources: RecordsResourceDTO[]): RecordsResourceDTO | undefined {
+  const renderable = resources.filter(resource => recordThumbnailCandidates(resource).length > 0);
+  return renderable.find(resource => resource.primary) ?? renderable[0]
+    ?? resources.find(resource => resource.primary) ?? resources[0];
+}
+
 export function youtubeImageId(raw: string): string | null {
   try {
     const url = new URL(raw);
