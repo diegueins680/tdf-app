@@ -263,5 +263,21 @@
   "sourceHashes": {
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "f12b8065fe17618ec11df36e1d4ec77404803fb4f568ac514819a369ed3fc6a4",
     "formal/event-operations/DirectoryFavoriteAuthority.tla": "4b4f5fb17e1f76f184faa76b9b8af020e2675ba39a288bc659bb70fdde7bfa5a"
+  },
+  "reviewFollowup": {
+    "review": "https://github.com/diegueins680/tdf-app/pull/447#discussion_r4046711715",
+    "behavior": "Successful current-session favorites refresh clears the mutation error; failed refresh retains it.",
+    "focusedTestsPassed": 19,
+    "browserStats": {
+      "startTime": "2026-09-18T12:33:53.051Z",
+      "duration": 64431.657,
+      "expected": 5,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "browserTransport": "Spanish branch of bilingual fixture script against final directory safety bundle; five profiles, three engines; no production requests. Equivalent ES-only test retained as directory-favorite-recovery.spec.mjs.",
+    "buildInitialGzip": 365647,
+    "sourceSha256": "5b36f353413dff3e74512e249a7203179121072bf94396b3d63205d5bce4825e"
   }
 }

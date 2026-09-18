@@ -1380,13 +1380,13 @@
     "acceptanceCriteria": "Check current occurrence before requests and receipt effects, isolate read caches, preserve public search input, and only acknowledge persisted success. Offer authoritative refresh after ambiguous failure.",
     "implementationStatus": "Immediate session identity, occurrence/mount predicates, isolated query scopes, guarded first-value callback, refresh action.",
     "verificationMethod": "Component counterexamples/conformance tests; executable TLC model with named negative controls; production-bundle browser checks for affected arrival.",
-    "verificationStatus": "18 focused tests pass; 356/208 TLC states depth9, dispatch29 and receipt63 negative controls; full pinned formal suite passes. TS/lint/build and strict1138-candidate catalog gate pass. Browser receipt contains exact scope.",
+    "verificationStatus": "18 focused tests pass; 356/208 TLC states depth9, dispatch29 and receipt63 negative controls; full pinned formal suite passes. TS/lint/build and strict1138-candidate catalog gate pass. Browser receipt contains exact scope. Review follow-up:19 focused tests and5 recovery browser cases pass; authoritative refresh clears error only on success/current session. New initialJS365647gzip.",
     "dependencies": [
       "independent review",
       "applicable CI",
       "Cloudflare deployment and production verification"
     ],
-    "mergeStatus": "Focused PR pending creation; no merge.",
+    "mergeStatus": "PR447; independent approval and refreshed checks required.",
     "releaseStatus": "Not deployed."
   },
   {
