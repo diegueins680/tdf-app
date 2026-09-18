@@ -13155,14 +13155,16 @@
       "reviewed": true
     },
     {
-      "id": "faf664611d7ab0aa954d",
-      "classification": "dynamic-business-catalog",
+      "id": "bffc5decb0aa4633b170",
+      "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
-      "reviewed": true
+      "justification": "Reviewed the merged mobile navigation contract: these five fixed Expo tab route names, icons, and localization title keys define rendering and routing. The added titleKey enables labels to follow the current locale; it does not grant access or encode an editable business catalog. Route authorization remains separate.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "identity-mobile-contract-integration-2026-09-18"
     },
     {
       "id": "60990a5df11b7a72f4d0",
