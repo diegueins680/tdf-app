@@ -46,11 +46,48 @@ import {
   type ManagedClassified,
   type ManagedDirectoryProfile,
 } from '../api/directory';
+import { useSession } from '../session/SessionContext';
 import { firstNonEmptyString } from '../utils/stringValues';
 
 const slugify = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 120);
 
 export default function DirectoryManagePage() {
+  const [params] = useSearchParams();
+  const kind = ['application', 'invitation', 'review', 'alert'].find((value) => params.has(value));
+  return kind ? <DirectoryNotificationContext kind={kind} id={params.get(kind) ?? ''} /> : <DirectoryManagement />;
+}
+
+function DirectoryNotificationContext({ kind, id }: { kind: string; id: string }) {
+  const { session } = useSession();
+  const valid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  const query = useQuery({ queryKey: ['directory', kind === 'invitation' ? 'invitations' : 'applications', 'notification-context', session?.partyId, kind, id],
+    queryFn: () => Directory.notificationContext(kind, id), enabled: valid, retry: false });
+  const data = query.isError ? undefined : query.data;
+  const value = (key: string) => typeof data?.[key] === 'string' ? data[key] : '';
+  const profileName = (key: string) => {
+    const profile = data?.[key];
+    return profile && typeof profile === 'object' && 'name' in profile && typeof profile.name === 'string' ? profile.name : '';
+  };
+  const resultType = value('resultType');
+  const resultId = value('resultId');
+  const slug = value('slug');
+  const path = resultType === 'profile' && slug ? `/directorio/${encodeURIComponent(slug)}`
+    : resultType === 'classified' && slug ? `/clasificados/${encodeURIComponent(slug)}`
+    : /^(event|venue)$/.test(resultType) && /^\d+$/.test(resultId)
+      ? `/${resultType === 'event' ? 'eventos' : 'venues'}/${resultId}` : null;
+  return <Container sx={{ py: 4 }}><Stack spacing={2}>
+    <Typography variant="h4" component="h1">{kind === 'application' ? 'Postulación' : kind === 'invitation' ? 'Invitación' : kind === 'review' ? 'Reseña' : 'Resultado de tu alerta'}</Typography>
+    {query.isPending && valid && <CircularProgress />}
+    {(!valid || query.isError) && <Alert severity="info">Este recurso ya no está disponible para tu cuenta o tu acceso ha cambiado.</Alert>}
+    {data && kind === 'application' && <><Typography>{value('title')}</Typography><ApplicationRow application={data} authorProfileId={value('authorProfileId')} /></>}
+    {data && kind === 'invitation' && <InvitationCard invitation={data as unknown as DirectoryInvitation} />}
+    {data && kind === 'review' && <><Typography>{profileName('authorProfile')} → {profileName('subjectProfile')}</Typography><Typography>{typeof data['rating'] === 'number' ? data['rating'] : ''} / 5</Typography><Typography>{value('body')}</Typography><Chip label={value('status')} /></>}
+    {data && kind === 'alert' && <><Typography>{value('searchName')}</Typography><Typography>{value('title')}</Typography>{path && <Button component={RouterLink} to={path}>Ver resultado</Button>}</>}
+    <Button component={RouterLink} to="/mis-clasificados">Volver a mis perfiles y clasificados</Button>
+  </Stack></Container>;
+}
+
+function DirectoryManagement() {
   const client = useQueryClient();
   const [params, setParams] = useSearchParams();
   const [tab, setTab] = useState(params.has('apply') || params.has('contact') || params.has('invite') ? 2 : 0);

@@ -1542,6 +1542,7 @@ data NotificationDTO = NotificationDTO
   , nBody        :: Text
   , nTargetType  :: Maybe Text
   , nTargetId    :: Maybe Int64
+  , nTargetKey   :: Maybe Text
   , nIsRead      :: Bool
   , nCreatedAt   :: UTCTime
   } deriving (Show, Generic)

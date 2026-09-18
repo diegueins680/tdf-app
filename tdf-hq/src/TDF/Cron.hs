@@ -13,6 +13,7 @@ module TDF.Cron
   , selectInstagramSyncAccessToken
   ) where
 
+import Web.PathPieces (toPathPiece)
 import           Control.Concurrent      (forkIO, threadDelay)
 import           Control.Exception
   ( SomeAsyncException
@@ -497,7 +498,7 @@ notifyLogisticsRouteRecipients Env{envPool, envConfig} checkpoint activityKey ac
       body = Social.eventLogisticsActivityTitle activity <> ": " <> verdict <> ", estimado " <> estimateLabel <> ", holgura " <> T.pack (show (ceiling (fromIntegral bufferSeconds / (60 :: Double)) :: Int)) <> " min."
       emailSvc = EmailSvc.mkEmailService envConfig
       targetId = fromIntegral (fromSqlKey (Social.eventLogisticsActivityEventId activity))
-      logisticsUrl = fmap (\base -> T.dropWhileEnd (== '/') base <> "/social/eventos/" <> T.pack (show (fromSqlKey (Social.eventLogisticsActivityEventId activity))) <> "/logistica") (EmailSvc.esAppBase emailSvc)
+      logisticsUrl = fmap (\base -> T.dropWhileEnd (== '/') base <> "/social/eventos/" <> T.pack (show (fromSqlKey (Social.eventLogisticsActivityEventId activity))) <> "/logistica?activity=" <> toPathPiece activityKey) (EmailSvc.esAppBase emailSvc)
   for_ recipientKeys $ \partyKey -> do
     inAppClaim <- runSqlPool (insertUnique Social.EventLogisticsAlertDelivery
       { Social.eventLogisticsAlertDeliveryActivityId = activityKey
@@ -514,6 +515,7 @@ notifyLogisticsRouteRecipients Env{envPool, envConfig} checkpoint activityKey ac
       , notificationBody = body
       , notificationTargetType = Just "event_logistics"
       , notificationTargetId = Just targetId
+      , notificationTargetKey = Just (toPathPiece activityKey)
       , notificationIsRead = False
       , notificationCreatedAt = now
       }) envPool
