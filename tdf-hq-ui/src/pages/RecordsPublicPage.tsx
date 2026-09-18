@@ -751,6 +751,7 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
         >
           <CardMedia
             component={item.url ? MuiLink : 'div'}
+            aria-label={item.url ? `Reproducir ${item.title}` : undefined}
             href={item.url}
             target={item.url ? '_blank' : undefined}
             rel={item.url ? 'noopener noreferrer' : undefined}

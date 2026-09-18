@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
   Alert,
@@ -18,21 +18,32 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { LiveSessionIntakeForm } from './LiveSessionIntakePage';
-import { setTransientApiToken, useSession } from '../session/SessionContext';
+import { resolveApiBase } from '../config/apiBase';
 
 export default function LiveSessionPublicPage() {
   const [sp] = useSearchParams();
   const tokenFromQuery = sp.get('token') ?? sp.get('t') ?? '';
-  const { session } = useSession();
   const [accessCode, setAccessCode] = useState(() => tokenFromQuery);
   const [codeStatus, setCodeStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [lastValidatedCode, setLastValidatedCode] = useState('');
-  const canUseForm = codeStatus === 'valid';
+  const [verifiedPartyId, setVerifiedPartyId] = useState<number>();
+  const canUseForm = codeStatus === 'valid' && accessCode.trim() === lastValidatedCode;
+  const validationGeneration = useRef(0);
+  const pendingValidation = useRef<AbortController | null>(null);
+  const pendingDebounce = useRef<number | null>(null);
+  const invalidateValidation = useCallback(() => {
+    validationGeneration.current += 1;
+    pendingValidation.current?.abort();
+    if (pendingDebounce.current !== null) window.clearTimeout(pendingDebounce.current);
+  }, []);
+  useEffect(() => invalidateValidation, [invalidateValidation]);
   const [showCode, setShowCode] = useState(false);
 
   const validateAccessCode = useCallback(async (codeOverride?: string) => {
     const code = (codeOverride ?? accessCode).trim();
+    invalidateValidation();
+    const generation = validationGeneration.current;
     if (!code) {
       setValidationMessage('Ingresa un código válido.');
       setCodeStatus('invalid');
@@ -40,70 +51,53 @@ export default function LiveSessionPublicPage() {
     }
     setCodeStatus('validating');
     setValidationMessage(null);
+    const controller = new AbortController();
+    pendingValidation.current = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 30_000);
     try {
-      const base = import.meta.env.VITE_API_BASE ?? '';
-      if (base) {
-        const res = await fetch(`${base}/live-sessions/intake/ping`, {
-          headers: { Authorization: `Bearer ${code}` },
-        });
-        if (!res.ok) {
-          throw new Error('invalid');
-        }
+      const res = await fetch(`${resolveApiBase()}/session`, {
+        headers: { Authorization: `Bearer ${code}` },
+        credentials: 'omit',
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error('invalid');
+      const account: unknown = await res.json();
+      if (!account || typeof account !== 'object' || !('partyId' in account)
+        || !Number.isSafeInteger(account.partyId) || Number(account.partyId) <= 0) {
+        throw new Error('invalid');
       }
+      if (generation !== validationGeneration.current) return;
+      setVerifiedPartyId(Number(account.partyId));
       setCodeStatus('valid');
       setLastValidatedCode(code);
     } catch {
+      if (generation !== validationGeneration.current) return;
       setCodeStatus('invalid');
       setLastValidatedCode('');
-      setValidationMessage('Código inválido o expirado. Solicita uno nuevo.');
+      setValidationMessage('No pudimos validar el código. Comprueba el código y la conexión e inténtalo de nuevo.');
+    } finally {
+      window.clearTimeout(timeout);
+      if (pendingValidation.current === controller) pendingValidation.current = null;
     }
-  }, [accessCode]);
+  }, [accessCode, invalidateValidation]);
 
   useEffect(() => {
-    if (tokenFromQuery) {
-      setAccessCode(tokenFromQuery);
-      setCodeStatus('idle');
-    }
-  }, [tokenFromQuery]);
-
-  useEffect(() => {
-    if (tokenFromQuery && codeStatus === 'idle') {
-      void validateAccessCode();
-    }
-  }, [codeStatus, tokenFromQuery, validateAccessCode]);
-
-  useEffect(() => {
-    const code = accessCode.trim();
-    if (session) {
-      setTransientApiToken(null);
-      return undefined;
-    }
-    if (!code || codeStatus !== 'valid') {
-      setTransientApiToken(null);
-      return undefined;
-    }
-    setTransientApiToken(code);
-    return () => {
-      setTransientApiToken(null);
-    };
-  }, [accessCode, codeStatus, session]);
+    invalidateValidation();
+    setAccessCode(tokenFromQuery);
+    setCodeStatus('idle');
+  }, [tokenFromQuery, invalidateValidation]);
 
   useEffect(() => {
     const code = accessCode.trim();
     if (!code) {
       setLastValidatedCode('');
-      if (codeStatus !== 'idle') {
-        setCodeStatus('idle');
-      }
+      setCodeStatus('idle');
       return;
     }
-    if (codeStatus === 'validating') return;
-    if (codeStatus === 'valid' && code === lastValidatedCode) return;
-    const handle = setTimeout(() => {
-      void validateAccessCode();
-    }, 450);
-    return () => clearTimeout(handle);
-  }, [accessCode, codeStatus, lastValidatedCode, validateAccessCode]);
+    const handle = window.setTimeout(() => { void validateAccessCode(code); }, 450);
+    pendingDebounce.current = handle;
+    return () => window.clearTimeout(handle);
+  }, [accessCode, validateAccessCode]);
 
   return (
     <Box
@@ -157,21 +151,13 @@ export default function LiveSessionPublicPage() {
                     label="Código de acceso"
                     value={accessCode}
                     onChange={(e) => {
+                      invalidateValidation();
                       setAccessCode(e.target.value);
                       setCodeStatus('idle');
                       setValidationMessage(null);
                     }}
                     onBlur={() => {
                       void validateAccessCode();
-                    }}
-                    onPaste={(e) => {
-                      const pasted = e.clipboardData.getData('text');
-                      setAccessCode(pasted);
-                      setCodeStatus('idle');
-                      setValidationMessage(null);
-                      setTimeout(() => {
-                        void validateAccessCode(pasted);
-                      }, 0);
                     }}
                     placeholder="Pega el código recibido"
                     fullWidth
@@ -233,8 +219,8 @@ export default function LiveSessionPublicPage() {
                   </Alert>
                 )}
               </Stack>
-              <Box sx={{ opacity: canUseForm ? 1 : 0.35, pointerEvents: canUseForm ? 'auto' : 'none' }}>
-                <LiveSessionIntakeForm variant="public" />
+              <Box component="fieldset" disabled={!canUseForm} sx={{ minWidth: 0, m: 0, p: 0, border: 0 }}>
+                <LiveSessionIntakeForm key={verifiedPartyId ?? 'unverified'} variant="public" draftOwner={verifiedPartyId} accessCode={canUseForm ? lastValidatedCode : undefined} />
               </Box>
             </Stack>
           </Paper>

@@ -666,9 +666,10 @@ parseAliasedOptionalField obj canonicalField legacyField = do
     (AliasedFieldMissing, AliasedFieldValue legacy) -> pure (Just legacy)
     (AliasedFieldValue _, AliasedFieldNull) -> fail conflictingMessage
     (AliasedFieldNull, AliasedFieldValue _) -> fail conflictingMessage
-    (AliasedFieldNull, AliasedFieldMissing) -> fail (nullMessage canonicalField)
-    (AliasedFieldMissing, AliasedFieldNull) -> fail (nullMessage legacyField)
-    (AliasedFieldNull, AliasedFieldNull) -> fail (nullMessage canonicalField)
+    -- Published optional fields are nullable; conflicting aliases still fail above.
+    (AliasedFieldNull, AliasedFieldMissing) -> pure Nothing
+    (AliasedFieldMissing, AliasedFieldNull) -> pure Nothing
+    (AliasedFieldNull, AliasedFieldNull) -> pure Nothing
     _ -> pure Nothing
   where
     conflictingMessage =
@@ -677,8 +678,6 @@ parseAliasedOptionalField obj canonicalField legacyField = do
         <> " and "
         <> T.unpack legacyField
         <> " must match when both are provided"
-    nullMessage fieldName =
-      T.unpack fieldName <> " must be omitted instead of null"
 
 parseAliasedField
   :: FromJSON a

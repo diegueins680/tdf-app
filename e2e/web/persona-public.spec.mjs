@@ -178,7 +178,7 @@ function observeRuntime(page) {
   return { consoleErrors, failedRequests };
 }
 
-async function expectNoSeriousAxeViolations(page, testInfo) {
+async function expectNoSeriousAxeViolations(page, testInfo, contextSelector = null) {
   await page.evaluate(async () => {
     await document.fonts.ready;
     await Promise.all(document.getAnimations()
@@ -187,8 +187,8 @@ async function expectNoSeriousAxeViolations(page, testInfo) {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   });
   await page.addScriptTag({ content: axe.source });
-  const violations = await page.evaluate(async () => {
-    const result = await globalThis.axe.run(document, {
+  const violations = await page.evaluate(async (selector) => {
+    const result = await globalThis.axe.run(selector ? document.querySelector(selector) : document, {
       resultTypes: ['violations'],
       rules: { 'color-contrast': { enabled: true } },
     });
@@ -204,7 +204,7 @@ async function expectNoSeriousAxeViolations(page, testInfo) {
           failureSummary: node.failureSummary,
         })),
       }));
-  });
+  }, contextSelector);
   await testInfo.attach('axe-serious-critical.json', { body: JSON.stringify(violations, null, 2), contentType: 'application/json' });
   expect(violations).toEqual([]);
 }
@@ -311,7 +311,7 @@ test('PW-PER-01-AUTH keeps signup labels readable in light theme', async ({ page
 });
 
 test('PW-PER-01-AUTH reports a reset transport failure instead of false success', async ({ page }) => {
-  await page.route('**/v1/password-reset', (route) => route.abort('failed'));
+  await page.route(/\/v1\/password-reset(?:\?.*)?$/, (route) => route.abort('failed'));
   await page.goto('/login');
   await page.getByRole('button', { name: /recuperar acceso/i }).click();
   const recoveryEmail = page.getByLabel('Correo asociado a tu cuenta');
@@ -676,3 +676,111 @@ test('PW-PER-01-MARKETPLACE removes fake notification capture and persistent con
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: testInfo.outputPath('marketplace-truthful-empty-state.png'), fullPage: true });
 });
+
+for (const locale of ['es', 'en']) {
+  test(`@critical PW-PER-RESET-OFFLINE ${locale} reset confirmation retains language`, async ({ page }) => {
+    const en = locale === 'en';
+    await page.addInitScript(language => localStorage.setItem('tdf-hq-ui/locale', language), locale);
+    await page.route(/\/v1\/password-reset\/confirm$/, route => route.abort('failed'));
+    await page.goto(`/reset?token=22222222-2222-4222-8222-222222222222&lang=${locale}`);
+    await page.getByLabel(en ? 'New password' : 'Nueva contraseña', { exact: true }).fill('SyntheticValidPassword42!');
+    await page.getByLabel(en ? 'Confirm password' : 'Confirmar contraseña', { exact: true }).fill('SyntheticValidPassword42!');
+    await page.getByRole('button', { name: en ? 'Save password' : 'Guardar contraseña', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText(en ? 'Could not connect' : 'No se pudo conectar');
+    await expect(page).not.toHaveURL(/token=/);
+  });
+  test(`@critical PW-PER-LOCALE ${locale} signup and recovery retain language and destination`, async ({ page }, testInfo) => {
+    const en = locale === 'en';
+    await page.addInitScript(language => localStorage.setItem('tdf-hq-ui/locale', language), locale);
+    await page.goto('/login?signup=1&intent=follow_artists&redirect=%2Ffans');
+    await expect(page.locator('html')).toHaveAttribute('lang', locale);
+    const signup = page.getByRole('dialog', { name: en ? 'Create account' : 'Crear cuenta' });
+    await expect(signup).toBeVisible();
+    await expect(signup.getByText(en ? /continue to “follow artists”/ : /continuarás con “seguir artistas”/)).toBeVisible();
+    await expect(signup.getByRole('link', { name: en ? 'account terms' : 'términos de la cuenta', exact: true })).toHaveAttribute('href', en ? '/account/terms.html' : '/account/terms-es.html');
+    await expect(signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true })).toBeDisabled();
+    await signup.getByLabel(en ? 'First name' : 'Nombre').fill('Synthetic');
+    await signup.getByLabel(en ? 'I accept the terms and privacy policy' : 'Acepto los términos y la política de privacidad', { exact: true }).check();
+    await expect(signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true })).toBeEnabled();
+    await expectNoSeriousAxeViolations(page, testInfo);
+    await page.goto('/reset?redirect=%2Ffans');
+    await expect(page.getByRole('heading', { name: en ? 'Incomplete link' : 'Enlace incompleto' })).toBeVisible();
+    const recovery = page.getByRole('link', { name: en ? 'Request a new link' : 'Solicitar nuevo enlace', exact: true });
+    await expect(recovery).toHaveAttribute('href', `/login?redirect=%2Ffans&recover=1&lang=${locale}`);
+    await expectNoSeriousAxeViolations(page, testInfo);
+    await recovery.click();
+    const dialog = page.getByRole('dialog', { name: en ? 'Recover access' : 'Recuperar acceso' });
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(/redirect=%2Ffans&recover=1/);
+    let requestedDestination;
+    let requestedLocale;
+    await page.route(/\/v1\/password-reset(?:\?.*)?$/, route => {
+      requestedDestination = new URL(route.request().url()).searchParams.get('redirect');
+      requestedLocale = new URL(route.request().url()).searchParams.get('locale');
+      expect(route.request().postDataJSON()).toEqual({ email: 'locale@persona.test' });
+      return route.abort('failed');
+    });
+    const email = dialog.getByLabel(en ? 'Account email' : 'Correo asociado a tu cuenta');
+    await email.fill('locale@persona.test');
+    await email.press('Enter');
+    await expect(dialog.getByRole('alert')).toContainText(en ? 'Check your connection and try again' : 'Revisa tu conexión e inténtalo de nuevo');
+    await expect(email).toHaveValue('locale@persona.test');
+    expect(requestedDestination).toBe('/fans');
+    expect(requestedLocale).toBe(locale);
+    await expect(page.locator('#root')).toHaveAttribute('aria-hidden', 'true');
+    await expect(dialog).toHaveAttribute('aria-modal', 'true');
+    for (let step = 0; step < 5; step += 1) {
+      await page.keyboard.press('Tab');
+      await expect.poll(() => dialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    }
+    // Measure the active modal. Its intentionally dimmed, inactive background
+    // is measured in full after close; keep all rules/contrast thresholds.
+    await expectNoSeriousAxeViolations(page, testInfo, '[role="dialog"][aria-labelledby="login-reset-dialog-title"]');
+    await page.screenshot({ path: testInfo.outputPath(`recovery-${locale}.png`), fullPage: true });
+    await dialog.getByRole('button', { name: en ? 'Close' : 'Cerrar', exact: true }).click();
+    await expect(dialog).not.toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/login\\?redirect=%2Ffans&lang=${locale}$`));
+    await expect(page.locator('#root')).not.toHaveAttribute('aria-hidden', 'true');
+    await expectNoSeriousAxeViolations(page, testInfo);
+  });
+}
+
+
+for (const locale of ['es', 'en']) {
+  test(`@critical PW-PER-POLICY ${locale} policy documents retain language and version`, async ({ page }, testInfo) => {
+    const suffix = locale === 'es' ? '-es' : '';
+    await page.goto(`/account/terms${suffix}.html`);
+    await expect(page.locator('html')).toHaveAttribute('lang', locale === 'es' ? 'es-EC' : 'en');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(locale === 'es' ? 'Términos de la cuenta de TDF Records' : 'TDF Records Account Terms');
+    await expect(page.locator('body')).toContainText('tdf-account-terms-v1');
+    await expectNoSeriousAxeViolations(page, testInfo);
+    await page.getByRole('navigation').getByRole('link', { name: locale === 'es' ? 'Privacidad' : 'Privacy', exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/account/privacy${suffix}\\.html$`));
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(locale === 'es' ? 'Aviso de privacidad de la cuenta de TDF Records' : 'TDF Records Account Privacy Notice');
+    await expectNoSeriousAxeViolations(page, testInfo);
+    await page.getByRole('navigation').getByRole('link', { name: locale === 'es' ? 'English' : 'Español', exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('lang', locale === 'es' ? 'en' : 'es-EC');
+  });
+}
+
+for (const locale of ['es', 'en']) {
+  for (const failure of ['network', 'unauthorized']) {
+    test(`@critical PW-PER-LOCALE-LOGIN ${locale} ${failure} preserves the selected language`, async ({ page }) => {
+      const en = locale === 'en';
+      await page.addInitScript(language => localStorage.setItem('tdf-hq-ui/locale', language), locale);
+      await page.route('**/login', route => route.request().method() === 'POST'
+        ? failure === 'network' ? route.abort('failed') : route.fulfill({ status: 401, body: '' })
+        : route.continue());
+      await page.goto('/login?redirect=%2Ffans');
+      await page.getByLabel(en ? 'Username or email *' : 'Usuario o correo *').fill('synthetic@persona.test');
+      await page.getByLabel(en ? 'Password *' : 'Contraseña *', { exact: true }).fill('fictional-password');
+      await page.getByRole('button', { name: en ? 'Sign in' : 'Ingresar', exact: true }).click();
+      const expected = failure === 'network'
+        ? en ? 'Could not connect to the service' : 'No se pudo conectar con el servicio'
+        : en ? 'Incorrect username or password' : 'Credenciales inválidas';
+      await expect(page.getByRole('alert')).toContainText(expected, { timeout: 15000 });
+      await expect(page).toHaveURL(/redirect=%2Ffans/);
+      await expect(page.getByLabel(en ? 'Username or email *' : 'Usuario o correo *')).toHaveValue('synthetic@persona.test');
+    });
+  }
+}

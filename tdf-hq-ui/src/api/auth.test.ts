@@ -8,7 +8,7 @@ jest.unstable_mockModule('../utils/env', () => ({
   },
 }));
 
-const { confirmPasswordReset, loginRequest, signupRequest } = await import('./auth');
+const { confirmPasswordReset, loginRequest, signupRequest, requestPasswordReset } = await import('./auth');
 
 const createHeaders = (contentType?: string, extra: Record<string, string | null> = {}) => ({
   get: jest.fn((name: string) => {
@@ -29,6 +29,32 @@ describe('auth api', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+  });
+
+  it.each([undefined, null, 'https://evil.example/', '//evil.example/', '/\\evil.example/'])('omits unsafe reset destinations: %s', async (redirect) => {
+    fetchMock.mockResolvedValueOnce({ ok: true } as Response);
+    await requestPasswordReset('ana@example.com', redirect);
+    expect(fetchMock).toHaveBeenCalledWith('/v1/password-reset', expect.objectContaining({
+      body: JSON.stringify({ email: 'ana@example.com' }),
+    }));
+  });
+
+  it('carries a safe destination separately from the compatible email-only body', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true } as Response);
+    const redirect = '/fans?artist=42&tab=eventos#próximo';
+    await requestPasswordReset('ana@example.com', redirect);
+    const [url, init] = fetchMock.mock.calls[0]!;
+    if (typeof url !== 'string' || typeof init?.body !== 'string') {
+      throw new Error('Expected a URL string and the compatible JSON body');
+    }
+    expect(new URL(url, 'https://tdf.local').searchParams.get('redirect')).toBe('/fans?artist=42&tab=eventos#pr%C3%B3ximo');
+    expect(JSON.parse(init.body)).toEqual({ email: 'ana@example.com' });
+  });
+
+  it('carries the requested recovery language without changing the email body', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true } as Response);
+    await requestPasswordReset('ana@example.com', '/fans', 'en-US');
+    expect(fetchMock).toHaveBeenCalledWith('/v1/password-reset?redirect=%2Ffans&locale=en', expect.objectContaining({ body: JSON.stringify({ email: 'ana@example.com' }) }));
   });
 
   it('posts password reset confirmations to the v1 confirm endpoint', async () => {
@@ -207,6 +233,11 @@ describe('auth api', () => {
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
+  it('tags an empty unauthorized response for locale-aware presentation', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 401, headers: createHeaders('text/plain'), text: async () => '' } as Response);
+    await expect(loginRequest({ username: 'synthetic', password: 'fictional' })).rejects.toMatchObject({ code: 'credentials', message: 'Credenciales inválidas' });
+  });
+
   it('aborts a hanging signup request with a stable timeout message', async () => {
     jest.useFakeTimers();
     fetchMock.mockImplementation((_input, init) => new Promise((_resolve, reject) => {
@@ -223,9 +254,7 @@ describe('auth api', () => {
       termsAccepted: true,
       termsVersion: 'test-terms',
     });
-    const rejection = expect(pending).rejects.toThrow(
-      'La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.',
-    );
+    const rejection = expect(pending).rejects.toMatchObject({ code: 'timeout', message: 'La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.' });
 
     await jest.advanceTimersByTimeAsync(30_000);
     await rejection;

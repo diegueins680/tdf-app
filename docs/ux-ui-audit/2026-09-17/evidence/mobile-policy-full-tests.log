@@ -1,0 +1,240 @@
+
+> tdf-mobile@1.0.1 test
+> jest --runInBand --runInBand
+
+PASS __tests__/AuthScreen.test.tsx (6.646 s)
+  ● Console
+
+    console.info
+      [analytics] PostHog disabled: EXPO_PUBLIC_POSTHOG_KEY is unset. Events will not be sent.
+
+      at info (src/analytics/posthog.ts:37:11)
+
+PASS __tests__/EventDetailMoments.test.tsx
+PASS __tests__/TicketCheckout.test.tsx
+PASS __tests__/NewUserOnboardingGate.test.tsx
+PASS __tests__/FirstRunProvider.test.tsx
+PASS __tests__/CreateEvent.test.tsx
+PASS __tests__/ArtistDetail.test.tsx
+PASS __tests__/AuthProvider.test.tsx
+PASS __tests__/DirectoryManage.test.tsx
+PASS __tests__/UserSettingsProvider.test.tsx
+  ● Console
+
+    console.error
+      An update to UserSettingsProvider inside a test was not wrapped in act(...).
+
+      When testing, code that causes React state updates should be wrapped into act(...):
+
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      157 |   const applyCatalogSnapshot = useCallback((next: CatalogSnapshot) => {
+      158 |     catalogSnapshotRef.current = next;
+    > 159 |     setCatalogSnapshot(next);
+          |     ^
+      160 |   }, []);
+      161 |
+      162 |   const applyRecordsSnapshot = useCallback((next: RecordsSnapshot | null) => {
+
+      at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+      at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+      at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+      at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+      at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+      at setCatalogSnapshot (src/providers/UserSettingsProvider.tsx:159:5)
+      at applyCatalogSnapshot (src/providers/UserSettingsProvider.tsx:257:9)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.error
+      An update to UserSettingsProvider inside a test was not wrapped in act(...).
+
+      When testing, code that causes React state updates should be wrapped into act(...):
+
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      162 |   const applyRecordsSnapshot = useCallback((next: RecordsSnapshot | null) => {
+      163 |     recordsSnapshotRef.current = next;
+    > 164 |     setRecordsSnapshot(next);
+          |     ^
+      165 |   }, []);
+      166 |
+      167 |   useEffect(() => {
+
+      at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+      at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+      at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+      at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+      at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+      at setRecordsSnapshot (src/providers/UserSettingsProvider.tsx:164:5)
+      at applyRecordsSnapshot (src/providers/UserSettingsProvider.tsx:258:9)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.error
+      An update to UserSettingsProvider inside a test was not wrapped in act(...).
+
+      When testing, code that causes React state updates should be wrapped into act(...):
+
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      259 |       }
+      260 |     } finally {
+    > 261 |       if (isMountedRef.current) setCatalogSyncing(false);
+          |                                 ^
+      262 |     }
+      263 |   }, [applyCatalogSnapshot, applyRecordsSnapshot]);
+      264 |
+
+      at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+      at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+      at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+      at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+      at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+      at setCatalogSyncing (src/providers/UserSettingsProvider.tsx:261:33)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS __tests__/EventDetailLiveBroadcastLifecycle.test.tsx
+PASS __tests__/socialApiUpdateMerge.test.ts
+PASS __tests__/ExperimentProvider.test.tsx
+PASS __tests__/MerchOrderReviewScreen.test.tsx
+PASS __tests__/OnboardingScreen.test.tsx
+  ● Console
+
+    console.info
+      [analytics] PostHog disabled: EXPO_PUBLIC_POSTHOG_KEY is unset. Events will not be sent.
+
+      at info (src/analytics/posthog.ts:37:11)
+
+PASS __tests__/SocialScreen.test.tsx
+PASS __tests__/UserProfileRsvpActivity.test.tsx
+  ● Console
+
+    console.warn
+      SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
+
+      332 |
+      333 |   return (
+    > 334 |     <SafeAreaView style={styles.container}>
+          |      ^
+      335 |       <ScrollView contentContainerStyle={styles.content}>
+      336 |         <View style={styles.profileHeader}>
+      337 |           <View style={styles.avatarPlaceholder}>
+
+      at warn (node_modules/react-native/Libraries/Utilities/warnOnce.js:27:11)
+      at Object.warnOnce [as SafeAreaView] (node_modules/react-native/index.js:92:5)
+      at SafeAreaView (app/userProfile.tsx:334:6)
+      at Object.react-stack-bottom-frame (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:13976:20)
+      at renderWithHooks (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2866:22)
+      at updateFunctionComponent (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6006:19)
+      at beginWork (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:7474:18)
+      at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+      at performUnitOfWork (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10972:22)
+      at workLoopSync (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10816:41)
+      at renderRootSync (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10797:11)
+      at performWorkOnRoot (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10349:13)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2094:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:859:10)
+      at actImplementation (node_modules/@testing-library/react-native/src/act.ts:30:25)
+      at renderWithAct (node_modules/@testing-library/react-native/src/render-act.ts:12:11)
+      at renderInternal (node_modules/@testing-library/react-native/src/render.tsx:81:33)
+      at renderInternal (node_modules/@testing-library/react-native/src/render.tsx:44:10)
+      at Object.<anonymous> (__tests__/UserProfileRsvpActivity.test.tsx:117:11)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+      at node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+      at Object.<anonymous> (node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+
+PASS __tests__/OperationsScreen.test.tsx
+PASS __tests__/VCardScreen.test.tsx
+PASS __tests__/Parties.test.tsx
+PASS __tests__/TicketPurchaseCard.test.tsx
+PASS __tests__/AccessRequestFirstValue.test.tsx
+PASS __tests__/PartySelector.test.tsx
+PASS __tests__/EventCardTickets.test.tsx
+PASS __tests__/catalogSnapshot.test.ts
+PASS __tests__/socialApiMapperSanitization.test.ts
+PASS __tests__/MerchStoreReputation.test.tsx
+PASS __tests__/featureRegistry.test.ts
+PASS __tests__/catalogAdmin.test.ts
+PASS __tests__/liveBroadcastsRepository.test.ts
+PASS __tests__/savedEvents.test.ts
+PASS __tests__/onboardingIntent.test.ts
+PASS src/lib/serviceCatalogSnapshot.test.ts
+PASS __tests__/socialApiListFilters.test.ts
+PASS __tests__/usePartyOwnership.test.tsx
+PASS __tests__/pipelinesApi.test.ts
+PASS __tests__/eventMomentsRepository.test.ts
+PASS __tests__/eventMoments.test.ts
+PASS __tests__/momentReactionFirstValue.test.ts
+PASS src/lib/catalogSnapshot.test.ts
+PASS __tests__/ThemeProvider.test.tsx
+PASS __tests__/firstRunFlags.test.ts
+PASS __tests__/firstValueCompletion.test.ts
+PASS __tests__/apiClient.test.ts
+PASS __tests__/directoryApi.test.ts
+PASS __tests__/tickets.test.ts
+PASS __tests__/DeepLinks.test.ts
+PASS __tests__/PartyIdentityCopy.test.ts
+PASS __tests__/authConfig.test.ts
+PASS __tests__/socialVCard.test.ts
+PASS __tests__/recordsSnapshot.test.ts
+PASS __tests__/liveBroadcasts.test.ts
+PASS __tests__/artistsApiGetByParty.test.ts
+PASS __tests__/mobileSurface.test.ts
+PASS __tests__/ticketCheckoutIdempotency.test.ts
+PASS __tests__/PartySelectorTelemetry.test.ts
+PASS __tests__/Analytics.test.ts
+  ● Console
+
+    console.info
+      [analytics] PostHog disabled: EXPO_PUBLIC_POSTHOG_KEY is unset. Events will not be sent.
+
+      at info (src/analytics/posthog.ts:37:11)
+
+PASS __tests__/catalogsApi.test.ts
+PASS __tests__/preferencesApi.test.ts
+PASS __tests__/momentMedia.test.ts
+PASS __tests__/partiesApi.test.ts
+PASS __tests__/recordsApi.test.ts
+PASS __tests__/operationsApi.test.ts
+PASS src/lib/eventSharing.test.ts
+PASS src/lib/eventRsvpIntent.test.ts
+PASS __tests__/merchDeepLinks.test.ts
+PASS src/lib/routeParams.test.ts
+PASS __tests__/onboardingApi.test.ts
+PASS __tests__/partySelectorApi.test.ts
+PASS src/lib/isoDate.test.ts
+PASS src/api/catalogs.test.ts
+PASS src/features/directory/profileForm.test.ts
+PASS src/features/directory/classifiedForm.test.ts
+PASS __tests__/merchReputationApi.test.ts
+PASS src/lib/identity.test.ts
+PASS src/lib/rsvp.test.ts
+PASS __tests__/passwordPolicy.test.ts
+
+Test Suites: 77 passed, 77 total
+Tests:       458 passed, 458 total
+Snapshots:   0 total
+Time:        26.81 s, estimated 42 s
+Ran all test suites.

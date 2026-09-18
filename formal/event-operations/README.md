@@ -119,6 +119,19 @@ The runner requires the exact named failures from all three negative controls.
 3. TLC rejected invitation transitions that did not explicitly preserve `now`. The missing
    `UNCHANGED now` clauses were added before the passing run.
 
+## Public Live Session credential validation
+
+`AccessCodeValidation.tla` checks one request, two code edits (including an ABA return),
+successful/invalid account responses and timeout. CurrentCredential and VerifiedAccount
+map to the generation guard and positive safe integer partyId check in
+LiveSessionPublicPage. Native disabled fieldset prevents input before verification;
+component tests cover same-origin API, superficial 200 responses, stale completion and
+retained input. TLC 1.7.2 checks eventual termination under weak fairness of a response
+or timeout; the browser implementation uses AbortController and a 30-second timeout.
+This assumes fetch honors abort and the event loop is scheduled. It does not establish
+ongoing token validity, backend authorization, submission persistence, or network
+availability. The server must authorize each submission independently. Negative controls
+remove each guard and must violate the corresponding named invariant.
 ## Artist activation context (UX-013 / PR #406)
 
 `ArtistActivation.tla` checks one activation and session refresh with up to two context
@@ -139,3 +152,24 @@ syntax mistakenly made the context predicate a transition guard instead of the
 assigned boolean; TLC's liveness counterexample exposed the disabled stale-response
 transition. Parenthesizing the assigned expression restored the intended discard
 transition. This model-authoring error is distinct from the component regressions.
+
+## Live Session submission authority — 2026-09-18
+
+`LiveIntakeAuthority` connects UX-260917-020 to explicit credential transport and
+receipt fencing in `LiveSessionIntakeForm` / `submitLiveSessionIntake`. TLC1.7.2
+exhaustively checked96 generated /42 distinct states (depth5): two accounts,
+one verified code, one submission, up to two code edits, arbitrary ambient cookie
+switches, and successful or failed persistence. `ExplicitAuthority` requires that
+writes use the verified code account; `CurrentReceipt` excludes stale/ABA success;
+`PersistedReceipt` permits success only after persistence. Weak fairness of the
+backend response action establishes that a pending request eventually settles.
+This assumes a response eventually arrives; it does not prove network availability,
+transactional atomicity of the intake handler, duplicate-submission prevention,
+or permissions of unrelated CRM handlers.
+
+Three executable negative controls independently remove explicit credentials,
+receipt generation fencing, or persistence confirmation. Each produced its named
+invariant counterexample. Component regressions cover the corresponding UI/API
+mechanisms, and an actual isolated HTTP/PostgreSQL browser test checks code-account
+persistence while a different cookie account remains signed in. Optional nested
+null handling is covered by multipart parser contract tests, not this state model.

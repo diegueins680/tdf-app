@@ -1339,13 +1339,13 @@
       "reviewed": true
     },
     {
-      "id": "2d43a4c97f70b8e8a5bc",
+      "id": "f9819fa4b81bdd8f3f21",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "navigation_item",
       "priority": "P3-retain",
       "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data.",
+      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
       "reviewed": true
     },
     {
@@ -13842,6 +13842,26 @@
       "priority": "P3-retain",
       "risk": "Fixture property drift would weaken current-session regression coverage.",
       "justification": "Reviewed 2026-09-17: ArtistClaimPanel.test.tsx session has the fixed SessionUser contract keys partyId and apiToken. Values are synthetic; it is not a role/grant or user-selectable catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "3ad9915d69339318f9ff",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
+      "justification": "Reviewed 2026-09-18: AuthErrorCode union in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "reviewed": true
+    },
+    {
+      "id": "4b3f6f86992b9c64f7a3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
+      "justification": "Reviewed 2026-09-18: error.code translation switch in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
       "reviewed": true
     }
   ]

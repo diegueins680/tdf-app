@@ -1,0 +1,59 @@
+[
+  {
+    "engine": "chromium",
+    "signup": true,
+    "persistedFirstValue": "artist_followed",
+    "returnVisit": true,
+    "keyboardAction": true,
+    "widths": [
+      {
+        "viewport": 320,
+        "scroll": 320
+      },
+      {
+        "viewport": 390,
+        "scroll": 390
+      },
+      {
+        "viewport": 834,
+        "scroll": 834
+      },
+      {
+        "viewport": 1280,
+        "scroll": 1280
+      }
+    ],
+    "darkWidths": [
+      {
+        "viewport": 320,
+        "scroll": 320
+      },
+      {
+        "viewport": 390,
+        "scroll": 390
+      },
+      {
+        "viewport": 834,
+        "scroll": 834
+      },
+      {
+        "viewport": 1280,
+        "scroll": 1280
+      }
+    ],
+    "enlargedText": {
+      "viewport": 1280,
+      "scroll": 1280,
+      "fontSize": "32px"
+    },
+    "pageErrors": [],
+    "axeViolations": [],
+    "darkAxeViolations": []
+  },
+  {
+    "engine": "chromium",
+    "guestFollowIntent": true,
+    "explicitConfirmation": true,
+    "persistedAfterReload": true
+  }
+]

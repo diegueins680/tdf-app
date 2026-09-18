@@ -1,0 +1,1323 @@
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LC_ALL = "C.UTF-8",
+	LC_CTYPE = "C.UTF-8",
+	LANG = "C.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LC_ALL = "C.UTF-8",
+	LC_CTYPE = "C.UTF-8",
+	LANG = "C.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 38 and seed 8287322525836044915 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 56321] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/EventLifecycle.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-17 21:38:49)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:38:50.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 0.0
+9941 states generated, 9941 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 0 (minimum is 0, the maximum 31 and the 95th percentile is 0).
+Finished in 03s at (2026-09-17 21:38:52)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 2 and seed 5649306398824543681 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 56392] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/EventLifecycle.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-17 21:38:53)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Finished computing initial states: 14 distinct states generated at 2026-09-17 21:38:53.
+Progress(3) at 2026-09-17 21:38:56: 139,174 states generated (139,174 s/min), 139,174 distinct states found (139,174 ds/min), 135,120 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 0.0
+139174 states generated, 139174 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 0 (minimum is 0, the maximum 31 and the 95th percentile is 0).
+Finished in 22s at (2026-09-17 21:39:15)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 74 and seed -8191723411005530937 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 56900] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/EventLifecycle.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-17 21:39:17)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Finished computing initial states: 14 distinct states generated at 2026-09-17 21:39:17.
+Error: Invariant AcceptedAuditIsAuthorized is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ seenCommands = {}
+/\ visible = FALSE
+/\ state = "settlement_pending"
+/\ audit = <<>>
+/\ revision = 0
+
+State 2: <Approve line 64, col 3 to line 75, col 27 of module EventLifecycle>
+/\ seenCommands = {c1}
+/\ visible = FALSE
+/\ state = "settled"
+/\ audit = << [ from |-> "settlement_pending",
+     to |-> "settled",
+     actor |-> approver,
+     command |-> c1,
+     accepted |-> TRUE ] >>
+/\ revision = 1
+
+1275 states generated, 1275 distinct states found, 1264 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 31 (minimum is 31, the maximum 31 and the 95th percentile is 31).
+Finished in 02s at (2026-09-17 21:39:17)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 48 and seed -5700234398106969472 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 57163] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/EventLifecycle.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-17 21:39:19)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Finished computing initial states: 14 distinct states generated at 2026-09-17 21:39:20.
+Error: Invariant AcceptedAuditIsAuthorized is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ seenCommands = {}
+/\ visible = FALSE
+/\ state = "settled"
+/\ audit = <<>>
+/\ revision = 0
+
+State 2: <Approve line 64, col 3 to line 75, col 27 of module EventLifecycle>
+/\ seenCommands = {c1}
+/\ visible = FALSE
+/\ state = "archived"
+/\ audit = << [ from |-> "settled",
+     to |-> "archived",
+     actor |-> owner,
+     command |-> c1,
+     accepted |-> TRUE ] >>
+/\ revision = 1
+
+1415 states generated, 1415 distinct states found, 1403 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 31 (minimum is 31, the maximum 31 and the 95th percentile is 31).
+Finished in 02s at (2026-09-17 21:39:20)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 36 and seed -1275500459750418391 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 57410] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/EventLifecycle.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-17 21:39:22)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:23.
+Error: Action property AuditAppendOnly is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ seenCommands = {}
+/\ visible = FALSE
+/\ state = "draft"
+/\ audit = <<>>
+/\ revision = 0
+
+State 2: <Approve line 64, col 3 to line 75, col 27 of module EventLifecycle>
+/\ seenCommands = {c1}
+/\ visible = FALSE
+/\ state = "planning"
+/\ audit = << [ from |-> "draft",
+     to |-> "planning",
+     actor |-> owner,
+     command |-> c1,
+     accepted |-> TRUE ] >>
+/\ revision = 1
+
+State 3: <RewriteAudit line 89, col 3 to line 93, col 57 of module EventLifecycle>
+/\ seenCommands = {c1}
+/\ visible = FALSE
+/\ state = "planning"
+/\ audit = << [ from |-> "draft",
+     to |-> "planning",
+     actor |-> outsider,
+     command |-> c1,
+     accepted |-> TRUE ] >>
+/\ revision = 1
+
+142 states generated, 142 distinct states found, 139 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 31 (minimum is 31, the maximum 31 and the 95th percentile is 31).
+Finished in 01s at (2026-09-17 21:39:23)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 8 and seed 1870688992867167039 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 57721] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/ReservationRace.tla
+!! WARNING: The TLA+ translation in module ReservationRace has changed since its last translation.
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Integers.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Integers
+Semantic processing of module TLC
+Semantic processing of module ReservationRace
+Starting... (2026-09-17 21:39:25)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:25.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 5.4E-19
+7 states generated, 5 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 01s at (2026-09-17 21:39:25)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 72 and seed -6051454014675431432 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 57806] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/ReservationRace.tla
+!! WARNING: The TLA+ translation in module ReservationRace has changed since its last translation.
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Integers.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Integers
+Semantic processing of module TLC
+Semantic processing of module ReservationRace
+Starting... (2026-09-17 21:39:27)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:27.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 5.4E-19
+7 states generated, 5 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 01s at (2026-09-17 21:39:27)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 90 and seed 8142975626081436080 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 57849] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/InvitationSafety.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module InvitationSafety
+Starting... (2026-09-17 21:39:29)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:29.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 9.6E-15
+1107 states generated, 912 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 7.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 10 and the 95th percentile is 5).
+Finished in 01s at (2026-09-17 21:39:30)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 58 and seed -4365544076878725090 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 57874] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/TaskRaci.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module TaskRaci
+Starting... (2026-09-17 21:39:31)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:32.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.2E-13
+5810 states generated, 1338 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 10.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 11 and the 95th percentile is 4).
+Finished in 01s at (2026-09-17 21:39:32)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 125 and seed -3810874648994008904 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 57942] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/ContractPayment.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ContractPayment
+Starting... (2026-09-17 21:39:33)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:34.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.3E-17
+31 states generated, 16 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 8.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 01s at (2026-09-17 21:39:34)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 15 and seed -8739570541657849994 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 57960] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/OperationalLiveness.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module OperationalLiveness
+Starting... (2026-09-17 21:39:35)
+Implied-temporal checking--satisfiability problem has 5 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:35.
+Progress(11) at 2026-09-17 21:39:36: 5,713 states generated, 1,440 distinct states found, 0 states left on queue.
+Checking 5 branches of temporal properties for the complete state space with 7200 total distinct states at (2026-09-17 21:39:36)
+Finished checking temporal properties in 00s at 2026-09-17 21:39:36
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.3E-13
+5713 states generated, 1440 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 11.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 12 and the 95th percentile is 7).
+Finished in 01s at (2026-09-17 21:39:36)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 124 and seed -4010376497040574196 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 57995] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/FanHubOnboarding.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-17 21:39:38)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:38.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.2E-14
+1249 states generated, 215 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 12.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 5 and the 95th percentile is 4).
+Finished in 01s at (2026-09-17 21:39:38)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 69 and seed -6058134361100333000 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58070] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/FanHubOnboarding.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-17 21:39:39)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:39.
+Progress(12) at 2026-09-17 21:39:40: 1,249 states generated, 215 distinct states found, 0 states left on queue.
+Checking 2 branches of temporal properties for the complete state space with 430 total distinct states at (2026-09-17 21:39:40)
+Finished checking temporal properties in 00s at 2026-09-17 21:39:40
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.2E-14
+1249 states generated, 215 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 12.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 5 and the 95th percentile is 4).
+Finished in 01s at (2026-09-17 21:39:40)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 28 and seed 8917337583303691753 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58127] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/FanHubOnboarding.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-17 21:39:41)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:42.
+Progress(12) at 2026-09-17 21:39:42: 1,249 states generated, 215 distinct states found, 0 states left on queue.
+Checking 2 branches of temporal properties for the complete state space with 430 total distinct states at (2026-09-17 21:39:42)
+Error: Temporal properties were violated.
+
+Error: The following behavior constitutes a counter-example:
+
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Change line 11, col 11 to line 13, col 87 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 1
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Change line 11, col 11 to line 13, col 87 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 4: <StartRead line 14, col 14 to line 16, col 60 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 5: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 6: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<2, 0>>
+/\ terminalOK = TRUE
+
+State 7: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = TRUE
+/\ captured = <<2, 0>>
+/\ terminalOK = TRUE
+
+State 8: Stuttering
+Finished checking temporal properties in 00s at 2026-09-17 21:39:42
+1249 states generated, 215 distinct states found, 0 states left on queue.
+Finished in 01s at (2026-09-17 21:39:42)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 4 and seed 4022056858621790930 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58191] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/FanHubOnboarding.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-17 21:39:43)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:44.
+Error: Invariant ConsentOnly is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = FALSE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+14 states generated, 7 distinct states found, 3 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 3 (minimum is 2, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-17 21:39:44)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 62 and seed 5924247769912238324 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58196] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/FanHubOnboarding.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-17 21:39:45)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:45.
+Error: Invariant CurrentContext is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Change line 11, col 11 to line 13, col 87 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 1
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = FALSE
+/\ hidden = FALSE
+/\ gen = 1
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+12 states generated, 7 distinct states found, 4 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 3 (minimum is 3, the maximum 3 and the 95th percentile is 3).
+Finished in 01s at (2026-09-17 21:39:45)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 102 and seed 2010163239929423966 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58408] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/FanHubOnboarding.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-17 21:39:47)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:47.
+Error: Invariant SingleFlight is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 4: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1, 2}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+34 states generated, 16 distinct states found, 8 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 01s at (2026-09-17 21:39:47)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 3 and seed -1646527208443082961 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58415] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/FanHubOnboarding.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-17 21:39:48)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:49.
+Error: Invariant TerminalOnly is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 4: <Receipt line 31, col 3 to line 37, col 69 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = TRUE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = FALSE
+
+32 states generated, 16 distinct states found, 8 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 01s at (2026-09-17 21:39:49)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 24 and seed 902688646809032777 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58436] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/AccessCodeValidation.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module AccessCodeValidation
+Starting... (2026-09-17 21:39:50)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:51.
+Progress(4) at 2026-09-17 21:39:51: 16 states generated, 9 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 9 total distinct states at (2026-09-17 21:39:51)
+Finished checking temporal properties in 00s at 2026-09-17 21:39:51
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.4E-18
+16 states generated, 9 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 01s at (2026-09-17 21:39:51)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 101 and seed -4437161122758918561 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58454] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/AccessCodeValidation.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module AccessCodeValidation
+Starting... (2026-09-17 21:39:52)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:52.
+Error: Invariant CurrentCredential is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ generation = 0
+/\ validAccount = FALSE
+/\ phase = "pending"
+/\ acceptedGeneration = 0
+/\ enabled = FALSE
+
+State 2: <EditCode line 8, col 13 to line 9, col 68 of module AccessCodeValidation>
+/\ generation = 1
+/\ validAccount = FALSE
+/\ phase = "pending"
+/\ acceptedGeneration = 0
+/\ enabled = FALSE
+
+State 3: <Resolve line 10, col 12 to line 12, col 61 of module AccessCodeValidation>
+/\ generation = 1
+/\ validAccount = TRUE
+/\ phase = "done"
+/\ acceptedGeneration = 0
+/\ enabled = TRUE
+
+8 states generated, 7 distinct states found, 4 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 3 (minimum is 3, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-17 21:39:52)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 73 and seed -1210907911168187586 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58460] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/AccessCodeValidation.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module AccessCodeValidation
+Starting... (2026-09-17 21:39:53)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:39:53.
+Error: Invariant VerifiedAccount is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ generation = 0
+/\ validAccount = FALSE
+/\ phase = "pending"
+/\ acceptedGeneration = 0
+/\ enabled = FALSE
+
+State 2: <Resolve line 10, col 12 to line 12, col 61 of module AccessCodeValidation>
+/\ generation = 0
+/\ validAccount = FALSE
+/\ phase = "done"
+/\ acceptedGeneration = 0
+/\ enabled = TRUE
+
+3 states generated, 3 distinct states found, 1 states left on queue.
+The depth of the complete state graph search is 2.
+Finished in 00s at (2026-09-17 21:39:54)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 29 and seed -71092873383716345 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58473] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/LiveIntakeAuthority.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module LiveIntakeAuthority
+Starting... (2026-09-17 21:39:55)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-17 21:39:55.
+Progress(5) at 2026-09-17 21:39:55: 96 states generated, 42 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 42 total distinct states at (2026-09-17 21:39:55)
+Finished checking temporal properties in 00s at 2026-09-17 21:39:55
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.2E-16
+96 states generated, 42 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-17 21:39:55)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 123 and seed 3422327865883590046 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58475] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/LiveIntakeAuthority.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module LiveIntakeAuthority
+Starting... (2026-09-17 21:39:56)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-17 21:39:56.
+Error: Invariant ExplicitAuthority is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "ready"
+/\ ambient = 2
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 0
+
+State 2: <Submit line 10, col 11 to line 13, col 85 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "pending"
+/\ ambient = 2
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 2
+
+6 states generated, 5 distinct states found, 2 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-17 21:39:56)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 46 and seed -5806696890206273947 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58479] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/LiveIntakeAuthority.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module LiveIntakeAuthority
+Starting... (2026-09-17 21:39:57)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-17 21:39:58.
+Error: Invariant CurrentReceipt is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "ready"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 0
+
+State 2: <Submit line 10, col 11 to line 13, col 85 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "pending"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 1
+
+State 3: <EditCode line 14, col 13 to line 16, col 100 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 1
+/\ phase = "pending"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 1
+
+State 4: <Resolve line 19, col 12 to line 23, col 74 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = TRUE
+/\ generation = 1
+/\ phase = "done"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = TRUE
+/\ writer = 1
+
+26 states generated, 19 distinct states found, 11 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-17 21:39:58)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 62 and seed 8890543875715443030 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58497] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/LiveIntakeAuthority.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module LiveIntakeAuthority
+Starting... (2026-09-17 21:39:59)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-17 21:39:59.
+Error: Invariant PersistedReceipt is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "ready"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 0
+
+State 2: <Submit line 10, col 11 to line 13, col 85 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "pending"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 1
+
+State 3: <Resolve line 19, col 12 to line 23, col 74 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "done"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = TRUE
+/\ writer = 1
+
+11 states generated, 8 distinct states found, 4 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-17 21:39:59)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 102 and seed 6462694794321625701 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58512] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/ArtistActivation.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistActivation
+Starting... (2026-09-17 21:40:00)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:40:00.
+Progress(5) at 2026-09-17 21:40:00: 23 states generated, 15 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 15 total distinct states at (2026-09-17 21:40:00)
+Finished checking temporal properties in 00s at 2026-09-17 21:40:00
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 6.5E-18
+23 states generated, 15 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-17 21:40:00)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 7 and seed -2194497283113947932 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58524] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/ArtistActivation.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistActivation
+Starting... (2026-09-17 21:40:01)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-17 21:40:01.
+Error: Invariant CurrentContext is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ persisted = FALSE
+/\ generation = 0
+/\ applied = FALSE
+/\ phase = "activate"
+/\ requestGeneration = 0
+/\ authoritative = FALSE
+/\ acceptedGeneration = 0
+
+State 2: <ChangeContext line 8, col 18 to line 10, col 104 of module ArtistActivation>
+/\ persisted = FALSE
+/\ generation = 1
+/\ applied = FALSE
+/\ phase = "activate"
+/\ requestGeneration = 0
+/\ authoritative = FALSE
+/\ acceptedGeneration = 0
+
+State 3: <ResolveActivation line 11, col 22 to line 14, col 111 of module ArtistActivation>
+/\ persisted = TRUE
+/\ generation = 1
+/\ applied = FALSE
+/\ phase = "refresh"
+/\ requestGeneration = 0
+/\ authoritative = FALSE
+/\ acceptedGeneration = 0
+
+State 4: <ResolveSession line 15, col 19 to line 20, col 75 of module ArtistActivation>
+/\ persisted = TRUE
+/\ generation = 1
+/\ applied = TRUE
+/\ phase = "done"
+/\ requestGeneration = 0
+/\ authoritative = TRUE
+/\ acceptedGeneration = 0
+
+17 states generated, 13 distinct states found, 5 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-17 21:40:01)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 35 and seed -5049365848656364744 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58554] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/ArtistClaimKind.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistClaimKind
+Starting... (2026-09-17 21:40:02)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Computed 2 initial states...
+Finished computing initial states: 4 distinct states generated at 2026-09-17 21:40:02.
+Progress(2) at 2026-09-17 21:40:02: 8 states generated, 8 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 8 total distinct states at (2026-09-17 21:40:02)
+Finished checking temporal properties in 00s at 2026-09-17 21:40:02
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 0.0
+8 states generated, 8 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 1 and the 95th percentile is 1).
+Finished in 00s at (2026-09-17 21:40:02)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 19 and seed 5284804735276186945 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58575] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/ArtistClaimKind.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistClaimKind
+Starting... (2026-09-17 21:40:03)
+Computing initial states...
+Computed 2 initial states...
+Finished computing initial states: 4 distinct states generated at 2026-09-17 21:40:04.
+Error: Invariant OnlyArtist is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ sourceKind = "artist"
+/\ done = FALSE
+/\ prepared = "none"
+/\ canonicalKind = "band"
+
+State 2: <Prepare line 9, col 12 to line 15, col 53 of module ArtistClaimKind>
+/\ sourceKind = "artist"
+/\ done = TRUE
+/\ prepared = "band"
+/\ canonicalKind = "band"
+
+6 states generated, 6 distinct states found, 3 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 1 (minimum is 1, the maximum 1 and the 95th percentile is 1).
+Finished in 00s at (2026-09-17 21:40:04)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 90 and seed -794804254570377917 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58588] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/ArtistClaimTarget.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistClaimTarget
+Starting... (2026-09-17 21:40:04)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Computed 2 initial states...
+Finished computing initial states: 4 distinct states generated at 2026-09-17 21:40:05.
+Progress(7) at 2026-09-17 21:40:05: 52 states generated, 49 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 49 total distinct states at (2026-09-17 21:40:05)
+Finished checking temporal properties in 00s at 2026-09-17 21:40:05
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 8.0E-18
+52 states generated, 49 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 7.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-17 21:40:05)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 120 and seed 8779434344865623519 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 58600] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-ux-continuation/formal/event-operations/ArtistClaimTarget.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistClaimTarget
+Starting... (2026-09-17 21:40:06)
+Computing initial states...
+Computed 2 initial states...
+Finished computing initial states: 4 distinct states generated at 2026-09-17 21:40:06.
+Error: Invariant UniqueTarget is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"start", "start">>
+/\ grants = {}
+
+State 2: <Acquire line 12, col 15 to line 15, col 84 of module ArtistClaimTarget>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"read", "start">>
+/\ grants = {}
+
+State 3: <Read line 16, col 12 to line 19, col 78 of module ArtistClaimTarget>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"write", "start">>
+/\ grants = {}
+
+State 4: <Acquire line 12, col 15 to line 15, col 84 of module ArtistClaimTarget>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"write", "read">>
+/\ grants = {}
+
+State 5: <Read line 16, col 12 to line 19, col 78 of module ArtistClaimTarget>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"write", "write">>
+/\ grants = {}
+
+State 6: <Commit line 20, col 14 to line 25, col 66 of module ArtistClaimTarget>
+/\ returned = {1}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 1
+/\ allowed = TRUE
+/\ phase = <<"done", "write">>
+/\ grants = {}
+
+State 7: <Commit line 20, col 14 to line 25, col 66 of module ArtistClaimTarget>
+/\ returned = {1, 2}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 2
+/\ allowed = TRUE
+/\ phase = <<"done", "done">>
+/\ grants = {}
+
+128 states generated, 65 distinct states found, 8 states left on queue.
+The depth of the complete state graph search is 7.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-17 21:40:06)
+00. run   EventOperationsScenario     0    1/1     SAT
+00. check ExactlyOneAccountable     0       UNSAT
+00. check RequiredResponsibleIsPresent     0       UNSAT
+00. check DependenciesAreAcyclic     0       UNSAT
+00. check ConfirmedContractUsesOneAcceptedVersion     0       UNSAT
+00. check ExclusiveConflictHasAuthorizedOverride     0       UNSAT
+00. check InvitationCannotExpandScopes     0       UNSAT
+00. check RestrictedReadRequiresEventRelationship     0       UNSAT
+00. check RaciAssignmentsAreNotOrphaned     0       UNSAT
+Event operations formal verification passed within the documented finite bounds.

@@ -1,4 +1,6 @@
+import authEntry from './authEntry.en';
 const en = {
+  authEntry,
   fanHubOnboarding: {
     title: 'First steps',
     managerTitle: 'Useful now',
