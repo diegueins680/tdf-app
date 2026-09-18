@@ -5,6 +5,87 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Checkpoint vigente — 2026-09-18 00:20 UTC (17 de septiembre en Ecuador)
+
+Este bloque y los estados por hallazgo sustituyen las pausas y capacidades
+históricas descritas más abajo. **PARTIALLY COMPLETE**: la cobertura inicial
+integral y la publicación móvil aún no están cerradas.
+
+- El usuario confirmó la finalización del despliegue ajeno y entregó la coordinación
+  de producción. La pausa anterior está levantada; respetar la lease vigente.
+- Main remoto verificado: `437fdddea907ba7a20b8626242bf2aed108d6789`.
+  #421 merge `6b48449e7f934e91b9450c44be3b43873922ffd9`; #425 merge
+  `437fdddea907ba7a20b8626242bf2aed108d6789`. #423/#424 ya están integradas;
+  no se reabren sus workstreams ni se limpian ramas ajenas.
+- #406 head `1fe6195a08a73574ee597cc0d227bcdf1a9157b2`: aprobación independiente
+  exacta confirmada, observación de reclamaciones reparada y resuelta; CI pendiente.
+  Incorpora UX-013/014 y preserva identidades separadas/revisión de titularidad.
+- #422 recibe la recuperación de destino en el correo, traducciones ES/EN y
+  políticas españolas de la misma versión. Su aprobación anterior no cubre estos
+  cambios; necesita gates y revisión exactos nuevos. No atribuirlos al head remoto
+  anterior `00b9029a807d275cbb0fc6879d2644d3f2709e44`.
+- Móvil #89 merge `d22b49eb68151924617b13cc763178b7fb2cb2ba`; #90 merge
+  `9e478efae4bbeebadf3b378250c49070d3fda636`, introduce contrato `c63290b`.
+  Nuevo sucesor `efa2555` conserva idioma de políticas y contrato de recuperación;
+  publicar las páginas españolas del padre antes de distribuirlo.
+- Producción API observada saludable en `9f0da14de84919f8fba391fa752b7df7412a600d`:
+  esto no acredita desplegar #421/#406/#422. Imagen de6b48449e7 sigue construyéndose
+  en run35286741467. Ninguna mutación backend en esta continuación todavía.
+- Web #425: Cloudflare check56e5751e-108c-4bc1-b9d8-e7820dd762f9 y Vercel
+  deployment6514224951 exitosos sobre437fddd; https://tdf-app.pages.dev/login
+  abre con getters local/sessionStorage denegados, conserva entrada y sin pageerror.
+  FanHub con persistencia real autenticada aún requiere observación.
+- Staging `tdf-hq-studio-audit-staging.fly.dev/health` responde db/status ok;
+  no equivale a recorrido autenticado. Fuente editable, Node, Stack/GHC9.10.3,
+  Docker/PostgreSQL17 aislado, tres motores de navegador, Fly y EAS disponibles.
+  Disco27GiB; iOS18.3 sim disponible, Maestro2.5.1; idb sin companion.
+  No Android/dispositivo físico ni VoiceOver/TalkBack verificados.
+
+Verificación nueva: backend de1fe6195a0 compilado; esquema productivo aislado y
+migraciones/reinicio idempotentes pasan; HTTP real de reclamaciones pasa con ocho
+solicitudes simultáneas, privacidad, denegación y comprobante persistido.
+TLC1.7.2/Alloy6.2.0 actuales y controles negativos pasan, incluyendo49 estados del
+nuevo modelo de preparación y contraejemplo al quitar su bloqueo. Los límites
+constan en [artist-management-claims](../../artist-management-claims.md).
+
+Recuperación: cinco ejemplos Hspec/100 QuickCheck y30 pruebas API/login/rutas pasan.
+Matriz final de bundle de producción20/20 (idioma, recuperación, políticas,
+foco/axe; Chromium desktop/teléfono/tablet, Firefox y WebKit). La corrida previa
+19/20 midió contraste del fondo atenuado detrás del modal; se conserva. Ahora se
+comprueban modalidad, aislamiento del fondo y Tab dentro del diálogo; axe analiza
+el diálogo activo y la página completa después de cerrar, sin cambiar umbrales.
+No es certificación WCAG integral ni entrega SMTP real.
+
+Suite web final215/215,2.064/2.064 tests; typecheck/lint y backend integrado
+se registran por separado al terminar. El registro conserva además los22 IDs
+históricos originales para conciliar sus sucesores; no son22 defectos nuevos ni
+una orden de reimplementar trabajo ya integrado.
+
+Móvil: release:check y77 suites/458 tests del sucesor pasan. Build iOS INTERNAL
+`acce0957-ec70-40a6-8f9e-8192db3b7839`,1.0.1(17), fuente74d784c, instalado;
+recorrido ES registro→Safari términos→retorno conserva email sin enviar signup.
+Evidencia en este directorio. Ese binario no contiene los cambios posteriores.
+#91 ya está fusionada como `fac7c2cfac14db1b81883e184764be7f7d28716a`.
+EAS confirmó credenciales remotas de ambas plataformas y aceptó builds STORE de
+fuente `efa2555c5400dfa736bc95a12414a790b82adda5`: Android1.0.1(9),
+`1fbcb51e-b035-4ba9-a6f5-b244bf67bae3`; iOS1.0.1(18),
+`154bc17c-ff2d-4f87-b383-75973ee25824`. Estado inicialNEW; sin envío ni publicación.
+La limitación histórica de firma iOS ya no aplica. No hay tienda pública,
+revisión aprobada ni rollout acreditados.
+
+Siguiente ejecución: gates/revisión y merge #406; publicar cliente móvil compatible;
+merge #422 tras revisión; artefacto inmutable y release backend guardado (snapshot,
+preflight, lease, canary, smoke, observación), conservando flags efectivos. Completar
+las filas no probadas, conciliación histórica y recorridos autenticados/native;
+firmar/subir/enviar/publicar móvil y comprobar disponibilidad por plataforma.
+No detenerse en estos incrementos ni declarar la auditoría integral terminada.
+
+Fuentes de esta continuación: [patrón de diálogo W3C](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
+(fondo inactivo atenuado y foco modal), [Maestro launchApp](https://docs.maestro.dev/reference/commands-available/launchapp)
+(`stopApp:false` para retorno sin reinicio), consultadas17 de septiembre2026 local.
+
+## Evidencia histórica anterior al checkpoint vigente
+
 ## Estado y procedencia
 
 - Workspace original `main` en `17a33eca11d585d84435af85340beece9b51d14e`, con cambios
@@ -25,7 +106,7 @@ sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
 ## Cobertura, roles y límites
 
-[coverage.csv](coverage.csv) inventaría 409 entradas: 155 funciones registradas,
+[coverage.csv](coverage.csv) conserva las409 entradas iniciales y añade dos traducciones estáticas verificadas (411 filas actuales): 155 funciones registradas,
 188 declaraciones de rutas (incluidos wrappers/aliases), pantallas Expo y HTML
 estático. **No son 409 recorridos probados ni 409 pantallas únicas.** Por fila se
 registran origen, acceso, dispositivos, idiomas y estados requeridos. El inventario

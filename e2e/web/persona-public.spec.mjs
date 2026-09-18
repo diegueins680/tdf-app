@@ -178,7 +178,7 @@ function observeRuntime(page) {
   return { consoleErrors, failedRequests };
 }
 
-async function expectNoSeriousAxeViolations(page, testInfo) {
+async function expectNoSeriousAxeViolations(page, testInfo, contextSelector = null) {
   await page.evaluate(async () => {
     await document.fonts.ready;
     await Promise.all(document.getAnimations()
@@ -187,8 +187,8 @@ async function expectNoSeriousAxeViolations(page, testInfo) {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   });
   await page.addScriptTag({ content: axe.source });
-  const violations = await page.evaluate(async () => {
-    const result = await globalThis.axe.run(document, {
+  const violations = await page.evaluate(async (selector) => {
+    const result = await globalThis.axe.run(selector ? document.querySelector(selector) : document, {
       resultTypes: ['violations'],
       rules: { 'color-contrast': { enabled: true } },
     });
@@ -204,7 +204,7 @@ async function expectNoSeriousAxeViolations(page, testInfo) {
           failureSummary: node.failureSummary,
         })),
       }));
-  });
+  }, contextSelector);
   await testInfo.attach('axe-serious-critical.json', { body: JSON.stringify(violations, null, 2), contentType: 'application/json' });
   expect(violations).toEqual([]);
 }
@@ -686,7 +686,7 @@ for (const locale of ['es', 'en']) {
     const signup = page.getByRole('dialog', { name: en ? 'Create account' : 'Crear cuenta' });
     await expect(signup).toBeVisible();
     await expect(signup.getByText(en ? /continue to “follow artists”/ : /continuarás con “seguir artistas”/)).toBeVisible();
-    await expect(signup.getByRole('link', { name: en ? 'account terms' : 'términos de la cuenta', exact: true })).toHaveAttribute('href', '/account/terms.html');
+    await expect(signup.getByRole('link', { name: en ? 'account terms' : 'términos de la cuenta', exact: true })).toHaveAttribute('href', en ? '/account/terms.html' : '/account/terms-es.html');
     await expect(signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true })).toBeDisabled();
     await signup.getByLabel(en ? 'First name' : 'Nombre').fill('Synthetic');
     await signup.getByLabel(en ? 'I accept the terms and privacy policy' : 'Acepto los términos y la política de privacidad', { exact: true }).check();
@@ -714,10 +714,37 @@ for (const locale of ['es', 'en']) {
     await expect(email).toHaveValue('locale@persona.test');
     expect(requestedDestination).toBe('/fans');
     await expect(page.locator('#root')).toHaveAttribute('aria-hidden', 'true');
-    await expectNoSeriousAxeViolations(page, testInfo);
+    await expect(dialog).toHaveAttribute('aria-modal', 'true');
+    for (let step = 0; step < 5; step += 1) {
+      await page.keyboard.press('Tab');
+      await expect.poll(() => dialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    }
+    // Measure the active modal. Its intentionally dimmed, inactive background
+    // is measured in full after close; keep all rules/contrast thresholds.
+    await expectNoSeriousAxeViolations(page, testInfo, '[role="dialog"][aria-labelledby="login-reset-dialog-title"]');
     await page.screenshot({ path: testInfo.outputPath(`recovery-${locale}.png`), fullPage: true });
     await dialog.getByRole('button', { name: en ? 'Close' : 'Cerrar', exact: true }).click();
     await expect(dialog).not.toBeVisible();
     await expect(page).toHaveURL(/\/login\?redirect=%2Ffans$/);
+    await expect(page.locator('#root')).not.toHaveAttribute('aria-hidden', 'true');
+    await expectNoSeriousAxeViolations(page, testInfo);
+  });
+}
+
+
+for (const locale of ['es', 'en']) {
+  test(`@critical PW-PER-POLICY ${locale} policy documents retain language and version`, async ({ page }, testInfo) => {
+    const suffix = locale === 'es' ? '-es' : '';
+    await page.goto(`/account/terms${suffix}.html`);
+    await expect(page.locator('html')).toHaveAttribute('lang', locale === 'es' ? 'es-EC' : 'en');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(locale === 'es' ? 'Términos de la cuenta de TDF Records' : 'TDF Records Account Terms');
+    await expect(page.locator('body')).toContainText('tdf-account-terms-v1');
+    await expectNoSeriousAxeViolations(page, testInfo);
+    await page.getByRole('navigation').getByRole('link', { name: locale === 'es' ? 'Privacidad' : 'Privacy', exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/account/privacy${suffix}\\.html$`));
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(locale === 'es' ? 'Aviso de privacidad de la cuenta de TDF Records' : 'TDF Records Account Privacy Notice');
+    await expectNoSeriousAxeViolations(page, testInfo);
+    await page.getByRole('navigation').getByRole('link', { name: locale === 'es' ? 'English' : 'Español', exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('lang', locale === 'es' ? 'en' : 'es-EC');
   });
 }

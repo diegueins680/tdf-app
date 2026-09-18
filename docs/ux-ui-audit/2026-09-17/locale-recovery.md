@@ -34,3 +34,19 @@ final y compilación Haskell siguen pendientes. No se afirma entrega SMTP real.
 Cierre local: matriz de producción 10/10; API/rutas/login 30/30; binario de pruebas
 construido con Stack/GHC 9.10.3: passwordResetLink 5 ejemplos y 100 casos QuickCheck,
 cero fallos. Compilación completa y gates del head publicado siguen pendientes.
+
+Continuación final: las políticas españolas son traducciones de la versión
+`tdf-account-terms-v1`, con enlaces a los originales ingleses; web y móvil eligen
+según idioma. La matriz ampliada pasó20/20 en bundle de producción y cinco perfiles.
+La corrida anterior19/20 identificó exclusivamente controles del fondo atenuado
+bajo el diálogo de recuperación; `aria-hidden=true` por sí solo no impidió que
+axe midiera esos píxeles. La prueba ahora exige aria-modal, aislamiento del fondo
+y cinco pasos Tab dentro del diálogo, analiza todas las reglas en el diálogo activo
+y vuelve a analizar la página completa tras cerrar. No se cambiaron umbrales de
+contraste ni se omitió la página activa. Fuente primaria: W3C APG Dialog Modal,
+consultada17-sept2026: el fondo modal es inactivo y normalmente atenuado.
+https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
+
+La rama conserva la dependencia #406 por merge normal (ancestría de migraciones),
+no por squash ni copia de SQL. Cliente móvil generado y probado efa2555 publicado
+y revisado en #91; requiere páginas españolas publicadas antes de distribución.

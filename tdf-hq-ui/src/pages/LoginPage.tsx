@@ -149,7 +149,7 @@ const loadGoogleScript = () => {
 };
 
 export default function LoginPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const servicePreparingMessage = t('authEntry.servicePreparing');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -1346,7 +1346,7 @@ export default function LoginPage() {
               )}
               label={(
                 <Typography variant="body2">
-                  <Trans i18nKey="authEntry.consentText" components={{ terms: <Link href="/account/terms.html" target="_blank" rel="noreferrer" />, privacy: <Link href="/account/privacy.html" target="_blank" rel="noreferrer" /> }} />
+                  <Trans i18nKey="authEntry.consentText" components={{ terms: <Link href={i18n.resolvedLanguage?.startsWith('en') ? '/account/terms.html' : '/account/terms-es.html'} target="_blank" rel="noreferrer" />, privacy: <Link href={i18n.resolvedLanguage?.startsWith('en') ? '/account/privacy.html' : '/account/privacy-es.html'} target="_blank" rel="noreferrer" /> }} />
                 </Typography>
               )}
             />
