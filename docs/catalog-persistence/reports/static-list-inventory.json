@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-18T17:26:57.676Z",
+  "generatedAt": "2026-09-18T17:33:41.972Z",
   "repositoryRoot": ".",
-  "filesScanned": 1590,
+  "filesScanned": 1594,
   "candidateCount": 1138,
   "byClassification": {
     "dynamic-business-catalog": 741,
@@ -3690,7 +3690,7 @@
       "lines": [
         124
       ],
-      "consumerCount": 212,
+      "consumerCount": 214,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -3863,6 +3863,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
         "scripts/test-live-intake-identity.sh",
@@ -3871,8 +3872,7 @@
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
-        "scripts/test-provider-identity.sh",
-        "scripts/test-public-ticket-checkout-runtime-migration.sh"
+        "scripts/test-provider-identity.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -3934,7 +3934,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 704,
+      "consumerCount": 706,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4222,7 +4222,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 704,
+      "consumerCount": 706,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5343,7 +5343,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 704,
+      "consumerCount": 706,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5682,7 +5682,7 @@
       "lines": [
         167
       ],
-      "consumerCount": 173,
+      "consumerCount": 174,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -5843,6 +5843,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-live-intake-identity.sh",
         "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
@@ -6155,7 +6156,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 172,
+      "consumerCount": 173,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -6289,6 +6290,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-live-intake-identity.sh",
         "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-party-selector-rate-limit-scope-migration.sh",
@@ -10955,7 +10957,7 @@
       "lines": [
         136
       ],
-      "consumerCount": 146,
+      "consumerCount": 147,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -11092,6 +11094,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-live-intake-identity.sh",
         "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
@@ -11139,7 +11142,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "eca67f06b24bad7056ef",
+      "id": "02464a57896073665826",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -11257,9 +11260,10 @@
         "{id=2026-09-18_notification_navigation}",
         "{id=2026-09-18_provider_subject_identity}",
         "{id=2026-09-18_live_intake_idempotency}",
-        "{id=2026-09-18_calendar_runtime_schema}"
+        "{id=2026-09-18_calendar_runtime_schema}",
+        "{id=2026-09-18_course_identity_requests}"
       ],
-      "valueCount": 110,
+      "valueCount": 111,
       "recommendedClassification": "security-system-registry",
       "lines": [
         3
@@ -11317,7 +11321,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Ordered immutable migration IDs and introduction commits are release execution mechanics. Preserve all prior109entries and append the existing calendar runtime tables, introduced in ancestor49ff02de5. No applied migration/checksum is rewritten; recovery retains these additive tables and authorized data.",
+      "justification": "Reviewed 111-entry immutable release registry: preserve main calendar migration and append course request receipts without changing prior SQL or introductions.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -11341,7 +11345,7 @@
       "lines": [
         96
       ],
-      "consumerCount": 143,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -11475,6 +11479,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-live-intake-identity.sh",
         "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
@@ -11539,7 +11544,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 171,
+      "consumerCount": 172,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -11673,6 +11678,7 @@
         "scripts/set-loop-github-polling.mjs",
         "scripts/sync-artist-drive.js",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-live-intake-identity.sh",
         "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
@@ -12660,7 +12666,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -12775,6 +12781,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -14739,7 +14746,7 @@
       "lines": [
         88
       ],
-      "consumerCount": 186,
+      "consumerCount": 187,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -14868,6 +14875,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -15010,7 +15018,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 120,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -15117,6 +15125,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -18269,7 +18278,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 151,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -18387,6 +18396,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -26336,7 +26346,7 @@
       "lines": [
         65
       ],
-      "consumerCount": 28,
+      "consumerCount": 29,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
@@ -26347,7 +26357,8 @@
         "tdf-hq/src/TDF/Routes/Courses.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/test/TDF/APITypesSpec.hs"
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/courses.ts",
@@ -28145,7 +28156,7 @@
       "lines": [
         49
       ],
-      "consumerCount": 152,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -28260,6 +28271,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -31669,7 +31681,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 576,
+      "consumerCount": 577,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -32088,7 +32100,7 @@
       "lines": [
         206
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -32211,6 +32223,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -36117,7 +36130,7 @@
       "lines": [
         108
       ],
-      "consumerCount": 250,
+      "consumerCount": 251,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -36283,6 +36296,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -38857,7 +38871,7 @@
       "lines": [
         388
       ],
-      "consumerCount": 706,
+      "consumerCount": 708,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -39600,7 +39614,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 576,
+      "consumerCount": 577,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -41373,7 +41387,7 @@
       "lines": [
         58
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -41487,6 +41501,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -43324,7 +43339,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -43444,6 +43459,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -44476,7 +44492,7 @@
       "lines": [
         137
       ],
-      "consumerCount": 154,
+      "consumerCount": 155,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -44596,6 +44612,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -46905,7 +46922,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 576,
+      "consumerCount": 577,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -47200,7 +47217,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 576,
+      "consumerCount": 577,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -47494,7 +47511,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 120,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -47601,6 +47618,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -47883,7 +47901,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 711,
+      "consumerCount": 713,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -48478,7 +48496,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 576,
+      "consumerCount": 577,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -48848,7 +48866,7 @@
       "lines": [
         127
       ],
-      "consumerCount": 94,
+      "consumerCount": 95,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -57064,7 +57082,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57200,6 +57218,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-country-reference.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-live-intake-identity.sh",
         "scripts/test-marketplace-contact-identity.sh",
         "scripts/test-provider-identity.sh",
@@ -57459,7 +57478,7 @@
         1182,
         1284
       ],
-      "consumerCount": 195,
+      "consumerCount": 196,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57614,6 +57633,7 @@
         "scripts/test-automatic-migrations-production-schema.sh",
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-catalog-production-cutover.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-event-research-ingestion-migration.sh",
         "scripts/test-feature-migrations.sh",
@@ -57625,8 +57645,7 @@
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-phase0-migration.sh",
-        "scripts/test-social-event-optional-end-migration.sh",
-        "scripts/test-studio-internship-audit-migration.sh"
+        "scripts/test-social-event-optional-end-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/deploy-stripe-ticketing.sh",
@@ -57919,7 +57938,7 @@
       "lines": [
         5584
       ],
-      "consumerCount": 236,
+      "consumerCount": 237,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58083,6 +58102,7 @@
         "scripts/test-catalog-production-cutover.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-event-research-ingestion-migration.sh",
         "scripts/test-feature-migrations.sh",
@@ -58092,8 +58112,7 @@
         "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
         "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
-        "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/deploy-stripe-ticketing.sh",
@@ -58793,7 +58812,7 @@
       "lines": [
         8091
       ],
-      "consumerCount": 152,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -58913,6 +58932,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -58983,7 +59003,7 @@
       "lines": [
         8178
       ],
-      "consumerCount": 127,
+      "consumerCount": 128,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -59093,6 +59113,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -60421,7 +60442,7 @@
       "lines": [
         10117
       ],
-      "consumerCount": 704,
+      "consumerCount": 706,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -61236,7 +61257,7 @@
       "lines": [
         10500
       ],
-      "consumerCount": 705,
+      "consumerCount": 707,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -62644,7 +62665,7 @@
       "lines": [
         12394
       ],
-      "consumerCount": 87,
+      "consumerCount": 88,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -62901,7 +62922,7 @@
         12929,
         12981
       ],
-      "consumerCount": 704,
+      "consumerCount": 706,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -63774,7 +63795,7 @@
       "lines": [
         13843
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -63890,6 +63911,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -63952,7 +63974,7 @@
       "lines": [
         13963
       ],
-      "consumerCount": 194,
+      "consumerCount": 195,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -64098,6 +64120,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -65454,7 +65477,7 @@
       "lines": [
         58
       ],
-      "consumerCount": 151,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -65573,6 +65596,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -66237,7 +66261,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 121,
+      "consumerCount": 122,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -66346,6 +66370,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -68342,7 +68367,7 @@
       "lines": [
         137
       ],
-      "consumerCount": 142,
+      "consumerCount": 143,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -68458,6 +68483,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -68514,7 +68540,7 @@
       "lines": [
         180
       ],
-      "consumerCount": 85,
+      "consumerCount": 86,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -68768,7 +68794,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 142,
+      "consumerCount": 143,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -68884,6 +68910,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -69147,7 +69174,7 @@
       "lines": [
         21
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -69264,6 +69291,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -70484,7 +70512,7 @@
       "lines": [
         390
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -70601,6 +70629,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -71431,7 +71460,7 @@
         164,
         288
       ],
-      "consumerCount": 97,
+      "consumerCount": 98,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -71482,7 +71511,7 @@
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -73043,7 +73072,7 @@
       "lines": [
         290
       ],
-      "consumerCount": 142,
+      "consumerCount": 143,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -73157,6 +73186,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -73215,7 +73245,7 @@
       "lines": [
         301
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -73329,6 +73359,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -73390,7 +73421,7 @@
       "lines": [
         19
       ],
-      "consumerCount": 142,
+      "consumerCount": 143,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -73506,6 +73537,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -73572,7 +73604,7 @@
       "lines": [
         25
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -73688,6 +73720,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -74039,7 +74072,7 @@
         126,
         142
       ],
-      "consumerCount": 88,
+      "consumerCount": 89,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -74089,8 +74122,8 @@
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -74698,7 +74731,7 @@
       "lines": [
         165
       ],
-      "consumerCount": 152,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -74819,6 +74852,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -74956,7 +74990,7 @@
       "lines": [
         210
       ],
-      "consumerCount": 154,
+      "consumerCount": 155,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -75078,6 +75112,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -75528,7 +75563,7 @@
       "lines": [
         345
       ],
-      "consumerCount": 97,
+      "consumerCount": 98,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -75579,7 +75614,7 @@
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -75787,7 +75822,7 @@
       "lines": [
         43
       ],
-      "consumerCount": 142,
+      "consumerCount": 143,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -75903,6 +75938,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -75962,7 +75998,7 @@
       "lines": [
         49
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -76078,6 +76114,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -76815,7 +76852,7 @@
       "lines": [
         98
       ],
-      "consumerCount": 88,
+      "consumerCount": 89,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -76865,8 +76902,8 @@
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -78095,7 +78132,7 @@
       "lines": [
         428
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -78214,6 +78251,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -78698,7 +78736,7 @@
       "lines": [
         565
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -78806,6 +78844,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -80171,7 +80210,7 @@
       "lines": [
         817
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -80294,6 +80333,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -83152,7 +83192,7 @@
       "lines": [
         29
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -83262,6 +83302,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -83994,7 +84035,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -84104,6 +84145,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -84812,7 +84854,7 @@
       "lines": [
         31
       ],
-      "consumerCount": 151,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -84934,6 +84976,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -85911,7 +85954,7 @@
       "lines": [
         20
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -86021,6 +86064,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -89121,7 +89165,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 91,
+      "consumerCount": 92,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -89172,7 +89216,7 @@
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -90098,7 +90142,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 151,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -90221,6 +90265,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -91993,7 +92038,7 @@
       "lines": [
         378
       ],
-      "consumerCount": 166,
+      "consumerCount": 167,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -92119,6 +92164,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -92251,7 +92297,7 @@
       "lines": [
         380
       ],
-      "consumerCount": 146,
+      "consumerCount": 147,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -92376,6 +92422,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -93332,7 +93379,7 @@
       "lines": [
         542
       ],
-      "consumerCount": 127,
+      "consumerCount": 128,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -93443,6 +93490,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -93500,7 +93548,7 @@
       "lines": [
         543
       ],
-      "consumerCount": 117,
+      "consumerCount": 118,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -93606,6 +93654,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -95128,7 +95177,7 @@
       "lines": [
         390
       ],
-      "consumerCount": 93,
+      "consumerCount": 94,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -95179,7 +95228,7 @@
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -95485,7 +95534,7 @@
       "lines": [
         483
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -95606,6 +95655,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -98622,7 +98672,7 @@
         345,
         362
       ],
-      "consumerCount": 88,
+      "consumerCount": 89,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -98672,8 +98722,8 @@
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
-        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -98909,7 +98959,7 @@
       "lines": [
         35
       ],
-      "consumerCount": 152,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -99037,6 +99087,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -100568,7 +100619,7 @@
       "lines": [
         299
       ],
-      "consumerCount": 137,
+      "consumerCount": 138,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -100685,6 +100736,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -100737,7 +100789,7 @@
       "lines": [
         313
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -100852,6 +100904,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -101690,7 +101743,7 @@
         16,
         76
       ],
-      "consumerCount": 168,
+      "consumerCount": 169,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -101818,6 +101871,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -106928,7 +106982,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MetaChannel",
-      "line": 2462,
+      "line": 2463,
       "values": [
         "MetaInstagram",
         "MetaFacebook"
@@ -106936,7 +106990,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2462
+        2463
       ],
       "consumerCount": 2,
       "backendConsumers": [
@@ -106968,7 +107022,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "calendarEventStatuses",
-      "line": 4606,
+      "line": 4607,
       "values": [
         "confirmed",
         "tentative",
@@ -106977,7 +107031,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4606
+        4607
       ],
       "consumerCount": 47,
       "backendConsumers": [
@@ -107060,7 +107114,7 @@
       "domain": "academy-courses",
       "kind": "haskell-list",
       "name": "courseFollowUpTypeOptions",
-      "line": 5987,
+      "line": 5947,
       "values": [
         "note",
         "call",
@@ -107073,7 +107127,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        5987
+        5947
       ],
       "consumerCount": 97,
       "backendConsumers": [
@@ -107215,7 +107269,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16724,
+      "line": 16688,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -107223,7 +107277,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16724
+        16688
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -107419,7 +107473,7 @@
       "lines": [
         1229
       ],
-      "consumerCount": 151,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -107539,6 +107593,7 @@
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -107609,7 +107664,7 @@
       "lines": [
         1713
       ],
-      "consumerCount": 126,
+      "consumerCount": 127,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -107719,6 +107774,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -109366,7 +109422,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -109481,6 +109537,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -109892,7 +109949,7 @@
       "lines": [
         212
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -110009,6 +110066,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -110180,7 +110238,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 691,
+      "line": 692,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -110192,7 +110250,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        691
+        692
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -110582,7 +110640,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 189,
+      "consumerCount": 190,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -110720,6 +110778,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -110924,7 +110983,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 325,
+      "consumerCount": 326,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -111223,7 +111282,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 576,
+      "consumerCount": 577,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -112176,7 +112235,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -112291,6 +112350,7 @@
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-course-identity.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-distribution-product-seeds-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -112877,7 +112937,7 @@
       "lines": [
         1178
       ],
-      "consumerCount": 704,
+      "consumerCount": 706,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",

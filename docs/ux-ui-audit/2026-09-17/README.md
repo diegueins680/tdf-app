@@ -5,7 +5,7 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
-## Checkpoint verificado — 2026-09-18 17:24 UTC
+## Checkpoint verificado — 2026-09-18 17:37 UTC
 
 Este bloque sustituye estados históricos inferiores. La API sigue en
 `e1a825bda26dbb16b1c732e551cc4880d5626943`, release guardado completado16:02UTC
@@ -43,7 +43,12 @@ Mobile109 corrige altura/wrapping sin limitar la preferencia;508pruebas/releasec
 y CI pasan, merge3647203bb20198ce7727b928492963f2ece20cd1. El prototipo nativo
 firmado muestra etiquetas completas; se restauró font_scale1.0. Ese prototipo no
 califica autenticación ni distribución. El Samsung se desconectó después. iOS24
-run35373472132 está construyéndose; Android sucesor pendiente. Parent prepara pin364
+run35373472132 terminó correctamente: IPA firmado/verificado
+SHA256f8f137efa9975d09cf4a92d9082e4c50c10c9827d329e7b2212e141fef56a389,
+[recibo](evidence/ios-github24-artifact.json); validación/subida Apple en curso.
+Android17 run35375029184 está compilando desde mobile111/e637216.
+El primer intento no se ejecutó por un contexto GitHub inválido;111 lo corrige
+y actionlint1.7.12 verifica ambos workflows. Parent prepara pin364
 con contratos generados idénticos a90ca, todavía sin merge del nuevo checkpoint.
 
 Siguiente acción: verificar artefacto24 y distribución de prueba, finalizar el

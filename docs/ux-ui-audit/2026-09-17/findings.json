@@ -1266,7 +1266,7 @@
     "implementationStatus": "Original locale/count correction retained; mobile109 custom scalable/wrapping labels reserve measured height and safe area.",
     "verificationStatus": "Earlier real iOS simulator ES/EN tab/session checks retained.508tests/releasecheck and hosted109 gates pass. PhysicalSamsung before/after at1x/2x verifies visual layout in signed local QA prototype, not a new store artifact/auth qualification or human reader test.",
     "mergeStatus": "Mobile109 merged3647203bb20198ce7727b928492963f2ece20cd1; parent successor pin prepared, not yet merged.",
-    "releaseStatus": "iOS24 GitHub35373472132 building from3647203; Android successor build pending. iOS23 signed/Apple-validated but excludes this font fix; no new store availability."
+    "releaseStatus": "iOS24 GitHub35373472132 source3647203 succeeded, signed IPA/hash/SDK26.2 verified; Apple validation/upload in progress. Android17 GitHub35375029184 building sourcee637216 (product identical364). No store availability or physical iPhone qualification."
   },
   {
     "id": "UX-260917-031",
