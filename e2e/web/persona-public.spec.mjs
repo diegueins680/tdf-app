@@ -678,6 +678,17 @@ test('PW-PER-01-MARKETPLACE removes fake notification capture and persistent con
 });
 
 for (const locale of ['es', 'en']) {
+  test(`@critical PW-PER-RESET-OFFLINE ${locale} reset confirmation retains language`, async ({ page }) => {
+    const en = locale === 'en';
+    await page.addInitScript(language => localStorage.setItem('tdf-hq-ui/locale', language), locale);
+    await page.route(/\/v1\/password-reset\/confirm$/, route => route.abort('failed'));
+    await page.goto(`/reset?token=22222222-2222-4222-8222-222222222222&lang=${locale}`);
+    await page.getByLabel(en ? 'New password' : 'Nueva contraseña', { exact: true }).fill('SyntheticValidPassword42!');
+    await page.getByLabel(en ? 'Confirm password' : 'Confirmar contraseña', { exact: true }).fill('SyntheticValidPassword42!');
+    await page.getByRole('button', { name: en ? 'Save password' : 'Guardar contraseña', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText(en ? 'Could not connect' : 'No se pudo conectar');
+    await expect(page).not.toHaveURL(/token=/);
+  });
   test(`@critical PW-PER-LOCALE ${locale} signup and recovery retain language and destination`, async ({ page }, testInfo) => {
     const en = locale === 'en';
     await page.addInitScript(language => localStorage.setItem('tdf-hq-ui/locale', language), locale);
