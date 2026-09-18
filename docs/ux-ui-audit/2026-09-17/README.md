@@ -5,7 +5,7 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
-## Checkpoint verificado — 2026-09-18 18:24 UTC
+## Checkpoint verificado — 2026-09-18 18:34 UTC
 
 Este bloque sustituye los estados históricos inferiores. #450 está fusionado como
 `3f0a56c0ded55fa9525dc80c895505ffcb069449`. Cloudflare `8f01e9e1` y la web pública
@@ -45,8 +45,8 @@ sesión y onboarding a las 18:01 UTC, sin crear cuentas ni divulgar credenciales
 
 **Android 15 ya está disponible para los testers seleccionados** en Alpha,
 según Play Console a las 18:09 UTC. [Estado](evidence/android15-available-state.json).
-El panel muestra dos inscritos; siguen faltando doce personas durante catorce días
-para solicitar producción. [Requisito vigente](evidence/play-production-eligibility.json).
+El panel muestra dos inscritos. Se exigen doce en total durante catorce días
+para solicitar producción: faltan diez inscritos adicionales. [Requisito vigente](evidence/play-production-eligibility.json).
 No se repiten las 80 invitaciones enviadas. Android 17, con texto ampliado corregido,
 terminó correctamente en el [run 35376997735](https://github.com/diegueins680/TDF-mobile/actions/runs/35376997735).
 El primer build nativo falló por Metaspace de 512 MiB durante lint; #113 aumenta
@@ -66,7 +66,11 @@ En Samsung, el prototipo QA mantiene completas las etiquetas a 1×/2×; se resta
 la preferencia original. Ese prototipo verifica presentación, no autenticación.
 El APK aislado completo 46b1 sí pasó acceso, seguimiento persistente y sesión al
 reabrir en Samsung. [Recibo](evidence/android-physical-46b1.json).
-El teléfono ya no aparece por ADB; no se modificó la instalación personal. El
+El Samsung volvió por ADB a las 18:29 UTC. La comprobación del APK QA instalado
+confirma su SHA256, seguimiento y sesión tras reapertura, respuesta autoritativa
+HTTP200 y un seguimiento persistido. Las cinco pestañas quedan completas a 1×/2×;
+se restauró font_scale1.0 y la instalación personal permanece idéntica.
+[Comprobación adicional](evidence/android-reconnect-verification.json). El
 simulador temporal de esta auditoría se eliminó después de conservar su evidencia
 para resolver la falta de espacio que interrumpió la primera descarga Android17. Sigue
 faltando el iPhone físico para Google OAuth y no se acredita lectura humana con
