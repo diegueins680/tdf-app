@@ -1,3 +1,4 @@
+import { authErrorMessage } from '../utils/authErrorMessage';
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
@@ -27,7 +28,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -53,25 +54,23 @@ import {
 } from '../utils/loginRouting';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
-import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
+import { isValidAuthPassword } from '../utils/passwordPolicy';
 import { env } from '../utils/env';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
 const GOOGLE_SIGNUP_CONSENT_REQUIRED_ERROR =
   'Accept the terms and privacy policy through the signup flow before creating a Google account';
-const GOOGLE_SIGNUP_CONSENT_PROMPT =
-  'Esta cuenta de Google todavía no está registrada en TDF. Revisa y acepta los términos y la política de privacidad; después vuelve a continuar con Google para crearla.';
 
 export const isGoogleSignupConsentRequiredError = (error: unknown): boolean =>
   error instanceof Error && error.message.trim() === GOOGLE_SIGNUP_CONSENT_REQUIRED_ERROR;
 
 const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
-  events: 'descubrir eventos',
-  follow_artists: 'seguir artistas',
-  artist_profile: 'crear o reclamar un perfil de artista',
-  internships: 'postular a prácticas',
-  learning: 'aprender o enseñar',
-  professional_tools: 'explorar herramientas profesionales',
+  events: 'authEntry.intentEvents',
+  follow_artists: 'authEntry.intentFollow',
+  artist_profile: 'authEntry.intentArtist',
+  internships: 'authEntry.intentIntern',
+  learning: 'authEntry.intentLearning',
+  professional_tools: 'authEntry.intentPro',
 };
 
 declare global {
@@ -151,8 +150,8 @@ const loadGoogleScript = () => {
 };
 
 export default function LoginPage() {
-  const { t } = useTranslation();
-  const servicePreparingMessage = 'Estamos activando el servicio. Apenas termine podrás iniciar sesión.';
+  const { t, i18n } = useTranslation();
+  const servicePreparingMessage = t('authEntry.servicePreparing');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -178,7 +177,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const analytics = useAnalytics();
-  const passwordHint = AUTH_PASSWORD_REQUIREMENTS_ES;
+  const passwordHint = t('authEntry.passwordHint');
   const googleClientId = env.read('VITE_GOOGLE_CLIENT_ID') ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
@@ -233,7 +232,7 @@ export default function LoginPage() {
         apiToken: fallback.apiToken,
       };
     } catch (error) {
-      logger.warn('No se pudo cargar la sesión autenticada desde el servidor', error);
+      logger.warn('Authenticated session snapshot could not load', error);
       return fallback;
     }
   }, []);
@@ -258,7 +257,7 @@ export default function LoginPage() {
           boxShadow: '0 0 0 1px rgba(37,99,235,0.35)',
         },
       },
-      '& .MuiFormHelperText-root': { color: '#475569' },
+      '& .MuiFormHelperText-root': { color: 'text.secondary' },
       '& .MuiInputBase-input::placeholder': { color: 'rgba(15,23,42,0.45)', opacity: 1 },
     }),
     [],
@@ -274,7 +273,7 @@ export default function LoginPage() {
     mutationFn: googleLoginRequest,
   });
   const resetMutation = useMutation({
-    mutationFn: (email: string) => requestPasswordReset(email),
+    mutationFn: (email: string) => requestPasswordReset(email, redirectPath, i18n.resolvedLanguage ?? i18n.language),
   });
   const signupMutation = useMutation({
     mutationFn: signupRequest,
@@ -301,8 +300,8 @@ export default function LoginPage() {
   const signupPreset = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const intent = readOnboardingIntent(location.search);
-    const openSignup = params.get('signup') === '1'
-      || intent !== null;
+    const openSignup = params.get('recover') !== '1' && (params.get('signup') === '1'
+      || intent !== null);
     const claimRaw = params.get('claimArtistId') ?? params.get('claim');
     const claimArtistId = parsePositiveSafeInt(claimRaw);
 
@@ -377,7 +376,7 @@ export default function LoginPage() {
     const normalizedPassword = password.trim();
     if (!normalizedIdentifier || !normalizedPassword) {
       captureGrowthEvent(analytics, 'login_validation_failed', { route: '/login', reason: 'missing_credentials' });
-      setFormError('Ingresa tu usuario o correo y la contraseña.');
+      setFormError(t('authEntry.credentialsRequired'));
       return;
     }
 
@@ -404,8 +403,7 @@ export default function LoginPage() {
       navigate(targetPath, { replace: true });
     } catch (error) {
       captureGrowthEvent(analytics, 'login_failed', { route: '/login', method: 'password' });
-      const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
-      setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
+      setFormError(authErrorMessage(error, t, 'authEntry.loginError'));
     }
   };
 
@@ -466,17 +464,17 @@ export default function LoginPage() {
         return;
       }
       if (signupDialogOpen && !termsAccepted) {
-        const termsErrorMessage = 'Acepta los términos y la política de privacidad para continuar con Google.';
+        const termsErrorMessage = t('authEntry.googleConsent');
         setGoogleError(termsErrorMessage);
         setSignupFeedback({ type: 'error', message: termsErrorMessage });
         return;
       }
       const credential = credentialResponse?.credential;
       const parsed = credential ? parseGoogleIdToken(credential) : null;
-      const fallbackName = parsed?.name ?? parsed?.email ?? 'Cuenta Google';
+      const fallbackName = parsed?.name ?? parsed?.email ?? t('authEntry.googleAccount');
       const fallbackUsername = parsed?.email ?? 'google-user';
       if (!credential) {
-        const message = 'No recibimos la credencial de Google.';
+        const message = t('authEntry.googleCredentialError');
         if (signupDialogOpen) {
           setSignupFeedback({ type: 'error', message });
         } else {
@@ -485,7 +483,7 @@ export default function LoginPage() {
         return;
       }
       try {
-        setGoogleStatus('Conectando con Google…');
+        setGoogleStatus(t('authEntry.googleConnecting'));
         setGoogleError(null);
         const response = await googleLoginMutation.mutateAsync({
           idToken: credential,
@@ -518,10 +516,10 @@ export default function LoginPage() {
       } catch (err) {
         if (!signupDialogOpen && isGoogleSignupConsentRequiredError(err)) {
           openSignupDialog(requestedIntent, 'google_login_handoff');
-          setSignupFeedback({ type: 'info', message: GOOGLE_SIGNUP_CONSENT_PROMPT });
+          setSignupFeedback({ type: 'info', message: t('authEntry.consentPrompt') });
           return;
         }
-        const message = err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.';
+        const message = authErrorMessage(err, t, 'authEntry.googleLoginError');
         captureGrowthEvent(analytics, signupDialogOpen ? 'signup_failed' : 'login_failed', {
           route: '/login',
           method: 'google',
@@ -537,7 +535,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, openSignupDialog, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
+    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, openSignupDialog, redirectPath, rememberDevice, requestedIntent, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, termsAccepted, t],
   );
 
   useEffect(() => {
@@ -612,7 +610,7 @@ export default function LoginPage() {
           renderGoogleButton(googleSignupButtonRef.current, 'signup_with');
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : GOOGLE_SCRIPT_ERROR_MESSAGE;
+        const message = t('authEntry.googleScriptError');
         if (!cancelled) {
           setGoogleError(message);
           setGoogleStatus(null);
@@ -623,10 +621,14 @@ export default function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen, termsAccepted]);
+  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen, termsAccepted, t]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    if (params.get('recover') === '1') {
+      setResetDialogOpen(true);
+      return;
+    }
     const wantsSignup = params.get('signup');
     const shouldOpenSignup = wantsSignup && wantsSignup.toLowerCase() !== 'false' && wantsSignup !== '0';
     if (shouldOpenSignup) {
@@ -649,6 +651,10 @@ export default function LoginPage() {
   };
 
   const closeResetDialog = () => {
+    const params = new URLSearchParams(location.search);
+    params.delete('recover');
+    const query = params.toString();
+    navigate(`${location.pathname}${query ? `?${query}` : ''}${location.hash}`, { replace: true });
     setResetDialogOpen(false);
     setResetFeedback(null);
     resetMutation.reset();
@@ -662,7 +668,7 @@ export default function LoginPage() {
 
     const emailValue = resetEmail.trim();
     if (!emailValue) {
-      setResetFeedback({ type: 'error', message: 'Ingresa el correo asociado a tu cuenta.' });
+      setResetFeedback({ type: 'error', message: t('authEntry.resetEmailRequired') });
       return;
     }
     setResetFeedback(null);
@@ -670,13 +676,13 @@ export default function LoginPage() {
       await resetMutation.mutateAsync(emailValue);
       setResetFeedback({
         type: 'success',
-        message: 'Si el correo existe en TDF Records, te enviaremos un enlace para restablecer la contraseña.',
+        message: t('authEntry.resetSent'),
       });
     } catch (err) {
       logger.warn('Password reset request failed', err);
       setResetFeedback({
         type: 'error',
-        message: 'No pudimos solicitar el enlace. Revisa tu conexión e inténtalo de nuevo.',
+        message: t('authEntry.resetRequestError'),
       });
     }
   };
@@ -711,7 +717,7 @@ export default function LoginPage() {
     const claimIsValid = claimArtistId ? claimableArtists.some((artist) => artist.apArtistId === claimArtistId) : true;
     if (!claimIsValid) {
       captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'claim_unavailable', intent: signupIntent ?? 'general' });
-      setSignupFeedback({ type: 'error', message: 'El perfil seleccionado ya no está disponible para reclamar.' });
+      setSignupFeedback({ type: 'error', message: t('authEntry.claimUnavailable') });
       return;
     }
 
@@ -723,7 +729,7 @@ export default function LoginPage() {
     };
     if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
       captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'missing_required_fields', intent: signupIntent ?? 'general' });
-      setSignupFeedback({ type: 'error', message: 'Completa nombre, correo y una contraseña segura (8+ caracteres).' });
+      setSignupFeedback({ type: 'error', message: t('authEntry.signupRequired') });
       if (!payload.firstName && !payload.lastName) signupNameInputRef.current?.focus();
       else if (!payload.email) signupEmailInputRef.current?.focus();
       else signupPasswordInputRef.current?.focus();
@@ -737,7 +743,7 @@ export default function LoginPage() {
     }
     if (!termsAccepted) {
       captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'terms_not_accepted', intent: signupIntent ?? 'general' });
-      setSignupFeedback({ type: 'error', message: 'Acepta los términos y la política de privacidad para continuar.' });
+      setSignupFeedback({ type: 'error', message: t('authEntry.consentRequired') });
       return;
     }
     setSignupFeedback(null);
@@ -765,7 +771,7 @@ export default function LoginPage() {
       captureGrowthEvent(analytics, 'signup_failed', { route: '/login', method: 'password', intent: signupIntent ?? 'general' });
       setSignupFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'No pudimos crear la cuenta. Intenta de nuevo.',
+        message: authErrorMessage(err, t, 'authEntry.signupError'),
       });
     }
   };
@@ -862,11 +868,11 @@ export default function LoginPage() {
                       }}
                       variant="outlined"
                     />
-                    <Tooltip title={mode === 'light' ? 'Usar tema oscuro' : 'Usar tema claro'}>
+                    <Tooltip title={mode === 'light' ? t('authEntry.darkTheme') : t('authEntry.lightTheme')}>
                       <IconButton
                         size="small"
                         onClick={toggleMode}
-                        aria-label="Cambiar tema"
+                        aria-label={t('authEntry.changeTheme')}
                         sx={{ color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.35)' }}
                       >
                         {mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
@@ -874,19 +880,19 @@ export default function LoginPage() {
                     </Tooltip>
                   </Stack>
                   <Typography variant="h5" fontWeight={700}>
-                    Iniciar sesión
+                    {t('authEntry.signIn')}
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
                     {isWideLayout
-                      ? 'Usa tus credenciales para entrar al panel. Si es tu primera vez, elige una ruta rápida en la tarjeta de al lado.'
-                      : 'Usa tus credenciales para entrar al panel. Si es tu primera vez, abre las rutas rápidas para crear tu cuenta.'}
+                      ? t('authEntry.loginIntroWide')
+                      : t('authEntry.loginIntroNarrow')}
                   </Typography>
                 </Stack>
 
                 <Stack spacing={2.25}>
                   <Stack spacing={2}>
                     <TextField
-                      label="Usuario o correo *"
+                      label={t('authEntry.identifier')}
                       type="text"
                       value={identifier}
                       onChange={(event) => setIdentifier(event.target.value)}
@@ -894,12 +900,12 @@ export default function LoginPage() {
                       fullWidth
                       autoComplete="username"
                       inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                      helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
+                      helperText={t('authEntry.identifierHint')}
                       sx={textFieldSx}
                     />
 
                     <TextField
-                      label="Contraseña *"
+                      label={t('authEntry.passwordRequired')}
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
@@ -912,7 +918,7 @@ export default function LoginPage() {
                             <IconButton
                               edge="end"
                               size="small"
-                              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                              aria-label={showPassword ? t('authEntry.hidePassword') : t('authEntry.showPassword')}
                               onClick={() => setShowPassword((prev) => !prev)}
                               onMouseDown={(event) => event.preventDefault()}
                               sx={{ color: 'rgba(248,250,252,0.78)' }}
@@ -930,7 +936,7 @@ export default function LoginPage() {
                 {servicePreparing && (
                   <Alert severity="info">
                     {serviceChecking
-                      ? 'Estamos preparando el panel y despertando la API. En unos segundos habilitamos el acceso.'
+                      ? t('authEntry.startupNotice')
                       : servicePreparingMessage}
                   </Alert>
                 )}
@@ -938,7 +944,7 @@ export default function LoginPage() {
                 {googleClientId && !servicePreparing && (
                   <Stack spacing={1} alignItems="center">
                     <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
-                      O continúa con Google
+                      {t('authEntry.googleContinue')}
                     </Typography>
                     <Box
                       ref={googleButtonRef}
@@ -951,7 +957,7 @@ export default function LoginPage() {
                       onClick={() => openSignupDialog(requestedIntent, 'google_signup_cta')}
                       sx={{ color: '#bfdbfe', textTransform: 'none' }}
                     >
-                      ¿Primera vez? Crear cuenta con Google
+                      {t('authEntry.googleSignup')}
                     </Button>
                     {googleStatus && (
                       <Typography variant="caption" color="text.secondary">
@@ -967,7 +973,7 @@ export default function LoginPage() {
                 )}
                 {googleClientId && servicePreparing && (
                   <Alert severity="info">
-                    Activaremos Google cuando el servicio termine de arrancar.
+                    {t('authEntry.googleWaiting')}
                   </Alert>
                 )}
 
@@ -978,10 +984,10 @@ export default function LoginPage() {
                       onChange={(event) => setRememberDevice(event.target.checked)}
                     />
                   }
-                  label="Recordarme en este dispositivo"
+                  label={t('authEntry.rememberDevice')}
                 />
                 <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.7)' }}>
-                  Si lo activas, mantendremos tu sesión iniciada en este navegador.
+                  {t('authEntry.rememberHint')}
                 </Typography>
 
                 {formError && <Alert severity="warning">{formError}</Alert>}
@@ -995,7 +1001,7 @@ export default function LoginPage() {
                       disabled={loginDisabled}
                       sx={{ textTransform: 'none' }}
                     >
-                      {loginMutation.isPending ? 'Ingresando…' : servicePreparing ? 'Preparando servicio…' : 'Ingresar'}
+                      {loginMutation.isPending ? t('authEntry.signingIn') : servicePreparing ? t('authEntry.preparing') : t('authEntry.enter')}
                     </Button>
                     <Button
                       variant="outlined"
@@ -1003,7 +1009,7 @@ export default function LoginPage() {
                       onClick={() => openSignupDialog(null)}
                       sx={{ minWidth: 180, textTransform: 'none' }}
                     >
-                      Crear cuenta general
+                      {t('authEntry.generalAccount')}
                     </Button>
                   </Stack>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -1014,7 +1020,7 @@ export default function LoginPage() {
                       size="small"
                       sx={{ textTransform: 'none', alignSelf: 'flex-start', px: 0 }}
                     >
-                      Explorar sin cuenta
+                      {t('authEntry.exploreGuest')}
                     </Button>
                     {!isWideLayout && (
                       <Button
@@ -1023,7 +1029,7 @@ export default function LoginPage() {
                         onClick={() => setShowOnboardingCards(true)}
                         sx={{ textTransform: 'none', alignSelf: 'flex-start', px: 0 }}
                       >
-                        Ver rutas rápidas
+                        {t('authEntry.showQuickStarts')}
                       </Button>
                     )}
                   </Stack>
@@ -1031,7 +1037,7 @@ export default function LoginPage() {
 
                 <Stack spacing={0.5} textAlign="center">
                   <Typography variant="body2">
-                    ¿Olvidaste tu contraseña?{' '}
+                    {t('authEntry.forgotPassword')}{' '}
                     <Link
                       component="button"
                       type="button"
@@ -1039,20 +1045,17 @@ export default function LoginPage() {
                       onClick={openResetDialog}
                       sx={{ cursor: 'pointer', p: 0 }}
                     >
-                      Recuperar acceso
-                    </Link>
+                      {t('authEntry.recover')}</Link>
                   </Typography>
                   <Typography variant="body2">
-                    ¿Buscas una clase de prueba?{' '}
+                    {t('authEntry.trialQuestion')}{' '}
                     <Link component={RouterLink} to="/trials" underline="hover">
-                      Solicitar clase de prueba
-                    </Link>
+                      {t('authEntry.requestTrial')}</Link>
                   </Typography>
                   <Typography variant="body2">
-                    ¿Quieres explorar la música?{' '}
+                    {t('authEntry.musicQuestion')}{' '}
                     <Link component={RouterLink} to="/fans" underline="hover">
-                      Ir a la comunidad
-                    </Link>
+                      {t('authEntry.communityLink')}</Link>
                   </Typography>
                 </Stack>
               </Stack>
@@ -1066,7 +1069,7 @@ export default function LoginPage() {
                 onClick={() => setShowOnboardingCards((prev) => !prev)}
                 sx={{ textTransform: 'none', color: 'rgba(226,232,240,0.88)' }}
               >
-                {showOnboardingCards ? 'Ocultar rutas rápidas' : 'Soy nuevo: ver rutas rápidas'}
+                {showOnboardingCards ? t('authEntry.hideQuickStarts') : t('authEntry.newQuickStarts')}
               </Button>
             )}
             <Collapse in={isWideLayout || showOnboardingCards} unmountOnExit={!isWideLayout}>
@@ -1086,7 +1089,7 @@ export default function LoginPage() {
                   <Stack spacing={2}>
                     <Stack spacing={0.75}>
                       <Chip
-                        label="Onboarding rápido"
+                        label={t('authEntry.quickStart')}
                         size="small"
                         sx={{
                           width: 'fit-content',
@@ -1098,10 +1101,10 @@ export default function LoginPage() {
                         variant="outlined"
                       />
                       <Typography variant="h6" fontWeight={800}>
-                        Empieza en minutos
+                        {t('authEntry.startMinutes')}
                       </Typography>
                       <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.78)' }}>
-                        Elige la ruta que mejor encaja contigo y te llevamos al panel ideal.
+                        {t('authEntry.chooseJourney')}
                       </Typography>
                     </Stack>
                     <Stack spacing={1.5}>
@@ -1131,10 +1134,10 @@ export default function LoginPage() {
                           </Box>
                           <Stack spacing={0.5} sx={{ flex: 1 }}>
                             <Typography variant="subtitle1" fontWeight={700}>
-                              Soy artista
+                              {t('authEntry.artist')}
                             </Typography>
                             <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                              Crea tu perfil, comparte tu enlace y presenta tu música.
+                              {t('authEntry.artistDescription')}
                             </Typography>
                             <Button
                               variant="outlined"
@@ -1147,7 +1150,7 @@ export default function LoginPage() {
                                 color: '#e2e8f0',
                               }}
                             >
-                              Crear perfil
+                              {t('authEntry.createProfile')}
                             </Button>
                           </Stack>
                         </Stack>
@@ -1178,10 +1181,10 @@ export default function LoginPage() {
                           </Box>
                           <Stack spacing={0.5} sx={{ flex: 1 }}>
                             <Typography variant="subtitle1" fontWeight={700}>
-                              Soy fan
+                              {t('authEntry.fan')}
                             </Typography>
                             <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                              Sigue artistas, recibe lanzamientos y reserva experiencias.
+                              {t('authEntry.fanDescription')}
                             </Typography>
                             <Button
                               variant="outlined"
@@ -1194,7 +1197,7 @@ export default function LoginPage() {
                                 color: '#e2e8f0',
                               }}
                             >
-                              Crear cuenta fan
+                              {t('authEntry.createFan')}
                             </Button>
                           </Stack>
                         </Stack>
@@ -1225,10 +1228,10 @@ export default function LoginPage() {
                           </Box>
                           <Stack spacing={0.5} sx={{ flex: 1 }}>
                             <Typography variant="subtitle1" fontWeight={700}>
-                              Busco prácticas
+                              {t('authEntry.intern')}
                             </Typography>
                             <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                              Postula, define tu plan y organiza tus rotaciones.
+                              {t('authEntry.internDescription')}
                             </Typography>
                             <Button
                               variant="outlined"
@@ -1241,16 +1244,16 @@ export default function LoginPage() {
                                 color: '#e2e8f0',
                               }}
                             >
-                              Postular prácticas
+                              {t('authEntry.applyIntern')}
                             </Button>
                           </Stack>
                         </Stack>
                       </Paper>
                     </Stack>
                     <Stack direction="row" spacing={1} flexWrap="wrap">
-                      <Chip label="Menos de 3 minutos" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                      <Chip label="Roles gobernados" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                      <Chip label="Asignación trazable" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                      <Chip label={t('authEntry.shortSetup')} size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                      <Chip label={t('authEntry.governedRoles')} size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                      <Chip label={t('authEntry.traceableAssignment')} size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
                     </Stack>
                   </Stack>
                 </Paper>
@@ -1278,7 +1281,7 @@ export default function LoginPage() {
           <DialogContent>
             <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField
-              label="Correo asociado a tu cuenta"
+              label={t('authEntry.accountEmail')}
               type="email"
               name="email"
               autoComplete="email"
@@ -1295,14 +1298,14 @@ export default function LoginPage() {
               </Alert>
             )}
             <Typography variant="body2" color="text.secondary">
-              Te enviaremos un enlace temporal para que puedas definir una nueva contraseña.
+              {t('authEntry.resetExplanation')}
             </Typography>
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button type="button" onClick={closeResetDialog}>Cerrar</Button>
+            <Button type="button" onClick={closeResetDialog}>{t('authEntry.close')}</Button>
             <Button type="submit" disabled={resetMutation.isPending || servicePreparing}>
-              {resetMutation.isPending ? 'Enviando…' : servicePreparing ? 'Preparando servicio…' : 'Enviar enlace'}
+              {resetMutation.isPending ? t('authEntry.sending') : servicePreparing ? t('authEntry.preparing') : t('authEntry.sendLink')}
             </Button>
           </DialogActions>
         </Box>
@@ -1327,7 +1330,7 @@ export default function LoginPage() {
             <Stack spacing={2} sx={{ pt: 1 }}>
             {signupIntent && (
               <Alert severity="info">
-                Al terminar, continuarás con “{ONBOARDING_INTENT_LABELS[signupIntent]}”. Si la tarea requiere acceso especial, podrás solicitarlo para revisión.
+                {t('authEntry.continueIntent', { intent: t(ONBOARDING_INTENT_LABELS[signupIntent]) })}
               </Alert>
             )}
             {signupFeedback?.type === 'info' && (
@@ -1338,15 +1341,12 @@ export default function LoginPage() {
                 <Checkbox
                   checked={termsAccepted}
                   onChange={(event) => setTermsAccepted(event.target.checked)}
-                  inputProps={{ 'aria-label': 'Acepto los términos y la política de privacidad' }}
+                  inputProps={{ 'aria-label': t('authEntry.acceptConsent') }}
                 />
               )}
               label={(
                 <Typography variant="body2">
-                  Acepto los{' '}
-                  <Link href="/account/terms.html" target="_blank" rel="noreferrer">términos de la cuenta</Link>
-                  {' '}y la{' '}
-                  <Link href="/account/privacy.html" target="_blank" rel="noreferrer">política de privacidad de la cuenta</Link>.
+                  <Trans i18nKey="authEntry.consentText" components={{ terms: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/terms-es.html' : '/account/terms.html'} target="_blank" rel="noreferrer" />, privacy: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/privacy-es.html' : '/account/privacy.html'} target="_blank" rel="noreferrer" /> }} />
                 </Typography>
               )}
             />
@@ -1358,7 +1358,7 @@ export default function LoginPage() {
             {googleClientId && termsAccepted && claimArtistId === null && (
               <Stack spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
-                  Crear e ingresar con Google
+                  {t('authEntry.googleCreateEnter')}
                 </Typography>
                 <Box
                   ref={googleSignupButtonRef}
@@ -1378,7 +1378,7 @@ export default function LoginPage() {
             )}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Nombre"
+                label={t('authEntry.firstName')}
                 inputRef={signupNameInputRef}
                 name="givenName"
                 autoComplete="given-name"
@@ -1389,7 +1389,7 @@ export default function LoginPage() {
                 sx={dialogFieldSx}
               />
               <TextField
-                label="Apellido"
+                label={t('authEntry.lastName')}
                 name="familyName"
                 autoComplete="family-name"
                 value={signupForm.lastName}
@@ -1399,7 +1399,7 @@ export default function LoginPage() {
               />
             </Stack>
             <TextField
-              label="Correo"
+              label={t('authEntry.email')}
               inputRef={signupEmailInputRef}
               type="email"
               name="email"
@@ -1413,19 +1413,19 @@ export default function LoginPage() {
             />
             {(signupIntent === 'artist_profile' || claimArtistId !== null) && (
               <Stack spacing={1}>
-                <Typography variant="subtitle2">¿Tu perfil de artista ya existe en TDF?</Typography>
+                <Typography variant="subtitle2">{t('authEntry.existingArtist')}</Typography>
                 <Autocomplete
                   options={claimableArtists}
                   getOptionLabel={(option) => option.apDisplayName}
                   value={selectedClaim}
                   loading={fanArtistsQuery.isFetching}
                   onChange={(_, option) => setClaimArtistId(option?.apArtistId ?? null)}
-                  noOptionsText={fanArtistsQuery.isFetching ? 'Buscando artistas…' : 'No hay perfiles disponibles para reclamar'}
+                  noOptionsText={fanArtistsQuery.isFetching ? t('authEntry.searchingArtists') : t('authEntry.noClaims')}
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Reclamar perfil de artista (opcional)"
-                      helperText="Solo se muestran perfiles sin usuario. Al reclamarlo obtendrás acceso como Artista."
+                      label={t('authEntry.claimOptional')}
+                      helperText={t('authEntry.claimHint')}
                       sx={dialogFieldSx}
                       InputProps={{
                         ...params.InputProps,
@@ -1440,12 +1440,12 @@ export default function LoginPage() {
                   )}
                 />
                 {claimArtistId && !selectedClaim && (
-                  <Alert severity="warning">El perfil elegido ya no está disponible para reclamar.</Alert>
+                  <Alert severity="warning">{t('authEntry.chosenClaimUnavailable')}</Alert>
                 )}
               </Stack>
             )}
             <TextField
-              label="Contraseña"
+              label={t('authEntry.password')}
               inputRef={signupPasswordInputRef}
               type={showSignupPassword ? 'text' : 'password'}
               name="newPassword"
@@ -1461,7 +1461,7 @@ export default function LoginPage() {
                     <IconButton
                       edge="end"
                       size="small"
-                      aria-label={showSignupPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      aria-label={showSignupPassword ? t('authEntry.hidePassword') : t('authEntry.showPassword')}
                       onClick={() => setShowSignupPassword((prev) => !prev)}
                       onMouseDown={(event) => event.preventDefault()}
                     >
@@ -1480,9 +1480,9 @@ export default function LoginPage() {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button type="button" onClick={closeSignupDialog}>Ya tengo una cuenta</Button>
+            <Button type="button" onClick={closeSignupDialog}>{t('authEntry.haveAccount')}</Button>
             <Button type="submit" disabled={signupMutation.isPending || servicePreparing || !termsAccepted}>
-              {signupMutation.isPending ? 'Creando…' : servicePreparing ? 'Preparando servicio…' : 'Crear e ingresar'}
+              {signupMutation.isPending ? t('authEntry.creating') : servicePreparing ? t('authEntry.preparing') : t('authEntry.createEnter')}
             </Button>
           </DialogActions>
         </Box>

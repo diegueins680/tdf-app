@@ -444,7 +444,7 @@ function ValueCard({
             component={RouterLink}
             to={to}
             variant="outlined"
-            sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
+            sx={{ alignSelf: 'flex-start', textTransform: 'none', color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK }}
           >
             {action}
           </Button>
@@ -1018,7 +1018,7 @@ export default function TdfPlatformPage() {
                     target="_blank"
                     rel="noreferrer"
                     variant="outlined"
-                    sx={{ textTransform: 'none' }}
+                    sx={{ textTransform: 'none', color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK }}
                   >
                     {copy.viewLocation}
                   </Button>
@@ -1082,7 +1082,7 @@ export default function TdfPlatformPage() {
                 to="/records"
                 variant="outlined"
                 size="large"
-                sx={{ textTransform: 'none' }}
+                sx={{ textTransform: 'none', color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK }}
               >
                 {copy.viewReleases}
               </Button>

@@ -5,6 +5,265 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Revisión de fallos de acceso y correo — 2026-09-18 03:40 UTC
+
+Dos observaciones posteriores a3def67665 se reparan en este sucesor: API de auth
+expone códigos estables para red/timeout/401/arranque; login/Google/signup traducen
+esos códigos conservando detalles útiles de otros errores.27 pruebas focalizadas,
+TypeScript/lint y25 recorridos de bundle en5 perfiles/3 motores pasan. Los recorridos
+interceptan red/401; conservan formulario y destino. No son OAuth/SMTP reales.
+
+UX029 registra regresión introducida en el CTA compartido: vuelve a «Ver detalles»;
+sólo los dos correos de curso usan «Ver detalles del curso». Compilación Stack9.10.3
+--fast y8 Hspec/100 QuickCheck de recuperación pasan. No hubo cambio de modelos
+ni de transiciones; los gates formales del nuevo head deberán terminar igualmente.
+Aprobación3def preservada como histórica; el nuevo código exige revisión exacta.
+
+## Actualización de gates y tiendas — 2026-09-18 03:28 UTC
+
+La aprobación independiente de #4226479e0350 quedó verificada, pero CI
+35302282394 detectó diez fallos de una expectativa E2E antigua: el enlace de
+recuperación ahora conserva `lang`. La corrección cambia sólo esa prueba: comprueba
+idioma en el enlace, en la petición del correo y al cerrar el diálogo, además del
+destino y cuerpo compatibles. Los diez casos ES/EN en cinco perfiles y tres motores
+pasan localmente con el bundle de producción. La revisión y CI del sucesor siguen
+siendo necesarias; no se vuelve a ejecutar un fallo determinista sin corregirlo.
+
+Play Console confirma cuenta de servicio Active y sólo app com.tdf.records,
+seis permisos de publicación solicitados y tres implícitos, sin admin/finanzas.
+Android envío f22acacc-5d30-4659-9078-a58f056f859b FINISHED: build1.0.1(10),
+canal internal, estado DRAFT. No equivale a rollout ni disponibilidad pública.
+iOS envío7233bd21-1d94-424c-b792-c0234f497949 FINISHED; Apple build
+`da874897-8526-480d-96ae-044cf075d491` VALID, versión19, asociado y leído de
+vuelta en borrador1.0.1 PREPARE_FOR_SUBMISSION. Capturas/declaraciones/revisión y
+publicación siguen pendientes. Simulador source1ec9160 builddd963682 también
+FINISHED, SHA25639109632b00852cc4c162ce8b4331440f520d035972a3ec93ddbe07c42ff3d07;
+no se confunde con distribución de tienda. Backend productivo permanece db69.
+
+## Checkpoint de continuación — 2026-09-18 03:10 UTC
+
+**PARTIALLY COMPLETE.** #422 f935ba1e6 recibió aprobación exacta y todos sus
+checks aplicables pasaron; tres observaciones posteriores exigieron este sucesor:
+credencial Live Session independiente de cookies, idioma en correo/enlace de
+recuperación y políticas inglesas para locales web sin traducción propia. Se
+preserva la aprobación como evidencia histórica, no como aprobación del nuevo código.
+
+- Recuperación: query `locale` opcional, cuerpo `{email}` compatible; correo y CTA
+  ES/EN, enlace `lang`, destino seguro existente.8 Hspec/100 QuickCheck;12 pruebas
+  de contexto/idioma/políticas. Chromium, Firefox y WebKit abren el enlace inglés
+  desde almacenamiento vacío y previamente español.
+- Live Session: transporte con código explícito sin cookies ni mutación de sesión
+  global, formulario público sin lecturas/escrituras CRM previas, borrador por
+  propietario verificado/variante y descarte de recibos tardíos.15 pruebas focalizadas
+  finales; TLC9+42 estados, controles negativos y runner Alloy completos. El navegador
+  confirma fila PostgreSQL17 bajo la cuenta del código mientras la cookie de otra
+  cuenta permanece intacta. UX021 confirma incompatibilidad `null` del contrato:
+  cliente omite opcionales para backend antiguo y backend nuevo acepta null sin
+  permitir aliases contradictorios;33 Hspec y HTTP/PostgreSQL de músico+canción pasan.
+- Web completo antes de los últimos cambios pequeños:217 suites/2085 pruebas;
+  las pruebas afectadas posteriores pasan. Build final5 preloads/364390 bytes gzip,
+  bajo410KiB; quality:repo pasa tras actualizar la aserción estática obsoleta del
+  orden de URLs legales. No se considera esa aserción un modelo formal.
+- Móvil PR94 fusionada como f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9;
+  gitlink publicado1ec9160ebcec19fff406c11b09ad0dc39bf76203 compatible con el
+  OpenAPI de esta rama.77 suites/461 pruebas y release:check pasan. Nuevos builds:
+  Android1.0.1(10)89431913-7993-47bc-932f-5652c017a652;
+  iOS1.0.1(19)1fc2fc0b-f93a-4d11-8eb6-2b7f97dc0207 FINISHED y subido a Apple.
+  Ni subida ni build firmado acreditan revisión/publicación.
+- Android: tras confirmación de permisos, envío f8eba9b9-b3a9-4b8c-9e82-2ad0fafc7864
+  volvió a fallar `The caller does not have permission`. Inspección real de Play
+  cuenta7746420275596660022: appcom.tdf.records existe en Closed testing, pero
+  Usuarios y permisos sólo contenía al titular. Se está corrigiendo el acceso de
+  la cuenta de servicio existente exclusivamente a esa app. No crear otro paquete.
+- Cobertura operativa independiente en worktree ux-operational:198 casos admin y
+  198 customer con sesión/backend/DB reales,99 rutas×2anchos; customer sin axe.
+  Correcciones operativas de nombres, teclado, reflow, contraste y carga pendientes
+  de PR sucesora.28 casos focalizados posteriores sin axe. Calendar500 corresponde
+  a OAuth no configurado en entorno aislado; /docs en un intento anterior tuvo
+  proxy OpenAPI incorrecto. Un bundle intermedio omitió VITE_API_BASE: no se cuenta
+  como persistencia. La cobertura411 sigue parcial (otros roles/estados/nativo).
+
+Producción backend sigue verificada en db69, sin otro rollout de esta rama.
+Recuperación: informe protegido y snapshot ya registrados abajo; ninguna migración
+histórica se cambia y no se necesitó rollback. Siguiente acción: publicar este head,
+resolver las tres observaciones con evidencia, obtener revisión exacta y gates;
+continuar sucesor operativo y tiendas. El operador de identidad sigue en su propia
+rama; volver a comprobar coordinación/lease antes de otro rollout.
+
+## Checkpoint de continuación — 2026-09-18 02:04 UTC
+
+**PARTIALLY COMPLETE.** Este bloque sustituye estados históricos contradictorios.
+La cobertura inicial de411 entradas continúa abierta; no se limita a las PR activas.
+
+- #406: aprobación independiente exacta de912f8326b, todos los gates aplicables
+  y cero hilos pendientes; fusionada sin squash como
+  `db69e0534e87ffcb9b3ccf3a856a7fc85e839f16` a01:34:52UTC. Incluye el filtro que
+  excluye bandas de las reclamaciones y la protección de activación contra ABA de
+  sesión/navegación.13 pruebas de componente, HTTP/PostgreSQL17 y modelos TLC
+  con controles negativos pasan. Identidades separadas y revisión de titularidad
+  permanecen obligatorias.
+- #422 integra main mediante merge31f92a2c5; incorpora la intención invitado→
+  registro→confirmación de seguimiento, validación Live Session mediante /session
+  y UX015–020. Web:216 suites/2074 pruebas;43 focalizadas; typecheck/build/lint
+  y quality:repo aprobados. El último cambio de color conserva5 preloads/364315
+  bytes gzip, bajo410KiB. El head publicado anterior8c2e5f9 no contiene todo esto;
+  la entrega nueva requiere sus propios gates y aprobación independiente.
+- Bundle de producción contra backend/PostgreSQL17 aislados:84 casos de42 rutas
+  públicas a320/1280px sin axe, overflow, pageerror ni5xx. Recorrido final en
+  Chromium/Firefox/WebKit: signup real, follow, completion autoritativa, reload,
+  teclado, dos temas, cuatro anchos y200%texto; cero violaciones axe/pageerror.
+  WebKit había conservado texto oscuro tras cambiar de tema; reparación focalizada
+  en Typography y evidencia antes/después. No es certificación WCAG, SMTP/OAuth,
+  cobertura de todos los roles ni medida de rendimiento de campo.
+- Producción: Build Image35295902009 SUCCESS y release protegido terminado a
+  02:03:41UTC. Ambas máquinas sirviendo db69e053, db/status ok. Imagen inmutable
+  `sha256:bf94f72ea7c45ff30a2fad939179f80592a8eacd51ea02a42f9891c5e7d4df76`.
+  Snapshot `vs_alV97Vxv1gacAOlLxK3OGM`, volumenvol_re89q7o0w7ynpx1r,
+  creado01:43:42UTC. Preflight, ledger/checksums, esquema, lease, canary y rolling
+  aprobados; no rollback. Flags existentes conservados. El túnel Fly falló;
+  el mecanismo documentado verificó HTTP público fijado a cada máquina. Webmain
+  db69 tiene Cloudflare check84bed2dd-9730-473e-b96f-a4c2f620065b SUCCESS.
+  Observación posterior y pruebas de journeys productivos se registran aparte.
+- Móvil: gitlink de#422 y ambos builds STORE provienen de
+  `efa2555c5400dfa736bc95a12414a790b82adda5`, ya contenido en mainfac7c2.
+  Main móvil actual50e680a añade sólo una cabecera opcional de tipos generados
+  (PR#92, otro workstream); no se importa ni se atribuye a los artefactos existentes.
+  Android1.0.1(9), build1fbcb51e-b035-4ba9-a6f5-b244bf67bae3, sigue sin envío
+  exitoso:656ce093-dbb9-4990-9b1e-8df40398f54a falló permisos. El usuario dijo
+  «Los completaré» para la lista corregida Expo; falta confirmación de ese cambio.
+- iOS1.0.1(18), build154bc17c-ff2d-4f87-b383-75973ee25824, subido mediante
+  EASd3c2977f-c136-4c03-81c8-51ecbc8c110f. Apple build
+  f72c49ae-2da2-4beb-b0eb-a26bdef674b2 VALID y enlazado al borrador1.0.1;
+  descripción/keywords/URLs es-MX guardados y releídos. Free Apps Agreement
+  Active observado en Business del equipo83J23NPXG7. Estado PREPARE_FOR_SUBMISSION:
+  faltan capturas, cuestionario de edad, privacidad, acceso de revisión y requisitos
+  de distribución aplicables. No revisión enviada ni publicación. Simulador de
+  fuenteefa build efc9a326-c925-4aa0-9176-767efbc845e0 FINISHED e instalado;
+  SHA256 del archivo8e1a446a49bbc84915f300b206945e4614566692dfc8ab5fd562bfc93a641e55.
+  Sus recorridos actuales están en ejecución; no acredita dispositivo físico.
+
+Conciliación de concurrencia: el bot publicó775934f75 sobre#422 durante el push.
+Su filtro artist/band contradecía el contrato artist-only ya aprobado en#406.
+Se conserva su atribución mediante merge, se reutilizan sus fixtures person-only,
+mixed y canonical-person, y se conserva el handler exacto de main. La prueba
+HTTP/PostgreSQL17 ampliada pasa: no selecciona bandas/personas, no elude un
+canonical inválido, mantiene idempotencia y no concede gestión. Evidencia
+[e2e de conciliación](evidence/artist-claim-kind-union-http.log).
+
+Siguiente acción: publicar el incremento integrado de#422 y observar sus gates;
+continuar cobertura autenticada/operativa y QA nativa mientras se obtiene revisión
+exacta y se completan requisitos de tienda. No reenviar Android sin cambio confirmado.
+Para recuperar backend usar el informe del release y la imagen previa compatible;
+no reescribir migraciones ni restaurar binarios incompatibles. Snapshot con retención
+5d; el rollback no se ejercitó porque no hubo fallo.
+
+Fuentes primarias: [permisos Expo/Play](https://github.com/expo/fyi/blob/main/creating-google-service-account.md),
+[acuerdos Apple](https://developer.apple.com/help/app-store-connect/manage-agreements/view-agreements-status),
+[builds de Apple](https://developer.apple.com/documentation/appstoreconnectapi/get-v1-builds).
+
+## Actualización verificada — 2026-09-18 00:36 UTC
+
+- El usuario aprobó #422 en `38256cf721d92380c8cfc0b6d19e10bd8703c233`, incluidas
+  las traducciones. CI detectó dos fallos exclusivamente en pruebas: contrato fuente
+  que esperaba enlaces sólo ingleses y coerciones de tipos rechazadas por ESLint.
+  Se corrigieron sin modificar comportamiento de producto; 13 pruebas auth, lint
+  completo y `quality:repo` pasan. El siguiente head requiere revisión renovada por
+  la protección que descarta aprobaciones al cambiar código.
+- #406 conserva aprobación exacta sobre `1fe6195a0`; backend CI continúa pendiente.
+- Build Image de main `6b48449e7` terminó exitosamente. No se ha desplegado.
+- iOS STORE `154bc17c-ff2d-4f87-b383-75973ee25824`, versión1.0.1(18),
+  fuente `efa2555`, terminó FINISHED; Android1.0.1(9) sigue IN_PROGRESS.
+  Ningún build acredita subida, revisión ni publicación en tienda.
+- HTTP real contra backend integrado y PostgreSQL17 aislado: signup de dos cuentas
+  sintéticas sin permisos elevados, intención persistida, primera acción inventada
+  rechazada, salida opcional persistida/idempotente, aislamiento de cuentas,
+  nuevo login conserva estado y logout revoca su token. Evidencia:
+  [onboarding HTTP](evidence/onboarding-isolated-http.log). No SMTP/OAuth ni recorrido
+  de navegador/productivo se infieren de esa prueba.
+- Backend integrado compiló; cinco ejemplos de recuperación y100 QuickCheck pasan.
+  Se conserva pendiente la cobertura integral, release guardado y publicación móvil.
+
+## Checkpoint vigente — 2026-09-18 00:20 UTC (17 de septiembre en Ecuador)
+
+Este bloque y los estados por hallazgo sustituyen las pausas y capacidades
+históricas descritas más abajo. **PARTIALLY COMPLETE**: la cobertura inicial
+integral y la publicación móvil aún no están cerradas.
+
+- El usuario confirmó la finalización del despliegue ajeno y entregó la coordinación
+  de producción. La pausa anterior está levantada; respetar la lease vigente.
+- Main remoto verificado: `437fdddea907ba7a20b8626242bf2aed108d6789`.
+  #421 merge `6b48449e7f934e91b9450c44be3b43873922ffd9`; #425 merge
+  `437fdddea907ba7a20b8626242bf2aed108d6789`. #423/#424 ya están integradas;
+  no se reabren sus workstreams ni se limpian ramas ajenas.
+- #406 head `1fe6195a08a73574ee597cc0d227bcdf1a9157b2`: aprobación independiente
+  exacta confirmada, observación de reclamaciones reparada y resuelta; CI pendiente.
+  Incorpora UX-013/014 y preserva identidades separadas/revisión de titularidad.
+- #422 recibe la recuperación de destino en el correo, traducciones ES/EN y
+  políticas españolas de la misma versión. Su aprobación anterior no cubre estos
+  cambios; necesita gates y revisión exactos nuevos. No atribuirlos al head remoto
+  anterior `00b9029a807d275cbb0fc6879d2644d3f2709e44`.
+- Móvil #89 merge `d22b49eb68151924617b13cc763178b7fb2cb2ba`; #90 merge
+  `9e478efae4bbeebadf3b378250c49070d3fda636`, introduce contrato `c63290b`.
+  Nuevo sucesor `efa2555` conserva idioma de políticas y contrato de recuperación;
+  publicar las páginas españolas del padre antes de distribuirlo.
+- Producción API observada saludable en `9f0da14de84919f8fba391fa752b7df7412a600d`:
+  esto no acredita desplegar #421/#406/#422. Imagen de6b48449e7 sigue construyéndose
+  en run35286741467. Ninguna mutación backend en esta continuación todavía.
+- Web #425: Cloudflare check56e5751e-108c-4bc1-b9d8-e7820dd762f9 y Vercel
+  deployment6514224951 exitosos sobre437fddd; https://tdf-app.pages.dev/login
+  abre con getters local/sessionStorage denegados, conserva entrada y sin pageerror.
+  FanHub con persistencia real autenticada aún requiere observación.
+- Staging `tdf-hq-studio-audit-staging.fly.dev/health` responde db/status ok;
+  no equivale a recorrido autenticado. Fuente editable, Node, Stack/GHC9.10.3,
+  Docker/PostgreSQL17 aislado, tres motores de navegador, Fly y EAS disponibles.
+  Disco27GiB; iOS18.3 sim disponible, Maestro2.5.1; idb sin companion.
+  No Android/dispositivo físico ni VoiceOver/TalkBack verificados.
+
+Verificación nueva: backend de1fe6195a0 compilado; esquema productivo aislado y
+migraciones/reinicio idempotentes pasan; HTTP real de reclamaciones pasa con ocho
+solicitudes simultáneas, privacidad, denegación y comprobante persistido.
+TLC1.7.2/Alloy6.2.0 actuales y controles negativos pasan, incluyendo49 estados del
+nuevo modelo de preparación y contraejemplo al quitar su bloqueo. Los límites
+constan en [artist-management-claims](../../artist-management-claims.md).
+
+Recuperación: cinco ejemplos Hspec/100 QuickCheck y30 pruebas API/login/rutas pasan.
+Matriz final de bundle de producción20/20 (idioma, recuperación, políticas,
+foco/axe; Chromium desktop/teléfono/tablet, Firefox y WebKit). La corrida previa
+19/20 midió contraste del fondo atenuado detrás del modal; se conserva. Ahora se
+comprueban modalidad, aislamiento del fondo y Tab dentro del diálogo; axe analiza
+el diálogo activo y la página completa después de cerrar, sin cambiar umbrales.
+No es certificación WCAG integral ni entrega SMTP real.
+
+Suite web final215/215,2.064/2.064 tests; typecheck/lint y backend integrado
+se registran por separado al terminar. El registro conserva además los22 IDs
+históricos originales para conciliar sus sucesores; no son22 defectos nuevos ni
+una orden de reimplementar trabajo ya integrado.
+
+Móvil: release:check y77 suites/458 tests del sucesor pasan. Build iOS INTERNAL
+`acce0957-ec70-40a6-8f9e-8192db3b7839`,1.0.1(17), fuente74d784c, instalado;
+recorrido ES registro→Safari términos→retorno conserva email sin enviar signup.
+Evidencia en este directorio. Ese binario no contiene los cambios posteriores.
+#91 ya está fusionada como `fac7c2cfac14db1b81883e184764be7f7d28716a`.
+EAS confirmó credenciales remotas de ambas plataformas y aceptó builds STORE de
+fuente `efa2555c5400dfa736bc95a12414a790b82adda5`: Android1.0.1(9),
+`1fbcb51e-b035-4ba9-a6f5-b244bf67bae3`; iOS1.0.1(18),
+`154bc17c-ff2d-4f87-b383-75973ee25824`. Estado inicialNEW; sin envío ni publicación.
+La limitación histórica de firma iOS ya no aplica. No hay tienda pública,
+revisión aprobada ni rollout acreditados.
+
+Siguiente ejecución: gates/revisión y merge #406; publicar cliente móvil compatible;
+merge #422 tras revisión; artefacto inmutable y release backend guardado (snapshot,
+preflight, lease, canary, smoke, observación), conservando flags efectivos. Completar
+las filas no probadas, conciliación histórica y recorridos autenticados/native;
+firmar/subir/enviar/publicar móvil y comprobar disponibilidad por plataforma.
+No detenerse en estos incrementos ni declarar la auditoría integral terminada.
+
+Fuentes de esta continuación: [patrón de diálogo W3C](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
+(fondo inactivo atenuado y foco modal), [Maestro launchApp](https://docs.maestro.dev/reference/commands-available/launchapp)
+(`stopApp:false` para retorno sin reinicio), consultadas17 de septiembre2026 local.
+
+## Evidencia histórica anterior al checkpoint vigente
+
 ## Estado y procedencia
 
 - Workspace original `main` en `17a33eca11d585d84435af85340beece9b51d14e`, con cambios
@@ -25,7 +284,7 @@ sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
 ## Cobertura, roles y límites
 
-[coverage.csv](coverage.csv) inventaría 409 entradas: 155 funciones registradas,
+[coverage.csv](coverage.csv) conserva las409 entradas iniciales y añade dos traducciones estáticas verificadas (411 filas actuales): 155 funciones registradas,
 188 declaraciones de rutas (incluidos wrappers/aliases), pantallas Expo y HTML
 estático. **No son 409 recorridos probados ni 409 pantallas únicas.** Por fila se
 registran origen, acceso, dispositivos, idiomas y estados requeridos. El inventario

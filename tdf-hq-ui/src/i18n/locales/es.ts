@@ -1,4 +1,6 @@
+import authEntry from './authEntry.es';
 const es = {
+  authEntry,
   fanHubOnboarding: {
     title: 'Primeros pasos',
     managerTitle: 'Lo más útil ahora',

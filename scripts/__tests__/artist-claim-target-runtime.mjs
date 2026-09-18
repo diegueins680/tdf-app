@@ -22,6 +22,20 @@ assert.equal((await draft.json()).name, 'Claim target draft fixture', 'private d
 assert.equal((await fetch(path(ids['Claim target blocked fixture']), { method: 'PUT', headers })).status, 404);
 assert.equal((await fetch(path(ids['Claim target canonical band fixture']), { method: 'PUT', headers })).status, 404, 'canonical resolution cannot switch resource kind');
 assert.equal((await fetch(path(-1), { method: 'PUT', headers })).status, 404);
+assert.equal((await fetch(path(ids['Claim target wrong-canonical fixture']), { method: 'PUT', headers })).status, 404, 'canonical person must not be bypassed by preparing a new identity');
+const expected = JSON.parse(process.env.TDF_CLAIM_TARGET_EXPECTED);
+const forbidden = new Set(JSON.parse(process.env.TDF_CLAIM_TARGET_FORBIDDEN));
+for (const name of ['person-only', 'mixed', 'band']) {
+  const label = `Claim target ${name} fixture`;
+  const response = await fetch(path(ids[label]), { method: 'PUT', headers });
+  assert.equal(response.status, 200, label);
+  const target = await response.json();
+  assert.equal(target.name, label, 'private names must stay private');
+  assert.ok(!forbidden.has(target.id), 'must not claim a person or incorrectly canonicalized profile');
+  if (expected[label]) assert.equal(target.id, expected[label], 'reuse the artist despite a newer person profile');
+  const retry = await fetch(path(ids[label]), { method: 'PUT', headers });
+  assert.deepEqual(await retry.json(), target, 'preparation remains idempotent across profile kinds');
+}
 const claim = async () => {
   const response = await fetch(`${base}/directory/claims`, {
     method: 'POST', headers: { ...headers, 'Content-Type': 'application/json', 'Idempotency-Key': 'claim-target-runtime-retry' },

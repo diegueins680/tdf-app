@@ -94,6 +94,13 @@ run_negative_tlc FanHubOnboardingContext.cfg fanhub-context 'Invariant CurrentCo
 run_negative_tlc FanHubOnboardingFlight.cfg fanhub-flight 'Invariant SingleFlight is violated' FanHubOnboarding.tla
 run_negative_tlc FanHubOnboardingTerminal.cfg fanhub-terminal 'Invariant TerminalOnly is violated' FanHubOnboarding.tla
 
+run_tlc AccessCodeValidation.tla AccessCodeValidation.cfg access-code-validation
+run_negative_tlc AccessCodeValidationStale.cfg access-code-stale 'Invariant CurrentCredential is violated' AccessCodeValidation.tla
+run_negative_tlc AccessCodeValidationSuperficial.cfg access-code-superficial 'Invariant VerifiedAccount is violated' AccessCodeValidation.tla
+run_tlc LiveIntakeAuthority.tla LiveIntakeAuthority.cfg live-intake-authority
+run_negative_tlc LiveIntakeAmbient.cfg live-intake-ambient 'Invariant ExplicitAuthority is violated' LiveIntakeAuthority.tla
+run_negative_tlc LiveIntakeStale.cfg live-intake-stale 'Invariant CurrentReceipt is violated' LiveIntakeAuthority.tla
+run_negative_tlc LiveIntakeUnpersisted.cfg live-intake-unpersisted 'Invariant PersistedReceipt is violated' LiveIntakeAuthority.tla
 run_tlc ArtistActivation.tla ArtistActivation.cfg artist-activation
 run_negative_tlc ArtistActivationUnsafe.cfg artist-activation-unsafe 'Invariant CurrentContext is violated' ArtistActivation.tla
 run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind

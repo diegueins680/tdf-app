@@ -24,7 +24,15 @@ export function normalizeLocale(value: string | null | undefined): SupportedLoca
   return base && Object.prototype.hasOwnProperty.call(resources, base) ? base as SupportedLocale : null;
 }
 
+export function requestedAuthLocale(): SupportedLocale | null {
+  if (typeof window === 'undefined' || !['/reset', '/login'].includes(window.location.pathname)) return null;
+  const value = new URLSearchParams(window.location.search).get('lang');
+  return value === 'en' || value === 'es' ? value : null;
+}
+
 function initialLocale(): SupportedLocale {
+  const requested = requestedAuthLocale();
+  if (requested) return requested;
   if (typeof window !== 'undefined') {
     try {
       const stored = normalizeLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
