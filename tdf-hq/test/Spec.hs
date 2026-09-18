@@ -144,7 +144,7 @@ import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
 import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
-import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink)
+import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink, passwordResetLinkWithLocale, passwordResetEmailContent)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
@@ -2811,6 +2811,26 @@ main = hspec $ do
         it "encodes query delimiters in tokens rather than adding parameters" $
             passwordResetLink (Just "https://tdf.example") "a&redirect=//evil.example" Nothing
                 `shouldBe` "https://tdf.example/reset?token=a%26redirect%3D%2F%2Fevil.example"
+
+        it "preserves English recovery on a fresh device without changing legacy links" $ do
+            passwordResetLinkWithLocale (Just "https://tdf.example") "synthetic-token" (Just "/fans") (Just "en-US")
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token&redirect=%2Ffans&lang=en"
+            passwordResetLinkWithLocale (Just "https://tdf.example") "synthetic-token" Nothing Nothing
+                `shouldBe` passwordResetLink (Just "https://tdf.example") "synthetic-token" Nothing
+            passwordResetLinkWithLocale (Just "https://tdf.example") "synthetic-token" Nothing (Just "es-EC")
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token&lang=es"
+        it "uses the English auth fallback for other supplied languages" $ do
+            let (subject, preheader, greeting, bodyLines) = passwordResetEmailContent (Just "fr") "Ana" "synthetic-token" "https://tdf.example/reset"
+            subject `shouldBe` "Reset your TDF Records password"
+            preheader `shouldBe` "Use your token to reset your account password."
+            greeting `shouldBe` "Hello Ana,"
+            bodyLines `shouldContain` ["Security token: synthetic-token"]
+        it "keeps omitted-locale emails Spanish and never reflects arbitrary locale text" $ do
+            let (subject, _, greeting, _) = passwordResetEmailContent Nothing "Ana" "synthetic-token" "https://tdf.example/reset"
+            subject `shouldBe` "Restablecer tu contraseña de TDF Records"
+            greeting `shouldBe` "Hola Ana,"
+            passwordResetLinkWithLocale Nothing "synthetic-token" Nothing (Just "en&redirect=//evil.example")
+                `shouldSatisfy` Data.Text.isSuffixOf "&lang=en"
 
         it "keeps arbitrary untrusted destinations on the configured origin" $
             QC.property $ \raw ->
@@ -16445,29 +16465,18 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected null/value musician aliases to be rejected, got: " <> show payload)
 
-        it "rejects null optional nested aliases instead of treating them as omitted" $ do
+        it "accepts nullable optional nested fields from supported clients" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
-                    , ( "musicians"
-                      , "[{\"name\":\"Keys\",\"email\":null,\"isExisting\":false}]"
-                      )
+                    , ("musicians", "[{\"name\":\"Keys\",\"partyId\":null,\"email\":null,\"instrumentId\":null,\"notes\":null,\"isExisting\":false}]")
+                    , ("setlist", "[{\"title\":\"Intro Jam\",\"bpm\":null,\"songKey\":null,\"lyrics\":null,\"sortOrder\":null}]")
                     ]) :: Either String LiveSessionIntakePayload of
-                Left err ->
-                    err `shouldContain` "email must be omitted instead of null"
-                Right payload ->
-                    expectationFailure ("Expected null musician email to be rejected, got: " <> show payload)
-
-            case fromMultipart (mkLiveSessionMultipart
-                    [ ("bandName", "The House Band")
-                    , ("musicians", "[]")
-                    , ( "setlist"
-                      , "[{\"title\":\"Intro Jam\",\"songKey\":null}]"
-                      )
-                    ]) :: Either String LiveSessionIntakePayload of
-                Left err ->
-                    err `shouldContain` "songKey must be omitted instead of null"
-                Right payload ->
-                    expectationFailure ("Expected null setlist songKey to be rejected, got: " <> show payload)
+                Left err -> expectationFailure err
+                Right payload -> do
+                    map lsmEmail (lsiMusicians payload) `shouldBe` [Nothing]
+                    map lsmPartyId (lsiMusicians payload) `shouldBe` [Nothing]
+                    map lssSongKey (lsiSetlist payload) `shouldBe` [Nothing]
+                    map lssBpm (lsiSetlist payload) `shouldBe` [Nothing]
 
         it "rejects unexpected nested musician or setlist fields instead of silently ignoring typos" $ do
             case fromMultipart (mkLiveSessionMultipart

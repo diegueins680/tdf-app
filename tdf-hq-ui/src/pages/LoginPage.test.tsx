@@ -144,6 +144,17 @@ describe('LoginPage Google signup consent flow', () => {
     window.history.replaceState({}, '', '/');
   });
 
+  it.each(['es', 'en', 'fr', 'de', 'pt'])('opens policies in the supported authentication language for %s', async (locale) => {
+    await i18n.changeLanguage(locale);
+    const cleanup = await renderLoginPage('/login?signup=1');
+    try {
+      await waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+      const suffix = locale === 'es' ? '-es' : '';
+      expect(document.querySelector(`a[href="/account/terms${suffix}.html"]`)).not.toBeNull();
+      expect(document.querySelector(`a[href="/account/privacy${suffix}.html"]`)).not.toBeNull();
+    } finally { await cleanup(); }
+  });
+
   it('recognizes only the server consent precondition', () => {
     expect(isGoogleSignupConsentRequiredError(new Error(` ${GOOGLE_CONSENT_ERROR} `))).toBe(true);
     expect(isGoogleSignupConsentRequiredError(new Error('Invalid Google token'))).toBe(false);

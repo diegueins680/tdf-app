@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import i18n, { LOCALE_STORAGE_KEY, normalizeLocale } from '../i18n';
+import i18n, { LOCALE_STORAGE_KEY, normalizeLocale, requestedAuthLocale } from '../i18n';
 import { Preferences, type LocalePreferences, type LocalePreferencesUpdate } from '../api/preferences';
 import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
@@ -38,10 +38,11 @@ function readStoredPreferences(): LocalePreferences {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return fallback;
     const stored = JSON.parse(raw) as Partial<LocalePreferences>;
-    const storedLocale = normalizeLocale(stored.locale) ?? fallback.locale;
+    const requested = requestedAuthLocale();
+    const storedLocale = requested ?? normalizeLocale(stored.locale) ?? fallback.locale;
     return {
       ...fallback,
-      localeId: typeof stored.localeId === 'string' ? stored.localeId.trim() : '',
+      localeId: requested ? '' : typeof stored.localeId === 'string' ? stored.localeId.trim() : '',
       locale: storedLocale,
       currencyId: typeof stored.currencyId === 'string' ? stored.currencyId.trim() : '',
       currency: typeof stored.currency === 'string' ? stored.currency.toUpperCase() : fallback.currency,
@@ -178,7 +179,7 @@ export function LocalePreferencesProvider({ children }: { children: ReactNode })
   }, [apply, currencyCatalog, currencyOptions, localeCatalog, localeOptions, preferences]);
 
   useEffect(() => {
-    if (!session) return;
+    if (!session || requestedAuthLocale()) return;
     if (session.preferences) {
       apply(session.preferences);
       return;

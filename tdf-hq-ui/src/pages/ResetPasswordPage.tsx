@@ -27,7 +27,7 @@ const normalizeRoles = (roles: readonly string[] | undefined): string[] =>
   Array.from(new Set((roles ?? []).map((role) => role.toLowerCase())));
 
 export default function ResetPasswordPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { login } = useSession();
@@ -37,7 +37,7 @@ export default function ResetPasswordPage() {
   });
   const redirectPath = useMemo(() => readSafeRedirectPath(location.search), [location.search]);
   const loginPath = redirectPath ? buildLoginRedirectPath(redirectPath) : '/login';
-  const recoveryPath = `${loginPath}${loginPath.includes('?') ? '&' : '?'}recover=1`;
+  const recoveryPath = `${loginPath}${loginPath.includes('?') ? '&' : '?'}recover=1&lang=${i18n.resolvedLanguage?.startsWith('es') ? 'es' : 'en'}`;
 
   useEffect(() => {
     if (!token) return;

@@ -141,9 +141,12 @@ export async function googleLoginRequest(payload: GoogleLoginRequestDTO): Promis
   });
 }
 
-export async function requestPasswordReset(email: string, redirect?: string | null): Promise<void> {
+export async function requestPasswordReset(email: string, redirect?: string | null, locale?: string): Promise<void> {
   const destination = sanitizeRedirectPath(redirect);
-  const query = destination ? `?${new URLSearchParams({ redirect: destination }).toString()}` : '';
+  const params = new URLSearchParams();
+  if (destination) params.set('redirect', destination);
+  if (locale) params.set('locale', locale.toLowerCase().startsWith('es') ? 'es' : 'en');
+  const query = params.size ? `?${params.toString()}` : '';
   const res = await authFetch(`${API_BASE}/v1/password-reset${query}`, {
     method: 'POST',
     credentials: 'include',

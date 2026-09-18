@@ -7,6 +7,8 @@ module TDF.Email
   , accountCreatedEmailContent
   , sendPasswordResetEmail
   , passwordResetLink
+  , passwordResetLinkWithLocale
+  , passwordResetEmailContent
   , sendCourseRegistrationEmail
   , sendCoursePaymentReminderEmail
   , sendMarketplaceOrderEmail
@@ -114,28 +116,49 @@ sendAccountCreatedEmail (Just cfg) name email mAppUrl = do
 
 sendPasswordResetEmail
   :: Maybe EmailConfig
-  -> Text   -- ^ recipient name
-  -> Text   -- ^ recipient email
-  -> Text   -- ^ reset token
-  -> Maybe Text -- ^ optional app URL
-  -> Maybe Text -- ^ optional local return destination
-  -> IO ()
-sendPasswordResetEmail Nothing _ _ _ _ _ =
+  -> Text -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> IO ()
+sendPasswordResetEmail Nothing _ _ _ _ _ _ =
   putStrLn "[Email] SMTP not configured; skipped password-reset email."
-sendPasswordResetEmail (Just cfg) name email token mAppUrl redirect = do
-  let subject   = "Restablecer tu contraseña de TDF Records"
-      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
-      resetLink = passwordResetLink mAppUrl token redirect
-      preheader = "Usa tu token para restablecer la contraseña de tu cuenta."
-      bodyLines =
-        [ "Recibimos una solicitud para restablecer tu acceso a TDF Records HQ."
+sendPasswordResetEmail (Just cfg) name email token mAppUrl redirect locale = do
+  let resetLink = passwordResetLinkWithLocale mAppUrl token redirect locale
+      language = passwordResetLocale locale
+      (subject, preheader, greeting, bodyLines) = passwordResetEmailContent locale name token resetLink
+      toAddr = Address (Just name) email
+      cta = if language == "en" then "Reset password" else "Restablecer contraseña"
+      mail = buildMailLocalized language cta cfg toAddr subject preheader greeting bodyLines (Just resetLink)
+  sendMailWithLogging cfg toAddr subject mail
+
+passwordResetLocale :: Maybe Text -> Text
+passwordResetLocale Nothing = "es"
+passwordResetLocale (Just raw)
+  | T.takeWhile (\c -> c /= '-' && c /= '_') (T.toLower (T.strip raw)) == "es" = "es"
+  | otherwise = "en"
+
+passwordResetEmailContent :: Maybe Text -> Text -> Text -> Text -> (Text, Text, Text, [Text])
+passwordResetEmailContent locale name token resetLink
+  | passwordResetLocale locale == "en" =
+      ( "Reset your TDF Records password"
+      , "Use your token to reset your account password."
+      , if T.null name then "Hello," else "Hello " <> name <> ","
+      , [ "We received a request to reset your TDF Records HQ access."
+        , "Use the link or token to choose a new password."
+        , "Link: " <> resetLink
+        , "Security token: " <> token
+        ])
+  | otherwise =
+      ( "Restablecer tu contraseña de TDF Records"
+      , "Usa tu token para restablecer la contraseña de tu cuenta."
+      , if T.null name then "Hola," else "Hola " <> name <> ","
+      , [ "Recibimos una solicitud para restablecer tu acceso a TDF Records HQ."
         , "Usa el enlace o token para definir una nueva contraseña."
         , "Enlace: " <> resetLink
         , "Token de seguridad: " <> token
-        ]
-      toAddr = Address (Just name) email
-      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just resetLink)
-  sendMailWithLogging cfg toAddr subject mail
+        ])
+
+passwordResetLinkWithLocale :: Maybe Text -> Text -> Maybe Text -> Maybe Text -> Text
+passwordResetLinkWithLocale mAppUrl token redirect locale =
+  passwordResetLink mAppUrl token redirect
+    <> maybe "" (const ("&lang=" <> passwordResetLocale locale)) locale
 
 -- Keep the trusted configured origin. Encode the destination as data; the web
 -- client revalidates it and checks the recovered account's route permissions.
@@ -352,11 +375,14 @@ sendMailWithLogging cfg toAddr _subject mail = do
       BS.putStrLn (TE.encodeUtf8 ("[Email] Sent registration email to " <> T.pack toEmail))
 
 buildMail :: EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail
-buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl =
+buildMail = buildMailLocalized "es" "Ver detalles del curso"
+
+buildMailLocalized :: Text -> Text -> EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail
+buildMailLocalized language ctaLabel cfg toAddr subject preheader greeting bodyLines mCtaUrl =
   let fromAddr = Address (Just (emailFromName cfg)) (emailFromAddress cfg)
       mailBase = emptyMail fromAddr
-      plainText = renderPlain greeting bodyLines mCtaUrl
-      htmlBody = renderHtml preheader greeting bodyLines mCtaUrl
+      plainText = renderPlain ctaLabel greeting bodyLines mCtaUrl
+      htmlBody = renderHtml language ctaLabel preheader greeting bodyLines mCtaUrl
   in mailBase
       { mailTo = [toAddr]
       , mailHeaders = [("Subject", subject)]
@@ -365,22 +391,22 @@ buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl =
                      ]]
       }
 
-renderPlain :: Text -> [Text] -> Maybe Text -> Text
-renderPlain greeting bodyLines mCtaUrl =
+renderPlain :: Text -> Text -> [Text] -> Maybe Text -> Text
+renderPlain ctaLabel greeting bodyLines mCtaUrl =
   T.unlines $
-    [greeting, ""] <> bodyLines <> maybe [] (\url -> ["", "Ver detalles: " <> url]) mCtaUrl
+    [greeting, ""] <> bodyLines <> maybe [] (\url -> ["", ctaLabel <> ": " <> url]) mCtaUrl
     <> ["", "—", "TDF Records"]
 
-renderHtml :: Text -> Text -> [Text] -> Maybe Text -> TL.Text
-renderHtml preheader greeting bodyLines mCtaUrl =
+renderHtml :: Text -> Text -> Text -> Text -> [Text] -> Maybe Text -> TL.Text
+renderHtml language ctaLabel preheader greeting bodyLines mCtaUrl =
   -- Inline PNG so the correct TDF Records logo always renders (no remote fetch).
   let esc = escapeHtml
       bodyParas = T.concat (map (\p -> "<p style=\"margin:0 0 12px;color:#0f172a;font-size:15px;line-height:22px;\">" <> esc p <> "</p>") bodyLines)
       ctaBlock = maybe "" (\url ->
-        "<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin-top:20px;\"><tr><td style=\"background:#0ea5e9;padding:12px 18px;border-radius:999px;font-weight:700;\"><a href=\"" <> esc url <> "\" style=\"color:#0b0f1b;text-decoration:none;font-family:Inter,Arial,sans-serif;\">Ver detalles del curso</a></td></tr></table>"
+        "<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin-top:20px;\"><tr><td style=\"background:#0ea5e9;padding:12px 18px;border-radius:999px;font-weight:700;\"><a href=\"" <> esc url <> "\" style=\"color:#0b0f1b;text-decoration:none;font-family:Inter,Arial,sans-serif;\">" <> esc ctaLabel <> "</a></td></tr></table>"
         ) mCtaUrl
       html = T.concat
-        [ "<!DOCTYPE html><html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"
+        [ "<!DOCTYPE html><html lang=\"" <> esc language <> "\"><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"
         , "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />"
         , "<style>body{margin:0;padding:0;background:#f1f5f9;} a{color:#0ea5e9;}</style>"
         , "</head><body style=\"margin:0;padding:0;background:#f1f5f9;\">"
@@ -390,7 +416,7 @@ renderHtml preheader greeting bodyLines mCtaUrl =
         , "<table role=\"presentation\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:640px;width:100%;background:#ffffff;border-radius:16px;box-shadow:0 14px 40px rgba(15,23,42,0.08);overflow:hidden;border:1px solid #e2e8f0;\">"
         , "<tr><td style=\"padding:24px 32px 8px;\" align=\"center\">"
         , "<img src=\"", logoDataUri, "\" alt=\"TDF Records\" width=\"160\" style=\"display:block;height:auto;margin:0 auto 8px;\" />"
-        , "<p style=\"margin:0;color:#334155;font-size:13px;\">Escuela &amp; Estudios</p>"
+        , "<p style=\"margin:0;color:#334155;font-size:13px;\">" <> (if language == "en" then "School &amp; Studios" else "Escuela &amp; Estudios") <> "</p>"
         , "</td></tr>"
         , "<tr><td style=\"padding:8px 32px 24px;\">"
         , "<p style=\"margin:0 0 12px;color:#0f172a;font-size:16px;font-weight:700;\">", esc greeting, "</p>"
@@ -398,7 +424,7 @@ renderHtml preheader greeting bodyLines mCtaUrl =
         , ctaBlock
         , "<div style=\"margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;\">"
         , "<p style=\"margin:0 0 4px;color:#0f172a;font-weight:700;\">TDF Records</p>"
-        , "<p style=\"margin:0;color:#475569;font-size:13px;\">Escuela &amp; Estudios</p>"
+        , "<p style=\"margin:0;color:#475569;font-size:13px;\">" <> (if language == "en" then "School &amp; Studios" else "Escuela &amp; Estudios") <> "</p>"
         , "</div>"
         , "</td></tr></table></td></tr></table></body></html>"
         ]

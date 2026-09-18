@@ -31,9 +31,9 @@ export interface InputInventoryItem {
   status?: string | null;
 }
 
-export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload): Promise<void> {
+export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload, accessCode?: string): Promise<void> {
   const base = resolveApiBase();
-  const authHeader = buildAuthorizationHeader();
+  const authHeader = accessCode ? `Bearer ${accessCode}` : buildAuthorizationHeader();
   const wireFields: Omit<LiveSessionIntakeMultipart, 'rider'> = {
     bandName: payload.bandName,
     bandDescription: payload.bandDescription,
@@ -45,8 +45,8 @@ export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload)
     availability: payload.availabilityNotes,
     acceptedTerms: payload.acceptedTerms,
     termsVersion: payload.termsVersion,
-    musicians: JSON.stringify(payload.musicians),
-    setlist: payload.setlist ? JSON.stringify(payload.setlist) : undefined,
+    musicians: JSON.stringify(payload.musicians, (_key, value: unknown) => value === null ? undefined : value),
+    setlist: payload.setlist ? JSON.stringify(payload.setlist, (_key, value: unknown) => value === null ? undefined : value) : undefined,
   };
 
   const form = new FormData();
@@ -68,6 +68,7 @@ export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload)
 
   const res = await fetch(`${base}/live-sessions/intake`, {
     method: 'POST',
+    credentials: accessCode ? 'omit' : 'same-origin',
     body: form,
     headers: authHeader ? { Authorization: authHeader } : undefined,
   });

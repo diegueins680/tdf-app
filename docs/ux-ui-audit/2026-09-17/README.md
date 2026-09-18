@@ -5,6 +5,56 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Checkpoint de continuación — 2026-09-18 03:10 UTC
+
+**PARTIALLY COMPLETE.** #422 f935ba1e6 recibió aprobación exacta y todos sus
+checks aplicables pasaron; tres observaciones posteriores exigieron este sucesor:
+credencial Live Session independiente de cookies, idioma en correo/enlace de
+recuperación y políticas inglesas para locales web sin traducción propia. Se
+preserva la aprobación como evidencia histórica, no como aprobación del nuevo código.
+
+- Recuperación: query `locale` opcional, cuerpo `{email}` compatible; correo y CTA
+  ES/EN, enlace `lang`, destino seguro existente.8 Hspec/100 QuickCheck;12 pruebas
+  de contexto/idioma/políticas. Chromium, Firefox y WebKit abren el enlace inglés
+  desde almacenamiento vacío y previamente español.
+- Live Session: transporte con código explícito sin cookies ni mutación de sesión
+  global, formulario público sin lecturas/escrituras CRM previas, borrador por
+  propietario verificado/variante y descarte de recibos tardíos.15 pruebas focalizadas
+  finales; TLC9+42 estados, controles negativos y runner Alloy completos. El navegador
+  confirma fila PostgreSQL17 bajo la cuenta del código mientras la cookie de otra
+  cuenta permanece intacta. UX021 confirma incompatibilidad `null` del contrato:
+  cliente omite opcionales para backend antiguo y backend nuevo acepta null sin
+  permitir aliases contradictorios;33 Hspec y HTTP/PostgreSQL de músico+canción pasan.
+- Web completo antes de los últimos cambios pequeños:217 suites/2085 pruebas;
+  las pruebas afectadas posteriores pasan. Build final5 preloads/364390 bytes gzip,
+  bajo410KiB; quality:repo pasa tras actualizar la aserción estática obsoleta del
+  orden de URLs legales. No se considera esa aserción un modelo formal.
+- Móvil PR94 fusionada como f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9;
+  gitlink publicado1ec9160ebcec19fff406c11b09ad0dc39bf76203 compatible con el
+  OpenAPI de esta rama.77 suites/461 pruebas y release:check pasan. Nuevos builds:
+  Android1.0.1(10)89431913-7993-47bc-932f-5652c017a652;
+  iOS1.0.1(19)1fc2fc0b-f93a-4d11-8eb6-2b7f97dc0207 FINISHED y subido a Apple.
+  Ni subida ni build firmado acreditan revisión/publicación.
+- Android: tras confirmación de permisos, envío f8eba9b9-b3a9-4b8c-9e82-2ad0fafc7864
+  volvió a fallar `The caller does not have permission`. Inspección real de Play
+  cuenta7746420275596660022: appcom.tdf.records existe en Closed testing, pero
+  Usuarios y permisos sólo contenía al titular. Se está corrigiendo el acceso de
+  la cuenta de servicio existente exclusivamente a esa app. No crear otro paquete.
+- Cobertura operativa independiente en worktree ux-operational:198 casos admin y
+  198 customer con sesión/backend/DB reales,99 rutas×2anchos; customer sin axe.
+  Correcciones operativas de nombres, teclado, reflow, contraste y carga pendientes
+  de PR sucesora.28 casos focalizados posteriores sin axe. Calendar500 corresponde
+  a OAuth no configurado en entorno aislado; /docs en un intento anterior tuvo
+  proxy OpenAPI incorrecto. Un bundle intermedio omitió VITE_API_BASE: no se cuenta
+  como persistencia. La cobertura411 sigue parcial (otros roles/estados/nativo).
+
+Producción backend sigue verificada en db69, sin otro rollout de esta rama.
+Recuperación: informe protegido y snapshot ya registrados abajo; ninguna migración
+histórica se cambia y no se necesitó rollback. Siguiente acción: publicar este head,
+resolver las tres observaciones con evidencia, obtener revisión exacta y gates;
+continuar sucesor operativo y tiendas. El operador de identidad sigue en su propia
+rama; volver a comprobar coordinación/lease antes de otro rollout.
+
 ## Checkpoint de continuación — 2026-09-18 02:04 UTC
 
 **PARTIALLY COMPLETE.** Este bloque sustituye estados históricos contradictorios.

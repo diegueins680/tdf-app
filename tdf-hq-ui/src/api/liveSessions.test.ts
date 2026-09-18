@@ -65,4 +65,25 @@ describe('Live Session canonical catalog contracts', () => {
     expect(musiciansPart).not.toContain('"instrument"');
     expect(musiciansPart).not.toContain('"role"');
   });
+  it('uses the verified intake code without ambient account credentials', async () => {
+    buildAuthorizationHeaderMock.mockReturnValue('Bearer different-signed-in-account');
+    fetchMock.mockResolvedValueOnce(successfulResponse);
+    await submitLiveSessionIntake({ bandName: 'Code-owned band', acceptedTerms: true, termsVersion: 'TDF Live Sessions v2', musicians: [] }, 'verified-code');
+    expect(fetchMock).toHaveBeenCalledWith('/live-sessions/intake', expect.objectContaining({
+      credentials: 'omit', headers: { Authorization: 'Bearer verified-code' },
+    }));
+    expect(buildAuthorizationHeaderMock).not.toHaveBeenCalled();
+  });
+
+  it('omits absent nested values for compatibility with the previous backend', async () => {
+    fetchMock.mockResolvedValueOnce(successfulResponse);
+    await submitLiveSessionIntake({ bandName: 'Band', acceptedTerms: true, termsVersion: 'TDF Live Sessions v2',
+      musicians: [{ name: 'Ana', isExisting: false, partyId: null, email: null, notes: null, instrumentId: null }],
+      setlist: [{ title: 'Song', bpm: null, songKey: null, lyrics: null, sortOrder: 0 }],
+    }, 'verified-code');
+    const form = fetchMock.mock.calls[0]?.[1]?.body as FormData;
+    expect(JSON.parse(form.get('musicians') as string)).toEqual([{ name: 'Ana', isExisting: false }]);
+    expect(JSON.parse(form.get('setlist') as string)).toEqual([{ title: 'Song', sortOrder: 0 }]);
+  });
+
 });
