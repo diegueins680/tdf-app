@@ -104,8 +104,8 @@ test('web signup links the recorded account-policy version to account-specific d
   const loginPage = await readFile(path.join(repo, 'tdf-hq-ui/src/pages/LoginPage.tsx'), 'utf8');
   const terms = await readFile(path.join(repo, 'tdf-hq-ui/public/account/terms.html'), 'utf8');
   const privacy = await readFile(path.join(repo, 'tdf-hq-ui/public/account/privacy.html'), 'utf8');
-  assert.match(loginPage, /href=\{[^}]*'\/account\/terms\.html'[^}]*'\/account\/terms-es\.html'[^}]*\}/);
-  assert.match(loginPage, /href=\{[^}]*'\/account\/privacy\.html'[^}]*'\/account\/privacy-es\.html'[^}]*\}/);
+  assert.match(loginPage, /href=\{[^}]*startsWith\('es'\)[^}]*'\/account\/terms-es\.html'[^}]*'\/account\/terms\.html'[^}]*\}/);
+  assert.match(loginPage, /href=\{[^}]*startsWith\('es'\)[^}]*'\/account\/privacy-es\.html'[^}]*'\/account\/privacy\.html'[^}]*\}/);
   assert.match(terms, /tdf-account-terms-v1/);
   assert.match(terms, /TDF Records Account Terms/);
   assert.match(privacy, /tdf-account-terms-v1/);

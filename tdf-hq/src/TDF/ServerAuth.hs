@@ -1441,8 +1441,8 @@ isNilPasswordResetToken :: UUID -> Bool
 isNilPasswordResetToken parsedToken =
   toText parsedToken == "00000000-0000-0000-0000-000000000000"
 
-passwordReset :: Maybe Text -> PasswordResetRequest -> AppM NoContent
-passwordReset redirect PasswordResetRequest{..} = do
+passwordReset :: Maybe Text -> Maybe Text -> PasswordResetRequest -> AppM NoContent
+passwordReset redirect locale PasswordResetRequest{..} = do
   let emailInput = T.strip email
   when (T.null emailInput) $ throwBadRequest "Email is required"
   emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
@@ -1453,7 +1453,7 @@ passwordReset redirect PasswordResetRequest{..} = do
     resetResult <-
       liftIO $
         ((try $
-          EmailSvc.sendPasswordReset emailSvc displayName recipientEmail resetToken redirect) :: IO (Either SomeException ()))
+          EmailSvc.sendPasswordReset emailSvc displayName recipientEmail resetToken redirect locale) :: IO (Either SomeException ()))
     case resetResult of
       Left _ -> do
         let msg = "[PasswordReset] Failed to send a reset email."

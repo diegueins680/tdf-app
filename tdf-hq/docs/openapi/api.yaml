@@ -489,6 +489,12 @@ paths:
       operationId: requestPasswordReset
       security: []
       parameters:
+        - in: query
+          name: locale
+          required: false
+          schema:
+            type: string
+          description: Requested recovery language. Spanish locales use Spanish; other supplied locales use English fallback. Omitted values retain legacy Spanish email behavior.
         - name: redirect
           in: query
           required: false

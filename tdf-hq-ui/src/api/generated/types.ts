@@ -14227,6 +14227,8 @@ export interface operations {
     requestPasswordReset: {
         parameters: {
             query?: {
+                /** @description Requested recovery language. Spanish locales use Spanish; other supplied locales use English fallback. Omitted values retain legacy Spanish email behavior. */
+                locale?: string;
                 /** @description Optional local destination, revalidated against the recovered account's permissions. Invalid destinations are ignored. */
                 redirect?: string;
             };
