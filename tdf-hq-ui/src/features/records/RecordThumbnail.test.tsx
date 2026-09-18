@@ -1,11 +1,27 @@
 import { fireEvent, render, screen, cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, it } from '@jest/globals';
 import RecordThumbnail from './RecordThumbnail';
-import { isProviderPlaceholder, recordThumbnailCandidates } from './resolveRecordThumbnail';
+import { isProviderPlaceholder, primaryRecordsResource, recordThumbnailCandidates } from './resolveRecordThumbnail';
+import type { RecordsResourceDTO } from '../../api/records';
 
 const youtube = { providerCode: 'youtube', externalCode: 'f2BabxM1Pjc' };
 afterEach(cleanup);
 describe('resource thumbnails', () => {
+  it('retains valid secondary artwork when the primary resource cannot supply an image', () => {
+    const primary: RecordsResourceDTO = {
+      id: 'primary', providerCode: 'vimeo', externalCode: '123',
+      kind: 'video', url: 'https://vimeo.com/123', primary: true,
+      relationKind: 'watch', sortOrder: 0,
+    };
+    const secondary: RecordsResourceDTO = { ...primary, id: 'secondary', primary: false,
+      thumbnailUrl: 'https://cdn.example.org/editorial.jpg' };
+    expect(primaryRecordsResource([primary, secondary])).toBe(secondary);
+    expect(primaryRecordsResource([{ ...primary, ...youtube, availability: 'unavailable' }, secondary])).toBe(secondary);
+    const illustratedPrimary = { ...primary, thumbnailUrl: secondary.thumbnailUrl };
+    expect(primaryRecordsResource([illustratedPrimary, secondary])).toBe(illustratedPrimary);
+    expect(primaryRecordsResource([primary])).toBe(primary);
+    expect(primaryRecordsResource([])).toBeUndefined();
+  });
   it('preserves explicit editorial images, rejects mismatched videos and limits retries', () => {
     expect(recordThumbnailCandidates({ ...youtube, thumbnailUrl: ' https://cdn.example.org/editorial.jpg ' })[0])
       .toBe('https://cdn.example.org/editorial.jpg');

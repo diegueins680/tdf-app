@@ -35,7 +35,7 @@ The channel page independently confirms stable identity
 | Current public upload | Video ID | Duration | Publication timestamp |
 | --- | --- | --- | --- |
 | Llama Este Pez … Pt. 1 | `0hYDXQ5hWfo` | 897 seconds | 2026-09-09T15:15:24-07:00 |
-| Llama Este Pez … Pt. 2 | `0W4KdgkQD5w` | 902 seconds | 2026-09-16T13:23:23-07:00 |
+| Llama Este Pez … Pt. 2 | `0W4KdgkQD5w` | 903 seconds (Data API) | 2026-09-16T13:23:23-07:00 |
 
 Both current watch pages report the verified channel, playable status and real
 thumbnail metadata. Their descriptions independently say the performance was
@@ -81,10 +81,21 @@ Only two subscribed cities were processed. Ecuador-wide discovery, the coherent
 video source administration, hourly/weekly video jobs and full backfill remain
 separate implementation work. No activation is claimed by this repair.
 
-No YouTube API credential appears in deployed Fly secret names. An approved
-server credential is needed for the official channels → uploads playlist →
-paginated playlistItems → videos interface. Public-page inspection above is
-incident evidence, not a replacement ingestion scraper.
+After explicit authorization, enabled YouTube Data API v3 in the existing Google
+Cloud project `tdf-records-477016` and created the server credential named
+`TDF Records video ingestion server`, restricted to that API. It is stored as
+Fly secret `YOUTUBE_API_KEY` for `tdf-hq`, staged pending the guarded deployment.
+No key value belongs in this repository or client bundles.
+
+A read-only official API traversal of uploads playlist `UUx9Jpaw_XDrMtIdzWYlU51g`
+completed one page: 39 listed identities, 39 metadata responses, 38 eligible public
+videos, one nonpublic item excluded. Two eligible uploads (`0hYDXQ5hWfo` and
+`0W4KdgkQD5w`) are absent from the canonical feed. The two removed identities
+are absent from the accessible playlist. This is an inventory, not a completed
+persisted backfill or evidence of scheduled execution. Data API duration for
+Pt. 2 is `PT15M3S`; the watch-page player reported 902 seconds. The official
+metadata takes precedence. Do not publish the raw inventory containing the
+nonpublic item.
 
 Provider references: [channels.list](https://developers.google.com/youtube/v3/docs/channels/list),
 [playlistItems.list](https://developers.google.com/youtube/v3/docs/playlistItems/list),

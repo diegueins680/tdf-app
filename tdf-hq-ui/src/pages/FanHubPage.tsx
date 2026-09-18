@@ -1,4 +1,5 @@
 import RecordThumbnail from '../features/records/RecordThumbnail';
+import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
 import { buildArtistFollowAuthPath } from '../utils/artistFollowIntent';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
@@ -106,9 +107,6 @@ interface CatalogRecoveryCard {
   to: string;
   action: string;
 }
-
-const primaryRecordsResource = (resources: RecordsResourceDTO[]) =>
-  resources.find((resource) => resource.primary) ?? resources[0];
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session, loading: sessionLoading } = useSession();
