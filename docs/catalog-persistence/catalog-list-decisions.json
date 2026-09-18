@@ -13155,13 +13155,13 @@
       "reviewed": true
     },
     {
-      "id": "bffc5decb0aa4633b170",
+      "id": "faf664611d7ab0aa954d",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Manually reviewed2026-09-18: five fixed native tab destinations now carry translation keys for reactive ES/EN labels. Names, icons and title keys are rendering/route-dispatch configuration; no editable business taxonomy or persisted catalog values changed.",
+      "justification": "Manually reviewed2026-09-18: current published parent gitlink7b7ecaf contains these five fixed native tab destinations. Names, icons and title renderer slots are route-dispatch configuration, not editable business data. The translated667/104 successor remains release-pending; reconcile this fingerprint again when its qualified gitlink advances.",
       "reviewed": true
     },
     {
