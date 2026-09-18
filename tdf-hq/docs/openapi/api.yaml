@@ -1632,6 +1632,25 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ArtistProfile'
+  /artists/me/activate:
+    post:
+      tags: [FanHub]
+      summary: Activate my artist profile immediately
+      description: Creates the authenticated account's artist profile and grants only the Artist role through an audited automatic policy in one transaction. No manual approval or invitation is required. Repeated calls preserve existing profile content and create no duplicate grant. Revoked roles and inactive accounts cannot be reactivated this way. No target party or role is accepted.
+      operationId: activateMyArtistProfile
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Artist profile ready to edit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtistProfile'
+        '401':
+          description: Authentication required
+        '403':
+          description: Account or automatic artist policy does not allow activation
   /artists/search:
     get:
       tags: [FanHub]
@@ -5785,6 +5804,7 @@ paths:
   /directory/favorites: { $ref: './directory.yaml#/paths/~1directory~1favorites' }
   /directory/favorites/{targetKind}/{targetId}: { $ref: './directory.yaml#/paths/~1directory~1favorites~1{targetKind}~1{targetId}' }
   /directory/saved-searches: { $ref: './directory.yaml#/paths/~1directory~1saved-searches' }
+  /directory/artist-claim-targets/{partyId}: { $ref: './directory.yaml#/paths/~1directory~1artist-claim-targets~1{partyId}' }
   /directory/claims: { $ref: './directory.yaml#/paths/~1directory~1claims' }
   /directory/verifications: { $ref: './directory.yaml#/paths/~1directory~1verifications' }
   /directory/reports: { $ref: './directory.yaml#/paths/~1directory~1reports' }
@@ -10051,6 +10071,42 @@ components:
         newlyCompleted:
           type: boolean
           description: True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence.
+    ExperimentAssignment:
+      type: object
+      required: [experimentId, experimentVersion, experimentEnabled, experimentEligible, variant, assignedAt, eligibleUntil, exposedAt, newlyAssigned]
+      properties:
+        experimentId:
+          type: string
+        experimentVersion:
+          type: integer
+        experimentEnabled:
+          type: boolean
+        experimentEligible:
+          type: boolean
+        variant:
+          type: string
+        assignedAt:
+          type: string
+          format: date-time
+          nullable: true
+        eligibleUntil:
+          type: string
+          format: date-time
+          nullable: true
+        exposedAt:
+          type: string
+          format: date-time
+          nullable: true
+        newlyAssigned:
+          type: boolean
+    ExperimentExposureResult:
+      type: object
+      required: [assignment, newlyExposed]
+      properties:
+        assignment:
+          $ref: '#/components/schemas/ExperimentAssignment'
+        newlyExposed:
+          type: boolean
     SessionResponse:
       type: object
       required: [username, displayName, partyId, roles, modules, featureFlags, preferences]

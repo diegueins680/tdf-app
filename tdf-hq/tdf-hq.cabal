@@ -392,6 +392,7 @@ test-suite tdf-hq-test
     TDF.Directory.PolicySpec
     TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec
+    TDF.Profiles.ArtistActivationSpec
     TDF.RagStore
     TDF.Reputation
     TDF.Reputation.Worker

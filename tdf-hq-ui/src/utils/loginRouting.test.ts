@@ -103,9 +103,9 @@ describe('onboarding intent routing', () => {
     expect(resolvePostAuthPath('events', ['Customer'], [], '/eventos/42')).toBe('/eventos/42');
   });
 
-  it('turns governed artist and internship intents into access requests for Customer accounts', () => {
+  it('routes artist intent to immediate creation and keeps internship requests', () => {
     expect(resolvePostAuthPath('artist_profile', ['Customer'])).toBe(
-      '/solicitudes-acceso/nueva?feature=artist.onboarding&action=create',
+      '/artista/crear',
     );
     expect(resolvePostAuthPath('internships', ['Customer'])).toBe(
       '/solicitudes-acceso/nueva?feature=internships&action=view',
