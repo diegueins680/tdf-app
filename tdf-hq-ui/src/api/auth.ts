@@ -1,3 +1,4 @@
+import { AuthRequestError } from '../utils/authErrorMessage';
 import type { components } from './generated/types';
 import { extractErrorDetails } from './errorMessage';
 import { resolveApiBase } from '../config/apiBase';
@@ -74,7 +75,7 @@ const authFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<
     return await fetch(input, { ...init, signal: controller.signal });
   } catch (err) {
     const timeout = controller.signal.aborted && !callerSignal?.aborted;
-    const wrapped = new Error(timeout ? AUTH_TIMEOUT_ERROR_MESSAGE : AUTH_NETWORK_ERROR_MESSAGE);
+    const wrapped = new AuthRequestError(timeout ? 'timeout' : 'network', timeout ? AUTH_TIMEOUT_ERROR_MESSAGE : AUTH_NETWORK_ERROR_MESSAGE);
     (wrapped as Error & { cause?: unknown }).cause = err;
     throw wrapped;
   } finally {
@@ -123,7 +124,9 @@ async function postAuthJson<T>(
       continue;
     }
 
-    throw new Error(await readErrorMessage(res, fallback));
+    const message = await readErrorMessage(res, fallback);
+    const code = res.status === 401 ? 'credentials' : message === SERVICE_STARTING_MESSAGE ? 'starting' : 'response';
+    throw new AuthRequestError(code, message);
   }
 
   throw new Error(fallback);

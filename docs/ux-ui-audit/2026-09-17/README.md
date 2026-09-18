@@ -5,6 +5,20 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Revisión de fallos de acceso y correo — 2026-09-18 03:40 UTC
+
+Dos observaciones posteriores a3def67665 se reparan en este sucesor: API de auth
+expone códigos estables para red/timeout/401/arranque; login/Google/signup traducen
+esos códigos conservando detalles útiles de otros errores.27 pruebas focalizadas,
+TypeScript/lint y25 recorridos de bundle en5 perfiles/3 motores pasan. Los recorridos
+interceptan red/401; conservan formulario y destino. No son OAuth/SMTP reales.
+
+UX029 registra regresión introducida en el CTA compartido: vuelve a «Ver detalles»;
+sólo los dos correos de curso usan «Ver detalles del curso». Compilación Stack9.10.3
+--fast y8 Hspec/100 QuickCheck de recuperación pasan. No hubo cambio de modelos
+ni de transiciones; los gates formales del nuevo head deberán terminar igualmente.
+Aprobación3def preservada como histórica; el nuevo código exige revisión exacta.
+
 ## Verificación adicional — 2026-09-18 03:38 UTC
 
 - Recepción:198 llegadas a99 rutas×320/1280, sesión/API/PostgreSQL17 reales,

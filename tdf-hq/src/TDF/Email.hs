@@ -200,7 +200,7 @@ sendCourseRegistrationEmail (Just cfg) name email courseTitle landingUrl datesSu
         , "Te contactaremos por este correo para completar el proceso de pago."
         ]
       toAddr = Address (Just name) email
-      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
+      mail = buildMailLocalized "es" "Ver detalles del curso" cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
   sendMailWithLogging cfg toAddr subject mail
 
 sendCoursePaymentReminderEmail
@@ -238,7 +238,7 @@ sendCoursePaymentReminderEmail (Just cfg) name email courseTitle price currency 
         , "Si ya realizaste el pago, por favor ignora este mensaje."
         ]
       toAddr = Address (Just name) email
-      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
+      mail = buildMailLocalized "es" "Ver detalles del curso" cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
   sendMailWithLogging cfg toAddr subject mail
 
 formatCoursePrice :: Text -> Text -> Double -> Text
@@ -375,7 +375,7 @@ sendMailWithLogging cfg toAddr _subject mail = do
       BS.putStrLn (TE.encodeUtf8 ("[Email] Sent registration email to " <> T.pack toEmail))
 
 buildMail :: EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail
-buildMail = buildMailLocalized "es" "Ver detalles del curso"
+buildMail = buildMailLocalized "es" "Ver detalles"
 
 buildMailLocalized :: Text -> Text -> EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail
 buildMailLocalized language ctaLabel cfg toAddr subject preheader greeting bodyLines mCtaUrl =

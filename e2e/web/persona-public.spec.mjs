@@ -751,3 +751,25 @@ for (const locale of ['es', 'en']) {
     await expect(page.locator('html')).toHaveAttribute('lang', locale === 'es' ? 'en' : 'es-EC');
   });
 }
+
+for (const locale of ['es', 'en']) {
+  for (const failure of ['network', 'unauthorized']) {
+    test(`@critical PW-PER-LOCALE-LOGIN ${locale} ${failure} preserves the selected language`, async ({ page }) => {
+      const en = locale === 'en';
+      await page.addInitScript(language => localStorage.setItem('tdf-hq-ui/locale', language), locale);
+      await page.route('**/login', route => route.request().method() === 'POST'
+        ? failure === 'network' ? route.abort('failed') : route.fulfill({ status: 401, body: '' })
+        : route.continue());
+      await page.goto('/login?redirect=%2Ffans');
+      await page.getByLabel(en ? 'Username or email *' : 'Usuario o correo *').fill('synthetic@persona.test');
+      await page.getByLabel(en ? 'Password *' : 'Contraseña *', { exact: true }).fill('fictional-password');
+      await page.getByRole('button', { name: en ? 'Sign in' : 'Ingresar', exact: true }).click();
+      const expected = failure === 'network'
+        ? en ? 'Could not connect to the service' : 'No se pudo conectar con el servicio'
+        : en ? 'Incorrect username or password' : 'Credenciales inválidas';
+      await expect(page.getByRole('alert')).toContainText(expected, { timeout: 15000 });
+      await expect(page).toHaveURL(/redirect=%2Ffans/);
+      await expect(page.getByLabel(en ? 'Username or email *' : 'Usuario o correo *')).toHaveValue('synthetic@persona.test');
+    });
+  }
+}
