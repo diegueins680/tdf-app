@@ -1289,7 +1289,7 @@
     "implementationStatus": "Companion operator candidate e002715 in draft mobile102; do not duplicate repair.",
     "verificationStatus": "Other operator final4f7 iOS97f46:3cold/request/warm scenariosPASS. PhysicalSamsungAndroid16 isolatednotificationqa82a56/e867 runtimeidentical4f7:3scenariosPASS, noQAcrash/ANR; personalPlayappunchanged. QApackage does not establishproductionOAuth/FCM/Playqualification.",
     "mergeStatus": "Mobile102merged0c1ee7f3387875496afadf930cb71b29c9edde99 after hosted gates; application4f7 plus evidence870020b.",
-    "releaseStatus": "Final corrected store publication remains pending integration with104; old667Android12/iOS21 must not be promoted as final corrected release."
+    "releaseStatus": "Final corrected store publication remains pending integration with104; old667Android12/iOS21 must not be promoted as final corrected release. Apple1.0.1 remains WAITING_FOR_REVIEW with AFTER_APPROVAL automatic release (read-only11:36UTC), an outstanding promotion risk; store coordination handoff requested before changing the release option. Other operator0c Android14/iOS22 builds FINISHED but exclude104; no submission/publication is inferred."
   },
   {
     "id": "UX-260917-031",
@@ -1439,7 +1439,7 @@
     "status": "verification pending",
     "implementationStatus": "Public list uses getMany and one approved-terms join, preserving shared DTO rendering. Records fixed reads share one transaction; locale and missing publication-state guards unchanged. No migration/cache/API shape change.",
     "verificationStatus": "Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Full stack tests running; production-after pending. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Full2587backend examples:0failures/3existing pending; npm verify:formal passes its scoped gates.",
-    "mergeStatus": "PR443641876c76519a16b015231335bed46c8593f39fb; all applicable hosted checks PASS; independent approval pending.",
+    "mergeStatus": "PR #443 open at 641876c76519a16b015231335bed46c8593f39fb; all applicable checks pass; independent review required.",
     "releaseStatus": "Not deployed; production remains5c until live evidence establishes a later revision."
   },
   {
@@ -1453,7 +1453,7 @@
       "guarded backend release and web deployment"
     ],
     "status": "implemented",
-    "mergeStatus": "PR4440e591dbe7; independent review and CI pending. Catalog-list metadata needs updated migration fingerprint; implementation gates remain unchanged.",
+    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.",
     "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
     "id": "UX-260917-040",
     "title": "Existing admin calendar API has no production runtime tables",
@@ -1479,7 +1479,7 @@
       "guarded backend release and web deployment"
     ],
     "status": "implemented",
-    "mergeStatus": "PR4440e591dbe7; independent review and CI pending. Catalog-list metadata needs updated migration fingerprint; implementation gates remain unchanged.",
+    "mergeStatus": "PR #444 open at 9497be8f4da96159a492c7f290f6b6229095cff2; all applicable checks pass; independent review required. Normal merge preserves migration introduction49ff02de5.",
     "releaseStatus": "Not deployed; no OAuth account or external calendar changed.",
     "id": "UX-260917-041",
     "title": "Calendar optional preference storage failure replaces the form with an error boundary",
@@ -1519,6 +1519,60 @@
     "verificationStatus": "All stated local/hosted mobile gates and full pinned TLC/Alloy PASS. Actual simulator afterfix sees connected profile and persisted follow on two cold launches. Not a new cloud/signed artifact; physical Android/iOS and stores remain pending.",
     "status": "merged",
     "mergeStatus": "Mobile104 merged90cae070 after exacta785 checks, clean base0c and no review threads; mobile main unprotected, no fabricated review. Parent435 not merged.",
-    "releaseStatus": "Not production distributed. EAS iOS successor rejected by exhausted monthly quota. Android1c92 is a prior d70 QA artifact, unexecuted after device disconnected and does not include042."
+    "releaseStatus": "Not production distributed. EAS iOS successor rejected by exhausted monthly quota. Final Android QA4602aa55 from6f8a998 (atop merged90ca) FINISHED, APK e9b8dbeaea34e4ad00a5a9a660b7bddea3ca76ddd7a83b7c6787e25e65420c14 downloaded and package/version verified. Physical device absent; not installed. Previous1c92 excludes042 and is superseded."
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "Admin calendar OAuth return, configuration recovery and account switching",
+    "roles": [
+      "Admin"
+    ],
+    "status": "implemented",
+    "dependencies": [
+      "UX-260917-040 / PR #444 runtime schema",
+      "independent review and CI",
+      "web deployment"
+    ],
+    "mergeStatus": "PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.",
+    "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
+    "id": "UX-260917-043",
+    "title": "Calendar OAuth return automatically replays a one-use authorization code",
+    "severity": "high",
+    "surface": "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+    "evidence": "Old component dispatches twice; real production bundle dispatches 26/30/30 requests at 320/768/1280px after a controlled rejected exchange. The initial unbounded component reproduction timed out; bounded regression explicitly observes the second call.",
+    "rootCause": "The effect depends on an unstable mutation object, resets autoExchanging after each settlement, and leaves code in the URL.",
+    "userImpact": "Repeated credential requests and misleading success or connection state prevent a reliable administrative integration journey.",
+    "acceptanceCriteria": "One automatic dispatch per returned code, URL code removed while unrelated parameters/hash remain, failed input retained, explicit retry and synchronous duplicate-click guard, no stale-session response effects.",
+    "implementationStatus": "Consume URL code before microtask dispatch; synchronous mutation guards; session-occurrence form/cache isolation and active-session checks; selected configuration authoritative; truthful refresh/cleanup text.",
+    "verificationMethod": "Actual React component negative/positive controls, production-bundle browser with actual isolated auth/config and only token-exchange failure controlled, executable TLC model plus named unsafe configurations.",
+    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json."
+  },
+  {
+    "kind": "confirmed",
+    "confidence": "high",
+    "journey": "Admin calendar OAuth return, configuration recovery and account switching",
+    "roles": [
+      "Admin"
+    ],
+    "status": "implemented",
+    "dependencies": [
+      "UX-260917-040 / PR #444 runtime schema",
+      "independent review and CI",
+      "web deployment"
+    ],
+    "mergeStatus": "PR #445 open at 563dafa4240933ed7d615ad61cb3d38f000ada22; depends on #444; checks and independent review pending.",
+    "releaseStatus": "Not deployed. No external Google consent, synchronization or revocation performed.",
+    "id": "UX-260917-044",
+    "title": "Calendar shows local connection claims and labels preference cleanup as disconnection",
+    "severity": "medium",
+    "surface": "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+    "evidence": "Actual empty server configuration still displays tokens saved for a synthetic previous account. Source and component tests show cleanup performs no revocation and config GET performs no provider probe.",
+    "rootCause": "Global localStorage markers establish connection state; one-time config application does not clear stale state; config refresh is described as provider verification and local cleanup as disconnect.",
+    "userImpact": "Repeated credential requests and misleading success or connection state prevent a reliable administrative integration journey.",
+    "acceptanceCriteria": "Connection and last-sync state come from the selected calendar API; configuration errors cannot retain a confirmed connection; current-session cache/response isolation; local cleanup described accurately; no provider health or revocation claim without execution.",
+    "implementationStatus": "Consume URL code before microtask dispatch; synchronous mutation guards; session-occurrence form/cache isolation and active-session checks; selected configuration authoritative; truthful refresh/cleanup text.",
+    "verificationMethod": "Actual React component negative/positive controls, production-bundle browser with actual isolated auth/config and only token-exchange failure controlled, executable TLC model plus named unsafe configurations.",
+    "verificationStatus": "14 component tests, TypeScript, lint and build PASS (365624 gzip bytes / five preloads). Full pinned TLC/Alloy PASS; positive 27 generated/21 distinct states/depth5, replay9/storage3/stale11 distinct negative states. Nine final browser cases PASS: three engines ×320/768/1280; actual isolated auth/config and controlled failed exchange. One automatic call plus one explicit retry, code removed, no false connection, zero axe/errors/overflow; evidence/calendar-state-verification.json."
   }
 ]

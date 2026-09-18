@@ -91,3 +91,23 @@ conformance regression, not claimed as a cloud experiment. Root reference must
 advance only to published, qualified compatible mobile source. Physical iOS Google
 and store review/publication remain separate open gates. Notification operator's
 0c production builds exclude104; they do not establish this finding's release.
+
+Current release boundary, 18 September 11:40 UTC: mobile #104 is merged as
+`90cae070446df6c740e9e8f25a034f3deb12c5c7` (tree identical to a785c998). The complete
+507-test/85-suite run and release check pass. The parent main currently pins4122bb75;
+this checkpoint advances to the published90ca while retaining4122/0c ancestry.
+
+Final isolated Android build `4602aa55-1914-4a80-9842-30e645339293`, QA source
+`6f8a998ed0fbc997e84770fea3d8e0c9edb3fe8e` atop90ca, FINISHED11:28:42UTC. APK package
+`com.tdf.records.uxaudit`,1.0.1(8),175818010bytes, SHA256
+`e9b8dbeaea34e4ad00a5a9a660b7bddea3ca76ddd7a83b7c6787e25e65420c14` verified.
+The physical device is disconnected; this artifact has not been installed/executed.
+It supersedes1c92, which predates the cold-return fix042. The local iOS final-Hermes
+return proof is separate from the earlier d70 follow receipt; neither is a signed
+production build. iOS cloud capacity and physical Google verification remain blocked.
+
+The notification operator's0c Android14/iOS22 EAS builds are now directly observed
+FINISHED. They exclude104; build22 is absent from App Store Connect on current query.
+No new upload/review/publication is inferred. Existing iOS1.0.1 review still has
+AFTER_APPROVAL automatic release, an outstanding gate/coordination issue recorded
+in the current README. No competing store mutation was performed.

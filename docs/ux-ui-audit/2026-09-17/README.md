@@ -5,6 +5,58 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Checkpoint vigente — 2026-09-18 11:40 UTC
+
+Este apartado sustituye los estados históricos de abajo. La auditoría sigue
+**PARTIALLY COMPLETE**; quedan cobertura de acciones/estados y publicación nativa,
+además de las revisiones y releases indicados.
+
+- **Producción:** API `5c11577a5d31f079b3e070a7810a6b04a48d99f4`, health/DB OK.
+  Web `2ce7a1a0d275ecc65924b5df68bc39cd7a373b1d`, deployment Cloudflare
+  `a3c035c1-2b7b-4398-80fb-8ef0b9258da2`; HTML público idéntico al inmutable.
+  Recibo: `evidence/release-observation-current.json`. No nuevo despliegue backend.
+- **#440 / UX038 terminado en web:** merge `5d49f61fa`,54 casos productivos,
+  tres motores, contraste/reflujo corregidos; política legal sin cambios.
+- **#442 / UX023:** head `1aa708a00`, checks aplicables aprobados, falta revisión.
+  **#443 / UX039:** head `641876c76`, mismos gates; catálogo reduce consultas reales
+  de259/60 a5/28,2587 ejemplos backend pasan (3 pendientes preexistentes).
+- **#444 / UX040–041:** head `9497be8f4`, checks aprobados, falta revisión.
+  Esquema de calendario ausente confirmado por consulta productiva de sólo lectura;
+  migración aditiva110 y almacenamiento opcional corregidos. Preservar introducción
+  `49ff02de5` mediante merge normal. **#445 / UX043–044:** `563dafa42`, sucesor
+  dependiente,14 pruebas y9 recorridos en tres motores pasan; TLC21 estados y tres
+  contraejemplos pasan. CI/revisión pendientes. Evita el bucle de26–30 canjes de un
+  código y los mensajes falsos de conexión; no ejecutó OAuth real ni revocación.
+- **Móvil:** #104 fusionada como `90cae070446df6c740e9e8f25a034f3deb12c5c7`,
+ 507 pruebas/85 suites y release check aprobados. #435 fija este commit publicado
+  y compatible; main aún fija4122bb75. iOS local conserva sesión/seguimiento al
+  reabrir; modelos de sesión/retorno y controles negativos aprobados.
+- **Android final aislado:** build `4602aa55`, APK verificado (recibo versionado),
+  pendiente de instalar porque ADB no detecta el Samsung. Sólo usar el paquete
+  `com.tdf.records.uxaudit`; conservar app personal y QA de otro operador.
+- **Apple:** nuevo build iOS bloqueado por cuota EAS; no se compró un plan.
+  No hay iPhone físico disponible para la prueba de Google exigida por la guía.
+  iOS21 sigue VALID/IN_BETA_TESTING; no es la corrección final. App Review1.0.1
+  sigue WAITING_FOR_REVIEW y **AFTER_APPROVAL**: el build antiguo podría publicarse
+  automáticamente. Se pidió traspaso de coordinación de tiendas para pasar a release
+  manual sin competir con el otro operador; aún no hay traspaso ni cambio confirmado.
+  Referencia primaria consultada18septiembre: [opciones de publicación de Apple](https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/select-an-app-store-version-release-option).
+- Los builds de otro operador Android14/iOS22 (`0c1ee7f`) terminaron, pero excluyen
+  #104. Su finalización no prueba envío, revisión, publicación ni cierre de coordinación.
+  La invitación autorizada permanece80 aceptados por SMTP/2 rechazados/0 ambiguos;
+  no implica entrega, inscripción ni cumplimiento de12 testers/14 días de Play.
+
+**Orden ejecutable:** fusionar #442/#443/#444 sólo tras sus revisiones exactas;
+revalidar #445 sobre #444 fusionada. Publicar web automáticamente y comprobarla.
+Para backend: renovar snapshot, compatibilidad de ledger/esquema, imagen inmutable,
+lease y canary mediante el runner corregido de #438; conservar flags actuales y
+recuperación compatible. No restaurar binarios anteriores a la autoridad Google
+corregida ni eliminar las nuevas tablas en rollback. Calificar APK4602 en el Samsung
+cuando vuelva a estar disponible; resolver capacidad iOS y prueba física, coordinar
+la selección de builds finales y completar tiendas. Mantener explícitas las acciones,
+recursos poblados, combinaciones de roles, lector de pantalla y métricas de campo
+que aún no tienen evidencia; las450 llegadas nuevas de tablet no las sustituyen.
+
 ## Continuación — 2026-09-18 04:52 UTC
 
 Release guardado #422 `f19bb8855e8a9bc5b73ee4c3199c631540eb0df9` completado
