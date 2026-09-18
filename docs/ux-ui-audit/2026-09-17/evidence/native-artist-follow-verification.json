@@ -1,6 +1,6 @@
 {
   "observedAt": "2026-09-18T10:22:38.846531+00:00",
-  "mobileSource": "d70d945fc86be1892ab44215a8da62028e15a525",
+  "mobileSource": "a785c99848478f9c27263e84454d6bdb81df4d4f",
   "finding": "UX-260917-037",
   "positive": {
     "generated": 592,
@@ -28,8 +28,8 @@
     }
   ],
   "mobileTests": {
-    "suites": 84,
-    "tests": 502,
+    "suites": 85,
+    "tests": 507,
     "typecheck": "passed",
     "lint": "passed",
     "oldImplementationRegression": "A-B-A test fails with2stale query writes; fixed implementation passes",
@@ -47,6 +47,9 @@
     "sha256": "85bf87e2ca30b9ac06e34a8076889efbaf1cac42d3d6b2bf7c08bc948cac5d89",
     "zipAndManifest": "verified",
     "physicalExecution": "pending: no ADB device at 10:18 UTC",
-    "publication": "not a store artifact"
-  }
+    "publication": "not a store artifact",
+    "qualification": "Predates native landing042 fix; successor required."
+  },
+  "mobileMerge": "90cae070446df6c740e9e8f25a034f3deb12c5c7",
+  "finalRuntime": "Actual simulator final productionHermes coldreopen/profile/follow PASS; real webD follow and authoritative completion before/after reload PASS. New signed artifact and physical/store gates pending."
 }
