@@ -2063,7 +2063,7 @@ paths:
       parameters:
         - name: Idempotency-Key
           in: header
-          required: false
+          required: true
           description: Stable request key scoped to the authenticated actor. Reuse on retries with the same body; a changed body returns 409. Contact attributes never establish identity.
           schema:
             type: string
@@ -4032,10 +4032,22 @@ paths:
       tags: [Live Sessions]
       summary: Submit a Live Session intake
       description: >-
-        Creates a Live Session intake using canonical persisted genre and instrument UUIDs.
+        Atomically creates an intake and its contacts, using canonical persisted genre and instrument UUIDs.
+        Email never selects an existing person. Explicit contact IDs require existing access.
+        Intake does not create login credentials or grant roles.
         Musicians and setlist are JSON-encoded strings inside the multipart form. Copied genre,
         instrument, role, label, code, and slug fields are rejected.
       operationId: createLiveSessionIntake
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 128
+            pattern: '^[A-Za-z0-9_-]+$'
+          description: Stable identity for one submission, scoped to the authenticated actor. Reuse unchanged requests after failures; changed accepted requests return 409.
       requestBody:
         required: true
         content:
@@ -4049,8 +4061,10 @@ paths:
           description: Invalid multipart data, canonical reference, or terms acceptance
         '401':
           description: Authentication required
+        '403':
+          description: The actor cannot select a supplied contact
         '409':
-          description: A supplied musician identity is ambiguous
+          description: The accepted submission changed or an archived contact requires review
   /feedback:
     post:
       tags: [Feedback]

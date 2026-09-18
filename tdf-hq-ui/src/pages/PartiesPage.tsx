@@ -1,3 +1,4 @@
+import { useContactCreation } from '../hooks/useContactCreation';
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -91,40 +92,41 @@ const createPartySchema = z.object({
 });
 type CreatePartyFormData = z.infer<typeof createPartySchema>;
 
-function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
+export function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
   const [isOrg, setIsOrg] = useState(false);
-  const creationRequest = useRef<{ body: string; key: string } | null>(null);
+  const contactCreation = useContactCreation();
+  const creationPending = useRef(false);
+  const requestClose = () => { if (!creationPending.current) onClose(); };
+  useEffect(() => {
+    if (!open) contactCreation.reset();
+  }, [open, contactCreation]);
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CreatePartyFormData>({
     resolver: zodResolver(createPartySchema),
     defaultValues: { name: '' },
   });
 
   const mutation = useMutation<PartyDTO, Error, PartyCreate>({
-    mutationFn: (body) => {
-      const serialized = JSON.stringify(body);
-      if (creationRequest.current?.body !== serialized) {
-        creationRequest.current = {
-          body: serialized,
-          key: globalThis.crypto?.randomUUID?.() ?? `contact-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        };
-      }
-      return Parties.create(body, creationRequest.current.key);
-    },
+    mutationFn: (body) => contactCreation.create(body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['parties'] });
-      creationRequest.current = null;
+      contactCreation.reset();
       reset();
       onClose();
     },
+    onSettled: () => { creationPending.current = false; },
   });
 
-  const onSubmit = handleSubmit((data) => {
-    mutation.mutate({ cDisplayName: data.name, cIsOrg: isOrg });
-  });
+  const onSubmit = async () => {
+    if (creationPending.current) return;
+    creationPending.current = true;
+    await handleSubmit((data) => {
+      mutation.mutate({ cDisplayName: data.name, cIsOrg: isOrg });
+    }, () => { creationPending.current = false; })();
+  };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={requestClose} fullWidth maxWidth="sm">
       <DialogTitle>Nuevo contacto</DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
@@ -151,7 +153,7 @@ function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={requestClose} disabled={mutation.isPending}>Cancelar</Button>
         <Button
           onClick={() => {
             void onSubmit();

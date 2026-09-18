@@ -41,7 +41,7 @@ describe('Live Session canonical catalog contracts', () => {
         instrumentId: '22222222-2222-4222-8222-222222222222',
         isExisting: true,
       }],
-    });
+    }, undefined, 'synthetic-intake-request');
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, request] = fetchMock.mock.calls[0] ?? [];
@@ -68,9 +68,9 @@ describe('Live Session canonical catalog contracts', () => {
   it('uses the verified intake code without ambient account credentials', async () => {
     buildAuthorizationHeaderMock.mockReturnValue('Bearer different-signed-in-account');
     fetchMock.mockResolvedValueOnce(successfulResponse);
-    await submitLiveSessionIntake({ bandName: 'Code-owned band', acceptedTerms: true, termsVersion: 'TDF Live Sessions v2', musicians: [] }, 'verified-code');
+    await submitLiveSessionIntake({ bandName: 'Code-owned band', acceptedTerms: true, termsVersion: 'TDF Live Sessions v2', musicians: [] }, 'verified-code', 'synthetic-intake-request');
     expect(fetchMock).toHaveBeenCalledWith('/live-sessions/intake', expect.objectContaining({
-      credentials: 'omit', headers: { Authorization: 'Bearer verified-code' },
+      credentials: 'omit', headers: { Authorization: 'Bearer verified-code', 'Idempotency-Key': 'synthetic-intake-request' },
     }));
     expect(buildAuthorizationHeaderMock).not.toHaveBeenCalled();
   });
@@ -80,7 +80,7 @@ describe('Live Session canonical catalog contracts', () => {
     await submitLiveSessionIntake({ bandName: 'Band', acceptedTerms: true, termsVersion: 'TDF Live Sessions v2',
       musicians: [{ name: 'Ana', isExisting: false, partyId: null, email: null, notes: null, instrumentId: null }],
       setlist: [{ title: 'Song', bpm: null, songKey: null, lyrics: null, sortOrder: 0 }],
-    }, 'verified-code');
+    }, 'verified-code', 'synthetic-intake-request');
     const form = fetchMock.mock.calls[0]?.[1]?.body as FormData;
     expect(JSON.parse(form.get('musicians') as string)).toEqual([{ name: 'Ana', isExisting: false }]);
     expect(JSON.parse(form.get('setlist') as string)).toEqual([{ title: 'Song', sortOrder: 0 }]);
