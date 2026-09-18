@@ -584,6 +584,7 @@ import TDF.Seed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
+import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.ServerSpec as ServerSpec
@@ -17014,6 +17015,7 @@ main = hspec $ do
     ProviderIdentitySpec.spec
     LiveIntakeIdentitySpec.spec
     CourseIdentitySpec.spec
+    MarketplaceIdentitySpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
     ServerProposalsSpec.spec
