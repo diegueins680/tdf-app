@@ -183,9 +183,12 @@ ensureEmailAvailableForParty :: PartyId -> Maybe (Maybe Text) -> AppM ()
 ensureEmailAvailableForParty _ Nothing = pure ()
 ensureEmailAvailableForParty _ (Just Nothing) = pure ()
 ensureEmailAvailableForParty partyKey (Just (Just emailVal)) = do
-  matches <- selectList [Models.PartyPrimaryEmail ==. Just emailVal] []
-  when (any ((/= partyKey) . entityKey) matches) $
-    liftIO $ throwIO err409 { errBody = "El correo ya está asignado a otra persona." }
+  current <- get partyKey
+  let unchanged = (current >>= Models.partyPrimaryEmail >>= cleanOptional . Just) == Just emailVal
+  unless unchanged $ do
+    matches <- selectList [Models.PartyPrimaryEmail ==. Just emailVal] []
+    when (any ((/= partyKey) . entityKey) matches) $
+      liftIO $ throwIO err409 { errBody = "El correo ya está asignado a otra persona." }
 
 validateRequiredEmail :: Maybe Text -> Either ServerError Text
 validateRequiredEmail mEmail =

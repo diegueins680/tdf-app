@@ -96,6 +96,20 @@ spec = describe "trial-identity-postgresql" $ do
         after <- snapshot pool
         zipWith (-) after before `shouldBe` [1,1,0,1,0,0]
 
+      it "edits a student with an unchanged shared email while preserving access and changed-email checks" $ \pool -> do
+        let admin = actor 900102 [Admin]
+            request = D.StudentCreate "Editable synthetic student" "trial-identity@example.test" Nothing Nothing
+        D.StudentDTO studentId _ _ _ <- runSqlPool (student admin (Just "student-shared-email-edit") request) pool
+        D.StudentDTO _ changedName savedEmail _ <- runSqlPool
+          (editStudent admin studentId (D.StudentUpdate (Just "Updated synthetic name") (Just "trial-identity@example.test") Nothing Nothing)) pool
+        changedName `shouldBe` "Updated synthetic name"
+        savedEmail `shouldBe` Just "trial-identity@example.test"
+        denied <- try (runSqlPool (editStudent (actor 900103 []) studentId (D.StudentUpdate (Just "Unauthorized") (Just "trial-identity@example.test") Nothing Nothing)) pool) :: IO (Either ServerError D.StudentDTO)
+        either errHTTPCode (const 0) denied `shouldBe` 403
+        runSqlPool (rawExecute "INSERT INTO party(display_name,is_org,primary_email,created_at) VALUES ('Other email owner',false,'other-student@example.test',now())" []) pool
+        conflict <- try (runSqlPool (editStudent admin studentId (D.StudentUpdate Nothing (Just "other-student@example.test") Nothing Nothing)) pool) :: IO (Either ServerError D.StudentDTO)
+        either errHTTPCode (const 0) conflict `shouldBe` 409
+
 enquiry :: A.SignupIn
 enquiry = A.SignupIn "Synthetic" "Person" "trial-identity@example.test" Nothing Nothing Nothing False
 signup :: Maybe Text -> A.SignupIn -> AppM A.SignupOut
@@ -107,6 +121,12 @@ student user =
   let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
         :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
         :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> handler :<|> _ = privateTrialsServer user
+  in handler
+editStudent :: AuthedUser -> Int -> D.StudentUpdate -> AppM D.StudentDTO
+editStudent user =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> handler = privateTrialsServer user
   in handler
 actor :: Int64 -> [RoleEnum] -> AuthedUser
 actor key roles = AuthedUser (toSqlKey key) roles (modulesForRoles roles) Nothing
