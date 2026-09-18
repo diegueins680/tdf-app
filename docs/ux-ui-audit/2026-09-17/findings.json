@@ -1363,5 +1363,31 @@
     "verificationStatus": "498 tests and complete native release check passed; final heading-only edit10focusedtests passed. Actual iOS18.3 simulator Hermes bundle entry-1672408e67b2eae14653ee1f2d7c9f00.hbc SHA256b28593cc6926264eaf6b4385f7d5fb7cd9eece0b85a5fce88d077c4b942c355c passed persisted-follow/reopen/network-label assertions. Prior functionally identical bundle nativeB→webB first-follow/completion/reload passed; accountA completion unchanged. Actual isolated backend38256cf/PostgreSQL17, native shellEAS5c6fb225. Not Android, physical Google OAuth or final signed store artifact evidence.",
     "mergeStatus": "Draft mobile #104 published60fccd5; depends on #102 runtime qualification and final integrated gates.",
     "releaseStatus": "Hold native promotion until corrected source and final qualified artifacts are published."
+  },
+  {
+    "id": "UX-260917-036",
+    "kind": "confirmed",
+    "title": "Release rollback can restore legacy Google email authority",
+    "severity": "high",
+    "confidence": "high",
+    "journey": "authentication / release failure / recovery",
+    "roles": "Google-authenticated accounts and release operator",
+    "surface": "scripts/production-release.mjs rollbackMachine",
+    "evidence": "After main430 adds issuer/subject binding, the existing canary/fleet failure path still deploys captured prior2f01 unconditionally. docs/identity/provider-prevention.md explicitly prohibits restoring email-only authorization. No production rollback incident is asserted. ProviderRollbackUnsafe models that exact unconditional command and must produce a named counterexample.",
+    "userImpact": "A failed rollout can restore weaker identity authorization after accounts have established verified provider bindings.",
+    "rootCause": "Schema remains additive/compatible at SQL level, but previous-binary authentication semantics are no longer safe; runner has no semantic rollback floor.",
+    "proposedChange": "Gate recovery deploy by reviewed authentication ancestry. Block preflight without compatible prior or explicit verified ancestor fallback with identical migration manifest/SQL; retain operational flags/bindings.",
+    "dependencies": [
+      "provider430",
+      "guarded next backend release",
+      "independent review and model/runtime conformance checks"
+    ],
+    "acceptanceCriteria": "Legacy/unknown recovery cannot execute a deploy callback. Compatible prior or explicit immutable fallback is verified before mutation; schema manifests/checksums match; reports identify recovery policy and preserve canary failure. After any deploy attempt, failure recovery includes untouched unsafe replicas; individual recovery errors cannot prevent attempts on remaining replicas and cannot count as verified recovery.",
+    "verificationMethod": "ProviderRollback TLC legacy/compatible/mixed two-machine models, unsafe negative control, executable boundary tests including two machine orders/all prior combinations/retries/missing history, existing release contract tests.",
+    "status": "merged",
+    "implementationStatus": "withCompatibleRollback and selectRecoveryTarget gate actual deploy; --recovery-sha accepts only distinct reviewed ancestors with identical migration manifests/expanded SQL. Preflight verifies immutable artifacts and blocks without safe recovery. recoverReleaseMachines handles the actual canary/fleet catch, includes untouched unsafe replicas and records per-machine failures.",
+    "verificationStatus": "74 release tests pass. Four TLC configurations pass (38/31/35/38 distinct states); unsafe rollback and partial-fleet recovery yield the named counterexamples. Full pinned TLA+/Alloy runner passed. No cloud failure induced; hosted checks required on revised head.",
+    "mergeStatus": "PR438 merged499e8be7b8edaccbbd46a4d763e4c3b6326b4d92 after exact35172083a approval and all applicable checks; review thread resolved.",
+    "releaseStatus": "No production mutation; block next provider-containing release until reviewed recovery guard is merged and verified."
   }
 ]

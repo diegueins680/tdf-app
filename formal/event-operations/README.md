@@ -286,3 +286,34 @@ listed invariants and conditional liveness pass. Legacy negative reaches the nam
 NoFailedVisits counterexample (two reads, insertion, duplicate insertion). The full
 formal runner passes, including all existing negative controls and Alloy checks.
 The pinned TLA+ release artifact is1.7.2; its runtime reports TLC2 engine2.17.
+
+### Provider identity release recovery
+
+`ProviderRollback.tla` models two machines, additive migration, canary/fleet
+deployment, an arbitrary concurrent provider binding, verification failure and
+per-machine recovery. Four configurations enumerate legacy, compatible and
+mixed prior binaries plus a compatible fallback from a legacy fleet. `PriorSafe`
+is the verified candidate chosen for recovery; `InitialSafe` describes the original
+fleet independently. A compatible fallback is a precondition of recovery when a
+prior binary is unsafe. `NoUnsafeRestoration` and `ModernNeverDowngrades` prohibit
+restoring legacy email authority. `StoppedFleetSafe` also requires every replica
+to be compatible after successful recovery, including untouched legacy replicas.
+`BindingPreserved` forbids clearing established bindings. `RecoveryDecisionSettles`
+assumes weak fairness and successful completion of recovery commands; it does
+not guarantee cloud availability. No fairness of deployment is assumed. The
+model allows the temporary mixed fleet during rollout/recovery; it does not
+prove that public traffic cannot reach legacy replicas during that interval.
+
+The unsafe configuration reproduces unconditional legacy rollback and must
+violate `NoUnsafeRestoration`. The partial configuration reproduces recovering
+only the canary and must violate `StoppedFleetSafe`. `withCompatibleRollback`
+is the implementation boundary before the actual deploy command;
+`recoverReleaseMachines` is the actual outer recovery loop and includes every
+unsafe replica once any deployment was attempted. Unit conformance enumerates
+both canary choices and all four prior combinations. An injected recovery
+failure verifies subsequent replicas are still attempted and failure is recorded;
+no successful fleet recovery is claimed in that case. Pre-deployment failures
+perform no machine recovery. The executable model abstracts verified immutable
+artifacts and trusted commit ancestry. It does not prove identity-token validation,
+the cloud provider, or whole-system availability. Exact executions are in the
+canonical UX audit record.
