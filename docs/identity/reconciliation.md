@@ -64,8 +64,8 @@ rejects stale review evidence. A confirmed decision still cannot bypass executio
 
 These are operator attestations, not cryptographically verified documents. Do not manufacture
 proof by copying shared contact fields into the subject. Missing authoritative proof remains a
-review blocker. Updating the status alone does not permit execution. The current inventory
-contains no authoritative verified person-subject binding and confirms zero groups automatically.
+review blocker. Updating the status alone does not permit execution. Attribute matching alone confirms zero groups. Direct authoritative owner attestations may establish
+whole-group identity; authentication, ownership and dependency conflicts still block execution.
 
 ## Retain and link complementary records
 
