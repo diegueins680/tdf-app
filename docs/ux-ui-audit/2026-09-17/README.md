@@ -635,3 +635,27 @@ Evidence files distinguish synthetic checkout/locale responses from production r
 Four slow-response ES/EN browser checks verify distinct activity loading names and
 named directory profile loading. `evidence/operational-loading-es-en.json`.
 Local integrated catalog gate, repository-quality and final affected-source lint pass.
+
+### Reservation cancellation review — 2026-09-18 05:24 UTC
+
+All applicable CI checks for60d754aab passed and its independent approval remains
+recorded, but new threadPRRT_kwDOQPdUrM6joQEq blocks merge. Confirmed regression:
+Cancel while `createPaymentIntent` is pending abandons the returned reservation.
+The focused regression failed on that head. Cancellation remains available during
+SDK loading; all dialog close paths now wait once reservation dispatch begins.
+19 component/logic tests, affected lint and TypeScript/production build pass,
+364991 gzip bytes/5preloads. CheckoutCancellation adds explicit dispatch/response
+states, named safety properties, conditional liveness and an unsafe negative control.
+No real payment was made. External interruption and transport ambiguity are outside
+this small model, as documented in the formal record.
+
+ReadOnly and Intern each completed198 real isolated API arrivals without observed
+axe/page errors or overflow. StudioManager198 produced two observations under review:
+transient button contrast on /label/artistas and unnamed teacher loading. These are
+not acceptance for every role combination, resource action, native state or assistive
+technology. Google still shows Android10 and the68-account list in review; no tester
+email has been sent. Apple19 remains submitted, not public availability.
+
+Current bundle rerun:10/10 browser cases pass; unsafe cancellation configuration
+produces the named abandoned-reservation counterexample. Full pinned TLC1.7.2/Alloy6.2.0 runner passed, including the four checkout
+negative controls; no merge or release of this successor is claimed.

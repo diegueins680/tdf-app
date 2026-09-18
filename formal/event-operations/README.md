@@ -193,3 +193,23 @@ Component regressions exercise null SDK plus retry/input retention, unmount, can
 and duplicate submissions. The model does not prove payment settlement, backend
 idempotency, inventory transactions, session authorization or provider availability.
 Existing event/payment models and backend gates retain their separate scope.
+
+### Cancellation during reservation (review PRRT_kwDOQPdUrM6joQEq)
+
+`CheckoutCancellation.tla` splits SDK readiness from the consequential reservation
+request. With `GuardReservation=TRUE`, TLC1.7.2 explores 8 generated /5 distinct
+states (depth4), checks `NoAbandonedReservation`, `PendingRetainsDialog` and
+`ReservationSettles` under weak fairness of the server response. Cancel is permitted
+before that request. The component sets a synchronous `reservationPending` ref before
+sending and guards every dialog-close path; `reserving` disables the visible button.
+The response reaches the payment form; failure restores cancellation and input.
+
+The negative configuration removes that guard: submit, SDK ready, cancel, successful
+server response is the expected abandoned-reservation counterexample. A component
+regression failed against60d754aab and passes after the guard, exercising button,
+Escape, backdrop and duplicate submission while the API promise is pending.
+This focused model assumes the component remains mounted and the account/context
+remains fixed after dispatch. It does not prove recovery after tab/browser shutdown,
+forced navigation, account switching, ambiguous transport failure, server expiry or
+payment compensation. Existing generation fencing still prevents another context
+from receiving old results; server reservation recovery remains a separate concern.

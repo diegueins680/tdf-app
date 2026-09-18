@@ -223,6 +223,8 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   const [stripeClient, setStripeClient] = useState<Stripe | null>(null);
   const buyerAttempt = useRef(0);
   const buyerPending = useRef(false);
+  const reservationPending = useRef(false);
+  const [reserving, setReserving] = useState(false);
   const returnFocusRef = useRef(null) as HTMLElementRef;
   const nameInputRef = useRef(null) as InputRef;
   const emailInputRef = useRef(null) as InputRef;
@@ -237,6 +239,8 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
     dispatch({ type: 'reset' });
     setStripeClient(null);
     buyerPending.current = false;
+    reservationPending.current = false;
+    setReserving(false);
     if (successTimerRef.current !== null) window.clearTimeout(successTimerRef.current);
     successTimerRef.current = null;
     pendingSuccessOrderIdRef.current = null;
@@ -310,6 +314,9 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
         ticketPurchasePromoCode: state.promoCode ?? undefined,
       };
 
+      // Once sent, this request may reserve inventory even if the dialog closes.
+      reservationPending.current = true;
+      setReserving(true);
       const response = await SocialEventsAPI.createPaymentIntent(payload);
       if (attempt !== buyerAttempt.current) return;
       dispatch({
@@ -324,7 +331,11 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
         error: err instanceof Error ? err.message : t('checkout.errors.paymentIntent'),
       });
     } finally {
-      if (attempt === buyerAttempt.current) buyerPending.current = false;
+      if (attempt === buyerAttempt.current) {
+        buyerPending.current = false;
+        reservationPending.current = false;
+        setReserving(false);
+      }
     }
   };
 
@@ -346,6 +357,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   };
 
   const handleClose = () => {
+    if (reservationPending.current) return;
     buyerAttempt.current += 1;
     buyerPending.current = false;
     if (successTimerRef.current !== null) {
@@ -504,6 +516,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
           <>
             <Button
               onClick={handleClose}
+              disabled={reserving}
               onKeyDown={(event) => {
                 if (event.key === 'Escape') {
                   event.preventDefault();

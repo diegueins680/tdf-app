@@ -300,6 +300,45 @@ describe('StripeCheckoutModal', () => {
     expect(createPaymentIntent).not.toHaveBeenCalled();
   });
 
+  it('keeps a slow reservation attached to the dialog until the payment form is ready', async () => {
+    let finish!: (response: StripePaymentIntentDTO) => void;
+    createPaymentIntent.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+    await waitFor(() => expect(createPaymentIntent).toHaveBeenCalledTimes(1));
+    const cancel = screen.getByRole('button', { name: /Cancel/i });
+    expect(cancel).toBeDisabled();
+    fireEvent.click(cancel);
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    const backdrop = document.querySelector('.MuiBackdrop-root')!;
+    fireEvent.mouseDown(backdrop);
+    fireEvent.click(backdrop);
+    fireEvent.submit(screen.getByLabelText(/Your Name/i).closest('form')!);
+    expect(mockOnClose).not.toHaveBeenCalled();
+    expect(createPaymentIntent).toHaveBeenCalledTimes(1);
+    finish({ spiClientSecret: 'secret', spiOrderId: 'order-slow', spiPaymentIntentId: 'intent-slow', spiAmountCents: 5000, spiCurrency: 'USD' });
+    expect(await screen.findByText(/buyer@example.test/i)).toBeInTheDocument();
+    expect(mockOnClose).not.toHaveBeenCalled();
+  });
+
+  it('restores cancellation and buyer input after the reservation request fails', async () => {
+    let fail!: (error: Error) => void;
+    createPaymentIntent.mockImplementationOnce(() => new Promise((_resolve, reject) => { fail = reject; }));
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Payment/i }));
+    await waitFor(() => expect(createPaymentIntent).toHaveBeenCalledTimes(1));
+    fail(new Error('Reservation unavailable'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Reservation unavailable');
+    expect(screen.getByLabelText(/Your Name/i)).toHaveValue('Buyer');
+    expect(screen.getByRole('button', { name: /Cancel/i })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
   it('closes modal on cancel', () => {
     renderModal();
 

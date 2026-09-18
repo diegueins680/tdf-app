@@ -86,6 +86,8 @@ run_tlc InvitationSafety.tla InvitationSafety.cfg invitation
 run_tlc TaskRaci.tla TaskRaci.cfg task-raci
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
 run_tlc CheckoutReadiness.tla CheckoutReadiness.cfg checkout-readiness
+run_tlc CheckoutCancellation.tla CheckoutCancellation.cfg checkout-cancellation
+run_negative_tlc CheckoutCancellationUnsafe.cfg checkout-cancellation-unsafe 'Invariant NoAbandonedReservation is violated' CheckoutCancellation.tla
 run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invariant ReadyBeforeReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
