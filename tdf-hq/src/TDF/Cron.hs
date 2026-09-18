@@ -90,6 +90,8 @@ import           TDF.Services.EventDiscovery
   , DiscoveredEvent(..)
   , DiscoveredVenue(..)
   , EventDiscoveryCity(..)
+  , eventDiscoveryDailySlot
+  , eventDiscoveryFullReconciliation
   , beginEventDiscoveryRun
   , discoveredEventFitsPilotLimit
   , failEventDiscoveryRun
@@ -124,6 +126,7 @@ import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials
 import           TDF.Config
   ( AppConfig
+  , eventDiscoveryHourLocal
   , eventDiscoveryEnabled
   , eventDiscoveryAutoPublish
   , eventDiscoveryPilotLimit
@@ -296,7 +299,7 @@ runArtistEnrichmentWithLeaderLock Env{envPool, envConfig} =
 
 -- | Import external events for cities with active subscriptions. Every API
 -- replica starts the loop, while a PostgreSQL advisory lock and per-source
--- slot ledger ensure that only one replica performs each six-hour run.
+-- slot ledger ensure that only one replica performs each daily run.
 startEventDiscoveryJob :: Env -> IO ()
 startEventDiscoveryJob env@Env{envConfig}
   | not (eventDiscoveryEnabled envConfig) =
@@ -305,10 +308,11 @@ startEventDiscoveryJob env@Env{envConfig}
       void (forkIO (eventDiscoveryLoop env))
       LogBuf.addLog
         LogBuf.LogInfo
-        "[Cron][EventDiscovery] Scheduled every six hours at UTC slot boundaries."
+        ("[Cron][EventDiscovery] Scheduled daily at " <> T.pack (show (eventDiscoveryHourLocal envConfig))
+          <> ":00 America/Guayaquil (UTC-05:00); Sunday full reconciliation.")
 
 eventDiscoveryLoop :: Env -> IO ()
-eventDiscoveryLoop env = do
+eventDiscoveryLoop env@Env{envConfig} = do
   threadDelay (30 * 1000000)
   forever $ do
     runResult <- tryNonAsync (runEventDiscoveryWithLeaderLock env)
@@ -321,22 +325,10 @@ eventDiscoveryLoop env = do
         LogBuf.addLog LogBuf.LogError message
       Right () -> pure ()
     now <- getCurrentTime
-    waitUntil (addUTCTime discoverySlotSeconds (eventDiscoverySlot now))
+    waitUntil (addUTCTime discoverySlotSeconds (eventDiscoveryDailySlot (eventDiscoveryHourLocal envConfig) now))
 
 discoverySlotSeconds :: NominalDiffTime
-discoverySlotSeconds = 6 * 60 * 60
-
-eventDiscoverySlot :: UTCTime -> UTCTime
-eventDiscoverySlot now =
-  UTCTime
-    (utctDay now)
-    ( secondsToDiffTime
-        ( (floor (toRational (utctDayTime now)) `div` slotSeconds)
-            * slotSeconds
-        )
-    )
-  where
-    slotSeconds = 6 * 60 * 60
+discoverySlotSeconds = 24 * 60 * 60
 
 runEventDiscoveryWithLeaderLock :: Env -> IO ()
 runEventDiscoveryWithLeaderLock env@Env{envPool} = do
@@ -562,7 +554,10 @@ runEventDiscoveryOnce :: Env -> IO ()
 runEventDiscoveryOnce Env{..} = do
   now <- getCurrentTime
   ensureDefaultEventDiscoverySources now
-  let slot = eventDiscoverySlot now
+  let slot = eventDiscoveryDailySlot (eventDiscoveryHourLocal envConfig) now
+  LogBuf.addLog LogBuf.LogInfo
+    ("[Cron][EventDiscovery] " <> (if eventDiscoveryFullReconciliation slot then "Sunday full" else "Daily")
+      <> " source refresh for " <> T.pack (show slot))
   allCities <- loadSubscribedDiscoveryCities envPool
   let cities = selectEventDiscoveryCities slot allCities
   lifecycleChanges <- reconcileImportedEvents envPool now allCities
@@ -698,7 +693,7 @@ runEventDiscoveryOnce Env{..} = do
               ([], [], [])
               requestedCities
           pure $
-            if null processedCities && not (null errors)
+            if not (null errors)
               then Left (T.intercalate "; " (take 3 (reverse errors)))
               else Right (reverse processedCities, events)
 
@@ -842,11 +837,9 @@ selectEventDiscoveryCities slot cities =
   take maxEventDiscoveryCitiesPerRun rotated
   where
     cityCount = length cities
-    slotOfDay =
-      floor (toRational (utctDayTime slot)) `div` (6 * 60 * 60)
     offset =
       fromIntegral
-        ( ((toModifiedJulianDay (utctDay slot) * 4 + slotOfDay)
+        ( ((toModifiedJulianDay (utctDay slot))
               * fromIntegral maxEventDiscoveryCitiesPerRun)
             `mod` fromIntegral cityCount
         )

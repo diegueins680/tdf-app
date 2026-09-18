@@ -8,6 +8,9 @@ module TDF.Services.EventDiscovery
   , DiscoverySyncStats(..)
   , EventDiscoveryCity(..)
   , EventDiscoveryRunHandle
+  , eventDiscoveryDailySlot
+  , eventDiscoveryFullReconciliation
+  , ticketmasterNextPage
   , beginEventDiscoveryRun
   , buildTicketmasterRequestUrl
   , fetchBuenPlanEvents
@@ -67,7 +70,7 @@ import Data.Ord (comparing)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Time (UTCTime, addUTCTime, diffUTCTime, utctDay)
+import Data.Time (UTCTime(..), DayOfWeek(Sunday), addDays, addUTCTime, dayOfWeek, diffUTCTime, secondsToDiffTime, utctDay)
 import Data.Time.Format (defaultTimeLocale, formatTime, parseTimeM)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
 import Data.UUID (UUID)
@@ -1259,6 +1262,27 @@ fetchTicketmasterEvents cfg apiKey city now =
     city
     now
 
+-- | The latest due slot, including one bounded catch-up after downtime.
+-- America/Guayaquil is UTC-05:00; this never uses the host's local timezone.
+eventDiscoveryDailySlot :: Int -> UTCTime -> UTCTime
+eventDiscoveryDailySlot localHour now =
+  let utcHour = (max 0 (min 23 localHour) + 5) `mod` 24
+      today = UTCTime (utctDay now) (secondsToDiffTime (fromIntegral utcHour * 3600))
+   in if today <= now then today else today { utctDay = addDays (-1) (utctDay today) }
+
+eventDiscoveryFullReconciliation :: UTCTime -> Bool
+eventDiscoveryFullReconciliation slot =
+  dayOfWeek (utctDay (addUTCTime (-5 * 3600) slot)) == Sunday
+
+-- | A budget stop is not a complete upstream inventory. Never reconcile
+-- omissions using the prefix returned before a pagination limit or outage.
+ticketmasterNextPage :: Int -> Int -> Int -> Either Text (Maybe Int)
+ticketmasterNextPage pageBudget currentPage totalPages
+  | pageBudget < 1 || currentPage < 0 || totalPages < 0 = Left "Invalid Ticketmaster pagination metadata"
+  | currentPage + 1 >= totalPages = Right Nothing
+  | currentPage + 1 >= pageBudget = Left "Ticketmaster pagination budget exhausted; inventory incomplete"
+  | otherwise = Right (Just (currentPage + 1))
+
 fetchTicketmasterEventsForCity ::
   AppConfig ->
   Text ->
@@ -1301,7 +1325,8 @@ fetchTicketmasterEventsWithCountry cfg countryCode apiKey city now =
   where
     endTime = addUTCTime (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400)) now
     fetchPage pageNumber collected
-      | pageNumber >= eventDiscoveryMaxPagesPerCity cfg = pure (Right collected)
+      | pageNumber >= eventDiscoveryMaxPagesPerCity cfg =
+          pure (Left "Ticketmaster pagination budget exhausted; inventory incomplete")
       | otherwise = do
           let url =
                 buildTicketmasterRequestUrl
@@ -1344,9 +1369,10 @@ fetchTicketmasterEventsWithCountry cfg countryCode apiKey city now =
                               if ticketmasterResponseRawEventCount decoded > 0 && null decodedEvents
                                 then pure (Left "Ticketmaster returned no usable event records")
                                 else
-                                  if pageNumber + 1 >= totalPages
-                                    then pure (Right nextCollected)
-                                    else fetchPage (pageNumber + 1) nextCollected
+                                  case ticketmasterNextPage (eventDiscoveryMaxPagesPerCity cfg) pageNumber totalPages of
+                                    Left err -> pure (Left err)
+                                    Right Nothing -> pure (Right nextCollected)
+                                    Right (Just nextPage) -> fetchPage nextPage nextCollected
 
 requestTicketmasterPage ::
   Request ->

@@ -904,7 +904,7 @@ loadConfig = do
   eventDiscoveryHourVal <-
     validateBoundedIntEnv
       "EVENT_DISCOVERY_HOUR_LOCAL"
-      3
+      6
       0
       23
       eventDiscoveryHourEnv

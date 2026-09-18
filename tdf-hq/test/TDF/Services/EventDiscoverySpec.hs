@@ -14,6 +14,7 @@ import Test.Hspec
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
 import Data.Maybe (isJust, isNothing)
+import Test.QuickCheck (property, forAll, chooseInt)
 import qualified Data.Text as T
 import qualified Data.UUID as UUID
 
@@ -23,6 +24,9 @@ import TDF.Services.EventDiscovery
   , DiscoveredVenue(..)
   , DiscoverySyncStats(..)
   , EventDiscoveryCity(..)
+  , eventDiscoveryDailySlot
+  , eventDiscoveryFullReconciliation
+  , ticketmasterNextPage
   , beginEventDiscoveryRun
   , buildTicketmasterRequestUrl
   , countImportedDiscoveryEvents
@@ -43,6 +47,32 @@ import qualified TDF.Models.SocialEventsModels as Social
 
 spec :: Spec
 spec = do
+  describe "daily Ecuador discovery schedule" $ do
+    it "converts 06:00 Guayaquil to 11:00 UTC and catches up only the latest slot" $ do
+      let day = fromGregorian 2026 9 20
+          at hour = UTCTime day (secondsToDiffTime (hour * 3600))
+      eventDiscoveryDailySlot 6 (at 11) `shouldBe` at 11
+      eventDiscoveryDailySlot 6 (at 10) `shouldBe` addUTCTime (-86400) (at 11)
+      eventDiscoveryDailySlot 6 (at 23) `shouldBe` at 11
+      eventDiscoveryFullReconciliation (at 11) `shouldBe` True
+      eventDiscoveryFullReconciliation (addUTCTime (-86400) (at 11)) `shouldBe` False
+    it "always selects one past due slot less than one day old" $ property $
+      forAll (chooseInt (0, 23)) $ \hour ->
+      forAll (chooseInt (0, 86400 * 40)) $ \seconds ->
+        let now = addUTCTime (fromIntegral seconds) (fixtureTime 0 0)
+            slot = eventDiscoveryDailySlot hour now
+         in slot <= now && now < addUTCTime 86400 slot
+    it "does not mistake a capped page prefix for complete inventory" $ do
+      ticketmasterNextPage 5 4 6 `shouldBe` Left "Ticketmaster pagination budget exhausted; inventory incomplete"
+      ticketmasterNextPage 5 4 5 `shouldBe` Right Nothing
+      ticketmasterNextPage 5 0 5 `shouldBe` Right (Just 1)
+    it "never accepts incomplete inventories at the configured budget" $ property $
+      forAll (chooseInt (1, 10)) $ \budget ->
+      forAll (chooseInt (1, 500)) $ \remaining ->
+        case ticketmasterNextPage budget (budget - 1) (budget + remaining) of
+          Left _ -> True
+          Right _ -> False
+
   describe "event discovery event-type lookup" $ do
     it "binds both effective-date placeholders for PostgreSQL" $ do
       let now = fixtureTime 10 0
