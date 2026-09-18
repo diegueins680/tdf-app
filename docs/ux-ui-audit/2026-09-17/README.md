@@ -5,6 +5,43 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Continuación — 2026-09-18 04:18 UTC
+
+#422 fusionada por merge normal como `f19bb8855e8a9bc5b73ee4c3199c631540eb0df9`:
+head209b21b07, revisión independiente exacta, todos los checks aplicables aprobados,
+nueve hilos resueltos. La API asíncrona de GitHub confirmó el SHA; el CLI normal
+rechazó la PR por pertenecer a un stack. El sucesor209 añade traducción de errores
+de transporte en confirmación de recuperación;10 casos ES/EN,5 perfiles/3 motores
+pasan y confirman eliminación del token de la URL. #429 integra ese merge y su
+base pasa a main. Backend productivo aún db69: Build Image35306320944 en curso;
+no confundir merge con despliegue. Continúa coordinación del release guardado.
+
+Bundle operacional dbf548172: build/typecheck y presupuesto364618 bytes gzip/5preloads
+pasan. Manager:198 llegadas(99rutas×320/1280), sesión/backend/PostgreSQL17 reales,
+cero axe/overflow/pageerror/5xx. `evidence/manager-runtime-dbf.json`. Engineer en curso;
+las llegadas no certifican todas las acciones, estados, permisos de recursos ni WCAG.
+
+Android: CSV derivado de90 credenciales activas→83direcciones únicas con sintaxis
+válida; Play rechaza1dominio y14cuentas Google inexistentes. Se crea lista68, se
+selecciona para Alpha preservando las listas1+11. Publishing overview indica lista
+en revisión. Draft10 sustituye sólo borrador vacío8 y conserva activo4;
+`evidence/android-alpha-draft10.json`. Cero invitaciones enviadas todavía:82cuentas
+contactables,14 necesitan indicar/asociar una cuenta Google. No publicar PII.
+
+Apple: usuario declara inexistentes groserías/alcohol-drogas/contenido sexual-violento;
+cuestionario guardado/readback200, UGC/social/publicación de mensajes declarados
+presentes. Enlaces privacidad/borrado guardados. Build19 interno IN_BETA_TESTING,
+externo READY_FOR_BETA_SUBMISSION; no revisión externa enviada. Credencial AppReview
+existente comprobada por login real y simulador; dos capturas actuales procesadas.
+Se revisaron manifiestos reales del IPA19 (`evidence/ios19-privacy-manifests.json`),
+no sólo dependencias; AppPrivacy sigue en preparación. No publicación pública.
+
+Fuentes primarias consultadas2026-09-18: [Apple edades](https://developer.apple.com/help/app-store-connect/reference/app-information/age-ratings-values-and-definitions),
+[Apple privacidad](https://developer.apple.com/app-store/app-privacy-details/) y
+[Stripe SDK](https://support.stripe.com/questions/stripe-mobile-sdk-privacy-details).
+La clasificación separa frecuencia editorial confirmada por titular de funciones
+observadas; la privacidad incluye SDKs y vínculo de datos a identidad.
+
 ## Revisión de fallos de acceso y correo — 2026-09-18 03:40 UTC
 
 Dos observaciones posteriores a3def67665 se reparan en este sucesor: API de auth

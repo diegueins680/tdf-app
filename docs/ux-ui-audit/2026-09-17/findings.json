@@ -87,11 +87,11 @@
     ],
     "acceptanceCriteria": "All mobile gates pass on published commit; generated API matches parent; native validation and release identify exact same SHA.",
     "verificationMethod": "Old pin 326/327 with timeout; current main 456/456 plus typecheck; remaining checks recorded separately.",
-    "releaseStatus": "Published mobilec63290b is pinned by #406; mobile#90 merged9e478ef; combined successor efa2555 awaits final parent pin and release.",
-    "status": "in progress",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending.",
+    "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
-    "mergeStatus": "pending"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
   {
     "id": "UX-260917-005",
@@ -133,11 +133,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Entire arrival/login/signup/reset/navigation journey follows selected es/en, including errors and screen-reader names.",
     "verificationMethod": "Source inventory plus bilingual browser/native task scripts.",
-    "releaseStatus": "Auth/public navigation and Spanish policy translations implemented in #422 successor;20/20 bilingual production-bundle cases and mobile458 tests pass. Whole-platform bilingual coverage remains open.",
-    "status": "in progress",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending.",
+    "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained.",
-    "mergeStatus": "pending"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
   {
     "id": "UX-260917-007",
@@ -201,11 +201,11 @@
     ],
     "acceptanceCriteria": "Canonical clients match and actual synthetic activation succeeds without unauthorized grant or lost Google claim",
     "verificationMethod": "schema generation, server tests, authenticated staged journey",
-    "releaseStatus": "Backend db69e0534e87ffcb9b3ccf3a856a7fc85e839f16 guarded release complete2026-09-18T02:03:41Z; both machine health/version verified; evidence/production-release-db69.json. Web db69 Cloudflare success. Native store and remaining journey acceptance separate.",
-    "status": "in progress",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending.",
+    "status": "merged",
     "implementationStatus": "in progress",
     "verificationStatus": "see evidence and acceptance criteria; full coverage not complete",
-    "mergeStatus": "pending"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)"
   },
   {
     "id": "UX-260917-010",
@@ -273,9 +273,9 @@
     ],
     "acceptanceCriteria": "FH-01 through FH-06 in fanhub-onboarding.md; no automatic completion, firstValue fabrication or stale session update; single pending command per generation; accessible retry and conditional liveness.",
     "verificationMethod": "TLC safety/conditional liveness with five negative controls; component/API conformance; 14 isolated browser cases across five profiles; actual backend/native scope remains separate.",
-    "releaseStatus": "Backend db69e0534e87ffcb9b3ccf3a856a7fc85e839f16 guarded release complete2026-09-18T02:03:41Z; both machine health/version verified; evidence/production-release-db69.json. Web db69 Cloudflare success. Native store and remaining journey acceptance separate.",
-    "status": "verification pending",
-    "mergeStatus": "merged #425 as 437fdddea907ba7a20b8626242bf2aed108d6789",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending.",
+    "status": "merged",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
     "verificationStatus": "exact-head CI, TLC and PostgreSQL foundation passed; fixtures not live persistence"
   },
   {
@@ -831,10 +831,10 @@
     "dependencies": [
       "root PR #422"
     ],
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "Local changes; next exact-head review and hosted gates pending",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending.",
     "id": "UX-260917-015",
     "title": "FanHub overflows narrow viewports after authenticated onboarding",
     "severity": "medium",
@@ -855,10 +855,10 @@
     "dependencies": [
       "root PR #422"
     ],
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "Local changes; next exact-head review and hosted gates pending",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending.",
     "id": "UX-260917-016",
     "title": "Artist card intercepts Space on its follow control",
     "severity": "medium",
@@ -879,10 +879,10 @@
     "dependencies": [
       "root PR #422"
     ],
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "Local changes; next exact-head review and hosted gates pending",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed",
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending.",
     "id": "UX-260917-017",
     "title": "Informational, warning and dark-surface public actions fail normal-text contrast",
     "severity": "medium",
@@ -913,11 +913,11 @@
     ],
     "acceptanceCriteria": "Controls and playback artwork links have accessible names; repeat applicable axe and keyboard checks.",
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "local scoped repair",
     "verificationStatus": "Final integrated bundle 84 cases (42 static public routes × 320/1280px), zero axe violations, horizontal overflow, page errors or HTTP5xx; evidence/public-runtime-final.json. Does not cover dynamic resource routes, all roles, languages or native.",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending."
   },
   {
     "id": "UX-260917-019",
@@ -937,11 +937,11 @@
     ],
     "acceptanceCriteria": "No horizontal page overflow at320px; readable branding and dates; generated code scrollable by keyboard.",
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "local scoped repair",
     "verificationStatus": "Final integrated bundle 84 cases (42 static public routes × 320/1280px), zero axe violations, horizontal overflow, page errors or HTTP5xx; evidence/public-runtime-final.json. Does not cover dynamic resource routes, all roles, languages or native.",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending."
   },
   {
     "id": "UX-260917-020",
@@ -961,11 +961,11 @@
     ],
     "acceptanceCriteria": "No enabled form without verified current credential; stale/ABA replies ignored; actionable retry; same-origin API validates; recoverable input retained.",
     "verificationMethod": "Real production-bundle browser, axe, geometry and keyboard checks; affected component and formal checks where applicable.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "local scoped repair",
     "verificationStatus": "Full web217 suites/2085 tests before final small transport/draft edits; affected final15 tests pass. AccessCodeValidation9 states and LiveIntakeAuthority42 states plus named negative controls pass. Real browser against isolated PostgreSQL17 verifies explicit code account persisted the inscription while unrelated cookie session is unchanged. Fresh/stored-Spanish recovery link opens English in Chromium/Firefox/WebKit. No production intake submitted.",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending."
   },
   {
     "id": "UX-260917-021",
@@ -985,11 +985,11 @@
     ],
     "acceptanceCriteria": "Empty optional musician/song fields can persist; old/new client/server combinations stay compatible; contradictory aliases remain rejected; no change to ownership or permission rules.",
     "verificationMethod": "Actual multipart HTTP and DB persistence; parser regression tests; web wire-contract regression.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "local repair",
     "verificationStatus": "33 multipart Hspec examples pass, preserving contradictory alias rejection. Web wire omission regression passes. Real browser writes with old strict backend; new compiled backend direct HTTP200 persists owner50,1 musician and1 song with null optionals in isolated PostgreSQL17.",
-    "mergeStatus": "pending",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending."
   },
   {
     "id": "UX-260917-022",
@@ -1184,10 +1184,10 @@
     ],
     "acceptanceCriteria": "Shared transactional builder uses generic CTA; course senders explicitly retain course CTA; localized password reset unchanged.",
     "verificationMethod": "Call-site inspection, Stack/GHC9.10.3 build and existing passwordReset Hspec/QuickCheck regression. No claim of real mailbox delivery.",
-    "status": "implemented",
+    "status": "merged",
     "implementationStatus": "Focused Email.hs fix in current#422 successor",
     "verificationStatus": "Stack --fast test passwordReset:8 examples/100generated pass; module rebuilt. SMTP/rendered mailbox not executed.",
-    "mergeStatus": "pending exact-head CI/review",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "merged #422 as f19bb8855e8a9bc5b73ee4c3199c631540eb0df9 (exact209 review and applicable CI passed)",
+    "releaseStatus": "Backend/web f19 release verification pending; production backend last verified db69. Native source1ec uploaded as iOS19/Android10; public store availability pending."
   }
 ]
