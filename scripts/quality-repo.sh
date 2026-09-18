@@ -31,3 +31,5 @@ run_npm run test:ci-pipeline --prefix "$ROOT"
 run_npm run test:instagram-token-workflows --prefix "$ROOT"
 run_npm run test:music-directory-visual-artifacts --prefix "$ROOT"
 run_npm run test:persona-program --prefix "$ROOT"
+
+node --test "$ROOT/scripts/__tests__/artist-import-idempotency.test.mjs"

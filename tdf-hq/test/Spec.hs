@@ -583,6 +583,7 @@ import TDF.Seed
     , syntheticPersonaSeedingAllowed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
+import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
@@ -16057,11 +16058,10 @@ main = hspec $ do
             assertRejected
                 "referenced musician partyIds must be distinct"
                 [mkMusician (Just 7) Nothing, mkMusician (Just 7) Nothing]
-            assertRejected
-                "musician emails must be distinct"
+            validateLiveSessionMusicianCount
                 [ mkMusician Nothing (Just " Player@Example.com ")
                 , mkMusician Nothing (Just "player@example.com")
-                ]
+                ] `shouldBe` Right ()
 
     describe "validateLiveSessionBandName" $ do
         it "trims live-session band names before intake persistence" $
@@ -17011,6 +17011,7 @@ main = hspec $ do
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
     ProviderIdentitySpec.spec
+    LiveIntakeIdentitySpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
     ServerProposalsSpec.spec

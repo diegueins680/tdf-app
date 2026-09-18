@@ -9339,33 +9339,16 @@ listParties user mLimit mOffset = do
 createParty :: AuthedUser -> Maybe Text -> PartyCreate -> AppM PartyDTO
 createParty user requestKey req = do
   requireModule user ModuleCRM
+  when (isNothing requestKey) $
+    throwError err400 { errBody = "Update the app or refresh the contact form before creating a contact so retries can be saved safely." }
   for_ requestKey $ \key ->
     unless (T.length key >= 16 && T.length key <= 128 && T.all (\ch -> ch <= '\x7f' && (isAlphaNum ch || ch == '-' || ch == '_')) key) $
       throwError err400 { errBody = "Idempotency-Key must contain 16-128 ASCII letters, digits, hyphens or underscores" }
   displayNameVal <- either throwError pure (validatePartyDisplayName (cDisplayName req))
   primaryEmailVal <- either throwError pure (validatePartyPrimaryEmail (cPrimaryEmail req))
   Env pool _ <- ask
-  now <- liftIO getCurrentTime
-  let p = Party
-          { partyLegalName = cLegalName req
-          , partyDisplayName = displayNameVal
-          , partyIsOrg = cIsOrg req
-          , partyTaxId = cTaxId req
-          , partyPrimaryEmail = primaryEmailVal
-          , partyPrimaryPhone = cPrimaryPhone req
-          , partyWhatsapp = cWhatsapp req
-          , partyInstagram = cInstagram req
-          , partyEmergencyContact = cEmergencyContact req
-          , partyNotes = cNotes req
-          , partyStripeCustomerId = Nothing
-          , partyCountryCode = Nothing
-          , partyCountryId = Nothing
-          , partyCreatedAt = now
-          }
   result <- liftIO $ try $ flip runSqlPool pool $ case requestKey of
-    Nothing -> do
-      pid <- insert p
-      pure (Just (Entity pid p))
+    Nothing -> pure Nothing
     Just key -> do
       let body = object
             [ "display_name" .= displayNameVal, "legal_name" .= cLegalName req
@@ -9377,7 +9360,7 @@ createParty user requestKey req = do
       ids <- rawSql "SELECT identity_create_contact(?, ?, ?::jsonb)"
         [toPersistValue (auPartyId user), PersistText key, PersistText (TE.decodeUtf8 (BL.toStrict (encode body)))]
       case ids of
-        [Single pid] -> getEntity (toSqlKey pid)
+        [Single pid] -> getEntity (toSqlKey pid :: PartyId)
         _ -> pure Nothing
   case result of
     Left sqlError
