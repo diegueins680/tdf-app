@@ -1,0 +1,11 @@
+{
+  "CFBundleIdentifier": "com.tdfrecords.app",
+  "CFBundleShortVersionString": "1.0.1",
+  "CFBundleVersion": "21",
+  "MinimumOSVersion": "15.1",
+  "sha256": "15cb6ebc81314cd9ffb665db74072b8f724290c8c22693a8de68a83162be56da",
+  "sourceSha": "667193e15517ecb087fbbacf6041b1296814da78",
+  "easBuildId": "0771998e-38c0-4e0b-9764-3b5cb9a30eee",
+  "embeddedProvisionPresent": true,
+  "codeResourcesPresent": true
+}

@@ -17,10 +17,10 @@
     ],
     "acceptanceCriteria": "Both machines stable; /health JSON status and db ok; /version exact verified SHA; essential public and authorized synthetic journeys pass.",
     "verificationMethod": "Fly machine status, immutable digest, SQL preflight, endpoint probes and observation window.",
-    "releaseStatus": "Backend critical recovery already deployed; /health and /version confirmed9f0da14. Further journey validation remains; old coordination hold resolved.",
-    "status": "verification pending",
+    "releaseStatus": "Guarded2f01 complete2026-09-18T07:32:24Z, zero rollback, fresh snapshotvs_OzXgpX4lyQnsnqNk2YZ6Vb9. Existing discovery settings preserved.",
+    "status": "deployed",
     "implementationStatus": "recovered by earlier critical release",
-    "verificationStatus": "Backend now healthy in guarded db69 release; checksum/schema preflight and both-machine health pass. Earlier incompatibility repaired by existing #423/#424 integrations; no new schema workaround.",
+    "verificationStatus": "Guarded release2f01 verifies both exact immutable-image machines,107migration compatibility, health/db ok and stable public/legitimate AppReview session onboarding200. Native authenticated return succeeded against production. Earlier critical incompatibility remains repaired; no new workaround.",
     "mergeStatus": "earlier critical changes merged"
   },
   {
@@ -771,11 +771,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Contract distinguishes signup from sign-in/new device and survives refresh/account switch. **Deferred; not reactivated.**",
     "verificationMethod": "Current source and regression suites; complete missing runtime/privacy/device boundary cases from initial report. Source suite215/2064 and mobile77/458 passed in this continuation, but aggregate success is not proof of every original acceptance criterion.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Focused successor b62895313 ports missing API/config/handlers from8c2960874 and both-arm tests3f1e6f3; existing model/DTO/migration retained. Adds progress-row serialization and post-lock clock, canonical OpenAPI paths and paused release guard. Integrated current main4b0bc6ed7 as0ebdb180d; experiment remains disabled.",
     "verificationStatus": "Pre-integration: Stack9.10.3 --fast build;2578Hspec examples0fail1PG-onlypending; actual isolated HTTP/PostgreSQL paused/no-write,16concurrent assignments/exposures, account isolation, completion/expiry lock contention and revocation pass. Full pinned TLC/Alloy runner and3experiment negative controls pass.43native conformance tests pass after two initial5-second timeouts under host contention; no test timeout/assertion weakened. Post-main integration checks pending.",
-    "mergeStatus": "Focused successor not yet merged; mobile generated contract companion pending publication.",
-    "releaseStatus": "No new deployment or experiment activation. Production already has original migration/checksum and0assignments at05:13UTC; current release ownership must be rechecked."
+    "mergeStatus": "Merged #431 as2f01b20b0c2a2e2088570c3dc5deba6197266452.",
+    "releaseStatus": "Guarded2f01 complete; authenticated production assignment200 reports experimentEnabled=false,newlyAssigned=false,nullassignment/exposure. Intentionally paused as approved; no activated experiment or conversion claim."
   },
   {
     "id": "I18N-01",
@@ -817,11 +817,11 @@
     "dependencies": [],
     "acceptanceCriteria": "Current static audit has zero findings and helper tests pass. Authenticated campaign keyboard/axe and screen-reader runtime remain unverified. **Implemented and static/unit-verified; manual runtime deferred.**",
     "verificationMethod": "Current runtime, component/source and release evidence; original report is historical.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Use SelectProps.labelId for the visible MUI combobox, referencing row+column; notes retain their existing labels. Name calendar/creative progress indicators.",
     "verificationStatus": "Actual isolated API/browser after label correction:320/1280 zero axe WCAG2.2-tagged violations; row/column IDs on visible combobox and notes. Complete5-tab cross-engine/keyboard/focus regression pending final shared-header change. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow.",
-    "mergeStatus": "Follow-up implementation not merged",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "Merged #433 as6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval and all applicable hosted checks.",
+    "releaseStatus": "Cloudflare345dbb80-6d55-4dfc-8e60-0f8dbecc72ac SUCCESS; public asset list matches. Ten production-bundle campaign cases PASS across5profiles/3engines with synthetic transport. Actual isolated14ES/ENloading cases already pass; no human screen-reader or field-performance claim."
   },
   {
     "kind": "confirmed",
@@ -1035,11 +1035,11 @@
     ],
     "acceptanceCriteria": "No corresponding axe name violations during affected load/form states; ordinary actions remain usable.",
     "verificationMethod": "Chromium/axe WCAG2/2.1/2.2AA tags, geometry, focused keyboard control inspection, actual API responses, build/lint and existing component checks.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Original #429 fixes deployed; additional initial-coverage loaders named on Teachers, TeacherPortal, DDEX inbox, Services/revisions, Reports and Chat threads/messages in audit/ux-remaining-coverage-20260918.",
     "verificationStatus": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Focused slow-response verification pending. Four delayed-response ES/EN browser checks pass for both activity loading names and directory profile loader. Eight-case delayed ES/EN checks passed for first5 additional loaders. Subsequent Reports/Chat initial arrival and12-case delayed runtime confirmed missing names; final expanded checks pending. Final14 slow-response ES/EN cases pass: real isolated API/session, locale override; synthetic read-only thread for message loading. All8 additional loaders have distinct translated accessible names; zero aria-progressbar-name violations. Final build365423gzip/5preloads passes.",
-    "mergeStatus": "Merged #429 as c00578da58d3a2a4541fceb08a6d1c463318d8a1 after exact2fb approval and all applicable gates.",
-    "releaseStatus": "Cloudflare c44d424e-3e93-4215-90b7-06a1fa8ffb5b succeeded; public assets matched06:10UTC. Production bundle10 ES/EN synthetic checkout cases passed in3 engines/5profiles; no actual payment or inventory operation. Separate affected-route/state acceptance remains documented."
+    "mergeStatus": "Merged #433 as6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval and all applicable hosted checks.",
+    "releaseStatus": "Cloudflare345dbb80-6d55-4dfc-8e60-0f8dbecc72ac SUCCESS; public asset list matches. Ten production-bundle campaign cases PASS across5profiles/3engines with synthetic transport. Actual isolated14ES/ENloading cases already pass; no human screen-reader or field-performance claim."
   },
   {
     "id": "UX-260917-024",
@@ -1233,11 +1233,11 @@
     ],
     "acceptanceCriteria": "Status and notes keyboard focus remain visibly unobscured at320/1280 and across supported browser engines; header actions remain accessible, no page overflow.",
     "verificationMethod": "Browser elementFromPoint at focused control center, keyboard menu open/Escape/next field, axe/reflow checks across5tabs and5profiles.",
-    "status": "implemented",
+    "status": "deployed",
     "implementationStatus": "Removed sticky positioning from shared PageShell header in audit/ux-remaining-coverage-20260918. Explicit nearest scrolling on table-control focus also fixes Linux WebKit notes clipping observed in CI.",
     "verificationStatus": "Actual compiled final bundle320/1280: status and notes centers hit the focused controls, not header; zero axe WCAG-tagged violations. Build/typecheck365423gzip/5preloads and affected lint pass. Durable5profile/3engine5tab regression running. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow. New local production build365428gzip/5preloads,10cases in5profiles/3engines and affected lint PASS; corrected Linux hosted run pending.",
-    "mergeStatus": "not merged",
-    "releaseStatus": "not deployed"
+    "mergeStatus": "Merged #433 as6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval and all applicable hosted checks.",
+    "releaseStatus": "Cloudflare345dbb80-6d55-4dfc-8e60-0f8dbecc72ac SUCCESS; public asset list matches. Ten production-bundle campaign cases PASS across5profiles/3engines with synthetic transport. Actual isolated14ES/ENloading cases already pass; no human screen-reader or field-performance claim."
   },
   {
     "id": "UX-260917-033",
@@ -1259,10 +1259,10 @@
     ],
     "acceptanceCriteria": "ES/EN5of5 for authenticated users,1of1 for guests; changing locale rerenders labels; hidden routes remain hidden and permissions unchanged; corrected native artifact and applicable distribution verified.",
     "verificationMethod": "Actual before accessibility tree; component tests of actual TabsLayout plus finite locale/auth/platform label contracts; native runtime and release evidence separate.",
-    "status": "in progress",
+    "status": "verification pending",
     "implementationStatus": "Mobile PR101 afbd5dcc7 based on34971c451; visible-tab count and ES/EN labels evaluated from current settings/session.",
-    "verificationStatus": "Hosted validate/Datadog PASS;83suites486cases plus final12 focused cases, TypeScript, lint, release checks PASS. Corrected EAS simulator4696e1b9 FINISHED; actual artifact execution pending.",
-    "mergeStatus": "mobile PR101draft; parent not merged",
-    "releaseStatus": "not deployed or published"
+    "verificationStatus": "Corrected actual EAS iOS18.3 simulator passed5visible labels,authenticated return/relaunch,ES→EN→ES. Hosted667 checks pass, generated API bytes unchanged from349; no physical/human reader/Androidruntime claim.",
+    "mergeStatus": "Mobile101 mergedebec681092ba12a9f8a58019e35ae52a6949eb6f; parent pins published source667193e15517ecb087fbbacf6041b1296814da78, whose runtime matches testedafbd.",
+    "releaseStatus": "iOS21 source667 build0771998e FINISHED; actual IPA1.0.1/build21 signature resources/hash verified; submissionc06c203d FINISHED (upload). Android12d16877f8 FINISHED, signed AAB hash verified; upload in progress. No new AppReview/store-publication or physical-device claim."
   }
 ]

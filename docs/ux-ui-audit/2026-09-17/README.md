@@ -774,3 +774,55 @@ variant1.0.1/build1 does not prove App Store build19 acceptance.
 The nearest-scroll correction passes10 local cases in five profiles/three engines;
 production build365428gzip and affected lint pass. Linux CI must confirm the same
 regression on the successor head. Synthetic fixtures prevent campaign submissions.
+
+## Checkpoint — 2026-09-18 07:36 UTC
+
+#431 is deployed as2f01b20b0c2a2e2088570c3dc5deba6197266452 through the guarded
+release lane: complete07:32:24Z, both machines healthy on the immutable artifact,
+107migration ledger rows, no lease remaining and no rollback. Fresh snapshot
+vs_OzXgpX4lyQnsnqNk2YZ6Vb9 completed07:25:22Z. Existing discovery/autopublish
+settings remain true; onboarding experiment remains false. Actual legitimate demo
+GETs return200 for persisted onboarding and paused assignment, with no assignment
+or exposure; production assignment table remains empty. Public health/version
+still match07:36UTC. Rollback reference is the prior compatible4b0 image captured
+in the guarded report; no SQL rollback is needed for this contract-only release.
+
+#433 merged6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval,
+all applicable checks and no unresolved threads. Cloudflare345dbb80 succeeded;
+public assets match the immutable deployment. Ten production-bundle campaign
+cases pass in5profiles/3engines; transport is synthetic. Final local bundle365447
+bytes gzip remains below410KiB. The earlier Firefox axe timeout under simulator
+pressure passed unchanged after the owned simulator was shut down.
+
+Mobile101 mergedebec681092ba12a9f8a58019e35ae52a6949eb6f. This increment pins
+published source667193e15517ecb087fbbacf6041b1296814da78, preserving the349 API
+contract and excluding unrelated provider/intake runtime changes from mobile main.
+The actual afbd simulator artifact has identical application code; authenticated
+return/relaunch and ES→EN→ES visible-tab labels passed, Spanish restored. Source
+667 adds only the durable flow/evidence. iOS21 artifact0771998e is built and verified,
+submissionc06c203d scheduled; Android12d16877f8 is building. These are separate
+from Apple19 still waiting for App Review/beta review and Android10 now active in
+Alpha. No current accessibility-fix store publication or human reader/device claim.
+
+Play Console now verifies Alpha10 active in177regions and the saved68-person
+registered-user list selected alongside the prior1/11 lists. Current active-account
+recipient set matches the prior83 after reserved-address exclusions. The authorized
+82-recipient invitation run is in progress with per-recipient receipts; never retry
+an ambiguous DATA result or resend an accepted message. Private audience stays off
+Git. Real12-person/14-day testing and production access remain external gates.
+
+#432 successor9213b1334 also repairs UX034: actual HTTP proved web preference keys
+were rejected by the strict decoder. Canonical/legacy schema compatibility and
+negative/generative cases are implemented; hosted corrected HTTP gate and renewed
+exact-head review remain required. Do not claim the earlier failed gate passed.
+Coverage remains bounded:31-role static arrivals, targeted actual isolated journeys,
+models and controlled browser cases are not every dynamic resource/state, physical
+platform, human screen-reader session or representative field-performance evidence.
+
+Invitation batch completed07:38:54UTC:80SMTP-accepted,2recipient-address rejections,
+0ambiguous and0unattempted among82 intended recipients. One invalid-domain and two
+reserved addresses were excluded earlier. No accepted invitation was resent. The
+private ledger/audience and retry safeguards are durably stored with owner-only
+permissions; delivery, reading, enrollment and actual testing are not inferred.
+iOS21 submissionc06c203d FINISHED (upload), not App Review/publication. Android12
+buildd16877f8 FINISHED; artifact verification and upload are the next step.
