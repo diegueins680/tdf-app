@@ -112,7 +112,8 @@ try {
   assert.equal(new Set(exposures.map(x => x.assignment.exposedAt)).size, 1);
   const second = await request(enabled, b.token);
   assert.equal(second.newlyAssigned, true); assert.equal(second.exposedAt, null);
-  assert.notEqual(second.variant, assignments[0].variant); assert.equal(assignmentCount(), 2);
+  // Distinct accounts may legitimately share a variant; persistence stays isolated.
+  assert.equal(assignmentCount(), 2);
   const completed = await lockedRequest(enabled, b, `UPDATE user_onboarding_progress SET completed_at=now() WHERE party_id=${b.id}`);
   assert.equal(completed.newlyExposed, false); assert.equal(completed.assignment.experimentEligible, false);
   const expires = fixture('expires', 1);
