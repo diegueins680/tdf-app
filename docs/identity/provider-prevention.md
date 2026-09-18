@@ -90,13 +90,12 @@ changes in main; if recovery is used, investigate delivery with the existing mai
 logs rather than assuming the newer message headers are available. Do not resend
 blindly or discard provider bindings, accepted receipts, or unrelated edits.
 
-The application target `7635a5f325b9f08e129498317fecd606dfd36dc6` includes the
-mail changes and must pass the existing Build Image workflow and staging checks.
-Use clean runner-only checkout `a72374b94a082320ac68737cdd21936fef90bd9a`, after
-its inclusion in protected main. Its only difference from the application target
-is `scripts/production-release.mjs`, satisfying the existing checkout guard.
-Run `plan`, then `preflight`, then `release` with the target and recovery SHA above.
-The final documentation/test checkout is not supported for releasing this older
-pinned application target. Do not widen the checkout allowlist. Both images must
-resolve to verified immutable digests before production execution. Operation-specific
+The final application target must include protected-main merge
+`7635a5f325b9f08e129498317fecd606dfd36dc6` (including the mail changes), the
+request-writer recovery guard, and the recovery-dialog navigation fix from PR #457.
+Record its exact source SHA and verified image digest in the private release evidence.
+Use a clean checkout of that same target SHA for `plan`, `preflight`, and `release`,
+with the recovery SHA above. The target must be incorporated into protected main,
+pass the complete Build Image workflow, and pass staging before production execution.
+Do not widen the checkout allowlist or use an unverified image. Operation-specific
 merge undo remains separate from application recovery.
