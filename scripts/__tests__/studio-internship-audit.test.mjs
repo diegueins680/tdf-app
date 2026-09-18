@@ -104,12 +104,18 @@ test('web signup links the recorded account-policy version to account-specific d
   const loginPage = await readFile(path.join(repo, 'tdf-hq-ui/src/pages/LoginPage.tsx'), 'utf8');
   const terms = await readFile(path.join(repo, 'tdf-hq-ui/public/account/terms.html'), 'utf8');
   const privacy = await readFile(path.join(repo, 'tdf-hq-ui/public/account/privacy.html'), 'utf8');
-  assert.match(loginPage, /href="\/account\/terms\.html"/);
-  assert.match(loginPage, /href="\/account\/privacy\.html"/);
+  assert.match(loginPage, /href=\{[^}]*'\/account\/terms\.html'[^}]*'\/account\/terms-es\.html'[^}]*\}/);
+  assert.match(loginPage, /href=\{[^}]*'\/account\/privacy\.html'[^}]*'\/account\/privacy-es\.html'[^}]*\}/);
   assert.match(terms, /tdf-account-terms-v1/);
   assert.match(terms, /TDF Records Account Terms/);
   assert.match(privacy, /tdf-account-terms-v1/);
   assert.match(privacy, /TDF Records Account Privacy Notice/);
+  for (const policy of ['terms', 'privacy']) {
+    const spanish = await readFile(path.join(repo, `tdf-hq-ui/public/account/${policy}-es.html`), 'utf8');
+    assert.match(spanish, /<html lang="es-EC">/);
+    assert.match(spanish, /tdf-account-terms-v1/);
+    assert.ok(spanish.includes(`href="./${policy}.html"`), 'Original English policy remains accessible');
+  }
 });
 
 test('inventory has evidence and an explicit scope/platform decision for every feature', async () => {

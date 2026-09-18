@@ -5,6 +5,28 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Actualización verificada — 2026-09-18 00:36 UTC
+
+- El usuario aprobó #422 en `38256cf721d92380c8cfc0b6d19e10bd8703c233`, incluidas
+  las traducciones. CI detectó dos fallos exclusivamente en pruebas: contrato fuente
+  que esperaba enlaces sólo ingleses y coerciones de tipos rechazadas por ESLint.
+  Se corrigieron sin modificar comportamiento de producto; 13 pruebas auth, lint
+  completo y `quality:repo` pasan. El siguiente head requiere revisión renovada por
+  la protección que descarta aprobaciones al cambiar código.
+- #406 conserva aprobación exacta sobre `1fe6195a0`; backend CI continúa pendiente.
+- Build Image de main `6b48449e7` terminó exitosamente. No se ha desplegado.
+- iOS STORE `154bc17c-ff2d-4f87-b383-75973ee25824`, versión1.0.1(18),
+  fuente `efa2555`, terminó FINISHED; Android1.0.1(9) sigue IN_PROGRESS.
+  Ningún build acredita subida, revisión ni publicación en tienda.
+- HTTP real contra backend integrado y PostgreSQL17 aislado: signup de dos cuentas
+  sintéticas sin permisos elevados, intención persistida, primera acción inventada
+  rechazada, salida opcional persistida/idempotente, aislamiento de cuentas,
+  nuevo login conserva estado y logout revoca su token. Evidencia:
+  [onboarding HTTP](evidence/onboarding-isolated-http.log). No SMTP/OAuth ni recorrido
+  de navegador/productivo se infieren de esa prueba.
+- Backend integrado compiló; cinco ejemplos de recuperación y100 QuickCheck pasan.
+  Se conserva pendiente la cobertura integral, release guardado y publicación móvil.
+
 ## Checkpoint vigente — 2026-09-18 00:20 UTC (17 de septiembre en Ecuador)
 
 Este bloque y los estados por hallazgo sustituyen las pausas y capacidades

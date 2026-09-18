@@ -44,8 +44,11 @@ describe('auth api', () => {
     const redirect = '/fans?artist=42&tab=eventos#próximo';
     await requestPasswordReset('ana@example.com', redirect);
     const [url, init] = fetchMock.mock.calls[0]!;
-    expect(new URL(String(url), 'https://tdf.local').searchParams.get('redirect')).toBe('/fans?artist=42&tab=eventos#pr%C3%B3ximo');
-    expect(JSON.parse(String(init?.body))).toEqual({ email: 'ana@example.com' });
+    if (typeof url !== 'string' || typeof init?.body !== 'string') {
+      throw new Error('Expected a URL string and the compatible JSON body');
+    }
+    expect(new URL(url, 'https://tdf.local').searchParams.get('redirect')).toBe('/fans?artist=42&tab=eventos#pr%C3%B3ximo');
+    expect(JSON.parse(init.body)).toEqual({ email: 'ana@example.com' });
   });
 
   it('posts password reset confirmations to the v1 confirm endpoint', async () => {
