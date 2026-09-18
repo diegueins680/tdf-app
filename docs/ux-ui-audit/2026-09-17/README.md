@@ -5,6 +5,25 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Verificación adicional — 2026-09-18 03:38 UTC
+
+- Recepción:198 llegadas a99 rutas×320/1280, sesión/API/PostgreSQL17 reales,
+  cero axe y errores de página; se conservan denegaciones según autorización.
+  Evidencia operational-reception-after.json. No sustituye otros estados/roles.
+- Reconciliados doce IDs históricos sin rehacer fixes: ocho web ya contenidos
+  en maindb69, cuatro nativos en móvil1ec9160/PR94.9 suites/47 pruebas web y
+  4 suites/60 móviles pasan. Sus límites de runtime/producción siguen explícitos.
+- Apple: capturas reales de simulador19/source1ec,1320×2868RGB, sin edición,
+  procesadas COMPLETE:2f053679-4332-4145-aef5-17a8ecd2b020 y
+  d877801c-3fc0-415b-8215-7766e0f01980; set1204e861-3128-48fb-bfae-e358b30a9ec3.
+- Play: servicio activo y envío exitoso; build10 internal DRAFT, sin testers
+  asignados a ese canal. Closed testing existente tiene sólo1 inscrito; Google
+  exige12 durante14 días consecutivos para solicitar producción. Este bloqueo
+  humano es distinto del permiso API ya resuelto. Notas ES/EN preparadas.
+- #4223def67665 recibió aprobación exacta; nueva revisión señaló localización
+  de fallos de login y CTA genérico de email. Reparación/test en su worktree;
+  no se fusiona ni despliega con discusiones o checks pendientes.
+
 ## Actualización de gates y tiendas — 2026-09-18 03:28 UTC
 
 La aprobación independiente de #4226479e0350 quedó verificada, pero CI
