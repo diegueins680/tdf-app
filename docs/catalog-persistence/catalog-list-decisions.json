@@ -13848,22 +13848,22 @@
       "reviewed": true
     },
     {
-      "id": "3af2c7276922c616b2d7",
+      "id": "4f27e0e516bc34335e31",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Ordered migration IDs and paths are deployment execution mechanics. The original 105 entries and applied SQL checksums remain unchanged. The final forward migration adds model-declared Party dependency and archive guards, including legacy reviewers and approvers without foreign keys. Introduction-commit ancestry remains enforced.",
+      "justification": "Ordered migration IDs and paths are deployment execution mechanics. All 106 reviewed main entries and their immutable SQL are preserved; the notification migration is appended with its original introduction ancestor. The ledger continues to enforce checksums and idempotence.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "identity-reconciliation-2026-09-17",
+      "reviewBatch": "notification-identity-integration-2026-09-18",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 106
+        "valueCount": 107
       }
     },
     {
@@ -13895,25 +13895,6 @@
       "justification": "This exhaustive dispatch maps persisted target kinds to fixed internal routes. It grants no resource permission and cannot create selectable business values.",
       "reviewed": true,
       "reviewBatch": "notification-navigation-2026-09-17"
-    },
-    {
-      "id": "10d8c12f75556497facf",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "notification-navigation-2026-09-17",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 105
-      }
     },
     {
       "id": "72486d7881b2bef49793",
