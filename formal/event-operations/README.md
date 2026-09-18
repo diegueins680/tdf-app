@@ -118,3 +118,17 @@ The runner requires the exact named failures from all three negative controls.
    examine the complete reachable graph and liveness has its own fair temporal specification.
 3. TLC rejected invitation transitions that did not explicitly preserve `now`. The missing
    `UNCHANGED now` clauses were added before the passing run.
+
+## Public Live Session credential validation
+
+`AccessCodeValidation.tla` checks one request, two code edits (including an ABA return),
+successful/invalid account responses and timeout. CurrentCredential and VerifiedAccount
+map to the generation guard and positive safe integer partyId check in
+LiveSessionPublicPage. Native disabled fieldset prevents input before verification;
+component tests cover same-origin API, superficial 200 responses, stale completion and
+retained input. TLC 1.7.2 checks eventual termination under weak fairness of a response
+or timeout; the browser implementation uses AbortController and a 30-second timeout.
+This assumes fetch honors abort and the event loop is scheduled. It does not establish
+ongoing token validity, backend authorization, submission persistence, or network
+availability. The server must authorize each submission independently. Negative controls
+remove each guard and must violate the corresponding named invariant.

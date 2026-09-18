@@ -352,7 +352,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
       )}
 
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <Typography variant="h6">Proyecto</Typography>
           <Grid container spacing={2}>
@@ -437,7 +437,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">Músicos</Typography>
@@ -563,7 +563,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">Setlist y canciones</Typography>
@@ -644,7 +644,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <Typography variant="h6">Términos y logística</Typography>
           <Typography variant="body2" color="text.secondary">
@@ -677,7 +677,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={1.5}>
           <Typography variant="h6">Rider técnico</Typography>
           <Button
@@ -705,7 +705,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Stack direction="row" spacing={2} justifyContent="flex-end">
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="flex-end">
         <Button variant="outlined" onClick={() => window.history.back()}>
           Cancelar
         </Button>

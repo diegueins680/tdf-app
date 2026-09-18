@@ -185,6 +185,12 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
           secondary: mode === 'light'
             ? { main: '#be123c', light: '#e11d48', dark: '#9f1239', contrastText: '#ffffff' }
             : { main: '#fda4af', light: '#fecdd3', dark: '#fb7185', contrastText: '#1f1115' },
+          info: mode === 'light'
+            ? { main: '#01579b', light: '#03a9f4', dark: '#003c6d', contrastText: '#ffffff' }
+            : { main: '#4fc3f7', light: '#81d4fa', dark: '#29b6f6', contrastText: '#071923' },
+          warning: mode === 'light'
+            ? { main: '#9a4600', light: '#ed6c02', dark: '#783500', contrastText: '#ffffff' }
+            : { main: '#ffb74d', light: '#ffcc80', dark: '#ffa726', contrastText: '#211100' },
           background: {
             default: mode === 'light' ? '#f8f7f5' : '#0a0a0f',
             paper: mode === 'light' ? '#ffffff' : '#12121a',

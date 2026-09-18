@@ -1,3 +1,4 @@
+import { buildArtistFollowAuthPath } from '../utils/artistFollowIntent';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import {
@@ -339,6 +340,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [releaseLinkDraft, setReleaseLinkDraft] = useState<string>('');
   const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [pendingFollowArtistId, setPendingFollowArtistId] = useState<number | null>(null);
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
       const dto = artistProfileQuery.data;
@@ -493,6 +495,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const handleFollowToggle = (artistId: number, currentlyFollowing: boolean) => {
     if (!viewerId) {
+      setPendingFollowArtistId(artistId);
       setLoginPromptOpen(true);
       return;
     }
@@ -779,7 +782,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           {!isAuthenticated && (
             <Typography variant="body2">
               ¿Quieres guardar tus artistas?{' '}
-              <Link component={RouterLink} to={loginPath} underline="hover">
+              <Link component={RouterLink} to={loginPath} underline="always">
                 Inicia sesión o crea una cuenta
               </Link>
               .
@@ -808,6 +811,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             severity="info"
             onClose={onboarding.saving ? undefined : onboarding.dismiss}
             closeText={t('fanHubOnboarding.close')}
+            sx={{ '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' } }}
             icon={<VisibilityIcon />}
           >
             <AlertTitle>{t(isHomeManagerView ? 'fanHubOnboarding.managerTitle' : 'fanHubOnboarding.title')}</AlertTitle>
@@ -1938,16 +1942,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       outlineOffset: 2,
                     },
                   }}
-                  tabIndex={0}
-                  role="link"
-                  aria-label={`Ver perfil de ${artist.apDisplayName}`}
                   onClick={() => navigate(artistProfilePath)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      navigate(artistProfilePath);
-                    }
-                  }}
                 >
                   {displayHeroImage && (
                     <CardMedia component="img" height="220" image={displayHeroImage} alt={artist.apDisplayName} />
@@ -1960,9 +1955,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       alignItems="flex-start"
                       rowGap={2}
                     >
-                      <Box flex={1} minWidth={0}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Typography variant="h5">{artist.apDisplayName}</Typography>
+                      <Box flex={1} minWidth={0} sx={{ width: { xs: '100%', md: 'auto' } }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} flexWrap="wrap">
+                          <Typography
+                            variant="h5"
+                            component={RouterLink}
+                            to={artistProfilePath}
+                            sx={{ overflowWrap: 'anywhere', minWidth: 0, color: 'inherit' }}
+                          >
+                            {artist.apDisplayName}
+                          </Typography>
                           <Chip label={`${artist.apFollowerCount} fans`} size="small" />
                         </Stack>
                         {artist.apCity && (
@@ -1982,7 +1984,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               <Chip key={genre.trim()} label={genre.trim()} size="small" variant="outlined" />
                             ))}
                         </Stack>
-                        <Stack direction="row" spacing={1} mt={2}>
+                        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" mt={2}>
                           <Button
                             {...spotifyButtonProps}
                             variant="contained"
@@ -2134,7 +2136,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             variant="contained"
             onClick={() => {
               setLoginPromptOpen(false);
-              navigate('/login');
+              const artist = artists.find((candidate) => candidate.apArtistId === pendingFollowArtistId);
+              const profilePath = artist ? `/a/${artist.apSlug?.trim() ? artist.apSlug : artist.apArtistId}` : null;
+              navigate(buildArtistFollowAuthPath(profilePath, artist?.apArtistId ?? null));
             }}
           >
             Ir a login

@@ -1,0 +1,19 @@
+
+> tdf-hq-ui@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --runInBand --runInBand src/pages/LiveSessionPublicPage.test.tsx src/pages/ArtistPublicPage.component.test.tsx src/pages/FanHubPage.audit.test.tsx src/pages/FanHubPage.onboarding.test.tsx
+
+(node:82278) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+PASS src/pages/LiveSessionPublicPage.test.tsx (10.207 s)
+PASS src/pages/FanHubPage.audit.test.tsx (12.802 s)
+PASS src/pages/FanHubPage.onboarding.test.tsx (8.953 s)
+PASS src/pages/ArtistPublicPage.component.test.tsx
+
+Test Suites: 4 passed, 4 total
+Tests:       43 passed, 43 total
+Snapshots:   0 total
+Time:        39.853 s
+Ran all test suites matching src/pages/LiveSessionPublicPage.test.tsx|src/pages/ArtistPublicPage.component.test.tsx|src/pages/FanHubPage.audit.test.tsx|src/pages/FanHubPage.onboarding.test.tsx.

@@ -5,6 +5,51 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
+## Checkpoint de continuación — 2026-09-18 01:24 UTC
+
+**PARTIALLY COMPLETE.** Los bloques siguientes son históricos cuando contradigan
+este checkpoint. Main remoto continúa437fdddea907ba7a20b8626242bf2aed108d6789.
+No se ha ejecutado una nueva mutación backend de producción en esta continuación.
+
+- #406 publicado7411a2a: todos los checks aplicables pasan, incluida la fixture
+  HTTP/PostgreSQL17 ampliada que impide reclamar una banda de la misma Party.
+  La revisión posterior4042801092 detectó una carrera de navegación; reparación
+  local con13 pruebas de activación pasando y un modelo específico en verificación.
+  Requiere publicar, renovar aprobación exacta y gates antes de fusionar.
+- #422 publicado8c2e5f9: checks aplicables pasan. Hay correcciones locales de
+  accesibilidad pública y recorrido invitado→registro→seguir; no atribuirlas a ese
+  head ni a producción. Las pruebas actuales focalizadas43/43 pasan. La matriz
+  previa del bundle integrado ya pasó onboarding persistido en tres motores,
+  dos temas,320/390/834/1280px y200%texto; nuevas correcciones requieren repetir
+  los recorridos afectados. Ninguna de estas pruebas usa producción ni SMTP.
+- Se observaron84 combinaciones de42 rutas públicas/320 y1280px contra backend
+  aislado. Persisten filas de cobertura autenticada/operativa/native sin ejecutar;
+  esta muestra no cierra la cobertura411 ni certifica WCAG.
+- Móvilmain fac7c2cfac14db1b81883e184764be7f7d28716a contieneefa2555c5400dfa736bc95a12414a790b82adda5,
+  que es el gitlink de#422 y la fuente de ambos builds STORE FINISHED.
+  Android1.0.1(9):1fbcb51e-b035-4ba9-a6f5-b244bf67bae3.
+  iOS1.0.1(18):154bc17c-ff2d-4f87-b383-75973ee25824.
+- El usuario confirmó acuerdos Apple Developer y permisos Play guardados.
+  Reintentos reales: iOS3123c73b-1dc8-4c8e-a373-4958575a640d sigueERRORED403
+  FORBIDDEN.REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED (job01:21:35UTC);
+  Android656ce093-dbb9-4990-9b1e-8df40398f54a sigueERRORED por permisos.
+  Apple key configurada tieneADMIN y equipoDiego Saa83J23NPXG7; no se imprimieron
+  claves. Cuenta Android confirmada:tdf-drive-sync@tdf-records-477016.iam.gserviceaccount.com.
+  Se solicitó estado exacto de acuerdos y completar permisos de Expo para borradores,
+  pruebas y presencia de tienda. La guía inicial omitía permisos; corregida con la
+  fuente oficial. Ningún envío acredita upload, revisión, rollout o publicación.
+- El navegador conectado no puede abrirse porque su perfil está ocupado; no se
+  cerró ni reutilizó el perfil ajeno. Playwright aislado sigue disponible.
+
+Siguiente acción: terminar gates locales/publicar la reparación de#406, integrar
+sin squash en#422, registrar hallazgos nuevos y evidencia antes/después, cerrar
+revisiones y gates exactos; continuar cobertura independiente. Después, release
+backend guardado y web compatible, y distribución móvil cuando los proveedores
+confirmen acceso. No reenviar repetidamente sin cambio de estado o diagnóstico.
+
+Fuentes consultadas18SepUTC: [permisos EAS/Play](https://github.com/expo/fyi/blob/main/creating-google-service-account.md)
+y [estados de acuerdos Apple](https://developer.apple.com/help/app-store-connect/manage-agreements/view-agreements-status).
+
 ## Actualización verificada — 2026-09-18 00:36 UTC
 
 - El usuario aprobó #422 en `38256cf721d92380c8cfc0b6d19e10bd8703c233`, incluidas
