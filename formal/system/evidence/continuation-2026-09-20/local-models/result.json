@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "revision": "633f9f906e7cb9d9a0911887fc057ca7ff68906c",
+  "startedAt": "2026-09-21T01:45:22.465Z",
+  "node": "v24.8.0",
+  "command": [
+    "bash",
+    "scripts/verify-event-operations-formal.sh"
+  ],
+  "sourceDigest": "ab66e6d577374d1c2abeed5f66ec33fafdd341c004bec1b0863f4ac91c364455",
+  "status": "bounded-model-checks-passed",
+  "tools": {
+    "TLA2TOOLS_JAR": "fa18543e44ed5974a85bd2c60c0dc16620ae117680ea8e693d2691999ed90b22",
+    "ALLOY_JAR": "6b8c1cb5bc93bedfc7c61435c4e1ab6e688a242dc702a394628d9a9801edb78d",
+    "java": "openjdk version \"21.0.8\" 2025-07-15\nOpenJDK Runtime Environment (build 21.0.8+-14196175-b1038.72)\nOpenJDK 64-Bit Server VM (build 21.0.8+-14196175-b1038.72, mixed mode)"
+  },
+  "limitations": "Bounded model analysis and translator-integrity tests, not whole-program refinement; mobile identity recorded but mobile source not analyzed by this runner.",
+  "execution": {
+    "status": 0,
+    "signal": null
+  },
+  "logSha256": "0cce5d38f358a7576f8032329494e6817496ff3c7123d0f15042883632e46a82",
+  "finishedAt": "2026-09-21T01:53:43.856Z",
+  "finalSourceDigest": "ab66e6d577374d1c2abeed5f66ec33fafdd341c004bec1b0863f4ac91c364455"
+}

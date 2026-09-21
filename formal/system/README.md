@@ -62,7 +62,7 @@ Existing formal artifacts stay under `formal/event-operations` and `formal/socia
 
 The embedded accepted ADR-0200 in the dated payment audit contributes ten invariant requirements.
 Its approval is scoped to that ADR; the surrounding provider research is not promoted to policy.
-Latest integrated main on 2026-09-20: `968006b69`
+Latest integrated main on 2026-09-20: `3d0b43942e3db9597cd159ffa37bf10713069a0b`
 (identity dependency #439 and mail corrections included). GitHub correctly rejected the prior
 inventory when its synthetic merge added those sources; regeneration retains that fail-closed gate.
 

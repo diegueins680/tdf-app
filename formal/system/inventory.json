@@ -611,6 +611,9 @@
       "tdf-hq-ui/src/features/finance/estebanMunozReport.test.ts",
       "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
       "tdf-hq-ui/src/features/finance/workAccountReport.test.ts",
+      "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
+      "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
+      "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
       "tdf-hq-ui/src/features/releases/ReleaseArtwork.test.tsx",
       "tdf-hq-ui/src/features/releases/ReleaseArtwork.tsx",
       "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
@@ -1321,6 +1324,8 @@
       "tdf-hq/sql/2026-09-18_notification_navigation_rollback.sql",
       "tdf-hq/sql/2026-09-18_provider_subject_identity.sql",
       "tdf-hq/sql/2026-09-18_provider_subject_identity_rollback.sql",
+      "tdf-hq/sql/2026-09-18_records_resource_availability.sql",
+      "tdf-hq/sql/2026-09-18_records_resource_availability_rollback.sql",
       "tdf-hq/sql/2026-09-18_trial_identity_requests.sql",
       "tdf-hq/sql/2026-09-18_trial_identity_requests_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
@@ -2929,6 +2934,13 @@
     {
       "path": "docs/physical-device-test-guide.md",
       "sha256": "a8b59fa45104cb608d157dcee3b17949e68dc89b5fc87534521943fd6bdcd59f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/records-ingestion/2026-09-18-thumbnail-evidence.md",
+      "sha256": "f1c1fe108a0baac79997871b0c2733b14338dbaf39542afc775ffdddf485bca9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4671,7 +4683,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "7091285429fb238ad2e628fe1ff58b1551bb8f578c6dbe0078266da7e7c519b2",
+      "sha256": "0015767fdc6d59c80dd017320ea2e600d69992df40289153bbb6fa97f279cb9f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
