@@ -120,13 +120,21 @@ once as Ecuador subscriptions for backward compatibility.
 
 ## Schedule and multi-machine safety
 
-The worker runs shortly after boot and then at UTC six-hour boundaries. Every
+The existing worker runs shortly after boot for at most the latest missed slot,
+then daily at 06:00 America/Guayaquil (11:00 UTC). The hour is configurable via
+`EVENT_DISCOVERY_HOUR_LOCAL` (default 6); conversion uses UTC-05:00 explicitly,
+never the server local timezone. Sunday is identified from that same timezone
+and performs full source reconciliation in the daily slot, without a second
+weekly job. The current adapters fetch full bounded source inventories on other
+days too; no incremental cursor behavior is claimed for these adapters. Every
 enabled source claims its own `(source, scheduled_for)` ledger row. A PostgreSQL
 advisory lock prevents concurrent replicas from running the batch, while the
 ledger makes restarts idempotent and permits a failed source to be retried.
 
 Ticketmaster requests are rate-limited, paginated, and bounded by configured
-lookahead/page limits. Buen Plan is independently isolated in the registry so it
+lookahead/page limits. Exceeding a page budget or failing any requested city
+marks the source run failed: partial results cannot drive missing-item
+reconciliation or a misleading success. Buen Plan is independently isolated in the registry so it
 can be disabled without affecting Ticketmaster or venue feeds. Source failures
 record the last error and consecutive failure count without stopping other
 sources.
@@ -139,6 +147,7 @@ EVENT_DISCOVERY_AUTO_PUBLISH=false
 EVENT_DISCOVERY_PILOT_LIMIT=20
 TICKETMASTER_API_KEY=your-consumer-key
 TICKETMASTER_API_BASE=https://app.ticketmaster.com/discovery/v2
+EVENT_DISCOVERY_HOUR_LOCAL=6
 EVENT_DISCOVERY_LOOKAHEAD_DAYS=90
 EVENT_DISCOVERY_MAX_PAGES_PER_CITY=5
 EVENT_DISCOVERY_COUNTRY_CODE=
@@ -180,3 +189,21 @@ npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
 
 After rollout, verify `/health`, `/version`, the exact release SHA, and
 `[Cron][EventDiscovery]` logs before enabling the master switch.
+
+
+## Schedule cutover and remaining coverage work
+
+This consolidates the existing six-hour loop; do not register another cron.
+During a guarded rolling deployment, disable discovery on **all** old replicas
+before starting the new binary. After both revisions are verified, set the
+approved flags and `EVENT_DISCOVERY_HOUR_LOCAL=6`, then enable the existing worker.
+Do not leave an old enabled replica running the six-hour schedule. The source
+ledger/advisory lock remains shared; a Sunday run uses the same daily identity.
+Verify an actual 11:00 UTC run separately from a manually triggered execution.
+
+This scheduling change does not expand the city-subscription-based discovery
+scope described above. Ecuador-wide discovery independent of personalization,
+resumable provider page checkpoints, shared research/discovery pilot accounting,
+and administrative execution controls remain follow-up work. It does not grant
+any event publication approval. Preserve recorded approvals only within their
+verified original scope.
