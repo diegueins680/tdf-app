@@ -34,7 +34,9 @@ operations are explicitly disabled. Termination of the local handler follows its
 expression; network response delivery is an environment assumption, not a liveness guarantee.
 
 The executable source contract is `scripts/lib/legacy-escrow-contract.mjs`. It recognizes exactly
-the two constant `throwError err503` definitions, failing on any body change. The manual reduction
+the two constant `throwError err503` definitions, the complete service-marketplace dispatch and
+API ordering, and their position in the authenticated parent/root composition. Body or binding
+changes fail the gate; keeping unused safe definitions cannot admit a rerouted writer. The manual reduction
 argument uses the ReaderT/Servant Handler error semantics: neither function evaluates its two
 arguments, reads Env, lifts IO, nor calls persistence. This is a narrow source-correspondence check
 and manually inspected effect argument, **not a machine-checked proof of Haskell or the whole API**.
@@ -44,7 +46,9 @@ trusted; the checker is intentionally not a general Haskell parser.
 Hspec extracts the actual handlers from `serviceMarketplaceServer` and executes them with a poison
 Env. It covers five role combinations, boundary Int64 identifiers, absent records and repeated
 release requests (55 executions). Accessing Env fails the test. Source-contract negative controls
-detect injected environment access, IO, successful return and an admin override in both bodies.
+detect injected environment access, IO, successful return, admin overrides, rerouted handlers,
+replaced parent/root dispatch and changed/reordered API alternatives. Recovery reads both Git
+blobs (`Server.hs` and `API.hs`) from the candidate, not from the current checkout.
 The tests establish those executions, not unrestricted implementation equivalence. Authentication,
 JSON decoding and capture parsing may reject earlier with their existing status codes; HTTP clients
 are not promised 503 before they reach these handlers. Ordinary request logging is outside the
@@ -59,14 +63,17 @@ global accounting invariants and all other payment routes remain separate open o
 
 The actual production tool checks the exact Git source blobs of both the target and every
 recovery candidate with the executable handler contract, in addition to the existing identity
-ancestry and migration checksum constraints. It rejects a target or recovery binary with a body
-that could re-enable either write. This remains required after squash/cherry-pick integration and
+ancestry and migration checksum constraints. It rejects a target or recovery revision whose recognized handler body, marketplace dispatch,
+API alternatives or authenticated parent binding changes. This remains required after squash/cherry-pick integration and
 also detects later reintroduction, unlike an ancestry-only marker. Missing Git blobs/history are
 tool failures, never compatibility. Preflight validates the supplied recovery image and each prior
 machine image; recovery rechecks source before mutation. The concrete counterexample
 `d517d6ed12a0f9ed3929df124507c7f4b025d16d` has identical migrations and identity protections but
 still permits nominal escrow; it is rejected. Tests cover actual Git blobs, all four combinations
-of identity/financial predicates, missing source, squash-equivalent source and reintroduced writes.
+of identity/financial predicates, missing source, squash-equivalent source, reintroduced writes and safe-but-unused stubs with rerouted financial
+endpoints. The checker does not prove arbitrary Haskell call graphs or all possible duplicate
+routes elsewhere; compiler/import/Servant semantics and reviewed surrounding application wiring
+remain in the trusted boundary.
 Current CI uses full history where actual historical blobs are regression inputs. Use the current
 guarded release tool; the contract does not control independent manual Fly operations.
 

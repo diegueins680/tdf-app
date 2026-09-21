@@ -4891,7 +4891,7 @@
     },
     {
       "path": "formal/system/delivery-2026-09-20.md",
-      "sha256": "2bff9a529650921e255eeaaf70f0df74b7b2dbfb713b6ef861ad74dacc98ceab",
+      "sha256": "745575c64a6f1e74c23a2dfb5ca62a6c25552163c62c5a49833cd61f71a8c4f9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4905,7 +4905,7 @@
     },
     {
       "path": "formal/system/legacy-escrow.md",
-      "sha256": "aa3082ed555ade4ac761365e24aa57ef901ec443f73e1c558c217f5a07370a63",
+      "sha256": "d5f18da10f1d568df9866184f79f6a70739f8ae5ee375f42777ed7a1ad0b22b0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

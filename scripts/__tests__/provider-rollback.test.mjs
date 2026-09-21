@@ -150,6 +150,7 @@ test('pre-deployment failure does not mutate the untouched fleet', async () => {
 
 
 const escrowSource = readFileSync(new URL('../../tdf-hq/src/TDF/Server.hs', import.meta.url), 'utf8');
+const escrowApiSource = readFileSync(new URL('../../tdf-hq/src/TDF/API.hs', import.meta.url), 'utf8');
 const escrowFix = '33083d469727da73e73ea4a2c2be5aaec130b137';
 const auditedBeforeDisablement = 'd517d6ed12a0f9ed3929df124507c7f4b025d16d';
 test('exact Git source rejects the previously eligible audit image after escrow disablement', async () => {
@@ -168,7 +169,9 @@ test('identity and financial-write protection must hold together before any reco
       assert.equal(required, floor); assert.equal(candidate, legacy); return identity;
     };
     const readSource = async (candidate, path) => {
-      assert.equal(candidate, legacy); assert.equal(path, 'tdf-hq/src/TDF/Server.hs');
+      assert.equal(candidate, legacy);
+      if (path === 'tdf-hq/src/TDF/API.hs') return escrowApiSource;
+      assert.equal(path, 'tdf-hq/src/TDF/Server.hs');
       return escrow ? escrowSource : 'legacy nominal writers';
     };
     let writes = 0;
@@ -192,7 +195,15 @@ test('source read failure is inconclusive and cannot authorize recovery mutation
 test('financial compatibility follows source, including squash and later reintroduction', async () => {
   const target = { sha: modern, migrations: [] };
   const noMarkerAncestry = () => assert.fail('financial contract must not depend on a commit marker');
-  assert.equal((await rollbackCompatibility(target, legacy, noMarkerAncestry, async () => escrowSource)).compatible, true);
+  assert.equal((await rollbackCompatibility(target, legacy, noMarkerAncestry, async (_, path) => path.endsWith('/API.hs') ? escrowApiSource : escrowSource)).compatible, true);
   assert.equal((await rollbackCompatibility(target, modern, noMarkerAncestry,
-    async () => escrowSource.replace('createServiceMarketplaceBooking _ _ =', 'createServiceMarketplaceBooking user request ='))).compatible, false);
+    async (_, path) => path.endsWith('/API.hs') ? escrowApiSource : escrowSource.replace('createServiceMarketplaceBooking _ _ =', 'createServiceMarketplaceBooking user request ='))).compatible, false);
+});
+
+test('actual recovery guard rejects safe unused stubs with financial routes rebound', async () => {
+  const target = { sha: modern, migrations: [] };
+  await assert.rejects(withCompatibleRollback(target, legacy,
+    () => assert.fail('must not deploy a rerouted financial writer'), async () => true,
+    async (_, path) => path.endsWith('/API.hs') ? escrowApiSource
+      : escrowSource.replace(':<|> releaseServiceMarketplaceEscrow user', ':<|> legacyRelease user')), /Unsafe financial-write/);
 });

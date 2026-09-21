@@ -717,9 +717,11 @@ const sourceRequestIdentityFloor = '6eab8592744015124b0162ce9e9361f51a04f538';
 // SYS-ESCROW-003: inspect the exact candidate blob, not a commit marker that
 // can disappear after a squash/cherry-pick or survive a later reintroduction.
 export async function disabledEscrowWritesAt(sha, readBlob = readGitBlob) {
-  const source = await readBlob(normalizeFullSha(sha), 'tdf-hq/src/TDF/Server.hs');
+  const candidate = normalizeFullSha(sha);
+  const source = await readBlob(candidate, 'tdf-hq/src/TDF/Server.hs');
+  const apiSource = await readBlob(candidate, 'tdf-hq/src/TDF/API.hs');
   try {
-    checkDisabledEscrowWrites(source);
+    checkDisabledEscrowWrites(source, apiSource);
     return true;
   } catch {
     return false; // Source disagrees. Git/tool failures above must still propagate.
