@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-09-18T18:56:18.269497+00:00",
+  "rootContractCommit": "7635a5f325b9f08e129498317fecd606dfd36dc6",
+  "mobileCommit": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+  "generatedBytes": 900600,
+  "generatedSHA256": "555385e4a7e3d1076ce0964a5712f69b9f098453fff8f39089e6c8aa4e8053eb",
+  "regeneratedMobileDiffEmpty": true,
+  "webMobileIdentical": true,
+  "releaseCheckPassed": true,
+  "generator": "openapi-typescript7.10.1",
+  "scope": "Current main contract regeneration; no new mobile commit or artifact required. Prior signed artifact source SHAs are preserved."
+}

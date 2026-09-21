@@ -635,6 +635,7 @@ export default function LoginPage() {
       setResetDialogOpen(true);
       return;
     }
+    setResetDialogOpen(false);
     const wantsSignup = params.get('signup');
     const shouldOpenSignup = wantsSignup && wantsSignup.toLowerCase() !== 'false' && wantsSignup !== '0';
     if (shouldOpenSignup) {

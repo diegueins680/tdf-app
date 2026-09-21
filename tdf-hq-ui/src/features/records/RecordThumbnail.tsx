@@ -5,22 +5,31 @@ import { isProviderPlaceholder, recordThumbnailCandidates, type ThumbnailResourc
 
 interface Props {
   resource: ThumbnailResource;
+  /** Only for catalog overview artwork, never for a specific video's playback card. */
+  fallbackResources?: ThumbnailResource[];
   title: string;
   compact?: boolean;
 }
 
 export default function RecordThumbnail(props: Props) {
-  const sources = recordThumbnailCandidates(props.resource);
+  // Catalog overview cards can use alternate media belonging to the same item.
+  // At most three resources / nine distinct requests; each URL is validated
+  // against its own provider identity before it enters this bounded queue.
+  const resources = [props.resource, ...(props.fallbackResources ?? []).filter(resource =>
+    (resource.providerCode !== props.resource.providerCode || resource.externalCode !== props.resource.externalCode)
+    && recordThumbnailCandidates(resource).length > 0).slice(0, 2)];
+  const sources = [...new Set(resources.flatMap(recordThumbnailCandidates))];
+  const unavailable = [props.resource, ...(props.fallbackResources ?? [])]
+    .every(resource => resource.availability === 'unavailable');
   // Reset only when the resource/metadata changes, never on an ordinary rerender.
-  return <ThumbnailAttempt key={JSON.stringify([props.resource, sources])} {...props} sources={sources} />;
+  return <ThumbnailAttempt key={JSON.stringify([resources, sources])} {...props} sources={sources} unavailable={unavailable} />;
 }
 
-function ThumbnailAttempt({ resource, title, compact, sources }: Props & { sources: string[] }) {
+function ThumbnailAttempt({ title, compact, sources, unavailable }: Props & { sources: string[]; unavailable: boolean }) {
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const src = sources[index];
-  const unavailable = resource.availability === 'unavailable';
   const label = unavailable
     ? t('records.videoUnavailable', 'Video no disponible en la fuente')
     : t('records.thumbnailUnavailable', 'Miniatura no disponible');

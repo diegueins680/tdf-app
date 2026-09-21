@@ -104,6 +104,7 @@ interface CatalogRecoveryCard {
   title: string;
   description: string;
   resource: RecordsResourceDTO | undefined;
+  fallbackResources: RecordsResourceDTO[];
   to: string;
   action: string;
 }
@@ -154,6 +155,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           title: release.title,
           description: firstNonEmptyString(collection?.description, collection?.name, release.title),
           resource: primaryRecordsResource(release.resources),
+          fallbackResources: release.resources,
           to: firstNonEmptyString(collection?.publicRoute, '/records'),
           action: firstNonEmptyString(collection?.name, 'Ver lanzamientos'),
         };
@@ -170,6 +172,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             recording.title,
           ),
           resource: primaryRecordsResource(recording.resources),
+          fallbackResources: recording.resources,
           to: firstNonEmptyString(collection?.publicRoute, '/records'),
           action: firstNonEmptyString(collection?.name, 'Ver grabaciones'),
         };
@@ -186,6 +189,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             sessionItem.title,
           ),
           resource: primaryRecordsResource(sessionItem.resources),
+          fallbackResources: sessionItem.resources,
           to: firstNonEmptyString(collection?.publicRoute, '/records'),
           action: firstNonEmptyString(collection?.name, 'Ver sesiones'),
         };
@@ -1792,7 +1796,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         flexDirection: 'column',
                       }}
                     >
-                      {card.resource && <Box sx={{ height: 180 }}><RecordThumbnail resource={card.resource} title={card.title} /></Box>}
+                      {card.resource && <Box sx={{ height: 180 }}><RecordThumbnail resource={card.resource} fallbackResources={card.fallbackResources} title={card.title} /></Box>}
                       <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
                         <Typography variant="overline" color="text.secondary">
                           {card.eyebrow}

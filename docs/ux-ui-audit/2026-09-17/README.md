@@ -5,50 +5,117 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las
 superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,
 sus dependencias y las regresiones introducidas siguen dentro del alcance.
 
-## Checkpoint verificado — 2026-09-18 16:34 UTC
+## Checkpoint verificado — 2026-09-18 18:58 UTC
 
-Este bloque sustituye los estados de los checkpoints históricos inferiores.
-#449 está fusionado como `e1a825bda26dbb16b1c732e551cc4880d5626943` desde15:42UTC;
-435 y442–448 quedaron incorporados conservando sus commits. El backend terminó
-el release guardado a16:02:10UTC, sin rollback: ambas máquinas saludables,110
-migraciones, tablas de calendario presentes y lease liberado. Imagen inmutable
-`sha256:637b749539975072aa78efd2180ce42438e81dc95f768f1c6b9e3557d3ed3a3f`.
-Web pública e1 coincide con Cloudflare `061e1fe4-97d8-431c-aeb9-24b90c53a98b`.
-[Recibo de release, snapshot y recuperación compatible](evidence/release-e1-verification.json).
-Se verificaron lectura pública y login/sesión/onboarding con la cuenta App Review
-legítima; Customer/Fan recibe403 al calendario administrativo. No se afirma un
-consentimiento Google administrativo ni revocación real. Las latencias son muestras
-de laboratorio individuales, no percentiles de campo.
+Este bloque sustituye los estados históricos inferiores. #450 está fusionado como
+`3f0a56c0ded55fa9525dc80c895505ffcb069449`. Cloudflare `8f01e9e1` y la web pública
+coincidieron; seis casos reales en tres motores verificaron Marketplace con
+almacenamiento denegado, búsqueda y recarga, sin errores ni infracciones axe.
+UX007 queda desplegado. [Evidencia y límites](evidence/marketplace-storage-deployment.json).
 
-La observación posterior confirmó un pendiente de UX007: Marketplace aún cae
-cuando se bloquea almacenamiento. [La continuación](marketplace-storage.md) pasa
-23 pruebas,30 casos distintos en tres motores y el conjunto formal, pero todavía
-requiere revisión independiente, CI, merge y despliegue. No reemplaza las demás
-entradas de007 ya publicadas ni relaja la idempotencia de pedidos.
+La API pública devuelve `ab9bbacc9da845b6bfe70ac3fda2ace44f17c918` y
+salud/DB correctas a las 18:53 UTC, después del release independiente de correo.
+[Observación de sólo lectura](evidence/current-api-mail-release.json). El release UX
+anterior `e1a825bda` terminó a las 16:02 UTC con 110 migraciones y dos máquinas
+saludables; su [recibo](evidence/release-e1-verification.json) sigue siendo histórico.
+El operador de correo registra finalización a las 18:45 UTC, snapshot
+`vs_RzLjpLR7DqVsLLZkDZJyV4` y recuperación compatible `e1a825bda`.
+Antes de otra mutación, renovar el lease y consultar su registro de release;
+no restaurar `e1` sin causa ni binarios antiguos de autenticación, ni borrar migraciones.
+#439 ya está fusionado en `7635a5f`, pero su despliegue corresponde a ese operador.
+Este parent móvil/documental no requiere desplegar el backend.
 
-El usuario entregó la coordinación de tiendas. Apple1.0.1 fue cambiado y leído
-como `MANUAL`/`WAITING_FOR_REVIEW` a15:51UTC; una aprobación no publicará sola la
-versión antigua. Continúa pendiente el iPhone físico para Google OAuth. Play
-muestra Alpha10 disponible a testers; a13:45 seguía1de12 inscritos para14días.
-No se repiten las80 invitaciones aceptadas previamente ni se inventa inscripción.
+**GitHub Actions gratuito produce iOS firmado.** Los workflows móviles #105–114
+están fusionados hasta `2a0e5a99535d9ef199a3e3464a660192f882f72b`. Se utilizan
+runners estándar `macos-15` y `ubuntu-24.04`, identidades de firma existentes,
+secretos cifrados y artefactos con retención de un día. No se contrató Starter;
+la decisión vigente del usuario es GitHub Actions gratuito. La cuota Free de EAS
+sigue agotada en ambos sistemas. Los intentos fallidos por entorno Jest,
+CocoaPods/JSON y memoria Gradle se conservan; no se debilitaron los controles.
 
-El usuario eligió GitHub Actions gratuito y sustituyó Starter antes de pagar.
-No se contrató plan. Mobile#105 está fusionado en `a72ee5be1e66bad9d1a23e2d67a2e693ff3ce613`:
-runner estándar macos-15/Xcode26.2, certificados existentes cifrados y environment
-restringido a main, IPA con recibo y sin publicación automática. Primer run
-35368454882: Xcode y dependencias pasan;1de507 pruebas falla por variables de
-producción capturadas en el fixture Jest. #106 `7e709dc` aísla ese proceso;
-cuatro pruebas afectadas locales y CI pasan. Archivo firmado aún pendiente.
-Android15 `96622c14-8ac2-4780-aa25-903ef788ae88` y QA
-`46b1cca1-f38e-4105-b9c4-68947bcdd52d` siguen construyéndose. QA4602 usó un perfil
-incorrecto con API de producción: queda excluido de la aceptación aislada; el
-Samsung está conectado y sólo se usará `com.tdf.records.uxaudit`.
+El build **iOS 1.0.1 (25)** terminó en el
+[run 35376470123](https://github.com/diegueins680/TDF-mobile/actions/runs/35376470123),
+source `9f4d0e89c430e25fcd572b4c87736cad15e12012`, SDK 26.2. La verificación
+independiente del IPA confirma firma, perfil App Store, enlaces Google y API de
+producción. Apple lo validó y recibió a las 18:08 UTC; a las 18:12 UTC ya estaba
+VALID e IN_BETA_TESTING. [Recibo](evidence/ios-github25-artifact.json). El número remoto de EAS
+se sincronizó a 25 para evitar reutilizarlo, sin iniciar otro build. iOS 24 ya está
+VALID/IN_BETA_TESTING, pero es intermedio: no contiene la corrección final de texto.
+Se retiró de revisión el build antiguo y se vinculó el 25. El nuevo envío
+`c59f5706-f10e-4caf-ad00-3fff47911f3b` está WAITING_FOR_REVIEW desde las 18:16 UTC,
+con publicación MANUAL; no se publicará automáticamente. La cuenta de demostración existente pasó acceso,
+sesión y onboarding a las 18:01 UTC, sin crear cuentas ni divulgar credenciales.
+[Comprobación](evidence/app-review-account-recheck.json).
 
-Siguientes acciones: fusionar106 tras refrescar gates y ejecutar iOS23; verificar
-los artefactos Android antes de instalar/subir; publicar la continuación007 para
-revisión; mantener la cobertura inicial faltante y la publicación móvil abiertas.
-No actualizar el gitlink90ca sólo para obtener archivos de CI: el producto de105/106
-es idéntico; registrar el SHA exacto del artefacto nuevo cuando exista.
+**Android 15 ya está disponible para los testers seleccionados** en Alpha,
+según Play Console a las 18:09 UTC. [Estado](evidence/android15-available-state.json).
+El panel muestra dos inscritos. Se exigen doce en total durante catorce días
+para solicitar producción: faltan diez inscritos adicionales. [Requisito vigente](evidence/play-production-eligibility.json).
+No se repiten las 80 invitaciones enviadas. Android 17, con texto ampliado corregido,
+terminó correctamente en el [run 35376997735](https://github.com/diegueins680/TDF-mobile/actions/runs/35376997735).
+El primer build nativo falló por Metaspace de 512 MiB durante lint; #113 aumenta
+heap/Metaspace a 4/2 GiB y limita workers a dos, conservando lint, arquitecturas y
+verificación de dependencias. El AAB 17 pasó verificación independiente de firma, certificado, manifest,
+configuración de producción y SHA256. El envío se validó y registró en Alpha a las 18:18 UTC; Play Console confirma
+**in review**. [Recibo](evidence/android17-alpha-submission.json) y
+[estado de revisión](evidence/android17-review-state.json). Android 15 sigue
+disponible mientras se revisa el 17.
+
+UX033 conserva las pruebas nativas originales de idioma, conteo y retorno. La
+ampliación real confirmó truncamiento adicional: #109 corrige Android y #112 mide
+las etiquetas iOS fuera de la barra para permitir su altura completa. Pasaron
+510 pruebas, los gates de CI y siete casos focalizados; las imágenes y el árbol
+accesible del simulador muestran cinco pestañas y ningún auxiliar expuesto.
+En Samsung, el prototipo QA mantiene completas las etiquetas a 1×/2×; se restauró
+la preferencia original. La primera ejecución de ese prototipo sólo verificó presentación; la comprobación posterior de sesión se distingue abajo.
+El APK aislado completo 46b1 sí pasó acceso, seguimiento persistente y sesión al
+reabrir en Samsung. [Recibo](evidence/android-physical-46b1.json).
+El Samsung volvió por ADB a las 18:29 UTC. La comprobación del APK QA instalado
+confirma su SHA256, seguimiento y sesión tras reapertura, respuesta autoritativa
+HTTP200 y un seguimiento persistido. Las cinco pestañas quedan completas a 1×/2×;
+se restauró font_scale1.0 y la instalación personal permanece idéntica.
+[Comprobación adicional](evidence/android-reconnect-verification.json). El
+simulador temporal de esta auditoría se eliminó después de conservar su evidencia
+para resolver la falta de espacio que interrumpió la primera descarga Android17. Sigue
+faltando el iPhone físico para Google OAuth: el usuario confirma que no dispone de uno.
+La publicación iOS permanece MANUAL. No se acredita lectura humana con
+VoiceOver/TalkBack ni rendimiento de campo.
+
+El parent #454 prepara el pin `2a0e5a9`, con contratos generados idénticos a `90ca`
+y ambos informes de catálogo regenerados y verificados. #114 hace que los comandos
+production/store usen GitHub y elimina el número iOS usado que estaba prellenado.
+Las diferencias posteriores a las fuentes de ambos binarios sólo afectan workflows,
+documentación y scripts npm; código de app, nativo, dependencias y metadatos de
+ejecución son idénticos. [Comparación](evidence/mobile-artifact-pin-equivalence.json).
+El parent aún no está fusionado. Integra `main` hasta `7635a5f` preservando su
+ancestría. La regeneración contra el contrato actual no modifica los tipos móviles,
+que ya contenían las adiciones de clases; coinciden con web y pasa release:check.
+[Recibo de regeneración](evidence/current-contract-parity.json).
+No hace falta otro build móvil por esta conciliación documental/de contratos.
+Se sincronizaron los estados obsoletos de los hallazgos y las páginas estáticas;
+[la evidencia histórica](evidence/status-reconciliation.json) conserva lo sustituido.
+El head anterior `b22d3e99b` completó CI (2.193 pruebas web, 510 móviles,
+recorridos persona, contratos y catálogo) y Cloudflare. Vercel rechazó su preview
+opcional por cuota diaria; no se cuenta como aprobado ni se altera el control.
+La eliminación del token en la URL de recuperación pasó en tres motores contra
+producción sin envío de formulario; no se observaron eventos de analítica, por lo
+que su privacidad autenticada sigue pendiente. [Límites](evidence/production-reset-privacy.json).
+El cambio de cuenta con cierre de sesión en la misma pestaña pasó en tres motores
+con cuentas/API/PostgreSQL aislados y borradores sintéticos: sin datos heredados y
+sesión nula confirmada. [Recibo](evidence/shared-tab-account-privacy.json).
+El nuevo head deberá completar sus propios gates y revisión independiente.
+Siguiente acción: cerrar las dos observaciones de revisión, completar los gates y
+la aprobación del parent #454, fusionarlo y verificar su despliegue web automático.
+En tiendas, comprobar el resultado de revisión de Android 17 y su disponibilidad
+para testers, y la revisión de iOS 25 manteniendo el bloqueo de publicación física.
+Las comprobaciones actuales de [Apple](evidence/ios25-review-recheck.json) y
+[Play Console](evidence/android17-review-recheck.json) mantienen esos estados.
+Los envíos ya completados no deben repetirse. La inscripción de diez testers
+adicionales y los catorce días efectivos requieren participación humana real.
+La auditoría integral conserva 69 hallazgos y 412 filas; continúa pendiente la
+cobertura de recursos poblados, combinaciones de roles, estados, lectores y
+plataformas indicados en coverage.csv. Inventario y pruebas parciales no equivalen
+a aceptación de toda la plataforma.
 
 ## Integración de release — 2026-09-18 13:31 UTC
 
