@@ -1,6 +1,7 @@
 import directorySearch from './directorySearch.en';
 import authEntry from './authEntry.en';
 const en = {
+  records: { videoUnavailable: 'Video unavailable at source', thumbnailUnavailable: 'Thumbnail unavailable', loadingThumbnail: 'Loading thumbnail' },
   authEntry,
   directorySearch,
   auditAccessibility: {

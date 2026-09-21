@@ -643,6 +643,9 @@ resourceDTO locale relationKind primaryResource sortOrder (Entity resourceKey re
     , rrLabel = localizedMaybe locale (M.recordExternalResourceLabelEs resource) (M.recordExternalResourceLabelEn resource)
     , rrDurationMs = M.recordExternalResourceDurationMs resource
     , rrThumbnailUrl = M.recordExternalResourceThumbnailUrl resource
+    , rrAvailability = M.recordExternalResourceAvailability resource
+    , rrAvailabilityReason = M.recordExternalResourceAvailabilityReason resource
+    , rrVerifiedAt = M.recordExternalResourceVerifiedAt resource
     , rrRelationKind = relationKind
     , rrPrimary = primaryResource
     , rrSortOrder = sortOrder

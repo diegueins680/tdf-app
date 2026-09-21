@@ -1,14 +1,13 @@
+import RecordThumbnail from '../features/records/RecordThumbnail';
 import { useTranslation } from 'react-i18next';
 import { useContactCreation } from '../hooks/useContactCreation';
 import { logger } from '../utils/logger';
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Card,
   CardContent,
-  CardMedia,
   Chip,
   Container,
   Dialog,
@@ -615,7 +614,7 @@ interface RecordingItem {
   title: string;
   artist: string;
   description: string;
-  image: string;
+  resource: RecordsResourceDTO;
   recordedAt: string;
   vibe: string;
   youtubeId?: string;
@@ -653,9 +652,6 @@ interface SessionItem {
 
 const sortSessions = (items: SessionItem[]): SessionItem[] =>
   [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
-
-const youtubeThumbnail = (youtubeId: string): string =>
-  `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
 
 const sortRecordings = (items: RecordingItem[]): RecordingItem[] =>
   [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
@@ -705,7 +701,7 @@ const mapRecordsRecording = (recording: RecordsRecordingDTO): RecordingItem | nu
     title: recording.title,
     artist: recording.contributors.map((contributor) => contributor.name).join(', '),
     description: recording.description ?? '',
-    image: resource.thumbnailUrl ?? youtubeThumbnail(resource.externalCode),
+    resource,
     recordedAt: duration,
     vibe: 'Video',
     youtubeId: resource.providerCode === 'youtube' ? resource.externalCode : undefined,
@@ -752,30 +748,16 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
             flexDirection: 'column',
           }}
         >
-          <CardMedia
+          <Box
             component={item.url ? MuiLink : 'div'}
-            aria-label={item.url ? `Reproducir ${item.title}` : undefined}
+            aria-label={item.url ? `${item.resource.availability === 'unavailable' ? 'Consultar fuente de' : 'Reproducir'} ${item.title}` : undefined}
             href={item.url}
             target={item.url ? '_blank' : undefined}
             rel={item.url ? 'noopener noreferrer' : undefined}
-            underline="none"
-            sx={{
-              pt: '60%',
-              backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35)), url(${item.image})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              display: 'block',
-              position: 'relative',
-              '&::after': item.url
-                ? {
-                    content: '""',
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'radial-gradient(circle at center, rgba(15,23,42,0.05), rgba(15,23,42,0.35))',
-                  }
-                : undefined,
-            }}
-          />
+            sx={{ height: 220, display: 'block', textDecoration: 'none' }}
+          >
+            <RecordThumbnail resource={item.resource} title={item.title} />
+          </Box>
           <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip label={item.vibe} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
@@ -818,7 +800,7 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
                   startIcon={<PlayCircleOutlineIcon />}
                   sx={{ textTransform: 'none' }}
                 >
-                  Ver video
+                  {item.resource.availability === 'unavailable' ? 'Consultar en YouTube' : 'Ver video'}
                 </Button>
               </Box>
             )}
@@ -1162,12 +1144,9 @@ export default function RecordsPublicPage() {
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center">
                 {recordings.slice(0, 3).map((item) => (
-                  <Avatar
-                    key={item.title}
-                    alt={item.title}
-                    src={item.image}
-                    sx={{ width: 40, height: 40, border: '2px solid rgba(255,255,255,0.2)' }}
-                  />
+                  <Box key={item.title} sx={{ width: 40, height: 40, borderRadius: 1, overflow: 'hidden' }}>
+                    <RecordThumbnail resource={item.resource} title={item.title} compact />
+                  </Box>
                 ))}
               </Stack>
             </GradientCard>
