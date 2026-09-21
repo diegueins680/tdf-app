@@ -149,7 +149,7 @@
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release ancestry guard regression. No whole-program proof.",
       "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
-      "status": "pending-dependent-recovery-guard"
+      "status": "implemented-awaiting-verification-and-release"
     }
   ]
 }

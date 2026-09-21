@@ -55,10 +55,24 @@ effects or state changes. This does not prevent independent writers or operators
 the database. Future escrow implementation, existing-data reconciliation, provider correctness,
 global accounting invariants and all other payment routes remain separate open obligations.
 
+## Recovery correspondence
+
+Commit `33083d469727da73e73ea4a2c2be5aaec130b137` removes the two writers. For a target
+containing that commit, the actual production guard requires its recovery candidate to contain
+it too, in addition to existing identity protections and identical migration checksums. Preflight
+checks the supplied forward-recovery artifact and every prior machine image; recovery rechecks the
+candidate before mutation. Missing history is a tool failure, never compatibility. The concrete
+counterexample `d517d6ed12a0f9ed3929df124507c7f4b025d16d` has identical migrations and identity
+protections but still permits nominal escrow; it is now rejected for the new target. Tests exercise
+real Git ancestry and all four combinations of the two protection predicates. Git commit ancestry
+is provenance, not a proof against a later deliberate reintroduction; source gates and independent
+review must continue to hold on target/recovery revisions. Use the current guarded release tool;
+this policy does not control independent manual Fly operations.
+
 ## Reproduce
 
 ```
-node --test scripts/__tests__/legacy-escrow-contract.test.mjs
+node --test scripts/__tests__/legacy-escrow-contract.test.mjs scripts/__tests__/provider-rollback.test.mjs
 cd tdf-hq
 stack test --test-arguments='--match "disabled legacy service marketplace financial writes"'
 ```

@@ -83,7 +83,7 @@ Options:
   --db-app <name>    Fly PostgreSQL app (default: tdf-hq-db)
   --database <name>  PostgreSQL database (default: tdf_hq)
   --image <ref>      Immutable image; defaults to diegueins680/tdf-hq:<sha>
-  --recovery-sha <sha> Reviewed ancestor with identical migrations and compatible authentication
+  --recovery-sha <sha> Reviewed ancestor preserving migrations, identity and disabled financial writes
 `;
 }
 
@@ -289,8 +289,8 @@ async function resolveReleaseContext(options) {
         throw new Error(`Recovery migration differs: ${migration.id}`);
       }
     }
-    if (!(await rollbackCompatibility({ migrations }, recoverySha)).compatible) {
-      throw new Error('Recovery source does not preserve the required authentication contract.');
+    if (!(await rollbackCompatibility({ sha, migrations }, recoverySha)).compatible) {
+      throw new Error('Recovery source does not preserve the required authentication and financial-write contracts.');
     }
   }
 
@@ -709,6 +709,14 @@ const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';
 // when the receipt tables happened to be empty during preflight.
 const intakeIdentityFloor = '02115f7d1b0786f3cdd4287a9466dd22682f603b';
 const sourceRequestIdentityFloor = '6eab8592744015124b0162ce9e9361f51a04f538';
+// SYS-ESCROW-003: no schema change accompanies the removal of nominal financial
+// writers. Migration compatibility alone must not re-enable those handlers.
+const disabledEscrowWriteFloor = '33083d469727da73e73ea4a2c2be5aaec130b137';
+
+export async function requiredEscrowCommit(context, isAncestor = gitIsAncestor) {
+  return context.sha && await isAncestor(disabledEscrowWriteFloor, normalizeFullSha(context.sha))
+    ? disabledEscrowWriteFloor : null;
+}
 
 export function requiredIdentityCommit(context) {
   const ids = new Set(context.migrations.map(({ id }) => id));
@@ -732,15 +740,21 @@ async function gitIsAncestor(ancestor, descendant) {
 export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor) {
   const candidate = normalizeFullSha(sha);
   const requiredCommit = requiredIdentityCommit(context);
+  const escrowCommit = await requiredEscrowCommit(context, isAncestor);
   return {
     sha: candidate,
     requiredCommit,
-    compatible: requiredCommit === null || await isAncestor(requiredCommit, candidate),
+    requiredEscrowCommit: escrowCommit,
+    compatible: (requiredCommit === null || await isAncestor(requiredCommit, candidate))
+      && (escrowCommit === null || await isAncestor(escrowCommit, candidate)),
   };
 }
 
 export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor) {
   const policy = await rollbackCompatibility(context, sha, isAncestor);
+  if (!policy.compatible && policy.requiredEscrowCommit !== null) {
+    throw new Error(`Unsafe financial-write or identity rollback blocked: ${policy.sha} must retain disabled escrow writers (${policy.requiredEscrowCommit}) and identity protection (${policy.requiredCommit}). Recover forward with a compatible reviewed image.`);
+  }
   if (!policy.compatible) {
     throw new Error(`Unsafe authentication rollback blocked: ${policy.sha} predates ${policy.requiredCommit}. Keep provider bindings and source request receipts; recover forward with a compatible reviewed image.`);
   }
@@ -1139,6 +1153,7 @@ async function main() {
       recoveryPolicy: {
         minimumAuthenticationCommit: context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity') ? providerIdentityFloor : null,
         minimumIdentityWriterCommit: requiredIdentityCommit(context),
+        minimumDisabledEscrowWriteCommit: await requiredEscrowCommit(context),
         fallbackSource: context.recoverySha ?? null,
         immutableArtifactVerification: 'required in preflight',
       },

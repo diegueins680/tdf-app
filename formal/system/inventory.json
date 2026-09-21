@@ -4896,7 +4896,7 @@
     },
     {
       "path": "formal/system/legacy-escrow.md",
-      "sha256": "44e1f17786a30cbbf4511300f57213fc3cfc5ca901a696ee5f4c5030156f25e2",
+      "sha256": "86adbc66e09e6454935d032c39fc152635c77abf055f110bfc1d1e79f7f1934f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4910,7 +4910,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "027fd4b906124cfdf27dc5fe3b0c492a2b27d91aa4bb8a64d97a4df0cdb4f10a",
+      "sha256": "a1e35bc9e31ed0361bccb4b523f0ffa33300fa1c258ceaf050872534e06bc1a3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
