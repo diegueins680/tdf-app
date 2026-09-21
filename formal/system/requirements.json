@@ -48,7 +48,7 @@
       "contract": "formal/system/payment-arithmetic.md",
       "implementation": ["tdf-hq/src/TDF/Commerce/StateMachine.hs", "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"],
       "verification": "Source-derived signed-64-bit SMT safety/admission equivalence, SAT witnesses and negative controls; actual Haskell boundary oracle. Caller preconditions manually inspected; SQL/whole-program proof open.",
-      "evidence": "payment-proof/result.json, PaymentArithmeticProbe, backend Hspec",
+      "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "implemented-awaiting-release-evidence"
     },
     {
@@ -60,7 +60,7 @@
       "contract": "formal/system/payment-arithmetic.md",
       "implementation": ["tdf-hq/src/TDF/Commerce/StateMachine.hs", "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"],
       "verification": "Same full-width source-derived SMT and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
-      "evidence": "payment-proof/result.json, PaymentArithmeticProbe, backend Hspec",
+      "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "implemented-awaiting-release-evidence"
     },
     {
@@ -72,7 +72,7 @@
       "contract": "formal/system/payment-arithmetic.md",
       "implementation": ["tdf-hq/src/TDF/Commerce/StateMachine.hs"],
       "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions. No proof of persisted SQL ledger or production use of this helper.",
-      "evidence": "PaymentArithmeticProbe and backend Hspec output",
+      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output",
       "status": "implemented-awaiting-release-evidence"
     }
   ]

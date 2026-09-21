@@ -61,7 +61,7 @@ state-consistency policy, caller authentication, locking/transactions, provider 
 concurrent history, retries and liveness remain outside this proof. No environment fairness
 assumption is needed for this terminating pure arithmetic fragment.
 
-The actual-module `PaymentArithmeticProbe.hs` checks 400 transition cases against an independent
+The registered Hspec module `TDF.Commerce.PaymentArithmeticSpec` checks 400 transition cases against an independent
 Integer oracle and 512 ledger sequences. Hspec regressions cover exact bug vectors and maximum
 successful amounts. These are execution/correspondence evidence, not a proof of all compiler or
 database behavior. SQL CHECKs at the canonical migration additionally reject negative/excess

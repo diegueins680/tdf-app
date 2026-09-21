@@ -1,6 +1,6 @@
 # System specification and verification index
 
-Status: active audit; partial verification, delivery pending. **The whole system is not formally verified.**
+Status: active audit; partial verification, delivery pending. See [current delivery report](delivery-2026-09-20.md). **The whole system is not formally verified.**
 
 This index consolidates existing sources; it does not replace the domain specifications or turn
 observed behavior into approved policy. The discovery index is mechanically reproducible, but
@@ -62,7 +62,7 @@ Existing formal artifacts stay under `formal/event-operations` and `formal/socia
 
 The embedded accepted ADR-0200 in the dated payment audit contributes ten invariant requirements.
 Its approval is scoped to that ADR; the surrounding provider research is not promoted to policy.
-Latest integrated main at this checkpoint: `7635a5f325b9f08e129498317fecd606dfd36dc6`
+Latest integrated main on 2026-09-20: `968006b69`
 (identity dependency #439 and mail corrections included). GitHub correctly rejected the prior
 inventory when its synthetic merge added those sources; regeneration retains that fail-closed gate.
 
@@ -156,7 +156,7 @@ python3 -m venv /tmp/tdf-verification-venv
 /tmp/tdf-verification-venv/bin/python scripts/test-payment-arithmetic-verifier.py
 node --test scripts/__tests__/verification-evidence.test.mjs
 cd tdf-hq
-stack exec -- runghc -isrc test/PaymentArithmeticProbe.hs
+stack test --test-arguments='--match "payment arithmetic Integer oracle"'
 stack test
 ```
 
