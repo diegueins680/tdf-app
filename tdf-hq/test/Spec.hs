@@ -47,6 +47,7 @@ import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
+import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
@@ -832,6 +833,7 @@ main :: IO ()
 main = hspec $ do
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
+    PaymentArithmeticSpec.spec
     EmailHeadersSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
@@ -2528,6 +2530,30 @@ main = hspec $ do
             fmap Commerce.paymentState captured `shouldBe` Right Commerce.PaymentCaptured
             Commerce.transitionPayment created (Commerce.PaymentCaptureVerified 10001)
               `shouldSatisfy` isLeft
+
+        it "rejects capture and refund overflow before adding Int64 amounts" $ do
+            let maximumAmount = maxBound :: Int64
+                partialCapture = Commerce.PaymentLifecycle
+                  Commerce.PaymentPartiallyCaptured maximumAmount maximumAmount 1 0
+                partialRefund = Commerce.PaymentLifecycle
+                  Commerce.PaymentPartiallyRefunded maximumAmount maximumAmount maximumAmount 1
+            Commerce.transitionPayment partialCapture (Commerce.PaymentCaptureVerified maximumAmount)
+              `shouldSatisfy` isLeft
+            Commerce.transitionPayment partialRefund (Commerce.PaymentRefundVerified maximumAmount)
+              `shouldSatisfy` isLeft
+            fmap Commerce.paymentCapturedMinor
+              (Commerce.transitionPayment partialCapture (Commerce.PaymentCaptureVerified (maximumAmount - 1)))
+              `shouldBe` Right maximumAmount
+            fmap Commerce.paymentRefundedMinor
+              (Commerce.transitionPayment partialRefund (Commerce.PaymentRefundVerified (maximumAmount - 1)))
+              `shouldBe` Right maximumAmount
+
+        it "checks exact ledger sums instead of Int64 modular zero" $ do
+            let maximumAmount = maxBound :: Int64
+            Commerce.ledgerBalances [("USD", maximumAmount), ("USD", maximumAmount), ("USD", 2)]
+              `shouldBe` False
+            Commerce.ledgerBalances [("USD", maximumAmount), ("USD", maximumAmount),
+              ("USD", -maximumAmount), ("USD", -maximumAmount)] `shouldBe` True
 
         it "voids only the exact remaining authorization" $ do
             let partiallyCaptured =

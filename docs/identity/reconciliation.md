@@ -135,15 +135,19 @@ to the authenticated CRM actor, serialized with a transaction advisory lock, and
 validated payload. Replays return the same Party; changed payloads return 409 without leaking
 another actor's contact. The web create dialog retains the key across failed retries. Separate
 requests remain separate, even with shared attributes. Imports, API clients and jobs using this
-endpoint must supply a stable key for each source operation; the optional header preserves
-compatibility for existing clients. There is no global unique email/phone/name constraint.
+endpoint must supply a stable key for each source operation. The intake prevention release
+makes this header mandatory; older clients receive 400 before creation and must refresh or
+provide a source operation key. There is no global unique email/phone/name constraint.
 
 Existing authentication username uniqueness and scoped social-sync/import keys remain in place.
 The provider-subject follow-up replaces email-only Google matching with explicit authenticated
 account linking and scoped immutable bindings. See [provider-prevention.md](provider-prevention.md)
-for rollout, validation and remaining entry points. Public Live Session ingestion and older
-creation clients without request keys still require further work before claiming comprehensive
-recurrence prevention.
+for provider rollout and validation. Atomic Live Session intake, guest commerce, course
+registration, trial enquiries, school student creation, and ad inquiries have separate reviewed
+prevention changes. Their deployment status must be verified against the release evidence.
+See [course-prevention.md](course-prevention.md), [trial-prevention.md](trial-prevention.md),
+and [guest-booking-prevention.md](guest-booking-prevention.md). Shared contact details never
+establish ownership, and a retry key identifies an operation rather than a person.
 
 ## Validation
 

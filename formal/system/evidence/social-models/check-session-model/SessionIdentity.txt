@@ -1,0 +1,61 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 10 and seed -8216971473187005724 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 83084] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /private/tmp/tdf-formal-system-20260918/formal/social/SessionBoundary.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module SessionBoundary
+Starting... (2026-09-18 13:33:16)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Computed 16 initial states...
+Computed 32 initial states...
+Finished computing initial states: 64 distinct states generated at 2026-09-18 13:33:17.
+Error: Invariant AuthorityAtResult is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ acting = (r1 :> a @@ r2 :> b)
+/\ token = (r1 :> t1 @@ r2 :> t1)
+/\ alive = {a, b}
+/\ observed = ( r1 :>
+      [active |-> FALSE, allowed |-> FALSE, live |-> FALSE, bound |-> FALSE] @@
+  r2 :> [active |-> FALSE, allowed |-> FALSE, live |-> FALSE, bound |-> FALSE] )
+/\ active = {t1, t2}
+/\ held = none
+/\ phase = (r1 :> "new" @@ r2 :> "new")
+/\ principal = (r1 :> a @@ r2 :> a)
+
+State 2: <Authenticate line 22, col 20 to line 25, col 91 of module SessionBoundary>
+/\ acting = (r1 :> a @@ r2 :> b)
+/\ token = (r1 :> t1 @@ r2 :> t1)
+/\ alive = {a, b}
+/\ observed = ( r1 :>
+      [active |-> FALSE, allowed |-> FALSE, live |-> FALSE, bound |-> FALSE] @@
+  r2 :> [active |-> FALSE, allowed |-> FALSE, live |-> FALSE, bound |-> FALSE] )
+/\ active = {t1, t2}
+/\ held = none
+/\ phase = (r1 :> "new" @@ r2 :> "ready")
+/\ principal = (r1 :> a @@ r2 :> a)
+
+State 3: <Read line 26, col 12 to line 30, col 73 of module SessionBoundary>
+/\ acting = (r1 :> a @@ r2 :> b)
+/\ token = (r1 :> t1 @@ r2 :> t1)
+/\ alive = {a, b}
+/\ observed = ( r1 :>
+      [active |-> FALSE, allowed |-> FALSE, live |-> FALSE, bound |-> FALSE] @@
+  r2 :> [active |-> TRUE, allowed |-> TRUE, live |-> TRUE, bound |-> FALSE] )
+/\ active = {t1, t2}
+/\ held = none
+/\ phase = (r1 :> "new" @@ r2 :> "done")
+/\ principal = (r1 :> a @@ r2 :> a)
+
+428 states generated, 411 distinct states found, 338 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 5 (minimum is 0, the maximum 7 and the 95th percentile is 6).
+Finished in 00s at (2026-09-18 13:33:17)

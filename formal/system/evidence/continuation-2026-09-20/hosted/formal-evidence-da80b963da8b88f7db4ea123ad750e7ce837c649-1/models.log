@@ -1,0 +1,3285 @@
+PlusCal regeneration matches exactly: ReservationRace.tla
+TAP version 13
+# Subtest: pinned regeneration matches the committed model without editing its source or siblings
+ok 1 - pinned regeneration matches the committed model without editing its source or siblings
+  ---
+  duration_ms: 88.719706
+  type: 'test'
+  ...
+# Subtest: rejects algorithm change without regeneration and preserves the rejected input
+ok 2 - rejects algorithm change without regeneration and preserves the rejected input
+  ---
+  duration_ms: 91.520442
+  type: 'test'
+  ...
+# Subtest: rejects translation-only semantic change and preserves the rejected input
+ok 3 - rejects translation-only semantic change and preserves the rejected input
+  ---
+  duration_ms: 95.026107
+  type: 'test'
+  ...
+# Subtest: rejects forged TLA checksum and preserves the rejected input
+ok 4 - rejects forged TLA checksum and preserves the rejected input
+  ---
+  duration_ms: 91.321208
+  type: 'test'
+  ...
+# Subtest: rejects forged PlusCal checksum and preserves the rejected input
+ok 5 - rejects forged PlusCal checksum and preserves the rejected input
+  ---
+  duration_ms: 91.486442
+  type: 'test'
+  ...
+# Subtest: rejects translation whitespace change and preserves the rejected input
+ok 6 - rejects translation whitespace change and preserves the rejected input
+  ---
+  duration_ms: 90.229485
+  type: 'test'
+  ...
+# Subtest: rejects original stale default-width translation and preserves the rejected input
+ok 7 - rejects original stale default-width translation and preserves the rejected input
+  ---
+  duration_ms: 83.80494
+  type: 'test'
+  ...
+# Subtest: missing, duplicate and orphaned translation blocks fail closed
+ok 8 - missing, duplicate and orphaned translation blocks fail closed
+  ---
+  duration_ms: 1.702083
+  type: 'test'
+  ...
+# Subtest: syntax errors and missing Java are failures, not successful no-change translations
+ok 9 - syntax errors and missing Java are failures, not successful no-change translations
+  ---
+  duration_ms: 80.972328
+  type: 'test'
+  ...
+# Subtest: directory scan includes new PlusCal files and cannot silently lose ReservationRace
+ok 10 - directory scan includes new PlusCal files and cannot silently lose ReservationRace
+  ---
+  duration_ms: 196.153702
+  type: 'test'
+  ...
+# Subtest: missing and unpinned toolchains fail before running a translator
+ok 11 - missing and unpinned toolchains fail before running a translator
+  ---
+  duration_ms: 0.623571
+  type: 'test'
+  ...
+# Subtest: CLI rejects unsupported options without modifying the model
+ok 12 - CLI rejects unsupported options without modifying the model
+  ---
+  duration_ms: 30.717762
+  type: 'test'
+  ...
+# Subtest: formal runner and both hosted triggers retain the fail-closed integrity gate
+ok 13 - formal runner and both hosted triggers retain the fail-closed integrity gate
+  ---
+  duration_ms: 0.3252
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1010.854912
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 17 and seed 9207585509115077161 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2366] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/NativeLanding.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module NativeLanding
+Starting... (2026-09-21 01:45:48)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:45:49.
+Progress(3) at 2026-09-21 01:45:49: 25 states generated, 9 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 9 total distinct states at (2026-09-21 01:45:49)
+Finished checking temporal properties in 00s at 2026-09-21 01:45:49
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 7.8E-18
+25 states generated, 9 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 4 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:45:49)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 121 and seed -3113608752204671952 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2394] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/NativeArtistFollow.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module NativeArtistFollow
+Starting... (2026-09-21 01:45:49)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:45:50.
+Progress(9) at 2026-09-21 01:45:50: 592 states generated, 328 distinct states found, 0 states left on queue.
+Checking 2 branches of temporal properties for the complete state space with 656 total distinct states at (2026-09-21 01:45:50)
+Finished checking temporal properties in 00s at 2026-09-21 01:45:50
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 4.7E-15
+592 states generated, 328 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 5 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:45:50)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 29 and seed -739767296561692133 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2424] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ExperimentAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ExperimentAuthority
+Starting... (2026-09-21 01:45:51)
+Implied-temporal checking--satisfiability problem has 3 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:45:51.
+Progress(12) at 2026-09-21 01:45:51: 1,920 states generated, 876 distinct states found, 0 states left on queue.
+Checking 3 branches of temporal properties for the complete state space with 2628 total distinct states at (2026-09-21 01:45:51)
+Finished checking temporal properties in 00s at 2026-09-21 01:45:51
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 5.0E-14
+1920 states generated, 876 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 12.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 5 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:45:51)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 57 and seed 2413583849755585703 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2455] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ExperimentAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ExperimentAuthority
+Starting... (2026-09-21 01:45:52)
+Implied-temporal checking--satisfiability problem has 3 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:45:53.
+Progress(12) at 2026-09-21 01:45:53: 1,574 states generated, 660 distinct states found, 0 states left on queue.
+Checking 3 branches of temporal properties for the complete state space with 1980 total distinct states at (2026-09-21 01:45:53)
+Finished checking temporal properties in 00s at 2026-09-21 01:45:53
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.3E-14
+1574 states generated, 660 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 12.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 5 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:45:53)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 85 and seed -188533696878527394 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2487] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/EventLifecycle.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-21 01:45:53)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:45:53.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 0.0
+9941 states generated, 9941 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 0 (minimum is 0, the maximum 31 and the 95th percentile is 0).
+Finished in 01s at (2026-09-21 01:45:54)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 71 and seed 2241515343095267762 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2517] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/EventLifecycle.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-21 01:45:55)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Finished computing initial states: 14 distinct states generated at 2026-09-21 01:45:55.
+Progress(3) at 2026-09-21 01:45:58: 139,174 states generated (139,174 s/min), 139,174 distinct states found (139,174 ds/min), 101,087 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 0.0
+139174 states generated, 139174 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 0 (minimum is 0, the maximum 31 and the 95th percentile is 0).
+Finished in 08s at (2026-09-21 01:46:03)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 113 and seed 1765356560389534426 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2549] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/MarketplaceStorage.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module MarketplaceStorage
+Starting... (2026-09-21 01:46:04)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:04.
+Progress(4) at 2026-09-21 01:46:04: 8 states generated, 8 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 8 total distinct states at (2026-09-21 01:46:04)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:04
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 0.0
+8 states generated, 8 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 1 and the 95th percentile is 1).
+Finished in 00s at (2026-09-21 01:46:04)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 98 and seed -1563618880591030361 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2576] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/MarketplaceStorage.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module MarketplaceStorage
+Starting... (2026-09-21 01:46:05)
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:05.
+Error: Invariant NoStorageExceptionEscapes is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ persistedKey = FALSE
+/\ attempts = 0
+/\ requests = 0
+/\ phase = "boot"
+/\ storageThrows = TRUE
+
+State 2: <Open line 8, col 9 to line 10, col 72 of module MarketplaceStorage>
+/\ persistedKey = FALSE
+/\ attempts = 0
+/\ requests = 0
+/\ phase = "crashed"
+/\ storageThrows = TRUE
+
+4 states generated, 4 distinct states found, 1 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 1 (minimum is 1, the maximum 1 and the 95th percentile is 1).
+Finished in 00s at (2026-09-21 01:46:05)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 26 and seed 7116624814311713868 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2604] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/MarketplaceStorage.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module MarketplaceStorage
+Starting... (2026-09-21 01:46:05)
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:06.
+Error: Invariant NoDispatchWithoutDurableKey is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ persistedKey = FALSE
+/\ attempts = 0
+/\ requests = 0
+/\ phase = "boot"
+/\ storageThrows = TRUE
+
+State 2: <Open line 8, col 9 to line 10, col 72 of module MarketplaceStorage>
+/\ persistedKey = FALSE
+/\ attempts = 0
+/\ requests = 0
+/\ phase = "browse"
+/\ storageThrows = TRUE
+
+State 3: <Checkout line 11, col 13 to line 15, col 49 of module MarketplaceStorage>
+/\ persistedKey = FALSE
+/\ attempts = 1
+/\ requests = 1
+/\ phase = "browse"
+/\ storageThrows = TRUE
+
+6 states generated, 6 distinct states found, 1 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 1 (minimum is 1, the maximum 1 and the 95th percentile is 1).
+Finished in 00s at (2026-09-21 01:46:06)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 85 and seed 6613360447223867480 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2632] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/OptionalTokenRecovery.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module OptionalTokenRecovery
+Starting... (2026-09-21 01:46:06)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Computed 16 initial states...
+Finished computing initial states: 32 distinct states generated at 2026-09-21 01:46:06.
+Progress(3) at 2026-09-21 01:46:06: 96 states generated, 96 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 96 total distinct states at (2026-09-21 01:46:06)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:06
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 0.0
+96 states generated, 96 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 1 and the 95th percentile is 1).
+Finished in 00s at (2026-09-21 01:46:06)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 38 and seed -9114189802001947853 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2659] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/OptionalTokenRecovery.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module OptionalTokenRecovery
+Starting... (2026-09-21 01:46:07)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Computed 16 initial states...
+Finished computing initial states: 32 distinct states generated at 2026-09-21 01:46:07.
+Progress(3) at 2026-09-21 01:46:07: 84 states generated, 84 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 84 total distinct states at (2026-09-21 01:46:07)
+Error: Temporal properties were violated.
+
+Error: The following behavior constitutes a counter-example:
+
+State 1: <Initial predicate>
+/\ lookup = ""
+/\ mode = "tracking"
+/\ cached = ""
+/\ requests = 0
+/\ phase = "resolve"
+/\ fragment = ""
+/\ hasReference = FALSE
+/\ storageThrows = TRUE
+
+State 2: <Resolve line 11, col 12 to line 18, col 89 of module OptionalTokenRecovery>
+/\ lookup = ""
+/\ mode = "tracking"
+/\ cached = ""
+/\ requests = 0
+/\ phase = "crashed"
+/\ fragment = ""
+/\ hasReference = FALSE
+/\ storageThrows = TRUE
+
+State 3: Stuttering
+Finished checking temporal properties in 00s at 2026-09-21 01:46:07
+84 states generated, 84 distinct states found, 0 states left on queue.
+Finished in 00s at (2026-09-21 01:46:07)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 18 and seed 4029163530843838057 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2689] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/OptionalTokenRecovery.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module OptionalTokenRecovery
+Starting... (2026-09-21 01:46:08)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Computed 16 initial states...
+Finished computing initial states: 32 distinct states generated at 2026-09-21 01:46:08.
+Error: Invariant FragmentPrecedence is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ lookup = ""
+/\ mode = "tracking"
+/\ cached = ""
+/\ requests = 0
+/\ phase = "resolve"
+/\ fragment = "fragment-key"
+/\ hasReference = FALSE
+/\ storageThrows = FALSE
+
+State 2: <Resolve line 11, col 12 to line 18, col 89 of module OptionalTokenRecovery>
+/\ lookup = ""
+/\ mode = "tracking"
+/\ cached = ""
+/\ requests = 0
+/\ phase = "ready"
+/\ fragment = "fragment-key"
+/\ hasReference = FALSE
+/\ storageThrows = FALSE
+
+41 states generated, 41 distinct states found, 31 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 1 (minimum is 1, the maximum 1 and the 95th percentile is 1).
+Finished in 00s at (2026-09-21 01:46:08)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 73 and seed 1680723235058921264 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2717] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/NativeLanding.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module NativeLanding
+Starting... (2026-09-21 01:46:09)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:09.
+Error: Invariant CurrentSessionSkipsMarker is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ auth = "hydrating"
+/\ marker = "pending"
+
+State 2: <ResolveAuth line 9, col 16 to line 10, col 34 of module NativeLanding>
+/\ auth = "member"
+/\ marker = "pending"
+
+3 states generated, 3 distinct states found, 1 states left on queue.
+The depth of the complete state graph search is 2.
+Finished in 00s at (2026-09-21 01:46:09)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 2 and seed -163169037361820156 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2745] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/NativeArtistFollow.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module NativeArtistFollow
+Starting... (2026-09-21 01:46:09)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:10.
+Error: Invariant SuccessfulFollowQualifies is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ contextOK = TRUE
+/\ canonical = {}
+/\ completed = {}
+/\ legacy = {}
+/\ owner = <<0, 0>>
+/\ generation = 0
+/\ applied = {}
+/\ phase = <<"idle", "idle">>
+
+State 2: <Dispatch line 15, col 16 to line 18, col 92 of module NativeArtistFollow>
+/\ contextOK = TRUE
+/\ canonical = {}
+/\ completed = {}
+/\ legacy = {}
+/\ owner = <<0, 0>>
+/\ generation = 0
+/\ applied = {}
+/\ phase = <<"pending", "idle">>
+
+State 3: <Persist line 19, col 15 to line 23, col 79 of module NativeArtistFollow>
+/\ contextOK = TRUE
+/\ canonical = {}
+/\ completed = {}
+/\ legacy = {1}
+/\ owner = <<0, 0>>
+/\ generation = 0
+/\ applied = {}
+/\ phase = <<"persisted", "idle">>
+
+State 4: <ReceiptAndHandshake line 28, col 3 to line 35, col 55 of module NativeArtistFollow>
+/\ contextOK = TRUE
+/\ canonical = {}
+/\ completed = {}
+/\ legacy = {1}
+/\ owner = <<0, 0>>
+/\ generation = 0
+/\ applied = {1}
+/\ phase = <<"done", "idle">>
+
+31 states generated, 28 distinct states found, 18 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 3 (minimum is 2, the maximum 4 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:10)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 8 and seed -2245981772846677190 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2773] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/NativeArtistFollow.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module NativeArtistFollow
+Starting... (2026-09-21 01:46:10)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:10.
+Error: Invariant CurrentSession is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ contextOK = TRUE
+/\ canonical = {}
+/\ completed = {}
+/\ legacy = {}
+/\ owner = <<0, 0>>
+/\ generation = 0
+/\ applied = {}
+/\ phase = <<"idle", "idle">>
+
+State 2: <Dispatch line 15, col 16 to line 18, col 92 of module NativeArtistFollow>
+/\ contextOK = TRUE
+/\ canonical = {}
+/\ completed = {}
+/\ legacy = {}
+/\ owner = <<0, 0>>
+/\ generation = 0
+/\ applied = {}
+/\ phase = <<"pending", "idle">>
+
+State 3: <ChangeSession line 13, col 18 to line 14, col 96 of module NativeArtistFollow>
+/\ contextOK = TRUE
+/\ canonical = {}
+/\ completed = {}
+/\ legacy = {}
+/\ owner = <<0, 0>>
+/\ generation = 1
+/\ applied = {}
+/\ phase = <<"pending", "idle">>
+
+State 4: <ChangeSession line 13, col 18 to line 14, col 96 of module NativeArtistFollow>
+/\ contextOK = TRUE
+/\ canonical = {}
+/\ completed = {}
+/\ legacy = {}
+/\ owner = <<0, 0>>
+/\ generation = 2
+/\ applied = {}
+/\ phase = <<"pending", "idle">>
+
+State 5: <Persist line 19, col 15 to line 23, col 79 of module NativeArtistFollow>
+/\ contextOK = TRUE
+/\ canonical = {1}
+/\ completed = {}
+/\ legacy = {}
+/\ owner = <<0, 0>>
+/\ generation = 2
+/\ applied = {}
+/\ phase = <<"persisted", "idle">>
+
+State 6: <ReceiptAndHandshake line 28, col 3 to line 35, col 55 of module NativeArtistFollow>
+/\ contextOK = FALSE
+/\ canonical = {1}
+/\ completed = {1}
+/\ legacy = {}
+/\ owner = <<0, 0>>
+/\ generation = 2
+/\ applied = {1}
+/\ phase = <<"done", "idle">>
+
+171 states generated, 116 distinct states found, 58 states left on queue.
+The depth of the complete state graph search is 6.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 5 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:10)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 123 and seed -1343193881664696686 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2801] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/MarketplaceCatalogRead.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module MarketplaceCatalogRead
+Starting... (2026-09-21 01:46:11)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:11.
+Progress(5) at 2026-09-21 01:46:11: 13 states generated, 11 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 11 total distinct states at (2026-09-21 01:46:11)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:11
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.2E-18
+13 states generated, 11 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:11)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 28 and seed -7200542037133992376 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2829] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/MarketplaceCatalogRead.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module MarketplaceCatalogRead
+Starting... (2026-09-21 01:46:12)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:12.
+Progress(5) at 2026-09-21 01:46:12: 13 states generated, 11 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 11 total distinct states at (2026-09-21 01:46:12)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:12
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.2E-18
+13 states generated, 11 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:12)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 26 and seed -4014942602588691475 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2856] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/MarketplaceCatalogRead.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module MarketplaceCatalogRead
+Starting... (2026-09-21 01:46:13)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:13.
+Error: Invariant SelectedRentalKeepsApprovedTerms is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ price = 0
+/\ active = TRUE
+/\ selected = FALSE
+/\ phase = "arrival"
+/\ hasTerms = FALSE
+
+State 2: <SelectListing line 8, col 18 to line 10, col 57 of module MarketplaceCatalogRead>
+/\ price = 0
+/\ active = TRUE
+/\ selected = TRUE
+/\ phase = "selected"
+/\ hasTerms = FALSE
+
+State 3: <DeliverSale line 11, col 16 to line 12, col 64 of module MarketplaceCatalogRead>
+/\ price = 0
+/\ active = FALSE
+/\ selected = TRUE
+/\ phase = "selected"
+/\ hasTerms = FALSE
+
+State 4: <ReadTerms line 13, col 14 to line 16, col 53 of module MarketplaceCatalogRead>
+/\ price = 0
+/\ active = FALSE
+/\ selected = TRUE
+/\ phase = "terms"
+/\ hasTerms = FALSE
+
+State 5: <Render line 17, col 11 to line 19, col 53 of module MarketplaceCatalogRead>
+/\ price = 10
+/\ active = FALSE
+/\ selected = TRUE
+/\ phase = "done"
+/\ hasTerms = FALSE
+
+11 states generated, 11 distinct states found, 3 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 2 (minimum is 1, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:13)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 101 and seed -8253921421547163768 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2884] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CalendarConnection.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CalendarConnection
+Starting... (2026-09-21 01:46:13)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:14.
+Progress(5) at 2026-09-21 01:46:14: 27 states generated, 21 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 21 total distinct states at (2026-09-21 01:46:14)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:14
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 6.8E-18
+27 states generated, 21 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:14)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 19 and seed 5965363413911195609 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2911] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CalendarConnection.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CalendarConnection
+Starting... (2026-09-21 01:46:14)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:14.
+Error: Invariant AtMostOneAutomaticExchange is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = FALSE
+/\ persisted = FALSE
+/\ epoch = 0
+/\ consumed = FALSE
+/\ displayEpoch = 0
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = FALSE
+/\ autoRequests = 0
+/\ settled = FALSE
+
+State 2: <AutoReturn line 12, col 15 to line 17, col 93 of module CalendarConnection>
+/\ pending = TRUE
+/\ persisted = FALSE
+/\ epoch = 0
+/\ consumed = TRUE
+/\ displayEpoch = 0
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = FALSE
+/\ autoRequests = 1
+/\ settled = FALSE
+
+State 3: <Response line 22, col 17 to line 27, col 88 of module CalendarConnection>
+/\ pending = FALSE
+/\ persisted = TRUE
+/\ epoch = 0
+/\ consumed = TRUE
+/\ displayEpoch = 0
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = TRUE
+/\ autoRequests = 1
+/\ settled = TRUE
+
+State 4: <AutoReturn line 12, col 15 to line 17, col 93 of module CalendarConnection>
+/\ pending = TRUE
+/\ persisted = TRUE
+/\ epoch = 0
+/\ consumed = TRUE
+/\ displayEpoch = 0
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = TRUE
+/\ autoRequests = 2
+/\ settled = TRUE
+
+15 states generated, 9 distinct states found, 4 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:14)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 3 and seed -1734268442406795629 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2939] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CalendarConnection.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CalendarConnection
+Starting... (2026-09-21 01:46:15)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:15.
+Error: Invariant OnlyPersistedConnection is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = FALSE
+/\ persisted = FALSE
+/\ epoch = 0
+/\ consumed = FALSE
+/\ displayEpoch = 0
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = FALSE
+/\ autoRequests = 0
+/\ settled = FALSE
+
+State 2: <LoadPreference line 19, col 19 to line 21, col 119 of module CalendarConnection>
+/\ pending = FALSE
+/\ persisted = FALSE
+/\ epoch = 0
+/\ consumed = FALSE
+/\ displayEpoch = 0
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = TRUE
+/\ autoRequests = 0
+/\ settled = FALSE
+
+3 states generated, 3 distinct states found, 1 states left on queue.
+The depth of the complete state graph search is 2.
+Finished in 00s at (2026-09-21 01:46:15)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 97 and seed 30538893518680308 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2968] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CalendarConnection.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CalendarConnection
+Starting... (2026-09-21 01:46:16)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:16.
+Error: Invariant CurrentSessionReceipt is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = FALSE
+/\ persisted = FALSE
+/\ epoch = 0
+/\ consumed = FALSE
+/\ displayEpoch = 0
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = FALSE
+/\ autoRequests = 0
+/\ settled = FALSE
+
+State 2: <AutoReturn line 12, col 15 to line 17, col 93 of module CalendarConnection>
+/\ pending = TRUE
+/\ persisted = FALSE
+/\ epoch = 0
+/\ consumed = TRUE
+/\ displayEpoch = 0
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = FALSE
+/\ autoRequests = 1
+/\ settled = FALSE
+
+State 3: <SwitchSession line 28, col 18 to line 30, col 111 of module CalendarConnection>
+/\ pending = TRUE
+/\ persisted = FALSE
+/\ epoch = 1
+/\ consumed = TRUE
+/\ displayEpoch = 1
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = FALSE
+/\ autoRequests = 1
+/\ settled = FALSE
+
+State 4: <Response line 22, col 17 to line 27, col 88 of module CalendarConnection>
+/\ pending = FALSE
+/\ persisted = TRUE
+/\ epoch = 1
+/\ consumed = TRUE
+/\ displayEpoch = 0
+/\ preference = TRUE
+/\ requestEpoch = 0
+/\ displayed = TRUE
+/\ autoRequests = 1
+/\ settled = TRUE
+
+11 states generated, 11 distinct states found, 4 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 1, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:16)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 128 and seed 7271386967294566133 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 2996] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/DirectoryFavoriteAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module DirectoryFavoriteAuthority
+Starting... (2026-09-21 01:46:17)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:17.
+Progress(9) at 2026-09-21 01:46:17: 356 states generated, 208 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 208 total distinct states at (2026-09-21 01:46:17)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:17
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.7E-15
+356 states generated, 208 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 4 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:17)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 59 and seed -9159089934597347777 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3023] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/DirectoryFavoriteAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module DirectoryFavoriteAuthority
+Starting... (2026-09-21 01:46:17)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:18.
+Error: Invariant AuthorizedDispatch is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ persisted = FALSE
+/\ epoch = 0
+/\ receiptEpoch = 0
+/\ owner = 0
+/\ rendered = 0
+/\ dispatchedAt = 0
+/\ phase = "idle"
+/\ visible = FALSE
+/\ mounted = TRUE
+/\ kind = "read"
+
+State 2: <Queue line 12, col 10 to line 14, col 104 of module DirectoryFavoriteAuthority>
+/\ persisted = FALSE
+/\ epoch = 0
+/\ receiptEpoch = 0
+/\ owner = 0
+/\ rendered = 0
+/\ dispatchedAt = 0
+/\ phase = "queued"
+/\ visible = FALSE
+/\ mounted = TRUE
+/\ kind = "read"
+
+State 3: <Switch line 27, col 11 to line 29, col 103 of module DirectoryFavoriteAuthority>
+/\ persisted = FALSE
+/\ epoch = 1
+/\ receiptEpoch = 0
+/\ owner = 0
+/\ rendered = 0
+/\ dispatchedAt = 0
+/\ phase = "queued"
+/\ visible = FALSE
+/\ mounted = TRUE
+/\ kind = "read"
+
+State 4: <Dispatch line 15, col 13 to line 19, col 100 of module DirectoryFavoriteAuthority>
+/\ persisted = FALSE
+/\ epoch = 1
+/\ receiptEpoch = 0
+/\ owner = 0
+/\ rendered = 0
+/\ dispatchedAt = 1
+/\ phase = "pending"
+/\ visible = FALSE
+/\ mounted = TRUE
+/\ kind = "read"
+
+29 states generated, 25 distinct states found, 14 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 4 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:18)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 30 and seed 7002891472259334155 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3051] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/DirectoryFavoriteAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module DirectoryFavoriteAuthority
+Starting... (2026-09-21 01:46:18)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:18.
+Error: Invariant CurrentSessionReceipt is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ persisted = FALSE
+/\ epoch = 0
+/\ receiptEpoch = 0
+/\ owner = 0
+/\ rendered = 0
+/\ dispatchedAt = 0
+/\ phase = "idle"
+/\ visible = FALSE
+/\ mounted = TRUE
+/\ kind = "read"
+
+State 2: <Queue line 12, col 10 to line 14, col 104 of module DirectoryFavoriteAuthority>
+/\ persisted = FALSE
+/\ epoch = 0
+/\ receiptEpoch = 0
+/\ owner = 0
+/\ rendered = 0
+/\ dispatchedAt = 0
+/\ phase = "queued"
+/\ visible = FALSE
+/\ mounted = TRUE
+/\ kind = "read"
+
+State 3: <Dispatch line 15, col 13 to line 19, col 100 of module DirectoryFavoriteAuthority>
+/\ persisted = FALSE
+/\ epoch = 0
+/\ receiptEpoch = 0
+/\ owner = 0
+/\ rendered = 0
+/\ dispatchedAt = 0
+/\ phase = "pending"
+/\ visible = FALSE
+/\ mounted = TRUE
+/\ kind = "read"
+
+State 4: <Switch line 27, col 11 to line 29, col 103 of module DirectoryFavoriteAuthority>
+/\ persisted = FALSE
+/\ epoch = 1
+/\ receiptEpoch = 0
+/\ owner = 0
+/\ rendered = 0
+/\ dispatchedAt = 0
+/\ phase = "pending"
+/\ visible = FALSE
+/\ mounted = TRUE
+/\ kind = "read"
+
+State 5: <Response line 20, col 17 to line 26, col 84 of module DirectoryFavoriteAuthority>
+/\ persisted = TRUE
+/\ epoch = 1
+/\ receiptEpoch = 0
+/\ owner = 0
+/\ rendered = 0
+/\ dispatchedAt = 0
+/\ phase = "done"
+/\ visible = TRUE
+/\ mounted = TRUE
+/\ kind = "read"
+
+63 states generated, 51 distinct states found, 27 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 4 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:18)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 44 and seed 2772581288923428448 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3079] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ExperimentAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ExperimentAuthority
+Starting... (2026-09-21 01:46:19)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:19.
+Error: Invariant AccountAndEligibilityAuthority is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"idle", "idle", "idle">>
+/\ assigned = {}
+/\ captured = <<FALSE, FALSE, FALSE>>
+
+State 2: <Start line 17, col 13 to line 20, col 82 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"waiting", "idle", "idle">>
+/\ assigned = {}
+/\ captured = <<TRUE, FALSE, FALSE>>
+
+State 3: <FinishOrExpire line 35, col 22 to line 37, col 98 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<FALSE, TRUE>>
+/\ phase = <<"waiting", "idle", "idle">>
+/\ assigned = {}
+/\ captured = <<TRUE, FALSE, FALSE>>
+
+State 4: <Acquire line 21, col 15 to line 24, col 87 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<1, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<FALSE, TRUE>>
+/\ phase = <<"holding", "idle", "idle">>
+/\ assigned = {}
+/\ captured = <<TRUE, FALSE, FALSE>>
+
+State 5: <Commit line 25, col 14 to line 34, col 48 of module ExperimentAuthority>
+/\ validWrites = FALSE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<1, 0>>
+/\ eligible = <<FALSE, TRUE>>
+/\ phase = <<"done", "idle", "idle">>
+/\ assigned = {1}
+/\ captured = <<TRUE, FALSE, FALSE>>
+
+138 states generated, 86 distinct states found, 51 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 3 (minimum is 1, the maximum 5 and the 95th percentile is 5).
+Finished in 00s at (2026-09-21 01:46:19)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 106 and seed -5077532933356385549 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3107] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ExperimentAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ExperimentAuthority
+Starting... (2026-09-21 01:46:20)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:20.
+Error: Invariant ExposureAtMostOnce is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"idle", "idle", "idle">>
+/\ assigned = {}
+/\ captured = <<FALSE, FALSE, FALSE>>
+
+State 2: <Start line 17, col 13 to line 20, col 82 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"waiting", "idle", "idle">>
+/\ assigned = {}
+/\ captured = <<TRUE, FALSE, FALSE>>
+
+State 3: <Acquire line 21, col 15 to line 24, col 87 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<1, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"holding", "idle", "idle">>
+/\ assigned = {}
+/\ captured = <<TRUE, FALSE, FALSE>>
+
+State 4: <Commit line 25, col 14 to line 34, col 48 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<1, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"done", "idle", "idle">>
+/\ assigned = {1}
+/\ captured = <<TRUE, FALSE, FALSE>>
+
+State 5: <Start line 17, col 13 to line 20, col 82 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<1, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"done", "waiting", "idle">>
+/\ assigned = {1}
+/\ captured = <<TRUE, TRUE, FALSE>>
+
+State 6: <Acquire line 21, col 15 to line 24, col 87 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<2, 0>>
+/\ exposureCount = <<1, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"done", "holding", "idle">>
+/\ assigned = {1}
+/\ captured = <<TRUE, TRUE, FALSE>>
+
+State 7: <Commit line 25, col 14 to line 34, col 48 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<2, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"done", "done", "idle">>
+/\ assigned = {1}
+/\ captured = <<TRUE, TRUE, FALSE>>
+
+476 states generated, 246 distinct states found, 111 states left on queue.
+The depth of the complete state graph search is 7.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 5 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:20)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 111 and seed 7629161162275037202 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3135] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ExperimentAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ExperimentAuthority
+Starting... (2026-09-21 01:46:20)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:21.
+Error: Invariant AccountAndEligibilityAuthority is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"idle", "idle", "idle">>
+/\ assigned = {}
+/\ captured = <<FALSE, FALSE, FALSE>>
+
+State 2: <Start line 17, col 13 to line 20, col 82 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"idle", "idle", "waiting">>
+/\ assigned = {}
+/\ captured = <<FALSE, FALSE, TRUE>>
+
+State 3: <Acquire line 21, col 15 to line 24, col 87 of module ExperimentAuthority>
+/\ validWrites = TRUE
+/\ locks = <<3, 0>>
+/\ exposureCount = <<0, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"idle", "idle", "holding">>
+/\ assigned = {}
+/\ captured = <<FALSE, FALSE, TRUE>>
+
+State 4: <Commit line 25, col 14 to line 34, col 48 of module ExperimentAuthority>
+/\ validWrites = FALSE
+/\ locks = <<0, 0>>
+/\ exposureCount = <<1, 0>>
+/\ eligible = <<TRUE, TRUE>>
+/\ phase = <<"idle", "idle", "done">>
+/\ assigned = {1}
+/\ captured = <<FALSE, FALSE, TRUE>>
+
+71 states generated, 48 distinct states found, 31 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 3 (minimum is 1, the maximum 5 and the 95th percentile is 5).
+Finished in 00s at (2026-09-21 01:46:21)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 126 and seed -5374150452245457233 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3163] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/EventLifecycle.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-21 01:46:21)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Finished computing initial states: 14 distinct states generated at 2026-09-21 01:46:21.
+Error: Invariant AcceptedAuditIsAuthorized is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ seenCommands = {}
+/\ visible = FALSE
+/\ state = "settlement_pending"
+/\ audit = <<>>
+/\ revision = 0
+
+State 2: <Approve line 64, col 3 to line 75, col 27 of module EventLifecycle>
+/\ seenCommands = {c1}
+/\ visible = FALSE
+/\ state = "settled"
+/\ audit = << [ from |-> "settlement_pending",
+     to |-> "settled",
+     actor |-> approver,
+     command |-> c1,
+     accepted |-> TRUE ] >>
+/\ revision = 1
+
+1275 states generated, 1275 distinct states found, 1264 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 31 (minimum is 31, the maximum 31 and the 95th percentile is 31).
+Finished in 00s at (2026-09-21 01:46:21)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 42 and seed -7828522338073840880 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3191] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/EventLifecycle.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-21 01:46:22)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Finished computing initial states: 14 distinct states generated at 2026-09-21 01:46:22.
+Error: Invariant AcceptedAuditIsAuthorized is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ seenCommands = {}
+/\ visible = FALSE
+/\ state = "settled"
+/\ audit = <<>>
+/\ revision = 0
+
+State 2: <Approve line 64, col 3 to line 75, col 27 of module EventLifecycle>
+/\ seenCommands = {c1}
+/\ visible = FALSE
+/\ state = "archived"
+/\ audit = << [ from |-> "settled",
+     to |-> "archived",
+     actor |-> owner,
+     command |-> c1,
+     accepted |-> TRUE ] >>
+/\ revision = 1
+
+1415 states generated, 1415 distinct states found, 1403 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 31 (minimum is 31, the maximum 31 and the 95th percentile is 31).
+Finished in 00s at (2026-09-21 01:46:22)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 123 and seed -9080224116918944129 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3219] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/EventLifecycle.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module EventLifecycle
+Starting... (2026-09-21 01:46:23)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:23.
+Error: Action property AuditAppendOnly is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ seenCommands = {}
+/\ visible = FALSE
+/\ state = "draft"
+/\ audit = <<>>
+/\ revision = 0
+
+State 2: <Approve line 64, col 3 to line 75, col 27 of module EventLifecycle>
+/\ seenCommands = {c1}
+/\ visible = FALSE
+/\ state = "planning"
+/\ audit = << [ from |-> "draft",
+     to |-> "planning",
+     actor |-> owner,
+     command |-> c1,
+     accepted |-> TRUE ] >>
+/\ revision = 1
+
+State 3: <RewriteAudit line 89, col 3 to line 93, col 57 of module EventLifecycle>
+/\ seenCommands = {c1}
+/\ visible = FALSE
+/\ state = "planning"
+/\ audit = << [ from |-> "draft",
+     to |-> "planning",
+     actor |-> outsider,
+     command |-> c1,
+     accepted |-> TRUE ] >>
+/\ revision = 1
+
+142 states generated, 142 distinct states found, 139 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 31 (minimum is 31, the maximum 31 and the 95th percentile is 31).
+Finished in 00s at (2026-09-21 01:46:23)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 60 and seed 4365737172269987557 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3247] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ReservationRace.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Integers
+Semantic processing of module TLC
+Semantic processing of module ReservationRace
+Starting... (2026-09-21 01:46:24)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:24.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 5.4E-19
+7 states generated, 5 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:24)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 85 and seed 3158386666004877446 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3273] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ReservationRace.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Integers
+Semantic processing of module TLC
+Semantic processing of module ReservationRace
+Starting... (2026-09-21 01:46:25)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:25.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 5.4E-19
+7 states generated, 5 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:25)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 71 and seed 5386416666524740139 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3299] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/InvitationSafety.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module InvitationSafety
+Starting... (2026-09-21 01:46:26)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:26.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 9.6E-15
+1107 states generated, 912 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 7.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 10 and the 95th percentile is 5).
+Finished in 00s at (2026-09-21 01:46:26)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 4 and seed 7616399798337649017 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3325] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/TaskRaci.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/TLC.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module TaskRaci
+Starting... (2026-09-21 01:46:26)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:27.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.2E-13
+5810 states generated, 1338 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 10.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 11 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:27)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 116 and seed -5935845718253267166 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3354] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ContractPayment.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ContractPayment
+Starting... (2026-09-21 01:46:27)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:27.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.3E-17
+31 states generated, 16 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 8.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:27)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 31 and seed -3712866976745805042 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3380] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CheckoutReadiness.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CheckoutReadiness
+Starting... (2026-09-21 01:46:28)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:28.
+Progress(9) at 2026-09-21 01:46:28: 389 states generated, 221 distinct states found, 0 states left on queue.
+Checking 2 branches of temporal properties for the complete state space with 442 total distinct states at (2026-09-21 01:46:28)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:28
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 2.0E-15
+389 states generated, 221 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:28)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 65 and seed 3894610603855738516 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3407] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CheckoutCancellation.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CheckoutCancellation
+Starting... (2026-09-21 01:46:29)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:29.
+Progress(6) at 2026-09-21 01:46:29: 13 states generated, 8 distinct states found, 0 states left on queue.
+Checking 2 branches of temporal properties for the complete state space with 16 total distinct states at (2026-09-21 01:46:29)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:29
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 2.2E-18
+13 states generated, 8 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 6.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:29)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 116 and seed 6924530285189496844 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3434] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CheckoutCancellation.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CheckoutCancellation
+Starting... (2026-09-21 01:46:30)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:30.
+Error: Invariant NoAbandonedReservation is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ requestPending = FALSE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = FALSE
+/\ phase = "buyer"
+/\ paymentPending = FALSE
+
+State 2: <Submit line 8, col 11 to line 9, col 91 of module CheckoutCancellation>
+/\ requestPending = FALSE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = FALSE
+/\ phase = "readiness"
+/\ paymentPending = FALSE
+
+State 3: <Ready line 10, col 10 to line 11, col 74 of module CheckoutCancellation>
+/\ requestPending = TRUE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = FALSE
+/\ phase = "reserving"
+/\ paymentPending = FALSE
+
+State 4: <Cancel line 14, col 11 to line 18, col 91 of module CheckoutCancellation>
+/\ requestPending = TRUE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = FALSE
+/\ phase = "closed"
+/\ paymentPending = FALSE
+
+State 5: <Resolve line 19, col 12 to line 25, col 55 of module CheckoutCancellation>
+/\ requestPending = FALSE
+/\ abandoned = TRUE
+/\ lostPayment = FALSE
+/\ reserved = TRUE
+/\ phase = "closed"
+/\ paymentPending = FALSE
+
+13 states generated, 7 distinct states found, 1 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:30)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 28 and seed -44422254299271521 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3463] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CheckoutCancellation.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CheckoutCancellation
+Starting... (2026-09-21 01:46:31)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:31.
+Error: Invariant NoLostPayment is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ requestPending = FALSE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = FALSE
+/\ phase = "buyer"
+/\ paymentPending = FALSE
+
+State 2: <Submit line 8, col 11 to line 9, col 91 of module CheckoutCancellation>
+/\ requestPending = FALSE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = FALSE
+/\ phase = "readiness"
+/\ paymentPending = FALSE
+
+State 3: <Ready line 10, col 10 to line 11, col 74 of module CheckoutCancellation>
+/\ requestPending = TRUE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = FALSE
+/\ phase = "reserving"
+/\ paymentPending = FALSE
+
+State 4: <Resolve line 19, col 12 to line 25, col 55 of module CheckoutCancellation>
+/\ requestPending = FALSE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = TRUE
+/\ phase = "payment"
+/\ paymentPending = FALSE
+
+State 5: <Pay line 26, col 8 to line 27, col 72 of module CheckoutCancellation>
+/\ requestPending = FALSE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = TRUE
+/\ phase = "paying"
+/\ paymentPending = TRUE
+
+State 6: <Cancel line 14, col 11 to line 18, col 91 of module CheckoutCancellation>
+/\ requestPending = FALSE
+/\ abandoned = FALSE
+/\ lostPayment = FALSE
+/\ reserved = TRUE
+/\ phase = "closed"
+/\ paymentPending = TRUE
+
+State 7: <Confirm line 28, col 12 to line 33, col 63 of module CheckoutCancellation>
+/\ requestPending = FALSE
+/\ abandoned = FALSE
+/\ lostPayment = TRUE
+/\ reserved = TRUE
+/\ phase = "closed"
+/\ paymentPending = FALSE
+
+18 states generated, 10 distinct states found, 1 states left on queue.
+The depth of the complete state graph search is 7.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:31)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 14 and seed -3158523725403469119 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3492] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CheckoutReadiness.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CheckoutReadiness
+Starting... (2026-09-21 01:46:31)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:32.
+Error: Invariant ReadyBeforeReservation is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ generation = 0
+/\ used = {}
+/\ reservations = {}
+/\ phase = "buyer"
+/\ requestGeneration = <<0, 0>>
+
+State 2: <Submit line 9, col 14 to line 14, col 54 of module CheckoutReadiness>
+/\ pending = {1}
+/\ generation = 0
+/\ used = {1}
+/\ reservations = {}
+/\ phase = "loading"
+/\ requestGeneration = <<0, 0>>
+
+State 3: <Resolve line 20, col 15 to line 27, col 66 of module CheckoutReadiness>
+/\ pending = {}
+/\ generation = 0
+/\ used = {1}
+/\ reservations = {[ready |-> FALSE, request |-> 1, owner |-> 0, current |-> 0, open |-> TRUE]}
+/\ phase = "buyer"
+/\ requestGeneration = <<0, 0>>
+
+5 states generated, 5 distinct states found, 2 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 3 (minimum is 3, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:32)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 98 and seed -795174332669356896 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3520] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CheckoutReadiness.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CheckoutReadiness
+Starting... (2026-09-21 01:46:32)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:32.
+Error: Invariant CurrentReservation is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ generation = 0
+/\ used = {}
+/\ reservations = {}
+/\ phase = "buyer"
+/\ requestGeneration = <<0, 0>>
+
+State 2: <Submit line 9, col 14 to line 14, col 54 of module CheckoutReadiness>
+/\ pending = {1}
+/\ generation = 0
+/\ used = {1}
+/\ reservations = {}
+/\ phase = "loading"
+/\ requestGeneration = <<0, 0>>
+
+State 3: <Close line 15, col 10 to line 17, col 72 of module CheckoutReadiness>
+/\ pending = {1}
+/\ generation = 1
+/\ used = {1}
+/\ reservations = {}
+/\ phase = "closed"
+/\ requestGeneration = <<0, 0>>
+
+State 4: <Resolve line 20, col 15 to line 27, col 66 of module CheckoutReadiness>
+/\ pending = {}
+/\ generation = 1
+/\ used = {1}
+/\ reservations = {[ready |-> TRUE, request |-> 1, owner |-> 0, current |-> 1, open |-> FALSE]}
+/\ phase = "closed"
+/\ requestGeneration = <<0, 0>>
+
+17 states generated, 16 distinct states found, 8 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 1, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:32)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 11 and seed 2998837068315793897 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3548] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/CheckoutReadiness.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module CheckoutReadiness
+Starting... (2026-09-21 01:46:33)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:33.
+Error: Invariant SingleCurrentFlight is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ generation = 0
+/\ used = {}
+/\ reservations = {}
+/\ phase = "buyer"
+/\ requestGeneration = <<0, 0>>
+
+State 2: <Submit line 9, col 14 to line 14, col 54 of module CheckoutReadiness>
+/\ pending = {1}
+/\ generation = 0
+/\ used = {1}
+/\ reservations = {}
+/\ phase = "loading"
+/\ requestGeneration = <<0, 0>>
+
+State 3: <Submit line 9, col 14 to line 14, col 54 of module CheckoutReadiness>
+/\ pending = {1, 2}
+/\ generation = 0
+/\ used = {1, 2}
+/\ reservations = {}
+/\ phase = "loading"
+/\ requestGeneration = <<0, 0>>
+
+9 states generated, 7 distinct states found, 4 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 3 (minimum is 3, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:33)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 16 and seed 2928163180077093298 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3576] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/NavigationVisit.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module NavigationVisit
+Starting... (2026-09-21 01:46:34)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:34.
+Progress(5) at 2026-09-21 01:46:34: 33 states generated, 16 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 16 total distinct states at (2026-09-21 01:46:34)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:34
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.5E-17
+33 states generated, 16 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 4 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:34)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 3 and seed 588213687200592815 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3603] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/NavigationVisit.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module NavigationVisit
+Starting... (2026-09-21 01:46:34)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:35.
+Error: Invariant NoFailedVisits is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ settingsDone = FALSE
+/\ counts = [a |-> 0, b |-> 0]
+/\ observed = <<FALSE, FALSE, FALSE>>
+/\ phase = <<"new", "new", "new">>
+/\ accepted = {}
+/\ pinned = [a |-> FALSE, b |-> FALSE]
+/\ failed = {}
+
+State 2: <Read line 14, col 12 to line 17, col 74 of module NavigationVisit>
+/\ settingsDone = FALSE
+/\ counts = [a |-> 0, b |-> 0]
+/\ observed = <<FALSE, FALSE, FALSE>>
+/\ phase = <<"read", "new", "new">>
+/\ accepted = {}
+/\ pinned = [a |-> FALSE, b |-> FALSE]
+/\ failed = {}
+
+State 3: <Read line 14, col 12 to line 17, col 74 of module NavigationVisit>
+/\ settingsDone = FALSE
+/\ counts = [a |-> 0, b |-> 0]
+/\ observed = <<FALSE, FALSE, FALSE>>
+/\ phase = <<"read", "read", "new">>
+/\ accepted = {}
+/\ pinned = [a |-> FALSE, b |-> FALSE]
+/\ failed = {}
+
+State 4: <Commit line 19, col 3 to line 25, col 49 of module NavigationVisit>
+/\ settingsDone = FALSE
+/\ counts = [a |-> 1, b |-> 0]
+/\ observed = <<FALSE, FALSE, FALSE>>
+/\ phase = <<"done", "read", "new">>
+/\ accepted = {1}
+/\ pinned = [a |-> FALSE, b |-> FALSE]
+/\ failed = {}
+
+State 5: <Commit line 19, col 3 to line 25, col 49 of module NavigationVisit>
+/\ settingsDone = FALSE
+/\ counts = [a |-> 1, b |-> 0]
+/\ observed = <<FALSE, FALSE, FALSE>>
+/\ phase = <<"done", "done", "new">>
+/\ accepted = {1}
+/\ pinned = [a |-> FALSE, b |-> FALSE]
+/\ failed = {2}
+
+59 states generated, 35 distinct states found, 16 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 4 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:35)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 53 and seed -409655023874660737 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3631] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ProviderRollback.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module ProviderRollback
+Starting... (2026-09-21 01:46:35)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:35.
+Progress(9) at 2026-09-21 01:46:35: 74 states generated, 38 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 38 total distinct states at (2026-09-21 01:46:35)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:35
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 7.4E-17
+74 states generated, 38 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:35)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 9 and seed 793093469429886324 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3658] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ProviderRollback.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module ProviderRollback
+Starting... (2026-09-21 01:46:36)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:36.
+Progress(9) at 2026-09-21 01:46:36: 64 states generated, 31 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 31 total distinct states at (2026-09-21 01:46:36)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:36
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 5.5E-17
+64 states generated, 31 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:36)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 121 and seed -6993489865263760559 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3685] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ProviderRollback.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module ProviderRollback
+Starting... (2026-09-21 01:46:37)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:37.
+Progress(9) at 2026-09-21 01:46:37: 70 states generated, 35 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 35 total distinct states at (2026-09-21 01:46:37)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:37
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 6.6E-17
+70 states generated, 35 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:37)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 85 and seed 260421692526075588 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3712] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ProviderRollback.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module ProviderRollback
+Starting... (2026-09-21 01:46:38)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:38.
+Progress(9) at 2026-09-21 01:46:38: 74 states generated, 38 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 38 total distinct states at (2026-09-21 01:46:38)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:38
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 7.4E-17
+74 states generated, 38 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:38)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 30 and seed -3928314513872720874 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3739] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ProviderRollback.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module ProviderRollback
+Starting... (2026-09-21 01:46:38)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:38.
+Error: Invariant StoppedFleetSafe is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ touched = {}
+/\ safe = <<FALSE, FALSE>>
+/\ outcome = <<"pending", "pending">>
+/\ bound = FALSE
+/\ phase = "ready"
+
+State 2: <Migrate line 14, col 12 to line 16, col 57 of module ProviderRollback>
+/\ touched = {}
+/\ safe = <<FALSE, FALSE>>
+/\ outcome = <<"pending", "pending">>
+/\ bound = FALSE
+/\ phase = "deploy"
+
+State 3: <Deploy line 17, col 14 to line 21, col 44 of module ProviderRollback>
+/\ touched = {1}
+/\ safe = <<TRUE, FALSE>>
+/\ outcome = <<"pending", "pending">>
+/\ bound = FALSE
+/\ phase = "deploy"
+
+State 4: <Fail line 26, col 9 to line 28, col 54 of module ProviderRollback>
+/\ touched = {1}
+/\ safe = <<TRUE, FALSE>>
+/\ outcome = <<"pending", "pending">>
+/\ bound = FALSE
+/\ phase = "rollback"
+
+State 5: <Rollback line 30, col 16 to line 37, col 53 of module ProviderRollback>
+/\ touched = {1}
+/\ safe = <<TRUE, FALSE>>
+/\ outcome = <<"restored", "pending">>
+/\ bound = FALSE
+/\ phase = "rollback"
+
+State 6: <Finish line 38, col 11 to line 41, col 56 of module ProviderRollback>
+/\ touched = {1}
+/\ safe = <<TRUE, FALSE>>
+/\ outcome = <<"restored", "pending">>
+/\ bound = FALSE
+/\ phase = "stopped"
+
+25 states generated, 18 distinct states found, 5 states left on queue.
+The depth of the complete state graph search is 6.
+The average outdegree of the complete state graph is 1 (minimum is 1, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:38)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 87 and seed 8363596144760960532 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3767] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ProviderRollback.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module ProviderRollback
+Starting... (2026-09-21 01:46:39)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:39.
+Error: Invariant NoUnsafeRestoration is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ touched = {}
+/\ safe = <<FALSE, FALSE>>
+/\ outcome = <<"pending", "pending">>
+/\ bound = FALSE
+/\ phase = "ready"
+
+State 2: <Migrate line 14, col 12 to line 16, col 57 of module ProviderRollback>
+/\ touched = {}
+/\ safe = <<FALSE, FALSE>>
+/\ outcome = <<"pending", "pending">>
+/\ bound = FALSE
+/\ phase = "deploy"
+
+State 3: <Deploy line 17, col 14 to line 21, col 44 of module ProviderRollback>
+/\ touched = {1}
+/\ safe = <<TRUE, FALSE>>
+/\ outcome = <<"pending", "pending">>
+/\ bound = FALSE
+/\ phase = "deploy"
+
+State 4: <Fail line 26, col 9 to line 28, col 54 of module ProviderRollback>
+/\ touched = {1}
+/\ safe = <<TRUE, FALSE>>
+/\ outcome = <<"pending", "pending">>
+/\ bound = FALSE
+/\ phase = "rollback"
+
+State 5: <Rollback line 30, col 16 to line 37, col 53 of module ProviderRollback>
+/\ touched = {1}
+/\ safe = <<FALSE, FALSE>>
+/\ outcome = <<"restored", "pending">>
+/\ bound = FALSE
+/\ phase = "rollback"
+
+14 states generated, 12 distinct states found, 5 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 2 (minimum is 1, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:39)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 29 and seed 5597267240145545888 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3795] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/OperationalLiveness.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module OperationalLiveness
+Starting... (2026-09-21 01:46:40)
+Implied-temporal checking--satisfiability problem has 5 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:40.
+Progress(11) at 2026-09-21 01:46:40: 5,713 states generated, 1,440 distinct states found, 0 states left on queue.
+Checking 5 branches of temporal properties for the complete state space with 7200 total distinct states at (2026-09-21 01:46:40)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:40
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.3E-13
+5713 states generated, 1440 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 11.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 12 and the 95th percentile is 7).
+Finished in 00s at (2026-09-21 01:46:40)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 12 and seed 8343256867493158816 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3825] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/FanHubOnboarding.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-21 01:46:41)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:41.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.2E-14
+1249 states generated, 215 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 12.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 5 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:41)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 79 and seed -5410199282643950803 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3851] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/FanHubOnboarding.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-21 01:46:42)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:42.
+Progress(12) at 2026-09-21 01:46:42: 1,249 states generated, 215 distinct states found, 0 states left on queue.
+Checking 2 branches of temporal properties for the complete state space with 430 total distinct states at (2026-09-21 01:46:42)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:42
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.2E-14
+1249 states generated, 215 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 12.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 5 and the 95th percentile is 4).
+Finished in 00s at (2026-09-21 01:46:42)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 25 and seed 5903056215703815724 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3881] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/FanHubOnboarding.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-21 01:46:43)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:43.
+Progress(12) at 2026-09-21 01:46:43: 1,249 states generated, 215 distinct states found, 0 states left on queue.
+Checking 2 branches of temporal properties for the complete state space with 430 total distinct states at (2026-09-21 01:46:43)
+Error: Temporal properties were violated.
+
+Error: The following behavior constitutes a counter-example:
+
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Change line 11, col 11 to line 13, col 87 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 1
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Change line 11, col 11 to line 13, col 87 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 4: <StartRead line 14, col 14 to line 16, col 60 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 5: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 6: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {2}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 2>>
+/\ terminalOK = TRUE
+
+State 7: <Receipt line 31, col 3 to line 37, col 69 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 2>>
+/\ terminalOK = TRUE
+
+State 8: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<2, 2>>
+/\ terminalOK = TRUE
+
+State 9: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 2
+/\ readGen = 2
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<2, 2>>
+/\ terminalOK = TRUE
+
+State 10: Stuttering
+Finished checking temporal properties in 00s at 2026-09-21 01:46:43
+1249 states generated, 215 distinct states found, 0 states left on queue.
+Finished in 00s at (2026-09-21 01:46:43)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 109 and seed 4057767277454612133 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3912] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/FanHubOnboarding.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-21 01:46:43)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:44.
+Error: Invariant ConsentOnly is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = FALSE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+14 states generated, 7 distinct states found, 3 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 3 (minimum is 2, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:44)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 50 and seed -3649624820995539991 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3940] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/FanHubOnboarding.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-21 01:46:44)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:44.
+Error: Invariant CurrentContext is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Change line 11, col 11 to line 13, col 87 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 1
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = FALSE
+/\ hidden = FALSE
+/\ gen = 1
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+12 states generated, 7 distinct states found, 4 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 3 (minimum is 3, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:44)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 63 and seed -3323066398962312134 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3968] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/FanHubOnboarding.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-21 01:46:45)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:45.
+Error: Invariant SingleFlight is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 4: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1, 2}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+34 states generated, 16 distinct states found, 8 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:45)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 97 and seed -2804736827574241034 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 3996] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/FanHubOnboarding.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module FanHubOnboarding
+Starting... (2026-09-21 01:46:46)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:46.
+Error: Invariant TerminalOnly is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = FALSE
+/\ known = FALSE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 2: <Read line 18, col 3 to line 22, col 81 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 3: <Exit line 24, col 3 to line 29, col 79 of module FanHubOnboarding>
+/\ pending = {1}
+/\ contextOK = TRUE
+/\ hidden = FALSE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = TRUE
+
+State 4: <Receipt line 31, col 3 to line 37, col 69 of module FanHubOnboarding>
+/\ pending = {}
+/\ contextOK = TRUE
+/\ hidden = TRUE
+/\ gen = 0
+/\ readGen = 0
+/\ consentOK = TRUE
+/\ eligible = TRUE
+/\ known = TRUE
+/\ captured = <<0, 0>>
+/\ terminalOK = FALSE
+
+32 states generated, 16 distinct states found, 8 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:46)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 47 and seed 8996141052285460374 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4025] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/AccessCodeValidation.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module AccessCodeValidation
+Starting... (2026-09-21 01:46:46)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:47.
+Progress(4) at 2026-09-21 01:46:47: 16 states generated, 9 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 9 total distinct states at (2026-09-21 01:46:47)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:47
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.4E-18
+16 states generated, 9 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:47)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 106 and seed -5898698253011727371 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4052] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/AccessCodeValidation.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module AccessCodeValidation
+Starting... (2026-09-21 01:46:47)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:47.
+Error: Invariant CurrentCredential is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ generation = 0
+/\ validAccount = FALSE
+/\ phase = "pending"
+/\ acceptedGeneration = 0
+/\ enabled = FALSE
+
+State 2: <EditCode line 8, col 13 to line 9, col 68 of module AccessCodeValidation>
+/\ generation = 1
+/\ validAccount = FALSE
+/\ phase = "pending"
+/\ acceptedGeneration = 0
+/\ enabled = FALSE
+
+State 3: <Resolve line 10, col 12 to line 12, col 61 of module AccessCodeValidation>
+/\ generation = 1
+/\ validAccount = TRUE
+/\ phase = "done"
+/\ acceptedGeneration = 0
+/\ enabled = TRUE
+
+8 states generated, 7 distinct states found, 4 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 3 (minimum is 3, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:47)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 122 and seed -4582063606474900169 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4080] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/AccessCodeValidation.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module AccessCodeValidation
+Starting... (2026-09-21 01:46:48)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:48.
+Error: Invariant VerifiedAccount is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ generation = 0
+/\ validAccount = FALSE
+/\ phase = "pending"
+/\ acceptedGeneration = 0
+/\ enabled = FALSE
+
+State 2: <Resolve line 10, col 12 to line 12, col 61 of module AccessCodeValidation>
+/\ generation = 0
+/\ validAccount = FALSE
+/\ phase = "done"
+/\ acceptedGeneration = 0
+/\ enabled = TRUE
+
+3 states generated, 3 distinct states found, 1 states left on queue.
+The depth of the complete state graph search is 2.
+Finished in 00s at (2026-09-21 01:46:48)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 117 and seed 846334166679512299 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4110] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/LiveIntakeAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module LiveIntakeAuthority
+Starting... (2026-09-21 01:46:49)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:49.
+Progress(5) at 2026-09-21 01:46:49: 96 states generated, 42 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 42 total distinct states at (2026-09-21 01:46:49)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:49
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.2E-16
+96 states generated, 42 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:49)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 35 and seed -4217765252022140101 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4137] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/LiveIntakeAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module LiveIntakeAuthority
+Starting... (2026-09-21 01:46:50)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:50.
+Error: Invariant ExplicitAuthority is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "ready"
+/\ ambient = 2
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 0
+
+State 2: <Submit line 10, col 11 to line 13, col 85 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "pending"
+/\ ambient = 2
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 2
+
+6 states generated, 5 distinct states found, 2 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:50)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 15 and seed -4389753117596283262 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4165] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/LiveIntakeAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module LiveIntakeAuthority
+Starting... (2026-09-21 01:46:50)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:50.
+Error: Invariant CurrentReceipt is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "ready"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 0
+
+State 2: <Submit line 10, col 11 to line 13, col 85 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "pending"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 1
+
+State 3: <EditCode line 14, col 13 to line 16, col 100 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 1
+/\ phase = "pending"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 1
+
+State 4: <Resolve line 19, col 12 to line 23, col 74 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = TRUE
+/\ generation = 1
+/\ phase = "done"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = TRUE
+/\ writer = 1
+
+26 states generated, 19 distinct states found, 11 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:50)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 95 and seed 5086957668081264093 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4193] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/LiveIntakeAuthority.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module LiveIntakeAuthority
+Starting... (2026-09-21 01:46:51)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-21 01:46:51.
+Error: Invariant PersistedReceipt is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "ready"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 0
+
+State 2: <Submit line 10, col 11 to line 13, col 85 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "pending"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = FALSE
+/\ writer = 1
+
+State 3: <Resolve line 19, col 12 to line 23, col 74 of module LiveIntakeAuthority>
+/\ receiptGeneration = 0
+/\ persisted = FALSE
+/\ generation = 0
+/\ phase = "done"
+/\ ambient = 1
+/\ requestGeneration = 0
+/\ receipt = TRUE
+/\ writer = 1
+
+11 states generated, 8 distinct states found, 4 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:51)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 28 and seed -4291194508636647343 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4221] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ArtistActivation.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistActivation
+Starting... (2026-09-21 01:46:52)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:52.
+Progress(5) at 2026-09-21 01:46:52: 23 states generated, 15 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 15 total distinct states at (2026-09-21 01:46:52)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:52
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 6.5E-18
+23 states generated, 15 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:52)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 38 and seed 6939255096673660501 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4248] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ArtistActivation.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistActivation
+Starting... (2026-09-21 01:46:53)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-21 01:46:53.
+Error: Invariant CurrentContext is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ persisted = FALSE
+/\ generation = 0
+/\ applied = FALSE
+/\ phase = "activate"
+/\ requestGeneration = 0
+/\ authoritative = FALSE
+/\ acceptedGeneration = 0
+
+State 2: <ChangeContext line 8, col 18 to line 10, col 104 of module ArtistActivation>
+/\ persisted = FALSE
+/\ generation = 1
+/\ applied = FALSE
+/\ phase = "activate"
+/\ requestGeneration = 0
+/\ authoritative = FALSE
+/\ acceptedGeneration = 0
+
+State 3: <ResolveActivation line 11, col 22 to line 14, col 111 of module ArtistActivation>
+/\ persisted = TRUE
+/\ generation = 1
+/\ applied = FALSE
+/\ phase = "refresh"
+/\ requestGeneration = 0
+/\ authoritative = FALSE
+/\ acceptedGeneration = 0
+
+State 4: <ResolveSession line 15, col 19 to line 20, col 75 of module ArtistActivation>
+/\ persisted = TRUE
+/\ generation = 1
+/\ applied = TRUE
+/\ phase = "done"
+/\ requestGeneration = 0
+/\ authoritative = TRUE
+/\ acceptedGeneration = 0
+
+17 states generated, 13 distinct states found, 5 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-21 01:46:53)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 120 and seed 876769100177346693 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4276] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ArtistClaimKind.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistClaimKind
+Starting... (2026-09-21 01:46:53)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Computed 2 initial states...
+Finished computing initial states: 4 distinct states generated at 2026-09-21 01:46:53.
+Progress(2) at 2026-09-21 01:46:53: 8 states generated, 8 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 8 total distinct states at (2026-09-21 01:46:53)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:53
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 0.0
+8 states generated, 8 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 1 and the 95th percentile is 1).
+Finished in 00s at (2026-09-21 01:46:53)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 43 and seed -4634007310980322727 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4303] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ArtistClaimKind.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistClaimKind
+Starting... (2026-09-21 01:46:54)
+Computing initial states...
+Computed 2 initial states...
+Finished computing initial states: 4 distinct states generated at 2026-09-21 01:46:54.
+Error: Invariant OnlyArtist is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ sourceKind = "artist"
+/\ done = FALSE
+/\ prepared = "none"
+/\ canonicalKind = "band"
+
+State 2: <Prepare line 9, col 12 to line 15, col 53 of module ArtistClaimKind>
+/\ sourceKind = "artist"
+/\ done = TRUE
+/\ prepared = "band"
+/\ canonicalKind = "band"
+
+6 states generated, 6 distinct states found, 3 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 1 (minimum is 1, the maximum 1 and the 95th percentile is 1).
+Finished in 00s at (2026-09-21 01:46:54)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 85 and seed 3420443599908076617 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4331] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ArtistClaimTarget.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistClaimTarget
+Starting... (2026-09-21 01:46:55)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Computed 2 initial states...
+Finished computing initial states: 4 distinct states generated at 2026-09-21 01:46:55.
+Progress(7) at 2026-09-21 01:46:55: 52 states generated, 49 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 49 total distinct states at (2026-09-21 01:46:55)
+Finished checking temporal properties in 00s at 2026-09-21 01:46:55
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 8.0E-18
+52 states generated, 49 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 7.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:55)
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 48 and seed -2301273031698030675 with 1 worker on 4 cores with 3554MB heap and 64MB offheap memory [pid: 4359] (Linux 6.17.0-1022-azure amd64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/runner/work/tdf-app/tdf-app/formal/event-operations/ArtistClaimTarget.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /tmp/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ArtistClaimTarget
+Starting... (2026-09-21 01:46:56)
+Computing initial states...
+Computed 2 initial states...
+Finished computing initial states: 4 distinct states generated at 2026-09-21 01:46:56.
+Error: Invariant UniqueTarget is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"start", "start">>
+/\ grants = {}
+
+State 2: <Acquire line 12, col 15 to line 15, col 84 of module ArtistClaimTarget>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"read", "start">>
+/\ grants = {}
+
+State 3: <Read line 16, col 12 to line 19, col 78 of module ArtistClaimTarget>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"write", "start">>
+/\ grants = {}
+
+State 4: <Acquire line 12, col 15 to line 15, col 84 of module ArtistClaimTarget>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"write", "read">>
+/\ grants = {}
+
+State 5: <Read line 16, col 12 to line 19, col 78 of module ArtistClaimTarget>
+/\ returned = {}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 0
+/\ allowed = TRUE
+/\ phase = <<"write", "write">>
+/\ grants = {}
+
+State 6: <Commit line 20, col 14 to line 25, col 66 of module ArtistClaimTarget>
+/\ returned = {1}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 1
+/\ allowed = TRUE
+/\ phase = <<"done", "write">>
+/\ grants = {}
+
+State 7: <Commit line 20, col 14 to line 25, col 66 of module ArtistClaimTarget>
+/\ returned = {1, 2}
+/\ owner = 0
+/\ observed = <<0, 0>>
+/\ published = FALSE
+/\ twins = 2
+/\ allowed = TRUE
+/\ phase = <<"done", "done">>
+/\ grants = {}
+
+128 states generated, 65 distinct states found, 8 states left on queue.
+The depth of the complete state graph search is 7.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-09-21 01:46:56)
+00. run   EventOperationsScenario     0    1/1     SAT
+00. check ExactlyOneAccountable     0       UNSAT
+00. check RequiredResponsibleIsPresent     0       UNSAT
+00. check DependenciesAreAcyclic     0       UNSAT
+00. check ConfirmedContractUsesOneAcceptedVersion     0       UNSAT
+00. check ExclusiveConflictHasAuthorizedOverride     0       UNSAT
+00. check InvitationCannotExpandScopes     0       UNSAT
+00. check RestrictedReadRequiresEventRelationship     0       UNSAT
+00. check RaciAssignmentsAreNotOrphaned     0       UNSAT
+Event operations formal verification passed within the documented finite bounds.
