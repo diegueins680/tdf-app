@@ -154,7 +154,7 @@ data DiscoveredEvent = DiscoveredEvent
   , discoveredEventTitle :: Text
   , discoveredEventDescription :: Maybe Text
   , discoveredEventStart :: UTCTime
-  , discoveredEventEnd :: UTCTime
+  , discoveredEventEnd :: Maybe UTCTime
   , discoveredEventVenue :: DiscoveredVenue
   , discoveredEventArtists :: [DiscoveredArtist]
   , discoveredEventPriceCents :: Maybe Int
@@ -702,7 +702,7 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
       , discoveredEventTitle = title
       , discoveredEventDescription = description
       , discoveredEventStart = buenPlanEventStart
-      , discoveredEventEnd = addUTCTime (3 * 60 * 60) buenPlanEventStart
+      , discoveredEventEnd = Nothing
       , discoveredEventVenue =
           DiscoveredVenue
             { discoveredVenueExternalId = venueExternalId
@@ -1002,8 +1002,8 @@ normalizeStructuredEvent cfg sourceKey city now StructuredFeedEvent{..} = do
   venueName <- cleanSingleLine 300 structuredEventVenue
   let endTime =
         case structuredEventEnd of
-          Just candidate | candidate > structuredEventStart -> candidate
-          _ -> addUTCTime (3 * 60 * 60) structuredEventStart
+          Just candidate | candidate > structuredEventStart -> Just candidate
+          _ -> Nothing
       lookaheadEnd =
         addUTCTime
           (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400))
@@ -1075,13 +1075,13 @@ normalizeStructuredArtist sourceKey rawName = do
 normalizeStructuredStatus ::
   UTCTime ->
   UTCTime ->
-  UTCTime ->
+  Maybe UTCTime ->
   Maybe Text ->
   Text
 normalizeStructuredStatus now startsAt endsAt rawStatus
-  | endsAt < now = "completed"
-  | startsAt <= now && endsAt >= now = "live"
   | normalized `elem` ["cancelled", "canceled"] = "cancelled"
+  | maybe False (< now) endsAt = "completed"
+  | startsAt <= now && maybe False (>= now) endsAt = "live"
   | normalized `elem` ["on_sale", "onsale", "confirmed"] = "on_sale"
   | otherwise = "announced"
   where
@@ -1416,8 +1416,8 @@ normalizeTicketmasterEvent configuredDefault requestedCity now TicketmasterEvent
         endText <- ticketmasterEndDateTime endData
         iso8601ParseM (T.unpack endText)
       end = case parsedEnd of
-        Just candidate | candidate > start -> candidate
-        _ -> addUTCTime (3 * 60 * 60) start
+        Just candidate | candidate > start -> Just candidate
+        _ -> Nothing
       classifications = ticketmasterEventClassifications
       segmentName = firstClassificationName ticketmasterSegment classifications
       genreNames = classificationGenreNames classifications
@@ -1551,13 +1551,13 @@ normalizeEventType title segment
 normalizeEventStatus ::
   UTCTime ->
   UTCTime ->
-  UTCTime ->
+  Maybe UTCTime ->
   Maybe Text ->
   Bool ->
   Text
 normalizeEventStatus now startsAt endsAt sourceStatus saleOpen
   | normalizedSource `elem` ["cancelled", "canceled"] = "cancelled"
-  | now >= startsAt && now <= endsAt = "live"
+  | now >= startsAt && maybe False (>= now) endsAt = "live"
   | saleOpen = "on_sale"
   | otherwise = "announced"
   where
@@ -2203,7 +2203,7 @@ syncUnsuppressedDiscoveredEventDb
               , Social.SocialEventVenueId =. Just venueKey
               , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
               , Social.SocialEventStartTime =. discoveredEventStart
-              , Social.SocialEventEndTime =. Just discoveredEventEnd
+              , Social.SocialEventEndTime =. discoveredEventEnd
               , Social.SocialEventPriceCents =. discoveredEventPriceCents
               , Social.SocialEventEventTypeId =. Just eventTypeUuid
               , Social.SocialEventWorkflowStateId =. Just workflowStateId
@@ -2246,7 +2246,7 @@ syncUnsuppressedDiscoveredEventDb
                     , Social.SocialEventVenueId =. Just venueKey
                     , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
                     , Social.SocialEventStartTime =. discoveredEventStart
-                    , Social.SocialEventEndTime =. Just discoveredEventEnd
+                    , Social.SocialEventEndTime =. discoveredEventEnd
                     , Social.SocialEventPriceCents =. discoveredEventPriceCents
                     , Social.SocialEventEventTypeId =. Just eventTypeUuid
                     , Social.SocialEventWorkflowStateId =. Just workflowStateId
@@ -2267,7 +2267,7 @@ syncUnsuppressedDiscoveredEventDb
                     , Social.socialEventEventTypeId = Just eventTypeUuid
                     , Social.socialEventWorkflowStateId = Just desiredWorkflowStateId
                     , Social.socialEventStartTime = discoveredEventStart
-                    , Social.socialEventEndTime = Just discoveredEventEnd
+                    , Social.socialEventEndTime = discoveredEventEnd
                     , Social.socialEventPriceCents = discoveredEventPriceCents
                     , Social.socialEventCurrencyId = Nothing
                     , Social.socialEventCapacity = Nothing
