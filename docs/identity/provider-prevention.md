@@ -68,8 +68,34 @@ require the override. Ancestry
 assumes reviewed commits have not deliberately reverted the authority contract;
 it does not replace review, artifact integrity or runtime checks.
 
-Remaining work: the Live Session ingestion path still resolves musicians by email and
-performs multiple database transactions, and older API/import clients can omit contact request
-keys. Those paths require their own scoped submission identities and relationship review.
-This follow-up does not claim comprehensive prevention until those remaining paths are repaired
-and the client/backend rollout is verified.
+Subsequent prevention changes add atomic Live Session intake and mandatory contact/import
+request keys, followed by commerce, course, trial and ad-inquiry receipts. Verify the actual
+deployed release before treating those controls as active; source implementation alone does
+not establish rollout.
+
+The guarded release runner also requires compatible contact writers during recovery. Intake
+targets require ancestor `02115f7d1b0786f3cdd4287a9466dd22682f603b`; targets with course,
+trial or ad request migrations require `6eab8592744015124b0162ce9e9361f51a04f538`.
+These reviewed writer contracts include the earlier provider protection. An older binary can
+ignore accepted receipts and repeat creation or account grants, so an empty-table count never
+permits falling back to it. The same mixed-fleet recovery lane upgrades untouched incompatible
+replicas after a canary failure and records incomplete recovery.
+
+For the combined release, the verified recovery candidate is
+`98a561a9446a1c51e627f6ad5a48737fe5122d85` (Build Image run 35370722046).
+It preserves all 113 migrations and the identity writer contracts, including the
+registration-specific confirmation-email throttle. Its backend, PostgreSQL,
+browser and image checks passed. It predates the mail delivery observability
+changes in main; if recovery is used, investigate delivery with the existing mail
+logs rather than assuming the newer message headers are available. Do not resend
+blindly or discard provider bindings, accepted receipts, or unrelated edits.
+
+The final application target must include protected-main merge
+`7635a5f325b9f08e129498317fecd606dfd36dc6` (including the mail changes), the
+request-writer recovery guard, and the recovery-dialog navigation fix from PR #457.
+Record its exact source SHA and verified image digest in the private release evidence.
+Use a clean checkout of that same target SHA for `plan`, `preflight`, and `release`,
+with the recovery SHA above. The target must be incorporated into protected main,
+pass the complete Build Image workflow, and pass staging before production execution.
+Do not widen the checkout allowlist or use an unverified image. Operation-specific
+merge undo remains separate from application recovery.

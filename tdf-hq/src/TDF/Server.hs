@@ -9587,112 +9587,10 @@ createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
     pure (toServiceAdSlotDTO slot)
 
 createServiceMarketplaceBooking :: AuthedUser -> Api.ServiceMarketplaceBookingReq -> AppM Api.ServiceMarketplaceBookingDTO
-createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
-  titleVal <- either throwError pure (validateServiceMarketplaceBookingTitle smbTitle)
-  paymentMethodVal <- either throwError pure (parsePaymentMethodText smbPaymentMethod)
-  notesVal <- either throwError pure (validateServiceMarketplaceBookingNotes smbNotes)
-  (adId, slotId) <- either throwError pure (validateServiceMarketplaceBookingRefs smbAdId smbSlotId)
-  pool <- asks envPool
-  now <- liftIO getCurrentTime
-  liftIO $ flip runSqlPool pool $ do
-    adEnt@(Entity adKey _) <- resolveServiceAdEntity adId
-    slotEnt@(Entity slotKey _) <- resolveServiceAdSlotEntity slotId
-    let ad = entityVal adEnt
-        slot = entityVal slotEnt
-        providerId = serviceAdProviderPartyId ad
-    when (not (serviceAdActive ad)) $ liftIO $ throwIO err409 { errBody = "Service ad is inactive" }
-    case validateServiceMarketplaceBookingSlot adKey slot of
-      Left serverErr -> liftIO $ throwIO serverErr
-      Right () -> pure ()
-    when (providerId == auPartyId user) $ liftIO $ throwIO err400 { errBody = "Cannot book your own service ad" }
-    let orderTitle = fromMaybe (serviceAdHeadline ad) titleVal
-    catalogId <- maybe (liftIO $ throwIO err409 { errBody = "Service ad is missing catalogId" }) pure (serviceAdServiceCatalogId ad)
-    catalog <- get catalogId
-    catalogKind <- case validateServiceMarketplaceCatalog catalog of
-      Left serverErr -> liftIO $ throwIO serverErr
-      Right kind -> pure kind
-    offeringEntity <- do
-      mapped <- getBy (Catalog.UniqueServiceOfferingLegacyId (Just (fromSqlKey catalogId)))
-      maybe
-        (liftIO $ throwIO err409 { errBody = "Service ad catalog has no canonical service offering mapping" })
-        pure
-        mapped
-    offeringUuid <-
-      maybe
-        (liftIO $ throwIO err500 { errBody = "Canonical service offering key is not a UUID" })
-        pure
-        (serviceOfferingUUIDFromKey (entityKey offeringEntity))
-    _ <- loadSelectableServiceOffering now offeringUuid
-    serviceOrderId <- insert ServiceOrder
-      { serviceOrderCustomerId = auPartyId user
-      , serviceOrderArtistId = Just providerId
-      , serviceOrderCatalogId = catalogId
-      , serviceOrderServiceOfferingId = Just offeringUuid
-      , serviceOrderServiceKind = catalogKind
-      , serviceOrderTitle = Just orderTitle
-      , serviceOrderDescription = notesVal
-      , serviceOrderStatus = "escrow_held"
-      , serviceOrderPriceQuotedCents = Just (serviceAdFeeCents ad)
-      , serviceOrderQuoteSentAt = Just now
-      , serviceOrderScheduledStart = Just (serviceAdSlotStartsAt slot)
-      , serviceOrderScheduledEnd = Just (serviceAdSlotEndsAt slot)
-      , serviceOrderCreatedAt = now
-      }
-    bookingId <- insert Booking
-      { bookingTitle = orderTitle
-      , bookingServiceOrderId = Just serviceOrderId
-      , bookingPartyId = Just (auPartyId user)
-      , bookingServiceType = Nothing
-      , bookingServiceOfferingId = Just offeringUuid
-      , bookingBookingTypeId = Nothing
-      , bookingWorkflowStateId = Nothing
-      , bookingEngineerPartyId = Just providerId
-      , bookingEngineerName = Nothing
-      , bookingStartsAt = serviceAdSlotStartsAt slot
-      , bookingEndsAt = serviceAdSlotEndsAt slot
-      , bookingStatus = Confirmed
-      , bookingCreatedBy = Just (auPartyId user)
-      , bookingNotes = notesVal
-      , bookingCreatedAt = now
-      }
-    update slotKey [ServiceAdSlotStatus =. "booked"]
-    paymentId <- insert Payment
-      { paymentInvoiceId = Nothing
-      , paymentOrderId = Just serviceOrderId
-      , paymentPartyId = auPartyId user
-      , paymentMethod = paymentMethodVal
-      , paymentAmountCents = serviceAdFeeCents ad
-      , paymentCurrency = serviceAdCurrency ad
-      , paymentReceivedAt = now
-      , paymentReference = Nothing
-      , paymentConcept = Just "escrow_hold"
-      , paymentPeriod = Nothing
-      , paymentAttachment = Nothing
-      , paymentCreatedBy = Just (auPartyId user)
-      , paymentCreatedAt = Just now
-      }
-    escrowId <- insert ServiceEscrow
-      { serviceEscrowBookingId = bookingId
-      , serviceEscrowServiceOrderId = serviceOrderId
-      , serviceEscrowAdId = adKey
-      , serviceEscrowPatronPartyId = auPartyId user
-      , serviceEscrowProviderPartyId = providerId
-      , serviceEscrowAmountCents = serviceAdFeeCents ad
-      , serviceEscrowCurrency = serviceAdCurrency ad
-      , serviceEscrowStatus = "held"
-      , serviceEscrowHeldPaymentId = Just paymentId
-      , serviceEscrowReleasedPaymentId = Nothing
-      , serviceEscrowHeldAt = now
-      , serviceEscrowReleasedAt = Nothing
-      }
-    pure $ Api.ServiceMarketplaceBookingDTO
-      { Api.smbBookingId = fromSqlKey bookingId
-      , Api.smbServiceOrderId = fromSqlKey serviceOrderId
-      , Api.smbEscrowId = fromSqlKey escrowId
-      , Api.smbEscrowStatus = "held"
-      , Api.smbEscrowAmountCents = serviceAdFeeCents ad
-      , Api.smbEscrowCurrency = serviceAdCurrency ad
-      }
+-- SYS-ESCROW-001: nominal Payment rows are not evidence of held funds.
+-- Keep the route fail-closed until a separately approved verified escrow flow exists.
+createServiceMarketplaceBooking _ _ =
+  throwError err503 { errBody = "Service marketplace booking is unavailable until verified escrow is supported" }
 
 completeServiceMarketplaceBooking :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
 completeServiceMarketplaceBooking user rawBookingId = do
@@ -9728,48 +9626,9 @@ validateServiceMarketplaceCompletion bookingStatusVal escrow
       Left err409 { errBody = "Booking must be confirmed or in progress before marketplace completion" }
 
 releaseServiceMarketplaceEscrow :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
-releaseServiceMarketplaceEscrow user rawBookingId = do
-  pool <- asks envPool
-  now <- liftIO getCurrentTime
-  liftIO $ flip runSqlPool pool $ do
-    booking@(Entity bookingKey _) <- resolveServiceMarketplaceBookingEntity rawBookingId
-    -- Lock the escrow row to prevent concurrent double-release
-    _ <- rawSql
-      "SELECT id FROM service_escrow WHERE booking_id = ? FOR UPDATE"
-      [toPersistValue bookingKey] ::
-      SqlPersistT IO [Single (Key ServiceEscrow)]
-    escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
-    Entity escrowKey escrow <-
-      either (liftIO . throwIO) pure (requireServiceEscrowForBooking escrowEnt)
-    let canRelease = serviceEscrowPatronPartyId escrow == auPartyId user || hasRole Admin user
-    when (not canRelease) $ liftIO $ throwIO err403
-    when (bookingStatus (entityVal booking) /= Completed) $
-      liftIO $ throwIO err409 { errBody = "Escrow can only be released after booking completion" }
-    when (not (escrowTransitionAllowed (serviceEscrowStatus escrow) "released")) $
-      liftIO $ throwIO err409 { errBody = "Escrow state transition not allowed" }
-    releasePaymentId <- insert Payment
-      { paymentInvoiceId = Nothing
-      , paymentOrderId = Just (serviceEscrowServiceOrderId escrow)
-      , paymentPartyId = serviceEscrowProviderPartyId escrow
-      , paymentMethod = BankTransferM
-      , paymentAmountCents = serviceEscrowAmountCents escrow
-      , paymentCurrency = serviceEscrowCurrency escrow
-      , paymentReceivedAt = now
-      , paymentReference = Nothing
-      , paymentConcept = Just "escrow_release"
-      , paymentPeriod = Nothing
-      , paymentAttachment = Nothing
-      , paymentCreatedBy = Just (auPartyId user)
-      , paymentCreatedAt = Just now
-      }
-    update escrowKey
-      [ ServiceEscrowStatus =. "released"
-      , ServiceEscrowReleasedPaymentId =. Just releasePaymentId
-      , ServiceEscrowReleasedAt =. Just now
-      ]
-    update (serviceEscrowServiceOrderId escrow) [ServiceOrderStatus =. "paid_out"]
-    refreshed <- getJustEntity escrowKey
-    pure (mkEscrowBookingDTO refreshed)
+-- SYS-ESCROW-002: completion or a nominal hold cannot authorize a payout.
+releaseServiceMarketplaceEscrow _ _ =
+  throwError err503 { errBody = "Service marketplace escrow release is unavailable until verified escrow is supported" }
 
 escrowTransitionAllowed :: Text -> Text -> Bool
 escrowTransitionAllowed "held" "released" = True

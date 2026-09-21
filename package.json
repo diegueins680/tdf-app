@@ -100,7 +100,10 @@
     "release:backend": "node scripts/production-release.mjs release",
     "clean": "rm -rf node_modules tdf-hq-ui/node_modules tdf-mobile/node_modules",
     "clean:build": "rm -rf tdf-hq-ui/dist tdf-mobile/dist tdf-hq/.stack-work",
-    "cron:sync-drive": "node scripts/sync-artist-drive.js"
+    "cron:sync-drive": "node scripts/sync-artist-drive.js",
+    "verify:event-operations:pluscal": "node scripts/verify-event-operations-pluscal.mjs",
+    "test:event-operations-pluscal": "node --test scripts/__tests__/event-operations-pluscal.test.mjs",
+    "verify:system:evidence": "node scripts/verify-system-evidence.mjs"
   },
   "keywords": [
     "crm",

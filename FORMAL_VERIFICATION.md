@@ -1,5 +1,11 @@
 # Formal Verification
 
+The cross-system authority, discovery inventory, open obligations, and delivery baseline are
+indexed in [formal/system/README.md](formal/system/README.md). Existing domain specifications
+remain authoritative within their approved scopes. Discovery and source audits do not establish
+implementation conformance. Payment arithmetic additionally has source-derived SMT obligations;
+their trusted translation and exact boundary are recorded in that index.
+
 This repo uses two complementary levels of formal work:
 
 - lightweight deterministic model checks and source audits for broad repository feedback; and
