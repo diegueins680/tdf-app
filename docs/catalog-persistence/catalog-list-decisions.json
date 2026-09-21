@@ -14007,6 +14007,24 @@
         "name": "VideoResult",
         "valueCount": 4
       }
+    },
+    {
+      "id": "24b181b6c7758991b35f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing a handler identifier or rejection message without rechecking correspondence could admit an unsafe recovery image.",
+      "justification": "Two source-verification bindings from explicit SYS-ESCROW-001/002 authority to Haskell handler names and literal HTTP rejection messages. These are compiler/source contract constants consumed by verification and release tooling, not user-selectable business catalog values. Keep them versioned with the handler contract and negative controls.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/lib/legacy-escrow-contract.mjs",
+        "line": 3,
+        "kind": "array",
+        "name": "disabledEscrowWrites",
+        "valueCount": 2,
+        "contract": "formal/system/legacy-escrow.md"
+      }
     }
   ]
 }

@@ -1510,6 +1510,7 @@
       "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramSync.hs",
       "tdf-hq/src/TDF/Services/Stripe.hs",
+      "tdf-hq/src/TDF/Services/YouTube.hs",
       "tdf-hq/src/TDF/Social/API.hs",
       "tdf-hq/src/TDF/Social/Chat.hs",
       "tdf-hq/src/TDF/Social/FanEffects.hs",
@@ -1582,6 +1583,7 @@
       "tdf-hq/test/TDF/ServerProposalsSpec.hs",
       "tdf-hq/test/TDF/ServerSpec.hs",
       "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
+      "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
@@ -3140,6 +3142,13 @@
     {
       "path": "docs/records-ingestion/2026-09-18-thumbnail-evidence.md",
       "sha256": "f1c1fe108a0baac79997871b0c2733b14338dbaf39542afc775ffdddf485bca9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/records-ingestion/youtube-provider.md",
+      "sha256": "58f7f33b656c8c5b042bd2be4a46380ce95bf6ca28cc1f38098ffee07486a17b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4875,14 +4884,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "a7625a8b7a243f33d77cda973233b4127e229400549f312c1231b10e1a6095ee",
+      "sha256": "573805a6a1ec2583726457b8468c24b3d77bd82fc2ac3e25ddf14e80d2eb0b62",
       "authority": "inferred",
       "authorityBasis": "Status: active audit; partial verification, delivery pending. See [current delivery report](delivery-2026-09-20.md). **The whole system is not formally verified.**",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/delivery-2026-09-20.md",
-      "sha256": "1e9dd415ea2bc2f5b6904dcbed7609af5ea2be671812de09229b361bd7eabdbe",
+      "sha256": "2bff9a529650921e255eeaaf70f0df74b7b2dbfb713b6ef861ad74dacc98ceab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4910,7 +4919,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b21e4c58dc4a5ee17fba6b9323a9102ed85ab804f96080d12aba819819364625",
+      "sha256": "40a0d0f7d4959da842fa72476619698527aa4e032dec327006442d53925fdb28",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

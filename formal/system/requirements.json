@@ -150,6 +150,22 @@
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
       "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
       "status": "implemented-awaiting-verification-and-release"
+    },
+    {
+      "id": "SYS-RELEASE-002",
+      "statement": "Required recovery-dialog browser checks must pass before release without weakening their assertions or time limits.",
+      "authority": "approved",
+      "source": "Current user audit instructions sections 7 and 9; .github/workflows/ci.yml persona-web-e2e gate; docs/ux-ui-audit/2026-09-17/locale-recovery.md records the existing intermittent failure",
+      "interpretation": "Close action must dismiss the existing recovery dialog while preserving the tested locale, destination and focus behavior. Immediate unmount is the chosen implementation, not a new business policy.",
+      "property": "After dismissal the recovery dialog is absent from the DOM; reopening remains possible; the unchanged browser assertions pass.",
+      "contract": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+      "implementation": [
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "e2e/web/persona-public.spec.mjs"
+      ],
+      "verification": "Actual React component regression fails before conditional unmount and passes afterward; existing Playwright browser checks. Runtime tests only, no unrestricted proof or claim that library/browser internals were verified.",
+      "evidence": "Local negative and corrected component logs; exact-head UI and persona-web-e2e CI artifacts.",
+      "status": "implemented-awaiting-browser-verification-and-release"
     }
   ]
 }
