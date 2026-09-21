@@ -35,7 +35,7 @@ jobs:
         run: |
           python scripts/specification-inventory.py --check
           python scripts/test-specification-inventory.py
-          node --test scripts/__tests__/verification-evidence.test.mjs
+          node --test scripts/__tests__/verification-evidence.test.mjs scripts/__tests__/legacy-escrow-contract.test.mjs
       - name: Install pinned arithmetic verifier
         run: python -m pip install -r formal/system/requirements-verification.txt
       - name: Verify actual payment arithmetic and negative controls

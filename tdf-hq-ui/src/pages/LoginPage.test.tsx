@@ -283,6 +283,23 @@ describe('LoginPage Google signup consent flow', () => {
       await cleanup();
     }
   }, 15_000);
+  it('unmounts a dismissed recovery dialog without waiting for an exit animation', async () => {
+    const cleanup = await renderLoginPage('/login?recover=1&redirect=%2Ffans&lang=es');
+    const dialog = () => document.querySelector('[role="dialog"][aria-labelledby="login-reset-dialog-title"]');
+    try {
+      await waitFor(() => expect(dialog()).not.toBeNull());
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        expect(findButton('Cerrar')).not.toBeNull();
+        await act(async () => { findButton('Cerrar')?.click(); await flushPromises(); });
+        expect(dialog()).toBeNull();
+        if (attempt === 0) {
+          await act(async () => { findButton('Recuperar acceso')?.click(); await flushPromises(); });
+          expect(dialog()).not.toBeNull();
+        }
+      }
+    } finally { await cleanup(); }
+  });
+
   it('connects an existing account only after explicit credential submission', async () => {
     googleLoginRequestMock.mockRejectedValueOnce(new Error(GOOGLE_CONSENT_ERROR))
       .mockResolvedValueOnce({ token: 'fictional-session', partyId: 42, roles: [], modules: [], accountCreated: false });

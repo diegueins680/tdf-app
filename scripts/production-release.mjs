@@ -7,6 +7,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
+import { checkDisabledEscrowWrites } from './lib/legacy-escrow-contract.mjs';
 
 import {
   buildDatabaseSqlInvocation,
@@ -83,7 +84,7 @@ Options:
   --db-app <name>    Fly PostgreSQL app (default: tdf-hq-db)
   --database <name>  PostgreSQL database (default: tdf_hq)
   --image <ref>      Immutable image; defaults to diegueins680/tdf-hq:<sha>
-  --recovery-sha <sha> Reviewed ancestor with identical migrations and compatible authentication
+  --recovery-sha <sha> Reviewed ancestor preserving migrations, identity and disabled financial writes
 `;
 }
 
@@ -270,6 +271,10 @@ async function resolveReleaseContext(options) {
     throw new Error('The target commit has no registered production migrations.');
   }
 
+  if (!await disabledEscrowWritesAt(sha)) {
+    throw new Error('Release source must preserve the disabled legacy escrow write contract.');
+  }
+
   let recoverySha;
   if (options.recoverySha) {
     recoverySha = normalizeFullSha(options.recoverySha);
@@ -289,8 +294,8 @@ async function resolveReleaseContext(options) {
         throw new Error(`Recovery migration differs: ${migration.id}`);
       }
     }
-    if (!(await rollbackCompatibility({ migrations }, recoverySha)).compatible) {
-      throw new Error('Recovery source does not preserve the required authentication contract.');
+    if (!(await rollbackCompatibility({ sha, migrations }, recoverySha)).compatible) {
+      throw new Error('Recovery source does not preserve the required authentication and financial-write contracts.');
     }
   }
 
@@ -709,6 +714,19 @@ const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';
 // when the receipt tables happened to be empty during preflight.
 const intakeIdentityFloor = '02115f7d1b0786f3cdd4287a9466dd22682f603b';
 const sourceRequestIdentityFloor = '6eab8592744015124b0162ce9e9361f51a04f538';
+// SYS-ESCROW-003: inspect the exact candidate blob, not a commit marker that
+// can disappear after a squash/cherry-pick or survive a later reintroduction.
+export async function disabledEscrowWritesAt(sha, readBlob = readGitBlob) {
+  const candidate = normalizeFullSha(sha);
+  const source = await readBlob(candidate, 'tdf-hq/src/TDF/Server.hs');
+  const apiSource = await readBlob(candidate, 'tdf-hq/src/TDF/API.hs');
+  try {
+    checkDisabledEscrowWrites(source, apiSource);
+    return true;
+  } catch {
+    return false; // Source disagrees. Git/tool failures above must still propagate.
+  }
+}
 
 export function requiredIdentityCommit(context) {
   const ids = new Set(context.migrations.map(({ id }) => id));
@@ -729,18 +747,24 @@ async function gitIsAncestor(ancestor, descendant) {
   }
 }
 
-export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor) {
+export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor, readBlob = readGitBlob) {
   const candidate = normalizeFullSha(sha);
   const requiredCommit = requiredIdentityCommit(context);
+  const escrowWritesDisabled = context.sha ? await disabledEscrowWritesAt(candidate, readBlob) : null;
   return {
     sha: candidate,
     requiredCommit,
-    compatible: requiredCommit === null || await isAncestor(requiredCommit, candidate),
+    escrowWritesDisabled,
+    compatible: (requiredCommit === null || await isAncestor(requiredCommit, candidate))
+      && escrowWritesDisabled !== false,
   };
 }
 
-export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor) {
-  const policy = await rollbackCompatibility(context, sha, isAncestor);
+export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor, readBlob = readGitBlob) {
+  const policy = await rollbackCompatibility(context, sha, isAncestor, readBlob);
+  if (policy.escrowWritesDisabled === false) {
+    throw new Error(`Unsafe financial-write rollback blocked: ${policy.sha} does not preserve the disabled escrow handler bodies. Recover forward with a compatible reviewed image.`);
+  }
   if (!policy.compatible) {
     throw new Error(`Unsafe authentication rollback blocked: ${policy.sha} predates ${policy.requiredCommit}. Keep provider bindings and source request receipts; recover forward with a compatible reviewed image.`);
   }
@@ -1139,6 +1163,7 @@ async function main() {
       recoveryPolicy: {
         minimumAuthenticationCommit: context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity') ? providerIdentityFloor : null,
         minimumIdentityWriterCommit: requiredIdentityCommit(context),
+        disabledEscrowWrites: 'required source contract on release and recovery revisions',
         fallbackSource: context.recoverySha ?? null,
         immutableArtifactVerification: 'required in preflight',
       },

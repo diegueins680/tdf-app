@@ -47,6 +47,7 @@
       "scripts/__tests__/identity-reconciliation.test.mjs",
       "scripts/__tests__/instagram-token-workflows.test.mjs",
       "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
+      "scripts/__tests__/legacy-escrow-contract.test.mjs",
       "scripts/__tests__/logical-correctness-audit.test.mjs",
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
@@ -120,6 +121,7 @@
       "scripts/lib/identity-inventory.sql",
       "scripts/lib/identity-reconciliation.mjs",
       "scripts/lib/instagram-token-lifecycle.mjs",
+      "scripts/lib/legacy-escrow-contract.mjs",
       "scripts/lib/logical-correctness-audit.mjs",
       "scripts/lib/openclaw-cdp.mjs",
       "scripts/lib/postgres-test-database.sh",
@@ -1508,6 +1510,7 @@
       "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramSync.hs",
       "tdf-hq/src/TDF/Services/Stripe.hs",
+      "tdf-hq/src/TDF/Services/YouTube.hs",
       "tdf-hq/src/TDF/Social/API.hs",
       "tdf-hq/src/TDF/Social/Chat.hs",
       "tdf-hq/src/TDF/Social/FanEffects.hs",
@@ -1580,6 +1583,7 @@
       "tdf-hq/test/TDF/ServerProposalsSpec.hs",
       "tdf-hq/test/TDF/ServerSpec.hs",
       "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
+      "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
@@ -1898,7 +1902,7 @@
     },
     {
       "path": "docs/Event_Discovery_Cron.md",
-      "sha256": "45ab7d0f57aa3d7ea6e5e78b70c6505535287d66b6f4c4e2dccfe9ebae418c48",
+      "sha256": "7bcd5161ff7dda115bfe2d6ef8ec309ef7fd24b5e46afa28253d933007f65e56",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -3138,6 +3142,13 @@
     {
       "path": "docs/records-ingestion/2026-09-18-thumbnail-evidence.md",
       "sha256": "f1c1fe108a0baac79997871b0c2733b14338dbaf39542afc775ffdddf485bca9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/records-ingestion/youtube-provider.md",
+      "sha256": "58f7f33b656c8c5b042bd2be4a46380ce95bf6ca28cc1f38098ffee07486a17b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4873,14 +4884,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "ebd4905b8bcd7bfc73454e6c00b66d611469544379a1f3b2d262a973f599a42d",
+      "sha256": "573805a6a1ec2583726457b8468c24b3d77bd82fc2ac3e25ddf14e80d2eb0b62",
       "authority": "inferred",
       "authorityBasis": "Status: active audit; partial verification, delivery pending. See [current delivery report](delivery-2026-09-20.md). **The whole system is not formally verified.**",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/delivery-2026-09-20.md",
-      "sha256": "b83cc72f7f3c5fdb03e68fad5f889a14c5bf8fb88796b030fb39ab93d89c0062",
+      "sha256": "745575c64a6f1e74c23a2dfb5ca62a6c25552163c62c5a49833cd61f71a8c4f9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4888,6 +4899,13 @@
     {
       "path": "formal/system/identity-recovery.md",
       "sha256": "d15f78faad09acc1900660112ffca7af42659104109e8e5fea84eafc7f1b8156",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-escrow.md",
+      "sha256": "d5f18da10f1d568df9866184f79f6a70739f8ae5ee375f42777ed7a1ad0b22b0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4901,7 +4919,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "fb42e7d3adb8faa1e4e4311d7fe3916ca72884fbaef01e06bd839224fbc6214b",
+      "sha256": "40a0d0f7d4959da842fa72476619698527aa4e032dec327006442d53925fdb28",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -5055,7 +5073,7 @@
     },
     {
       "path": "tdf-hq/docs/service_marketplace_formal_spec.md",
-      "sha256": "69451a2a1b486b200484449898e58f641b77dba00a13cf015c07c081d9913d21",
+      "sha256": "4556c612b267c47402d374190112be743f02167bfcf0130850c3a14bc81f7761",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

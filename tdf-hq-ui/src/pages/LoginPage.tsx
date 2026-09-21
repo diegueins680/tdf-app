@@ -1298,7 +1298,8 @@ export default function LoginPage() {
           </DialogActions>
         </Box>
       </Dialog>
-      <Dialog
+      {/* Dismissal must not leave a modal mounted behind an exit transition. */}
+      {resetDialogOpen && <Dialog
         open={resetDialogOpen}
         onClose={closeResetDialog}
         fullWidth
@@ -1345,7 +1346,7 @@ export default function LoginPage() {
             </Button>
           </DialogActions>
         </Box>
-      </Dialog>
+      </Dialog>}
       <Dialog
         open={signupDialogOpen}
         onClose={closeSignupDialog}
