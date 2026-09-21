@@ -4880,7 +4880,7 @@
     },
     {
       "path": "formal/system/delivery-2026-09-20.md",
-      "sha256": "62348b99a4993714a0b4e2168bd8ca7a1c9898239529c0b7be1579d24faec59f",
+      "sha256": "b83cc72f7f3c5fdb03e68fad5f889a14c5bf8fb88796b030fb39ab93d89c0062",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
