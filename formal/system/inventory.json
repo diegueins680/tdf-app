@@ -47,6 +47,7 @@
       "scripts/__tests__/identity-reconciliation.test.mjs",
       "scripts/__tests__/instagram-token-workflows.test.mjs",
       "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
+      "scripts/__tests__/legacy-escrow-contract.test.mjs",
       "scripts/__tests__/logical-correctness-audit.test.mjs",
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
@@ -120,6 +121,7 @@
       "scripts/lib/identity-inventory.sql",
       "scripts/lib/identity-reconciliation.mjs",
       "scripts/lib/instagram-token-lifecycle.mjs",
+      "scripts/lib/legacy-escrow-contract.mjs",
       "scripts/lib/logical-correctness-audit.mjs",
       "scripts/lib/openclaw-cdp.mjs",
       "scripts/lib/postgres-test-database.sh",
@@ -4873,14 +4875,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "ebd4905b8bcd7bfc73454e6c00b66d611469544379a1f3b2d262a973f599a42d",
+      "sha256": "a7625a8b7a243f33d77cda973233b4127e229400549f312c1231b10e1a6095ee",
       "authority": "inferred",
       "authorityBasis": "Status: active audit; partial verification, delivery pending. See [current delivery report](delivery-2026-09-20.md). **The whole system is not formally verified.**",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/delivery-2026-09-20.md",
-      "sha256": "b83cc72f7f3c5fdb03e68fad5f889a14c5bf8fb88796b030fb39ab93d89c0062",
+      "sha256": "a40a7fbd3367f0914ba5fb88dc523e5214762f02b2bd108df9609d08fc344478",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4888,6 +4890,13 @@
     {
       "path": "formal/system/identity-recovery.md",
       "sha256": "d15f78faad09acc1900660112ffca7af42659104109e8e5fea84eafc7f1b8156",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/legacy-escrow.md",
+      "sha256": "44e1f17786a30cbbf4511300f57213fc3cfc5ca901a696ee5f4c5030156f25e2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4901,7 +4910,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "fb42e7d3adb8faa1e4e4311d7fe3916ca72884fbaef01e06bd839224fbc6214b",
+      "sha256": "027fd4b906124cfdf27dc5fe3b0c492a2b27d91aa4bb8a64d97a4df0cdb4f10a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -5055,7 +5064,7 @@
     },
     {
       "path": "tdf-hq/docs/service_marketplace_formal_spec.md",
-      "sha256": "69451a2a1b486b200484449898e58f641b77dba00a13cf015c07c081d9913d21",
+      "sha256": "4556c612b267c47402d374190112be743f02167bfcf0130850c3a14bc81f7761",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

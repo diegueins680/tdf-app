@@ -38,6 +38,7 @@ import Database.Persist.Sql
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import TDF.API
     ( AdsInquiry (..)
+    , ServiceMarketplaceBookingReq (..)
     , CreateBookingReq (..)
     , CmsContentDTO (..)
     , PublicBookingReq (..)
@@ -2400,6 +2401,31 @@ spec = describe "TDF.Server helpers" $ do
                                 "Expected malformed artist auth scope to be rejected"
             assertRejected duplicatedArtist
             assertRejected invalidPartyArtist
+
+    describe "disabled legacy service marketplace financial writes" $ do
+        -- Extract the actual Servant route handlers, not a parallel policy helper.
+        -- A bottom Env fails if either path attempts to read configuration or a pool.
+        forM_ [[], [Customer], [Artist], [Admin], [Admin, Customer, Artist]] $ \roles -> do
+            let user = mkUser roles
+                _ :<|> _ :<|> _ :<|> _ :<|> book :<|> _ :<|> release =
+                    NotificationServer.serviceMarketplaceServer user
+                assertUnavailable action expectedBody = do
+                    result <- runHandler $ runReaderT action
+                        (error "Disabled financial writes must not access Env or persistence")
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 503
+                            errBody serverErr `shouldBe` expectedBody
+                        Right _ -> expectationFailure "Disabled financial write unexpectedly succeeded"
+            it ("rejects booking without database access for " <> show roles) $
+                forM_ [minBound, -1, 0, 1, maxBound] $ \identifier ->
+                    assertUnavailable
+                        (book (ServiceMarketplaceBookingReq identifier identifier Nothing Nothing (Just "cash")))
+                        "Service marketplace booking is unavailable until verified escrow is supported"
+            it ("rejects release and retries without database access for " <> show roles) $
+                forM_ [minBound, -1, 0, 1, maxBound, 1] $ \identifier ->
+                    assertUnavailable (release identifier)
+                        "Service marketplace escrow release is unavailable until verified escrow is supported"
 
     describe "validateServiceMarketplaceBookingRefs" $ do
         it "accepts positive ad and slot identifiers before marketplace booking lookups" $

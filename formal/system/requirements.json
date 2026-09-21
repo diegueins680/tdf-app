@@ -106,6 +106,50 @@
       "verification": "Three executable discovery regression checks including current actual backend documents; deterministic full index drift check. This does not establish semantic completeness of every implicit rule.",
       "evidence": "specification-contracts CI job; formal/system/inventory.json",
       "status": "implemented-awaiting-release-evidence"
+    },
+    {
+      "id": "SYS-ESCROW-001",
+      "statement": "Reject every decoded authenticated legacy service marketplace booking request until verified escrow exists.",
+      "authority": "approved",
+      "source": "Explicit user instruction 2026-09-20: Disable the two unverified financial writes; docs/adr/0101-verified-payment-events.md",
+      "property": "HTTP 503; unchanged persistent state; no handler-generated IO",
+      "contract": "formal/system/legacy-escrow.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API.hs"
+      ],
+      "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release ancestry guard regression. No whole-program proof.",
+      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "status": "implemented-awaiting-verification-and-release"
+    },
+    {
+      "id": "SYS-ESCROW-002",
+      "statement": "Reject every decoded authenticated legacy service marketplace escrow release request until verified escrow exists.",
+      "authority": "approved",
+      "source": "Explicit user instruction 2026-09-20: Disable the two unverified financial writes; docs/adr/0101-verified-payment-events.md",
+      "property": "HTTP 503; unchanged persistent state; no handler-generated IO",
+      "contract": "formal/system/legacy-escrow.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API.hs"
+      ],
+      "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release ancestry guard regression. No whole-program proof.",
+      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "status": "implemented-awaiting-verification-and-release"
+    },
+    {
+      "id": "SYS-ESCROW-003",
+      "statement": "Recovery must preserve the disablement of both unverified service marketplace financial writes.",
+      "authority": "approved",
+      "source": "Explicit user instruction 2026-09-20: Disable the two unverified financial writes; docs/adr/0101-verified-payment-events.md",
+      "property": "Recovery candidate must retain the reviewed write disablement",
+      "contract": "formal/system/legacy-escrow.md",
+      "implementation": [
+        "scripts/production-release.mjs"
+      ],
+      "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release ancestry guard regression. No whole-program proof.",
+      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "status": "pending-dependent-recovery-guard"
     }
   ]
 }
