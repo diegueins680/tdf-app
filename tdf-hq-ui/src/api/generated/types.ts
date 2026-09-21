@@ -10276,6 +10276,15 @@ export interface components {
             durationMs?: number;
             /** Format: uri */
             thumbnailUrl?: string;
+            /**
+             * @description Absent when provider availability has not been verified.
+             * @enum {string}
+             */
+            availability?: "available" | "unavailable";
+            /** @description Verified provider reason, independent of image loading failures. */
+            availabilityReason?: string;
+            /** Format: date-time */
+            verifiedAt?: string;
             relationKind: string;
             primary: boolean;
             sortOrder: number;

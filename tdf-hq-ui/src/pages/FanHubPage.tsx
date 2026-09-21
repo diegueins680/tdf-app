@@ -1,3 +1,5 @@
+import RecordThumbnail from '../features/records/RecordThumbnail';
+import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
 import { buildArtistFollowAuthPath } from '../utils/artistFollowIntent';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
@@ -101,15 +103,11 @@ interface CatalogRecoveryCard {
   eyebrow: string;
   title: string;
   description: string;
-  image: string;
+  resource: RecordsResourceDTO | undefined;
+  fallbackResources: RecordsResourceDTO[];
   to: string;
   action: string;
 }
-
-const primaryRecordsImage = (resources: RecordsResourceDTO[]): string =>
-  resources.find((resource) => resource.primary && resource.thumbnailUrl)?.thumbnailUrl ??
-  resources.find((resource) => resource.thumbnailUrl)?.thumbnailUrl ??
-  '';
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session, loading: sessionLoading } = useSession();
@@ -156,7 +154,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           eyebrow: firstNonEmptyString(contributorNames(release.contributors), collection?.name, release.code),
           title: release.title,
           description: firstNonEmptyString(collection?.description, collection?.name, release.title),
-          image: primaryRecordsImage(release.resources),
+          resource: primaryRecordsResource(release.resources),
+          fallbackResources: release.resources,
           to: firstNonEmptyString(collection?.publicRoute, '/records'),
           action: firstNonEmptyString(collection?.name, 'Ver lanzamientos'),
         };
@@ -172,7 +171,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             collection?.name,
             recording.title,
           ),
-          image: primaryRecordsImage(recording.resources),
+          resource: primaryRecordsResource(recording.resources),
+          fallbackResources: recording.resources,
           to: firstNonEmptyString(collection?.publicRoute, '/records'),
           action: firstNonEmptyString(collection?.name, 'Ver grabaciones'),
         };
@@ -188,7 +188,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             collection?.name,
             sessionItem.title,
           ),
-          image: primaryRecordsImage(sessionItem.resources),
+          resource: primaryRecordsResource(sessionItem.resources),
+          fallbackResources: sessionItem.resources,
           to: firstNonEmptyString(collection?.publicRoute, '/records'),
           action: firstNonEmptyString(collection?.name, 'Ver sesiones'),
         };
@@ -1795,7 +1796,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         flexDirection: 'column',
                       }}
                     >
-                      {card.image && <CardMedia component="img" height="180" image={card.image} alt={card.title} />}
+                      {card.resource && <Box sx={{ height: 180 }}><RecordThumbnail resource={card.resource} fallbackResources={card.fallbackResources} title={card.title} /></Box>}
                       <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
                         <Typography variant="overline" color="text.secondary">
                           {card.eyebrow}

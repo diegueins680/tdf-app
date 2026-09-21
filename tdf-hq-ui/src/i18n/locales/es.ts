@@ -1,6 +1,7 @@
 import directorySearch from './directorySearch.es';
 import authEntry from './authEntry.es';
 const es = {
+  records: { videoUnavailable: 'Video no disponible en la fuente', thumbnailUnavailable: 'Miniatura no disponible', loadingThumbnail: 'Cargando miniatura' },
   authEntry,
   directorySearch,
   auditAccessibility: {

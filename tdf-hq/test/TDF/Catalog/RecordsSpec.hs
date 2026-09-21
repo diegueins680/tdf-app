@@ -12,6 +12,7 @@ import TDF.API.Catalog
   , ContentTypeDTO (..)
   , RecordsCollectionDTO (..)
   , RecordsFeedDTO (..)
+  , RecordsResourceDTO (..)
   , WorkflowStateDTO (..)
   , WorkflowTransitionDTO (..)
   )
@@ -53,6 +54,28 @@ spec = do
               ]
       eitherDecode (encode feed) `shouldBe` Right expected
       eitherDecode (encode feed) `shouldBe` Right feed
+
+    it "keeps verified unavailability separate from an absent thumbnail" $ do
+      let resource = RecordsResourceDTO
+            { rrId = "ea399819-3f0d-4700-9488-c53d30ddd00b"
+            , rrProviderCode = "youtube"
+            , rrKind = "video"
+            , rrExternalCode = "ooPsIHsikYU"
+            , rrUrl = "https://www.youtube.com/watch?v=ooPsIHsikYU"
+            , rrLabel = Nothing
+            , rrDurationMs = Just 756000
+            , rrThumbnailUrl = Nothing
+            , rrAvailability = Just "unavailable"
+            , rrAvailabilityReason = Just "removed_by_uploader"
+            , rrVerifiedAt = Nothing
+            , rrRelationKind = "primary-media"
+            , rrPrimary = True
+            , rrSortOrder = 0
+            }
+      eitherDecode (encode resource) `shouldBe` Right resource
+      let unknown = resource { rrAvailability = Nothing, rrAvailabilityReason = Nothing }
+      eitherDecode (encode unknown) `shouldBe` Right unknown
+      encode unknown `shouldNotBe` encode resource
 
     it "rejects the former arbitrary CMS payload shape" $
       ( eitherDecode
