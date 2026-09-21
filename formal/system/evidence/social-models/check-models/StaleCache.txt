@@ -1,0 +1,251 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 112 and seed 4550194096926209640 with 1 worker on 16 cores with 4096MB heap and 64MB offheap memory [pid: 82505] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /private/tmp/tdf-formal-system-20260918/formal/social/Relationships.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Relationships
+Starting... (2026-09-18 13:32:33)
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-18 13:32:33.
+Error: Invariant AuthoritativeDenial is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ cacheVersion = 0
+/\ blocked = {}
+/\ terminal = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ delivered = {}
+/\ consent = {}
+/\ pending = {}
+/\ lastRead = [ consent |-> {},
+  blocked |-> {},
+  alive |-> {a, b},
+  members |-> {a, b},
+  private |-> FALSE,
+  granted |-> FALSE ]
+/\ version = 0
+/\ queuedVersion = (request1 :> 0 @@ request2 :> 0)
+/\ cacheConsent = {}
+/\ deliveryEvidence = ( request1 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] @@
+  request2 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] )
+/\ deliveryCount = (request1 :> 0 @@ request2 :> 0)
+/\ members = {a, b}
+/\ consentOwnerSafe = TRUE
+
+State 2: <Request line 27, col 3 to line 34, col 40 of module Relationships>
+/\ cacheVersion = 0
+/\ blocked = {}
+/\ terminal = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ delivered = {}
+/\ consent = {a}
+/\ pending = {}
+/\ lastRead = [ consent |-> {},
+  blocked |-> {},
+  alive |-> {a, b},
+  members |-> {a, b},
+  private |-> FALSE,
+  granted |-> FALSE ]
+/\ version = 1
+/\ queuedVersion = (request1 :> 0 @@ request2 :> 0)
+/\ cacheConsent = {}
+/\ deliveryEvidence = ( request1 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] @@
+  request2 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] )
+/\ deliveryCount = (request1 :> 0 @@ request2 :> 0)
+/\ members = {a, b}
+/\ consentOwnerSafe = TRUE
+
+State 3: <Request line 27, col 3 to line 34, col 40 of module Relationships>
+/\ cacheVersion = 0
+/\ blocked = {}
+/\ terminal = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ delivered = {}
+/\ consent = {a, b}
+/\ pending = {}
+/\ lastRead = [ consent |-> {},
+  blocked |-> {},
+  alive |-> {a, b},
+  members |-> {a, b},
+  private |-> FALSE,
+  granted |-> FALSE ]
+/\ version = 2
+/\ queuedVersion = (request1 :> 0 @@ request2 :> 0)
+/\ cacheConsent = {}
+/\ deliveryEvidence = ( request1 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] @@
+  request2 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] )
+/\ deliveryCount = (request1 :> 0 @@ request2 :> 0)
+/\ members = {a, b}
+/\ consentOwnerSafe = TRUE
+
+State 4: <Refresh line 74, col 12 to line 76, col 122 of module Relationships>
+/\ cacheVersion = 2
+/\ blocked = {}
+/\ terminal = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ delivered = {}
+/\ consent = {a, b}
+/\ pending = {}
+/\ lastRead = [ consent |-> {},
+  blocked |-> {},
+  alive |-> {a, b},
+  members |-> {a, b},
+  private |-> FALSE,
+  granted |-> FALSE ]
+/\ version = 2
+/\ queuedVersion = (request1 :> 0 @@ request2 :> 0)
+/\ cacheConsent = {a, b}
+/\ deliveryEvidence = ( request1 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] @@
+  request2 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] )
+/\ deliveryCount = (request1 :> 0 @@ request2 :> 0)
+/\ members = {a, b}
+/\ consentOwnerSafe = TRUE
+
+State 5: <Withdraw line 36, col 3 to line 43, col 55 of module Relationships>
+/\ cacheVersion = 2
+/\ blocked = {}
+/\ terminal = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ delivered = {}
+/\ consent = {b}
+/\ pending = {}
+/\ lastRead = [ consent |-> {},
+  blocked |-> {},
+  alive |-> {a, b},
+  members |-> {a, b},
+  private |-> FALSE,
+  granted |-> FALSE ]
+/\ version = 3
+/\ queuedVersion = (request1 :> 0 @@ request2 :> 0)
+/\ cacheConsent = {a, b}
+/\ deliveryEvidence = ( request1 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] @@
+  request2 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] )
+/\ deliveryCount = (request1 :> 0 @@ request2 :> 0)
+/\ members = {a, b}
+/\ consentOwnerSafe = TRUE
+
+State 6: <Read line 77, col 9 to line 83, col 79 of module Relationships>
+/\ cacheVersion = 2
+/\ blocked = {}
+/\ terminal = {}
+/\ private = FALSE
+/\ alive = {a, b}
+/\ delivered = {}
+/\ consent = {b}
+/\ pending = {}
+/\ lastRead = [ consent |-> {b},
+  blocked |-> {},
+  alive |-> {a, b},
+  members |-> {a, b},
+  private |-> FALSE,
+  granted |-> TRUE ]
+/\ version = 3
+/\ queuedVersion = (request1 :> 0 @@ request2 :> 0)
+/\ cacheConsent = {a, b}
+/\ deliveryEvidence = ( request1 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] @@
+  request2 :>
+      [ consent |-> {},
+        blocked |-> {},
+        alive |-> {a, b},
+        members |-> {a, b},
+        private |-> FALSE,
+        version |-> 0,
+        queued |-> 0 ] )
+/\ deliveryCount = (request1 :> 0 @@ request2 :> 0)
+/\ members = {a, b}
+/\ consentOwnerSafe = TRUE
+
+3994 states generated, 2303 distinct states found, 1668 states left on queue.
+The depth of the complete state graph search is 6.
+The average outdegree of the complete state graph is 4 (minimum is 0, the maximum 12 and the 95th percentile is 8).
+Finished in 01s at (2026-09-18 13:32:34)

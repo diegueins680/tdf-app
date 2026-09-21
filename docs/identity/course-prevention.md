@@ -11,3 +11,14 @@ Migration 110 adds the private receipt table. Apply through the normal immutable
 Validation: `sh scripts/test-course-identity.sh` creates a disposable production-shaped schema and exercises shared details, simultaneous retries, source namespace isolation, changed payloads, dependent-write rollback, and receipt-preserving schema rollback. Email is disabled in that test; it checks confirmation attempt records, not live delivery. The web regression covers editing a failed submission while retaining the original key. Staging and deployment must still be verified before claiming active prevention.
 
 The same public-course receipt and transaction lock cover fallback enquiry and payable checkout. A feature-flag change preserves the originally accepted registration and checkout details; concurrent requests spanning that change converge on one result. Accepted retries do not depend on current policy availability. Existing checkout records without a new receipt retain their original checkout replay path. Separate attendees may share an email; seat capacity is protected by the course lock and actual registrations rather than by email uniqueness. New course request keys accept 16–128 ASCII letters, digits, hyphens, and underscores; unsupported punctuation returns a clear 400 before either creation transaction. Migration 110 remains unchanged.
+
+Confirmation throttling is scoped to the registration and confirmation event type,
+so separate attendees sharing an email can each receive their acknowledgement.
+Public submission retries do not redispatch after a failed or uncertain SMTP
+attempt: an exception can occur after remote acceptance and does not prove
+nondelivery. The authorized registration dossier exposes `course_email_event`
+history, including failures and skips. Operators must inspect delivery evidence
+before arranging another send. There is no automatic retry guarantee for
+uncertain mail delivery; reliable automatic recovery requires provider idempotency
+or a proven failure before acceptance. This preserves the no-duplicate-notification
+invariant without describing a stored registration as proof of email delivery.

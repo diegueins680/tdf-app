@@ -1,6 +1,7 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
-import { parseArgs, recoverReleaseMachines, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
+import { parseArgs, recoverReleaseMachines, requiredIdentityCommit, disabledEscrowWritesAt, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
 
 const legacy = '2f01b20b0c2a2e2088570c3dc5deba6197266452';
 const modern = '5c11577a5d31f079b3e070a7810a6b04a48d99f4';
@@ -11,13 +12,52 @@ const ancestry = async (required, candidate) => {
   return candidate === modern || candidate === floor;
 };
 
+test('intake recovery cannot restore a provider-only writer that ignores submission receipts', async () => {
+  const intake = { migrations: [...context.migrations, { id: '2026-09-18_live_intake_idempotency' }] };
+  const required = '02115f7d1b0786f3cdd4287a9466dd22682f603b';
+  assert.equal(requiredIdentityCommit(intake), required);
+  let writes = 0;
+  await assert.rejects(withCompatibleRollback(intake, modern, () => { writes++; }, async (floor, prior) => {
+    assert.equal(floor, required); assert.equal(prior, modern); return false;
+  }), /source request receipts/);
+  assert.equal(writes, 0);
+});
+
+test('each source request migration requires the reviewed combined writer before recovery can mutate', async () => {
+  const required = '6eab8592744015124b0162ce9e9361f51a04f538';
+  const compatible = 'bdd9e24bddaaa96e2da72d75041b1e1b20236e04';
+  const oldIntake = 'e1a825bda26dbb16b1c732e551cc4880d5626943';
+  for (const id of ['2026-09-18_course_identity_requests', '2026-09-18_trial_identity_requests', '2026-09-18_ads_identity_requests']) {
+    const scoped = { migrations: [...context.migrations, { id }] };
+    let writes = 0;
+    const history = async (floor, prior) => { assert.equal(floor, required); return prior === compatible; };
+    await assert.rejects(withCompatibleRollback(scoped, oldIntake, () => { writes++; }, history), /source request receipts/);
+    assert.equal(writes, 0);
+    assert.equal(await withCompatibleRollback(scoped, compatible, () => { writes++; return 'verified'; }, history), 'verified');
+    assert.equal(writes, 1);
+    await assert.rejects(withCompatibleRollback(scoped, compatible, () => assert.fail('missing history must block'), async () => { throw new Error('history unavailable'); }), /history unavailable/);
+  }
+});
+
 test('first provider rollout refuses the actual prior binary before any deploy callback', async () => {
   let writes = 0;
   assert.deepEqual(await rollbackCompatibility(context, legacy, ancestry), {
-    sha: legacy, requiredCommit: floor, compatible: false,
+    sha: legacy, requiredCommit: floor, escrowWritesDisabled: null, compatible: false,
   });
   await assert.rejects(withCompatibleRollback(context, legacy, () => { writes++; }, ancestry), /recover forward/);
   assert.equal(writes, 0);
+});
+
+test('combined source-request requirements cannot weaken the identity recovery floor', () => {
+  const earlier = ['2026-09-18_provider_subject_identity', '2026-09-18_live_intake_idempotency'];
+  for (let mask = 0; mask < 4; mask++) {
+    const migrations = earlier.filter((_, index) => mask & (1 << index)).map(id => ({ id }));
+    for (const id of ['2026-09-18_course_identity_requests', '2026-09-18_trial_identity_requests', '2026-09-18_ads_identity_requests']) {
+      for (const order of [[{ id }, ...migrations], [...migrations, { id }]]) {
+        assert.equal(requiredIdentityCommit({ migrations: order }), '6eab8592744015124b0162ce9e9361f51a04f538');
+      }
+    }
+  }
 });
 
 test('compatible rollback preserves the deploy result and surfaces its failure', async () => {
@@ -105,4 +145,65 @@ test('recovery attempts every required replica despite a failure and records inc
 test('pre-deployment failure does not mutate the untouched fleet', async () => {
   const machines = [{ id: 0, releaseSnapshot: { rollbackPolicy: { compatible: false } } }];
   assert.deepEqual(await recoverReleaseMachines(machines, new Set(), () => assert.fail('no deploy attempt')), { rollbacks: [], errors: [] });
+});
+
+
+
+const escrowSource = readFileSync(new URL('../../tdf-hq/src/TDF/Server.hs', import.meta.url), 'utf8');
+const escrowApiSource = readFileSync(new URL('../../tdf-hq/src/TDF/API.hs', import.meta.url), 'utf8');
+const escrowFix = '33083d469727da73e73ea4a2c2be5aaec130b137';
+const auditedBeforeDisablement = 'd517d6ed12a0f9ed3929df124507c7f4b025d16d';
+test('exact Git source rejects the previously eligible audit image after escrow disablement', async () => {
+  const target = { sha: escrowFix, migrations: [{ id: '2026-09-18_course_identity_requests' }] };
+  assert.equal(await disabledEscrowWritesAt(escrowFix), true);
+  assert.equal((await rollbackCompatibility(target, auditedBeforeDisablement)).compatible, false);
+  assert.equal((await rollbackCompatibility(target, escrowFix)).compatible, true);
+  await assert.rejects(withCompatibleRollback(target, auditedBeforeDisablement,
+    () => assert.fail('must never restore nominal financial writers')), /Unsafe financial-write/);
+});
+
+test('identity and financial-write protection must hold together before any recovery mutation', async () => {
+  const target = { ...context, sha: modern };
+  for (const identity of [false, true]) for (const escrow of [false, true]) {
+    const history = async (required, candidate) => {
+      assert.equal(required, floor); assert.equal(candidate, legacy); return identity;
+    };
+    const readSource = async (candidate, path) => {
+      assert.equal(candidate, legacy);
+      if (path === 'tdf-hq/src/TDF/API.hs') return escrowApiSource;
+      assert.equal(path, 'tdf-hq/src/TDF/Server.hs');
+      return escrow ? escrowSource : 'legacy nominal writers';
+    };
+    let writes = 0;
+    const deploy = () => { writes++; return 'compatible recovery'; };
+    if (identity && escrow) {
+      assert.equal(await withCompatibleRollback(target, legacy, deploy, history, readSource), 'compatible recovery');
+      assert.equal(writes, 1);
+    } else {
+      await assert.rejects(withCompatibleRollback(target, legacy, deploy, history, readSource), /rollback blocked/);
+      assert.equal(writes, 0);
+    }
+  }
+});
+
+test('source read failure is inconclusive and cannot authorize recovery mutation', async () => {
+  await assert.rejects(withCompatibleRollback({ migrations: [], sha: modern }, legacy,
+    () => assert.fail('must not deploy without candidate source'), async () => true,
+    async () => { throw new Error('history unavailable'); }), /history unavailable/);
+});
+
+test('financial compatibility follows source, including squash and later reintroduction', async () => {
+  const target = { sha: modern, migrations: [] };
+  const noMarkerAncestry = () => assert.fail('financial contract must not depend on a commit marker');
+  assert.equal((await rollbackCompatibility(target, legacy, noMarkerAncestry, async (_, path) => path.endsWith('/API.hs') ? escrowApiSource : escrowSource)).compatible, true);
+  assert.equal((await rollbackCompatibility(target, modern, noMarkerAncestry,
+    async (_, path) => path.endsWith('/API.hs') ? escrowApiSource : escrowSource.replace('createServiceMarketplaceBooking _ _ =', 'createServiceMarketplaceBooking user request ='))).compatible, false);
+});
+
+test('actual recovery guard rejects safe unused stubs with financial routes rebound', async () => {
+  const target = { sha: modern, migrations: [] };
+  await assert.rejects(withCompatibleRollback(target, legacy,
+    () => assert.fail('must not deploy a rerouted financial writer'), async () => true,
+    async (_, path) => path.endsWith('/API.hs') ? escrowApiSource
+      : escrowSource.replace(':<|> releaseServiceMarketplaceEscrow user', ':<|> legacyRelease user')), /Unsafe financial-write/);
 });

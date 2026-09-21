@@ -63,6 +63,11 @@ run_tlc() {
 
 cd "${MODEL_DIR}"
 
+# Reused from PR #372: TLC checks generated TLA+, so first verify its source link.
+export JAVA_BIN TLA2TOOLS_JAR
+node "${SCRIPT_DIR}/verify-event-operations-pluscal.mjs"
+node --test "${SCRIPT_DIR}/__tests__/event-operations-pluscal.test.mjs"
+
 # Keep TLC sequential: 1.7.2 materializes standard modules through a shared temp location.
 run_tlc NativeLanding.tla NativeLanding.cfg native-landing
 run_tlc NativeArtistFollow.tla NativeArtistFollow.cfg native-artist-follow

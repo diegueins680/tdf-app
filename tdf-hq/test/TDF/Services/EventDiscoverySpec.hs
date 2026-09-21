@@ -157,6 +157,7 @@ spec = do
             buenPlanFixture
         of
           Right [event] -> do
+            discoveredEventEnd event `shouldBe` Nothing
             discoveredEventExternalId event `shouldBe` "bp-quito"
             discoveredEventTitle event `shouldBe` "Festival Sonoro - Quito"
             discoveredVenueCity (discoveredEventVenue event) `shouldBe` "QUITO"
@@ -188,6 +189,27 @@ spec = do
       result `shouldBe` Right []
 
   describe "Ticketmaster event normalization" $ do
+    it "keeps an unconfirmed end unknown through draft ingestion and replay" $ do
+      let withoutEnd = BL8.pack . T.unpack . T.replace
+            "\"end\":{\"dateTime\":\"2026-08-01T23:00:00Z\"}," ""
+            . T.pack . BL8.unpack $ ticketmasterFixture
+      response <- either fail pure (eitherDecode withoutEnd)
+      event <- case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+        [normalized] -> pure normalized
+        other -> fail ("Expected one event, got " <> show other)
+      discoveredEventEnd event `shouldBe` Nothing
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+      first <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
+      replay <- syncDiscoveredEventDraft pool (fixtureTime 10 6) event
+      discoveryEventsCreated first `shouldBe` 1
+      discoveryEventsCreated replay `shouldBe` 0
+      Just (Entity _ ref) <- runSqlPool
+        (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1")) pool
+      Just stored <- runSqlPool (get (Social.externalEventRefEventId ref)) pool
+      Social.socialEventEndTime stored `shouldBe` Nothing
+      destroyAllResources pool
+
     it "creates a complete graph while ignoring malformed provider records and other cities" $ do
       case eitherDecode ticketmasterFixture of
         Left err -> expectationFailure ("Fixture did not decode: " <> err)
@@ -196,6 +218,7 @@ spec = do
               events = normalizeTicketmasterResponse "USD" "Quito" now response
           case events of
             [event] -> do
+              discoveredEventEnd event `shouldBe` Just (fixtureTime 23 0)
               discoveredEventExternalId event `shouldBe` "tm-event-1"
               discoveredEventTitle event `shouldBe` "Festival Sonoro"
               discoveredEventType event `shouldBe` "festival"
@@ -729,7 +752,7 @@ spec = do
               { discoveredEventExternalId = "bp-distinct-event"
               , discoveredEventTitle = "Festival completamente diferente"
               , discoveredEventStart = addUTCTime (4 * 60 * 60) (discoveredEventStart event)
-              , discoveredEventEnd = addUTCTime (4 * 60 * 60) (discoveredEventEnd event)
+              , discoveredEventEnd = addUTCTime (4 * 60 * 60) <$> discoveredEventEnd event
               }
 
       discoveredEventFitsPilotLimit pool 1 sameCanonicalEvent `shouldReturn` True
@@ -937,7 +960,7 @@ initializeEventDiscoverySchema = do
     "CREATE TABLE venue (id INTEGER PRIMARY KEY, name TEXT NOT NULL, address TEXT NULL, city TEXT NULL, country TEXT NULL, country_code TEXT NULL, country_id TEXT NULL, city_id TEXT NULL, timezone TEXT NULL, latitude REAL NULL, longitude REAL NULL, capacity INTEGER NULL, contact TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
     []
   rawExecute
-    "CREATE TABLE social_event (id INTEGER PRIMARY KEY, organizer_party_id TEXT NULL, title TEXT NOT NULL, description TEXT NULL, venue_id INTEGER NULL, event_type_id TEXT NULL, workflow_state_id TEXT NULL, timezone TEXT NULL, start_time TIMESTAMP NOT NULL, end_time TIMESTAMP NOT NULL, price_cents INTEGER NULL, currency_id TEXT NULL, capacity INTEGER NULL, metadata TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
+    "CREATE TABLE social_event (id INTEGER PRIMARY KEY, organizer_party_id TEXT NULL, title TEXT NOT NULL, description TEXT NULL, venue_id INTEGER NULL, event_type_id TEXT NULL, workflow_state_id TEXT NULL, timezone TEXT NULL, start_time TIMESTAMP NOT NULL, end_time TIMESTAMP NULL, price_cents INTEGER NULL, currency_id TEXT NULL, capacity INTEGER NULL, metadata TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
     []
   rawExecute
     "CREATE TABLE external_venue_ref (id INTEGER PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, venue_id INTEGER NOT NULL, last_seen_at TIMESTAMP NOT NULL, UNIQUE(provider, external_id))"
