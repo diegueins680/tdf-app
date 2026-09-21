@@ -13971,6 +13971,42 @@
       "risk": "Unknown status must not be mistaken for verified removal.",
       "justification": "Database constraint for verified provider availability mirrors the optional API wire outcome; absent means unknown. This is not an editable business catalog.",
       "reviewed": true
+    },
+    {
+      "id": "c2ce66bee5505ee23ec9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Confusing provider failures, missing metadata or nonpublic content with verified publishable recordings.",
+      "justification": "Closed transport/parser failure sum type for the official YouTube client. It prevents secret-bearing HTTP exceptions and malformed or failed requests from becoming successful empty inventories; these are implementation outcomes, not editable provider or business catalogs.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "youtube-provider-2026-09-18",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Services/YouTube.hs",
+        "kind": "haskell-sum-type",
+        "name": "ProviderError",
+        "valueCount": 8
+      }
+    },
+    {
+      "id": "bc40390ae5d8ab889afc",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Confusing provider failures, missing metadata or nonpublic content with verified publishable recordings.",
+      "justification": "Closed result type distinguishes verified eligible public metadata, review-required metadata, discarded nonpublic metadata and absence in the public response. This provider-boundary type does not grant channel approval or govern publication by itself; its constructors are not administrator-selectable catalog values.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "youtube-provider-2026-09-18",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Services/YouTube.hs",
+        "kind": "haskell-sum-type",
+        "name": "VideoResult",
+        "valueCount": 4
+      }
     }
   ]
 }
