@@ -118,7 +118,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/API.hs"
       ],
-      "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release ancestry guard regression. No whole-program proof.",
+      "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
       "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
       "status": "implemented-awaiting-verification-and-release"
     },
@@ -133,7 +133,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/API.hs"
       ],
-      "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release ancestry guard regression. No whole-program proof.",
+      "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
       "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
       "status": "implemented-awaiting-verification-and-release"
     },
@@ -147,7 +147,7 @@
       "implementation": [
         "scripts/production-release.mjs"
       ],
-      "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release ancestry guard regression. No whole-program proof.",
+      "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
       "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
       "status": "implemented-awaiting-verification-and-release"
     }

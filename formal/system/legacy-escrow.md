@@ -57,17 +57,18 @@ global accounting invariants and all other payment routes remain separate open o
 
 ## Recovery correspondence
 
-Commit `33083d469727da73e73ea4a2c2be5aaec130b137` removes the two writers. For a target
-containing that commit, the actual production guard requires its recovery candidate to contain
-it too, in addition to existing identity protections and identical migration checksums. Preflight
-checks the supplied forward-recovery artifact and every prior machine image; recovery rechecks the
-candidate before mutation. Missing history is a tool failure, never compatibility. The concrete
-counterexample `d517d6ed12a0f9ed3929df124507c7f4b025d16d` has identical migrations and identity
-protections but still permits nominal escrow; it is now rejected for the new target. Tests exercise
-real Git ancestry and all four combinations of the two protection predicates. Git commit ancestry
-is provenance, not a proof against a later deliberate reintroduction; source gates and independent
-review must continue to hold on target/recovery revisions. Use the current guarded release tool;
-this policy does not control independent manual Fly operations.
+The actual production tool checks the exact Git source blobs of both the target and every
+recovery candidate with the executable handler contract, in addition to the existing identity
+ancestry and migration checksum constraints. It rejects a target or recovery binary with a body
+that could re-enable either write. This remains required after squash/cherry-pick integration and
+also detects later reintroduction, unlike an ancestry-only marker. Missing Git blobs/history are
+tool failures, never compatibility. Preflight validates the supplied recovery image and each prior
+machine image; recovery rechecks source before mutation. The concrete counterexample
+`d517d6ed12a0f9ed3929df124507c7f4b025d16d` has identical migrations and identity protections but
+still permits nominal escrow; it is rejected. Tests cover actual Git blobs, all four combinations
+of identity/financial predicates, missing source, squash-equivalent source and reintroduced writes.
+Current CI uses full history where actual historical blobs are regression inputs. Use the current
+guarded release tool; the contract does not control independent manual Fly operations.
 
 ## Reproduce
 

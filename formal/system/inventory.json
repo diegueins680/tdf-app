@@ -1900,7 +1900,7 @@
     },
     {
       "path": "docs/Event_Discovery_Cron.md",
-      "sha256": "45ab7d0f57aa3d7ea6e5e78b70c6505535287d66b6f4c4e2dccfe9ebae418c48",
+      "sha256": "7bcd5161ff7dda115bfe2d6ef8ec309ef7fd24b5e46afa28253d933007f65e56",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4882,7 +4882,7 @@
     },
     {
       "path": "formal/system/delivery-2026-09-20.md",
-      "sha256": "a40a7fbd3367f0914ba5fb88dc523e5214762f02b2bd108df9609d08fc344478",
+      "sha256": "1e9dd415ea2bc2f5b6904dcbed7609af5ea2be671812de09229b361bd7eabdbe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4896,7 +4896,7 @@
     },
     {
       "path": "formal/system/legacy-escrow.md",
-      "sha256": "86adbc66e09e6454935d032c39fc152635c77abf055f110bfc1d1e79f7f1934f",
+      "sha256": "aa3082ed555ade4ac761365e24aa57ef901ec443f73e1c558c217f5a07370a63",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4910,7 +4910,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a1e35bc9e31ed0361bccb4b523f0ffa33300fa1c258ceaf050872534e06bc1a3",
+      "sha256": "b21e4c58dc4a5ee17fba6b9323a9102ed85ab804f96080d12aba819819364625",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

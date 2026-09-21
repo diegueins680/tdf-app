@@ -7,6 +7,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
+import { checkDisabledEscrowWrites } from './lib/legacy-escrow-contract.mjs';
 
 import {
   buildDatabaseSqlInvocation,
@@ -268,6 +269,10 @@ async function resolveReleaseContext(options) {
   }
   if (migrations.length === 0) {
     throw new Error('The target commit has no registered production migrations.');
+  }
+
+  if (!await disabledEscrowWritesAt(sha)) {
+    throw new Error('Release source must preserve the disabled legacy escrow write contract.');
   }
 
   let recoverySha;
@@ -709,13 +714,16 @@ const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';
 // when the receipt tables happened to be empty during preflight.
 const intakeIdentityFloor = '02115f7d1b0786f3cdd4287a9466dd22682f603b';
 const sourceRequestIdentityFloor = '6eab8592744015124b0162ce9e9361f51a04f538';
-// SYS-ESCROW-003: no schema change accompanies the removal of nominal financial
-// writers. Migration compatibility alone must not re-enable those handlers.
-const disabledEscrowWriteFloor = '33083d469727da73e73ea4a2c2be5aaec130b137';
-
-export async function requiredEscrowCommit(context, isAncestor = gitIsAncestor) {
-  return context.sha && await isAncestor(disabledEscrowWriteFloor, normalizeFullSha(context.sha))
-    ? disabledEscrowWriteFloor : null;
+// SYS-ESCROW-003: inspect the exact candidate blob, not a commit marker that
+// can disappear after a squash/cherry-pick or survive a later reintroduction.
+export async function disabledEscrowWritesAt(sha, readBlob = readGitBlob) {
+  const source = await readBlob(normalizeFullSha(sha), 'tdf-hq/src/TDF/Server.hs');
+  try {
+    checkDisabledEscrowWrites(source);
+    return true;
+  } catch {
+    return false; // Source disagrees. Git/tool failures above must still propagate.
+  }
 }
 
 export function requiredIdentityCommit(context) {
@@ -737,23 +745,23 @@ async function gitIsAncestor(ancestor, descendant) {
   }
 }
 
-export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor) {
+export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor, readBlob = readGitBlob) {
   const candidate = normalizeFullSha(sha);
   const requiredCommit = requiredIdentityCommit(context);
-  const escrowCommit = await requiredEscrowCommit(context, isAncestor);
+  const escrowWritesDisabled = context.sha ? await disabledEscrowWritesAt(candidate, readBlob) : null;
   return {
     sha: candidate,
     requiredCommit,
-    requiredEscrowCommit: escrowCommit,
+    escrowWritesDisabled,
     compatible: (requiredCommit === null || await isAncestor(requiredCommit, candidate))
-      && (escrowCommit === null || await isAncestor(escrowCommit, candidate)),
+      && escrowWritesDisabled !== false,
   };
 }
 
-export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor) {
-  const policy = await rollbackCompatibility(context, sha, isAncestor);
-  if (!policy.compatible && policy.requiredEscrowCommit !== null) {
-    throw new Error(`Unsafe financial-write or identity rollback blocked: ${policy.sha} must retain disabled escrow writers (${policy.requiredEscrowCommit}) and identity protection (${policy.requiredCommit}). Recover forward with a compatible reviewed image.`);
+export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor, readBlob = readGitBlob) {
+  const policy = await rollbackCompatibility(context, sha, isAncestor, readBlob);
+  if (policy.escrowWritesDisabled === false) {
+    throw new Error(`Unsafe financial-write rollback blocked: ${policy.sha} does not preserve the disabled escrow handler bodies. Recover forward with a compatible reviewed image.`);
   }
   if (!policy.compatible) {
     throw new Error(`Unsafe authentication rollback blocked: ${policy.sha} predates ${policy.requiredCommit}. Keep provider bindings and source request receipts; recover forward with a compatible reviewed image.`);
@@ -1153,7 +1161,7 @@ async function main() {
       recoveryPolicy: {
         minimumAuthenticationCommit: context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity') ? providerIdentityFloor : null,
         minimumIdentityWriterCommit: requiredIdentityCommit(context),
-        minimumDisabledEscrowWriteCommit: await requiredEscrowCommit(context),
+        disabledEscrowWrites: 'required source contract on release and recovery revisions',
         fallbackSource: context.recoverySha ?? null,
         immutableArtifactVerification: 'required in preflight',
       },

@@ -1,6 +1,7 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
-import { parseArgs, recoverReleaseMachines, requiredIdentityCommit, requiredEscrowCommit, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
+import { parseArgs, recoverReleaseMachines, requiredIdentityCommit, disabledEscrowWritesAt, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
 
 const legacy = '2f01b20b0c2a2e2088570c3dc5deba6197266452';
 const modern = '5c11577a5d31f079b3e070a7810a6b04a48d99f4';
@@ -41,7 +42,7 @@ test('each source request migration requires the reviewed combined writer before
 test('first provider rollout refuses the actual prior binary before any deploy callback', async () => {
   let writes = 0;
   assert.deepEqual(await rollbackCompatibility(context, legacy, ancestry), {
-    sha: legacy, requiredCommit: floor, requiredEscrowCommit: null, compatible: false,
+    sha: legacy, requiredCommit: floor, escrowWritesDisabled: null, compatible: false,
   });
   await assert.rejects(withCompatibleRollback(context, legacy, () => { writes++; }, ancestry), /recover forward/);
   assert.equal(writes, 0);
@@ -147,13 +148,15 @@ test('pre-deployment failure does not mutate the untouched fleet', async () => {
 });
 
 
-const escrowFloor = '33083d469727da73e73ea4a2c2be5aaec130b137';
+
+const escrowSource = readFileSync(new URL('../../tdf-hq/src/TDF/Server.hs', import.meta.url), 'utf8');
+const escrowFix = '33083d469727da73e73ea4a2c2be5aaec130b137';
 const auditedBeforeDisablement = 'd517d6ed12a0f9ed3929df124507c7f4b025d16d';
-test('real ancestry rejects the previously eligible audit image after escrow disablement', async () => {
-  const target = { sha: escrowFloor, migrations: [{ id: '2026-09-18_course_identity_requests' }] };
-  assert.equal(await requiredEscrowCommit(target), escrowFloor);
+test('exact Git source rejects the previously eligible audit image after escrow disablement', async () => {
+  const target = { sha: escrowFix, migrations: [{ id: '2026-09-18_course_identity_requests' }] };
+  assert.equal(await disabledEscrowWritesAt(escrowFix), true);
   assert.equal((await rollbackCompatibility(target, auditedBeforeDisablement)).compatible, false);
-  assert.equal((await rollbackCompatibility(target, escrowFloor)).compatible, true);
+  assert.equal((await rollbackCompatibility(target, escrowFix)).compatible, true);
   await assert.rejects(withCompatibleRollback(target, auditedBeforeDisablement,
     () => assert.fail('must never restore nominal financial writers')), /Unsafe financial-write/);
 });
@@ -162,31 +165,34 @@ test('identity and financial-write protection must hold together before any reco
   const target = { ...context, sha: modern };
   for (const identity of [false, true]) for (const escrow of [false, true]) {
     const history = async (required, candidate) => {
-      if (required === escrowFloor && candidate === modern) return true; // target contains disablement
-      if (required === escrowFloor && candidate === legacy) return escrow;
-      if (required === floor && candidate === legacy) return identity;
-      assert.fail('unexpected ancestry query');
+      assert.equal(required, floor); assert.equal(candidate, legacy); return identity;
+    };
+    const readSource = async (candidate, path) => {
+      assert.equal(candidate, legacy); assert.equal(path, 'tdf-hq/src/TDF/Server.hs');
+      return escrow ? escrowSource : 'legacy nominal writers';
     };
     let writes = 0;
     const deploy = () => { writes++; return 'compatible recovery'; };
     if (identity && escrow) {
-      assert.equal(await withCompatibleRollback(target, legacy, deploy, history), 'compatible recovery');
+      assert.equal(await withCompatibleRollback(target, legacy, deploy, history, readSource), 'compatible recovery');
       assert.equal(writes, 1);
     } else {
-      await assert.rejects(withCompatibleRollback(target, legacy, deploy, history), /rollback blocked/);
+      await assert.rejects(withCompatibleRollback(target, legacy, deploy, history, readSource), /rollback blocked/);
       assert.equal(writes, 0);
     }
   }
 });
 
-test('financial recovery provenance failure is inconclusive and cannot authorize mutation', async () => {
+test('source read failure is inconclusive and cannot authorize recovery mutation', async () => {
   await assert.rejects(withCompatibleRollback({ migrations: [], sha: modern }, legacy,
-    () => assert.fail('must not deploy without target ancestry'),
+    () => assert.fail('must not deploy without candidate source'), async () => true,
     async () => { throw new Error('history unavailable'); }), /history unavailable/);
 });
 
-test('targets before the explicit disablement retain their scoped recovery policy', async () => {
-  const prior = { sha: auditedBeforeDisablement, migrations: [] };
-  assert.equal(await requiredEscrowCommit(prior), null);
-  assert.equal((await rollbackCompatibility(prior, auditedBeforeDisablement)).compatible, true);
+test('financial compatibility follows source, including squash and later reintroduction', async () => {
+  const target = { sha: modern, migrations: [] };
+  const noMarkerAncestry = () => assert.fail('financial contract must not depend on a commit marker');
+  assert.equal((await rollbackCompatibility(target, legacy, noMarkerAncestry, async () => escrowSource)).compatible, true);
+  assert.equal((await rollbackCompatibility(target, modern, noMarkerAncestry,
+    async () => escrowSource.replace('createServiceMarketplaceBooking _ _ =', 'createServiceMarketplaceBooking user request ='))).compatible, false);
 });
