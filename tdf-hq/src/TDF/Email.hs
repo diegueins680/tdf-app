@@ -365,7 +365,7 @@ sendMailWithLogging cfg toAddr _subject mail = do
         , T.pack modeLabel
         , ")"
         ]
-  BS.putStrLn (TE.encodeUtf8 logLine)
+  BS.hPutStrLn stderr (TE.encodeUtf8 logLine)
   result <- try (sendAction :: IO ())
   case result of
     Left err -> do
@@ -377,7 +377,7 @@ sendMailWithLogging cfg toAddr _subject mail = do
       throwIO (err :: SomeException)
     Right () ->
       -- SMTP acceptance is not evidence of delivery or inbox placement.
-      BS.putStrLn (TE.encodeUtf8 ("[Email] smtp_accepted message_id=" <> messageId))
+      BS.hPutStrLn stderr (TE.encodeUtf8 ("[Email] smtp_accepted message_id=" <> messageId))
 
 buildMail :: EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail
 buildMail = buildMailLocalized "es" "Ver detalles"
