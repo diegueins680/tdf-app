@@ -268,6 +268,7 @@
       "scripts/test-service-storefront-checkout-runtime-migration.sh",
       "scripts/test-service-storefront-phase0-migration.sh",
       "scripts/test-social-event-optional-end-migration.sh",
+      "scripts/test-specification-inventory.py",
       "scripts/test-stripe-integration.sh",
       "scripts/test-studio-internship-audit-api-e2e.mjs",
       "scripts/test-studio-internship-audit-api-e2e.sh",
@@ -1623,8 +1624,64 @@
   },
   "artifacts": [
     {
+      "path": "AI_WORKFLOW.md",
+      "sha256": "73076e21c7b3731e5c61611ec10674f093aa9f905b1148856a9b6326d2927cc6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "ARTIST_FEATURES_REFERENCE.md",
+      "sha256": "def37283177e67bf4af2bc2c4534a493b454fce532b9758e7d8d829956b380b4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "BACKEND_CHANGES_NEEDED.md",
+      "sha256": "0e2a10e6b08750f25bda1fda92b156c89a66a82a4729da5d86c6ee6611ad8af7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "BEST_PRACTICES.md",
+      "sha256": "c250f70f39aaa06510c15efe1af0999b1c2ba707309615a09f15ad6ff637f007",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "143223f44c4c8f265ac93fb3ebf64ac2ae112a7ab2c3d5d3af9689d11d540c4a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "DEPLOYMENT_GUIDE.md",
       "sha256": "0a1a1fd9462ee37ba234d2eb78a3b394bdefdb7fb37046b724dd87ec97e465b4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "DEPLOYMENT_UPDATE.md",
+      "sha256": "973e1394827642838892252a92109d6465305697bb7002b084a37a286b28ec6a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "DEVELOPMENT.md",
+      "sha256": "c4d7d6baf81636e0fd408f201eb5cc3a1593044e0fc6cc9842b3bf9fb1b13ab6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "DOCUMENTATION.md",
+      "sha256": "7fd6fc6957f708c7229fbd521468216e0e0a3899b3be91fd8e034eb7a3ecb313",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -1644,6 +1701,34 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "HASKELL_BEST_PRACTICES.md",
+      "sha256": "948166b2aaa01b7feed562157d62ae227e4418474620815f30fadf32f428b9ca",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "HASKELL_CHECKLIST.md",
+      "sha256": "265d86556a33f5579c29e19e8941fed07d1e8f0ce303ec2642ba0ef9353d8af7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "IMPLEMENTATION_SUMMARY.md",
+      "sha256": "91c11103297cf7ec92b00ee6543f5dfdf87497817a7dab07d778009ad8b89f2c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "INDEX.md",
+      "sha256": "248d1ac3b04f4338e8d225d00c40dfd04c33aa818b8445b042a4c210ab1493b8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "MOBILE_APP.md",
       "sha256": "ac5d1d4bbcbcbff0958d33ab3446c08c8e7881a5751d8b821c6e923665bf63e9",
       "authority": "inferred",
@@ -1658,8 +1743,120 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "QUICKSTART.md",
+      "sha256": "28751e157154bdb0b519471b9c6ae591af56a9c871c7f074ef4b76cbbd71fda4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "QUICK_REFERENCE.md",
+      "sha256": "0832935e568eed4cf3b4e6c4d25aa06e2c54fdeffa2c2e92c50b9c4630391a0a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "QUICK_START_REFERENCE.md",
+      "sha256": "94ca346334c6fe8646e7b2d5017c46bbfc4f6870ea9d7fbc12e658407d74362f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "README.md",
       "sha256": "fbdfd0f5021ab36fd3453d75472b088059abb52de3523675317041cf45b09caf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "SECURITY_NOTICE.md",
+      "sha256": "a76ed52a7edef4c2bd81b59974f3c3662c190152dab9267d5e4ccc7ade7a81eb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "SELF_HEALING_AND_CONTINUOUS_IMPROVEMENT.md",
+      "sha256": "944d708d6d2edba750186679e35baf55ceafd7f36201eb421fcd806485c5db53",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "SERVICE_STOREFRONT_DEPLOYMENT.md",
+      "sha256": "7389913502871d283a8427c4e9e9771eed2eb4ae405fdfff961d2957861c809c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "STRIPE_DEPLOYMENT_GUIDE.md",
+      "sha256": "0e4a55eeabd81cd50724b5ff6796c473158b470fd49dbb884704e5e32698b40d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "STRIPE_TICKETING_CHECKLIST.md",
+      "sha256": "5e6b745d79276b66ddaec925ecade60e1d83c8cb5db49c7d1629c5dbe3689588",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "STRIPE_TICKETING_DEPLOYMENT_SUMMARY.md",
+      "sha256": "233c8f6d7ae87da8a2ca1ecfa3790bf7c35e73847328618c805303cdb6f0217b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "STRIPE_WEBHOOK_SETUP.md",
+      "sha256": "cdc865e625ef96c192ed309ecdb465a3badb6be4e252ca6f28b727963fa9e666",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "TDF_REVENUE_STRATEGY.md",
+      "sha256": "62ee22c1bc6a176066a7d8f9a9e588c585a4f50460a69170c82fe69fc5350f27",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "TESTING_GUIDE.md",
+      "sha256": "136283c4d4c5ae6dd7bbb2f2ea8171357310009ca76f1f2c400d2b3d2e12c796",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "TICKETING_IMPLEMENTATION_STATUS.md",
+      "sha256": "96d7c5b00fd52e71cb9ee0023adbe2817f8f1e2275584762e0e0e704e4976edd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "TICKETING_SYSTEM_SUMMARY.md",
+      "sha256": "5a571b815342238ef1694a77d83a6321e7ed6a0b4ffae70c5f204e16641b748e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "TROUBLESHOOTING.md",
+      "sha256": "6be2e27f0f6d21a79a31e66008387b535d9b02084f1a487c252a15c4528de847",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "UI_VISUAL_GUIDE.md",
+      "sha256": "f056edda0645e00c48aff20f4cb3f1eccd8a498ecdcad36ff13a873f41b4ea58",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2768,7 +2965,7 @@
       "sha256": "5416bafc510e51156762c444ac6e36a421bd4f48aadf3842cadcdd592dce7bd2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
+      "kind": "interface-contract"
     },
     {
       "path": "docs/operations-control-center/architecture.md",
@@ -4220,6 +4417,13 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/README.md",
+      "sha256": "103b5cf8c37e7ed406fbf62e34380a17f7ba8718d3dd609172add7d54bddf6cf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/event-operations/ReservationOverride.cfg",
       "sha256": "d42367fad32145f991def9b5b8bdc47e0de76ad536ca659068bece1d24c45dcf",
       "authority": "inferred",
@@ -4668,8 +4872,57 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/system/README.md",
+      "sha256": "ebd4905b8bcd7bfc73454e6c00b66d611469544379a1f3b2d262a973f599a42d",
+      "authority": "inferred",
+      "authorityBasis": "Status: active audit; partial verification, delivery pending. See [current delivery report](delivery-2026-09-20.md). **The whole system is not formally verified.**",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/delivery-2026-09-20.md",
+      "sha256": "62348b99a4993714a0b4e2168bd8ca7a1c9898239529c0b7be1579d24faec59f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/identity-recovery.md",
+      "sha256": "d15f78faad09acc1900660112ffca7af42659104109e8e5fea84eafc7f1b8156",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/payment-arithmetic.md",
+      "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/requirements.json",
+      "sha256": "fb42e7d3adb8faa1e4e4311d7fe3916ca72884fbaef01e06bd839224fbc6214b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-register"
+    },
+    {
+      "path": "release-checklist.md",
+      "sha256": "aa542aaf3a0468b89d445c41844a38fdf8be655bab4c775d66086e671720c473",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "release-readiness.md",
       "sha256": "ecff23b9f3b0b71629e170367834078c4c727e8321bcc70505ab09e08612beec",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "scripts/archive/README.md",
+      "sha256": "54efbd9b283aa89ae1d64ea8a9eac0a8c8bd66c8c08e7bbf210035fd966586ea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4682,11 +4935,137 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "streaming/README.md",
+      "sha256": "7f4e5ba45b7c920a6730afc6eb98023db623bf47e8c28237af633976fce8241b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq-ui/README.md",
+      "sha256": "0a7abf0a7ebe5d8ac4b81189ef1e6e36bda76a4670f6db8d10d73af00837d9be",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq/README.md",
+      "sha256": "04b9fd3bc7992049f1ba40442304d507f58ea32dc3c3bd3d6ec28a3b0db7f58f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq/contracts/README.md",
+      "sha256": "e9a04b34605ec0eab9a831af9f84d472b01ffbd9775ffd788355de7acd682209",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq/docs/CONTRACTS_API.md",
+      "sha256": "b6eb651d375ea8e7c4cbe9089058ad65437d4fed52561d54ffd50e2e35c430d4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq/docs/CalendarAPI.md",
+      "sha256": "731081d8c9e3c4d0d93bdb4b531c997624485005d4ea63e9ca1111c1f4aa65a5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq/docs/Event_Research_Ingestion.md",
+      "sha256": "e9e50a63ad8024acbcd8e8425f3ef5e94335c9337b6121d8098d1baf160f3cd6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq/docs/api.md",
+      "sha256": "fc9bf8314b265684750fd8ec7b04fa2cb9d5848fd6505189bbb6cd91a811c3a8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq/docs/ddex/README.md",
+      "sha256": "e1133fc45a15764be5073a1687c9c9e100e17cb25fddc1bdc2bfc4617bf81b9e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq/docs/lesson-management-questions.md",
+      "sha256": "89a6ea0e0da8dd948f616fd520a7ff01eff4080c45461e5ac9686ce03dad7763",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "tdf-hq/docs/openapi/api.yaml",
       "sha256": "0015767fdc6d59c80dd017320ea2e600d69992df40289153bbb6fa97f279cb9f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
+    },
+    {
+      "path": "tdf-hq/docs/openapi/directory.yaml",
+      "sha256": "18e7eca75897711da63ffce6fb9282da5d7e36e4613263eee86436e4c7462849",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "interface-contract"
+    },
+    {
+      "path": "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
+      "sha256": "03bc7ffd250a525fbf9f02ecbf18f9ad775cedc20521fcb6af1d2469729d3a60",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "interface-contract"
+    },
+    {
+      "path": "tdf-hq/docs/openapi/reviews.yaml",
+      "sha256": "48a759639d1dbeb462367f6cd895f8c5f15e99300c6c912ab3674cf59ed721ed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "interface-contract"
+    },
+    {
+      "path": "tdf-hq/docs/openapi/social-v2.yaml",
+      "sha256": "454fef25cae0040f03b302436516c3ad76b09472157e44940748aee91dc9e034",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "interface-contract"
+    },
+    {
+      "path": "tdf-hq/docs/openapi/trials-identity.yaml",
+      "sha256": "863e82e508b1d3c9519318c0e92c2948f5a7493549755dd9199ed2aecc2644a0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "interface-contract"
+    },
+    {
+      "path": "tdf-hq/docs/openapi/user-roles.yaml",
+      "sha256": "ec433c47aec36842c799456dfd28c52c02dc6278a857e2e87c55d654fba7a543",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "interface-contract"
+    },
+    {
+      "path": "tdf-hq/docs/service_marketplace_formal_spec.md",
+      "sha256": "69451a2a1b486b200484449898e58f641b77dba00a13cf015c07c081d9913d21",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tidal-agent/README.md",
+      "sha256": "4ead6479a46259b8bc5c14ccefb6c8a675a9f5c27cf3b6fae903297662577e92",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
     }
   ],
   "requirements": [

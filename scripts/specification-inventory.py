@@ -15,6 +15,24 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def is_specification_candidate(relative):
+    path = Path(relative)
+    # Root technical guidance is evidence, not automatically approved policy.
+    private_roots = {"AGENTS.md", "SOUL.md", "USER.md", "MEMORY.md", "DREAMS.md",
+                     "HEARTBEAT.md", "IDENTITY.md", "TOOLS.md", "memory-storage-analysis.md"}
+    if len(path.parts) == 1:
+        return relative == "specs.yaml" or path.suffix == ".md" and relative not in private_roots
+    if any(part in {"evidence", "campaigns", "reports", "rollout-evidence", "event-research-runs"}
+           for part in path.parts):
+        return False
+    if relative.startswith(("docs/", "tdf-hq/docs/")):
+        return path.suffix in (".md", ".yaml")
+    if relative.startswith("formal/"):
+        return path.suffix in (".md", ".tla", ".cfg", ".als") or relative == "formal/system/requirements.json"
+    return path.name == "README.md" and path.parts[0] in {
+        "tdf-hq", "tdf-hq-ui", "scripts", "functions", "streaming", "tidal-agent"}
+
+
 def generate():
     paths = sorted(set(subprocess.check_output(
         ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"], cwd=ROOT
@@ -28,13 +46,7 @@ def generate():
             component = relative.split('/')[0]
             components.setdefault(component, []).append(relative)
         # Source specifications, excluding historical evidence, private working notes and campaign material.
-        candidate = (relative in ("specs.yaml", "FORMAL_VERIFICATION.md", "README.md", "MOBILE_APP.md", "FEATURES.md",
-                                  "PAYMENT_AUDIT.md", "VERIFICATION.md", "release-readiness.md", "DEPLOYMENT_GUIDE.md")
-                     or (relative.startswith("docs/") and path.suffix in (".md", ".yaml")
-                         and not any(x in relative.split('/') for x in ("evidence", "campaigns", "reports", "rollout-evidence")))
-                     or relative == "tdf-hq/docs/openapi/api.yaml"
-                     or relative.startswith("formal/") and path.suffix in (".tla", ".cfg", ".als"))
-        if not candidate:
+        if not is_specification_candidate(relative):
             continue
         data = path.read_bytes()
         source = data.decode()
@@ -50,7 +62,8 @@ def generate():
                           "authorityBasis": declaration[0] if declaration else "No explicit approval declaration extracted; retain source provenance for review",
                           "kind": "formal-model" if path.suffix in (".tla", ".als") else
                           "model-configuration" if path.suffix == ".cfg" else
-                          "interface-contract" if relative.endswith("openapi/api.yaml") else "requirement-candidate"})
+                          "interface-contract" if "/openapi/" in relative and path.suffix == ".yaml" else
+                          "requirement-register" if relative == "formal/system/requirements.json" else "requirement-candidate"})
         if path.suffix == ".cfg":
             models.append({"configuration": relative, "declarations": source.splitlines(),
                            "result": "not-revalidated-by-inventory", "correspondence": "See domain traceability; discovery establishes no refinement"})

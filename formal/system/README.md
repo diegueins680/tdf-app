@@ -22,6 +22,7 @@ Historical memory and earlier reports are leads, not evidence of the live baseli
 | SYS-D02 | Formal workflow filters omit `tdf-hq/src`, web/mobile/config paths modeled by its runner; no retained run manifest | Every PR/main change revalidates; fresh source/tool/log identity; failed/incomplete/stale runs never pass | Existing workflow extended, weekly rerun, evidence admission regressions |
 | SYS-D03 | Actual `transitionPayment` accepts wrapped negative capture/refund totals | Positive increment within exact remaining balance; all other increments rejected; safe Int64 update | Accepted embedded ADR-0200 cumulative bounds and ADR 0102 minor units; source-derived solver analysis, actual-module regressions, backend CI and guarded release |
 | SYS-D04 | `ledgerBalances [(USD,maxBound),(USD,maxBound),(USD,2)]` returns True | Exact sum per currency, independent of bounded accumulation overflow | Accepted ADR 0104; Integer accumulation, regression. Helper has no discovered production callers; do not claim this defect corrupted persisted ledger rows |
+| SYS-D06 | Final inventory inspection found backend component specs and OpenAPI fragments omitted by root-doc-only discovery | Include component contracts, technical root guidance and formal indices; preserve inferred authority and privacy exclusions | Necessary inventory completeness correction; three regression checks in formal CI |
 | SYS-D05 | During release preparation, actual rollback classification admits mail-only `ab9bbacc9` for the full identity target, despite approved no-adoption/no-replay-loss contracts | Preflight and recovery reject binaries predating applicable identity implementations; require verified forward recovery | Necessary release dependency discovered after initial scope; [identity-recovery.md](identity-recovery.md), actual guard regressions and existing bounded recovery model |
 
 D03/D04 were added during initial implementation inspection because they violate approved monetary
@@ -55,7 +56,8 @@ now use conservative all-change triggers, with a regression requiring those trig
 
 [inventory.json](inventory.json) indexes source hashes, accepted/proposed ADR decision paragraphs,
 legacy YAML candidates, existing EO requirement IDs, model configurations and implementation file
-inventory. `python3 scripts/specification-inventory.py --check` detects drift. Generated statements
+inventory. `python3 scripts/specification-inventory.py --check
+python3 scripts/test-specification-inventory.py` detects drift. Generated statements
 explicitly retain gaps; their discovery does not establish a semantic formal specification.
 [requirements.json](requirements.json) contains the initial correction obligations and traceability.
 Existing formal artifacts stay under `formal/event-operations` and `formal/social`.
@@ -118,6 +120,7 @@ operational models. Pairwise/domain passes do not close global obligation SYS-GA
 | SYS-C03 | Root/backend docs mention Node20/Koyeb/no tests; actual package/CI uses Node22+, Fly and test suites | Treat executable build config as observed toolchain; stale prose is not business authority. No permission to change hosting inferred |
 | SYS-C04 | ADR 0105 is used for both directory and private assets | Identify by full path plus content hash, not numeric prefix alone; no historical renumbering |
 | SYS-C05 | Revenue YAML and `transitionCheckout` differ (e.g. failed checkout retry; draft cancellation; direct validated→awaiting payment) | Proven syntactic disagreement, product applicability and production callers unresolved. Do not alter either merely to agree |
+| SYS-C06 | Legacy `tdf-hq/docs/service_marketplace_formal_spec.md` creates nominal Payment rows as escrow proof; accepted ADR 0101 requires verified provider/manual evidence | Financial-evidence postconditions are superseded by ADR 0101; retain the legacy document as inferred historical design, never approval to charge or pay out |
 | SYS-GAP-01 | Every implicit rule/API/schema/worker/mobile path has not been semantically extracted and classified | Inventory is comprehensive only for declared discovery classes; system-wide requirement coverage remains open |
 | SYS-GAP-02 | Combined whole-system constraints, non-vacuity and cross-service refinement/liveness not discharged | Keep global consistency/formal completion open; do not infer from isolated model passes |
 | SYS-GAP-03 | External payment, calendar, messaging, storage, scheduler, mobile-store and runtime guarantees unverified | Record relied-on guarantees per domain; no external implementation proof claim |
