@@ -1610,6 +1610,7 @@ RecordExternalResource sql=record_external_resource
     availability Text Maybe
     availabilityReason Text Maybe
     verifiedAt UTCTime Maybe
+    providerMetadata AesonValue Maybe
     active Bool default=True
     createdAt UTCTime default=CURRENT_TIMESTAMP
     updatedAt UTCTime default=CURRENT_TIMESTAMP

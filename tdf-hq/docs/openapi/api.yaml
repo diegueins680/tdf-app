@@ -7222,6 +7222,97 @@ paths:
         '409': { description: 'Settlement is not approved, separation of duties failed, or evidence conflicts' }
         '503': { description: Durable private evidence storage is not configured in production }
 
+  /admin/records-ingestion:
+    get:
+      summary: Read approved video sources, health, checkpoints, and recent runs
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Strict-administrator ingestion overview
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '403': { description: Strict administrator required }
+  /admin/records-ingestion/sources:
+    put:
+      summary: Verify and approve a YouTube channel, or disable an existing source
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [channelId, enabled, collectionId]
+              properties:
+                channelId: { type: string, pattern: '^UC[A-Za-z0-9_-]{22}$' }
+                enabled: { type: boolean }
+                collectionId: { type: string, format: uuid }
+                approvalReference: { type: string, nullable: true, maxLength: 500 }
+                partyId: { type: integer, nullable: true }
+                artistProfileId: { type: integer, nullable: true }
+      responses:
+        '200':
+          description: Audited source configuration
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '400': { description: Invalid source configuration }
+        '403': { description: Strict administrator required }
+        '502': { description: Provider verification failed }
+        '503': { description: Provider credential unavailable }
+  /admin/records-ingestion/control:
+    put:
+      summary: Change the ingestion emergency stop and interval
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [running, intervalSeconds]
+              properties:
+                running: { type: boolean }
+                intervalSeconds: { type: integer, minimum: 300, maximum: 86400 }
+      responses:
+        '200':
+          description: Audited control state
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '403': { description: Strict administrator required }
+  /admin/records-ingestion/runs:
+    post:
+      summary: Run or resume bounded ingestion using a stable execution key
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [sourceAccountId, executionKey, reconciliation, dryRun]
+              properties:
+                sourceAccountId: { type: integer, minimum: 1 }
+                executionKey: { type: string, minLength: 1, maxLength: 150 }
+                reconciliation: { type: boolean }
+                dryRun: { type: boolean }
+      responses:
+        '200':
+          description: Durable run identity and explicit completed, partial, failed, busy, disabled or rate-limited status
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '403': { description: Strict administrator required }
+
 security:
   - bearerAuth: [ ]
 
@@ -11496,6 +11587,10 @@ components:
         verifiedAt:
           type: string
           format: date-time
+        providerMetadata:
+          type: object
+          additionalProperties: true
+          description: Verified public provider metadata, including publication time, thumbnails, and embedding status.
         relationKind:
           type: string
         primary:

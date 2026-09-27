@@ -13,7 +13,7 @@ interface Props {
 
 export default function RecordThumbnail(props: Props) {
   // Catalog overview cards can use alternate media belonging to the same item.
-  // At most three resources / nine distinct requests; each URL is validated
+  // At most three resources / twenty-four distinct requests; each URL is validated
   // against its own provider identity before it enters this bounded queue.
   const resources = [props.resource, ...(props.fallbackResources ?? []).filter(resource =>
     (resource.providerCode !== props.resource.providerCode || resource.externalCode !== props.resource.externalCode)
@@ -22,15 +22,17 @@ export default function RecordThumbnail(props: Props) {
   const unavailable = [props.resource, ...(props.fallbackResources ?? [])]
     .every(resource => resource.availability === 'unavailable');
   // Reset only when the resource/metadata changes, never on an ordinary rerender.
-  return <ThumbnailAttempt key={JSON.stringify([resources, sources])} {...props} sources={sources} unavailable={unavailable} />;
+  return <ThumbnailAttempt key={JSON.stringify([resources.map(({ providerCode, externalCode, availability }) => [providerCode, externalCode, availability]), sources])} {...props} sources={sources} unavailable={unavailable} />;
 }
 
-function ThumbnailAttempt({ title, compact, sources, unavailable }: Props & { sources: string[]; unavailable: boolean }) {
+function ThumbnailAttempt({ title, compact, sources, unavailable, resource }: Props & { sources: string[]; unavailable: boolean }) {
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const src = sources[index];
-  const label = unavailable
+  const label = unavailable && resource.availabilityReason === 'verification_expired'
+    ? t('records.verificationExpired', 'Información del video pendiente de verificar')
+    : unavailable
     ? t('records.videoUnavailable', 'Video no disponible en la fuente')
     : t('records.thumbnailUnavailable', 'Miniatura no disponible');
   const failed = () => { setLoaded(false); setIndex(index + 1); };

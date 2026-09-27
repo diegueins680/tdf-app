@@ -1,7 +1,7 @@
 import type { RecordsResourceDTO } from '../../api/records';
 
 export type ThumbnailResource = Pick<RecordsResourceDTO,
-  'providerCode' | 'externalCode' | 'thumbnailUrl' | 'availability'>;
+  'providerCode' | 'externalCode' | 'thumbnailUrl' | 'availability' | 'availabilityReason' | 'providerMetadata'>;
 
 const youtubeImageHosts = new Set(['i.ytimg.com', 'img.youtube.com']);
 
@@ -24,17 +24,31 @@ export function youtubeImageId(raw: string): string | null {
 export function recordThumbnailCandidates(resource: ThumbnailResource): string[] {
   if (resource.availability === 'unavailable') return [];
   const candidates: string[] = [];
+  let providerExplicit: string | undefined;
   const explicit = resource.thumbnailUrl?.trim();
   if (explicit) {
     try {
       const url = new URL(explicit);
       const imageId = youtubeImageId(explicit);
       if (url.protocol === 'https:' && !url.username && !url.password
-        && (!imageId || (resource.providerCode === 'youtube' && imageId === resource.externalCode))) {
-        candidates.push(explicit);
+        && (!youtubeImageHosts.has(url.hostname) || (resource.providerCode === 'youtube' && imageId === resource.externalCode))) {
+        if (imageId) providerExplicit = explicit;
+        else candidates.push(explicit);
       }
     } catch { /* Invalid metadata must not become an image request. */ }
   }
+  const metadata = resource.providerMetadata;
+  if (resource.providerCode === 'youtube' && metadata?.['id'] === resource.externalCode && Array.isArray(metadata['thumbnails'])) {
+    for (const thumbnail of (metadata['thumbnails'] as unknown[]).slice(0, 5)) {
+      if (thumbnail && typeof thumbnail === 'object' && 'url' in thumbnail && typeof thumbnail.url === 'string') {
+        try {
+          const url = new URL(thumbnail.url);
+          if (url.protocol === 'https:' && !url.username && !url.password && youtubeImageId(url.href) === resource.externalCode) candidates.push(url.href);
+        } catch { /* Ignore malformed provider metadata. */ }
+      }
+    }
+  }
+  if (providerExplicit) candidates.push(providerExplicit);
   if (resource.providerCode === 'youtube' && /^[A-Za-z0-9_-]{11}$/.test(resource.externalCode)) {
     // These are bounded recovery candidates, not evidence of availability.
     candidates.push(`https://i.ytimg.com/vi/${resource.externalCode}/hqdefault.jpg`);

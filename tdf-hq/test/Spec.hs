@@ -151,6 +151,7 @@ import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink, passwordResetLinkWithLocale, passwordResetEmailContent)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import qualified TDF.Services.RecordsIngestionSpec as RecordsIngestion
 import qualified TDF.Services.YouTubeSpec as YouTubeSpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
@@ -17038,6 +17039,7 @@ main = hspec $ do
     DDEXBusinessRulesSpec.spec
     DirectoryPolicySpec.spec
     EventDiscoverySpec.spec
+    RecordsIngestion.spec
     YouTubeSpec.spec
     EventResearchSpec.spec
     ArtistSpec.spec

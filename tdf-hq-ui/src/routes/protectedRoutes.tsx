@@ -31,6 +31,7 @@ const DocsPage = lazy(() => import('../pages/DocsPage'));
 const DirectoryManagePage = lazy(() => import('../pages/DirectoryManagePage'));
 const DirectoryAdminPage = lazy(() => import('../pages/DirectoryAdminPage'));
 const EstebanMunozReportPage = lazy(() => import('../pages/EstebanMunozReportPage'));
+const RecordsIngestionPage = lazy(() => import('../pages/RecordsIngestionPage'));
 const EventDiscoverySourcesPage = lazy(() => import('../pages/EventDiscoverySourcesPage'));
 const DavidCelayaReportPage = lazy(() => import('../pages/DavidCelayaReportPage'));
 const WorkAccountReportBuilderPage = lazy(() => import('../pages/WorkAccountReportBuilderPage'));
@@ -237,6 +238,7 @@ export function renderProtectedRoutes() {
           <Route path="integraciones/calendario" element={<CalendarSyncPage />} />
           <Route path="cms" element={<CmsAdminPage />} />
           <Route path="campanas-automaticas" element={<CampaignAutomationsPage />} />
+          <Route path="fuentes-videos" element={<RecordsIngestionPage />} />
           <Route path="fuentes-eventos" element={<EventDiscoverySourcesPage />} />
           <Route path="whatsapp-consentimiento" element={<WhatsAppConsentPage />} />
           <Route path="opciones-ux" element={<UxOptionsPage />} />

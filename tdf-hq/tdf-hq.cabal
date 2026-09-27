@@ -131,6 +131,9 @@ executable tdf-hq-exe
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
     TDF.Services.YouTube
+    TDF.Services.RecordsIngestion
+    TDF.Server.RecordsIngestion
+    TDF.API.RecordsIngestion
     TDF.SocialEventLifecycle
     TDF.Services.EventLogisticsRoutes
     TDF.Services.Stripe
@@ -456,9 +459,13 @@ test-suite tdf-hq-test
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
     TDF.Services.YouTube
+    TDF.Services.RecordsIngestion
+    TDF.Server.RecordsIngestion
+    TDF.API.RecordsIngestion
     TDF.Services.EventLogisticsRoutes
     TDF.Services.EventDiscoverySpec
     TDF.Services.YouTubeSpec
+    TDF.Services.RecordsIngestionSpec
     TDF.Server.EventResearchSpec
     TDF.Services.InstagramSync
     TDF.Services.Stripe

@@ -646,6 +646,7 @@ resourceDTO locale relationKind primaryResource sortOrder (Entity resourceKey re
     , rrAvailability = M.recordExternalResourceAvailability resource
     , rrAvailabilityReason = M.recordExternalResourceAvailabilityReason resource
     , rrVerifiedAt = M.recordExternalResourceVerifiedAt resource
+    , rrProviderMetadata = fmap unAesonValue (M.recordExternalResourceProviderMetadata resource)
     , rrRelationKind = relationKind
     , rrPrimary = primaryResource
     , rrSortOrder = sortOrder
