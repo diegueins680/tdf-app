@@ -96,6 +96,10 @@ nationwide event coverage, event approval, or mobile-store availability.
   All four ingestion admin handlers reject staff roles and malformed Admin grants
   before touching the database or provider.
 - UI focused tests: 15 passed; type checking and focused lint passed.
+- Full Stack-built Hspec suite: 3,539 examples, zero failures, six existing
+  pending examples (rerun with permission for the HTTP test to bind locally).
+- Release tooling: 82 tests passed. The existing formal-methods audit passed;
+  this does not establish a formal proof of the ingestion service.
 - Full backend compilation reached linking but the local disk filled (`errno=28`).
   This is not a passing full build; subsequent checks must record their outcome.
 - Staging rollout remains blocked by the previously observed Fly HTTP 403 for

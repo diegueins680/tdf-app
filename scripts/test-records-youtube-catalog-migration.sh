@@ -21,7 +21,14 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+if [ -n "${TDF_RECORDS_TEST_DATABASE_URL:-}" ]; then
+  TDF_RECORDS_MODE="external"
+  records_existing_tables=$(psql "$TDF_RECORDS_TEST_DATABASE_URL" -X -At -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p')")
+  if [ "$records_existing_tables" != "0" ]; then
+    echo "Records tests require an empty isolated database" >&2
+    exit 1
+  fi
+elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   TDF_RECORDS_MODE="docker"
   docker run --rm -d \
     --name "$test_container" \
@@ -51,7 +58,9 @@ else
 fi
 
 psql_exec() {
-  if [ "$TDF_RECORDS_MODE" = "docker" ]; then
+  if [ "$TDF_RECORDS_MODE" = "external" ]; then
+    psql "$TDF_RECORDS_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 "$@"
+  elif [ "$TDF_RECORDS_MODE" = "docker" ]; then
     docker exec -i "$test_container" psql -v ON_ERROR_STOP=1 -U postgres -d records_youtube_catalog_test "$@"
   else
     "$TDF_RECORDS_PG_BIN/psql" -h 127.0.0.1 -p "$TDF_RECORDS_PORT" -v ON_ERROR_STOP=1 -U postgres -d records_youtube_catalog_test "$@"
@@ -402,6 +411,9 @@ if [ -n "${TDF_RECORDS_RUNTIME_PROBE:-}" ]; then
   if [ "$TDF_RECORDS_MODE" = "docker" ]; then
     TDF_RECORDS_PORT=$(docker inspect --format '{{(index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' "$test_container")
   fi
-  TDF_RECORDS_TEST_DATABASE_URL="host=127.0.0.1 port=$TDF_RECORDS_PORT user=postgres dbname=records_youtube_catalog_test" \
-    "$TDF_RECORDS_RUNTIME_PROBE"
+  if [ "$TDF_RECORDS_MODE" != "external" ]; then
+    TDF_RECORDS_TEST_DATABASE_URL="host=127.0.0.1 port=$TDF_RECORDS_PORT user=postgres dbname=records_youtube_catalog_test"
+  fi
+  export TDF_RECORDS_TEST_DATABASE_URL
+  "$TDF_RECORDS_RUNTIME_PROBE"
 fi

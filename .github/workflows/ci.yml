@@ -292,6 +292,14 @@ jobs:
           bash scripts/test-identity-reconciliation.sh
           node --test scripts/__tests__/identity-reconciliation.test.mjs
 
+      - name: Verify resumable video ingestion and migration invariants
+        env:
+          PGPASSWORD: postgres
+          TDF_RECORDS_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_records_runtime_test
+        run: |
+          createdb -h postgres -U postgres tdf_records_runtime_test
+          ./scripts/test-records-ingestion-runtime.sh
+
       - name: Verify automatic migrations against the production schema
         env:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
