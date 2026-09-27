@@ -100,8 +100,8 @@ nationwide event coverage, event approval, or mobile-store availability.
   pending examples (rerun with permission for the HTTP test to bind locally).
 - Release tooling: 82 tests passed. The existing formal-methods audit passed;
   this does not establish a formal proof of the ingestion service.
-- Full backend compilation reached linking but the local disk filled (`errno=28`).
-  This is not a passing full build; subsequent checks must record their outcome.
+- Full Stack build passed after local disk exhaustion was resolved. Both the
+  executable and test suite linked; the full suite results are recorded above.
 - Staging rollout remains blocked by the previously observed Fly HTTP 403 for
   overdue invoices. No rollout, production backfill or scheduled execution is
   established by these local checks.

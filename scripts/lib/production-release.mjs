@@ -1417,6 +1417,25 @@ BEGIN
     RAISE EXCEPTION 'unique_external_event_discovery_slot is missing or invalid';
   END IF;
 
+  IF to_regclass('public.records_ingestion_control') IS NULL
+    OR to_regclass('public.records_ingestion_quota') IS NULL
+    OR to_regclass('public.records_ingestion_change') IS NULL
+    OR to_regclass('public.records_ingestion_admin_audit') IS NULL
+    OR to_regprocedure('public.tdf_ingest_public_video(bigint,uuid,jsonb)') IS NULL
+    OR to_regprocedure('public.tdf_mark_video_unavailable(bigint,uuid,text,text,timestamptz)') IS NULL
+    OR to_regprocedure('public.tdf_expire_records_provider_data()') IS NULL THEN
+    RAISE EXCEPTION 'Records ingestion runtime schema is incomplete';
+  END IF;
+  IF (SELECT count(*) FROM records_ingestion_control WHERE singleton) <> 1
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='social_sync_account'::regclass
+      AND tgname='records_source_configuration_lock' AND tgenabled='O')
+    OR NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='record_external_resource' AND column_name='provider_metadata' AND data_type='jsonb')
+    OR NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='record_external_resource' AND column_name='source_account_id' AND data_type='bigint') THEN
+    RAISE EXCEPTION 'Records ingestion controls, metadata or source locking are incomplete';
+  END IF;
+
   FOREACH social_table IN ARRAY ARRAY[
     'social_sync_account',
     'social_sync_post',
@@ -1431,7 +1450,7 @@ BEGIN
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_account'
-  ) <> 12 OR (
+  ) <> 13 OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_post'
   ) <> 20 OR (
@@ -1448,6 +1467,7 @@ BEGIN
     SELECT 1
     FROM (
       VALUES
+        ('social_sync_account', 'records_ingestion', 'jsonb', 'YES'),
         ('social_sync_account', 'party_id', 'bigint', 'YES'),
         ('social_sync_account', 'artist_profile_id', 'bigint', 'YES'),
         ('social_sync_account', 'platform', 'character varying', 'NO'),

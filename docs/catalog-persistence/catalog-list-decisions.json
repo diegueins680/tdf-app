@@ -1459,14 +1459,23 @@
       "reviewed": true
     },
     {
-      "id": "91ec5702d1c3efd7777e",
+      "id": "2223179c95a61ccff02d",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P3-retain",
       "risk": "Changing navigation or UI constants could break rendering or user experience.",
-      "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
-      "reviewed": true
+      "justification": "The administration navigation adds the protected video-source screen. This array maps client routes to labels; source approval and publication authority remain server-enforced.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "records-ingestion-2026-09-28",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 210,
+        "kind": "array",
+        "name": "items",
+        "valueCount": 19
+      }
     },
     {
       "id": "c388c94cfce1b0e865b0",
@@ -13934,22 +13943,22 @@
       }
     },
     {
-      "id": "8ea1bf1edf9585be5676",
+      "id": "07da55e81a186d26df37",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Reviewed the integrated ordered 114-entry release registry. Preserve all 113 approved main migrations and their immutable introduction commits; append the additive resource availability correction, whose introducing commit remains in ancestry. This is executable release metadata, not editable business data.",
+      "justification": "Reviewed the ordered 115-entry release registry: all 114 existing migrations retain their immutable introduction commits; the additive disabled ingestion runtime is appended with its exact introducing commit.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "records-availability-integration-2026-09-18",
+      "reviewBatch": "records-ingestion-2026-09-28",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 114
+        "valueCount": 115
       }
     },
     {
@@ -14024,6 +14033,25 @@
         "name": "disabledEscrowWrites",
         "valueCount": 2,
         "contract": "formal/system/legacy-escrow.md"
+      }
+    },
+    {
+      "id": "f9b091e996694d5bb0b5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this fixture could weaken resource identity regression coverage.",
+      "justification": "Synthetic thumbnail test object with a video identity and availability state; it supplies no selectable catalog or source approval.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "records-ingestion-2026-09-28",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
+        "line": 3,
+        "kind": "object-registry",
+        "name": "resource",
+        "valueCount": 3
       }
     }
   ]
