@@ -105,3 +105,23 @@ from its caller. The image workflow now grants only `contents: read` and
 `actions: read` to its required-test job. Sixteen pipeline regressions pass,
 including this caller/callee permission contract. This was caught before merge
 or deployment; a successful replacement image build remains required.
+
+## Malformed response regression
+
+Image run 36495066879 exposed a real publication crash: its RSVP browser trace
+received an HTML fallback as an interaction summary, then reaction rendering
+attempted `reduce` on an absent array. The shared web/native API now rejects
+malformed summaries and invalid counts before query caching. Eight API cases per
+client cover invalid payloads and recovery; 14 focused web and 15 focused native
+tests pass. The full web signup/RSVP/profile/share/withdrawal journey now injects
+an HTML discussion response and passes with zero page errors (two browser cases).
+Mobile PR 119 carries the generated counterpart; root pins `1ae6e43`.
+
+Android 18 was accepted by Play and saved only as an unpublished Alpha draft
+(release 6), explicitly marked HOLD. Alpha 17 remains active. Replace this draft
+with a newly qualified build containing the response guard before rollout;
+version 18 is now consumed. iOS run 36495672565 first failed a GitHub dependency
+clone with connection reset; its retry was cancelled before signing so the next
+candidate can include the response fix. No iOS upload or tester rollout occurred.
+The image retry was also cancelled after identifying the real response defect;
+a fresh image build is required from corrected source.

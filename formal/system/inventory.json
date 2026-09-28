@@ -444,6 +444,7 @@
       "tdf-hq-ui/src/api/generated/social-v2.ts",
       "tdf-hq-ui/src/api/generated/types.ts",
       "tdf-hq-ui/src/api/instagramOAuth.ts",
+      "tdf-hq-ui/src/api/interactions.test.ts",
       "tdf-hq-ui/src/api/interactions.ts",
       "tdf-hq-ui/src/api/internAudit.ts",
       "tdf-hq-ui/src/api/internalFeedback.ts",
@@ -2692,7 +2693,7 @@
     },
     {
       "path": "docs/interactions/verification-2026-09-29.md",
-      "sha256": "9b4929ae655b47bd0ad0c3064b6c9e1659cb071968e6a84e7f27448ff0c10a9a",
+      "sha256": "ecffe96dbb7f62f5ec073e2267625fade2626c3cd6063502a6e3a98c6205ffc3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

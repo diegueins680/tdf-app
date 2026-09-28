@@ -16,9 +16,23 @@ export interface InteractionIdentity { kind: InteractionKind; entityKey: string 
 const base = (authenticated: boolean) => `${authenticated ? '' : '/public'}/interactions`;
 const path = (identity: InteractionIdentity, authenticated: boolean) =>
   `${base(authenticated)}/targets/${encodeURIComponent(identity.kind)}/${encodeURIComponent(identity.entityKey)}`;
+// Transports may return HTML from a stale deployment's SPA fallback with HTTP 200.
+// Reject it before caching: a broken discussion must not crash its publication.
+export function validateInteractionSummary(value: InteractionSummary): InteractionSummary {
+  if (!value || typeof value !== 'object' || typeof value.id !== 'string'
+      || !Array.isArray(value.reactions)
+      || !Number.isSafeInteger(value.commentCount) || value.commentCount < 0
+      || !Number.isSafeInteger(value.rootCount) || value.rootCount < 0
+      || value.reactions.some((reaction) => !reaction || typeof reaction.id !== 'string'
+        || typeof reaction.label !== 'string' || typeof reaction.emoji !== 'string'
+        || !Number.isSafeInteger(reaction.count) || reaction.count < 0)) {
+    throw new Error('Invalid interaction summary response');
+  }
+  return value;
+}
 export const Interactions = {
-  summary: (identity: InteractionIdentity, authenticated: boolean, signal?: AbortSignal) =>
-    get<InteractionSummary>(path(identity, authenticated), { signal }),
+  summary: async (identity: InteractionIdentity, authenticated: boolean, signal?: AbortSignal) =>
+    validateInteractionSummary(await get<InteractionSummary>(path(identity, authenticated), { signal })),
   comments: (identity: InteractionIdentity, authenticated: boolean, sort: InteractionSort, root?: string, cursor?: string, signal?: AbortSignal) => {
     const params = new URLSearchParams({ sort, limit: '20' });
     if (root) params.set('root', root);
