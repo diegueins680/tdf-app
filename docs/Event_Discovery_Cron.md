@@ -235,3 +235,14 @@ retaining imported records, pilot decisions and publication approval history.
 Re-enable only after verifying the deployed code's controls. The regression script
 `scripts/test-event-ingestion-boundaries.sh` covers shared-cap races, duplicate
 canonical links, discard semantics, separate approval, revocation and reapplication.
+
+### Editorial ownership on refresh
+
+Newly imported event fields retain the last source value in the existing event
+metadata. Refresh compares that value with the current canonical value, preserves
+editorial changes and unrelated metadata, and permanently relinquishes an edited
+field so later coincidental agreement does not reclaim it. Legacy events without
+ownership evidence stay protected; their source references still refresh.
+Venue and artist profile ownership is a separate remaining limitation. A failure
+to persist an event now fails its source run before absence reconciliation, rather
+than logging the error and reporting a successful run.

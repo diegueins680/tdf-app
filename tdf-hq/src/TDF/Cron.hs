@@ -757,7 +757,9 @@ runEventDiscoveryOnce Env{..} = do
                     <> ": "
                     <> T.pack (displayException err)
                 )
-              pure totals
+              -- Keep the run failed so a retry resumes safely; never reconcile
+              -- absence or report success after a persistence failure.
+              throwIO err
             Right stats -> pure (addDiscoveryStats totals stats)
 
     markSourceFailure sourceKey finishedAt errText =

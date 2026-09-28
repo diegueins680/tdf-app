@@ -1906,7 +1906,7 @@
     },
     {
       "path": "docs/Event_Discovery_Cron.md",
-      "sha256": "b586f8a87a67801ec2f36c60af9b383abc2769728e859e3852fc276af03a9182",
+      "sha256": "79a9bf2b8a96857cb1712d0695b1796b7e0dfcf2cb68e7e167d04e55208729ab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

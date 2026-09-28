@@ -44,6 +44,7 @@ import Control.Concurrent (threadDelay)
 import Data.Aeson
   ( FromJSON(..)
   , Value(..)
+  , ToJSON(toJSON)
   , decodeStrict'
   , encode
   , eitherDecode
@@ -56,6 +57,7 @@ import Data.Aeson
   )
 import Data.Int (Int64)
 import Data.Aeson.Types (parseMaybe)
+import Data.Aeson.Key (Key)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Aeson.KeyMap as AesonKeyMap
@@ -80,6 +82,7 @@ import Data.UUID (UUID)
 import Database.Persist
   ( Entity(..)
   , PersistValue
+  , Update
   , SelectOpt(Asc)
   , deleteWhere
   , get
@@ -2248,20 +2251,9 @@ syncUnsuppressedDiscoveredEventDb
               resolveAllowedImportedUpdateStateId
                 (existingEvent >>= Social.socialEventWorkflowStateId)
                 desiredWorkflowStateId
-            update
-              existingEventKey
-              [ Social.SocialEventTitle =. discoveredEventTitle
-              , Social.SocialEventDescription =. discoveredEventDescription
-              , Social.SocialEventVenueId =. Just venueKey
-              , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
-              , Social.SocialEventStartTime =. discoveredEventStart
-              , Social.SocialEventEndTime =. discoveredEventEnd
-              , Social.SocialEventPriceCents =. discoveredEventPriceCents
-              , Social.SocialEventEventTypeId =. Just eventTypeUuid
-              , Social.SocialEventWorkflowStateId =. Just workflowStateId
-              , Social.SocialEventMetadata =. metadata
-              , Social.SocialEventUpdatedAt =. now
-              ]
+            forM_ existingEvent $ \current ->
+              update existingEventKey (ownedEventUpdates current now DiscoveredEvent{..}
+                venueKey eventTypeUuid workflowStateId metadata)
           else pure ()
         update
           refKey
@@ -2291,20 +2283,9 @@ syncUnsuppressedDiscoveredEventDb
                     resolveAllowedImportedUpdateStateId
                       (candidateEvent >>= Social.socialEventWorkflowStateId)
                       desiredWorkflowStateId
-                  update
-                    candidateKey
-                    [ Social.SocialEventTitle =. discoveredEventTitle
-                    , Social.SocialEventDescription =. discoveredEventDescription
-                    , Social.SocialEventVenueId =. Just venueKey
-                    , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
-                    , Social.SocialEventStartTime =. discoveredEventStart
-                    , Social.SocialEventEndTime =. discoveredEventEnd
-                    , Social.SocialEventPriceCents =. discoveredEventPriceCents
-                    , Social.SocialEventEventTypeId =. Just eventTypeUuid
-                    , Social.SocialEventWorkflowStateId =. Just workflowStateId
-                    , Social.SocialEventMetadata =. metadata
-                    , Social.SocialEventUpdatedAt =. now
-                    ]
+                  forM_ candidateEvent $ \current ->
+                    update candidateKey (ownedEventUpdates current now DiscoveredEvent{..}
+                      venueKey eventTypeUuid workflowStateId metadata)
                 else pure ()
               pure (candidateKey, False)
             Nothing -> do
@@ -2323,7 +2304,8 @@ syncUnsuppressedDiscoveredEventDb
                     , Social.socialEventPriceCents = discoveredEventPriceCents
                     , Social.socialEventCurrencyId = Nothing
                     , Social.socialEventCapacity = Nothing
-                    , Social.socialEventMetadata = metadata
+                    , Social.socialEventMetadata = initialOwnedEventMetadata DiscoveredEvent{..}
+                        venueKey eventTypeUuid desiredWorkflowStateId metadata
                     , Social.socialEventCreatedAt = now
                     , Social.socialEventUpdatedAt = now
                     }
@@ -2357,6 +2339,84 @@ syncUnsuppressedDiscoveredEventDb
       , discoveryVenuesCreated = if venueCreated then 1 else 0
       , discoveryArtistsCreated = artistsCreated
       }
+
+-- Compare each canonical field with the last value actually supplied by ingestion.
+-- A differing field belongs to the editor. Keep unrelated metadata, and retain the
+-- newest source evidence even when its canonical field is protected. Legacy rows
+-- without ownership evidence are conservative: their canonical fields are not adopted.
+ownedEventUpdates :: Social.SocialEvent -> UTCTime -> DiscoveredEvent -> Social.VenueId
+  -> UUID -> UUID -> Maybe Text -> [Update Social.SocialEvent]
+ownedEventUpdates current now event@DiscoveredEvent{..} venueKey typeId stateId metadata =
+  [ Social.SocialEventTitle =. keep "title" (Social.socialEventTitle current) discoveredEventTitle
+  , Social.SocialEventDescription =. keep "description" (Social.socialEventDescription current) discoveredEventDescription
+  , Social.SocialEventVenueId =. keep "venueId" (Social.socialEventVenueId current) (Just venueKey)
+  , Social.SocialEventTimezone =. keep "timezone" (Social.socialEventTimezone current) (importedEventTimeZone discoveredEventVenue)
+  , Social.SocialEventStartTime =. keep "startTime" (Social.socialEventStartTime current) discoveredEventStart
+  , Social.SocialEventEndTime =. keep "endTime" (Social.socialEventEndTime current) discoveredEventEnd
+  , Social.SocialEventPriceCents =. keep "priceCents" (Social.socialEventPriceCents current) discoveredEventPriceCents
+  , Social.SocialEventEventTypeId =. keep "eventTypeId" (Social.socialEventEventTypeId current) (Just typeId)
+  , Social.SocialEventWorkflowStateId =. keep "workflowStateId" (Social.socialEventWorkflowStateId current) (Just stateId)
+  , Social.SocialEventMetadata =. Just (encodeMetadata mergedMetadata)
+  , Social.SocialEventUpdatedAt =. now
+  ]
+  where
+    oldMetadata = metadataObject (Social.socialEventMetadata current)
+    previous = case AesonKeyMap.lookup "_discoveryOwned" oldMetadata of
+      Just (Object snapshot) -> snapshot
+      _ -> AesonKeyMap.empty
+    next = ownedEventSnapshot event venueKey typeId stateId metadata
+    -- Only previously owned keys remain owned; a missing legacy snapshot is not
+    -- permission to claim values that may have been written by an administrator.
+    nextOwned = AesonKeyMap.filterWithKey
+      (\key _ -> AesonKeyMap.member key previous
+        && AesonKeyMap.lookup key previous == AesonKeyMap.lookup key actualSnapshot) next
+    actualSnapshot = AesonKeyMap.fromList
+      [ ("title", toJSON (Social.socialEventTitle current))
+      , ("description", toJSON (Social.socialEventDescription current))
+      , ("venueId", toJSON (Social.socialEventVenueId current))
+      , ("timezone", toJSON (Social.socialEventTimezone current))
+      , ("startTime", toJSON (Social.socialEventStartTime current))
+      , ("endTime", toJSON (Social.socialEventEndTime current))
+      , ("priceCents", toJSON (Social.socialEventPriceCents current))
+      , ("eventTypeId", toJSON (Social.socialEventEventTypeId current))
+      , ("workflowStateId", toJSON (Social.socialEventWorkflowStateId current))
+      ] <> oldMetadata
+    keep :: ToJSON a => Key -> a -> a -> a
+    keep key actual incoming =
+      if AesonKeyMap.lookup key previous == Just (toJSON actual) then incoming else actual
+    mergeMetadata acc key =
+      let actual = AesonKeyMap.lookup key oldMetadata
+       in if actual == AesonKeyMap.lookup key previous && AesonKeyMap.member key previous
+          then maybe acc (\value -> AesonKeyMap.insert key value acc) (AesonKeyMap.lookup key next)
+          else acc
+    mergedMetadata = AesonKeyMap.insert "_discoveryOwned" (Object nextOwned)
+      (foldl mergeMetadata oldMetadata ["ticketUrl", "imageUrl", "currency", "isPublic"])
+
+initialOwnedEventMetadata :: DiscoveredEvent -> Social.VenueId -> UUID -> UUID -> Maybe Text -> Maybe Text
+initialOwnedEventMetadata event venueKey typeId stateId metadata = Just . encodeMetadata $
+  AesonKeyMap.insert "_discoveryOwned" (Object (ownedEventSnapshot event venueKey typeId stateId metadata))
+    (metadataObject metadata)
+
+ownedEventSnapshot :: DiscoveredEvent -> Social.VenueId -> UUID -> UUID -> Maybe Text -> AesonKeyMap.KeyMap Value
+ownedEventSnapshot DiscoveredEvent{..} venueKey typeId stateId metadata = AesonKeyMap.fromList
+  [ ("title", toJSON discoveredEventTitle)
+  , ("description", toJSON discoveredEventDescription)
+  , ("venueId", toJSON (Just venueKey))
+  , ("timezone", toJSON (importedEventTimeZone discoveredEventVenue))
+  , ("startTime", toJSON discoveredEventStart)
+  , ("endTime", toJSON discoveredEventEnd)
+  , ("priceCents", toJSON discoveredEventPriceCents)
+  , ("eventTypeId", toJSON (Just typeId))
+  , ("workflowStateId", toJSON (Just stateId))
+  ] <> metadataObject metadata
+
+metadataObject :: Maybe Text -> AesonKeyMap.KeyMap Value
+metadataObject value = case value >>= decodeStrict' . TE.encodeUtf8 of
+  Just (Object fields) -> fields
+  _ -> AesonKeyMap.empty
+
+encodeMetadata :: AesonKeyMap.KeyMap Value -> Text
+encodeMetadata = TE.decodeUtf8 . BL.toStrict . encode . Object
 
 eventHasSuppressedReference ::
   Social.SocialEventId ->
