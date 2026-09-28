@@ -2357,7 +2357,7 @@
     },
     {
       "path": "docs/courses/README.md",
-      "sha256": "6a9be3fa06e8d5d611330bdd93576f6d54748233a85fdab29126a6812a1741ff",
+      "sha256": "b1ae3130c896f1f62029896cf158018bea1a2b3c067e22ecd81aada48652712e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
