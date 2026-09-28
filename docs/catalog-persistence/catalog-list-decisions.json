@@ -14053,6 +14053,158 @@
         "name": "resource",
         "valueCount": 3
       }
+    },
+    {
+      "id": "6ab46a9a823aa52bd8e8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Treating callable transport methods as editable values could redirect authenticated commands or invalidate receipt binding.",
+      "justification": "EventOperations is an object of seven typed API functions, not a selectable business list. Its keys dispatch existing canonical endpoints; each function validates its own request and receipt.",
+      "reviewed": true
+    },
+    {
+      "id": "ed9e380a46b4f315e551",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Editable local phases could bypass deliberate confirmation, single-flight guards or exact uncertain replay.",
+      "justification": "EventRaciEditor Phase discriminates transient React control flow, not event lifecycle or business workflow records. RaciWebEditor models its confirmation, context and retry semantics; labels remain localized separately.",
+      "reviewed": true
+    },
+    {
+      "id": "9f7714307b6856ea63cf",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Expanding exception details can expose database internals or mishandle cancellation and retryable conflicts.",
+      "justification": "DatabaseFailure is the Haskell exception-classification boundary: SQL serialization/deadlock errors map to TransactionConflict, other synchronous failures to DatabaseUnavailable, and asynchronous cancellation is rethrown. These are sanitized runtime variants, not business catalog entries.",
+      "reviewed": true
+    },
+    {
+      "id": "747165e201d9c11c2215",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "event_logistics_activity.status and EventTaskStatus wire contract",
+      "risk": "A DTO-only status expansion could accept task states unsupported by persisted transitions or completion guards.",
+      "justification": "The five Haskell task constructors encode the existing canonical activity status strings and reject unknown wire values. This typed consumer is not a new status authority; future changes must align canonical task constraints, API schemas, generated consumers and formal transitions.",
+      "reviewed": true
+    },
+    {
+      "id": "b7bf17e6cd7bfdd01325",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "event_operation_raci_assignment.raci_role and EventRaciRole wire contract",
+      "risk": "A client/server role mismatch could misidentify accountability or authorize an unsupported reassignment.",
+      "justification": "The Haskell RACI constructors are an exhaustive typed consumer of the canonical four-role assignment constraint, with explicit JSON conversion and rejection of unknown roles. Assignment identity and scope remain persisted and checked, not owned by this enum.",
+      "reviewed": true
+    },
+    {
+      "id": "466aa6b7847efbc61fda",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P0-cutover",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "465def35066189c2212f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+      "reviewed": true
+    },
+    {
+      "id": "26a352668341118b54ee",
+      "classification": "security-system-registry",
+      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
+      "reviewed": true
+    },
+    {
+      "id": "2d43a4c97f70b8e8a5bc",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data.",
+      "reviewed": true
+    },
+    {
+      "id": "91ec5702d1c3efd7777e",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-retain",
+      "risk": "Changing navigation or UI constants could break rendering or user experience.",
+      "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
+      "reviewed": true
+    },
+    {
+      "id": "ffb84e8fd3972fd0730d",
+      "classification": "security-system-registry",
+      "disposition": "generated-consumer-pending-governance-cutover",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+      "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+      "reviewed": true
+    },
+    {
+      "id": "faf664611d7ab0aa954d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "82e3ab110124708c621c",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P1-cross-platform",
+      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
+      "justification": "Onboarding intents are cross-client product choices whose identifiers, labels, order, and availability require one governed source.",
+      "reviewed": true
+    },
+    {
+      "id": "29021a526fad50de4bf4",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P1-cross-platform",
+      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
+      "justification": "Onboarding intent labels and ordering are user-visible cross-client product data and must follow the governed intent registry.",
+      "reviewed": true
+    },
+    {
+      "id": "34d5f2f94d1a165783ba",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update-required",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "risk": "Local routing and completion hints can diverge from governed intent or authoritative account progress.",
+      "justification": "The six intent switch labels only changed order at fingerprint level. Current routing uses local role/module hints and falls back to MOBILE_LANDING_ROUTE; unlike historical code, this file stores progress locally. Retain business-catalog classification and require authoritative consumer alignment; this is not approval of end-to-end onboarding correctness.",
+      "reviewed": true
+    },
+    {
+      "id": "7578a30aa3cc5aa23870",
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+      "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+      "reviewed": true
     }
   ]
 }

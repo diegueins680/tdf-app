@@ -30,6 +30,8 @@ import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
 import { firstNonEmptyString } from '../utils/stringValues';
+import { eventTaskPath } from '../utils/eventTaskRoutes';
+import { useTranslation } from 'react-i18next';
 
 import PageShell from '../components/PageShell';
 import { GOOGLE_MAPS_BROWSER_API_KEY } from '../config/appConfig';
@@ -305,6 +307,7 @@ function PlaceMapPicker({ draft, onChange }: { draft: PlaceDraft; onChange: (nex
 }
 
 export default function EventLogisticsPage() {
+  const { t } = useTranslation();
   const { timezone: preferredTimezone, locale } = useLocalePreferences();
   const { eventId = '' } = useParams();
   const [notificationParams] = useSearchParams();
@@ -631,6 +634,7 @@ export default function EventLogisticsPage() {
             ? 'La actividad de esta notificación está resaltada en el cronograma.'
             : 'La actividad de esta notificación ya no está disponible. Consulta el cronograma actual.'}</Alert>}
           {visibleActivities.length ? visibleActivities.map((activity) => {
+            const taskHref = eventTaskPath(eventId, String(activity.eacId));
             const verification = activity.eacLatestVerification;
             const origin = activity.eacOriginPlaceId ? placesById.get(activity.eacOriginPlaceId) : undefined;
             const destination = activity.eacDestinationPlaceId ? placesById.get(activity.eacDestinationPlaceId) : undefined;
@@ -644,6 +648,7 @@ export default function EventLogisticsPage() {
               {activity.eacPlaceId && <Typography variant="body2">Lugar: {placesById.get(activity.eacPlaceId)?.elpLabel ?? activity.eacPlaceId}</Typography>}
               {activity.eacAssignments.length > 0 && <Typography variant="body2">Responsables: {activity.eacAssignments.map((assignment) => assignment.elaDisplayName ?? assignment.elaExternalName ?? assignment.elaPartyId).filter(Boolean).join(', ')}</Typography>}
               {activity.eacNotes && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{activity.eacNotes}</Typography>}
+              {taskHref && <Button component={RouterLink} to={taskHref} size="small">{t('eventTask.open')}</Button>}
               {verification && <Alert icon={<RouteIcon />} severity={verification.ervVerdict === 'feasible' ? 'success' : verification.ervVerdict === 'tight' ? 'warning' : 'error'}>
                 Ruta {verification.ervVerdict}: estimado {secondsLabel(verification.ervDurationSeconds)}, holgura {secondsLabel(verification.ervBufferSeconds)}, reservado {secondsLabel(verification.ervAllocatedSeconds)}{verification.ervDistanceMeters ? ` · ${(verification.ervDistanceMeters / 1000).toFixed(1)} km` : ''}.
               </Alert>}

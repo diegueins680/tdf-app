@@ -3369,6 +3369,7 @@ adminUser =
       , auRoles = roles
       , auModules = modulesForRoles roles
       , auApiTokenId = Nothing
+      , auSessionWitness = Nothing
       }
 
 runPublicTrialRequestHandler

@@ -280,17 +280,21 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                 <Alert severity="info">
                   <Stack spacing={1.5}>
                     <Box>
-                      <Typography variant="h5" fontWeight={800}>Continúa tu contacto con {title}</Typography>
+                      <Typography variant="h5" fontWeight={800}>
+                        {english ? `Continue your contact with ${title}` : `Continúa tu contacto con ${title}`}
+                      </Typography>
                       <Typography color="text.secondary" mt={0.5}>
-                        Revisa el perfil remitente y escribe tu mensaje antes de enviarlo. Nada se enviará automáticamente.
+                        {english
+                          ? 'Review the sender profile and write your message before sending it. Nothing will be sent automatically.'
+                          : 'Revisa el perfil remitente y escribe tu mensaje antes de enviarlo. Nada se enviará automáticamente.'}
                       </Typography>
                     </Box>
                     <Stack direction="row" gap={1} flexWrap="wrap">
                       <Button component={RouterLink} to={authenticatedAction} variant="contained">
-                        Revisar y escribir mensaje
+                        {english ? 'Review and write a message' : 'Revisar y escribir mensaje'}
                       </Button>
                       <Button component={RouterLink} to={location.pathname} variant="text">
-                        Ahora no
+                        {english ? 'Not now' : 'Ahora no'}
                       </Button>
                     </Stack>
                   </Stack>

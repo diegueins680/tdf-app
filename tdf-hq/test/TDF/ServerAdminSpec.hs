@@ -1844,6 +1844,7 @@ mkUser roles =
         , auRoles = roles
         , auModules = modulesForRoles roles
         , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 expectBadRequestContaining :: Show a => String -> Either ServerError a -> Expectation
