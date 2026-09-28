@@ -42,6 +42,8 @@ services:
       REPUTATION_AGGREGATION_WORKER_ENABLED: 'false'
       ALLOW_ALL_ORIGINS: 'false'
       ALLOW_ORIGINS: https://www.tdfrecords.net,https://tdfrecords.net
+      HQ_ASSETS_BASE_URL: https://api.tdfrecords.net/assets/serve
+      RADIO_PUBLIC_BASE: https://api.tdfrecords.net/live
       HQ_ASSETS_DIR: /data/assets
       TZ: America/Guayaquil
     mem_limit: 384m
@@ -72,6 +74,8 @@ services:
       EVENT_DISCOVERY_ENABLED: 'false'
       EVENT_DISCOVERY_AUTO_PUBLISH: 'false'
       REPUTATION_AGGREGATION_WORKER_ENABLED: 'false'
+      HQ_ASSETS_BASE_URL: https://api.tdfrecords.net/assets/serve
+      RADIO_PUBLIC_BASE: https://api.tdfrecords.net/live
       HQ_ASSETS_DIR: /data/assets
       TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT: /data/assets/.internal-feedback
       TZ: America/Guayaquil

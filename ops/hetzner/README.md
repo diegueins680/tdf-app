@@ -134,6 +134,12 @@ ready and the repository's required review/checks pass.
   Preserve payment webhook IDs/signature secrets and verify callbacks without
   creating a real charge. Verify Google authentication and uploads before
   reopening writes. Prepare native builds using the new hostname separately.
+- Cloudflare Pages has two independent backend settings: browser
+  `VITE_API_BASE` and event-preview function `PUBLIC_API_BASE`. Before deploying
+  this hostname change, pin both production settings to the current Fly base.
+  At cutover change both to `https://api.tdfrecords.net`, preserving all other
+  bindings, and rebuild production. Verify an actual public event page as
+  well as browser API calls; the preview function runs before the SPA.
 - Once new writes are accepted, recovery must preserve them. Roll back the
   application to the compatible image on the new database; never switch
   traffic back to a stale pre-cutover Fly database. A provider reversal needs
