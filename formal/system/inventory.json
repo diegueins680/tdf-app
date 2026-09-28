@@ -2671,7 +2671,7 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "3a3ca6e8b7ef30db9811372c4e6b37555a463d438cc933f454ed2e104dc72fd8",
+      "sha256": "25584b5e2fe8a8089a8e988270bb8838a7adc89ca232c7b075d1f3b63162f6a4",
       "authority": "inferred",
       "authorityBasis": "Status: implementation and installed test journeys pass; protected review, signed releases and production rollout remain pending. No production schema or feature gate changed.",
       "kind": "requirement-candidate"
@@ -2692,7 +2692,7 @@
     },
     {
       "path": "docs/interactions/verification-2026-09-29.md",
-      "sha256": "65a0ed746a35f7d05640321f8f706a1c0ef0b277987e1643036a0a66b1cd3f90",
+      "sha256": "a36e3c3fcfad088b04930ec9fa6fe2719c2cc660708dfa030837786058922969",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

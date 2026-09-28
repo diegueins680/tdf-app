@@ -62,9 +62,10 @@ the fixture without changing app behavior.
 
 Independent protected review, merge, immutable backend build, fresh encrypted
 backup, guarded live migration, signed native releases, public association
-configuration and production canary verification remain required. The local iOS
-profile lacks Associated Domains; release preflight rejects it. Apple Developer
-access is pending. Play Console's latest uploaded Android version is 17; version
+configuration and production canary verification remain required. GitHub's stored
+iOS profile passed the Associated Domains preflight in run 36493156554; the older
+local profile lacks that capability and is not used. App Store Connect login is
+pending for build-history/submission verification. Play Console's latest uploaded Android version is 17; version
 18 is available as of this check. The last GitHub iOS release used build 25, but
 App Store Connect history must be checked before selecting its successor.
 
@@ -87,3 +88,10 @@ Their replacements are Android [36493153223](https://github.com/diegueins680/TDF
 (candidate build 26); qualification and publication remain pending. No OTA update
 or channel mapping was changed. See the mobile repository's
 `docs/interaction-release-runtime.md` for the compatibility contract.
+
+The first image-preparation run (36494858380) failed GitHub workflow validation:
+the reusable native artifact job requested `actions: read` without that grant
+from its caller. The image workflow now grants only `contents: read` and
+`actions: read` to its required-test job. Sixteen pipeline regressions pass,
+including this caller/callee permission contract. This was caught before merge
+or deployment; a successful replacement image build remains required.

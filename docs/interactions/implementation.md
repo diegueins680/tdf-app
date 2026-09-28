@@ -250,9 +250,10 @@ from React Native's legacy SafeAreaView. Follow-up `7f2e885` uses the existing
 safe-area-context provider. Seven rendered regressions, type checking and lint
 pass. All other jobs in run `36485841756` passed, including backend, migrations,
 API and persona browser journeys. No complete Android journey pass is claimed yet.
-The local iOS distribution profile lacks Associated Domains. Release preflight
-now rejects that profile before compilation; Apple Developer sign-in is pending
-for verification/replacement of the release profile. Ten release/signing tests
+The older local iOS distribution profile lacks Associated Domains and release
+preflight rejects it. GitHub's stored profile passed that preflight in signed
+release run 36493156554; the local profile is not used. App Store Connect access
+is pending for build-history and submission verification. Ten release/signing tests
 reject stale API hosts, wrong signed associations and missing profile capability.
 Reproduction commands and artifact boundaries: [native verification](native-verification.md).
 

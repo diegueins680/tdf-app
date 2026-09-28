@@ -139,6 +139,21 @@ test('backend image packages the tested artifact instead of recompiling Haskell'
   assert.doesNotMatch(runtimeDockerfile, /stack (?:--[^\n]+ )?build/);
 });
 
+test('image workflow grants the reusable native artifact job its required read permissions', async () => {
+  const caller = await source('.github/workflows/build.yml');
+  const callee = await source('.github/workflows/ci.yml');
+  const callerJob = caller.match(/^  required-tests:\n([\s\S]*?)(?=^  \S)/m)?.[1];
+  const nativeJob = callee.match(/^  native-android-e2e:\n([\s\S]*?)(?=^  \S)/m)?.[1];
+  assert.ok(callerJob && nativeJob);
+  for (const permission of ['contents', 'actions']) {
+    const requiredRead = new RegExp(`^      ${permission}: read$`, 'm');
+    assert.match(nativeJob, requiredRead);
+    // GitHub validates called-job permissions even when that job is skipped.
+    assert.match(callerJob, requiredRead);
+  }
+  assert.doesNotMatch(callerJob, /: write\b|write-all/);
+});
+
 test('automatic migration integration matches the persisted production locale', async () => {
   const integration = await source('scripts/test-automatic-migrations-production-schema.sh');
   assert.equal(integration.match(/DEFAULT_LOCALE=es/g)?.length, 1);
