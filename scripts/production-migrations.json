@@ -595,6 +595,116 @@
       "id": "2026-09-20_records_ingestion_runtime",
       "path": "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
       "introducedBy": "633d3dc8f2451397c8bb51beee51700c172aad98"
+    },
+    {
+      "id": "2026-09-14_social_v2_foundation",
+      "path": "tdf-hq/sql/2026-09-14_social_v2_foundation.sql",
+      "introducedBy": "fa6b99e7a4e718f7e6db7226ed01301ff762e4f9"
+    },
+    {
+      "id": "2026-09-14_social_v2_read_models",
+      "path": "tdf-hq/sql/2026-09-14_social_v2_read_models.sql",
+      "introducedBy": "aa56289c3b01d0d74d45c5e590882eca98fd5b2c"
+    },
+    {
+      "id": "2026-09-15_social_v2_dm_write_boundary",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql",
+      "introducedBy": "efc827f7628afe084db173be627d0d7f71d0142a"
+    },
+    {
+      "id": "2026-09-15_social_v2_chat_api",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
+      "introducedBy": "02755bc410eecb5c3e03938121f1197102c709e1"
+    },
+    {
+      "id": "2026-09-15_social_v2_relationship_reads",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql",
+      "introducedBy": "8b2d1557a5e72e0346af1fd43dc7cf36033da067"
+    },
+    {
+      "id": "2026-09-15_social_v2_profile_reads",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql",
+      "introducedBy": "7706258a9e8ecbe0b99b4fd23903df606848ad03"
+    },
+    {
+      "id": "2026-09-16_social_v2_legacy_writes",
+      "path": "tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql",
+      "introducedBy": "7e601607f60b2987e502c4a14db821bbf37df296"
+    },
+    {
+      "id": "2026-09-16_social_v2_fan_effects",
+      "path": "tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql",
+      "introducedBy": "daf6c5a680b81928c2e2c66df98063328e6d5e9c"
+    },
+    {
+      "id": "2026-09-28_universal_interactions",
+      "path": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_policy",
+      "path": "tdf-hq/sql/2026-09-28_interaction_policy.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_discussions",
+      "path": "tdf-hq/sql/2026-09-28_interaction_discussions.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_locks",
+      "path": "tdf-hq/sql/2026-09-28_interaction_locks.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_commands",
+      "path": "tdf-hq/sql/2026-09-28_interaction_commands.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_blocks",
+      "path": "tdf-hq/sql/2026-09-28_interaction_blocks.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_summary",
+      "path": "tdf-hq/sql/2026-09-28_interaction_summary.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_notifications",
+      "path": "tdf-hq/sql/2026-09-28_interaction_notifications.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_navigation",
+      "path": "tdf-hq/sql/2026-09-28_interaction_navigation.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_read_optimization",
+      "path": "tdf-hq/sql/2026-09-28_interaction_read_optimization.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_legacy",
+      "path": "tdf-hq/sql/2026-09-28_interaction_legacy.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_compatibility",
+      "path": "tdf-hq/sql/2026-09-28_interaction_compatibility.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_account_controls",
+      "path": "tdf-hq/sql/2026-09-28_interaction_account_controls.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_integrity",
+      "path": "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
     }
   ]
 }
