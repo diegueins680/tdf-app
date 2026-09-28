@@ -1,9 +1,14 @@
-# TDF portable restore rehearsal
+# TDF portable deployment and recovery
 
-This configuration deploys a quarantined copy of TDF on a dedicated Hetzner
-host. It does **not** switch production writers, frontend traffic, payment
-callbacks, or mobile clients. Never promote the rehearsal database: take a
-fresh consistent export after quiescing every production writer.
+The live TDF web API moved to Hetzner on 2026-09-28; see the
+[verified cutover record](validation-2026-09-28.md). Trader and its shared Fly
+database remain running. Older mobile builds require a new release.
+
+The rehearsal configuration deploys a quarantined copy and does not switch
+production writers or traffic. Never promote that rehearsal database: take a
+fresh consistent export after quiescing every production writer. Production is
+already accepting writes on Hetzner; never restore service from the stale Fly
+copy without a new freeze and reverse migration.
 
 ## Host selection and cost
 
