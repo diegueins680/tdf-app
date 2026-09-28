@@ -28,6 +28,17 @@ BEGIN
  child:=interaction_command(910000003,target,gen_random_uuid(),jsonb_build_object('operation','comment.create',
    'parentId',root,'body','A reply','mentions','[]'::jsonb));
  ASSERT child->>'parentId'=root::text,child::text;
+ -- Creation policy changes do not revoke an existing author's edit permission.
+ UPDATE interaction_target SET comment_policy='off' WHERE id=target;
+ response:=interaction_command(910000003,target,gen_random_uuid(),jsonb_build_object('operation','comment.edit',
+   'commentId',child->>'id','expectedVersion',1,'body','Correct my reply','mentions','[]'::jsonb));
+ ASSERT response->>'body'='Correct my reply',response::text;
+ ASSERT interaction_command(910000003,target,gen_random_uuid(),'{"operation":"comment.create","body":"Off"}')->>'error'='comments_not_allowed';
+ UPDATE interaction_target SET comment_policy='mentioned' WHERE id=target;
+ response:=interaction_command(910000003,target,gen_random_uuid(),jsonb_build_object('operation','comment.edit',
+   'commentId',child->>'id','expectedVersion',2,'body','Correct again','mentions','[]'::jsonb));
+ ASSERT response->>'version'='3',response::text;
+ UPDATE interaction_target SET comment_policy='everyone' WHERE id=target;
  response:=interaction_command(910000001,target,gen_random_uuid(),jsonb_build_object('operation','comment.hide',
    'commentId',root,'expectedVersion',1,'reason','Owner hide'));
  ASSERT response->>'state'='hidden',response::text;
@@ -44,6 +55,11 @@ BEGIN
  ASSERT response->>'state'='deleted',response::text;
  ASSERT (SELECT count(*) FROM interaction_comment WHERE root_id=root)=2;
  ASSERT interaction_command(910000002,target,request_id,command)->>'body'='', 'Replay leaked deleted text';
+ SELECT r.id INTO reaction FROM content_reaction_type r WHERE NOT EXISTS(
+   SELECT 1 FROM interaction_reaction_choice c WHERE c.reaction_type_id=r.id) AND r.active LIMIT 1;
+ ASSERT reaction IS NOT NULL;
+ response:=interaction_command(910000002,target,gen_random_uuid(),jsonb_build_object('operation','reaction.set','reactionTypeId',reaction));
+ ASSERT response->>'error'='invalid_reaction', 'Only explicitly selectable reactions may be newly chosen';
  SELECT id INTO reaction FROM content_reaction_type WHERE code='like';
  response:=interaction_command(910000002,target,gen_random_uuid(),jsonb_build_object('operation','reaction.set','reactionTypeId',reaction));
  ASSERT response->>'reactionTypeId'=reaction::text,response::text;

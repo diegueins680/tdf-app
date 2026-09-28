@@ -64,6 +64,10 @@ context=request(actors[2],identity+'/comments/'+reply['id']); assert context['ro
 legacy=request(actors[2],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':None,'fcpReqContent':'Legacy client reply','fcpReqMediaUrls':[],'fcpReqParentId':post['fcpId']})
 assert legacy['fcpContent']=='Legacy client reply'
 assert sql(f"SELECT count(*) FROM fan_club_post WHERE id={legacy['fcpId']}")=='0'
+# The legacy event-moment array has no cursor; activation must not truncate it.
+sql(f"INSERT INTO social_event(id,organizer_party_id,title,start_time,event_type_id,workflow_state_id) SELECT {actors[0]},'{actors[0]}','Moment compatibility event',now(),id,'00000000-0000-4000-8000-000000000232' FROM event_type WHERE code='concert'; INSERT INTO event_moment(event_id,author_party_id,author_name,media_url,media_type) SELECT {actors[0]},'{actors[0]}','API fixture','https://example.test/photo.jpg','image' FROM generate_series(1,60);")
+moments=request(actors[0],f'/social-events/events/{actors[0]}/moments')
+assert len(moments)==60 and len({m['emId'] for m in moments})==60, 'Canonical compatibility must retain older moments'
 # Owner policies apply to stale clients and compose with current target access.
 version=request(actors[0],identity)['version']
 command(actors[0],{'operation':'settings.update','commentPolicy':'mentioned','expectedVersion':version,'mentionedPartyIds':[actors[2]]})

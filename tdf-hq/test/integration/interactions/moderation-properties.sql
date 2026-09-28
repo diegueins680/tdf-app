@@ -21,6 +21,10 @@ BEGIN
  ASSERT result_value->>'reported'='true';
  ASSERT interaction_report_inbox(916000001,NULL,20)->>'error'='forbidden';
  ASSERT jsonb_array_length(interaction_report_inbox(916000004,NULL,20)->'items')=1;
+ ASSERT interaction_report_inbox(916000004,NULL,20)->'items'->0->'reportReasons'->>0='Please review';
+ ASSERT interaction_moderation_page(916000004,target,NULL,20)->'items'->0->'reportReasons'->>0='Please review';
+ ASSERT interaction_report_reasons(916000001,comment_key)='[]', 'Owners cannot see private report reasons';
+ ASSERT interaction_report_reasons(916000003,comment_key)='[]', 'Reporters cannot browse other reports';
  result_value:=interaction_command(916000001,target,gen_random_uuid(),jsonb_build_object('operation','comment.report.resolve','commentId',comment_key,'expectedVersion',1,'reason','Owner cannot dismiss safety reports','decision','dismissed'));
  ASSERT result_value->>'error'='forbidden';
  result_value:=interaction_command(916000004,target,gen_random_uuid(),jsonb_build_object('operation','comment.report.resolve','commentId',comment_key,'expectedVersion',1,'reason','Reviewed and allowed','decision','dismissed'));
@@ -43,6 +47,44 @@ BEGIN
  version_value:=(result_value->>'version')::bigint;
  PERFORM interaction_block(916000002,916000003,false,version_value,gen_random_uuid());
  ASSERT jsonb_array_length(interaction_block_list(916000002,NULL,20)->'items')=0;
+ -- Blocking severs both legacy relationship directions permanently.
+ INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES(916000001,916000002,now());
+ INSERT INTO party_follow(follower_party_id,following_party_id,via_nfc,created_at)
+ VALUES(916000001,916000002,false,now()),(916000002,916000001,false,now());
+ ASSERT interaction_follows(916000002,916000001);
+ result_value:=interaction_block(916000001,916000002,true,0,gen_random_uuid());
+ ASSERT NOT result_value ? 'error',result_value::text;
+ ASSERT NOT EXISTS(SELECT 1 FROM fan_follow WHERE fan_party_id IN (916000001,916000002) AND artist_party_id IN (916000001,916000002));
+ ASSERT NOT EXISTS(SELECT 1 FROM party_follow WHERE follower_party_id IN (916000001,916000002) AND following_party_id IN (916000001,916000002));
+ PERFORM interaction_block(916000001,916000002,false,(result_value->>'version')::bigint,gen_random_uuid());
+ ASSERT NOT interaction_follows(916000002,916000001);
+ ASSERT NOT interaction_follows(916000001,916000002);
+ ASSERT NOT interaction_club_access(916000002,916000001), 'Unblock cannot silently restore club membership';
+ ASSERT NOT interaction_can_comment(target,916000002), 'Unblock cannot restore member-only discussion writes';
+ -- Directory-owned blocks share account projection, revision and ownership.
+ INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug)
+ VALUES('91600000-0000-4000-8000-000000000002',916000002,'person','Two','interaction-review-two'),
+ ('91600000-0000-4000-8000-000000000003',916000003,'person','Three','interaction-review-three');
+ UPDATE social_v2_pair SET follow_a=true,follow_b=true WHERE party_a=916000002 AND party_b=916000003;
+ version_value:=(interaction_block_state(916000002,916000003)->>'version')::bigint;
+ INSERT INTO directory_profile_block(blocker_profile_id,blocked_profile_id,created_by)
+ VALUES('91600000-0000-4000-8000-000000000002','91600000-0000-4000-8000-000000000003',916000002);
+ ASSERT interaction_block_state(916000002,916000003)->>'blocked'='true';
+ ASSERT interaction_block_list(916000002,NULL,20)->'items'->0->>'partyId'='916000003';
+ ASSERT jsonb_array_length(interaction_block_list(916000003,NULL,20)->'items')=0, 'Peer cannot see actor-owned directory blocks';
+ ASSERT interaction_block(916000002,916000003,false,version_value,gen_random_uuid())->>'error'='revision_conflict';
+ INSERT INTO directory_profile_block(blocker_profile_id,blocked_profile_id,created_by)
+ VALUES('91600000-0000-4000-8000-000000000003','91600000-0000-4000-8000-000000000002',916000003);
+ version_value:=(interaction_block_state(916000002,916000003)->>'version')::bigint;
+ result_value:=interaction_block(916000002,916000003,false,version_value,gen_random_uuid());
+ ASSERT result_value->>'blocked'='false',result_value::text;
+ ASSERT interaction_blocked(916000002,916000003), 'Own unblock must preserve the peer-owned directory block';
+ ASSERT NOT interaction_owned_directory_block(916000002,916000003);
+ ASSERT interaction_owned_directory_block(916000003,916000002);
+ PERFORM interaction_block(916000003,916000002,false,(result_value->>'version')::bigint,gen_random_uuid());
+ ASSERT NOT interaction_blocked(916000002,916000003);
+ ASSERT NOT interaction_follows(916000002,916000003);
+ ASSERT NOT interaction_follows(916000003,916000002);
  INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version)
  SELECT 916000004,id,'bootstrap',true,now(),1 FROM security_role WHERE code='engineer';
  ASSERT NOT interaction_is_moderator(916000004), 'Mixed privileged staff grants do not satisfy strict admin';

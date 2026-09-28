@@ -1373,6 +1373,7 @@
       "tdf-hq/sql/2026-09-28_interaction_read_optimization.sql",
       "tdf-hq/sql/2026-09-28_interaction_summary.sql",
       "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+      "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2686,14 +2687,14 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "38ae06ae32e99ad03dda151eb6ede30ff8b2412f3d1e87b7d963a4d330489cfe",
+      "sha256": "8b5f537c82e9758613a5e563923ccec76cd4dd3291ded85b338da6c74a288363",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/interactions/verification-2026-09-29.md",
-      "sha256": "0b7e3ee1baf9a648140dfc17e69f6ada054c711451c864627bdc9dfaddb9fedf",
+      "sha256": "0c09d17857070c140a94785d51db6343bd302d0eadfbdba73cd3745a7946b01b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -5143,7 +5144,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/interactions.yaml",
-      "sha256": "d72e60d84d8aac8e29c519f5c8e5e7e3481108f29f4ab5f79e33defd1f69c669",
+      "sha256": "24694baabc83e3094ee5b33e425417385f9a1538fe6cfb7e4443dc1957cdff04",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

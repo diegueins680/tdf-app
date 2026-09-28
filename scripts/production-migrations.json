@@ -705,6 +705,11 @@
       "id": "2026-09-28_interaction_integrity",
       "path": "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
       "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-29_interaction_review_repairs",
+      "path": "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
+      "introducedBy": "5eb0ac922528c814951aafa9f9fc57a435d48b98"
     }
   ]
 }

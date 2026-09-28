@@ -25,6 +25,19 @@ INSERT INTO event_moment_comment(id,moment_id,author_party_id,author_name,body)
 VALUES(915000001,915000001,'915000001','Migration actor','Original moment comment');
 INSERT INTO event_moment_reaction(id,moment_id,reactor_party_id,reaction_type_id)
 VALUES('91500000-0000-4000-8000-000000000004',915000001,'915000001','50800000-0000-4000-8000-000000000002');
+-- Anonymous historical attribution must never be silently hidden after cutover.
+DO $$ BEGIN
+ BEGIN
+   INSERT INTO event_moment_comment(moment_id,author_name,body) VALUES(915000001,'Historical guest','Preserve this text');
+   UPDATE interaction_runtime SET enabled=true WHERE singleton;
+   RAISE EXCEPTION 'Anonymous source unexpectedly activated';
+ EXCEPTION WHEN raise_exception THEN
+   ASSERT SQLERRM='Legacy interactions require identity/parent reconciliation before activation';
+ END;
+ ASSERT NOT (SELECT activated_once FROM interaction_runtime WHERE singleton);
+ ASSERT NOT EXISTS(SELECT 1 FROM interaction_legacy_cutover);
+ ASSERT NOT EXISTS(SELECT 1 FROM interaction_legacy_mapping);
+END $$;
 UPDATE interaction_runtime SET enabled=true WHERE singleton;
 DO $$
 DECLARE target uuid; reply uuid; child uuid; moment_comment uuid; result_value jsonb; before_count bigint; new_alias text;

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Interactions.Legacy
-  ( activated, visible, reactionSummary, momentPreview, commentCount, postReactionCounts ) where
+  ( activated, visible, reactionSummary, momentPreview, momentPreviews, commentCount, postReactionCounts ) where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (FromJSON, eitherDecodeStrict', encode)
@@ -57,6 +57,15 @@ momentPreview actor entity = do
   if not ready then pure Nothing else Just <$> readJSON
     "SELECT jsonb_build_array(value->'reactions',value->'comments')::text FROM (SELECT interaction_legacy_moment(?::bigint,?) value) x"
     [PersistText actor,PersistText entity]
+
+-- One database round trip for the legacy array endpoint. Its source list has
+-- no pagination contract; only each discussion preview is deliberately bounded.
+-- Omit inaccessible moments before returning any preview to the caller.
+momentPreviews :: Text -> [Text]
+  -> SqlPersistT IO (Map.Map Text ([EventMomentReactionDTO],[EventMomentCommentDTO]))
+momentPreviews actor entities = readJSON
+  "SELECT coalesce(jsonb_object_agg(entity,jsonb_build_array(value->'reactions',value->'comments')),'{}')::text FROM jsonb_array_elements_text(?::jsonb) candidate(entity) CROSS JOIN LATERAL (SELECT interaction_legacy_moment(?::bigint,entity) value) preview WHERE interaction_resolve('event_moment',entity,?::bigint) IS NOT NULL"
+  [PersistText (TE.decodeUtf8 (BL.toStrict (encode entities))),PersistText actor,PersistText actor]
 
 commentCount :: PartyId -> Text -> Text -> SqlPersistT IO (Maybe Int)
 commentCount actor kind entity = do

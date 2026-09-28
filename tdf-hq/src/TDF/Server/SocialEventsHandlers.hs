@@ -9485,12 +9485,12 @@ loadEventMoments pool viewerPartyId eventKey =
         ( do
             canonical <- Interactions.activated
             if canonical then do
-                sources <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt, LimitTo 50]
-                visibleSources <- filterM (\(Entity key _) -> Interactions.visible (toSqlKey (fromMaybe 0 (readMaybe (T.unpack viewerPartyId)))) "event_moment" (renderKeyText key)) sources
-                forM visibleSources $ \(Entity key row) -> do
-                    preview <- Interactions.momentPreview viewerPartyId (renderKeyText key)
-                    let (reactions,comments) = fromMaybe ([],[]) preview
-                    pure (momentEntityToDTO key row reactions comments)
+                sources <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt]
+                previews <- Interactions.momentPreviews viewerPartyId (map (renderKeyText . entityKey) sources)
+                pure [ momentEntityToDTO key row reactions comments
+                     | Entity key row <- sources
+                     , Just (reactions, comments) <- [Map.lookup (renderKeyText key) previews]
+                     ]
             else do
                 momentRows <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt]
                 let momentKeys = map entityKey momentRows

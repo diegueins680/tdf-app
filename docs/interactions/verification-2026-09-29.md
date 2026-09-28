@@ -5,6 +5,23 @@ previous release; no interaction schema migration or activation has been applied
 there. This record does not establish store signing, HTTPS app-link association,
 physical-device VoiceOver/TalkBack behavior or a completed production rollout.
 
+## Current review follow-up
+
+The historical evidence below remains tied to its stated commits. The new forward
+repair migration and moderator-reason clients are undergoing fresh qualification.
+Regression coverage now includes the eight-way notification preference truth table,
+new mentions after read, aggregate unread refresh, reaction no-ops, edit after policy
+changes, permanent legacy follow revocation, protected report reasons and atomic
+refusal of authorless legacy conversion. SQL suites and concurrent commands pass;
+seven rendered web tests and eight native tests pass, with type/lint validation.
+The HTTP suite additionally checks an event containing 60 moments without truncation.
+
+Android 18 was accepted by Play only as a **held unpublished Alpha draft**, now
+superseded. Android 19/iOS 26 signed candidates were cancelled before upload for the
+moderation follow-up. Alpha 17 remains active. The old image build passed, but the
+forward repairs require a new image. No interaction production migration,
+activation, store rollout or Cloudflare configuration change has occurred.
+
 ## Exact source and artifacts
 
 - Root tested commit: `daf3011fc` (documentation-only evidence follows it).

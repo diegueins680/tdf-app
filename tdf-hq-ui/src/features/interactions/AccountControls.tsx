@@ -54,6 +54,10 @@ export function AccountControls({ scope, canModerate }: { scope: string; canMode
           {reports.data?.pages.every((page) => page.items.length === 0) && <Typography>No hay reportes pendientes.</Typography>}
           {reports.data?.pages.flatMap((page) => page.items).map((comment) => <Stack key={comment.id}>
             <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{comment.moderationBody}</Typography>
+            {!!comment.reportReasons?.length && <Stack component="section" aria-label="Motivos de los reportes" spacing={1}>
+              <Typography variant="caption">Motivos recientes ({comment.reportReasons.length} de {comment.openReports ?? 0})</Typography>
+              {comment.reportReasons.map((text, index) => <Typography key={index} sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{text}</Typography>)}
+            </Stack>}
             <Button component={RouterLink} to={discussionLink('comment', comment.id)} onClick={() => setOpen(false)}>Revisar {comment.openReports} reportes en la conversación</Button>
           </Stack>)}
           {reports.hasNextPage && <Button disabled={reports.isFetchingNextPage} onClick={() => void reports.fetchNextPage()}>Ver más reportes</Button>}

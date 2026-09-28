@@ -12,9 +12,10 @@ const rootId = '10000000-0000-4000-8000-000000000002';
 const replyId = '10000000-0000-4000-8000-000000000003';
 const summary = jest.fn<() => Promise<InteractionSummary>>();
 const comments = jest.fn<(...args: unknown[]) => Promise<InteractionPage>>();
+const moderation = jest.fn<() => Promise<InteractionPage>>();
 const context = jest.fn<() => Promise<InteractionCommentContext>>();
 const command = jest.fn<(id: string, input: InteractionCommand, key: string) => Promise<unknown>>();
-jest.unstable_mockModule('../../api/interactions', () => ({ Interactions: { summary, comments, context, command, reactors: jest.fn(), moderation: jest.fn() } }));
+jest.unstable_mockModule('../../api/interactions', () => ({ Interactions: { summary, comments, context, command, reactors: jest.fn(), moderation } }));
 jest.unstable_mockModule('../../session/SessionContext', () => ({ useSession: () => ({ session: { partyId: 7 } }), getActiveSession: () => ({ partyId: 7 }), getStoredSessionToken: () => null }));
 jest.unstable_mockModule('../../analytics/posthog', () => ({ getAnalyticsClient: () => ({ capture: jest.fn() }) }));
 jest.unstable_mockModule('../../components/party-selector/PartySelector', () => ({ UserSelector: () => null, PartyMultiSelector: () => null }));
@@ -121,4 +122,16 @@ test('bounds retained discussion pages and refetches while allowing backward nav
   fireEvent.click(screen.getByRole('button', { name: 'Ver comentarios anteriores' }));
   await screen.findByText('Window comment 2');
   expect(screen.queryByText('Window comment 7')).toBeNull();
+});
+
+
+test('lets moderators read report reasons before making a decision', async () => {
+  summary.mockResolvedValue({ ...data, canModerate: true });
+  moderation.mockResolvedValue({ items: [{ ...root, moderationBody: 'Reported comment', openReports: 1, reportReasons: ['Unwanted personal information'] }], nextCursor: null });
+  view({ initiallyExpanded: true }); fireEvent.click(await screen.findByRole('button', { name: 'Moderación' }));
+  expect(await screen.findByText('Unwanted personal information')).toBeTruthy();
+  expect(screen.getByRole('region', { name: 'Motivos de los reportes' })).toBeTruthy();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Motivo de la decisión' }), { target: { value: 'Reviewed the report' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Desestimar reportes' }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith(target, expect.objectContaining({ operation: 'comment.report.resolve', commentId: rootId }), expect.any(String)));
 });

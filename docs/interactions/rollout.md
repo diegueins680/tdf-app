@@ -2,7 +2,7 @@
 
 Production schema migration is additive and separate from activation. The live
 baseline was 115 reviewed migrations on PostgreSQL 17.8; eight existing social
-compatibility migrations and fourteen interaction migrations are registered in
+compatibility migrations and fifteen interaction migrations are registered in
 order. Existing social-v2 rollout gates remain disabled. No feature activation
 is a schema-install side effect.
 
@@ -64,3 +64,34 @@ application together using the existing backup runbook. A backup from before
 activation is not a safe routine rollback once new interactions have been accepted.
 External notification delivery is limited to the existing in-app inbox; no email
 or push distribution is newly activated by this migration.
+
+## Review repair migration
+
+`2026-09-29_interaction_review_repairs` is an additive forward migration; every
+previously registered SQL file retains its original bytes. It introduces bounded
+mention-recipient snapshots and a notification event watermark, replaces the
+command/delivery/block/read functions, and indexes recent open reports. Reapplying
+the migration does not refill delta-only edit events. Roll back application changes
+only with compatible canonical readers; retain this schema and repair forward.
+
+First activation refuses legacy event comments with missing or unresolved author
+IDs. Reconcile those identities from trusted provenance before retrying; never
+invent an account or accept a count-only conversion that hides existing text.
+The failure is atomic and leaves legacy readers/writers available before activation.
+
+New mention recipients are captured by stable ID in the same transaction as edits.
+Delivery picks the highest enabled applicable reason (mention, reply, comment),
+refreshes unread state once per new event, and ignores desired-reaction no-ops.
+Unblocking never recreates either legacy follow direction. Existing authors can
+edit visible comments after creation policy changes, subject to current access,
+blocking, account and version checks. Moderator queues expose at most the latest
+20 open report reasons per comment, labeled with the total; reporter identities
+remain private. The legacy moment array retains every accessible moment with
+bounded discussion previews fetched in one batch.
+
+Directory-profile blocks are included in account block lists and revision checks.
+Unblocking removes only rows owned by the actor's subject profiles; reverse blocks
+remain effective. After activation, directory block changes share the account locks
+and increment the canonical pair revision, and block creation severs both follow
+stores. Reaction writes require an explicit selectable-choice row; historical
+nonselectable reactions remain readable and removable.

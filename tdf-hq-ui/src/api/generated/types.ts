@@ -7602,6 +7602,8 @@ export interface components {
             replyCount?: number;
             moderationBody?: string;
             openReports?: number;
+            /** @description Latest 20 open report reasons, visible only to authorized moderators; reporter identities are omitted. */
+            reportReasons?: string[];
             legacyPresentation?: {
                 title?: string | null;
                 mediaUrls?: string[];

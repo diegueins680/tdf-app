@@ -800,6 +800,13 @@ components:
         replyCount: *id007
         moderationBody: *id009
         openReports: *id007
+        reportReasons:
+          description: Latest 20 open report reasons, visible only to authorized moderators; reporter identities are omitted.
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            maxLength: 1000
         legacyPresentation:
           type: object
           nullable: true

@@ -42,6 +42,10 @@ export function DiscussionControls({ summary, scope, run }: { summary: Interacti
         <TextField label="Motivo de la decisión" multiline value={reason} onChange={(event) => setReason(event.target.value)} inputProps={{ maxLength: 1000 }} />
         {queue.data?.pages.flatMap((page) => page.items).map((comment) => <Stack key={comment.id} spacing={1}>
           <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{comment.moderationBody}</Typography>
+            {!!comment.reportReasons?.length && <Stack component="section" aria-label="Motivos de los reportes" spacing={1}>
+              <Typography variant="caption">Motivos recientes ({comment.reportReasons.length} de {comment.openReports ?? 0})</Typography>
+              {comment.reportReasons.map((text, index) => <Typography key={index} sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{text}</Typography>)}
+            </Stack>}
           <Typography variant="caption">{comment.state === 'hidden' ? 'Oculto' : `${comment.openReports ?? 0} reportes`}</Typography>
           <Stack direction="row">
             {comment.state === 'hidden' && <Button disabled={pending || !reason.trim()} onClick={() => {
