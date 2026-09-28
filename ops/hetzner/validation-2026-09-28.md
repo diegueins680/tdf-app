@@ -45,15 +45,34 @@ Older installed mobile builds still point at Fly and need an updated release;
 the operator explicitly accepted that downtime. Google interactive login and
 authenticated uploads have not been exercised end to end after cutover.
 No real payment was made. Database emergency-access checks are not evidence
-of a manual login. Video ingestion's global switch remains disabled, and event
-discovery/automatic publication remain disabled; deploying the reliability
-code does not mean these jobs have been activated. Event PRs #460/#463/#464
+of a manual login. Video ingestion was disabled at cutover and was activated in the verified
+follow-up below. Event discovery and automatic publication remain disabled. Event PRs #460/#463/#464
 remain separate review and rollout work.
 
 The operator explicitly authorized retaining Trader and the shared Fly database.
 Hetzner's account-specific estimate is USD 16.788/month including backups and
 IPv4, **not a realized total-bill saving**. Retained Fly storage and the shared
 running database continue to incur charges; total spend can temporarily increase.
+
+## Video-ingestion activation follow-up — 15:27 UTC
+
+The operator reported that the two latest official uploads were still missing.
+The deployed importer had neither a configured YouTube source nor its global
+switch enabled. The authenticated administration API verified the official
+`UCx9Jpaw_XDrMtIdzWYlU51g` channel as TDF Records and approved source 137 for
+the existing recordings collection. No role or permission grants were changed.
+
+A dry run completed with 38 eligible videos and one review-only item. After
+enabling hourly synchronization, the full import completed: two resources
+created, 36 refreshed, and one item retained for review. Its known-resource
+pass found all 38 verified resources unchanged. A repeat of the same execution
+key returned the completed run without applying it again.
+
+The first two public recordings are now `0W4KdgkQD5w` (Llama Este Pez part 2)
+and `0hYDXQ5hWfo` (part 1), ordered by YouTube publication time. Both are
+available and their provider thumbnails return HTTP 200 / image/jpeg.
+The next hourly slot is 16:00 UTC; full reconciliation is weekly on Sunday.
+The two removed legacy uploads retain their unavailable status.
 
 ## Earlier isolated rehearsal
 
