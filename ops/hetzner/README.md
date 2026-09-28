@@ -1,8 +1,11 @@
 # TDF portable deployment and recovery
 
 The live TDF web API moved to Hetzner on 2026-09-28; see the
-[verified cutover record](validation-2026-09-28.md). Trader and its shared Fly
+[cutover evidence and outstanding validation](validation-2026-09-28.md). Trader and its shared Fly
 database remain running. Older mobile builds require a new release.
+Cutover validation is incomplete until Google interactive login and
+authenticated uploads pass end to end; the live transition is not evidence
+that those gates passed.
 
 The rehearsal configuration deploys a quarantined copy and does not switch
 production writers or traffic. Never promote that rehearsal database: take a
@@ -175,3 +178,23 @@ is deliberate; monitor free space and preserve an off-host verified copy.
 
 The event ingestion changes in PRs #460, #463, and #464 remain separate from
 this hosting configuration and require their own review and rollout.
+
+## Remaining operational follow-up
+
+Daily artist enrichment and the course publisher target `https://api.tdfrecords.net`.
+The hourly messaging workflow now performs the existing read-only token check:
+missing, invalid, expired, or soon-expiring credentials still fail and notify.
+It cannot exchange credentials or update the retired Fly app. Automatic token
+rotation for Hetzner is pending a reviewed integration with the current secret
+store. Until then, an authorized operator must rotate credentials in the current
+Hetzner deployment and synchronize the GitHub health-check credentials; a check
+of GitHub credentials alone does not verify the running service's credentials.
+Do not use the legacy no-argument Fly refresh command after this cutover.
+
+Datadog API synthetic test `r2d-i82-3jy` still targets the retired
+`https://tdf-hq.fly.dev/health`. Its owner must retarget it to
+`https://api.tdfrecords.net/health`, preserving its assertions, locations,
+timeouts, and failure policy, and verify a successful run. Repository CI must
+continue reporting failures until that external configuration is corrected.
+These repository changes do not deploy, rotate production credentials, or
+claim that the pending authentication/upload gates have been performed.

@@ -147,25 +147,20 @@ test('read-only CLI fails missing credentials without entering maintenance', asy
   assert.match(script, /runMessagingTokenCli\(process\.argv\.slice\(2\)\)\.then\(code => \{\s*process\.exitCode = code;/);
 });
 
-test('messaging workflow separates read-only credentials from unchanged maintenance', async () => {
+test('scheduled and manual messaging checks cannot update retired Fly credentials', async () => {
   const workflow = await readFile(
     new URL('../../.github/workflows/check-messaging-token.yml', import.meta.url), 'utf8'
   );
   const step = name => workflow.split(`      - name: ${name}\n`)[1]?.split('\n      - name:')[0];
   const readOnly = step('Check Messaging Token (read-only)');
-  const maintenance = step('Check/Refresh Messaging Token');
   assert.match(workflow, /permissions:\n  contents: read/);
   assert.match(workflow, /cron: '0 \* \* \* \*'/);
-  assert.match(readOnly, /if: github.event_name == 'workflow_dispatch' && inputs.action == 'check'/);
   assert.match(readOnly, /run: node scripts\/check-messaging-token\.mjs --check/);
-  assert.doesNotMatch(readOnly, /FLY_|flyctl/);
-  assert.match(maintenance, /if: github.event_name == 'schedule' \|\| inputs.action == 'refresh'/);
-  assert.match(maintenance, /FLY_API_TOKEN: \$\{\{ secrets.FLY_API_TOKEN \}\}/);
-  assert.match(maintenance, /run: node scripts\/check-messaging-token\.mjs\s*$/);
-  assert.match(step('Install Fly CLI'), /if: github.event_name == 'schedule' \|\| inputs.action == 'refresh'/);
+  assert.doesNotMatch(readOnly, /\bif:/);
+  assert.doesNotMatch(workflow, /FLY_|flyctl|Check\/Refresh|superfly\//);
+  assert.equal(workflow.match(/run: node scripts\/check-messaging-token\.mjs/g)?.length, 1);
   assert.match(step('Validate requested action'), /Unsupported messaging-token action'; exit 1/);
-  // The Fly credential must occur only on the guarded maintenance step.
-  assert.equal(workflow.match(/FLY_API_TOKEN:/g)?.length, 1);
+  assert.match(step('Notify on Failure'), /if: failure\(\)/);
   assert.doesNotMatch(workflow.split('    steps:')[0], /\benv:/);
 });
 
@@ -179,7 +174,7 @@ test('messaging workflow rejects unsupported actions before any credential step'
   for (const [event, action, status] of [
     ['schedule', '', 0],
     ['workflow_dispatch', 'check', 0],
-    ['workflow_dispatch', 'refresh', 0],
+    ['workflow_dispatch', 'refresh', 1],
     ['workflow_dispatch', '', 1],
     ['workflow_dispatch', 'unknown', 1],
     ['pull_request', 'refresh', 1],

@@ -25,7 +25,7 @@ TDF_ADMIN_TOKEN="..." node scripts/upsert-course.mjs docs/courses/bateria-guille
 The helper defaults to the live API root:
 
 ```text
-https://tdf-hq.fly.dev
+https://api.tdfrecords.net
 ```
 
 Override the API root only for local or staging work:

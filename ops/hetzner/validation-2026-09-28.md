@@ -1,8 +1,11 @@
 # Hetzner cutover evidence — 2026-09-28
 
-## Live result
+## Live transition — validation incomplete
 
-The authorized web-first cutover completed on 2026-09-28. Production
+The authorized web-first traffic and writer transition occurred on 2026-09-28.
+Cutover validation remains **incomplete**: Google interactive login and
+authenticated uploads have not passed their end-to-end gates. No waiver of
+those gates is recorded here. Production
 `https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated
 Hetzner CPX12. Cloudflare deployment
 `4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend
