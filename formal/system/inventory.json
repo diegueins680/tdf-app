@@ -2692,7 +2692,7 @@
     },
     {
       "path": "docs/interactions/verification-2026-09-29.md",
-      "sha256": "a36e3c3fcfad088b04930ec9fa6fe2719c2cc660708dfa030837786058922969",
+      "sha256": "9b4929ae655b47bd0ad0c3064b6c9e1659cb071968e6a84e7f27448ff0c10a9a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

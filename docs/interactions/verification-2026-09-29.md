@@ -77,15 +77,25 @@ Mobile PRs [116](https://github.com/diegueins680/TDF-mobile/pull/116) and
 [117](https://github.com/diegueins680/TDF-mobile/pull/117) merged through the normal
 workflow after validation. PR 117 separates OTA runtime `1.0.1-interactions.1`
 from old binaries lacking Expo Crypto; it changes compatibility metadata and
-release qualification, not interaction behavior. The root now pins merged commit
-`5eb05bc`; mobile main is `16202bf72f04e85f9f2bf624006eac7c033afa55`.
+release qualification, not interaction behavior. The runtime correction is merged commit `5eb05bc`; the root additionally pins
+merged verifier follow-up `85bac6e`. Mobile main is now
+`6df4bebbaf139fe8996e40e2cb866083405fedd3`.
 Both Python guard suites run in Mobile Validate, including negative native/config
 runtime mismatch and mixed Android resource-value cases. Ten tests, resolved
 production Expo config, type checking, lint and hosted Mobile Validate pass.
 Signed candidates from the earlier main were cancelled before distribution.
 Their replacements are Android [36493153223](https://github.com/diegueins680/TDF-mobile/actions/runs/36493153223)
 (version code 18) and iOS [36493156554](https://github.com/diegueins680/TDF-mobile/actions/runs/36493156554)
-(candidate build 26); qualification and publication remain pending. No OTA update
+(candidate build 26). Android qualification passed; its retained AAB has SHA256
+`1d0534d23fc036ec23f16700445204bda67a82169ffea6298a7c110e90954748`.
+The download hash, signature, compiled runtime, API and four association routes
+were independently verified. No store upload has occurred.
+The iOS archive/export succeeded but entitlement parsing failed because codesign
+returned human-readable output. Mobile PR [118](https://github.com/diegueins680/TDF-mobile/pull/118)
+merged the explicit XML fix after hosted validation. Twelve Python checks pass
+locally, including an actual macOS ad-hoc signing/entitlement round trip.
+Replacement signed iOS run [36495672565](https://github.com/diegueins680/TDF-mobile/actions/runs/36495672565)
+is pending qualification; the failed artifact was never distributed. No OTA update
 or channel mapping was changed. See the mobile repository's
 `docs/interaction-release-runtime.md` for the compatibility contract.
 
