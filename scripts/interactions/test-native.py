@@ -58,7 +58,7 @@ def flow(name, variables):
     log_path = private / (args.app_id + '-' + name + '.log')
     with log_path.open('w') as log:
         log_path.chmod(0o600)
-        result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=os.environ)
+        result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env={**os.environ, 'MAESTRO_CLI_NO_ANALYTICS': '1'})
     if result.returncode:
         excerpt = '\n'.join(log_path.read_text(errors='replace').splitlines()[-45:])
         for secret in [fixture.get('nativePassword', ''), *fixture['tokens'].values()]:

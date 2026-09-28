@@ -429,8 +429,16 @@ jobs:
           import json, os, pathlib, subprocess
           run=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'mobile-run.json').read_text())
           expected=subprocess.check_output(['git','-C','tdf-mobile','rev-parse','HEAD'],text=True).strip()
-          assert run['head_sha']==expected and run['conclusion']=='success'
-          assert run['path']=='.github/workflows/interaction-android.yml'
+          assert run['conclusion']=='success' and run['path']=='.github/workflows/interaction-android.yml'
+          source=run['head_sha']
+          assert len(source)==40 and all(c in '0123456789abcdef' for c in source)
+          if source != expected:
+              subprocess.run(['git','-C','tdf-mobile','fetch','--no-tags','--depth=1','origin',source],check=True)
+              changed=subprocess.check_output(['git','-C','tdf-mobile','diff','--name-only',source,expected],text=True).splitlines()
+              # Only Maestro YAML may differ. App, dependencies, native projects,
+              # release scripts and build workflows must remain byte-identical.
+              assert changed and all(p.startswith('e2e/interactions/') and p.endswith('.yaml') for p in changed), 'Native artifact application source differs'
+          print('Verified native application source; test fixtures may advance independently')
           PYVERIFY
           gh run download "$MOBILE_RUN" --repo diegueins680/TDF-mobile --pattern 'interaction-android-*' --dir artifacts/interaction-apk
       - name: Install test runtime and verified Maestro CLI

@@ -199,3 +199,29 @@ test('affected active workflow actions use Node 24 majors', async () => {
     );
   }
 });
+
+test('native artifact admission rejects application drift while allowing only Maestro fixture changes', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const match = workflow.match(/python3 - <<'PYVERIFY'\n([\s\S]*?)\n          PYVERIFY/);
+  assert.ok(match, 'Native artifact admission must run before download');
+  const admission = match[1].split('\n').map(line => line.slice(10)).join('\n');
+  const harness = `
+import json, os, sys
+from unittest.mock import patch
+expected='a'*40
+run={'head_sha':'b'*40,'conclusion':sys.argv[3],'path':sys.argv[4]}
+changed=json.loads(sys.argv[2])
+def output(command, **kwargs):
+    return expected if 'rev-parse' in command else '\\n'.join(changed)
+os.environ['RUNNER_TEMP']='/synthetic'
+with patch('pathlib.Path.read_text',return_value=json.dumps(run)), patch('subprocess.check_output',side_effect=output), patch('subprocess.run'):
+    exec(compile(sys.argv[1], '<actual-workflow-admission>', 'exec'))
+`;
+  const invoke = (paths, conclusion = 'success', workflowPath = '.github/workflows/interaction-android.yml') => spawnSync('python3', ['-c', harness, admission, JSON.stringify(paths), conclusion, workflowPath], { encoding: 'utf8' });
+  assert.equal(invoke(['e2e/interactions/create.yaml']).status, 0);
+  for (const paths of [['src/features/interactions/DiscussionScreen.tsx'], ['android/app/build.gradle'], ['package-lock.json'], ['.github/workflows/interaction-android.yml'], ['scripts/android-release.py'], ['e2e/interactions/entry.js'], ['e2e/interactions/create.yaml', 'app.config.ts']]) {
+    assert.notEqual(invoke(paths).status, 0, `Must rebuild after ${paths.join(', ')}`);
+  }
+  assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'failure').status, 0);
+  assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'success', '.github/workflows/untrusted.yml').status, 0);
+});

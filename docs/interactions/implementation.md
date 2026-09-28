@@ -221,13 +221,20 @@ moderation attempts exhaust the account write budget and return 429.
 
 The root revision `4c9ef6a3891733a3f0f687fb43efc57242ed5521` passed all 23
 GitHub checks, including the complete persona browser and backend HTTP suites.
-Installed iOS verified login, a reaction and a server-persisted comment. Its initial
-unsigned artifact could not retain a login across cold starts because SecureStore
-lacked simulator entitlements; the Xcode test build now embeds those entitlements.
-Cold notification/edit/deletion flows remain pending the corrected artifact.
-Two additional native rendered regressions preserve exact target/comment return
-destinations through guest sign-in; all seven interaction flows and type/lint pass.
-The local Android emulator hit host resource limits. Installed Android journeys
-now run on a dedicated GitHub runner with matching build provenance; no installed
-Android pass is claimed until that job completes.
+Installed iOS passed login, reaction, comment creation, cold notification opening,
+automatic exact-reply focus, editing, parent deletion, reply preservation,
+collapse and expansion, followed by authoritative API assertions. Verification
+used the corrected ad hoc simulator binary with locally rebuilt feature
+JavaScript; it does not establish store signing or HTTPS association. The native
+focus regression waits for list layout, includes header height when retrying an
+unmeasured row, and announces only a visible target. Seven rendered regressions
+and type/lint pass; final hosted native artifacts remain pending.
+
+The initial Android CI device installed and launched the APK successfully. Its
+journey stopped at the welcome screen; the Maestro setup now follows the existing
+account action before login. No complete Android journey pass is claimed yet.
+The local iOS distribution profile lacks Associated Domains. Release preflight
+now rejects that profile before compilation; Apple Developer sign-in is pending
+for verification/replacement of the release profile. Ten release/signing tests
+reject stale API hosts, wrong signed associations and missing profile capability.
 Reproduction commands and artifact boundaries: [native verification](native-verification.md).

@@ -49,7 +49,10 @@ restoration and association responses against the deployed canonical hosts.
 For a resource-constrained local machine, dispatch the existing CI workflow with
 `force_backend=true`, `publish_backend_artifact=true`, and `native_android_run`
 set to a successful Android test-build run. The run must match the root checkout's
-mobile gitlink and the designated test-build workflow. CI downloads the backend
+mobile application source and the designated test-build workflow. A later gitlink
+may reuse an artifact only when every changed path is a Maestro YAML file under
+`e2e/interactions/`; any application, native, dependency or build-script change
+requires a new artifact. CI downloads the backend
 from its own successful build, boots a dedicated Android 35 device on a Linux
 runner with hardware virtualization, and runs the same isolated HTTP/native
 journeys. It retains only synthetic screenshots; credentials remain ephemeral.

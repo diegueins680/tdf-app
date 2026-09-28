@@ -2671,21 +2671,21 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "e768f5a9fa4c6b699e849e169c40e3fe98acbb405ce259da0176be9720bce80f",
+      "sha256": "541bf6972032cecfddecbb6abaff7035748cc815e768d59d9a1bde1e207ada47",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress in isolated worktrees; no production schema or feature gate changed.",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/interactions/native-verification.md",
-      "sha256": "e55061eb1d324830a98eb1d8b4a90d3c4091fe51359aedd86cee45471880343f",
+      "sha256": "9d56a15dcbf8d848c61b30d0c5e33ff1d73f355e689141ae9612c691dc02afd6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "50c93e98087dd70e515bdded8c0f4df882165bbb296a49e47198927928ac7d8a",
+      "sha256": "38ae06ae32e99ad03dda151eb6ede30ff8b2412f3d1e87b7d963a4d330489cfe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

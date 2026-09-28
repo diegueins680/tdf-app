@@ -8,7 +8,14 @@ is a schema-install side effect.
 
 ## Release gates
 
-1. Merge through normal protected review/CI; build an immutable backend image.
+1. Preserve the Cloudflare Pages project settings, then temporarily pause only
+   automatic production deployments for `tdf-app`; keep its current deployment
+   serving traffic and preserve preview builds. Use the granular
+   `source.config.production_deployments_enabled` setting, preserving
+   `preview_deployment_setting` ([Cloudflare project API](https://developers.cloudflare.com/api/resources/pages/subresources/projects/)).
+   Otherwise a protected main merge
+   could publish the new web client before its backend/schema are ready.
+   Merge through normal protected review/CI; build an immutable backend image.
    Apply only the exact merged manifest using the existing Hetzner release lane.
 2. Capture a fresh encrypted/off-host production backup and rehearse its restore.
    Capture exact legacy row counts and parent/reaction validation in a read-only
@@ -22,7 +29,8 @@ is a schema-install side effect.
    TDF writer before activation. Confirm source/target adapters, authentication,
    existing events/feed/records flows, credentials and webhook health. Do not
    touch Trader or the shared Fly database. Old Fly TDF writers stay fenced.
-5. Deploy web and signed native releases. Configure existing Cloudflare association
+5. Deploy web and signed native releases after the backend is ready, then restore
+   the saved automatic-production-deployment setting. Configure existing Cloudflare association
    functions with the verified public certificates in implementation.md. Check
    HTTPS association responses without redirects and installed-app deep links.
 6. In the existing deployment lease, enable `interaction_runtime.enabled` in a
