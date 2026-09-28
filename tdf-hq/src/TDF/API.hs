@@ -11,6 +11,7 @@ import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
 import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
 import TDF.API.SocialProfiles (ProfileListAPI, ProfileGetAPI)
 import TDF.Social.API (SocialV2API)
+import TDF.Interactions.API (InteractionsAPI, PublicInteractionsAPI)
 import           Control.Applicative ((<|>))
 import           Servant
 import           Database.Persist          (Entity)
@@ -626,6 +627,7 @@ type ProtectedAPI =
   :<|> OperationsAPI
   :<|> CommerceOperationsAPI
   :<|> ReviewsProtectedAPI
+  :<|> InteractionsAPI
 
 type API =
        VersionAPI
@@ -656,6 +658,7 @@ type API =
   :<|> InventoryPublicAPI
   :<|> FeedbackAPI
   :<|> PublicCatalogAPI
+  :<|> PublicInteractionsAPI
   :<|> DirectoryPublicAPI
   :<|> MerchPublicAPI
   :<|> PublicUpcomingEventsAPI

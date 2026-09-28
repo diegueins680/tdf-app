@@ -9,6 +9,38 @@ servers:
     description: Development server
 
 paths:
+  /interactions/reports:
+    $ref: './interactions.yaml#/paths/~1interactions~1reports'
+  /interactions/blocked-accounts:
+    $ref: './interactions.yaml#/paths/~1interactions~1blocked-accounts'
+  /interactions/targets/{kind}/{entityKey}:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{kind}~1{entityKey}'
+  /interactions/targets/{kind}/{entityKey}/comments:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{kind}~1{entityKey}~1comments'
+  /interactions/targets/{kind}/{entityKey}/comments/{commentId}:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{kind}~1{entityKey}~1comments~1{commentId}'
+  /interactions/targets/{kind}/{entityKey}/reactors:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{kind}~1{entityKey}~1reactors'
+  /interactions/resolve/{destinationKind}/{destinationId}:
+    $ref: './interactions.yaml#/paths/~1interactions~1resolve~1{destinationKind}~1{destinationId}'
+  /public/interactions/targets/{kind}/{entityKey}:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1targets~1{kind}~1{entityKey}'
+  /public/interactions/targets/{kind}/{entityKey}/comments:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1targets~1{kind}~1{entityKey}~1comments'
+  /public/interactions/targets/{kind}/{entityKey}/comments/{commentId}:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1targets~1{kind}~1{entityKey}~1comments~1{commentId}'
+  /public/interactions/targets/{kind}/{entityKey}/reactors:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1targets~1{kind}~1{entityKey}~1reactors'
+  /public/interactions/resolve/{destinationKind}/{destinationId}:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1resolve~1{destinationKind}~1{destinationId}'
+  /interactions/targets/{targetId}/commands:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{targetId}~1commands'
+  /interactions/blocks/{partyId}:
+    $ref: './interactions.yaml#/paths/~1interactions~1blocks~1{partyId}'
+  /interactions/preferences:
+    $ref: './interactions.yaml#/paths/~1interactions~1preferences'
+  /interactions/moderation/{targetId}:
+    $ref: './interactions.yaml#/paths/~1interactions~1moderation~1{targetId}'
   /trials/v1/signup:
     $ref: './trials-identity.yaml#/paths/~1trials~1v1~1signup'
   /trials/v1/trial-requests:
@@ -2147,7 +2179,7 @@ paths:
         - bearerAuth: [ ]
       parameters:
         - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 120 } }
-        - { name: context, in: query, description: Functional authorization context; public discovery contexts are forced to active person accounts and exclude the actor., schema: { type: string, enum: [crm_assignment, booking, booking_engineer, billing_contact, artist_link, campaign_enrollment, event_invitation, social_connection, operations, internal_feedback, live_session, event_logistics], default: crm_assignment } }
+        - { name: context, in: query, description: Functional authorization context; public discovery contexts are forced to active person accounts and exclude the actor., schema: { type: string, enum: [crm_assignment, booking, booking_engineer, billing_contact, artist_link, campaign_enrollment, event_invitation, social_connection, interaction_mention, operations, internal_feedback, live_session, event_logistics], default: crm_assignment } }
         - { name: scopeId, in: query, description: Required domain scope for contexts that authorize against a concrete resource. For event_logistics this is the event ID., schema: { type: string } }
         - { name: kind, in: query, schema: { type: string, enum: [any, person, organization], default: any } }
         - { name: accountOnly, in: query, schema: { type: boolean, default: false } }
@@ -7493,6 +7525,42 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    InteractionKind:
+      $ref: './interactions.yaml#/components/schemas/InteractionKind'
+    InteractionMention:
+      $ref: './interactions.yaml#/components/schemas/InteractionMention'
+    InteractionAuthor:
+      $ref: './interactions.yaml#/components/schemas/InteractionAuthor'
+    InteractionComment:
+      $ref: './interactions.yaml#/components/schemas/InteractionComment'
+    InteractionReaction:
+      $ref: './interactions.yaml#/components/schemas/InteractionReaction'
+    InteractionContext:
+      $ref: './interactions.yaml#/components/schemas/InteractionContext'
+    InteractionSummary:
+      $ref: './interactions.yaml#/components/schemas/InteractionSummary'
+    InteractionPage:
+      $ref: './interactions.yaml#/components/schemas/InteractionPage'
+    InteractionCommentContext:
+      $ref: './interactions.yaml#/components/schemas/InteractionCommentContext'
+    InteractionDestination:
+      $ref: './interactions.yaml#/components/schemas/InteractionDestination'
+    InteractionReactors:
+      $ref: './interactions.yaml#/components/schemas/InteractionReactors'
+    InteractionBlockedAccounts:
+      $ref: './interactions.yaml#/components/schemas/InteractionBlockedAccounts'
+    InteractionBlock:
+      $ref: './interactions.yaml#/components/schemas/InteractionBlock'
+    InteractionBlockRequest:
+      $ref: './interactions.yaml#/components/schemas/InteractionBlockRequest'
+    InteractionPreferences:
+      $ref: './interactions.yaml#/components/schemas/InteractionPreferences'
+    InteractionCommand:
+      $ref: './interactions.yaml#/components/schemas/InteractionCommand'
+    InteractionCommandRequest:
+      $ref: './interactions.yaml#/components/schemas/InteractionCommandRequest'
+    InteractionCommandResult:
+      $ref: './interactions.yaml#/components/schemas/InteractionCommandResult'
     Notification:
       type: object
       required: [nId, nType, nTitle, nBody, nIsRead, nCreatedAt]
