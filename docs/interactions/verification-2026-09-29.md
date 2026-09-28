@@ -125,3 +125,23 @@ clone with connection reset; its retry was cancelled before signing so the next
 candidate can include the response fix. No iOS upload or tester rollout occurred.
 The image retry was also cancelled after identifying the real response defect;
 a fresh image build is required from corrected source.
+
+## Encrypted backup and dependency audit
+
+A fresh live dump captured at 2026-09-28T23:19:19Z was encrypted directly into an
+off-host archive using checksum-verified age 1.3.2 and the existing dedicated
+SSH public recipient. Decryption was verified against the plaintext digest and
+streamed into a new isolated PostgreSQL 17 database, with no application workers.
+Restore completed at 23:20:09Z with 115 migration entries, 30 notifications and
+no interaction installation. Ciphertext SHA256:
+`45c8b5002d4921feb3be4a1898fb302d133df2d77f9f13bbfa237422e79dcfb4`.
+The protected receipt and decryption identity reference remain outside Git; retain
+the identity for recovery. Capture a new backup at actual cutover if writes have
+continued. This does not authorize restoring an old snapshot over accepted writes.
+
+CI Safe Install found newly indexed ip-address advisories GHSA-2vr4-cq9g-pvrc
+and GHSA-rpw4-54j3-4h4q. The lockfile updates only that transitive package from
+10.3.1 to compatible patched 10.7.2; the existing audit policy is unchanged.
+Mobile PR119 has merged as ce6f9ecba1675381c65e002a6b5ca3c968413896.
+Signed corrected candidates are Android19 run36497188620 and iOS26 run36497191523;
+neither has completed qualification or distribution at this checkpoint.
