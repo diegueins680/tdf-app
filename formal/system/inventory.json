@@ -3161,7 +3161,7 @@
     },
     {
       "path": "docs/records-ingestion/runtime-rollout.md",
-      "sha256": "3da243efcb4e602010485dbf28aff67fdf4c817fc2688f58a93d4c2cbad0b11a",
+      "sha256": "bfc143b6f040593ee65d02baad218f3a040b5abaf970fe4c101926aad78c6184",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
