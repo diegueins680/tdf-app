@@ -203,7 +203,7 @@ jobs:
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev postgresql-client nodejs pkg-config git curl ca-certificates
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client nodejs python3 pkg-config git curl ca-certificates
 
       - name: Restore immutable Stack dependencies
         uses: actions/cache@v6
@@ -346,6 +346,14 @@ jobs:
           TDF_PUBLIC_BOOKING_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_PUBLIC_BOOKING_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-public-booking-http-concurrency.sh
+
+      - name: Verify universal interactions through real HTTP sessions
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_INTERACTION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: bash scripts/interactions/test-http.sh
 
       - name: Upload tested backend executable
         if: inputs.publish_backend_artifact == true

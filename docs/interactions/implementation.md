@@ -100,7 +100,7 @@ schema and activation gate remain unchanged. Independent review, full green CI,
 installed native verification, production restore rehearsal and deployment are
 still release requirements.
 
-- Full normal Stack build passed; full Stack test is running after compatibility
+- Full normal Stack build and the full Stack test suite passed after compatibility
   updates. PostgreSQL 17 hosted property checks and fresh 137-entry migration
   rehearsal pass, including source retirement, legacy conversion, moderation,
   current privacy, session revocation and concurrency. Existing source engagement
@@ -130,8 +130,8 @@ still release requirements.
 - Root CI uncovered stale test mocks, generated specification inventory and
   reviewed catalog decisions, a setup-node major mismatch, an outdated mobile
   gitlink, and overlap between mocked persona and real-API test discovery. Fixes
-  are under verification. The external Datadog monitor still targets retired Fly;
-  updating its target requires signed-in account access, preserving assertions.
+  are under verification. The external Datadog monitor was retargeted with unchanged assertions;
+  its GitHub rerun passed (details below).
 
 ### Content integration and boundaries
 
@@ -184,3 +184,27 @@ navigation, edit and parent deletion. Browser axe serious/critical findings: zer
 Five native rendered flows passed optimistic rollback, same-key draft retries,
 progressive disclosure, linked-reply accessibility announcement/tombstone and
 immediate removal of cached bodies after access revocation.
+
+### Production-data and monitoring verification
+
+A fresh 72 MB production database was exported and restored into the isolated
+`tdf_interaction_restore_20260928` PostgreSQL 17.8 database. The complete reviewed
+137-migration manifest applied without error. First activation, repeated enable,
+pause, and resume passed; the conversion ledger remained one row and source counts
+matched migrated counts. Exact production legacy post/reply/reaction/moment counts
+were zero; all 30 existing notifications survived without any rehearsal delivery.
+The clone is paused and has no application workers. Live production schema/gates
+remain unchanged. Nonempty migration behavior is covered by synthetic properties.
+
+The full Stack suite passed 3,539 examples with zero failures and six pre-existing
+pending examples after preserving the pre-interaction SQLite inbox path. Installed
+interaction authority always retains current bearer locks, including while paused.
+The isolated HTTP runner now joins the backend CI job and can optionally run the
+real-browser suite using `TDF_INTERACTION_BROWSER_E2E=1`.
+
+Datadog API health test `r2d-i82-3jy` now targets
+`https://api.tdfrecords.net/health`. Browser form comparison verified all other 85
+fields unchanged. Persisted assertions remain HTTP 200, JSON content type,
+`$.status == ok`, and `$.db == ok`; location, retries, scheduling state and blocking
+CI rule are unchanged. GitHub Datadog rerun `36468621062` passed. No unrelated
+monitor or application was changed.

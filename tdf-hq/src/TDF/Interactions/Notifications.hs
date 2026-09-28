@@ -29,13 +29,16 @@ available = do
       [(Single True,Single False)] -> liftIO (ioError (userError "Incomplete interaction notification authority"))
       _ -> pure False
 
+-- Preserve legacy inbox semantics on databases without the interaction authority
+-- (including SQLite fixtures). Once installed, even a paused gate keeps current
+-- bearer locks and canonical visibility enforcement.
 notificationRows :: AuthedUser -> Bool -> Maybe Int64 -> SqlPersistT IO (Either ServerError [Entity Notification])
-notificationRows user unread ident = withCurrentSession ReadSession user $ do
+notificationRows user unread ident = do
   canonical <- available
-  if canonical then rawSql
+  if canonical then withCurrentSession ReadSession user $ rawSql
     "SELECT ?? FROM notification WHERE recipient_party_id=? AND (NOT ? OR NOT is_read) AND (?::bigint IS NULL OR id=?) AND interaction_notification_visible(id,?) ORDER BY created_at DESC,id DESC LIMIT 50"
     [actor, PersistBool unread, maybe PersistNull PersistInt64 ident, maybe PersistNull PersistInt64 ident, actor]
-  else selectList filters [Desc NotificationCreatedAt,LimitTo 50]
+  else Right <$> selectList filters [Desc NotificationCreatedAt,LimitTo 50]
   where
     actor = PersistInt64 (fromSqlKey (auPartyId user))
     filters :: [Filter Notification]
@@ -44,13 +47,13 @@ notificationRows user unread ident = withCurrentSession ReadSession user $ do
       ++ maybe [] (\key -> [NotificationId ==. toSqlKey key]) ident
 
 notificationUnreadCount :: AuthedUser -> SqlPersistT IO (Either ServerError Int)
-notificationUnreadCount user = withCurrentSession ReadSession user $ do
+notificationUnreadCount user = do
   canonical <- available
-  if canonical then do
+  if canonical then withCurrentSession ReadSession user $ do
     rows <- rawSql "SELECT count(*)::bigint FROM notification WHERE recipient_party_id=? AND NOT is_read AND interaction_notification_visible(id,?)"
       [actor,actor] :: SqlPersistT IO [Single Int64]
     pure $ case rows of [Single n] -> fromIntegral n; _ -> 0
-  else count [NotificationRecipientPartyId ==. auPartyId user, NotificationIsRead ==. False]
+  else Right <$> count [NotificationRecipientPartyId ==. auPartyId user, NotificationIsRead ==. False]
   where actor = PersistInt64 (fromSqlKey (auPartyId user))
 
 startInteractionNotifications :: ConnectionPool -> IO ()

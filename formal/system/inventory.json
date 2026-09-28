@@ -120,6 +120,7 @@
       "scripts/interactions/test-concurrency.py",
       "scripts/interactions/test-concurrency.sh",
       "scripts/interactions/test-database.sh",
+      "scripts/interactions/test-http.sh",
       "scripts/interactions/test-schema.sh",
       "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
@@ -2669,7 +2670,7 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "abf4686c29d9c66852ad61b2df109b02b7196096484da6a34a1e552024ac60c7",
+      "sha256": "b8c278d6e77afe276d3bab2a8abbb53cfb12ca8a84236a61c47fbf8c24315e56",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress in isolated worktrees; no production schema or feature gate changed.",
       "kind": "requirement-candidate"

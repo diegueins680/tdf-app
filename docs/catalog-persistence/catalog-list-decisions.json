@@ -14141,10 +14141,10 @@
       "id": "157e8175d06c926eb08e",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
-      "specializedModel": "interaction_reaction.state",
+      "specializedModel": "interaction_comment.state and body constraint",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Active/hidden reaction authorization state controls authoritative counters and moderation visibility; not a configurable reaction type list.",
+      "justification": "Only visible and hidden comments retain nonempty bodies; deleted and administratively removed comments require an empty body. This is the enforced deletion state invariant.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
