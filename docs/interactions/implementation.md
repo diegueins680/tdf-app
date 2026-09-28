@@ -1,6 +1,6 @@
 # Universal interactions — implementation and acceptance
 
-Status: implementation in progress in isolated worktrees; no production schema or feature gate changed.
+Status: implementation and installed test journeys pass; protected review, signed releases and production rollout remain pending. No production schema or feature gate changed.
 User authorization (2026-09-28): implement, test, review, merge, deploy and verify
 universal interactions across web/mobile. This supersedes historical draft-only
 instructions in the old social design packets, but not release protections.
@@ -86,7 +86,7 @@ passing prototype fixture for production rollout.
 - [x] Shared web/native components and every eligible existing entry point.
 - [x] Mentions, notification aggregation/preferences, exact deep-link resolution.
 - [x] Unit/property/model/database/concurrency/migration coverage.
-- [ ] Desktop/mobile accessibility and end-to-end workflows.
+- [x] Desktop/mobile interaction flows, semantic controls, focus regressions and browser accessibility checks.
 - [x] Large synthetic discussion EXPLAIN/query-budget evidence.
 - [x] OpenAPI/generated contracts, documentation, full relevant local checks.
 - [ ] Independent repository review, protected green CI, merge and immutable build.
@@ -114,7 +114,7 @@ The production restore rehearsal has passed (details below).
   Firefox and WebKit, including
   exact notification navigation, focused deep links, editing and parent deletion.
   Browser axe serious/critical findings are zero. Native rendered flows and all
-  521 native tests pass. Type/lint/release checks are rerun after follow-up edits.
+  523 native tests pass. Type/lint/release checks are rerun after follow-up edits.
 - Rendered pagination test walks eight pages, verifies only five remain, verifies
   refresh issues five page requests, and navigates backward without a full-tree
   fetch. Both clients share cursor-history semantics; each response stays at 20
@@ -125,7 +125,7 @@ The production restore rehearsal has passed (details below).
   overhead raises these timings. These are local measurements, not production SLOs.
 - Expo simulator build was rejected by the monthly Free-plan quota. The GitHub
   macOS simulator build passed and its bundled app is installed on a dedicated
-  iOS 18.3 simulator; installed-device flows remain under verification.
+  iOS 18.3 simulator; the final unmodified artifact passes the full installed journey.
   Its ad hoc simulator artifact is not a store release. Signed release workflows
   now point to the canonical API; checked-in native projects include link
   entitlements/intent filters and the locked ExpoCrypto dependency.
@@ -253,3 +253,11 @@ now rejects that profile before compilation; Apple Developer sign-in is pending
 for verification/replacement of the release profile. Ten release/signing tests
 reject stale API hosts, wrong signed associations and missing profile capability.
 Reproduction commands and artifact boundaries: [native verification](native-verification.md).
+
+## Final installed verification (2026-09-29)
+
+Both installed platforms pass the complete fixture journey. See
+[verification evidence](verification-2026-09-29.md) for exact application source,
+artifact provenance, CI run and remaining release boundaries. Earlier failure
+notes above document the regressions that led to the measured native focus,
+safe-area and automation corrections; they are superseded by this result.

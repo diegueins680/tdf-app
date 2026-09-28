@@ -2671,9 +2671,9 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "ec52e812f8590a4d59d6f989c3cdbed539e2b7f25734014b1a3b60fa3570de74",
+      "sha256": "44f91302c13bb604e7555eed854103ba6610e17b1f6bb2496321781e4f8a163c",
       "authority": "inferred",
-      "authorityBasis": "Status: implementation in progress in isolated worktrees; no production schema or feature gate changed.",
+      "authorityBasis": "Status: implementation and installed test journeys pass; protected review, signed releases and production rollout remain pending. No production schema or feature gate changed.",
       "kind": "requirement-candidate"
     },
     {
@@ -2686,6 +2686,13 @@
     {
       "path": "docs/interactions/rollout.md",
       "sha256": "38ae06ae32e99ad03dda151eb6ede30ff8b2412f3d1e87b7d963a4d330489cfe",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/interactions/verification-2026-09-29.md",
+      "sha256": "bb2695ad83bedb98c5bd7abeff9e7eafb3f9296d80e8d31a5673f290788908b4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
