@@ -29,6 +29,17 @@ identity=f"/interactions/targets/club_post/{post['fcpId']}"
 summary=request(actors[1],identity); target=summary['id']
 def command(actor, payload, key=None, status=200):
     return request(actor,f'/interactions/targets/{target}/commands',{'requestKey':key or str(uuid.uuid4()),'command':payload},status=status)
+# Reuse the actual scoped party selector and stable party IDs, with live privacy.
+sql(f"INSERT INTO social_v2_preference(party_id,discoverable) VALUES({actors[2]},true) ON CONFLICT(party_id) DO UPDATE SET discoverable=true;")
+search=f'/parties/search?context=interaction_mention&scopeId={target}&q=API&limit=20'
+assert actors[2] in [item['partyId'] for item in request(actors[0],search)['items']]
+sql(f"UPDATE social_v2_preference SET discoverable=false WHERE party_id={actors[2]};")
+assert actors[2] not in [item['partyId'] for item in request(actors[0],search)['items']]
+sql(f"UPDATE social_v2_preference SET discoverable=true WHERE party_id={actors[2]};")
+settings={'reactions':False,'comments':True,'replies':True,'mentions':False}
+assert request(actors[2],'/interactions/preferences',settings,method='PUT')==settings
+assert request(actors[2],'/interactions/preferences')==settings
+request(actors[2],'/interactions/preferences',{**settings,'ownerId':actors[0]},method='PUT',status=400)
 request(None,identity,status=401)
 request(None,'/public'+identity,status=404)
 like=next(r['id'] for r in summary['reactions'] if r['code']=='like')
@@ -52,6 +63,17 @@ context=request(actors[2],identity+'/comments/'+reply['id']); assert context['ro
 legacy=request(actors[2],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':None,'fcpReqContent':'Legacy client reply','fcpReqMediaUrls':[],'fcpReqParentId':post['fcpId']})
 assert legacy['fcpContent']=='Legacy client reply'
 assert sql(f"SELECT count(*) FROM fan_club_post WHERE id={legacy['fcpId']}")=='0'
+# Owner policies apply to stale clients and compose with current target access.
+version=request(actors[0],identity)['version']
+command(actors[0],{'operation':'settings.update','commentPolicy':'mentioned','expectedVersion':version,'mentionedPartyIds':[actors[2]]})
+command(actors[1],{'operation':'comment.create','body':'Not mentioned by content owner','mentions':[]},status=403)
+mention=command(actors[2],{'operation':'comment.create','body':'@Owner hello','mentions':[{'partyId':actors[0],'start':0,'end':6}]})
+assert mention['mentions'][0]['partyId']==actors[0]
+version=request(actors[0],identity)['version']
+command(actors[0],{'operation':'settings.update','commentPolicy':'off','expectedVersion':version,'mentionedPartyIds':[]})
+command(actors[2],{'operation':'comment.create','body':'Disabled discussion','mentions':[]},status=403)
+version=request(actors[0],identity)['version']
+command(actors[0],{'operation':'settings.update','commentPolicy':'everyone','expectedVersion':version,'mentionedPartyIds':[]})
 # Dense pages are seeded in the isolated DB, avoiding artificial rate-limit bypass
 # in the HTTP client and proving that reads never serialize a full thread.
 sql(f"INSERT INTO interaction_comment(id,target_id,author_id,root_id,body,created_at) SELECT id,'{target}',{actors[2]},id,'Synthetic page row',now()+n*interval '1 microsecond' FROM (SELECT gen_random_uuid() id,n FROM generate_series(1,125) n) x;")
@@ -74,4 +96,4 @@ fixture=os.environ.get('TDF_INTERACTION_TEST_FIXTURE')
 if fixture:
     output=pathlib.Path(fixture); output.parent.mkdir(parents=True,exist_ok=True); output.parent.chmod(0o700)
     output.write_text(json.dumps({'base':base,'database':database,'actors':actors,'tokens':tokens,'postId':post['fcpId'],'targetId':target,'rootId':root['id'],'replyId':reply['id']})); output.chmod(0o600)
-print('PASS HTTP sessions, publication, reactions, idempotency, comments/replies, edits, tombstones, notifications/deep links, legacy adapter, pagination, blocks and bearer revocation')
+print('PASS HTTP sessions, publication, reactions, idempotency, comments/replies, edits, tombstones, notifications/deep links, legacy adapter, scoped mention privacy, notification preferences, owner policies, pagination, blocks and bearer revocation')

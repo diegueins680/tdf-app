@@ -101,3 +101,24 @@ test('author deletion leaves a parent placeholder and replies intact', async () 
   fireEvent.click(await screen.findByRole('button', { name: 'Confirmar' }));
   await screen.findByText('Comentario eliminado'); expect(screen.queryByText('Root comment')).toBeNull(); expect(screen.getByText('A reply')).toBeTruthy();
 });
+
+test('bounds retained discussion pages and refetches while allowing backward navigation', async () => {
+  comments.mockImplementation(async (...args) => {
+    const index = Number(args[4] ?? 0);
+    return { items: [{ ...root, id: `10000000-0000-4000-8000-${String(index + 100).padStart(12, '0')}`, body: `Window comment ${index}`, replyCount: 0 }], nextCursor: index < 7 ? String(index + 1) : null, sort: 'newest' };
+  });
+  view(); fireEvent.click(await screen.findByRole('button', { name: 'Ver los 2 comentarios' }));
+  await screen.findByText('Window comment 0');
+  for (let index = 1; index < 8; index++) {
+    fireEvent.click(await screen.findByRole('button', { name: /Ver más comentarios/ }));
+    await screen.findByText(`Window comment ${index}`);
+  }
+  expect(screen.queryByText('Window comment 0')).toBeNull();
+  expect(screen.getByText('Window comment 3')).toBeTruthy();
+  comments.mockClear();
+  await act(async () => { await client.invalidateQueries({ queryKey: ['interactions'] }); });
+  expect(comments).toHaveBeenCalledTimes(5);
+  fireEvent.click(screen.getByRole('button', { name: 'Ver comentarios anteriores' }));
+  await screen.findByText('Window comment 2');
+  expect(screen.queryByText('Window comment 7')).toBeNull();
+});

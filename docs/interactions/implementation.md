@@ -92,62 +92,72 @@ passing prototype fixture for production rollout.
 - [ ] Independent repository review, protected green CI, merge and immutable build.
 - [ ] Backup/guarded migration/recovery drill/deployment/live verification.
 
-## Working verification checkpoint (2026-09-28)
+## Verification and release state (2026-09-28)
 
-- Additive schema, live entity adapters, desired-state commands, keyset discussion
-  reads, typed deep-link resolution, scoped mention search, canonical pair blocks,
-  owner/admin moderation boundaries and queued existing-inbox delivery implemented
-  behind a disabled runtime gate. Legacy conversion/adapters remain unfinished.
-- Fresh local PostgreSQL rehearsal applies the existing 115 production migrations,
-  all eight social authority compatibility prerequisites, and the new interactions
-  migrations. Policy, command, notification and navigation SQL property scripts
-  pass. The rehearsal is synthetic; production has not been migrated.
-- Web components and generated OpenAPI contracts implemented. Attached to published
-  recordings/sessions/releases, artist releases, directory profiles, classified ads
-  and public events. Fan-club and event-moment replacements await compatibility.
-- Native components, shared generated model/API, scoped PartySelector, opaque
-  discussion routes and notification routing implemented. Native API release host
-  corrected to api.tdfrecords.net. Native owner controls, reaction inspection,
-  link/mention rendering and comprehensive flow tests still need completion.
-- Web and native TypeScript checks passed at intermediate checkpoints (rerun after
-  subsequent edits). Web tests: 2,000 generated reaction state transitions, 200
-  Unicode mention edits; five rendered flows cover disclosure, failed optimistic
-  rollback, same-key retries, deep focus, parent deletion. axe checks on rendered
-  flow pass with contrast disabled in jsdom; real-browser contrast/keyboard/mobile
-  verification still required.
-- 10,000-comment / 2,000-reaction synthetic fixture exposed per-row policy overhead.
-  Batched author eligibility plus target/author counters reduced local summary from
-  8.59s to 0.642s and root page from 2.60s to 0.108s. Reply page 0.234s. Deep context
-  was subsequently converted to batching and needs its final benchmark. These are
-  busy local-machine measurements, not production service-level claims.
-- Full initial no-code build reached the application but source edits during that
-  pass required a repeat. Normal Stack build now running; no complete backend build,
-  HTTP E2E, CI, review, merge or deployment result is claimed.
+Draft pull requests: root [470](https://github.com/diegueins680/tdf-app/pull/470)
+and native [116](https://github.com/diegueins680/TDF-mobile/pull/116). Production
+schema and activation gate remain unchanged. Independent review, full green CI,
+installed native verification, production restore rehearsal and deployment are
+still release requirements.
 
-### Subsequent checkpoint
+- Full normal Stack build passed; full Stack test is running after compatibility
+  updates. PostgreSQL 17 hosted property checks and fresh 137-entry migration
+  rehearsal pass, including source retirement, legacy conversion, moderation,
+  current privacy, session revocation and concurrency. Existing source engagement
+  remains archived and mapped; no aggregate provider counts become local reactions.
+- Real HTTP checks pass publication, desired reactions, duplicate/conflicting
+  request keys, comments/replies, edit, parent tombstone, exact notification
+  context, legacy adapters, pagination, blocking, bearer revocation, scoped mention
+  search/discoverability, stable mention IDs, notification preferences and owner
+  mentioned-only/off policies.
+- Desktop and Pixel 7 browser flows pass against the isolated real API, including
+  exact notification navigation, focused deep links, editing and parent deletion.
+  Browser axe serious/critical findings are zero. Native rendered flows and all
+  521 native tests pass. Type/lint/release checks are rerun after follow-up edits.
+- Rendered pagination test walks eight pages, verifies only five remain, verifies
+  refresh issues five page requests, and navigates backward without a full-tree
+  fetch. Both clients share cursor-history semantics; each response stays at 20
+  comments. Earlier page controls restore evicted pages.
+- Synthetic 10,000-comment / 2,000-reactor PostgreSQL 16 measurements: summary
+  154 ms, root page 44 ms, replies 21 ms, deep context 38 ms. Nested auto_explain
+  confirms batched author policy and indexed reaction lookup; instrumentation
+  overhead raises these timings. These are local measurements, not production SLOs.
+- Expo simulator build was rejected by the monthly Free-plan quota. A GitHub
+  macOS simulator build with bundled JS and the isolated localhost API is running.
+  Its unsigned simulator artifact is not a store release. Signed release workflows
+  now point to the canonical API; checked-in native projects include link
+  entitlements/intent filters and the locked ExpoCrypto dependency.
+- Root CI uncovered stale test mocks, generated specification inventory and
+  reviewed catalog decisions, a setup-node major mismatch, an outdated mobile
+  gitlink, and overlap between mocked persona and real-API test discovery. Fixes
+  are under verification. The external Datadog monitor still targets retired Fly;
+  updating its target requires signed-in account access, preserving assertions.
 
-Full Stack build and web/native TypeScript passed intermediate checkpoints.
-Legacy conversion preserves nested replies, 4,096-character bodies, titles,
-media references, original IDs and historical reaction types. First activation
-is transactional, repeat-safe, and permanently fences legacy writers; pausing
-never reopens old authorization paths. Canonical erasure also scrubs archived
-legacy bodies. Legacy adapters and source deletion are under final review.
+### Content integration and boundaries
 
-SQL properties cover moderation/admin scope, private-event revocation,
-legacy self-invitation denial, owner blocking, parent tombstones and conversion.
-Real HTTP tests passed publication, reactions, comments/replies, idempotent
-retry/conflict, edits, deletion, exact notification context, legacy replies,
-keyset pagination, blocks and bearer revocation. Concurrency tests passed 80
-competing reaction commands, duplicate comment requests, concurrent replies
-and parent deletion, and block/write fencing.
+| Authority | Web entry points | Native entry points |
+| --- | --- | --- |
+| club_post | FanClubPage feed and posts | Existing fan-club web destination; native opaque discussion links |
+| club_memory | FanClubPage, FanClubMemberProfilePage | Existing web destination; native opaque discussion links |
+| recording, recording_session, record_release | RecordsPublicPage | Existing Records web destination; native opaque discussion links |
+| artist_release | ArtistPublicPage, ReleaseFeed | Existing artist web destination; native opaque discussion links |
+| event | SocialEventDetailPage, DirectoryPublicDetailPage | eventDetail, DirectoryPublicDetailScreen |
+| event_moment | SocialEventDetailPage | EventMomentCard for persisted remote moments |
+| directory_profile | DirectoryPublicDetailPage | DirectoryPublicDetailScreen |
+| classified / opportunities | DirectoryPublicDetailPage | DirectoryPublicDetailScreen |
+| artist_update | Trusted adapter for persisted social_sync_post; no existing client renders these external posts | Opaque discussion destination; no standalone native publication feed exists |
 
-Latest local 10,000-comment/2,000-reactor measurements: summary 154 ms, root
-page 44 ms, replies 21 ms, deep context 38 ms. Synthetic PostgreSQL 16 only;
-production PostgreSQL 17 rehearsal still required. Web rendered tests: 9 passed.
-Mobile event repository tests: 12 passed, including removal of misleading local
-fallback after remote authorization or network failures. Actual browser and
-native accessibility/E2E remain underway. No PR, production migration,
-activation, merge or deployment has occurred.
+Label/venue publication content follows its actual persisted post/media authority.
+Operational venue records do not acquire social discussions merely because they
+have a directory route. Private device drafts retain device-only editing controls;
+remote failures never become successful local engagement. Verified transaction
+reviews, operational notes, and external provider metrics retain distinct models.
+
+Compatibility clients receive bounded moment previews (20 comments/100 reaction
+identities); exact totals and full traversal are canonical interaction endpoints.
+Old array-count-only clients can undercount beyond that preview and need the new
+client. Catalog administrative usage_count is a legacy summary; canonical target
+counters and reference-protection triggers remain authoritative for this layer.
 
 ### Verified mobile association identities
 

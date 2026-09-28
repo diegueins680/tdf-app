@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Avatar, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
@@ -7,13 +7,13 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { Link as RouterLink } from 'react-router-dom';
 import { ApiError } from '../../api/client';
 import { Interactions } from '../../api/interactions';
-import type { InteractionCommand, InteractionComment, InteractionCommentContext, InteractionIdentity, InteractionSort, InteractionSummary } from '../../api/interactions';
+import type { InteractionCommand, InteractionComment, InteractionCommentContext, InteractionIdentity, InteractionPage, InteractionSort, InteractionSummary } from '../../api/interactions';
 import { useSession } from '../../session/SessionContext';
 import { getAnalyticsClient } from '../../analytics/posthog';
 import { AccountControls } from './AccountControls';
 import { DiscussionControls } from './DiscussionControls';
 import { CommentComposer } from './CommentComposer';
-import { commandAnalyticsEvents, discussionLink, getDisclosure, optimisticReaction, setDisclosure } from './model';
+import { createDiscussionCursorHistory, discussionWindowPages, commandAnalyticsEvents, discussionLink, getDisclosure, optimisticReaction, setDisclosure } from './model';
 
 const unavailable = (error: unknown) => error instanceof ApiError && [401, 403, 404].includes(error.status);
 const message = (error: unknown) => error instanceof ApiError && error.status === 409
@@ -124,10 +124,12 @@ function Thread({ root, identity, summary, run, scope, authenticated, context, f
   const [expanded, setExpanded] = useState(() => Boolean(context) || getDisclosure(key));
   const [reply, setReply] = useState<InteractionComment | null>(null);
   const toggleButton = useRef<HTMLButtonElement>(null); const repliesId = useId();
+  const replyCursors = useMemo(createDiscussionCursorHistory, [scope, identity.kind, identity.entityKey, root.id]);
   const replies = useInfiniteQuery({ queryKey: ['interactions', scope, identity.kind, identity.entityKey, 'replies', root.id],
-    initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam, signal }) => Interactions.comments(identity, authenticated, 'oldest', root.id, pageParam, signal),
-    getNextPageParam: (page) => page.nextCursor ?? undefined, enabled: expanded, retry: false, refetchInterval: 30000,
+    initialPageParam: '', maxPages: discussionWindowPages,
+    getPreviousPageParam: (_page, _pages, cursor) => replyCursors.previous(cursor),
+    queryFn: async ({ pageParam, signal }) => { const page = await Interactions.comments(identity, authenticated, 'oldest', root.id, pageParam || undefined, signal); replyCursors.remember(pageParam, page.nextCursor); return page; },
+    getNextPageParam: (page: InteractionPage) => page.nextCursor ?? undefined, enabled: expanded, retry: false, refetchInterval: 30000,
   });
   useEffect(() => { if (context) setExpanded(true); }, [context]);
   const items = unique([...(context ? [context.parent, context.comment, ...context.surrounding].filter((c): c is InteractionComment => !!c && c.id !== root.id) : []),
@@ -140,6 +142,7 @@ function Thread({ root, identity, summary, run, scope, authenticated, context, f
       if (expanded) { setReply(null); toggleButton.current?.focus(); }
     }}>{expanded ? 'Ocultar respuestas' : `Ver ${root.replyCount ?? 0} respuestas`}</Button>}
     {expanded && <Box id={repliesId} sx={{ ml: { xs: 1, sm: 3 } }}>
+      {replies.hasPreviousPage && <Button disabled={replies.isFetchingPreviousPage} onClick={() => void replies.fetchPreviousPage()}>Ver respuestas anteriores</Button>}
       {replies.isPending && <Typography role="status">Cargando respuestas…</Typography>}
       {replies.isError ? <Alert severity="error" action={<Button onClick={() => void replies.refetch()}>Reintentar</Button>}>{message(replies.error)}</Alert>
         : items.map((comment) => <CommentCard key={comment.id} comment={comment} summary={summary} run={run} onReply={openReply} focused={focusId === comment.id} refresh={refresh} />)}
@@ -173,9 +176,11 @@ function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExp
   const [reactorsOpen, setReactorsOpen] = useState(false);
   const summaryKey = ['interactions', scope, kind, entityKey, 'summary'];
   const summary = useQuery({ queryKey: summaryKey, queryFn: ({ signal }) => Interactions.summary(identity, authenticated, signal), enabled: active || expanded, retry: false, refetchInterval: active ? 30000 : false });
-  const comments = useInfiniteQuery({ queryKey: ['interactions', scope, kind, entityKey, 'comments', sort], initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam, signal }) => Interactions.comments(identity, authenticated, sort, undefined, pageParam, signal),
-    getNextPageParam: (page) => page.nextCursor ?? undefined, enabled: expanded && Boolean(summary.data), retry: false, refetchInterval: 30000 });
+  const commentCursors = useMemo(createDiscussionCursorHistory, [scope, kind, entityKey, sort]);
+  const comments = useInfiniteQuery({ queryKey: ['interactions', scope, kind, entityKey, 'comments', sort], initialPageParam: '', maxPages: discussionWindowPages,
+    getPreviousPageParam: (_page, _pages, cursor) => commentCursors.previous(cursor),
+    queryFn: async ({ pageParam, signal }) => { const page = await Interactions.comments(identity, authenticated, sort, undefined, pageParam || undefined, signal); commentCursors.remember(pageParam, page.nextCursor); return page; },
+    getNextPageParam: (page: InteractionPage) => page.nextCursor ?? undefined, enabled: expanded && Boolean(summary.data), retry: false, refetchInterval: 30000 });
   const context = useQuery({ queryKey: ['interactions', scope, kind, entityKey, 'context', focusCommentId],
     queryFn: ({ signal }) => Interactions.context(identity, authenticated, focusCommentId!, signal), enabled: Boolean(focusCommentId && summary.data), retry: false });
   const reactors = useInfiniteQuery({ queryKey: ['interactions', scope, kind, entityKey, 'reactors'], initialPageParam: undefined as number | undefined,
@@ -233,6 +238,7 @@ function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExp
       {data.canComment && <CommentComposer targetId={data.id} onSave={(body, mentions, requestKey) => run({ operation: 'comment.create', body, mentions }, requestKey)} />}
       {context.isError && <Alert severity="info">El comentario enlazado ya no está disponible.</Alert>}
       {comments.isPending && <Typography role="status">Cargando comentarios…</Typography>}
+      {comments.hasPreviousPage && <Button disabled={comments.isFetchingPreviousPage} onClick={() => void comments.fetchPreviousPage()}>Ver comentarios anteriores</Button>}
       {comments.isError ? <Alert severity="error" action={<Button onClick={() => void comments.refetch()}>Reintentar</Button>}>{message(comments.error)}</Alert>
         : roots.map((root) => <Thread key={root.id} root={root} identity={identity} summary={data} run={run} scope={scope} authenticated={authenticated}
           context={context.data?.root.id === root.id ? context.data : undefined} focusId={focusCommentId} refresh={refresh} />)}

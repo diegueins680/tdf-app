@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 import base from './playwright.config.mjs';
-export default defineConfig({ ...base, testMatch: '**/interactions.spec.mjs', workers: 1, timeout: 60000,
+export default defineConfig({ ...base, testDir: './e2e/interactions', testMatch: '**/interactions.spec.mjs', workers: 1, timeout: 60000,
   outputDir: '/private/tmp/tdf-interaction-browser-results',
   reporter: [['line'], ['json', { outputFile: '/private/tmp/tdf-interaction-browser-results.json' }]],
   use: { ...base.use, baseURL: 'http://127.0.0.1:4188' },

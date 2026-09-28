@@ -54,3 +54,16 @@ export function commandAnalyticsEvents(command: InteractionCommand): string[] {
   if (command.operation === 'comment.delete') return ['comment_deleted'];
   return [command.operation.replace(/\./g, '_')];
 }
+
+/** Keep only five result pages live. Cursor history contains no comment content and
+ * lets the user return to discarded pages without fetching the intervening tree. */
+export const discussionWindowPages = 5;
+export function createDiscussionCursorHistory() {
+  const previous = new Map<string, string>();
+  return {
+    remember(cursor: string, nextCursor: string | null | undefined) {
+      if (nextCursor) previous.set(nextCursor, cursor);
+    },
+    previous(cursor: string) { return cursor ? previous.get(cursor) : undefined; },
+  };
+}
