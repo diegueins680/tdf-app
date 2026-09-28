@@ -29,11 +29,11 @@ describe('resolveApiBase', () => {
     expect(resolveApiBase({ hostname: 'localhost' })).toBe('https://the-dream-factory.koyeb.app');
   });
 
-  it('falls back to the Fly backend on the public Cloudflare Pages host', () => {
+  it('falls back to the canonical API hostname on the public Cloudflare Pages host', () => {
     expect(resolveApiBase({ hostname: 'tdf-app.pages.dev' })).toBe(DEFAULT_DEPLOYED_API_BASE);
   });
 
-  it('falls back to the Fly backend on Cloudflare Pages preview hosts', () => {
+  it('falls back to the canonical API hostname on Cloudflare Pages preview hosts', () => {
     expect(resolveApiBase({ hostname: 'preview.tdf-app.pages.dev' })).toBe(DEFAULT_DEPLOYED_API_BASE);
   });
 

@@ -68,7 +68,7 @@ function normalizeAssets(payload: AssetsPayload): AssetDTO[] {
 
 const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
   ? import.meta.env.VITE_API_BASE
-  : 'https://tdf-hq.fly.dev');
+  : 'https://api.tdfrecords.net');
 const ASSET_CATEGORY_KEY = 'asset-category';
 
 const normalizeGoogleDriveUrl = (url: string): string | null => {
