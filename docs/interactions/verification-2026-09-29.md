@@ -165,3 +165,24 @@ and GHSA-rpw4-54j3-4h4q. The lockfile updates only that transitive package from
 Mobile PR119 has merged as ce6f9ecba1675381c65e002a6b5ca3c968413896.
 Signed corrected candidates are Android19 run36497188620 and iOS26 run36497191523;
 neither has completed qualification or distribution at this checkpoint.
+
+## Publication-authority repair qualification
+
+Imported `social_sync_post` records have no public publication state. The reserved
+artist_update target is disabled and its source resolver refuses access even if
+its capability flag is accidentally re-enabled. Ten supported publication kinds
+remain enabled; imported source content is preserved. This closes a review-found
+privacy exposure before any production activation.
+
+The 139-entry bundle passed installation and a second checksum-verified no-op on
+the isolated encrypted production restore. The new entity properties passed on
+PostgreSQL16 and PostgreSQL17.8, including anonymous/owner denial, capability-toggle
+resistance and preservation of the private source caption. The clone retains all
+30 notifications and is paused. Live production is unchanged.
+
+Hosted backend job 109187113814 at root3ecbf3a12 passed the full build, unit suite
+and every HTTP integration check, including all 60 legacy event moments. The UI
+and persona-browser jobs also passed. The only failed gate was the migration
+registry's stale catalog-inventory fingerprint, narrowly refreshed and locally
+rechecked without changing its technical-constant classification. The later
+publication-authority HTTP checks still require qualification on the new head.
