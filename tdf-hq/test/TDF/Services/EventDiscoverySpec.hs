@@ -30,6 +30,7 @@ import TDF.Services.EventDiscovery
   , eventDiscoveryDailySlot
   , eventDiscoveryFullReconciliation
   , ticketmasterNextPage
+  , buenPlanNextPage
   , beginEventDiscoveryRun
   , buildTicketmasterRequestUrl
   , countImportedDiscoveryEvents
@@ -71,6 +72,11 @@ spec = do
       ticketmasterNextPage 5 4 6 `shouldBe` Left "Ticketmaster pagination budget exhausted; inventory incomplete"
       ticketmasterNextPage 5 4 5 `shouldBe` Right Nothing
       ticketmasterNextPage 5 0 5 `shouldBe` Right (Just 1)
+    it "distinguishes a complete Buen Plan tenth page from a truncated inventory" $ do
+      buenPlanNextPage 10 10 `shouldBe` Right Nothing
+      buenPlanNextPage 9 11 `shouldBe` Right (Just 10)
+      buenPlanNextPage 10 11 `shouldBe` Left "Buen Plan pagination budget exhausted; inventory incomplete"
+      buenPlanNextPage 0 1 `shouldBe` Left "Invalid Buen Plan pagination metadata"
     it "never accepts incomplete inventories at the configured budget" $ property $
       forAll (chooseInt (1, 10)) $ \budget ->
       forAll (chooseInt (1, 500)) $ \remaining ->

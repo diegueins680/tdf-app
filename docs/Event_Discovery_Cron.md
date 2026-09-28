@@ -246,3 +246,8 @@ ownership evidence stay protected; their source references still refresh.
 Venue and artist profile ownership is a separate remaining limitation. A failure
 to persist an event now fails its source run before absence reconciliation, rather
 than logging the error and reporting a successful run.
+
+Buen Plan's ten-page request budget now fails incomplete inventories explicitly.
+A truncated prefix cannot mark unseen events missing or count as a successful
+reconciliation. Continuing beyond that cap still requires the pending resumable
+provider-page implementation and verified source permission.

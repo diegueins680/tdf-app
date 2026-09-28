@@ -11,6 +11,7 @@ module TDF.Services.EventDiscovery
   , eventDiscoveryDailySlot
   , eventDiscoveryFullReconciliation
   , ticketmasterNextPage
+  , buenPlanNextPage
   , beginEventDiscoveryRun
   , buildTicketmasterRequestUrl
   , fetchBuenPlanEvents
@@ -611,7 +612,7 @@ fetchBuenPlanEvents cfg cities now
         (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400))
         now
     fetchPage pageNumber collected
-      | pageNumber > 10 = pure (Right collected)
+      | pageNumber > 10 = pure (Left "Buen Plan pagination budget exhausted; inventory incomplete")
       | otherwise = do
           requestResult <-
             try (parseRequest (buildBuenPlanRequestUrl pageNumber)) ::
@@ -651,9 +652,10 @@ fetchBuenPlanEvents cfg cities now
                                   Left err -> pure (Left err)
                                   Right (pageCount, normalized) -> do
                                     let nextCollected = collected ++ normalized
-                                    if pageNumber >= pageCount
-                                      then pure (Right nextCollected)
-                                      else fetchPage (pageNumber + 1) nextCollected
+                                    case buenPlanNextPage pageNumber pageCount of
+                                      Left err -> pure (Left err)
+                                      Right Nothing -> pure (Right nextCollected)
+                                      Right (Just nextPage) -> fetchPage nextPage nextCollected
 
     buildBuenPlanRequestUrl pageNumber =
       T.unpack
@@ -1292,10 +1294,19 @@ eventDiscoveryFullReconciliation slot =
 -- | A budget stop is not a complete upstream inventory. Never reconcile
 -- omissions using the prefix returned before a pagination limit or outage.
 ticketmasterNextPage :: Int -> Int -> Int -> Either Text (Maybe Int)
-ticketmasterNextPage pageBudget currentPage totalPages
-  | pageBudget < 1 || currentPage < 0 || totalPages < 0 = Left "Invalid Ticketmaster pagination metadata"
+ticketmasterNextPage = providerNextPage "Ticketmaster"
+
+-- Buen Plan uses one-based pages. Exhausting its request budget while another
+-- page exists is an incomplete inventory, never a successful empty/missing set.
+buenPlanNextPage :: Int -> Int -> Either Text (Maybe Int)
+buenPlanNextPage currentPage totalPages =
+  fmap (fmap (+ 1)) (providerNextPage "Buen Plan" 10 (currentPage - 1) totalPages)
+
+providerNextPage :: Text -> Int -> Int -> Int -> Either Text (Maybe Int)
+providerNextPage provider pageBudget currentPage totalPages
+  | pageBudget < 1 || currentPage < 0 || totalPages < 0 = Left ("Invalid " <> provider <> " pagination metadata")
   | currentPage + 1 >= totalPages = Right Nothing
-  | currentPage + 1 >= pageBudget = Left "Ticketmaster pagination budget exhausted; inventory incomplete"
+  | currentPage + 1 >= pageBudget = Left (provider <> " pagination budget exhausted; inventory incomplete")
   | otherwise = Right (Just (currentPage + 1))
 
 fetchTicketmasterEventsForCity ::
