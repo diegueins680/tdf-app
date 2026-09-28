@@ -17,8 +17,12 @@ the pricing API and capacity again before provisioning.
 The observed Fly production baseline is approximately USD 23.56/month:
 two shared-CPU 256 MB APIs in ORD/LAX, one 2 GB database in GRU, 5 GB database
 storage, and 11 GB of API asset volumes. Staging adds at least USD 8.45.
-These estimates exclude additional traffic, snapshots, taxes, and other
-account charges. Savings occur only after the corresponding Fly resources
+The source audit also found active Trader databases on the same Fly database
+server (about 3 GB combined). Its compute/storage cost is shared and cannot be
+removed by migrating TDF alone. Leave that server and Trader connections running
+unless a separate Trader migration is explicitly authorized and verified; do not
+count shared database retirement as realized TDF savings. These estimates exclude
+additional traffic, snapshots, taxes, and other account charges. Savings occur only after the corresponding Fly resources
 are retired; stopping a VM does not remove all storage charges. Outstanding
 Fly invoices are unaffected by migration.
 
