@@ -3,15 +3,14 @@
  * Social Infrastructure Diagnostic
  *
  * Checks Instagram + Facebook webhook subscriptions and messaging tokens.
- * Run from Fly machine: flyctl ssh console --app tdf-hq
- * Or locally with env vars set.
+ * Run locally with securely supplied current-deployment environment variables.
+ * This diagnostic does not apply callback or credential changes.
  */
 
 const APP_ID = process.env.FACEBOOK_APP_ID || process.env.META_APP_ID;
 const APP_SECRET = process.env.FACEBOOK_APP_SECRET || process.env.META_APP_SECRET;
 const IG_MSG_TOKEN = process.env.INSTAGRAM_MESSAGING_TOKEN;
 const IG_ACCOUNT_ID = process.env.INSTAGRAM_MESSAGING_ACCOUNT_ID;
-const IG_VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN;
 const FB_MSG_TOKEN = process.env.FACEBOOK_MESSAGING_TOKEN || process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 const FB_PAGE_ID = process.env.FACEBOOK_MESSAGING_PAGE_ID || process.env.FACEBOOK_PAGE_ID;
 
@@ -52,12 +51,12 @@ async function main() {
 
   if (!igSub) {
     console.log('\n🔧 To fix Instagram subscription:');
-    console.log(`  curl -X POST "https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}"`);
+    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions" --data-urlencode "object=instagram" --data-urlencode "callback_url=https://api.tdfrecords.net/instagram/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${INSTAGRAM_VERIFY_TOKEN}" --data-urlencode "access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}"');
   }
 
   if (!fbSub) {
     console.log('\n🔧 To fix Facebook subscription:');
-    console.log(`  curl -X POST "https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=page&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Ffacebook%2Fwebhook&fields=messages&verify_token=${FB_MSG_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}"`);
+    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions" --data-urlencode "object=page" --data-urlencode "callback_url=https://api.tdfrecords.net/facebook/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=YOUR_FACEBOOK_WEBHOOK_VERIFY_TOKEN" --data-urlencode "access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}"');
   }
 
   // 3. Instagram messaging token
@@ -149,9 +148,9 @@ async function main() {
     console.log('   4. Exchange for Page Token:');
     console.log(`      GET /me/accounts?access_token=USER_TOKEN`);
     console.log('   5. Copy the page access_token for "TDF Studio"');
-    console.log('   6. Set as Fly secret:');
-    console.log('      flyctl secrets set INSTAGRAM_MESSAGING_TOKEN="token" FACEBOOK_MESSAGING_TOKEN="token" --app tdf-hq');
-    console.log('   7. Restart: flyctl apps restart tdf-hq');
+    console.log('   6. Follow docs/INSTAGRAM_TOKEN_SETUP.md: Messaging credential rotation after the cutover.');
+    console.log('   7. An authorized operator must update the current Hetzner secret store, verify live messaging, and synchronize GitHub check credentials.');
+    console.log('      Do not update or restart the retired Fly app; this diagnostic performs no writes.');
   }
 }
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -627,4 +627,31 @@ test('token maintenance never invokes a shell, exposes prefixes, or deploys as p
   const library = await readFile(new URL('../lib/instagram-token-lifecycle.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(source + library, /execSync\s*\(|flyctl|token (?:prefix|substring)/i);
   assert.doesNotMatch(library, /graph\.facebook\.com|debug_token/);
+});
+
+test('social repair diagnostics use current callbacks without printing supplied credentials', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'tdf-social-diagnostic-'));
+  try {
+    const mock = join(directory, 'fetch.mjs');
+    await writeFile(mock, "globalThis.fetch = async () => ({ json: async () => ({ data: [] }) });\n");
+    const result = spawnSync(process.execPath, [
+      '--import', mock, new URL('../diagnose-social.mjs', import.meta.url).pathname,
+    ], {
+      encoding: 'utf8', timeout: 10000,
+      env: {
+        FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'do-not-log-app-secret',
+        INSTAGRAM_MESSAGING_TOKEN: 'do-not-log-ig-token',
+        INSTAGRAM_VERIFY_TOKEN: 'do-not-log-verify-token',
+        FACEBOOK_MESSAGING_TOKEN: 'do-not-log-fb-token',
+      },
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /callback_url=https:\/\/api\.tdfrecords\.net\/instagram\/webhook/);
+    assert.match(result.stdout, /callback_url=https:\/\/api\.tdfrecords\.net\/facebook\/webhook/);
+    assert.doesNotMatch(result.stdout, /do-not-log-|tdf-hq\.fly\.dev|flyctl/);
+    assert.match(result.stdout, /current Hetzner secret store/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

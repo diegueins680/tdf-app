@@ -1923,7 +1923,7 @@
     },
     {
       "path": "docs/INSTAGRAM_TOKEN_SETUP.md",
-      "sha256": "816807dd76320e18c884c359e39b30811af4b76839c3b99a3e7a31178bde5c9c",
+      "sha256": "d358888640ae8a167a9b6668ad4cfb1a35590458c12a6b7e7d34b53a6bb4e73f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2112,7 +2112,7 @@
     },
     {
       "path": "docs/artist-enrichment-runbook.md",
-      "sha256": "c565efa9c0e2c9798339db6895c9c4f406c6a335197ecea8d03331bc399619a2",
+      "sha256": "87dd02ec7376ff5d2e6c33810cf04d445bddaf043734c107fe61ed38ef7b0cda",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

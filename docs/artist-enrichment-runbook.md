@@ -52,7 +52,7 @@ database warnings and errors remain enabled.
 
 - `ADMIN_TOKEN` (or `API_TOKEN`): active bearer token for a strict Admin with the
   Admin module.
-- `TDF_API_BASE`: defaults to `https://tdf-hq.fly.dev`.
+- `TDF_API_BASE`: defaults to `https://api.tdfrecords.net`.
 - `TDF_API_TIMEOUT_MS`: protected TDF API request timeout; defaults to 180000 ms
   and is 300000 ms in the daily workflow so full discovery can complete. This
   does not relax the shorter timeouts used for external providers.
@@ -66,7 +66,7 @@ database warnings and errors remain enabled.
 
 The command fails closed when the admin token is absent. When the runner does
 not have complete Drive credentials, image ingestion uses the authenticated TDF
-`/drive/upload` proxy so the existing Fly Drive integration remains the sole
+`/drive/upload` proxy so the current backend Drive integration remains the sole
 secret holder. It fails closed if neither direct Drive authentication nor that
 backend proxy is available.
 Direct uploads also require Google Drive to confirm the public-reader permission;
@@ -76,6 +76,9 @@ the generated Drive URL.
 ## Operator commands
 
 Install Node 20+ and FFmpeg/FFprobe. Run from the repository root.
+The manual CLI and scheduled workflow default to `https://api.tdfrecords.net`.
+For an isolated local/staging target, set `TDF_API_BASE` explicitly; `API_BASE`
+is the legacy fallback override. Do not target the retired Fly database.
 
 Audit only, with no external research or profile publication:
 
@@ -149,7 +152,7 @@ group, preventing a later decision from silently reassigning its references.
 
 Two complementary layers run daily in `America/Guayaquil`:
 
-- Fly backend discovery at configurable local hour 04:00. It discovers TDF
+- Backend discovery on the current Hetzner deployment at configurable local hour 04:00. It discovers TDF
   references, checks slugs/staleness, and queues review records without calling
   external providers.
 - GitHub Actions external research at 10:00 UTC (05:00 Ecuador), with concurrency
@@ -162,7 +165,7 @@ Two complementary layers run daily in `America/Guayaquil`:
   auto-publish or ingest an image without explicit rights; a strict administrator
   can approve queued fields or launch an authorized image run.
 
-Fly variables:
+Current backend environment variables:
 
 - `ARTIST_ENRICHMENT_ENABLED` (`false` disables backend discovery immediately)
 - `ARTIST_ENRICHMENT_AUTO_PUBLISH`
@@ -174,7 +177,7 @@ Disable the external job by disabling the `Daily artist enrichment` workflow.
 Rerun it with `workflow_dispatch`; default manual mode is dry-run. GitHub schedule
 activation requires this workflow to exist on the default branch.
 
-Cloudflare Pages must target `https://tdf-hq.fly.dev`. The UI deliberately
+Cloudflare Pages must target `https://api.tdfrecords.net`. The UI deliberately
 ignores the retired `https://the-dream-factory.koyeb.app` value when that stale
 value is injected into a `*.tdf-app.pages.dev` build, while retaining other
 explicit API overrides for local or alternate deployments. Remove the retired
@@ -185,19 +188,18 @@ fallback prevents it from breaking previews in the meantime.
 
 Before a production migration or data write:
 
-1. Record the API release and Machine IDs.
-2. Create a Fly volume snapshot for the attached PostgreSQL volume.
-3. Produce a PostgreSQL custom-format dump containing the database and verify it
-   with `pg_restore --list`. Store it in an access-controlled location outside Git.
-4. Restore the dump into an isolated PostgreSQL instance, apply the forward
-   migration twice, execute a full dry-run against the clone, apply the rollback,
-   and verify the legacy profile count and representative rows are unchanged.
-5. Run all tests and inspect dry-run counts, automatic candidates, corrections,
+1. Record the exact current release, immutable image and Hetzner deployment.
+2. Follow the backup, restore, migration-ancestry and recovery gates in
+   [the current portable deployment runbook](../ops/hetzner/README.md).
+   Preserve a verified off-host logical backup and the current production data.
+3. Restore the custom-format PostgreSQL dump into an isolated instance, apply
+   the forward migration twice, execute a full dry-run against the clone, apply
+   the rollback, and verify legacy profile counts and representative rows.
+4. Run all tests and inspect dry-run counts, automatic candidates, corrections,
    ambiguity queue, and expected zero deletions.
-6. Deploy an immutable image tagged with the full commit SHA through
-   `scripts/production-release.mjs`. The release lane applies registered
-   migrations once, performs a one-Machine canary, checks `/health`, then rolls
-   out the remaining Machine while retaining the prior image and Machine config.
+5. Obtain the required independent review and checks for the immutable release.
+6. An authorized operator uses the current guarded deployment/recovery procedure;
+   do not run the retired Fly release lane or restore service on its stale data.
 7. Execute production enrichment in batches of 25 first. Check errors, duplicate
    slugs, candidates, public API responses, and frontend pages before raising the
    batch size.
@@ -205,10 +207,8 @@ Before a production migration or data write:
 Useful read-only checks:
 
 ```bash
-curl -fsS https://tdf-hq.fly.dev/health
-flyctl status --app tdf-hq
-flyctl releases --app tdf-hq
-flyctl volumes list --app tdf-hq-db
+curl -fsS https://api.tdfrecords.net/health
+curl -fsS https://api.tdfrecords.net/version
 ```
 
 Do not paste a bearer token into shell history. Export it through the secure
@@ -219,9 +219,11 @@ operator environment, then omit it from captured command output.
 Application rollback is preferred when the additive schema is healthy:
 
 1. Stop production enrichment by disabling the workflow and setting
-   `ARTIST_ENRICHMENT_ENABLED=false` on Fly.
-2. Restore the pre-release Machine configuration/image retained by the guarded
-   release lane, then verify `/health` on every Machine.
+   `ARTIST_ENRICHMENT_ENABLED=false` in the current backend configuration, using
+   an authorized maintenance operation.
+2. Use the reviewed compatible recovery image against the current Hetzner
+   database, following the portable recovery runbook; verify `/health` and
+   exact `/version`. Never route traffic back to the stale Fly copy.
 3. Leave the additive tables intact so old application revisions continue to
    ignore them and audit evidence remains available.
 
@@ -234,7 +236,9 @@ window:
 3. Verify legacy `artist_profile`, `party`, releases, bookings, and public artist
    endpoints.
 4. If legacy data was affected or schema rollback fails, restore the verified
-   PostgreSQL dump or Fly volume snapshot and redeploy the pre-release revision.
+   current PostgreSQL backup through the guarded recovery procedure. Preserve
+   post-cutover writes; a provider reversal needs a new freeze and reverse
+   migration, not a restore of the retired Fly snapshot.
 
 Never restore a database or volume over production without first confirming the
 exact app, volume, snapshot/dump identifier, recovery point, and maintenance
