@@ -21,6 +21,37 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+  canary:
+    profiles: [canary]
+    image: ${TDF_IMAGE:?Set the reviewed TDF image digest}
+    restart: 'no'
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: ./api.canary.env
+    environment:
+      APP_PORT: '8080'
+      RUN_MIGRATIONS: 'false'
+      AUTO_APPLY_PRODUCTION_MIGRATIONS: 'false'
+      RESET_DB: 'false'
+      SEED_DB: 'false'
+      EVENT_DISCOVERY_ENABLED: 'false'
+      EVENT_DISCOVERY_AUTO_PUBLISH: 'false'
+      EVENT_LOGISTICS_RECHECK_ENABLED: 'false'
+      ARTIST_ENRICHMENT_ENABLED: 'false'
+      REPUTATION_AGGREGATION_WORKER_ENABLED: 'false'
+      ALLOW_ALL_ORIGINS: 'false'
+      ALLOW_ORIGINS: https://www.tdfrecords.net,https://tdfrecords.net
+      HQ_ASSETS_DIR: /data/assets
+      TZ: America/Guayaquil
+    mem_limit: 384m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./assets:/data/assets
+    networks: [database]
+    # Probe from the host using the container's internal address over SSH.
+    # Keep absent: published ports, external networks, production credentials.
   api:
     profiles: [serve]
     image: ${TDF_IMAGE:?Set the verified TDF image digest}

@@ -4,8 +4,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { resolveReleaseContext, verifyImageExists } from './production-release.mjs';
-import { buildMigrationBatchSql, buildSchemaPreflightSql, buildSchemaVerificationSql } from './lib/production-release.mjs';
+
 
 const [sha, recoverySha, directory] = process.argv.slice(2);
 if (!sha || !recoverySha || !directory || process.argv.length !== 5) {
@@ -14,6 +15,11 @@ if (!sha || !recoverySha || !directory || process.argv.length !== 5) {
 const context = await resolveReleaseContext({
   mode: 'plan', sha, recoverySha, app: 'tdf-hq', dbApp: 'tdf-hq-db', database: 'tdf_hq',
 });
+// Load the schema builders from the reviewed revision, never the caller's HEAD.
+// This module imports only Node built-ins and is loaded without writing source files.
+const builderSource = execFileSync('git', ['show', context.sha + ':scripts/lib/production-release.mjs'], { encoding: 'utf8' });
+const { buildMigrationBatchSql, buildSchemaPreflightSql, buildSchemaVerificationSql } =
+  await import('data:text/javascript;base64,' + Buffer.from(builderSource).toString('base64'));
 const image = await verifyImageExists(context.image, context.sha);
 const recovery = await verifyImageExists(`diegueins680/tdf-hq:${context.recoverySha}`, context.recoverySha);
 const files = {

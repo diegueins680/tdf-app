@@ -142,6 +142,7 @@
       "scripts/patchCodexUI",
       "scripts/patchOpenApi",
       "scripts/persona-test-program.mjs",
+      "scripts/prepare-portable-restore.mjs",
       "scripts/prepare-studio-audit-draft.mjs",
       "scripts/production-catalog-inventory.mjs",
       "scripts/production-migrations.json",

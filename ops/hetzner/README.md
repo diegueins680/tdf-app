@@ -114,8 +114,23 @@ ready and the repository's required review/checks pass.
   take the final consistent export and asset copy, and verify restore counts,
   financial/audit invariants, schema checksums, and security readiness. Keep
   event discovery and automatic publication disabled through the cutover.
-- Run a canary against the final database, then switch the frontend so
-  there is only one writable database.
+- Apply `migrate-owned-urls.sql` with `psql -X -v ON_ERROR_STOP=1` to the
+  final restored database before starting any application. Repeat it to prove
+  idempotence; confirm no active asset, event-image (including its directory
+  view projection), or radio URL retains the Fly prefix. Preserve historical
+  cutover metadata. Verify every referenced local asset exists in the final
+  merged assets directory.
+- Run only the isolated `canary` profile against the final database first.
+  Create the restricted reader role and fresh `api.canary.env` exactly as in
+  rehearsal step 7: SELECT plus the two startup-counter column grants, no
+  production provider credentials. Its only network is the internal database
+  network. Prove outbound access and business writes fail, then probe health,
+  exact version, public reads, asset availability, and canonical CORS from
+  the host. Background loops may log denied writes but cannot execute them.
+  Stop the canary and revoke its login after validation. Only then start the
+  `serve` profile; this explicitly enables production workers and writes on
+  the new database. Switch callbacks and frontend while the old database stays
+  fenced, so there is only one writable database.
   Preserve payment webhook IDs/signature secrets and verify callbacks without
   creating a real charge. Verify Google authentication and uploads before
   reopening writes. Prepare native builds using the new hostname separately.

@@ -1,3 +1,4 @@
+import { resolveApiBase } from '../config/apiBase';
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference, removeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
 import { useTranslation } from 'react-i18next';
 import { logger } from '../utils/logger';
@@ -80,9 +81,7 @@ import {
   writeSessionPersonalData,
 } from '../utils/sessionPersonalData';
 
-const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
-  ? import.meta.env.VITE_API_BASE
-  : 'https://api.tdfrecords.net');
+const API_BASE = resolveApiBase();
 const normalizeGoogleDriveUrl = (url: string): string | null => {
   const trimmed = url.trim();
   if (trimmed === '') return null;
