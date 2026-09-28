@@ -2570,7 +2570,7 @@
     },
     {
       "path": "docs/event-operations/integration-2026-09-28.md",
-      "sha256": "6c9cd81e388caf7de8daaf77e021e67f2093b76e3670f5ea7073dea62cf4b04d",
+      "sha256": "2fb1f1b42677dac733c6c8cb8a33613c6c54150b9c9b5b1e4629320f57c1f663",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -39,6 +39,9 @@ Responsible assignment. Exact revision, projection and lock-order assertions rem
 Editor-context races use a valid transition to an in-progress task and still require the
 new revision and unavailable operation together. The HTTP fixture explicitly disables
 main's added single-feature-onboarding configuration; missing fields remain compile errors.
+HTTP expiry fixtures commit a valid future expiry, observe the database clock crossing it,
+then use attributed retirement and replacement. Original attention, failure-code, privacy
+and completion assertions remain, with revisions accounting for retained history.
 No database guard is disabled
 for ordinary fixtures, no assertion is removed, and no CI job is skipped.
 

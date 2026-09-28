@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeOperators #-}
 module Main (main) where
 
-import Control.Concurrent (forkFinally, newEmptyMVar, putMVar, readMVar, takeMVar)
+import Control.Concurrent (forkFinally, newEmptyMVar, putMVar, readMVar, takeMVar, threadDelay)
 import Control.Exception (bracket_, throwIO)
 import Control.Monad (forM_, void)
 import Control.Monad.IO.Class (liftIO)
@@ -183,8 +183,8 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
     scalar "SELECT count(*) FROM event_operation_raci_assignment WHERE activity_id=8000" `shouldReturn` 2
 
   it "surfaces expired accountability explicitly without declaring the task ready" $
-    bracket_ (execute "UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()-interval '2 days',valid_until=clock_timestamp()-interval '1 day' WHERE activity_id=8000 AND raci_role='responsible'")
-             (execute "UPDATE event_operation_raci_assignment SET valid_until=NULL WHERE activity_id=8000") $ do
+    bracket_ (expireResponsible 8000)
+             (replaceExpiredResponsible 8000) $ do
       response <- send "GET" "/80/tasks/8000" (auth owner) Nothing
       expectStatus 200 response
       field "accountabilityNeedsAttention" response `shouldBe` Just (Bool True)
@@ -535,15 +535,15 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
   it "enforces current dependencies, RACI and lifecycle over HTTP without leaking prerequisite data" $ do
     execute "INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES(8302,8303)"
     complete 8302 402 owner "5" >>= expectError 409 "dependencies_not_ready"
-    bracket_ (execute "UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()-interval '2 days',valid_until=clock_timestamp()-interval '1 day' WHERE activity_id=8302 AND raci_role='responsible'")
-      (execute "UPDATE event_operation_raci_assignment SET valid_until=NULL WHERE activity_id=8302 AND raci_role='responsible'") $
+    bracket_ (expireResponsible 8302)
+      (replaceExpiredResponsible 8302) $
         complete 8302 402 owner "6" >>= expectError 409 "accountability_not_ready"
     bracket_ (execute "UPDATE event_operation_event_state SET canonical_state='ready' WHERE event_id=83")
       (execute "UPDATE event_operation_event_state SET canonical_state='planning' WHERE event_id=83") $ do
-        complete 8302 402 owner "7" >>= expectError 409 "operation_not_ready"
+        complete 8302 402 owner "8" >>= expectError 409 "operation_not_ready"
         complete 8300 400 owner "4" >>= expectStatus 200
     execute "UPDATE event_logistics_activity SET status='completed',version=version+1 WHERE id=8303"
-    complete 8302 402 owner "7" >>= expectStatus 200
+    complete 8302 402 owner "8" >>= expectStatus 200
 
   it "returns historical completion only to a currently authorized reader after a downgrade" $ do
     execute "INSERT INTO event_operation_grant(event_id,grantee_party_id,scope_code,resource_kind,resource_id,issued_by_party_id) VALUES(83,2,'task.manage','task','8304',1)"
@@ -613,6 +613,31 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
       } manager
     post event command token payload = send "POST" (BS.pack ("/" <> show (event :: Int) <> "/transitions"))
       (auth token <> idem command) (Just payload)
+    -- Commit a valid assignment, then observe real clock expiry. Current foundation
+    -- must reject a writer that tries to commit an already-expired sole Responsible.
+    expireResponsible :: Int -> IO ()
+    expireResponsible task = do
+      let taskText = T.pack (show task)
+      execute ("UPDATE event_operation_raci_assignment SET valid_until=clock_timestamp()+interval '5 seconds'"
+        <> " WHERE activity_id=" <> taskText <> " AND raci_role='responsible' AND revoked_at IS NULL")
+      let awaitExpiry :: Int -> IO ()
+          awaitExpiry remaining = do
+            expired <- scalar ("SELECT count(*) FROM event_operation_raci_assignment WHERE activity_id="
+              <> taskText <> " AND raci_role='responsible' AND revoked_at IS NULL AND valid_until<=clock_timestamp()")
+            if expired == 1 then pure ()
+              else if remaining == 0 then expectationFailure "Expected observed Responsible expiry"
+              else threadDelay 50000 >> awaitExpiry (remaining-1)
+      awaitExpiry 200
+    replaceExpiredResponsible :: Int -> IO ()
+    replaceExpiredResponsible task = do
+      let taskText = T.pack (show task)
+      execute ("DO $$ BEGIN PERFORM event_operation_retire_expired_raci(" <> taskText
+        <> ",1,'HTTP expiry fixture completed'); END $$;"
+        <> " INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id) VALUES("
+        <> taskText <> ",3,'responsible',1)")
+      scalar ("SELECT count(*) FROM event_operation_raci_assignment WHERE activity_id=" <> taskText
+        <> " AND revoked_at IS NOT NULL AND revoked_by_party_id=1 AND revocation_reason='HTTP expiry fixture completed'")
+        `shouldReturn` 1
     execute sql = runSqlPool (rawExecute sql []) pool
     scalar sql = do
       rows <- runSqlPool (rawSql sql []) pool :: IO [Single Int64]
