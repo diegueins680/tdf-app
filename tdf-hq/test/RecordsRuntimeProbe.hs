@@ -46,6 +46,12 @@ main = do
           (\_ ids -> pure (Right (map (Y.PublicVideo . video) ids)))
         run key full dry = runRecordsIngestionWith provider pool 1 key full dry
     resetRate
+    sql "INSERT INTO records_ingestion_quota(day,reserved_units) VALUES((now() AT TIME ZONE 'America/Los_Angeles')::date,9000) ON CONFLICT(day) DO UPDATE SET reserved_units=9000" []
+    limited <- run "pagination" False False
+    check "exhausted provider-day quota must fail without consuming a page" (status limited == Just (String "failed"))
+    readIORef pages >>= check "quota failure made a provider page request" . null
+    resetRate
+    sql "UPDATE records_ingestion_quota SET reserved_units=0" []
     first <- run "pagination" False False
     check "first invocation must be partial" (status first == Just (String "partial"))
     other <- run "competing-key" False False

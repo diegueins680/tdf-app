@@ -201,7 +201,7 @@ runRecordsIngestionWith provider pool accountId executionKey full dryRun
                      [PersistText runId]) backend
                    result <- try $ do
                      budget <- runSqlConn (rawSql
-                       "INSERT INTO records_ingestion_quota(day,reserved_units) VALUES((now() AT TIME ZONE 'UTC')::date,15) ON CONFLICT(day) DO UPDATE SET reserved_units=records_ingestion_quota.reserved_units+15 WHERE records_ingestion_quota.reserved_units+15<=9000 RETURNING reserved_units"
+                       "INSERT INTO records_ingestion_quota(day,reserved_units) VALUES((now() AT TIME ZONE 'America/Los_Angeles')::date,15) ON CONFLICT(day) DO UPDATE SET reserved_units=records_ingestion_quota.reserved_units+15 WHERE records_ingestion_quota.reserved_units+15<=9000 RETURNING reserved_units"
                        [] :: SqlPersistT IO [Single Int]) backend
                      if null budget then throwIO (ProviderFailure (Y.ProviderHttp 429)) else pure ()
                      verifiedChannel <- readChannel provider channel >>= providerResult

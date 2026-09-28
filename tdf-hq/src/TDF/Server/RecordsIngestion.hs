@@ -86,7 +86,7 @@ recordsIngestionServer user = overview :<|> saveSource :<|> control :<|> runNow
             [PersistInt64 actor] :: SqlPersistT IO [Single Int64]
           if not (null recent) then pure False else do
             budget <- rawSql
-              "INSERT INTO records_ingestion_quota(day,reserved_units) VALUES((now() AT TIME ZONE 'UTC')::date,3) ON CONFLICT(day) DO UPDATE SET reserved_units=records_ingestion_quota.reserved_units+3 WHERE records_ingestion_quota.reserved_units+3<=9000 RETURNING reserved_units"
+              "INSERT INTO records_ingestion_quota(day,reserved_units) VALUES((now() AT TIME ZONE 'America/Los_Angeles')::date,3) ON CONFLICT(day) DO UPDATE SET reserved_units=records_ingestion_quota.reserved_units+3 WHERE records_ingestion_quota.reserved_units+3<=9000 RETURNING reserved_units"
               [] :: SqlPersistT IO [Single Int]
             if null budget then pure False else do
               auditDb "source_verification_requested" (object ["channelId" .= channelId])

@@ -41,7 +41,7 @@ existing `(provider_id,resource_kind,external_code)` constraint. The existing ru
 ledger identity includes source, execution key, mode and dry-run flag. Provider
 failures retain checkpoints. Missing metadata is a review/unavailability count,
 never evidence that a failed or incomplete playlist deleted content. The worker
-reserves a conservative 15 provider units per invocation under a 9000-unit UTC-day
+reserves a conservative 15 provider units per invocation under a 9000-unit Pacific-day
 budget; channel verification reserves three units in the same budget and
 is limited to one attempt per administrator per minute. No paid quota changes
 are made. Sources are ordered by oldest attempt to prevent starvation.
@@ -105,3 +105,7 @@ nationwide event coverage, event approval, or mobile-store availability.
 - Staging rollout remains blocked by the previously observed Fly HTTP 403 for
   overdue invoices. No rollout, production backfill or scheduled execution is
   established by these local checks.
+
+Quota dates use `America/Los_Angeles`, including daylight-saving changes, to match
+[YouTube’s documented midnight Pacific reset](https://developers.google.com/youtube/v3/determine_quota_cost).
+Schedule identities remain UTC; the quota calendar is intentionally separate.
