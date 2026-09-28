@@ -595,6 +595,11 @@
       "id": "2026-09-20_records_ingestion_runtime",
       "path": "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
       "introducedBy": "633d3dc8f2451397c8bb51beee51700c172aad98"
+    },
+    {
+      "id": "2026-09-27_event_ingestion_boundaries",
+      "path": "tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql",
+      "introducedBy": "441dfcc968559f829e84c89751f008657566138c"
     }
   ]
 }

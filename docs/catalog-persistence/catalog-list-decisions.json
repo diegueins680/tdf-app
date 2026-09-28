@@ -13943,16 +13943,16 @@
       }
     },
     {
-      "id": "07da55e81a186d26df37",
+      "id": "ffa26fc8430840b541e1",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Reviewed the ordered 115-entry release registry: all 114 existing migrations retain their immutable introduction commits; the additive disabled ingestion runtime is appended with its exact introducing commit.",
+      "justification": "Reviewed the 116-entry release registry: all 115 current-main entries and immutable introduction commits remain in order, including records ingestion. The additive shared event pilot/publication boundary migration is appended at its original introduction commit; it grants no approval or enablement.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "records-ingestion-2026-09-28",
+      "reviewBatch": "event-discovery-integration-2026-09-28",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
