@@ -27,10 +27,8 @@ BEGIN
     IF TG_OP = 'UPDATE' AND (NEW.id <> OLD.id OR NEW.event_id <> OLD.event_id) THEN
       RAISE EXCEPTION 'task identity and event are immutable' USING ERRCODE = '23514';
     END IF;
-    IF TG_OP = 'DELETE' AND EXISTS (
-      SELECT 1 FROM event_operation_task_policy WHERE activity_id = OLD.id
-    ) THEN
-      RAISE EXCEPTION 'protected tasks require an audited archival workflow' USING ERRCODE = '23514';
+    IF TG_OP = 'DELETE' THEN
+      PERFORM event_operation_assert_task_deletable(OLD.id);
     END IF;
     target_event_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.event_id ELSE NEW.event_id END;
   ELSE
@@ -103,6 +101,7 @@ BEGIN
       WHERE override_record.activity_id = activity.id
         AND override_record.activity_version = activity.version - 1
         AND override_record.override_kind = 'blocked_completion'
+        AND override_record.dependency_snapshot = event_operation_dependency_snapshot(activity.id)
     ) LIMIT 1;
   IF FOUND THEN
     RAISE EXCEPTION 'completed task % has incomplete dependencies', invalid_activity_id

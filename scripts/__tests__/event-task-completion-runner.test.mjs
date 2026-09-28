@@ -30,7 +30,10 @@ test('completion CI and full-schema down/up stay mandatory without production ac
   assert.doesNotMatch(workflow, /continue-on-error/);
   for (const file of [runner, 'scripts/__tests__/event-task-completion-runner.test.mjs',
     'tdf-hq/test/integration/event_task_completion_*.sql']) {
-    assert.equal(workflow.split(`"${file}"`).length - 1, 2, file);
+    // Main deliberately verifies every change; path filtering would narrow coverage.
+    assert.match(workflow, /^  pull_request:\s*$/m);
+    assert.match(workflow, /^  push:\s*\n\s+branches: \[main\]/m);
+    assert.doesNotMatch(workflow, /^\s+paths(?:-ignore)?:/m);
   }
   const rehearsal = readFileSync('scripts/test-event-operations-schema-rehearsal.sh', 'utf8');
   const prerequisite = rehearsal.indexOf('apply_sql tdf-hq/sql/2026-09-15_event_raci_reassignment.sql');

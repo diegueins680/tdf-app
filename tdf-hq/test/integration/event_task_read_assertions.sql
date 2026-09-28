@@ -95,7 +95,10 @@ DO $$ DECLARE result JSONB; before_rows JSONB; BEGIN
   PERFORM task_read_test.check_that(task_read_test.rows()=before_rows, 'protected reads preserve rows');
 END $$;
 
--- Existing commit cardinality is non-revoked, not time-aware. Expose the gap explicitly.
+-- Exercise defensive projections during a transaction, before the deferred
+-- current-time cardinality guards run. Restore valid assignments before commit;
+-- the negative controls below also prove invalid schedules cannot be committed.
+BEGIN;
 UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()+interval '1 day'
   WHERE activity_id=100 AND raci_role='responsible';
 SELECT task_read_test.check_that(event_operation_read_task(10,100,1)->'accountabilityNeedsAttention'='true'::JSONB
@@ -111,6 +114,18 @@ SELECT task_read_test.check_that(event_operation_read_task(10,100,1)->'accountab
   AND jsonb_array_length(event_operation_read_task(10,100,1)->'raci')=1, 'future Accountable reports attention');
 UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()-interval '1 day'
   WHERE activity_id=100 AND raci_role='accountable';
+COMMIT;
+DO $$ DECLARE role_code TEXT; BEGIN
+  FOREACH role_code IN ARRAY ARRAY['responsible','accountable'] LOOP
+    BEGIN
+      UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()+interval '1 day'
+        WHERE activity_id=100 AND raci_role=role_code;
+      SET CONSTRAINTS ALL IMMEDIATE;
+      PERFORM task_read_test.check_that(FALSE, 'future required assignment must not commit: ' || role_code);
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+  END LOOP;
+END $$;
 INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id,
   revoked_at,revoked_by_party_id,revocation_reason)
   VALUES (100,3,'consulted',1,clock_timestamp(),1,'test');

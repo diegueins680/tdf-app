@@ -172,6 +172,15 @@ for expiry in metadata activity party raci; do
   grep -q "\"error\": \"$error\"" "$test_logs/expiry-waiter-$expiry.log"
   test "$(sql -qAtc "SELECT raci_command_test.rev($task)")" = "$expected"
   test "$(sql -qAtc "SELECT count(*) FROM event_operation_audit_event WHERE resource_id='$task'")" = 0
+  if [ "$expiry" = raci ]; then
+    # This case proved actual time expiry. Repair only its fixture, with the
+    # canonical attributed retirement, before creating another task in the event.
+    sql -c "BEGIN;
+      SELECT event_operation_retire_expired_raci($task,1,'completed expiry regression');
+      INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id)
+        VALUES($task,2,'responsible',1);
+      COMMIT;" >/dev/null
+  fi
 done
 
 for ordering in revoke-first command-first aborted-first; do

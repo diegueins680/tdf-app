@@ -12,7 +12,10 @@ test('editor formal guard mutations stay mandatory with named invariant failures
     assert(runner.includes(`expect_counterexample RaciWebEditor${mutation}.cfg ${invariant}`));
   }
   const workflow = read('.github/workflows/event-operations-formal.yml');
-  assert.equal(workflow.split('tdf-hq-ui/src/components/events/EventRaciEditor.tsx').length - 1, 2);
+  // Main deliberately verifies every change; path filtering would narrow coverage.
+    assert.match(workflow, /^  pull_request:\s*$/m);
+    assert.match(workflow, /^  push:\s*\n\s+branches: \[main\]/m);
+    assert.doesNotMatch(workflow, /^\s+paths(?:-ignore)?:/m);
   assert.match(workflow, /run: node --test scripts\/__tests__\/event-raci-web-editor.test.mjs/);
 });
 

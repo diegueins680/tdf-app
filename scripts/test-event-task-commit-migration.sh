@@ -206,19 +206,37 @@ sql -c 'UPDATE event_logistics_dependency SET depends_on_activity_id=101 WHERE a
 reject 23514 'UPDATE event_logistics_activity SET version=4 WHERE id=100;'
 reject 55000 "UPDATE event_operation_task_override SET reason='changed' WHERE activity_id=100;"
 
+# An approval captured before a graph change cannot complete the changed task.
+sql -c "BEGIN;
+ INSERT INTO event_logistics_activity(id,event_id,status,version) VALUES (8000,10,'planned',1);
+ INSERT INTO event_operation_task_policy(activity_id,requires_accountability,dependencies_gate_completion)
+ VALUES (8000,false,true);
+ INSERT INTO event_operation_task_override(activity_id,activity_version,override_kind,reason,policy_reference,authorized_by_party_id)
+ VALUES (8000,1,'blocked_completion','Original graph only','test-policy',1);
+ INSERT INTO event_logistics_dependency(activity_id,depends_on_activity_id) VALUES (8000,103);
+ COMMIT;" >/dev/null
+reject 23514 "UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=8000;"
+reject 23514 'DELETE FROM event_logistics_activity WHERE id=8000;'
+
 apply "$down"
 apply "$down"
 test "$(sql -qAtc 'SELECT count(*) FROM event_operation_task_override WHERE activity_id=100')" = 1
-# Simulate incompatible data written under the rolled-back, weaker guard. A forward
-# migration must refuse it and roll its DDL back, not silently grandfather the violation.
-sql -c 'UPDATE event_logistics_activity SET version=4 WHERE id=100;' >/dev/null
+# Application rollback must retain the foundation's stronger integrity boundary.
+reject 23514 "UPDATE event_logistics_activity SET status='completed',version=2 WHERE id=8000;"
+reject 23514 'DELETE FROM event_logistics_activity WHERE id=8000;'
+reject 23514 'UPDATE event_logistics_activity SET version=4 WHERE id=100;'
+# Reproduce an incompatible historical installation only in this disposable
+# superuser fixture. Forward migration must still reject it transactionally.
+sql -c 'ALTER TABLE event_logistics_activity DISABLE TRIGGER USER;
+ UPDATE event_logistics_activity SET version=4 WHERE id=100;
+ ALTER TABLE event_logistics_activity ENABLE TRIGGER USER;' >/dev/null
 if apply "$up" > "$test_logs/invalid-up.log" 2>&1; then
   echo 'Expected migration to reject incompatible existing task' >&2
   exit 1
 fi
 grep -q 'completed task 100 has incomplete dependencies' "$test_logs/invalid-up.log"
-test "$(sql -qAtc "SELECT count(*) FROM pg_trigger WHERE tgname='event_operation_task_completion_guard'")" = 1
-test "$(sql -qAtc "SELECT count(*) FROM pg_trigger WHERE tgname='event_operation_task_commit_guard'")" = 0
+test "$(sql -qAtc "SELECT count(*) FROM pg_trigger WHERE tgname='event_operation_task_completion_guard'")" = 0
+test "$(sql -qAtc "SELECT count(*) FROM pg_trigger WHERE tgname='event_operation_task_commit_guard'")" = 4
 sql -c 'UPDATE event_logistics_activity SET version=3 WHERE id=100;' >/dev/null
 apply "$up"
 reject 23514 'UPDATE event_logistics_activity SET version=4 WHERE id=100;'

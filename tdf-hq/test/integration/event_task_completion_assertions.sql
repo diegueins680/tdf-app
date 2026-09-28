@@ -148,6 +148,9 @@ SELECT raci_command_test.check_that(completion_test.command(405,1,1,6)->>'aggreg
 -- Exhaustive deterministic decision table over five binary guard inputs.
 DO $$ DECLARE n INTEGER; task BIGINT; actor BIGINT; expected BIGINT; result JSONB; code TEXT; snapshot JSONB; BEGIN
   FOR n IN 0..31 LOOP
+    -- Each decision-table case owns its intentionally invalid/expired fixture.
+    -- Roll it back after the assertions so it cannot poison a sibling's event.
+    BEGIN
     task := 2000+n; PERFORM raci_command_test.seed(task);
     INSERT INTO event_logistics_activity(id,event_id,status,version)
       VALUES(5000+n,10,CASE WHEN (n & 1)=1 THEN 'completed' ELSE 'planned' END,1);
@@ -174,6 +177,9 @@ DO $$ DECLARE n INTEGER; task BIGINT; actor BIGINT; expected BIGINT; result JSON
       PERFORM raci_command_test.check_that(result=jsonb_build_object('error',code),'generated guard rejection '||n);
     END IF;
     PERFORM raci_command_test.check_that(snapshot=completion_test.rows(),'generated rejected/replayed history unchanged');
+    RAISE EXCEPTION 'reset generated test fixture' USING ERRCODE='ZT001';
+    EXCEPTION WHEN SQLSTATE 'ZT001' THEN NULL;
+    END;
   END LOOP;
   UPDATE event_operation_event_state SET canonical_state='planning' WHERE event_id=10;
 END $$;

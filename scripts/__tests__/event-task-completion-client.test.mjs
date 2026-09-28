@@ -15,7 +15,10 @@ test('formal workflow watches both completion client tests and its verification 
   const workflow = readFileSync('.github/workflows/event-operations-formal.yml', 'utf8');
   for (const path of ['tdf-hq-ui/src/api/eventTaskCompletion*.test.ts',
     'scripts/__tests__/event-task-completion-client.test.mjs']) {
-    assert.equal(workflow.split(`"${path}"`).length - 1, 2);
+    // Main deliberately verifies every change; path filtering would narrow coverage.
+    assert.match(workflow, /^  pull_request:\s*$/m);
+    assert.match(workflow, /^  push:\s*\n\s+branches: \[main\]/m);
+    assert.doesNotMatch(workflow, /^\s+paths(?:-ignore)?:/m);
   }
   assert.match(workflow, /node --test scripts\/__tests__\/event-task-completion-client.test.mjs/);
 });

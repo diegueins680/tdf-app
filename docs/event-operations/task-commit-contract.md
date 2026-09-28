@@ -13,9 +13,9 @@ only by replaying the whole authorized, version-checked command, never a subset 
 
 | Operation | Guard at commit | Failure |
 |---|---|---|
-| Complete or edit completed opted-in task | Every dependency is completed, or an immutable blocked-completion override references the immediately preceding activity version | `23514`, entire transaction rolls back |
-| Add dependency / reopen prerequisite | Must not leave any gated completed task blocked without that version-bound override | `23514` |
-| Revoke or replace required RACI | Exactly one non-revoked Accountable and at least one non-revoked Responsible remain | `23514` |
+| Complete or edit completed opted-in task | Every dependency is completed, or an immutable blocked-completion override references the immediately preceding activity version and the current dependency snapshot | `23514`, entire transaction rolls back |
+| Add dependency / reopen prerequisite | Must not leave any gated completed task blocked without that version- and dependency-bound override | `23514` |
+| Revoke or replace required RACI | Exactly one currently effective Accountable and at least one currently effective Responsible remain | `23514` |
 | Opt in an existing or newly inserted completed activity | Same final-state checks, even when status was set before policy insertion | `23514` |
 | Delete policy, weaken its flags, move or delete protected task | No generic edit bypass; dedicated audited workflow is not implemented | `23514` |
 | Move an assignment between tasks | Revoke old assignment and create new assignment in one transaction; do not change its task identity | `23514` |
@@ -38,17 +38,20 @@ counterexamples; they are intentional negative controls, not accepted production
 and relational scoping specifications. The new model abstracts DB exceptions as rejection;
 it does not establish SQL isolation behavior. Real concurrent PostgreSQL tests are required.
 
-RACI validity windows, membership removal, contextual authorization, field privacy, policy
-administration, accepted evidence, task history and user-visible conflict handling are not
-implemented by this correction. In particular, non-revoked assignment cardinality is not a
-claim that a time-limited assignment remains effective forever. Do not expose this sidecar
-for production use until those workflows are implemented and tested.
+The current foundation additionally enforces RACI validity windows at commit and
+requires attributed retirement of expired assignments. The read projection still reports
+attention when time passes beyond an assignment's validity without a new write. This
+integration retains those foundation guards, scoped command authorization, and audited
+history. Formal bounds do not establish unbounded clock or provider behavior; production
+activation remains separately gated.
 
 ## Rollout / rollback
 
 Apply after the foundation, with the event-operations API disabled. The migration validates
 existing opted-in tasks and refuses invalid data without repairing it silently. It is excluded
-from the production migration manifest. Rollback removes only these additional guards, restores
-the original BEFORE-completion guard, and retains the write-fence rows and all domain history.
-Rollback deliberately restores the previous weaker safety boundary; keep task writes quiesced
-until a corrected forward migration can be applied. Reapply revalidates retained records.
+from the production migration manifest. Rollback retains the integrity triggers, write-fence
+rows and all domain history. It does not restore weaker historical completion or deletion
+behavior. Disable and roll back the later command/read adapters in reverse dependency order,
+with task writes quiesced; reapply revalidates retained records. Migration tests prove stale
+approval graphs, unsafe deletion and version regression are rejected after both apply and
+rollback.

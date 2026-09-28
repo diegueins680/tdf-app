@@ -72,7 +72,10 @@ test('task read verification remains in the formal workflow and complete migrati
   assert.match(workflow, /run: npm run test:event-task-read-migration/);
   for (const file of ['scripts/test-event-task-read-migration.sh',
     'tdf-hq/test/integration/event_task_read_assertions.sql']) {
-    assert.equal(workflow.split(`"${file}"`).length - 1, 2, `${file} must trigger PR and main verification`);
+    // Main deliberately verifies every change; path filtering would narrow coverage.
+    assert.match(workflow, /^  pull_request:\s*$/m);
+    assert.match(workflow, /^  push:\s*\n\s+branches: \[main\]/m);
+    assert.doesNotMatch(workflow, /^\s+paths(?:-ignore)?:/m);
   }
   assert.match(source, /apply_sql tdf-hq\/sql\/2026-09-14_event_task_read.sql/);
   assert.ok(source.indexOf('apply_sql tdf-hq/sql/2026-09-14_event_task_read_rollback.sql')

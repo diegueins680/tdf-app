@@ -54,7 +54,7 @@ import {
 } from '../utils/loginRouting';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
-import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
+import { isValidAuthPassword } from '../utils/passwordPolicy';
 import { env } from '../utils/env';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';

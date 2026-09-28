@@ -84,8 +84,8 @@ increment. Hosted workflow configuration is not evidence that remote CI passed.
 
 Stop consumers of the new function, apply `2026-09-14_event_task_read_rollback.sql` before
 rolling back any prerequisite. It drops only the two new functions, without CASCADE or
-domain deletion. Apply/rollback/reapply preserve the focused domain snapshot. Unlike the
-task-commit rollback, this rollback does not weaken write constraints. Function DDL may
+domain deletion. Apply/rollback/reapply preserve the focused domain snapshot. The current integrated
+task-commit rollback also preserves write constraints. Function DDL may
 wait on active queries; use the bounded lock timeout and retry during a quiescent window.
 
 Next: typed, authenticated task/RACI API and web client tests, explicit field visibility,

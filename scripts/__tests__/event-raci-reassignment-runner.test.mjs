@@ -24,7 +24,10 @@ test('RACI command CI and full-schema migration order remain mandatory without p
   assert.doesNotMatch(workflow, /continue-on-error/);
   for (const file of [runner, 'scripts/__tests__/event-raci-reassignment-runner.test.mjs',
     'tdf-hq/test/integration/event_raci_reassignment_*.sql']) {
-    assert.equal(workflow.split(`"${file}"`).length - 1, 2, file);
+    // Main deliberately verifies every change; path filtering would narrow coverage.
+    assert.match(workflow, /^  pull_request:\s*$/m);
+    assert.match(workflow, /^  push:\s*\n\s+branches: \[main\]/m);
+    assert.doesNotMatch(workflow, /^\s+paths(?:-ignore)?:/m);
   }
   const rehearsal = readFileSync('scripts/test-event-operations-schema-rehearsal.sh', 'utf8');
   const read = rehearsal.indexOf('apply_sql tdf-hq/sql/2026-09-15_event_task_revisioned_read.sql');

@@ -25,7 +25,10 @@ test('editor context formal controls, CI and migration order remain mandatory', 
   assert.doesNotMatch(ci, /continue-on-error/);
   for (const path of [runner, 'scripts/__tests__/event-raci-editor-context-runner.test.mjs',
     'tdf-hq/test/integration/event_raci_editor_context_*.sql']) {
-    assert.equal(ci.split(`"${path}"`).length-1, 2);
+    // Main deliberately verifies every change; path filtering would narrow coverage.
+    assert.match(ci, /^  pull_request:\s*$/m);
+    assert.match(ci, /^  push:\s*\n\s+branches: \[main\]/m);
+    assert.doesNotMatch(ci, /^\s+paths(?:-ignore)?:/m);
   }
   const rehearsal = readFileSync('scripts/test-event-operations-schema-rehearsal.sh', 'utf8');
   const command = rehearsal.indexOf('apply_sql tdf-hq/sql/2026-09-15_event_raci_reassignment.sql');

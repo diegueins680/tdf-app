@@ -14,6 +14,7 @@
       ".github/workflows/ci.yml",
       ".github/workflows/datadog-synthetics.yml",
       ".github/workflows/event-operations-formal.yml",
+      ".github/workflows/event-raci-browser.yml",
       ".github/workflows/refresh-instagram-token.yml",
       ".github/workflows/social-verification.yml",
       ".github/workflows/test-trigger.txt"
@@ -35,8 +36,18 @@
       "scripts/__tests__/ci-change-scope.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
+      "scripts/__tests__/event-operations-http-runner.test.mjs",
       "scripts/__tests__/event-operations-pluscal.test.mjs",
+      "scripts/__tests__/event-operations-schema-rehearsal.test.mjs",
       "scripts/__tests__/event-preview.test.mjs",
+      "scripts/__tests__/event-raci-browser-runner.test.mjs",
+      "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
+      "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
+      "scripts/__tests__/event-raci-web-editor.test.mjs",
+      "scripts/__tests__/event-task-completion-client.test.mjs",
+      "scripts/__tests__/event-task-completion-runner.test.mjs",
+      "scripts/__tests__/event-task-revision-runner.test.mjs",
+      "scripts/__tests__/event-task-revisioned-read-runner.test.mjs",
       "scripts/__tests__/experiment-http-runtime.mjs",
       "scripts/__tests__/fixtures/artist-management-claim.sql",
       "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -48,6 +59,7 @@
       "scripts/__tests__/instagram-token-workflows.test.mjs",
       "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
       "scripts/__tests__/legacy-escrow-contract.test.mjs",
+      "scripts/__tests__/local-api-fixture.test.mjs",
       "scripts/__tests__/logical-correctness-audit.test.mjs",
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
@@ -60,6 +72,7 @@
       "scripts/__tests__/sri-invoice.test.mjs",
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
+      "scripts/__tests__/ui-validation-bundle.test.mjs",
       "scripts/__tests__/ux-quality-audit.test.mjs",
       "scripts/__tests__/ux-review-real-browser.mjs",
       "scripts/__tests__/verification-evidence.test.mjs",
@@ -156,6 +169,8 @@
       "scripts/render-production-migration-batch.mjs",
       "scripts/render-production-schema-preflight.mjs",
       "scripts/render-production-schema-verification.mjs",
+      "scripts/run-event-operations-http-harness.sh",
+      "scripts/run-event-raci-browser.mjs",
       "scripts/run-instagram-follower-invite-2026-09-08.sh",
       "scripts/run-instagram-follower-invite-2026-09-09.sh",
       "scripts/set-loop-github-polling.mjs",
@@ -241,10 +256,22 @@
       "scripts/test-distribution-accounting-migration.sh",
       "scripts/test-distribution-product-seeds-migration.sh",
       "scripts/test-domo-quote-checkout-runtime-migration.sh",
+      "scripts/test-event-operations-api-migration.sh",
       "scripts/test-event-operations-foundation-migration.sh",
+      "scripts/test-event-operations-http-ci.sh",
+      "scripts/test-event-operations-http.sh",
+      "scripts/test-event-operations-schema-rehearsal.sh",
+      "scripts/test-event-raci-browser.sh",
+      "scripts/test-event-raci-editor-context-migration.sh",
+      "scripts/test-event-raci-reassignment-migration.sh",
       "scripts/test-event-relations-runtime.sh",
       "scripts/test-event-research-ingestion-migration.sh",
       "scripts/test-event-rsvp-identity-migration.sh",
+      "scripts/test-event-task-commit-migration.sh",
+      "scripts/test-event-task-completion-migration.sh",
+      "scripts/test-event-task-read-migration.sh",
+      "scripts/test-event-task-revision-migration.sh",
+      "scripts/test-event-task-revisioned-read-migration.sh",
       "scripts/test-feature-migrations.sh",
       "scripts/test-identity-reconciliation.sh",
       "scripts/test-invitation-update-concurrency.sh",
@@ -421,7 +448,11 @@
       "tdf-hq-ui/src/api/errorMessage.test.ts",
       "tdf-hq-ui/src/api/errorMessage.ts",
       "tdf-hq-ui/src/api/eventDiscoverySources.ts",
+      "tdf-hq-ui/src/api/eventOperations.test.ts",
+      "tdf-hq-ui/src/api/eventOperations.ts",
       "tdf-hq-ui/src/api/eventResearch.ts",
+      "tdf-hq-ui/src/api/eventTaskCompletion.test.ts",
+      "tdf-hq-ui/src/api/eventTaskCompletion.transport.test.ts",
       "tdf-hq-ui/src/api/eventTickets.test.ts",
       "tdf-hq-ui/src/api/eventTickets.ts",
       "tdf-hq-ui/src/api/fans.test.ts",
@@ -566,6 +597,7 @@
       "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
       "tdf-hq-ui/src/components/__tests__/TicketTransferDialog.test.tsx",
       "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
+      "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
@@ -728,6 +760,8 @@
       "tdf-hq-ui/src/pages/EstebanMunozReportPage.tsx",
       "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
       "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+      "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
+      "tdf-hq-ui/src/pages/EventTaskPage.tsx",
       "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx",
       "tdf-hq-ui/src/pages/FanClubPage.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
@@ -838,6 +872,8 @@
       "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
       "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
       "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+      "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
+      "tdf-hq-ui/src/pages/SocialEventWorkspacePage.tsx",
       "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
       "tdf-hq-ui/src/pages/SocialInboxPage.test.tsx",
       "tdf-hq-ui/src/pages/SocialInboxPage.tsx",
@@ -934,6 +970,8 @@
       "tdf-hq-ui/src/utils/eventRsvpIntent.ts",
       "tdf-hq-ui/src/utils/eventSharing.test.ts",
       "tdf-hq-ui/src/utils/eventSharing.ts",
+      "tdf-hq-ui/src/utils/eventTaskRoutes.test.ts",
+      "tdf-hq-ui/src/utils/eventTaskRoutes.ts",
       "tdf-hq-ui/src/utils/formatPhone.ts",
       "tdf-hq-ui/src/utils/formatters.test.ts",
       "tdf-hq-ui/src/utils/formatters.ts",
@@ -1303,17 +1341,33 @@
       "tdf-hq/sql/2026-09-10_party_selector_rate_limit_scopes_rollback.sql",
       "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
       "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding_rollback.sql",
+      "tdf-hq/sql/2026-09-14_event_operations_api.sql",
+      "tdf-hq/sql/2026-09-14_event_operations_api_rollback.sql",
       "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
       "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql",
+      "tdf-hq/sql/2026-09-14_event_task_commit.sql",
+      "tdf-hq/sql/2026-09-14_event_task_commit_rollback.sql",
+      "tdf-hq/sql/2026-09-14_event_task_read.sql",
+      "tdf-hq/sql/2026-09-14_event_task_read_rollback.sql",
       "tdf-hq/sql/2026-09-14_social_v2_foundation.sql",
       "tdf-hq/sql/2026-09-14_social_v2_pause.sql",
       "tdf-hq/sql/2026-09-14_social_v2_read_models.sql",
+      "tdf-hq/sql/2026-09-15_event_raci_editor_context.sql",
+      "tdf-hq/sql/2026-09-15_event_raci_editor_context_rollback.sql",
+      "tdf-hq/sql/2026-09-15_event_raci_reassignment.sql",
+      "tdf-hq/sql/2026-09-15_event_raci_reassignment_rollback.sql",
+      "tdf-hq/sql/2026-09-15_event_task_revision.sql",
+      "tdf-hq/sql/2026-09-15_event_task_revision_rollback.sql",
+      "tdf-hq/sql/2026-09-15_event_task_revisioned_read.sql",
+      "tdf-hq/sql/2026-09-15_event_task_revisioned_read_rollback.sql",
       "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
       "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql",
       "tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql",
       "tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql",
       "tdf-hq/sql/2026-09-16_artist_self_service.sql",
       "tdf-hq/sql/2026-09-16_artist_self_service_rollback.sql",
+      "tdf-hq/sql/2026-09-16_event_task_completion.sql",
+      "tdf-hq/sql/2026-09-16_event_task_completion_rollback.sql",
       "tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql",
       "tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql",
       "tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql",
@@ -1456,6 +1510,10 @@
       "tdf-hq/src/TDF/Email.hs",
       "tdf-hq/src/TDF/Email/Headers.hs",
       "tdf-hq/src/TDF/Email/Service.hs",
+      "tdf-hq/src/TDF/EventOperations/API.hs",
+      "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs",
+      "tdf-hq/src/TDF/EventOperations/Server.hs",
+      "tdf-hq/src/TDF/EventOperations/Types.hs",
       "tdf-hq/src/TDF/FeatureRegistry.hs",
       "tdf-hq/src/TDF/Handlers/InputList.hs",
       "tdf-hq/src/TDF/Internationalization.hs",
@@ -1561,6 +1619,9 @@
       "tdf-hq/templates/proposals/assets/tdf_logo_header.png",
       "tdf-hq/templates/proposals/assets/wide1.jpg",
       "tdf-hq/templates/proposals/tdf_live_sessions.tex",
+      "tdf-hq/test/EventOperationsBoundaryMain.hs",
+      "tdf-hq/test/EventOperationsHttpMain.hs",
+      "tdf-hq/test/EventRaciBrowserMain.hs",
       "tdf-hq/test/PaymentArithmeticProbe.hs",
       "tdf-hq/test/RecordsRuntimeProbe.hs",
       "tdf-hq/test/Spec.hs",
@@ -1577,6 +1638,10 @@
       "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
       "tdf-hq/test/TDF/Directory/PolicySpec.hs",
       "tdf-hq/test/TDF/EmailHeadersSpec.hs",
+      "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs",
+      "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+      "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
+      "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
       "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
       "tdf-hq/test/TDF/Operations/ModelSpec.hs",
@@ -1617,9 +1682,32 @@
       "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
       "tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql",
       "tdf-hq/test/integration/event_moment_reaction_cutover_postgres.sql",
+      "tdf-hq/test/integration/event_operations_command_privacy_assertions.sql",
       "tdf-hq/test/integration/event_operations_foundation_fixture.sql",
+      "tdf-hq/test/integration/event_operations_http_fixture.sql",
+      "tdf-hq/test/integration/event_operations_replay_assertions.sql",
+      "tdf-hq/test/integration/event_operations_schema_assertions.sql",
+      "tdf-hq/test/integration/event_operations_schema_reapply_assertions.sql",
+      "tdf-hq/test/integration/event_operations_schema_rollback_assertions.sql",
+      "tdf-hq/test/integration/event_operations_schema_seed.sql",
+      "tdf-hq/test/integration/event_operations_snapshot_assertions.sql",
+      "tdf-hq/test/integration/event_raci_browser_fixture.sql",
+      "tdf-hq/test/integration/event_raci_editor_context_assertions.sql",
+      "tdf-hq/test/integration/event_raci_editor_context_schema_assertions.sql",
+      "tdf-hq/test/integration/event_raci_reassignment_assertions.sql",
+      "tdf-hq/test/integration/event_raci_reassignment_faults.sql",
+      "tdf-hq/test/integration/event_raci_reassignment_fixture.sql",
+      "tdf-hq/test/integration/event_raci_reassignment_schema_assertions.sql",
       "tdf-hq/test/integration/event_relations_fixture.sql",
+      "tdf-hq/test/integration/event_task_completion_assertions.sql",
+      "tdf-hq/test/integration/event_task_completion_fixture.sql",
+      "tdf-hq/test/integration/event_task_completion_schema_assertions.sql",
+      "tdf-hq/test/integration/event_task_read_assertions.sql",
+      "tdf-hq/test/integration/event_task_revision_assertions.sql",
+      "tdf-hq/test/integration/event_task_revisioned_read_assertions.sql",
+      "tdf-hq/test/integration/event_task_revisioned_read_barrier.sql",
       "tdf-hq/test/integration/label_project_notes_backfill_postgres.sql",
+      "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
       "tdf-hq/test/integration/pipeline_authorization_http.sh",
       "tdf-hq/test/integration/pipeline_workflow_cutover_negative.sh",
       "tdf-hq/test/integration/pipeline_workflow_cutover_postgres.sql",
@@ -2370,7 +2458,14 @@
     },
     {
       "path": "docs/event-operations/README.md",
-      "sha256": "d8acedc17ab7eb62b36f08d74c36410d9194c73f26995fedc9a3ad1ae4cd473c",
+      "sha256": "c0737f40fe41f6e386f58a83bef09a3fb2453075716912df6d08571aa108694b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/artist-follow-continuity-contract.md",
+      "sha256": "d30020ca0e2517a49c872127904beda7a2eaff97e1a3e56d818a2d5de496618c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2390,6 +2485,27 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/event-operations/catalog-review-contract.md",
+      "sha256": "7c3a7923e34e75f5f8bc4ac8aea79464c80107883b55e611a854ef8d38102cf4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/catalog-stale-reconciliation-contract.md",
+      "sha256": "c36e1b71ac2557130fcd3b24e38649e241a60648b86d28aa05bcb923295def9d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/command-privacy-contract.md",
+      "sha256": "0c8acc7e5065141b278cc7d773222b6102ff5e93190430680aa8140e087377f2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/event-operations/creation-deletion-review-2026-09-16.md",
       "sha256": "5b214c9cfa621551f6d5a926cbf0a2fc9401c4b4ddbfeb23a89e391123aa9a36",
       "authority": "inferred",
@@ -2398,7 +2514,14 @@
     },
     {
       "path": "docs/event-operations/delivery-plan.md",
-      "sha256": "2635ab65c6930836abbe0ae40304c3a29e8fd3cf80c0ea0076c4bb384991890c",
+      "sha256": "86c8c2f0e542bb19c54cf9c523ee8732bbda4fc3c0c767110468c02d93970f3d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/fanhub-onboarding-contract.md",
+      "sha256": "8e566b2fc27d739625f95fff0e1488eac827a7cac8423f86fbe195664dd26c9e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2412,21 +2535,49 @@
     },
     {
       "path": "docs/event-operations/gap-matrix.md",
-      "sha256": "31580bbfa896c73fca5c13660741ba0cd14c2b8f8f7e860d9e77aba972f4ba46",
+      "sha256": "21fe9e25e1d618d0a8d8b1150b9906bb279a351b6fa9c9753f5e3eecf8182966",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/github-delivery-2026-09-14.md",
+      "sha256": "a2884702036d7e934d25f78ac32959049515aa586f2fe7a1f33404605661298d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/event-operations/glossary.md",
-      "sha256": "3073441cd8403dd3b5826e63906036e7df0968c5134445d77cbecf45ffea56df",
+      "sha256": "399491d3f036752b664e0e7d67a6b4d223ccec31c5028be7b2f4379afda45943",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/http-verification-contract.md",
+      "sha256": "69f1d622ea8fee742711799fe040cdca02b434f724a76d9b06ca6561fcb3e79a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/event-operations/implementation-report-2026-09-14.md",
-      "sha256": "ea0efad2087a9ddf741578beffc3b64894cbdf047ad4f2ffdb175081637180d5",
+      "sha256": "3fcf8b32ac7c7753a2e35b083799b58cc1e82045d1084054fd13c0f65b0306ea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/integration-2026-09-28.md",
+      "sha256": "e46fbb109363b5927dcb07d4018ca326b6f56836e31127591d39d32b6e00a734",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/merch-expiry-test-contract.md",
+      "sha256": "6b8f43bdcdd934bce9dbb948b311728974c5145ae3348167185aa06af0a3cece",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2440,14 +2591,315 @@
     },
     {
       "path": "docs/event-operations/pr-01-formal-foundation.md",
-      "sha256": "4f8a249b02801b18603f9c26e95bf10a4c0771efb2faa04c131dd22b09f8ec1c",
+      "sha256": "6edc37a9be34b78f28a9a703531bc1d1f7deefd00b762fc3d29f0765d71dc589",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-02-api-foundation.md",
+      "sha256": "d7cfbc833e421dc0c0d5c31a778ca661e60a58874bec39824a914e6c0713ddaa",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-03-logistics-transaction-hardening.md",
+      "sha256": "94318f02179d0deca8cde79bea9ae1744348fedf0823ccfc6607f9bc8915efd5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-04-task-commit-invariants.md",
+      "sha256": "fe840b63f18bc88b2e2c846b8843e0a90024b6356dc933b8b279b5d6219ce05b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-05-replay-authorization.md",
+      "sha256": "9a9e609c92b5fd0b0340aa68983e7e49c8cdf1171d4ee6aae2bbd7bda865c232",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-06-snapshot-privacy.md",
+      "sha256": "2a766734a351208cf8a5d04733d019a214cb763a3d96f43f60eba166c2aec1d3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-07-http-verification.md",
+      "sha256": "221e288ad92e0953692799f935f99471b82c4f8795cc783d17f50e792093c252",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-08-command-privacy.md",
+      "sha256": "3e1369b2932b6c801c380082bfceacea4f61058a69d2cdd172b41710ada39217",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-09-session-fence.md",
+      "sha256": "37638e5c75d5e84e4659530abf134db33ba90c1fbfe7ac8f396806cad18ec679",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-10-schema-rehearsal.md",
+      "sha256": "fe0f18c4a331616146093e335e7fe2649d00b19bb971ab2979b0b5d7b40414ad",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-11-schema-dependencies.md",
+      "sha256": "68103c54602a7a72d8decbf9076063fdc08171512eaccab4a6b90b0178b574f4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-12-merch-expiry-contract.md",
+      "sha256": "3ca63c5c2fa501570b5b1f799451bec4b9de69a5fcf61e1d7583f3abec8fb4e8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-13-task-read-projection.md",
+      "sha256": "0197d29bc792586a2a10c9714ed827ac2e62e7b789e3f94481e0a18677425f24",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-14-task-read-api.md",
+      "sha256": "e8a959450349f4fe9ded3924d0245eac9be412d78e346f3340765bd09a55af90",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-15-web-onboarding-integration.md",
+      "sha256": "1daf40668c1b56cf8ffe66de2164f197b3099d44578af227139e4924655dfe69",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-16-artist-follow-continuity.md",
+      "sha256": "38defe82e74277a70b5f58da4f406548e1662aad190750d0c9d3b1c474feaac5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-17-fanhub-onboarding.md",
+      "sha256": "10198b9b0b788796070eb0cb7f1ef1af6a7285c9a35629e56f1aa872546fd696",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-18-pluscal-integrity.md",
+      "sha256": "08cf85b44509d916f6ce4fe4453134344dbaa7f0b550934ef54ee07bc60a872f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-19-task-raci-view.md",
+      "sha256": "0cda54aa0ce6b3f943dfa7f6a63b882791916103ec0624a84f8ea38f3ac41b4f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-20-task-browser-startup.md",
+      "sha256": "fe89a4d4ff51a127ad8a361fe484fe7cc029fe984d2375b582dccaf47d33f919",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-21-task-aggregate-revision.md",
+      "sha256": "d4018993a93d7c7396562bef9b60e77f49724e61bed73d00f4cb6f7434edba45",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-22-task-revisioned-read.md",
+      "sha256": "f300147c16295c1a06c1be962e46d6ee5b309e8a6d0a6e59858647647975c84f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-23-raci-reassignment-command.md",
+      "sha256": "7a8ec40a807af8f5a548641820b2505551606c9e9d08961c618b4277918b3db6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-24-raci-reassignment-api.md",
+      "sha256": "3637bd333549e438e640f083282320bc1787560c2b2306fb1487aa0cf4170ec5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-25-raci-editor-context.md",
+      "sha256": "710e31ca34b1ab7197fa03612d779d5fdf5277fbadb09e48247b9fd5dd09e414",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-26-raci-web-editor.md",
+      "sha256": "47a67364be4bfba839938b3ce24af03ea7c3ce68bceee709b0b3f14171e4b7bd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-27-raci-real-browser.md",
+      "sha256": "4a8cac29fafe6a91dfbdd980e8d03fb1e8f93129d2acb2aa73ed7a322d7798ba",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-28-ci-test-contracts.md",
+      "sha256": "d615466d438e836a9f1e206b0183f0e67f2d0be0b8f78e0f9c534959205273f9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-29-lazy-validation-bundle.md",
+      "sha256": "320cc6760bdb658aa6d2d239e6b537934806a9cf7e55703f62b70d74e16263da",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-30-raci-review-accessibility.md",
+      "sha256": "e52cfb782500a9a5c5be409f619022c951cb40651f9d16faa21337e6e53ef2d1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-31-task-completion-command.md",
+      "sha256": "7a4363134f1379bcfd936e46d8595f22c94b4f69afb1f2df49523b1e39f2c868",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-32-task-completion-api.md",
+      "sha256": "86f124a929425594b1318775249dad17501f6cb788b43ba9aaff5b5f04c08f5c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-33-task-completion-client.md",
+      "sha256": "aaae6f88383a3f654c7c90d2ce77621c7582728c9787dcd7c4fa141b594ec743",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-34-raci-review-paint.md",
+      "sha256": "d2337528124258937d26fe41a5277dfdd246c64a03a044db623bd82fb8a99f70",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-35-event-catalog-review.md",
+      "sha256": "a837c371eaa193e577b2a64ba1d428ec068123edca2290ee695ebc20847ce73f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/pr-36-catalog-stale-reconciliation.md",
+      "sha256": "caf8be936f769e8ca7fdfac7ab9b881a0f56dbbcca3ca0cc84cc644988b0535b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/raci-api-contract.md",
+      "sha256": "7e88219e03e9f334f6665d6f9f7b3f732e3cdc80e883b078356ca6c8867171ed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/raci-browser-integration-contract.md",
+      "sha256": "50060a593357e27bd8294bd4f28eaf4a8c6a2bfd4385ea9c16eac0fd84573567",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/raci-editor-context-contract.md",
+      "sha256": "2eab7e99c8b64cca67a1b5c71091c04706f0ed088f1c6877806801128e3931fb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/raci-reassignment-contract.md",
+      "sha256": "e61f0a8e11721ca36acd0bc42201044fec1226d1d69bec7b8652eda132afaf52",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/raci-review-paint-contract.md",
+      "sha256": "cfdf2c9e275b4ea7a3dcda3b64687d1a6795584711513c18dd29363507ad02b7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/raci-validity-followup-2026-09-15.md",
+      "sha256": "03738c89cd56de49c8c2bb13854ad38df5b7c0bf6c100b4705bd8408c738d4ca",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/raci-web-editor-contract.md",
+      "sha256": "7e7b73b6dce1a13532b98e21f7fd820d3df7d1fb5047d7247812867e322efcd4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/receipt-replay-contract.md",
+      "sha256": "80b357596a47557e5e35ba55231178c0d40c63182379772d214f09df954b4192",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/event-operations/repository-audit-2026-09-14.md",
-      "sha256": "1692ab83843821f070f39533ae6409e5127dd0e10ca9dff23aabff56c4d4368f",
+      "sha256": "0e2e86cf28d1a414503fa9240c0ddbcb730e9365f96a7ddc5217db19e3fe1113",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2467,6 +2919,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/event-operations/session-fence-contract.md",
+      "sha256": "a747598cdad648d7a52d7f99de2b01a6e8981b09c63368e8d28bbc1a1359a074",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/snapshot-privacy-contract.md",
+      "sha256": "2f2d654b9af9ab576b19569157ae1b48f47b1d0c1a3a38f1bfd6ed32cf24227d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/event-operations/state-machines.md",
       "sha256": "a2826f758bb9aaf31dc3a5c852cdec476a3dae29e6bb8da5666528406e82083b",
       "authority": "inferred",
@@ -2474,15 +2940,92 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/event-operations/task-browser-isolation-contract.md",
+      "sha256": "7a4bc216d06825c741e4d175f552a89893073188b08e04b88a6c46bb9431cdee",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/task-commit-contract.md",
+      "sha256": "f5f6bb794d7e7089e092300d578d401b5db740a82ea30758c63c62099956ffb9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/task-completion-api-contract.md",
+      "sha256": "32865ff6222c1662082ea65279a71bc4ae16685f18872ba6ace1dba1a076567d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/task-completion-client-contract.md",
+      "sha256": "01119d44677792d6f331ab4fa436328294fd56e054327d68fba1da4a2e66dbb9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/task-completion-contract.md",
+      "sha256": "c13f5b07f28f8c53490ca904cf7dbeefaea5d294004ab011b003dbaefaa813a2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/task-read-api-contract.md",
+      "sha256": "b64a33101ad06413736c7d3efdd645f33ad65908efeea371d795df51882c571a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/task-read-contract.md",
+      "sha256": "f06e8b54afbb0e7324d2e42af9c1e46f07861bb3a53b437c2953fbf8408e15c3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/task-revision-contract.md",
+      "sha256": "48db2cfff8d5a5285c131231935cc296dca5a678cd3a4d2c98957d6da2e80345",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/task-revisioned-read-contract.md",
+      "sha256": "5a84bbbea331acd8fd69d0cb2d97c16d130822b6263bdb1b426e26f65857b8da",
+      "authority": "inferred",
+      "authorityBasis": "Status: specified and model-checked before implementation; scoped SQL/HTTP/web verification",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/task-view-contract.md",
+      "sha256": "1e9eeb895055df2f0476f6cd16b68600a193fcafbec3dc100e9aa47423d6c732",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/event-operations/threat-model.md",
-      "sha256": "7104621b8c639a9a87b8959ea3a461eac4789c62147b3b36cebf89b7871690ac",
+      "sha256": "1ecdfe7a389297910b4d207c1bf4e8d43b8b1b1cccf121409178c4a568130758",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/event-operations/traceability-matrix.md",
-      "sha256": "d748dabef69b166be95a72c8d9e11944d6e29d28d6ee8af1460fb0588c5b19ce",
+      "sha256": "ec304f21cfdb45c96d75b139113f52cb2be6cb9304cf0fdf287821eadafc8363",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/event-operations/web-onboarding-integration-contract.md",
+      "sha256": "538f9fb8a016cf9c84f43494aaa447e9ff6c9c293f2b861fe0e0a3fbaa507180",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -3895,6 +4438,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/ArtistFollowConsent.cfg",
+      "sha256": "af179af5ae5dee9762878d1c6655ade79409d75ae230fcb603b57c1a409e8dc3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ArtistFollowConsent.tla",
+      "sha256": "bfe1972cf000459bc3e05925e9b83250d1dd148c7664de74672017bd88bcfb5d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ArtistFollowConsentClick.cfg",
+      "sha256": "a0151a22e9eb972bcd748b23e674cbddff16a0e5b6d989a4c4d14124d5735b68",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ArtistFollowConsentStale.cfg",
+      "sha256": "ac208807eb6297e19e327dbe92ed74513528c3bed7dd259ca771775ee458a435",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ArtistFollowConsentUnknown.cfg",
+      "sha256": "6913da0e0214e9ffad45fb5e5f44e31c7ebdb910ca03ee6610eb23651899a917",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/CalendarConnection.cfg",
       "sha256": "115acfa81df940e88dabbb898d617da197e6e9b86e6670b0e16f79990f567a85",
       "authority": "inferred",
@@ -3988,6 +4566,62 @@
     {
       "path": "formal/event-operations/CheckoutReadinessUnavailable.cfg",
       "sha256": "3f6d20c9b4fe9151a1666081cfafa3fb684aaec626e3f9dbb1e97d66f28313cc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CommandBoundary.cfg",
+      "sha256": "125328caf4f0c9a4a6b631545de689217eef5e75fc2f7935e509e83a7325e53a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CommandBoundary.tla",
+      "sha256": "c8466db2ac47c09b38d7ab31c2c6318a5f698417408757d8283f282af7794c83",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/CommandBoundaryEarly.cfg",
+      "sha256": "3e2ff8bd499fd9aee905ac02dc498279e79fba4c1e64f9a0ca90e308f4df92ac",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CommandBoundaryUnbound.cfg",
+      "sha256": "d57a55831c957c847ae09017e00ed164d4c703fe2d522930a6875b3150c8d157",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CommandPrivacy.cfg",
+      "sha256": "6a61e40a0120b4e66105c0835d917ccc245953bb600a688874279fe25c17609a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CommandPrivacy.tla",
+      "sha256": "44974d2e9b290f35d9c94afa820eeea4d635b3f9f426bc10354b146beb45f2e2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/CommandPrivacyExistenceLeak.cfg",
+      "sha256": "daf108145374634c7bb6ac9ca80375cb0625b1a3c103cd5440f28e1c2d90d4a7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CommandPrivacyReceiptLeak.cfg",
+      "sha256": "79c1e97ffa265af9def2df14f0c6292f64721e8c735b73a3646ee001052141a2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -4449,10 +5083,185 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "103b5cf8c37e7ed406fbf62e34380a17f7ba8718d3dd609172add7d54bddf6cf",
+      "sha256": "6523c1e8624f33b608d2208a67f49fb1f112e377f75a7d49172c45884f0b8a8f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/event-operations/RaciEditorContext.cfg",
+      "sha256": "88d86e1f1a56ae7514ee46cd41a42f14f9e7299e58e22cd21c8f5c8f050bb80e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciEditorContext.tla",
+      "sha256": "d26893c36a1e4cd48238316d1e496d80b297e17a65abb51959961b1b7c1ba8ea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/RaciEditorContextCandidate.cfg",
+      "sha256": "f84dc0887062b68875d35ab723334b6d715cd68b28bc0b16adce22626660901c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciEditorContextEarly.cfg",
+      "sha256": "f182b22b6b3009ccf8d79fecb59ec3427a1fe28a3090a8e99c00468bac168044",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciEditorContextMixed.cfg",
+      "sha256": "0c0c61dd457ce4fe814527cd00f765e3cfe4785edf765280ceb6ff2f745b312c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciReassignment.cfg",
+      "sha256": "cf4f419db8e5a00dfdda8fddda5c3680831e319abe9f01cf0fbaddc6e3a3cc25",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciReassignment.tla",
+      "sha256": "715bf42c68579a34af4dcd6b1d1d326c6d9723094fdb96418b06c00a418478c7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/RaciReassignmentAudit.cfg",
+      "sha256": "cd71cca65e008cd62f8341a6803e24ac291b141cd24441e80ebd9c63044f794f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciReassignmentEarly.cfg",
+      "sha256": "74439b5c978237f68ba579eef9e0f4fa76d856a12c773d0064c55c624e909cca",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciReassignmentReplay.cfg",
+      "sha256": "fefd02612d6d350e34b708ceb9c7090d18cae7c7c887d5798918e2a3d419718a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciReassignmentScope.cfg",
+      "sha256": "731aa2d6191c025e921185c75d701540a280af2a7ceae5c8fdd2e9a5132373d7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciReassignmentSplit.cfg",
+      "sha256": "9e14c603ddde1dd9ad452f490befe3c41a163db7e14e26ea3f4f545b5eb08111",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciReassignmentVersion.cfg",
+      "sha256": "c40df5c53511aa03044b6fe574205d82eda54cbfbd99f33507619871ac4d09d9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciWebEditor.cfg",
+      "sha256": "7112d9756b77d113bd56e5ef51c3ac43ec4c1a5cd39955d1bb7bd10f9e2597bb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciWebEditor.tla",
+      "sha256": "365088c35477b00fef336f162043bc8860af1d9cc15519d2c365294ef62ceefd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/RaciWebEditorConsent.cfg",
+      "sha256": "30cf48e4519ff2cf6527a08cf612898da159e1074b9a1aadbd53e2222eca18ff",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciWebEditorContext.cfg",
+      "sha256": "b89feec1eecd3f9616ad71ff87cd5353ce2db18db6cd0dbc7a63d49268ba63ac",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciWebEditorFlight.cfg",
+      "sha256": "b1b7b26e9d755e2d30d4c8ed65d5d96a96306dada30c6823e7232c21819f1361",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciWebEditorReceipt.cfg",
+      "sha256": "a48e96bb71ecd32dcfee544f83921125b9bf26d512bef8e8727ca48d3a76bfa1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RaciWebEditorRetry.cfg",
+      "sha256": "4931120eb43ea3951f6210b4569bdee4e299eaae28bf1e284d02c7eb9d067d69",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReceiptReplay.cfg",
+      "sha256": "94e216fd2e6f46edcefcebf87ef3057f100b309e346bf2ca5e5cf9f33b2bc9d1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReceiptReplay.tla",
+      "sha256": "e68741aca6095dafcd46751b96f6deb57832d316b84067ccb6bab2b73acbcd4b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ReceiptReplayBypass.cfg",
+      "sha256": "9ea7285d83d2c2930c446401aedb3a63bbe52f6eaf80b1c8d32b2b9b0ab6af88",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReceiptReplayStaleClock.cfg",
+      "sha256": "ee8b6b90980a49f471775e292df0a5b702cb0794b72447464302771136c54f21",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReceiptReplayStaleSnapshot.cfg",
+      "sha256": "7e7b315796c0acacebe7b02c593ac0aeab867699a5282da6aafa7245ed67257a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/ReservationOverride.cfg",
@@ -4476,6 +5285,230 @@
       "kind": "formal-model"
     },
     {
+      "path": "formal/event-operations/SessionFence.cfg",
+      "sha256": "35110db7a0007b753f31e7fc8002a588eb9258f580b3f24d0ceebb15d3afe8d8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SessionFence.tla",
+      "sha256": "9056ed4224135410817c446e8c3b5d57ce8f1bcb03db40b3fdb65a68c72a1ebc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/SessionFenceCredential.cfg",
+      "sha256": "751c46bace8b910df3da7941e024ea482e1b22a579089e8145c9568087e3f76c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SessionFenceParty.cfg",
+      "sha256": "35ed05e71ad91d60c83386e73d513c3010e7ab88e33a1e15d78b10a382be14e5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SessionFencePurpose.cfg",
+      "sha256": "796d3557d206d51efbf649a13dcbeb3ad4fcb36b99ca5224ffd370ddab1a773e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SessionFenceStale.cfg",
+      "sha256": "6fd52873b6303c6c697cf8b9e7f57354ca8194c7faf10afec1b2190099df57f7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SessionFenceUnlocked.cfg",
+      "sha256": "4ae7cce8c2b73f940ccd585366efb1722e08db3be1e270a4f54ec805fc5776a9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SessionFenceWitness.cfg",
+      "sha256": "0b43491e621cd1498c2a2e99fdd1aaf7fb5562eff13638d3865a0ccab054e81e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SnapshotRead.cfg",
+      "sha256": "1567ee3846333b270c74973d79c93ed4b03c6aa0ca45be54484497d2411936a1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SnapshotRead.tla",
+      "sha256": "117fcf2082d79fb03746b55b6dfa306ee145e9ad80144fb508fc91f2937eae96",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/SnapshotReadEarlyAuth.cfg",
+      "sha256": "b275bab8e1a98c9fa76f98ba9db3300485629365113b90b2a0136507032e575d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SnapshotReadMixedClock.cfg",
+      "sha256": "af88246107d10ebe9b5b3821525d27dc448f5c676cce7183eb6235e9b7a8ef60",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SnapshotReadRawLog.cfg",
+      "sha256": "d8f9bf17e2630637f66a3bc94041f0bae686320853daa54585ed9744567c1675",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCommit.cfg",
+      "sha256": "afddcd28e28c8bd54d4b5bb575959dafb0b28ad6788bf81bea6853b0145230eb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCommit.tla",
+      "sha256": "1a2d9df9ef6abcecc0be3df497413da3a813371fb3121f63062d1c209355f0fe",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaskCommitEarlyValidation.cfg",
+      "sha256": "51b1c6f2955010a6379f34579570e8d6726be78513845dab9413a53d91655740",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCommitWriteSkew.cfg",
+      "sha256": "c0b5b4a43093800fd8d68f25f01e926dc2165ec05ecfb2fc622253814ef6623f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletion.cfg",
+      "sha256": "42dae8c5e533ca1f24f903a4665392e59d3df7d2ad0a73f04238e58eeb44da3a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletion.tla",
+      "sha256": "3a140671bce6d63eac0dab67363372eef20376855019552d11886a68541c30c9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionAudit.cfg",
+      "sha256": "6f32a29066e145e4876470af2430e30534b10f44017ca64c22ac59d58ee2f016",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionAuthority.cfg",
+      "sha256": "88aef2bd288aa2b60425d8d6510dd05c2e040e606658f68c8332b81c8e61b12a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionClient.cfg",
+      "sha256": "850ad29f3dd5c12a5eb3fb69e2dcd201e1033ea4e873afe1b1b8caf8edaacd7c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionClient.tla",
+      "sha256": "adae254c537548dac0f13c77e1a7c70e8a57afd20e87a3eb6edb3c42deafbac2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionClientBinding.cfg",
+      "sha256": "ce5b34657798c338fde570f3608305ce9d88247b042783932ed4310b0e2c05f8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionClientCapture.cfg",
+      "sha256": "1f6ccd086855888f4db1e7583336850eca23a8af7d9a902baf2089d514078c5f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionClientRetry.cfg",
+      "sha256": "12ce5c3e16fc4f671517da833f54e9e1e166be01c0fea004781e793a7cc984f5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionClientShape.cfg",
+      "sha256": "2c472f4d9d770e7d2dd967783c57d107c18e05bd0fa416fb85812079cbf41e1b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionDependencies.cfg",
+      "sha256": "680e26e50dec6d0e5a83a405ea5b0d80c5e11b5b434f82924477ea629fd567ed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionLifecycle.cfg",
+      "sha256": "8a5c24ae8206d1f38e4b273e09172887808a5d4a1092cd34c0c29b910e1562cd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionRaci.cfg",
+      "sha256": "bde1ef5579f733fb9c7b338e225fc704813a950f24300505f082fc8c144c4023",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionReplay.cfg",
+      "sha256": "0b2432576a93a11017520e6a283ed4bba5c4e7ba675cd451128ef6bfc8b8fca3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskCompletionVersion.cfg",
+      "sha256": "4c412e45e4759156f82f57de459b411ff8a63f1cdd81704fcf77aa9d964872a7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/TaskRaci.cfg",
       "sha256": "d3d9af4262fdf857a50432890594804e8bbbf24317116599554de19657be8ee5",
       "authority": "inferred",
@@ -4488,6 +5521,181 @@
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaskRead.cfg",
+      "sha256": "63eb22c06d6bfc768c5412d859e2f476239fd0996f89107f28e8c8310848c616",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskRead.tla",
+      "sha256": "6f35c2d986a1bc8680986c21531aef3acc9b4d1740dd589f471940cc4f6babc6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaskReadEarly.cfg",
+      "sha256": "8bcceeb639d87cc0785d1e8f4f133f2c290060992ee3227ee3bd2947bf1eab63",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskReadEvent.cfg",
+      "sha256": "376076d7020d9873e2a12794bfe5ac9dc4e207b50f7c048fc118ae261ed2a5f4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskReadMixed.cfg",
+      "sha256": "01a84e47e0ead557ccfc5b5886f9cdb3a3624573bafa459e09a4de01cb4c7a63",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskReadScope.cfg",
+      "sha256": "6beee61cf28335c10b9a28d5b12c14bda501bb0d96359e0a7921197021cc6809",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskReadStructure.als",
+      "sha256": "fd5a3a2658b4ecdd9044575abf191e3be09950b9f1867760acab66d566796216",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaskRevision.cfg",
+      "sha256": "c9428cbdd82cee3702d6cda217bcb568f2164ee1cd70c4b632cf7b6f844a35de",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskRevision.tla",
+      "sha256": "e560cdc1e21b903eeac1acdc39b115329fb0162735e06d9d6a74261e281224ed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaskRevisionEarly.cfg",
+      "sha256": "9c09e34aec509860b38be3a268785e3e9f96396f3a1fd9793b4163db767183de",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskRevisionRaci.cfg",
+      "sha256": "32245cdbae5927799c67728c6cd2d48838d1aeeb5e83e0feb9f33fd5ffdb252d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskRevisionRead.cfg",
+      "sha256": "c64595f91790bac44f144a753483408c85fe0c9b5293cd6d525a534c48272845",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskRevisionRead.tla",
+      "sha256": "ee3eb05e4b2d53c838eda2f0e6dba4db066ca0ff96c29456f58b3bc9f24efab9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaskRevisionReadEarly.cfg",
+      "sha256": "5bfb1553aa145f243bc7848df3e7829f5422179598947761cf55a07acc2538ef",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskRevisionReadMixed.cfg",
+      "sha256": "8e547500a1b8d3b530959f78750a0c7c47bf25a1a6044b70e944e8349cb705ea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskView.cfg",
+      "sha256": "d87a42d1351f4ea32e8c450540f81efa810538a40f3173b19da2ae0e25d19614",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskView.tla",
+      "sha256": "d641496834d630d801c21a268e73d8fea1881f72ec66b8087558db0597ba948d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaskViewInvalid.cfg",
+      "sha256": "37ba55b00f0bdd07afeb1ddfc36aef859d74e2b5d57acc23fe67f286b69a0c76",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskViewLate.cfg",
+      "sha256": "bff484d1cb06b9bd9deec650630d774f6800d68d1fba3a861df29303e3e8c357",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaskViewRetained.cfg",
+      "sha256": "cb4b8ef88ae5f13160518540f4a05431c9e402ff6d98a73a910821c475ae8f31",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WebOnboardingRecovery.cfg",
+      "sha256": "ed92f2d992280f08b21a18cf2c26a63f32cde2e125e9b36a1843695a89d4f8ca",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WebOnboardingRecovery.tla",
+      "sha256": "34c0176d16039ce5f142b484522f61a305ea36c48526a512d587f3112cfebffd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/WebOnboardingRecoveryOverlap.cfg",
+      "sha256": "8b0f60090091c9ef17e88c5d4196d09b9c2e5cfd43aff6e0ca9eaf54be0d30bf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WebOnboardingRecoveryReceipt.cfg",
+      "sha256": "4e1aadb29d88af91bfeecd00e6db0ab75373bb0c9bd11a1b85c4b87c869d94c7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WebOnboardingRecoveryStale.cfg",
+      "sha256": "242146f81cb14630d5bd9aad6e9ddd630a67248c81843503e8eca34577769108",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
     },
     {
       "path": "formal/social/ConsentTraces.cfg",
@@ -5044,7 +6252,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "ca766bcdc383be9dba03c59315292a8c77737f61f2336e71a5835c691540eae6",
+      "sha256": "ec35e2b8b6df4605b06791fed4f6def64efd6913cf3a29b72d601d513658b2bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -7413,6 +8621,50 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/ArtistFollowConsent.cfg",
+      "declarations": [
+        "CONSTANTS RequireClick = TRUE RequireKnown = TRUE CheckContext = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoUnconfirmedMutation CurrentTargetReceipt",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ArtistFollowConsentClick.cfg",
+      "declarations": [
+        "CONSTANTS RequireClick = FALSE RequireKnown = TRUE CheckContext = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoUnconfirmedMutation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ArtistFollowConsentStale.cfg",
+      "declarations": [
+        "CONSTANTS RequireClick = TRUE RequireKnown = TRUE CheckContext = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentTargetReceipt",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ArtistFollowConsentUnknown.cfg",
+      "declarations": [
+        "CONSTANTS RequireClick = TRUE RequireKnown = FALSE CheckContext = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoUnconfirmedMutation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/CalendarConnection.cfg",
       "declarations": [
         "SPECIFICATION Spec",
@@ -7549,6 +8801,72 @@
         "SPECIFICATION Spec",
         "INVARIANTS ReadyBeforeReservation CurrentReservation SingleCurrentFlight",
         "PROPERTY Settles",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CommandBoundary.cfg",
+      "declarations": [
+        "CONSTANTS ValidateBeforeCommit = TRUE BindReceipt = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ValidatedCommit DurableSuccess",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CommandBoundaryEarly.cfg",
+      "declarations": [
+        "CONSTANTS ValidateBeforeCommit = FALSE BindReceipt = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ValidatedCommit DurableSuccess",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CommandBoundaryUnbound.cfg",
+      "declarations": [
+        "CONSTANTS ValidateBeforeCommit = TRUE BindReceipt = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ValidatedCommit DurableSuccess",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CommandPrivacy.cfg",
+      "declarations": [
+        "CONSTANTS OpaqueDenial = TRUE VisibilityFirst = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK OpaqueTarget NoUnauthorizedEffect ReadOnlyDenial",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CommandPrivacyExistenceLeak.cfg",
+      "declarations": [
+        "CONSTANTS OpaqueDenial = FALSE VisibilityFirst = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK OpaqueTarget NoUnauthorizedEffect ReadOnlyDenial",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CommandPrivacyReceiptLeak.cfg",
+      "declarations": [
+        "CONSTANTS OpaqueDenial = TRUE VisibilityFirst = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK OpaqueTarget NoUnauthorizedEffect ReadOnlyDenial",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -8260,6 +9578,244 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/RaciEditorContext.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE FilterCandidates = TRUE FenceMetadata = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK PrivateOptions EligibleOptions CoherentContext",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciEditorContextCandidate.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE FilterCandidates = FALSE FenceMetadata = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK PrivateOptions EligibleOptions CoherentContext",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciEditorContextEarly.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = FALSE FilterCandidates = TRUE FenceMetadata = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK PrivateOptions EligibleOptions CoherentContext",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciEditorContextMixed.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE FilterCandidates = TRUE FenceMetadata = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK PrivateOptions EligibleOptions CoherentContext",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciReassignment.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthorization = TRUE CheckRevision = TRUE Deduplicate = TRUE",
+        "          ScopeKeys = TRUE AtomicSwap = TRUE RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority ExactRetry TaskKeyIsolation NoStaleReassignment NoOrphanResponsibilities AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciReassignmentAudit.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthorization = TRUE CheckRevision = TRUE Deduplicate = TRUE",
+        "          ScopeKeys = TRUE AtomicSwap = TRUE RecordAudit = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciReassignmentEarly.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthorization = FALSE CheckRevision = TRUE Deduplicate = TRUE",
+        "          ScopeKeys = TRUE AtomicSwap = TRUE RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciReassignmentReplay.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthorization = TRUE CheckRevision = TRUE Deduplicate = FALSE",
+        "          ScopeKeys = TRUE AtomicSwap = TRUE RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ExactRetry",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciReassignmentScope.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthorization = TRUE CheckRevision = TRUE Deduplicate = TRUE",
+        "          ScopeKeys = FALSE AtomicSwap = TRUE RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK TaskKeyIsolation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciReassignmentSplit.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthorization = TRUE CheckRevision = TRUE Deduplicate = TRUE",
+        "          ScopeKeys = TRUE AtomicSwap = FALSE RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoOrphanResponsibilities",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciReassignmentVersion.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthorization = TRUE CheckRevision = FALSE Deduplicate = TRUE",
+        "          ScopeKeys = TRUE AtomicSwap = TRUE RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoStaleReassignment",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciWebEditor.cfg",
+      "declarations": [
+        "CONSTANTS RequireConfirm=TRUE CheckContext=TRUE SingleFlight=TRUE ExactRetry=TRUE ValidateReceipt=TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ExplicitConfirmation CurrentEditor OneFlight SameRetry ValidatedSuccess",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciWebEditorConsent.cfg",
+      "declarations": [
+        "CONSTANTS RequireConfirm=FALSE CheckContext=TRUE SingleFlight=TRUE ExactRetry=TRUE ValidateReceipt=TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ExplicitConfirmation CurrentEditor OneFlight SameRetry ValidatedSuccess",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciWebEditorContext.cfg",
+      "declarations": [
+        "CONSTANTS RequireConfirm=TRUE CheckContext=FALSE SingleFlight=TRUE ExactRetry=TRUE ValidateReceipt=TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ExplicitConfirmation CurrentEditor OneFlight SameRetry ValidatedSuccess",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciWebEditorFlight.cfg",
+      "declarations": [
+        "CONSTANTS RequireConfirm=TRUE CheckContext=TRUE SingleFlight=FALSE ExactRetry=TRUE ValidateReceipt=TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ExplicitConfirmation CurrentEditor OneFlight SameRetry ValidatedSuccess",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciWebEditorReceipt.cfg",
+      "declarations": [
+        "CONSTANTS RequireConfirm=TRUE CheckContext=TRUE SingleFlight=TRUE ExactRetry=TRUE ValidateReceipt=FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ExplicitConfirmation CurrentEditor OneFlight SameRetry ValidatedSuccess",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RaciWebEditorRetry.cfg",
+      "declarations": [
+        "CONSTANTS RequireConfirm=TRUE CheckContext=TRUE SingleFlight=TRUE ExactRetry=FALSE ValidateReceipt=TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ExplicitConfirmation CurrentEditor OneFlight SameRetry ValidatedSuccess",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReceiptReplay.cfg",
+      "declarations": [
+        "CONSTANTS Reauthorize = TRUE FreshClock = TRUE Fence = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoUnauthorizedDisclosure ReceiptBindingPreserved",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReceiptReplayBypass.cfg",
+      "declarations": [
+        "CONSTANTS Reauthorize = FALSE FreshClock = TRUE Fence = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoUnauthorizedDisclosure ReceiptBindingPreserved",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReceiptReplayStaleClock.cfg",
+      "declarations": [
+        "CONSTANTS Reauthorize = TRUE FreshClock = FALSE Fence = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoUnauthorizedDisclosure ReceiptBindingPreserved",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReceiptReplayStaleSnapshot.cfg",
+      "declarations": [
+        "CONSTANTS Reauthorize = TRUE FreshClock = TRUE Fence = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoUnauthorizedDisclosure ReceiptBindingPreserved",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/ReservationOverride.cfg",
       "declarations": [
         "CONSTANTS",
@@ -8313,6 +9869,354 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/SessionFence.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = TRUE Fence = TRUE BindParty = TRUE BindCredential = TRUE CheckPurpose = TRUE RequireWitness = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentBoundSession",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionFenceCredential.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = TRUE Fence = TRUE BindParty = TRUE BindCredential = FALSE CheckPurpose = TRUE RequireWitness = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentBoundSession",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionFenceParty.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = TRUE Fence = TRUE BindParty = FALSE BindCredential = TRUE CheckPurpose = TRUE RequireWitness = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentBoundSession",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionFencePurpose.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = TRUE Fence = TRUE BindParty = TRUE BindCredential = TRUE CheckPurpose = FALSE RequireWitness = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentBoundSession",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionFenceStale.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = FALSE Fence = TRUE BindParty = TRUE BindCredential = TRUE CheckPurpose = TRUE RequireWitness = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentBoundSession",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionFenceUnlocked.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = TRUE Fence = FALSE BindParty = TRUE BindCredential = TRUE CheckPurpose = TRUE RequireWitness = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentBoundSession",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionFenceWitness.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = TRUE Fence = TRUE BindParty = TRUE BindCredential = TRUE CheckPurpose = TRUE RequireWitness = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentBoundSession",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SnapshotRead.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = TRUE SharedClock = TRUE RedactLogs = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS NoUnauthorizedSnapshot CoherentProjection LogFieldsAllowlisted",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SnapshotReadEarlyAuth.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = FALSE SharedClock = TRUE RedactLogs = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS NoUnauthorizedSnapshot",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SnapshotReadMixedClock.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = TRUE SharedClock = FALSE RedactLogs = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS CoherentProjection",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SnapshotReadRawLog.cfg",
+      "declarations": [
+        "CONSTANTS Recheck = TRUE SharedClock = TRUE RedactLogs = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS LogFieldsAllowlisted",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCommit.cfg",
+      "declarations": [
+        "CONSTANTS Serialize = TRUE",
+        "          FinalValidation = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoBlockedCompletion NoOrphanResponsibilities",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCommitEarlyValidation.cfg",
+      "declarations": [
+        "CONSTANTS Serialize = TRUE",
+        "          FinalValidation = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoBlockedCompletion NoOrphanResponsibilities",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCommitWriteSkew.cfg",
+      "declarations": [
+        "CONSTANTS Serialize = FALSE",
+        "          FinalValidation = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoOrphanResponsibilities",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletion.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE",
+        "          CheckRevision = TRUE",
+        "          CheckDependencies = TRUE",
+        "          CheckRaci = TRUE",
+        "          CheckLifecycle = TRUE",
+        "          Deduplicate = TRUE",
+        "          RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority NoStaleCompletion NoBlockedCompletion CurrentAccountability ValidLifecycle ExactRetry AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionAudit.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE",
+        "          CheckRevision = TRUE",
+        "          CheckDependencies = TRUE",
+        "          CheckRaci = TRUE",
+        "          CheckLifecycle = TRUE",
+        "          Deduplicate = TRUE",
+        "          RecordAudit = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority NoStaleCompletion NoBlockedCompletion CurrentAccountability ValidLifecycle ExactRetry AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionAuthority.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = FALSE",
+        "          CheckRevision = TRUE",
+        "          CheckDependencies = TRUE",
+        "          CheckRaci = TRUE",
+        "          CheckLifecycle = TRUE",
+        "          Deduplicate = TRUE",
+        "          RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority NoStaleCompletion NoBlockedCompletion CurrentAccountability ValidLifecycle ExactRetry AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionClient.cfg",
+      "declarations": [
+        "CONSTANTS CaptureRequest = TRUE CheckShape = TRUE BindReceipt = TRUE NoRetry = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK OriginalRequestSent ValidatedReceipt SingleDispatch",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionClientBinding.cfg",
+      "declarations": [
+        "CONSTANTS CaptureRequest = TRUE CheckShape = TRUE BindReceipt = FALSE NoRetry = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ValidatedReceipt",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionClientCapture.cfg",
+      "declarations": [
+        "CONSTANTS CaptureRequest = FALSE CheckShape = TRUE BindReceipt = TRUE NoRetry = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK OriginalRequestSent",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionClientRetry.cfg",
+      "declarations": [
+        "CONSTANTS CaptureRequest = TRUE CheckShape = TRUE BindReceipt = TRUE NoRetry = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK SingleDispatch",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionClientShape.cfg",
+      "declarations": [
+        "CONSTANTS CaptureRequest = TRUE CheckShape = FALSE BindReceipt = TRUE NoRetry = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK ValidatedReceipt",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionDependencies.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE",
+        "          CheckRevision = TRUE",
+        "          CheckDependencies = FALSE",
+        "          CheckRaci = TRUE",
+        "          CheckLifecycle = TRUE",
+        "          Deduplicate = TRUE",
+        "          RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority NoStaleCompletion NoBlockedCompletion CurrentAccountability ValidLifecycle ExactRetry AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionLifecycle.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE",
+        "          CheckRevision = TRUE",
+        "          CheckDependencies = TRUE",
+        "          CheckRaci = TRUE",
+        "          CheckLifecycle = FALSE",
+        "          Deduplicate = TRUE",
+        "          RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority NoStaleCompletion NoBlockedCompletion CurrentAccountability ValidLifecycle ExactRetry AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionRaci.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE",
+        "          CheckRevision = TRUE",
+        "          CheckDependencies = TRUE",
+        "          CheckRaci = FALSE",
+        "          CheckLifecycle = TRUE",
+        "          Deduplicate = TRUE",
+        "          RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority NoStaleCompletion NoBlockedCompletion CurrentAccountability ValidLifecycle ExactRetry AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionReplay.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE",
+        "          CheckRevision = TRUE",
+        "          CheckDependencies = TRUE",
+        "          CheckRaci = TRUE",
+        "          CheckLifecycle = TRUE",
+        "          Deduplicate = FALSE",
+        "          RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority NoStaleCompletion NoBlockedCompletion CurrentAccountability ValidLifecycle ExactRetry AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskCompletionVersion.cfg",
+      "declarations": [
+        "CONSTANTS FreshAuthority = TRUE",
+        "          CheckRevision = FALSE",
+        "          CheckDependencies = TRUE",
+        "          CheckRaci = TRUE",
+        "          CheckLifecycle = TRUE",
+        "          Deduplicate = TRUE",
+        "          RecordAudit = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentAuthority NoStaleCompletion NoBlockedCompletion CurrentAccountability ValidLifecycle ExactRetry AuditCoupled",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/TaskRaci.cfg",
       "declarations": [
         "CONSTANTS",
@@ -8334,6 +10238,218 @@
         "  NoOrphanAssignments",
         "  CompletedDependenciesSatisfiedOrOverridden",
         "  OverridesAreAudited"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskRead.cfg",
+      "declarations": [
+        "CONSTANTS ScopeBoundary = TRUE BindEvent = TRUE FreshAuth = TRUE AtomicProjection = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS NoUnauthorizedTask CoherentTaskProjection",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskReadEarly.cfg",
+      "declarations": [
+        "CONSTANTS ScopeBoundary = TRUE BindEvent = TRUE FreshAuth = FALSE AtomicProjection = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS NoUnauthorizedTask CoherentTaskProjection",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskReadEvent.cfg",
+      "declarations": [
+        "CONSTANTS ScopeBoundary = TRUE BindEvent = FALSE FreshAuth = TRUE AtomicProjection = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS NoUnauthorizedTask CoherentTaskProjection",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskReadMixed.cfg",
+      "declarations": [
+        "CONSTANTS ScopeBoundary = TRUE BindEvent = TRUE FreshAuth = TRUE AtomicProjection = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS NoUnauthorizedTask CoherentTaskProjection",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskReadScope.cfg",
+      "declarations": [
+        "CONSTANTS ScopeBoundary = FALSE BindEvent = TRUE FreshAuth = TRUE AtomicProjection = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS NoUnauthorizedTask CoherentTaskProjection",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskRevision.cfg",
+      "declarations": [
+        "CONSTANTS TrackRaci = TRUE",
+        "          CheckInsideFence = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoStaleCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskRevisionEarly.cfg",
+      "declarations": [
+        "CONSTANTS TrackRaci = TRUE",
+        "          CheckInsideFence = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoStaleCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskRevisionRaci.cfg",
+      "declarations": [
+        "CONSTANTS TrackRaci = FALSE",
+        "          CheckInsideFence = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoStaleCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskRevisionRead.cfg",
+      "declarations": [
+        "CONSTANTS FenceMetadata = TRUE FreshAuthorization = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CoherentRevisionRead NoExpiredDisclosure",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskRevisionReadEarly.cfg",
+      "declarations": [
+        "CONSTANTS FenceMetadata = TRUE FreshAuthorization = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CoherentRevisionRead NoExpiredDisclosure",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskRevisionReadMixed.cfg",
+      "declarations": [
+        "CONSTANTS FenceMetadata = FALSE FreshAuthorization = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CoherentRevisionRead NoExpiredDisclosure",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskView.cfg",
+      "declarations": [
+        "CONSTANTS CheckContext = TRUE ClearOnChange = TRUE RequireValid = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentView ValidatedView",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskViewInvalid.cfg",
+      "declarations": [
+        "CONSTANTS CheckContext = TRUE ClearOnChange = TRUE RequireValid = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentView ValidatedView",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskViewLate.cfg",
+      "declarations": [
+        "CONSTANTS CheckContext = FALSE ClearOnChange = TRUE RequireValid = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentView ValidatedView",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaskViewRetained.cfg",
+      "declarations": [
+        "CONSTANTS CheckContext = TRUE ClearOnChange = FALSE RequireValid = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentView ValidatedView",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WebOnboardingRecovery.cfg",
+      "declarations": [
+        "CONSTANTS CheckGeneration = TRUE CheckReceipt = TRUE Coalesce = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK SingleFlight CurrentSessionOnly AuthoritativeOnly",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WebOnboardingRecoveryOverlap.cfg",
+      "declarations": [
+        "CONSTANTS CheckGeneration = TRUE CheckReceipt = TRUE Coalesce = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK SingleFlight",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WebOnboardingRecoveryReceipt.cfg",
+      "declarations": [
+        "CONSTANTS CheckGeneration = TRUE CheckReceipt = FALSE Coalesce = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK AuthoritativeOnly",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WebOnboardingRecoveryStale.cfg",
+      "declarations": [
+        "CONSTANTS CheckGeneration = FALSE CheckReceipt = TRUE Coalesce = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CurrentSessionOnly",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
