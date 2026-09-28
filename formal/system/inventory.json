@@ -1555,6 +1555,7 @@
       "tdf-hq/templates/proposals/assets/tdf_logo_header.png",
       "tdf-hq/templates/proposals/assets/wide1.jpg",
       "tdf-hq/templates/proposals/tdf_live_sessions.tex",
+      "tdf-hq/test/EventPilotCountMain.hs",
       "tdf-hq/test/PaymentArithmeticProbe.hs",
       "tdf-hq/test/Spec.hs",
       "tdf-hq/test/TDF/APITypesSpec.hs",
@@ -5000,7 +5001,7 @@
     },
     {
       "path": "tdf-hq/docs/Event_Research_Ingestion.md",
-      "sha256": "38d8090156e9b9521439e7bb460c847d1c233b6c4b8421152c295b72ad89a01a",
+      "sha256": "647dde3d322bdacd1925aa7f8df06a013b8957c3a8adf927faa69b3272a122e4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

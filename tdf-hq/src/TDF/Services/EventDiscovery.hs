@@ -30,6 +30,7 @@ module TDF.Services.EventDiscovery
   , reconcileProviderEvents
   , discoveredEventFitsPilotLimit
   , countImportedDiscoveryEvents
+  , countEventPilotIdentitiesDb
   , isDiscoveredEventKnown
   , discoveredEventPublicationReady
   , syncDiscoveredEvent
@@ -1736,9 +1737,18 @@ discoveredEventFitsPilotLimit pool pilotLimit event =
                   "SELECT approved FROM event_research_pilot_control WHERE control_key='default'"
                   [] :: SqlPersistT IO [Single Bool]
                 if approved == [Single True] then pure True else do
-                  totals <- rawSql "SELECT count(*) FROM tdf_event_pilot_keys()" [] :: SqlPersistT IO [Single Int]
-                  pure (case totals of [Single n] -> n < min 20 (max 0 pilotLimit); _ -> False)
+                  total <- countEventPilotIdentitiesDb
+                  pure (total < min 20 (max 0 pilotLimit))
               else (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
+
+-- | The status endpoint and PostgreSQL writer preflight share the same canonical
+-- identities as the database capacity guard, including linked research/imports.
+countEventPilotIdentitiesDb :: SqlPersistT IO Int
+countEventPilotIdentitiesDb = do
+  rows <- rawSql "SELECT count(*) FROM tdf_event_pilot_keys()" []
+  case rows of
+    [Single total] -> pure total
+    _ -> liftIO (fail "Event pilot capacity could not be read")
 
 countImportedDiscoveryEventsDb :: SqlPersistT IO Int
 countImportedDiscoveryEventsDb = do

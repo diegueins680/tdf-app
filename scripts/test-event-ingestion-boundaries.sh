@@ -28,6 +28,16 @@ SQL
 psql_exec -f "$records_root/tdf-hq/sql/2026-08-16_event_research_ingestion.sql" >/dev/null
 psql_exec -f "$records_root/tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql" >/dev/null
 psql_exec -f "$records_root/tdf-hq/test/sql/event_ingestion_boundaries.sql" >/dev/null
+# Exercise the production count used by both the API projection and preflight,
+# not only the SQL trigger. The runner rolls its fixture changes back.
+(
+  cd "$records_root/tdf-hq"
+  mkdir -p .stack-work/event-pilot-count
+  stack exec -- ghc -O0 -Wall -threaded -isrc -itest -outputdir .stack-work/event-pilot-count \
+    test/EventPilotCountMain.hs -o .stack-work/event-pilot-count/event-pilot-count
+  TDF_EVENT_BOUNDARY_TEST_DATABASE_URL="$TDF_EVENT_BOUNDARY_TEST_DATABASE_URL" \
+    .stack-work/event-pilot-count/event-pilot-count
+)
 # Leave one capacity slot, then race the research and automated writers.
 psql_exec -c "UPDATE event_research_candidate SET review_state='discarded' WHERE external_id='research-3'; UPDATE event_research_pilot_control SET approved=false; INSERT INTO social_event VALUES(4);" >/dev/null
 psql_exec -c "BEGIN; SELECT 1 FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE; SELECT pg_sleep(1); INSERT INTO external_event_ref(provider,external_id,event_id,source_status) VALUES('race','event',4,'draft:on_sale'); COMMIT;" >/dev/null &
