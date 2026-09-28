@@ -1,8 +1,10 @@
-# Event discovery by subscribed city
+# Ecuador event discovery
 
-The backend imports upcoming events only for cities explicitly followed by active
-TDF users. The mobile Events tab uses that scope by default and also offers an
-**Explore** mode for all public events already present in TDF.
+The backend discovers events for Ecuador cities in the canonical city registry,
+prioritizing Quito. Discovery does not require user subscriptions or change them.
+The mobile Events tab still uses followed cities for personalized display and
+offers **Explore** for other public events. Registered coverage is not proof
+that every Ecuador city or official source has an automated interface.
 
 ## Sources
 
@@ -157,17 +159,29 @@ EVENT_DISCOVERY_COUNTRY_CODE=
 initial production rollout. Ticketmaster can be disabled in the source registry
 or left enabled without a key; its failure does not prevent Buen Plan/venue
 feeds from running. `EVENT_DISCOVERY_COUNTRY_CODE` remains a legacy default for
-the old single-city helper; explicit subscriptions always send their own country.
+the old single-city helper; the discovery registry sends the explicit Ecuador country code.
 
 Buen Plan's endpoint is public but undocumented. Keep its source independently
 disableable and review its logs/terms before enabling it in production.
 
 `EVENT_DISCOVERY_AUTO_PUBLISH` defaults to `false`. In this mode provider
 records are idempotently created or refreshed as non-public `planning` events.
-The cumulative number of imported canonical events is capped by
-`EVENT_DISCOVERY_PILOT_LIMIT` (20 by default); known provider IDs continue to
-refresh after the cap is reached. Set auto-publish to `true` only after the
-pilot has been reviewed and explicitly approved. The pilot cap is then ignored.
+Research candidates and imported canonical events share the existing cumulative
+20-item pilot allowance until its durable approval is recorded. Linked candidates
+and multiple provider references count once. Discarded unlinked candidates free
+a slot; suppressed imports keep their tombstones. Known records remain refreshable
+when capacity is exhausted, and database triggers serialize both entry points.
+`EVENT_DISCOVERY_PILOT_LIMIT` can lower the scheduler's limit but cannot raise the
+unapproved database cap or bypass it by setting auto-publish.
+
+Automatic publication additionally requires a non-revoked entry for the exact
+source in `event_discovery_publication_approval`, with an explicit applicable
+reference, actor and approval time. The migration creates no approval. Historical
+research-pilot approval is insufficient, and manual `web` sources cannot receive
+this authority. Disabling or changing a source revokes its prior approval;
+revocation and import share the pilot lock. Approval alone does not make missing
+venue, lineup or sale-reference information publishable. Existing explicit
+research materialization remains its own guarded administrative workflow.
 
 ## Deployment
 
@@ -177,6 +191,7 @@ manifest order:
 ```text
 tdf-hq/sql/2026-07-12_event_discovery_imports.sql
 tdf-hq/sql/2026-07-30_event_city_subscriptions.sql
+tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql
 ```
 
 Use the guarded backend release lane:
@@ -201,9 +216,21 @@ Do not leave an old enabled replica running the six-hour schedule. The source
 ledger/advisory lock remains shared; a Sunday run uses the same daily identity.
 Verify an actual 11:00 UTC run separately from a manually triggered execution.
 
-This scheduling change does not expand the city-subscription-based discovery
-scope described above. Ecuador-wide discovery independent of personalization,
-resumable provider page checkpoints, shared research/discovery pilot accounting,
-and administrative execution controls remain follow-up work. It does not grant
-any event publication approval. Preserve recorded approvals only within their
-verified original scope.
+The registry includes seven manual research sources: Meet2Go, Passline Ecuador,
+BuenPlan Tickets social, Feel The Tickets, TicketShow, On Time Tickets and Output
+Concerts. Their existing disabled `web` entries remain manual research paths.
+Buen Plan's undocumented endpoint still requires an applicable access/terms review;
+this change does not infer permission from its public accessibility. No source is
+enabled by the migration.
+
+Remaining acceptance work includes verifying the live registry's Ecuador coverage,
+provider permissions, event administration dry-run/manual-run progress controls,
+and resumable provider pagination beyond the current bounded inventory fetch.
+Those outcomes are not established by this boundary correction. Staging and
+production remain subject to billing access, independent review and guarded rollout.
+
+Rollback stops non-web sources and restores the prior research-only trigger while
+retaining imported records, pilot decisions and publication approval history.
+Re-enable only after verifying the deployed code's controls. The regression script
+`scripts/test-event-ingestion-boundaries.sh` covers shared-cap races, duplicate
+canonical links, discard semantics, separate approval, revocation and reapplication.

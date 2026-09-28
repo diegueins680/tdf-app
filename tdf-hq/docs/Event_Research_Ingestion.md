@@ -6,7 +6,7 @@ This workflow stores evidence-backed web research separately from published soci
 
 - Every route under `/social-events/event-research` requires strict administrator access.
 - Candidate upserts never create or publish a `social_event`.
-- Before explicit pilot approval, the database permits at most 20 active pilot candidates across all runs. A discarded candidate frees one slot; no record is deleted.
+- Before explicit pilot approval, the database permits at most 20 active items shared by research and structured discovery across all runs. A linked candidate and its canonical event count once. Discarding an unlinked candidate frees one slot; records are retained. The 2026-09-27 boundary migration enforces this across both writers.
 - Pilot approval is an explicit `POST /social-events/event-research/pilot/approve` with a durable reference. It is append-audited and cannot be silently replaced with a different reference.
 - `web` discovery sources are registry entries for manual research only. They require an HTTPS official URL and must remain disabled, so the structured-feed cron never treats HTML as a feed.
 - A candidate records its IANA timezone, primary source, evidence list, verification time, confidence, source-owned fields, and the complete normalized payload.

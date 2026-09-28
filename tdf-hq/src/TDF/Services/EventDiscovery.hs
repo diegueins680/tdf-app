@@ -21,6 +21,7 @@ module TDF.Services.EventDiscovery
   , finishEventDiscoveryRun
   , loadActiveUserCities
   , loadSubscribedDiscoveryCities
+  , loadEcuadorDiscoveryCities
   , decodeBuenPlanResponse
   , normalizeTicketmasterResponse
   , normalizeUserCities
@@ -30,6 +31,7 @@ module TDF.Services.EventDiscovery
   , discoveredEventFitsPilotLimit
   , countImportedDiscoveryEvents
   , isDiscoveredEventKnown
+  , discoveredEventPublicationReady
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
   ) where
@@ -1188,6 +1190,15 @@ loadActiveUserCities :: ConnectionPool -> IO [Text]
 loadActiveUserCities pool =
   map eventDiscoveryCityName <$> loadSubscribedDiscoveryCities pool
 
+-- Discovery scope is independent of personal follow preferences. Reuse the
+-- canonical city registry, including places attached to approved venue feeds.
+loadEcuadorDiscoveryCities :: ConnectionPool -> IO [EventDiscoveryCity]
+loadEcuadorDiscoveryCities pool = do
+  rows <- runSqlPool (rawSql
+    "SELECT name,country_code,time_zone FROM event_city WHERE country_code='EC' ORDER BY CASE WHEN normalized_name='quito' THEN 0 ELSE 1 END,normalized_name"
+    [] :: SqlPersistT IO [(Single Text,Single Text,Single (Maybe Text))]) pool
+  pure [EventDiscoveryCity name country zone | (Single name,Single country,Single zone) <- rows]
+
 loadSubscribedDiscoveryCities :: ConnectionPool -> IO [EventDiscoveryCity]
 loadSubscribedDiscoveryCities pool = do
   rows <-
@@ -1661,6 +1672,17 @@ joinDescription parts =
     [] -> Nothing
     values -> Just (T.intercalate "\n\n" values)
 
+-- Approval cannot make an incomplete provider record publishable. Missing
+-- confirmed end remains valid; venue, sale reference and lineup are required.
+discoveredEventPublicationReady :: DiscoveredEvent -> Bool
+discoveredEventPublicationReady DiscoveredEvent{..} =
+  not (T.null (T.strip discoveredEventTitle))
+    && not (T.null (T.strip (discoveredVenueName discoveredEventVenue)))
+    && not ("Ubicación publicada en Buen Plan" `T.isPrefixOf` discoveredVenueName discoveredEventVenue)
+    && not (null discoveredEventArtists)
+    && maybe False ("https://" `T.isPrefixOf`) discoveredEventTicketUrl
+    && discoveredVenueCountryCode discoveredEventVenue == Just "EC"
+
 syncDiscoveredEvent :: ConnectionPool -> UTCTime -> DiscoveredEvent -> IO DiscoverySyncStats
 syncDiscoveredEvent pool now event =
   runSqlPool (syncDiscoveredEventDb True now event) pool
@@ -1706,7 +1728,16 @@ discoveredEventFitsPilotLimit pool pilotLimit event =
           mergeCandidate <- findCanonicalEventCandidate event
           case mergeCandidate of
             Just _ -> pure True
-            Nothing -> (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
+            Nothing -> do
+              backend <- T.toCaseFold <$> getRDBMS
+              if "postgres" `T.isInfixOf` backend then do
+                approved <- rawSql
+                  "SELECT approved FROM event_research_pilot_control WHERE control_key='default'"
+                  [] :: SqlPersistT IO [Single Bool]
+                if approved == [Single True] then pure True else do
+                  totals <- rawSql "SELECT count(*) FROM tdf_event_pilot_keys()" [] :: SqlPersistT IO [Single Int]
+                  pure (case totals of [Single n] -> n < min 20 (max 0 pilotLimit); _ -> False)
+              else (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
 
 countImportedDiscoveryEventsDb :: SqlPersistT IO Int
 countImportedDiscoveryEventsDb = do
@@ -2028,7 +2059,21 @@ resolveAllowedImportedUpdateStateId currentStateId desiredStateId =
       pure (if allowed then desiredStateId else currentState)
 
 syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
-syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
+syncDiscoveredEventDb requestedPublication now event@DiscoveredEvent{..} = do
+  -- Every automated entry point locks the existing pilot before event/entity
+  -- locks. Database triggers enforce the shared cap in the same transaction.
+  backend <- T.toCaseFold <$> getRDBMS
+  autoPublish <- if "postgres" `T.isInfixOf` backend then do
+    controls <- rawSql
+      "SELECT approved FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE"
+      [] :: SqlPersistT IO [Single Bool]
+    unless (length controls == 1) (liftIO (fail "Event pilot control unavailable"))
+    authority <- rawSql
+      "SELECT true FROM event_discovery_publication_approval approval JOIN event_discovery_source source ON source.id=approval.source_id WHERE source.source_key=? AND source.enabled AND approval.revoked_at IS NULL AND approval.approved_at<=? LIMIT 1"
+      [toPersistValue discoveredEventProvider,toPersistValue now] :: SqlPersistT IO [Single Bool]
+    pure (requestedPublication && controls == [Single True] && authority == [Single True]
+      && discoveredEventPublicationReady event)
+    else pure requestedPublication -- SQLite unit fixtures; deployed storage is PostgreSQL.
   initialExistingRef <-
     getBy
       (Social.UniqueExternalEventRef discoveredEventProvider discoveredEventExternalId)
@@ -2039,6 +2084,8 @@ syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
         _ <- lockDiscoveredSocialEvent (Social.externalEventRefEventId ref)
         fmap (Entity refKey) <$> get refKey
   case existingRef of
+    Just (Entity _ ref) | now < Social.externalEventRefLastSeenAt ref ->
+      pure emptyDiscoverySyncStats { discoveryEventsSeen=1 }
     Just (Entity refKey ref)
       | Social.externalEventRefIsSuppressed ref -> do
           update

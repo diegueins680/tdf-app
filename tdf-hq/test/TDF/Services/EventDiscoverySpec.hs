@@ -34,12 +34,14 @@ import TDF.Services.EventDiscovery
   , discoveredEventFitsPilotLimit
   , normalizeTicketmasterResponse
   , normalizeUserCities
+  , loadEcuadorDiscoveryCities
   , publishedEventTypeLookupParams
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
   , isDiscoveredEventKnown
   , reconcileImportedEvents
   , reconcileProviderEvents
+  , discoveredEventPublicationReady
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
   )
@@ -72,6 +74,19 @@ spec = do
         case ticketmasterNextPage budget (budget - 1) (budget + remaining) of
           Left _ -> True
           Right _ -> False
+
+  describe "Ecuador discovery coverage" $ do
+    it "includes registered Ecuador cities without subscriptions and prioritizes Quito" $
+      withSystemTempFile "tdf-discovery-cities.sqlite" $ \dbPath handle -> do
+        hClose handle
+        pool <- runNoLoggingT $ createSqlitePool (T.pack dbPath) 1
+        runSqlPool (do
+          rawExecute "CREATE TABLE event_city(name TEXT,normalized_name TEXT,country_code TEXT,time_zone TEXT)" []
+          rawExecute "INSERT INTO event_city VALUES('Loja','loja','EC','America/Guayaquil'),('Quito','quito','EC','America/Guayaquil'),('Madrid','madrid','ES','Europe/Madrid')" []
+          ) pool
+        cities <- loadEcuadorDiscoveryCities pool
+        map eventDiscoveryCityName cities `shouldBe` ["Quito","Loja"]
+        destroyAllResources pool
 
   describe "event discovery event-type lookup" $ do
     it "binds both effective-date placeholders for PostgreSQL" $ do
@@ -187,6 +202,19 @@ spec = do
               (addUTCTime (90 * 86400) now)
               buenPlanExpiredFixture
       result `shouldBe` Right []
+
+  describe "event publication validation" $ do
+    it "requires verified lineup and sale URL even after source approval" $ do
+      response <- either fail pure (eitherDecode ticketmasterFixture)
+      event <- case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+        [normalized] -> pure normalized
+        other -> fail ("Expected one event, got " <> show other)
+      let verified = event { discoveredEventTicketUrl=Just "https://official.example/tickets"
+            , discoveredEventVenue=(discoveredEventVenue event) { discoveredVenueCountryCode=Just "EC" } }
+      discoveredEventPublicationReady verified `shouldBe` True
+      discoveredEventPublicationReady verified { discoveredEventArtists=[] } `shouldBe` False
+      discoveredEventPublicationReady verified { discoveredEventTicketUrl=Nothing } `shouldBe` False
+      discoveredEventPublicationReady verified { discoveredEventEnd=Nothing } `shouldBe` True
 
   describe "Ticketmaster event normalization" $ do
     it "keeps an unconfirmed end unknown through draft ingestion and replay" $ do
