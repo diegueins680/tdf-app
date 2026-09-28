@@ -80,15 +80,15 @@ passing prototype fixture for production rollout.
 ## Delivery checklist
 
 - [x] Isolated root/mobile worktrees; inspect live architecture and schema.
-- [ ] Complete source/caller inventory and adapter authorization matrix.
-- [ ] Canonical schema, legacy conversion and rollback rehearsal.
-- [ ] Backend operations, session/permissions, moderation and abuse controls.
-- [ ] Shared web/native components and every eligible existing entry point.
-- [ ] Mentions, notification aggregation/preferences, exact deep-link resolution.
-- [ ] Unit/property/model/database/concurrency/migration coverage.
+- [x] Complete source/caller inventory and adapter authorization matrix.
+- [x] Canonical schema, legacy conversion and rollback rehearsal.
+- [x] Backend operations, session/permissions, moderation and abuse controls.
+- [x] Shared web/native components and every eligible existing entry point.
+- [x] Mentions, notification aggregation/preferences, exact deep-link resolution.
+- [x] Unit/property/model/database/concurrency/migration coverage.
 - [ ] Desktop/mobile accessibility and end-to-end workflows.
-- [ ] Large synthetic discussion EXPLAIN/query-budget evidence.
-- [ ] OpenAPI/generated contracts, documentation, full relevant local checks.
+- [x] Large synthetic discussion EXPLAIN/query-budget evidence.
+- [x] OpenAPI/generated contracts, documentation, full relevant local checks.
 - [ ] Independent repository review, protected green CI, merge and immutable build.
 - [ ] Backup/guarded migration/recovery drill/deployment/live verification.
 
@@ -97,8 +97,8 @@ passing prototype fixture for production rollout.
 Draft pull requests: root [470](https://github.com/diegueins680/tdf-app/pull/470)
 and native [116](https://github.com/diegueins680/TDF-mobile/pull/116). Production
 schema and activation gate remain unchanged. Independent review, full green CI,
-installed native verification, production restore rehearsal and deployment are
-still release requirements.
+installed native verification and deployment are still release requirements.
+The production restore rehearsal has passed (details below).
 
 - Full normal Stack build and the full Stack test suite passed after compatibility
   updates. PostgreSQL 17 hosted property checks and fresh 137-entry migration
@@ -110,7 +110,8 @@ still release requirements.
   context, legacy adapters, pagination, blocking, bearer revocation, scoped mention
   search/discoverability, stable mention IDs, notification preferences and owner
   mentioned-only/off policies.
-- Desktop and Pixel 7 browser flows pass against the isolated real API, including
+- All ten real-API browser journeys pass across desktop, phone and tablet Chromium,
+  Firefox and WebKit, including
   exact notification navigation, focused deep links, editing and parent deletion.
   Browser axe serious/critical findings are zero. Native rendered flows and all
   521 native tests pass. Type/lint/release checks are rerun after follow-up edits.
@@ -122,8 +123,9 @@ still release requirements.
   154 ms, root page 44 ms, replies 21 ms, deep context 38 ms. Nested auto_explain
   confirms batched author policy and indexed reaction lookup; instrumentation
   overhead raises these timings. These are local measurements, not production SLOs.
-- Expo simulator build was rejected by the monthly Free-plan quota. A GitHub
-  macOS simulator build with bundled JS and the isolated localhost API is running.
+- Expo simulator build was rejected by the monthly Free-plan quota. The GitHub
+  macOS simulator build passed and its bundled app is installed on a dedicated
+  iOS 18.3 simulator; installed-device flows remain under verification.
   Its unsigned simulator artifact is not a store release. Signed release workflows
   now point to the canonical API; checked-in native projects include link
   entitlements/intent filters and the locked ExpoCrypto dependency.
@@ -208,3 +210,8 @@ fields unchanged. Persisted assertions remain HTTP 200, JSON content type,
 `$.status == ok`, and `$.db == ok`; location, retries, scheduling state and blocking
 CI rule are unchanged. GitHub Datadog rerun `36468621062` passed. No unrelated
 monitor or application was changed.
+
+The records thumbnail regression fixture now returns the actual unavailable-target
+404 contract for synthetic rows. All ten records tests pass across five browser
+configurations. The real HTTP suite also verifies that repeated unauthorized
+moderation attempts exhaust the account write budget and return 429.

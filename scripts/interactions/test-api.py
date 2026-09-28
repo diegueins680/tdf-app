@@ -19,7 +19,8 @@ def request(actor, path, data=None, method=None, status=200):
             code, body = response.status, response.read().decode()
     except urllib.error.HTTPError as error:
         code, body = error.code, error.read().decode()
-    assert code == status, f'{req.get_method()} {path}: expected {status}, got {code}: {body[:300]}'
+    assert code in (status if isinstance(status, tuple) else (status,)), f'{req.get_method()} {path}: expected {status}, got {code}: {body[:300]}'
+    if isinstance(status, tuple): return code
     return json.loads(body) if body and code < 400 else body
 for actor in actors:
     sql(f"INSERT INTO party(id,display_name,is_org,created_at) VALUES({actor},'API actor {actor}',false,now()); INSERT INTO user_credential(party_id,username,password_hash,active) VALUES({actor},'interaction-api-{actor}','not-a-login-hash',true); INSERT INTO api_token(token,party_id,label,active) VALUES('{tokens[actor]}',{actor},'interaction-local-test',true); INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT {actor},id,'bootstrap',true,now(),1 FROM security_role WHERE code='fan';")
@@ -89,6 +90,14 @@ assert not any(n.get('nTargetKey')==reply['id'] for n in request(actors[1],'/fan
 # Unblock and prove a revoked bearer cannot replay a previously accepted request.
 state=request(actors[0],f'/interactions/blocks/{actors[1]}')
 request(actors[0],f'/interactions/blocks/{actors[1]}',{'blockRequestKey':str(uuid.uuid4()),'blocked':False,'expectedVersion':state['version']},method='PUT')
+# Rejected moderation attempts must consume the same per-account write budget.
+limited=False
+for attempt in range(91):
+    result=command(actors[1],{'operation':'comment.remove','commentId':reply['id'],'expectedVersion':1,'reason':'Synthetic unauthorized attempt'},status=(403,429))
+    if result==429:
+        limited=True
+        break
+assert limited, 'Rejected requests escaped the HTTP abuse budget'
 sql(f"UPDATE api_token SET active=false WHERE party_id={actors[1]};")
 command(actors[1],payload,key,status=401)
 # Leave actor 2 revoked. The UI E2E uses the current owner and third account.
@@ -96,4 +105,4 @@ fixture=os.environ.get('TDF_INTERACTION_TEST_FIXTURE')
 if fixture:
     output=pathlib.Path(fixture); output.parent.mkdir(parents=True,exist_ok=True); output.parent.chmod(0o700)
     output.write_text(json.dumps({'base':base,'database':database,'actors':actors,'tokens':tokens,'postId':post['fcpId'],'targetId':target,'rootId':root['id'],'replyId':reply['id']})); output.chmod(0o600)
-print('PASS HTTP sessions, publication, reactions, idempotency, comments/replies, edits, tombstones, notifications/deep links, legacy adapter, scoped mention privacy, notification preferences, owner policies, pagination, blocks and bearer revocation')
+print('PASS HTTP sessions, publication, reactions, idempotency, comments/replies, edits, tombstones, notifications/deep links, legacy adapter, scoped mention privacy, notification preferences, owner policies, pagination, blocks, rejected-write throttling and bearer revocation')

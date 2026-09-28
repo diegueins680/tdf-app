@@ -2670,7 +2670,7 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "b8c278d6e77afe276d3bab2a8abbb53cfb12ca8a84236a61c47fbf8c24315e56",
+      "sha256": "ac68e0fa05e1cf110e74aa775546be018241f7ff6a577dc094f9e17aa74ea500",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress in isolated worktrees; no production schema or feature gate changed.",
       "kind": "requirement-candidate"
