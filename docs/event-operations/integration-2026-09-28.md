@@ -33,7 +33,13 @@ Completion decision cases now roll back their individual test state after all as
 so expired assignments cannot contaminate later cases. Expiry-race fixtures use attributed
 retirement and valid replacement after asserting rejection. Task-read projection tests retain
 their transitional-state assertions inside a transaction and add immediate-constraint negative
-controls proving future required assignments cannot commit. No database guard is disabled
+controls proving future required assignments cannot commit. Revisioned-read concurrency fixtures expire an optional Consulted assignment, so the
+old/new projections remain distinguishable without attempting to commit an invalid sole
+Responsible assignment. Exact revision, projection and lock-order assertions remain.
+Editor-context races use a valid transition to an in-progress task and still require the
+new revision and unavailable operation together. The HTTP fixture explicitly disables
+main's added single-feature-onboarding configuration; missing fields remain compile errors.
+No database guard is disabled
 for ordinary fixtures, no assertion is removed, and no CI job is skipped.
 
 Current validation results and remaining blockers are recorded in the branch-audit report.

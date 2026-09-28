@@ -73,13 +73,19 @@ sql -qAtc "SELECT task_revision_read_test.check_that(
   AND (SELECT snapshot=task_revision_read_test.rows() FROM task_revision_read_test.preserved),
   'reapply restores envelope without resetting data');" >/dev/null
 
+# Current foundation forbids committing an expired sole Responsible assignment.
+# Expire an optional Consulted assignment instead: old/new projections still differ,
+# while the concurrent writer respects mandatory current-time RACI cardinality.
+sql -c "INSERT INTO event_operation_raci_assignment(activity_id,party_id,raci_role,assigned_by_party_id)
+  VALUES (100,3,'consulted',1);" >/dev/null
+
 for isolation in 'READ COMMITTED' 'REPEATABLE READ' 'SERIALIZABLE'; do
   sql -c 'UPDATE event_operation_raci_assignment SET valid_until=NULL WHERE activity_id=100;' >/dev/null
   old_revision=$(sql -qAtc 'SELECT revision FROM event_operation_task_revision WHERE activity_id=100')
   start_coordinator
   sql -c "BEGIN; SET LOCAL application_name='revision_read_writer';
     UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()-interval '2 days',
-      valid_until=clock_timestamp()-interval '1 day' WHERE activity_id=100 AND raci_role='responsible';
+      valid_until=clock_timestamp()-interval '1 day' WHERE activity_id=100 AND raci_role='consulted';
     SELECT pg_advisory_xact_lock(889,3); COMMIT;" > "$test_logs/writer-$isolation.log" 2>&1 &
   writer_pid=$!
   wait_backend revision_read_writer Lock
@@ -87,8 +93,8 @@ for isolation in 'READ COMMITTED' 'REPEATABLE READ' 'SERIALIZABLE'; do
     SET LOCAL application_name='revision_read_waiter';
     WITH result AS MATERIALIZED (SELECT event_operation_read_task_with_revision(10,100,1) AS value)
     SELECT task_revision_read_test.check_that(value->>'aggregateRevision'='$((old_revision+1))'
-      AND jsonb_array_length(value->'task'->'raci')=1
-      AND value->'task'->'accountabilityNeedsAttention'='true'::JSONB, 'post-wait coherent task and revision') FROM result;
+      AND jsonb_array_length(value->'task'->'raci')=2
+      AND value->'task'->'accountabilityNeedsAttention'='false'::JSONB, 'post-wait coherent task and revision') FROM result;
     COMMIT;" > "$test_logs/read-$isolation.log" 2>&1 &
   reader_pid=$!
   wait_backend revision_read_waiter Lock
@@ -112,14 +118,14 @@ start_coordinator
 sql -qAtc "SET application_name='revision_read_first';
   WITH result AS MATERIALIZED (SELECT event_operation_read_task_with_revision(10,100,1) AS value)
   SELECT task_revision_read_test.check_that(value->>'aggregateRevision'='$old_revision'
-    AND jsonb_array_length(value->'task'->'raci')=2, 'reader-first coherent old projection') FROM result;" \
+    AND jsonb_array_length(value->'task'->'raci')=3, 'reader-first coherent old projection') FROM result;" \
   > "$test_logs/read-first.log" 2>&1 &
 reader_pid=$!
 wait_backend revision_read_first Lock
 sql -c "SET statement_timeout='5s'; UPDATE event_logistics_activity SET status='confirmed' WHERE id=101;" >/dev/null
 sql -c "SET application_name='revision_read_second';
   UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()-interval '2 days',
-    valid_until=clock_timestamp()-interval '1 day' WHERE activity_id=100 AND raci_role='responsible';" \
+    valid_until=clock_timestamp()-interval '1 day' WHERE activity_id=100 AND raci_role='consulted';" \
   > "$test_logs/write-second.log" 2>&1 &
 writer_pid=$!
 wait_backend revision_read_second Lock
@@ -131,7 +137,7 @@ sql -c 'DROP FUNCTION event_operation_read_task(BIGINT,BIGINT,BIGINT);
   ALTER FUNCTION task_revision_read_saved(BIGINT,BIGINT,BIGINT) RENAME TO event_operation_read_task;' >/dev/null
 sql -qAtc "WITH result AS MATERIALIZED (SELECT event_operation_read_task_with_revision(10,100,1) AS value)
   SELECT task_revision_read_test.check_that(value->>'aggregateRevision'='$((old_revision+1))'
-    AND jsonb_array_length(value->'task'->'raci')=1, 'next read sees committed replacement') FROM result;" >/dev/null
+    AND jsonb_array_length(value->'task'->'raci')=2, 'next read sees committed replacement') FROM result;" >/dev/null
 
 # Permission can expire while waiting only on metadata, even with the event
 # authorization fence already held. The canonical projector must recheck the clock.

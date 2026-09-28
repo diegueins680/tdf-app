@@ -27,6 +27,7 @@ httpTestConfig = AppConfig
   , sessionCookieSecure = False, sessionCookieSameSite = "Lax", sessionCookieMaxAgeSeconds = Nothing
   , stripeSecretKey = Nothing, stripePublishableKey = Nothing, stripeWebhookSecret = Nothing
   , contextualReputationEnabled = False, publicReputationProjectionEnabled = False
+  , singleFeatureOnboardingExperimentEnabled = False
   , eventDiscoveryEnabled = False, eventDiscoveryAutoPublish = False, eventDiscoveryPilotLimit = 1
   , ticketmasterApiKey = Nothing, ticketmasterApiBase = disabledEndpoint
   , eventDiscoveryLookaheadDays = 1, eventDiscoveryMaxPagesPerCity = 1, eventDiscoveryHourLocal = 0

@@ -68,13 +68,15 @@ test "$(sql -qAtc 'SELECT raci_command_test.rows()')" = "$before_rows"
 apply "$up"
 test "$(sql -qAtc 'SELECT raci_command_test.rows()')" = "$before_rows"
 
+# Change readiness through a valid task transition. Current foundation correctly
+# rejects committing an expired sole Responsible, which the old fixture attempted.
+# The reader must still observe the new revision and unavailable operation together.
 for isolation in 'READ COMMITTED' 'REPEATABLE READ' 'SERIALIZABLE'; do
-  sql -c "UPDATE event_operation_raci_assignment SET valid_until=NULL WHERE activity_id=300;" >/dev/null
+  sql -c "UPDATE event_logistics_activity SET status='planned' WHERE id=300;" >/dev/null
   old_revision=$(sql -qAtc 'SELECT raci_command_test.rev(300)')
   start_coordinator
   sql -c "BEGIN; SET LOCAL application_name='raci_context_writer';
-    UPDATE event_operation_raci_assignment SET valid_from=clock_timestamp()-interval '2 days',
-      valid_until=clock_timestamp()-interval '1 day' WHERE activity_id=300 AND raci_role='responsible';
+    UPDATE event_logistics_activity SET status='in_progress' WHERE id=300;
     SELECT pg_advisory_xact_lock(889,5); COMMIT;" > "$test_logs/writer-$isolation.log" 2>&1 &
   writer_pid=$!
   wait_backend raci_context_writer Lock
@@ -96,7 +98,7 @@ for isolation in 'READ COMMITTED' 'REPEATABLE READ' 'SERIALIZABLE'; do
     grep -q '40001' "$test_logs/reader-$isolation.log"
   fi
 done
-sql -c "UPDATE event_operation_raci_assignment SET valid_until=NULL WHERE activity_id=300;" >/dev/null
+sql -c "UPDATE event_logistics_activity SET status='planned' WHERE id=300;" >/dev/null
 for expiry in actor recipient manage; do
   expiring_party=2
   if [ "$expiry" = recipient ]; then expiring_party=3; fi
