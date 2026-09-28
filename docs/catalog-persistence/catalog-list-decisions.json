@@ -14025,6 +14025,24 @@
         "valueCount": 2,
         "contract": "formal/system/legacy-escrow.md"
       }
+    },
+    {
+      "id": "d880b17bae6c922ecfce",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Claiming a manually edited event field as provider-owned can erase editorial changes.",
+      "justification": "These nine keys are serialized field-ownership identifiers mapped directly to typed SocialEvent updates. They describe the persistence protocol for comparing provider snapshots, not administrator-selectable business catalog values. Keep the keys versioned with the importer and preservation tests.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "event-editorial-2026-09-28",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "kind": "haskell-list",
+        "name": "ownedEventUpdates",
+        "valueCount": 9
+      }
     }
   ]
 }
