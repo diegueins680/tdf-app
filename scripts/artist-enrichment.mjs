@@ -604,12 +604,13 @@ async function persistLinkChecks(api, profile, linkChecks) {
   }
 }
 
-function isTdfManagedImageUrl(rawUrl) {
+export function isTdfManagedImageUrl(rawUrl) {
   try {
     const host = new URL(rawUrl).hostname.toLowerCase();
     return host === 'drive.google.com'
       || host.endsWith('.googleusercontent.com')
       || host === 'tdf-hq.fly.dev'
+      || host === 'api.tdfrecords.net'
       || host === 'tdfrecords.com'
       || host.endsWith('.tdfrecords.com');
   } catch {
