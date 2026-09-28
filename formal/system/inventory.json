@@ -4561,7 +4561,7 @@
     },
     {
       "path": "formal/interactions/README.md",
-      "sha256": "7e15a1d3b638bdca10e25d9127e0c225a279412abfbc2bfadd58e2832af8dd93",
+      "sha256": "77740900f0f57aba1889fdc1bd54afced2538761a69e6fb61e25a0409bfe3d34",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

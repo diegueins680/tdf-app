@@ -1,6 +1,6 @@
 # Executable interaction invariants
 
-This specification maps directly to deployed SQL functions and real PostgreSQL
+This specification maps directly to implemented SQL functions and real PostgreSQL
 properties; it is not an assertion of unbounded correctness. The existing social
 session/pair models remain authoritative for token revocation and bilateral blocks.
 
