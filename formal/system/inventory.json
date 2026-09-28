@@ -265,6 +265,7 @@
       "scripts/test-public-booking-http-concurrency.sh",
       "scripts/test-public-booking-tentative-idempotency-migration.sh",
       "scripts/test-public-ticket-checkout-runtime-migration.sh",
+      "scripts/test-records-ingestion-runtime.sh",
       "scripts/test-records-youtube-catalog-migration.sh",
       "scripts/test-service-booking-checkout-runtime-migration.sh",
       "scripts/test-service-storefront-checkout-runtime-migration.sh",
@@ -616,6 +617,7 @@
       "tdf-hq-ui/src/features/finance/workAccountReport.test.ts",
       "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
+      "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
       "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
       "tdf-hq-ui/src/features/releases/ReleaseArtwork.test.tsx",
       "tdf-hq-ui/src/features/releases/ReleaseArtwork.tsx",
@@ -817,6 +819,8 @@
       "tdf-hq-ui/src/pages/ReactionTypesCatalogPage.test.ts",
       "tdf-hq-ui/src/pages/ReactionTypesCatalogPage.tsx",
       "tdf-hq-ui/src/pages/RecentlyDiscoveredEventsPage.tsx",
+      "tdf-hq-ui/src/pages/RecordsIngestionPage.test.tsx",
+      "tdf-hq-ui/src/pages/RecordsIngestionPage.tsx",
       "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
       "tdf-hq-ui/src/pages/ReportsPage.tsx",
       "tdf-hq-ui/src/pages/ReputationConsentsPage.test.tsx",
@@ -1331,6 +1335,8 @@
       "tdf-hq/sql/2026-09-18_records_resource_availability_rollback.sql",
       "tdf-hq/sql/2026-09-18_trial_identity_requests.sql",
       "tdf-hq/sql/2026-09-18_trial_identity_requests_rollback.sql",
+      "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
+      "tdf-hq/sql/2026-09-20_records_ingestion_runtime_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -1365,6 +1371,7 @@
       "tdf-hq/src/TDF/API/Pipelines.hs",
       "tdf-hq/src/TDF/API/Proposals.hs",
       "tdf-hq/src/TDF/API/Radio.hs",
+      "tdf-hq/src/TDF/API/RecordsIngestion.hs",
       "tdf-hq/src/TDF/API/Reviews.hs",
       "tdf-hq/src/TDF/API/Rooms.hs",
       "tdf-hq/src/TDF/API/ServiceStorefront.hs",
@@ -1486,6 +1493,7 @@
       "tdf-hq/src/TDF/Server/Merch.hs",
       "tdf-hq/src/TDF/Server/MerchReputation.hs",
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
+      "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Server/Reviews.hs",
       "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
       "tdf-hq/src/TDF/Server/SocialDiscovery.hs",
@@ -1509,6 +1517,7 @@
       "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramSync.hs",
+      "tdf-hq/src/TDF/Services/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Services/Stripe.hs",
       "tdf-hq/src/TDF/Services/YouTube.hs",
       "tdf-hq/src/TDF/Social/API.hs",
@@ -1553,6 +1562,7 @@
       "tdf-hq/templates/proposals/assets/wide1.jpg",
       "tdf-hq/templates/proposals/tdf_live_sessions.tex",
       "tdf-hq/test/PaymentArithmeticProbe.hs",
+      "tdf-hq/test/RecordsRuntimeProbe.hs",
       "tdf-hq/test/Spec.hs",
       "tdf-hq/test/TDF/APITypesSpec.hs",
       "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
@@ -1583,6 +1593,7 @@
       "tdf-hq/test/TDF/ServerProposalsSpec.hs",
       "tdf-hq/test/TDF/ServerSpec.hs",
       "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
+      "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs",
       "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
@@ -1617,7 +1628,9 @@
       "tdf-hq/test/integration/social_event_workflow_cutover_negative.sh",
       "tdf-hq/test/integration/social_event_workflow_cutover_postgres.sql",
       "tdf-hq/test/integration/social_event_workflow_postgres.sql",
-      "tdf-hq/test/sql/identity_reconciliation.sql"
+      "tdf-hq/test/sql/identity_reconciliation.sql",
+      "tdf-hq/test/sql/records_ingestion_invariants.sql",
+      "tdf-hq/test/sql/records_ingestion_runtime.sql"
     ],
     "tidal-agent": [
       "tidal-agent/README.md",
@@ -3142,6 +3155,13 @@
     {
       "path": "docs/records-ingestion/2026-09-18-thumbnail-evidence.md",
       "sha256": "f1c1fe108a0baac79997871b0c2733b14338dbaf39542afc775ffdddf485bca9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/records-ingestion/runtime-rollout.md",
+      "sha256": "3a3cb55661b6ac5fcc7be77ab0a3dd422cc080b702dfc932a39c56e2be817d63",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -5024,7 +5044,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "0015767fdc6d59c80dd017320ea2e600d69992df40289153bbb6fa97f279cb9f",
+      "sha256": "ca766bcdc383be9dba03c59315292a8c77737f61f2336e71a5835c691540eae6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

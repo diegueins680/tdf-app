@@ -77,6 +77,7 @@ import TDF.Cron (
     startInstagramSyncJob,
     startSocialAutoReplyJob,
   )
+import TDF.Services.RecordsIngestion (startRecordsIngestionJob)
 import TDF.DB (ConnectionPool, Env (..), makePool)
 import TDF.Models (
     PartyId,
@@ -159,6 +160,7 @@ runBootServer = do
         let env = Env{envPool = pool, envConfig = cfg}
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
+        startRecordsIngestionJob (envPool env)
         startEventDiscoveryJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env

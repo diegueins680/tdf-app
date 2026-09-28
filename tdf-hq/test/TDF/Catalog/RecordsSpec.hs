@@ -68,6 +68,7 @@ spec = do
             , rrAvailability = Just "unavailable"
             , rrAvailabilityReason = Just "removed_by_uploader"
             , rrVerifiedAt = Nothing
+            , rrProviderMetadata = Nothing
             , rrRelationKind = "primary-media"
             , rrPrimary = True
             , rrSortOrder = 0

@@ -643,7 +643,8 @@ interface SessionItem {
   title: string;
   guests: string;
   youtubeId: string;
-  embedUrl: string;
+  embedUrl?: string;
+  resource: RecordsResourceDTO;
   duration: string;
   description: string;
   url: string;
@@ -718,7 +719,9 @@ const mapRecordsSession = (session: RecordsSessionDTO): SessionItem | null => {
     title: session.title,
     guests: session.contributors.map((contributor) => contributor.name).join(', '),
     youtubeId: resource.externalCode,
-    embedUrl: `https://www.youtube.com/embed/${resource.externalCode}`,
+    resource,
+    embedUrl: resource.availability === 'unavailable' || resource.providerMetadata?.['embeddable'] === false
+      ? undefined : `https://www.youtube.com/embed/${resource.externalCode}`,
     duration: formatDurationMs(resource.durationMs),
     description: session.description ?? '',
     url: resource.url,
@@ -933,7 +936,7 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
             }}
           >
             <Box sx={{ position: 'relative', pt: '56.25%', backgroundColor: '#0f1117' }}>
-              <Box
+              {video.embedUrl ? <Box
                 component="iframe"
                 src={video.embedUrl}
                 title={video.title}
@@ -946,7 +949,10 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
                   height: '100%',
                   border: 0,
                 }}
-              />
+              /> : <Box component="a" href={sessionHref} target="_blank" rel="noopener noreferrer"
+                aria-label={`Consultar en YouTube: ${video.title}`} sx={{ position: 'absolute', inset: 0 }}>
+                <RecordThumbnail resource={video.resource} title={video.title} />
+              </Box>}
             </Box>
             <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Stack direction="row" spacing={1} alignItems="center">

@@ -40,6 +40,7 @@ module TDF.ServerAdmin
   , normalizeBrainEntryTags
   ) where
 
+import TDF.Server.RecordsIngestion (recordsIngestionServer)
 import           Control.Exception      (SomeException, try)
 import           Control.Applicative    ((<|>))
 import           Control.Monad          (forM, unless, when)
@@ -256,6 +257,7 @@ adminServer user =
   :<|> brainRouter
   :<|> ragRouter
   :<|> socialRouter
+  :<|> recordsIngestionServer user
   where
     seedHandler rawToken = do
       ensureStrictAdmin user
