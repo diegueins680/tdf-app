@@ -23,7 +23,7 @@ psql_exec >/dev/null <<'SQL'
 CREATE TABLE party(id bigint PRIMARY KEY);
 CREATE TABLE social_event(id bigint PRIMARY KEY);
 CREATE TABLE event_discovery_source(id bigserial PRIMARY KEY,source_key text UNIQUE,name text,source_type text,feed_url text,city_id bigint,enabled boolean DEFAULT true,priority integer DEFAULT 100,configuration text,etag text,last_modified text,consecutive_failures integer DEFAULT 0,last_success_at timestamptz,last_error text,created_at timestamptz DEFAULT now(),updated_at timestamptz DEFAULT now());
-CREATE TABLE external_event_ref(id bigserial PRIMARY KEY,provider text,external_id text,event_id bigint REFERENCES social_event(id),source_status text,UNIQUE(provider,external_id));
+CREATE TABLE external_event_ref(id bigserial PRIMARY KEY,provider text,external_id text,event_id bigint REFERENCES social_event(id),source_status text,city text NOT NULL DEFAULT 'Quito',country_code text,source_url text,price_cents integer,currency text,last_seen_at timestamptz NOT NULL DEFAULT now(),missing_runs integer NOT NULL DEFAULT 0,UNIQUE(provider,external_id));
 SQL
 psql_exec -f "$records_root/tdf-hq/sql/2026-08-16_event_research_ingestion.sql" >/dev/null
 psql_exec -f "$records_root/tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql" >/dev/null

@@ -19,6 +19,7 @@ module TDF.Services.EventDiscovery
   , fetchTicketmasterEventsForCity
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
+  , completeEventDiscoverySourceRun
   , loadActiveUserCities
   , loadSubscribedDiscoveryCities
   , loadEcuadorDiscoveryCities
@@ -39,7 +40,7 @@ module TDF.Services.EventDiscovery
 
 import Control.Applicative ((<|>))
 import Control.Exception (try)
-import Control.Monad (filterM, forM, forM_, unless)
+import Control.Monad (filterM, forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (threadDelay)
 import Data.Aeson
@@ -256,22 +257,59 @@ finishEventDiscoveryRun ::
   Int ->
   DiscoverySyncStats ->
   IO ()
-finishEventDiscoveryRun pool (EventDiscoveryRunHandle runKey) now citiesCount stats =
-  runSqlPool
-    ( update
-        runKey
-        [ Social.ExternalEventDiscoveryRunStatus =. "completed"
-        , Social.ExternalEventDiscoveryRunCitiesCount =. citiesCount
-        , Social.ExternalEventDiscoveryRunEventsSeen =. discoveryEventsSeen stats
-        , Social.ExternalEventDiscoveryRunEventsCreated =. discoveryEventsCreated stats
-        , Social.ExternalEventDiscoveryRunEventsUpdated =. discoveryEventsUpdated stats
-        , Social.ExternalEventDiscoveryRunVenuesCreated =. discoveryVenuesCreated stats
-        , Social.ExternalEventDiscoveryRunArtistsCreated =. discoveryArtistsCreated stats
-        , Social.ExternalEventDiscoveryRunErrorMessage =. Nothing
-        , Social.ExternalEventDiscoveryRunFinishedAt =. Just now
+finishEventDiscoveryRun pool handle now citiesCount stats =
+  runSqlPool (finishEventDiscoveryRunDb handle now citiesCount stats) pool
+
+finishEventDiscoveryRunDb ::
+  EventDiscoveryRunHandle -> UTCTime -> Int -> DiscoverySyncStats -> SqlPersistT IO ()
+finishEventDiscoveryRunDb (EventDiscoveryRunHandle runKey) now citiesCount stats =
+  update runKey
+    [ Social.ExternalEventDiscoveryRunStatus =. "completed"
+    , Social.ExternalEventDiscoveryRunCitiesCount =. citiesCount
+    , Social.ExternalEventDiscoveryRunEventsSeen =. discoveryEventsSeen stats
+    , Social.ExternalEventDiscoveryRunEventsCreated =. discoveryEventsCreated stats
+    , Social.ExternalEventDiscoveryRunEventsUpdated =. discoveryEventsUpdated stats
+    , Social.ExternalEventDiscoveryRunVenuesCreated =. discoveryVenuesCreated stats
+    , Social.ExternalEventDiscoveryRunArtistsCreated =. discoveryArtistsCreated stats
+    , Social.ExternalEventDiscoveryRunErrorMessage =. Nothing
+    , Social.ExternalEventDiscoveryRunFinishedAt =. Just now
+    ]
+
+-- | Fetches happen outside the transaction. Completion rechecks source authority
+-- under its row lock before any absence reconciliation, including empty feeds.
+-- Disablement either wins first (no completion writes) or follows this commit.
+completeEventDiscoverySourceRun ::
+  ConnectionPool -> Social.EventDiscoverySourceId -> EventDiscoveryRunHandle ->
+  UTCTime -> Text -> [EventDiscoveryCity] -> [Text] -> DiscoverySyncStats -> IO ()
+completeEventDiscoverySourceRun pool sourceKey handle now provider cities seen stats =
+  runSqlPool complete pool
+  where
+    complete = do
+      backend <- T.toCaseFold <$> getRDBMS
+      sources <- if "postgres" `T.isInfixOf` backend
+        then rawSql "SELECT ?? FROM event_discovery_source WHERE id=? FOR UPDATE"
+          [toPersistValue sourceKey]
+        else maybe [] (pure . Entity sourceKey) <$> get sourceKey
+      case sources of
+        [Entity _ source]
+          | Social.eventDiscoverySourceEnabled source
+            && Social.eventDiscoverySourceSourceKey source == provider -> pure ()
+        _ -> liftIO (fail "Event source disabled or unavailable before completion")
+      -- Reference status updates acquire the pilot lock in their trigger.
+      -- Match imports' source -> pilot -> event order before reconciliation.
+      when ("postgres" `T.isInfixOf` backend) $ do
+        controls <- rawSql
+          "SELECT approved FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE"
+          [] :: SqlPersistT IO [Single Bool]
+        unless (length controls == 1) (liftIO (fail "Event pilot control unavailable"))
+      _ <- reconcileProviderEventsDb now provider cities seen
+      finishEventDiscoveryRunDb handle now (length cities) stats
+      update sourceKey
+        [ Social.EventDiscoverySourceConsecutiveFailures =. 0
+        , Social.EventDiscoverySourceLastSuccessAt =. Just now
+        , Social.EventDiscoverySourceLastError =. Nothing
+        , Social.EventDiscoverySourceUpdatedAt =. now
         ]
-    )
-    pool
 
 failEventDiscoveryRun ::
   ConnectionPool ->
@@ -1849,7 +1887,11 @@ reconcileProviderEvents ::
   [Text] ->
   IO Int
 reconcileProviderEvents pool now provider targetCities seenExternalIds =
-  runSqlPool reconcile pool
+  runSqlPool (reconcileProviderEventsDb now provider targetCities seenExternalIds) pool
+
+reconcileProviderEventsDb ::
+  UTCTime -> Text -> [EventDiscoveryCity] -> [Text] -> SqlPersistT IO Int
+reconcileProviderEventsDb now provider targetCities seenExternalIds = reconcile
   where
     seen =
       Map.fromList

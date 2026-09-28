@@ -142,6 +142,13 @@ can be disabled without affecting Ticketmaster or venue feeds. Source failures
 record the last error and consecutive failure count without stopping other
 sources.
 
+Per-event persistence failures abort their source run. After fetching, completion
+locks and rechecks the enabled source before absence reconciliation, including
+empty feeds. Reconciliation, the completed run ledger and the source success
+timestamp commit in one transaction; a disabled source or failed final write
+cannot leave partial success evidence. The source-row lock is held only during
+completion, not across network requests.
+
 ## Configuration
 
 ```env
