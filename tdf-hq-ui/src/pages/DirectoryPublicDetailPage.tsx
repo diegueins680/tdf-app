@@ -1,3 +1,4 @@
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import {
   Alert,
   Box,
@@ -274,6 +275,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                 </Stack>
               )}
 
+              {kind !== 'venue' && targetId && <InteractionPanel kind={kind === 'profile' ? 'directory_profile' : kind} entityKey={targetId} />}
               {kind === 'profile' && <ProfileReviews slug={identifier} profileId={targetId} authenticated={Boolean(session)} />}
 
               {shouldResumeContact ? (

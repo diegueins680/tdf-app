@@ -1,3 +1,4 @@
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -635,6 +636,7 @@ export default function ArtistPublicPage() {
                       {visibleReleases.map((release) => (
                         <Grid key={release.arReleaseId} item xs={12} sm={6} md={4}>
                           <ReleaseCard release={release} />
+                          <InteractionPanel kind="artist_release" entityKey={String(release.arReleaseId)} />
                         </Grid>
                       ))}
                     </Grid>

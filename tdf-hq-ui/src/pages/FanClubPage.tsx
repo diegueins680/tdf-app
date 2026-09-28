@@ -26,7 +26,7 @@ import {
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
-import ReactionBar from '../components/ReactionBar';
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -257,19 +257,6 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
     },
   });
 
-  const reactMut = useMutation({
-    mutationFn: ({ itemId, kind, reactionTypeId }: { itemId: number; kind: string; reactionTypeId: string }) => {
-      if (kind === 'post') {
-        return Fans.reactToPost(artistId, itemId, { crrReactionTypeId: reactionTypeId });
-      } else {
-        return Fans.reactToMemory(artistId, itemId, { crrReactionTypeId: reactionTypeId });
-      }
-    },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
-    },
-  });
-
   if (loading) return <SkeletonCards count={3} />;
 
   const visibleItems = displayFeed.filter(item => !item.fcfIsHidden);
@@ -333,12 +320,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                           ))}
                         </ImageList>
                       )}
-                      <ReactionBar
-                        reactions={item.fcfReactions}
-                        onReact={(reactionTypeId) => reactMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, reactionTypeId })}
-                        disabled={reactMut.isPending}
-                        loading={reactMut.isPending}
-                      />
+                      <InteractionPanel kind={item.fcfKind === 'post' ? 'club_post' : 'club_memory'} entityKey={String(item.fcfId)} />
                       <Typography variant="caption" color="text.secondary">
                         {new Date(item.fcfCreatedAt).toLocaleString()}
                       </Typography>
@@ -591,6 +573,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                       </Stack>
                       {post.fcpTitle && <Typography variant="h6">{post.fcpTitle}</Typography>}
                       <Typography variant="body1">{post.fcpContent}</Typography>
+                      <InteractionPanel kind="club_post" entityKey={String(post.fcpId)} />
                       {post.fcpMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
                           {post.fcpMediaUrls.map((url, idx) => (

@@ -1,3 +1,4 @@
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -291,6 +292,7 @@ export default function SocialEventDetailPage() {
 
         <Stack spacing={1.5}>
           <Typography variant="h5">Publicaciones</Typography>
+          <InteractionPanel kind="event" entityKey={eventId} />
           {momentsQuery.isLoading ? <CircularProgress size={24} /> : momentsQuery.data?.length === 0 ? (
             <EmptyState icon={<ImageIcon fontSize="inherit" />} title="Todavía no hay publicaciones" description="Sé la primera persona en compartir un momento de este evento." />
           ) : momentsQuery.data?.map((moment) => (
@@ -322,6 +324,7 @@ export default function SocialEventDetailPage() {
                   )}
                   {moment.emMediaType === 'video' ? <Box component="video" src={moment.emMediaUrl} controls sx={{ width: '100%', maxHeight: 520, borderRadius: 2, bgcolor: 'black' }} /> : <Box component="img" src={moment.emMediaUrl} alt={moment.emCaption ?? `Publicación de ${moment.emAuthorName}`} sx={{ width: '100%', maxHeight: 520, objectFit: 'contain', borderRadius: 2, bgcolor: 'action.hover' }} />}
                   {moment.emCaption && <><Divider /><Typography sx={{ whiteSpace: 'pre-wrap' }}>{moment.emCaption}</Typography></>}
+                  {moment.emId && <InteractionPanel kind="event_moment" entityKey={moment.emId} />}
                 </Stack>
               </CardContent>
             </Card>

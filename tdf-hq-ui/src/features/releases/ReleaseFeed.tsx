@@ -1,3 +1,4 @@
+import { InteractionPanel } from '../interactions/InteractionPanel';
 import { useId, useRef, useState, type RefObject } from 'react';
 import {
   Alert,
@@ -403,6 +404,7 @@ function ReleaseCard(props: ReleaseCardProps) {
       }}
     >
       <ReleaseSummary release={release} />
+      <InteractionPanel kind="artist_release" entityKey={String(release.arReleaseId)} />
       {releaseSources.length > 0 && (
         <Box sx={{ mt: 1.5 }}>
           <StreamingPlayer

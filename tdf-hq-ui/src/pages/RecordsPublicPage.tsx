@@ -1,3 +1,4 @@
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { useTranslation } from 'react-i18next';
 import { useContactCreation } from '../hooks/useContactCreation';
@@ -611,6 +612,7 @@ const GradientCard = ({
 );
 
 interface RecordingItem {
+  id: string;
   title: string;
   artist: string;
   description: string;
@@ -629,6 +631,7 @@ interface ReleaseLink {
 }
 
 interface ReleaseItem {
+  id: string;
   title: string;
   artist: string;
   blurb: string;
@@ -640,6 +643,7 @@ interface ReleaseItem {
   sortOrder: number;
 }
 interface SessionItem {
+  id: string;
   title: string;
   guests: string;
   youtubeId: string;
@@ -682,6 +686,7 @@ const mapRecordsRelease = (release: RecordsReleaseDTO): ReleaseItem => {
   const resource = primaryResource(release.resources, 'audio-track');
   const duration = formatDurationMs(resource?.durationMs);
   return {
+    id: release.id,
     title: release.title,
     artist: release.contributors.map((contributor) => contributor.name).join(', ') || 'TDF Records',
     releasedOn: release.releaseDate ?? duration,
@@ -699,6 +704,7 @@ const mapRecordsRecording = (recording: RecordsRecordingDTO): RecordingItem | nu
   if (!resource) return null;
   const duration = formatDurationMs(recording.durationMs ?? resource.durationMs);
   return {
+    id: recording.id,
     title: recording.title,
     artist: recording.contributors.map((contributor) => contributor.name).join(', '),
     description: recording.description ?? '',
@@ -716,6 +722,7 @@ const mapRecordsSession = (session: RecordsSessionDTO): SessionItem | null => {
   const resource = primaryResource(session.resources, 'video');
   if (resource?.providerCode !== 'youtube') return null;
   return {
+    id: session.id,
     title: session.title,
     guests: session.contributors.map((contributor) => contributor.name).join(', '),
     youtubeId: resource.externalCode,
@@ -807,6 +814,7 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
                 </Button>
               </Box>
             )}
+            <InteractionPanel kind="recording" entityKey={item.id} />
           </CardContent>
         </Card>
       </Grid>
@@ -904,6 +912,7 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
                   </Button>
                 ))}
               </Stack>
+              <InteractionPanel kind="record_release" entityKey={release.id} />
             </CardContent>
           </Card>
         </Grid>
@@ -978,6 +987,7 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {video.description}
               </Typography>
+              <InteractionPanel kind="recording_session" entityKey={video.id} />
             </CardContent>
           </Card>
         </Grid>

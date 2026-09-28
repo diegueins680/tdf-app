@@ -12,6 +12,8 @@ export function notificationTargetPath(notification: NotificationDTO): string | 
   const activity = typeof notification.nTargetKey === 'string' && /^[1-9]\d*$/.test(notification.nTargetKey)
     ? positiveNotificationId(Number(notification.nTargetKey)) : null;
   switch (notification.nTargetType) {
+    case 'interaction_target': return key ? `/conversacion/target/${key}` : null;
+    case 'interaction_comment': return key ? `/conversacion/comment/${key}` : null;
     case 'party_profile': return id ? `/perfil/${id}` : null;
     case 'feature_access_request': return id ? `/solicitudes-acceso?request=${id}` : null;
     case 'event_logistics': return id ? `/social/eventos/${id}/logistica${activity ? `?activity=${activity}` : ''}` : null;
