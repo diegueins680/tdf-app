@@ -464,17 +464,21 @@ jobs:
           target: google_apis
           cores: 2
           ram-size: 2048M
+          profile: pixel_6
           disable-animations: true
           script: |
             adb install "$(find artifacts/interaction-apk -name '*.apk' -print -quit)"
             adb reverse tcp:18128 tcp:18128
-            bash scripts/interactions/test-http.sh
+            adb shell am start -W -n com.tdf.records/.MainActivity
+            bash scripts/interactions/test-http.sh || { adb logcat -b crash -d; find "$HOME/.maestro/tests" -name '*.png' -exec cp {} /tmp/ \;; exit 1; }
       - name: Retain synthetic native screenshots
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: interaction-android-evidence-${{ github.sha }}
-          path: /tmp/tdf-interaction-native-*.png
+          path: |
+            /tmp/tdf-interaction-native-*.png
+            /tmp/screenshot-*.png
           if-no-files-found: ignore
           retention-days: 7
 

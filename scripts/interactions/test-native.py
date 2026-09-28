@@ -86,10 +86,15 @@ root = next(comment for comment in page['items'] if comment['body'] == fixture['
 assert root['state'] == 'visible' and root['author']['id'] == owner and root['parentId'] is None
 summary = request(owner, identity)
 assert any(reaction['code'] == 'like' and reaction['count'] > 0 for reaction in summary['reactions'])
-reply_body = 'Native reply ' + uuid.uuid4().hex
-reply = request(respondent, f'/interactions/targets/{target}/commands', {
-    'requestKey': str(uuid.uuid4()), 'command': {'operation': 'comment.create', 'body': reply_body, 'parentId': root['id'], 'mentions': []},
-})
+if args.resume and fixture.get('nativeRootId') == root['id'] and fixture.get('nativeReplyId'):
+    reply = request(owner, identity + '/comments/' + fixture['nativeReplyId'])['comment']
+    reply_body = fixture['nativeReplyBody']
+    assert reply['parentId'] == root['id'] and reply['body'] == reply_body
+else:
+    reply_body = 'Native reply ' + uuid.uuid4().hex
+    reply = request(respondent, f'/interactions/targets/{target}/commands', {
+        'requestKey': str(uuid.uuid4()), 'command': {'operation': 'comment.create', 'body': reply_body, 'parentId': root['id'], 'mentions': []},
+    })
 sql('SELECT interaction_dispatch_events(20);')
 notification = next(row for row in request(owner, '/fans/me/notifications') if row.get('nTargetKey') == reply['id'])
 assert notification['nTargetType'] == 'interaction_comment'
