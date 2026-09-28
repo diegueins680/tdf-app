@@ -64,6 +64,10 @@ context=request(actors[2],identity+'/comments/'+reply['id']); assert context['ro
 legacy=request(actors[2],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':None,'fcpReqContent':'Legacy client reply','fcpReqMediaUrls':[],'fcpReqParentId':post['fcpId']})
 assert legacy['fcpContent']=='Legacy client reply'
 assert sql(f"SELECT count(*) FROM fan_club_post WHERE id={legacy['fcpId']}")=='0'
+# Imported artist updates do not carry public publication authority.
+sql(f"INSERT INTO artist_profile(artist_party_id,created_at) VALUES({actors[0]},now()); INSERT INTO social_sync_post(id,platform,external_post_id,artist_party_id,caption,fetched_at,ingest_source,created_at,updated_at) VALUES({actors[0]},'instagram','synthetic-api-private-update',{actors[0]},'Private ingestion caption',now(),'manual',now(),now());")
+request(None,f'/public/interactions/targets/artist_update/{actors[0]}',status=404)
+request(actors[0],f'/interactions/targets/artist_update/{actors[0]}',status=404)
 # The legacy event-moment array has no cursor; activation must not truncate it.
 sql(f"INSERT INTO social_event(id,organizer_party_id,title,start_time,event_type_id,workflow_state_id) SELECT {actors[0]},'{actors[0]}','Moment compatibility event',now(),id,'00000000-0000-4000-8000-000000000232' FROM event_type WHERE code='concert'; INSERT INTO event_moment(event_id,author_party_id,author_name,media_url,media_type) SELECT {actors[0]},'{actors[0]}','API fixture','https://example.test/photo.jpg','image' FROM generate_series(1,60);")
 moments=request(actors[0],f'/social-events/events/{actors[0]}/moments')

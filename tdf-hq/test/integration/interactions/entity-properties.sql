@@ -9,6 +9,9 @@ INSERT INTO event_moment(id,event_id,author_party_id,author_name,media_url,media
 VALUES(917000001,917000001,'917000002','Member','https://example.test/photo.jpg','image');
 INSERT INTO event_logistics_member(event_id,party_id,member_role) VALUES(917000001,'917000002','viewer');
 INSERT INTO event_invitation(event_id,from_party_id,to_party_id,status) VALUES(917000001,'917000003','917000003','accepted');
+INSERT INTO artist_profile(artist_party_id,created_at) VALUES(917000001,now());
+INSERT INTO social_sync_post(id,platform,external_post_id,artist_party_id,caption,fetched_at,ingest_source,created_at,updated_at)
+VALUES(917000001,'instagram','synthetic-private-update',917000001,'Private ingestion caption',now(),'manual',now(),now());
 UPDATE interaction_runtime SET enabled=true WHERE singleton;
 DO $$
 DECLARE target uuid; result_value jsonb; root uuid; reply uuid; k record;
@@ -16,6 +19,13 @@ BEGIN
  FOR k IN SELECT code FROM interaction_entity_kind LOOP
    ASSERT interaction_resolve(k.code,'not-an-id',917000001) IS NULL;
  END LOOP;
+ ASSERT interaction_resolve('artist_update','917000001',NULL) IS NULL, 'Importing an artist update grants no anonymous publication';
+ ASSERT interaction_resolve('artist_update','917000001',917000001) IS NULL;
+ ASSERT interaction_register('artist_update','917000001',917000001) IS NULL;
+ UPDATE interaction_entity_kind SET enabled=true WHERE code='artist_update';
+ ASSERT interaction_resolve('artist_update','917000001',NULL) IS NULL, 'Capability toggles cannot replace publication authority';
+ UPDATE interaction_entity_kind SET enabled=false WHERE code='artist_update';
+ ASSERT (SELECT caption='Private ingestion caption' FROM social_sync_post WHERE id=917000001), 'Unavailable target retains imported source';
  ASSERT interaction_event_access(917000001,917000001);
  ASSERT interaction_event_access(917000001,917000002);
  ASSERT NOT interaction_event_access(917000001,917000003), 'Legacy self-invitation is not an access grant';

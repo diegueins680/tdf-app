@@ -9,6 +9,9 @@ physical-device VoiceOver/TalkBack behavior or a completed production rollout.
 
 The historical evidence below remains tied to its stated commits. The new forward
 repair migration and moderator-reason clients are undergoing fresh qualification.
+All 138 migrations and all seven SQL property suites pass against the restored
+production PostgreSQL 17.8 schema; activation/retry/pause/resume preserve the 30
+existing notifications. The clone is paused, with no application workers.
 Regression coverage now includes the eight-way notification preference truth table,
 new mentions after read, aggregate unread refresh, reaction no-ops, edit after policy
 changes, permanent legacy follow revocation, protected report reasons and atomic

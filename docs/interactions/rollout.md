@@ -2,7 +2,7 @@
 
 Production schema migration is additive and separate from activation. The live
 baseline was 115 reviewed migrations on PostgreSQL 17.8; eight existing social
-compatibility migrations and fifteen interaction migrations are registered in
+compatibility migrations and sixteen interaction migrations are registered in
 order. Existing social-v2 rollout gates remain disabled. No feature activation
 is a schema-install side effect.
 
@@ -95,3 +95,9 @@ remain effective. After activation, directory block changes share the account lo
 and increment the canonical pair revision, and block creation severs both follow
 stores. Reaction writes require an explicit selectable-choice row; historical
 nonselectable reactions remain readable and removable.
+
+`2026-09-29_interaction_publication_authority` disables the reserved artist_update
+kind and makes its resolver unconditionally unavailable, including if a capability
+flag is accidentally enabled. Social-sync ingestion has no publication/review
+state and must remain private. Imported rows are preserved. Published artist
+releases and ordinary club posts retain their existing publication paths.

@@ -1373,6 +1373,7 @@
       "tdf-hq/sql/2026-09-28_interaction_read_optimization.sql",
       "tdf-hq/sql/2026-09-28_interaction_summary.sql",
       "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+      "tdf-hq/sql/2026-09-29_interaction_publication_authority.sql",
       "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
@@ -2673,7 +2674,7 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "25584b5e2fe8a8089a8e988270bb8838a7adc89ca232c7b075d1f3b63162f6a4",
+      "sha256": "106272b4cdf37b1a05465242689581e9af373d86d6bc5d4a1f69c9b92aa9f86f",
       "authority": "inferred",
       "authorityBasis": "Status: implementation and installed test journeys pass; protected review, signed releases and production rollout remain pending. No production schema or feature gate changed.",
       "kind": "requirement-candidate"
@@ -2687,14 +2688,14 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "8b5f537c82e9758613a5e563923ccec76cd4dd3291ded85b338da6c74a288363",
+      "sha256": "5d00adc60cdd6cac37cc6387fbe3f8781e7ec590a9f2ee170d8a2a77665863ac",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/interactions/verification-2026-09-29.md",
-      "sha256": "0c09d17857070c140a94785d51db6343bd302d0eadfbdba73cd3745a7946b01b",
+      "sha256": "6530b481b4ec92f08ea6a1c7c94dfe41769c01f0da0faad58fea0048afaa443d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4570,7 +4571,7 @@
     },
     {
       "path": "formal/interactions/README.md",
-      "sha256": "77740900f0f57aba1889fdc1bd54afced2538761a69e6fb61e25a0409bfe3d34",
+      "sha256": "d025b1e2c446f92b312c830dd7a233fe35ebc8b1c898ee69d5ee24eaab3158a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

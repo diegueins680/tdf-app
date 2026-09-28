@@ -149,7 +149,7 @@ The production restore rehearsal has passed (details below).
 | event_moment | SocialEventDetailPage | EventMomentCard for persisted remote moments |
 | directory_profile | DirectoryPublicDetailPage | DirectoryPublicDetailScreen |
 | classified / opportunities | DirectoryPublicDetailPage | DirectoryPublicDetailScreen |
-| artist_update | Trusted adapter for persisted social_sync_post; no existing client renders these external posts | Opaque discussion destination; no standalone native publication feed exists |
+| artist_update | Reserved and disabled: social_sync_post is private ingestion with no publication authority | No target registration or public/authenticated discussion; future adoption requires an explicit reviewed publication model |
 
 Label/venue publication content follows its actual persisted post/media authority.
 Operational venue records do not acquire social discussions merely because they
