@@ -1,7 +1,8 @@
 # Ecuador event discovery
 
 The backend discovers events for Ecuador cities in the canonical city registry,
-prioritizing Quito. Discovery does not require user subscriptions or change them.
+prioritizing Quito, while retaining previously supported followed destinations.
+Ecuador discovery does not require user subscriptions or change them.
 The mobile Events tab still uses followed cities for personalized display and
 offers **Explore** for other public events. Registered coverage is not proof
 that every Ecuador city or official source has an automated interface.

@@ -101,6 +101,7 @@ import           TDF.Services.EventDiscovery
   , fetchTicketmasterEventsForCity
   , finishEventDiscoveryRun
   , loadEcuadorDiscoveryCities
+  , loadSubscribedDiscoveryCities
   , reconcileProviderEvents
   , reconcileImportedEvents
   , syncDiscoveredEvent
@@ -548,8 +549,10 @@ runEventDiscoveryOnce Env{..} = do
   LogBuf.addLog LogBuf.LogInfo
     ("[Cron][EventDiscovery] " <> (if eventDiscoveryFullReconciliation slot then "Sunday full" else "Daily")
       <> " source refresh for " <> T.pack (show slot))
-  allCities <- loadEcuadorDiscoveryCities envPool
-  let cities = selectEventDiscoveryCities slot allCities
+  ecuadorCities <- loadEcuadorDiscoveryCities envPool
+  followedCities <- loadSubscribedDiscoveryCities envPool
+  let allCities = nub (ecuadorCities ++ followedCities)
+      cities = selectEventDiscoveryCities slot allCities
   lifecycleChanges <- reconcileImportedEvents envPool now allCities
   when (lifecycleChanges > 0) $
     LogBuf.addLog

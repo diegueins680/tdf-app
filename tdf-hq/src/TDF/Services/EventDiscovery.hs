@@ -54,6 +54,7 @@ import Data.Aeson
   , (.!=)
   , (.=)
   )
+import Data.Int (Int64)
 import Data.Aeson.Types (parseMaybe)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BS8
@@ -2060,10 +2061,14 @@ resolveAllowedImportedUpdateStateId currentStateId desiredStateId =
 
 syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
 syncDiscoveredEventDb requestedPublication now event@DiscoveredEvent{..} = do
-  -- Every automated entry point locks the existing pilot before event/entity
-  -- locks. Database triggers enforce the shared cap in the same transaction.
+  -- Every automated entry point locks its enabled source and the existing
+  -- pilot before event/entity locks. Database triggers enforce the shared cap in the same transaction.
   backend <- T.toCaseFold <$> getRDBMS
   autoPublish <- if "postgres" `T.isInfixOf` backend then do
+    sources <- rawSql
+      "SELECT id FROM event_discovery_source WHERE source_key=? AND enabled AND source_type IN ('ticketmaster','buenplan','ical','json') FOR SHARE"
+      [toPersistValue discoveredEventProvider] :: SqlPersistT IO [Single Int64]
+    unless (length sources == 1) (liftIO (fail "Event source disabled or unavailable"))
     controls <- rawSql
       "SELECT approved FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE"
       [] :: SqlPersistT IO [Single Bool]

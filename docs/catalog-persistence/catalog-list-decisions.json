@@ -13934,22 +13934,22 @@
       }
     },
     {
-      "id": "8ea1bf1edf9585be5676",
+      "id": "2b913508b878369712cf",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Reviewed the integrated ordered 114-entry release registry. Preserve all 113 approved main migrations and their immutable introduction commits; append the additive resource availability correction, whose introducing commit remains in ancestry. This is executable release metadata, not editable business data.",
+      "justification": "Reviewed all 114 existing migration identities and retained their immutable introducing commits. Append only the additive shared event pilot/publication boundary migration; it records no approval or enablement.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "records-availability-integration-2026-09-18",
+      "reviewBatch": "event-ingestion-boundaries-2026-09-28",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 114
+        "valueCount": 115
       }
     },
     {
