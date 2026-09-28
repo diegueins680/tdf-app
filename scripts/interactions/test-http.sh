@@ -37,4 +37,12 @@ if test "${TDF_INTERACTION_BROWSER_E2E:-0}" = 1; then
   cd "$interaction_repo"
   TDF_INTERACTION_TEST_FIXTURE="$interaction_runtime/fixture.json" npm exec -- playwright test --config=playwright.interactions.config.mjs
 fi
+if test -n "${TDF_INTERACTION_NATIVE_DEVICE:-}"; then
+  python3 "$interaction_repo/scripts/interactions/test-native.py" \
+    --fixture "$interaction_runtime/fixture.json" \
+    --mobile-root "${TDF_INTERACTION_MOBILE_ROOT:-$interaction_repo/tdf-mobile}" \
+    --device "$TDF_INTERACTION_NATIVE_DEVICE" \
+    --app-id "${TDF_INTERACTION_NATIVE_APP_ID:-com.tdfrecords.app}" \
+    --maestro "${TDF_INTERACTION_MAESTRO:-maestro}"
+fi
 printf 'PASS isolated interaction HTTP runtime; logs in %s\n' "$interaction_runtime"

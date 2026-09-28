@@ -13,7 +13,7 @@ API: Hetzner / PostgreSQL 17.8, reviewed SQL migrations (115), Persistent boot
 migration disabled. Web: Cloudflare Pages. Old TDF Fly API stopped/cordoned;
 shared Fly database remains for Trader and must not be changed by this project.
 Production inspection used read-only transactions and schema/aggregate metadata;
-no private discussion bodies or notification text was exported.
+no private discussion bodies or notification text were included in inventory output.
 
 | Existing implementation | Current authority / reuse decision |
 | --- | --- |
@@ -215,3 +215,14 @@ The records thumbnail regression fixture now returns the actual unavailable-targ
 404 contract for synthetic rows. All ten records tests pass across five browser
 configurations. The real HTTP suite also verifies that repeated unauthorized
 moderation attempts exhaust the account write budget and return 429.
+
+The root revision `4c9ef6a3891733a3f0f687fb43efc57242ed5521` passed all 23
+GitHub checks, including the complete persona browser and backend HTTP suites.
+Installed iOS verified login, a reaction and a server-persisted comment. Its initial
+unsigned artifact could not retain a login across cold starts because SecureStore
+lacked simulator entitlements; the Xcode test build now embeds those entitlements.
+Cold notification/edit/deletion flows remain pending the corrected artifact.
+Two additional native rendered regressions preserve exact target/comment return
+destinations through guest sign-in; all seven interaction flows and type/lint pass.
+The dedicated Android test device is booting; no installed Android pass is claimed.
+Reproduction commands and artifact boundaries: [native verification](native-verification.md).

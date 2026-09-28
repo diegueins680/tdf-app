@@ -121,6 +121,7 @@
       "scripts/interactions/test-concurrency.sh",
       "scripts/interactions/test-database.sh",
       "scripts/interactions/test-http.sh",
+      "scripts/interactions/test-native.py",
       "scripts/interactions/test-schema.sh",
       "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
@@ -2670,9 +2671,16 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "ac68e0fa05e1cf110e74aa775546be018241f7ff6a577dc094f9e17aa74ea500",
+      "sha256": "ed4281550c2e1541619651473cafdb2cc4d31504f333128b78029e96e543978d",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress in isolated worktrees; no production schema or feature gate changed.",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/interactions/native-verification.md",
+      "sha256": "df6afab79a837a94ba1b4e4958711857af75a97768f23636eca6a462de442ceb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
