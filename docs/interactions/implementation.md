@@ -176,9 +176,12 @@ Read from the signed iOS artifact and Google Play Console App signing page on
 Set the existing Cloudflare association-function deployment variables
 `APPLE_TEAM_ID` and `ANDROID_APP_LINK_SHA256_CERT_FINGERPRINTS` during release.
 Include both Android certificates when supporting EAS and Play builds. Native
-associated domains now include both canonical TDF hosts and the existing Pages
-host; event routes remain supported alongside discussion links. Association
-endpoints and an installed signed build still require deployed verification.
+associated domains include `www.tdfrecords.net` and the existing Pages host;
+event routes remain supported alongside discussion links. The bare
+`tdfrecords.net` domain is a separate redirect-only host, so it is excluded from
+native verified-host declarations. Copied discussion links use the canonical
+www host. Association endpoints and an installed signed build still require
+deployed verification.
 
 Actual desktop and Pixel 7 browser flows passed against the isolated real API:
 pagination/disclosure, reactions, deep focus, authoring/replies, notification
@@ -224,5 +227,7 @@ lacked simulator entitlements; the Xcode test build now embeds those entitlement
 Cold notification/edit/deletion flows remain pending the corrected artifact.
 Two additional native rendered regressions preserve exact target/comment return
 destinations through guest sign-in; all seven interaction flows and type/lint pass.
-The dedicated Android test device is booting; no installed Android pass is claimed.
+The local Android emulator hit host resource limits. Installed Android journeys
+now run on a dedicated GitHub runner with matching build provenance; no installed
+Android pass is claimed until that job completes.
 Reproduction commands and artifact boundaries: [native verification](native-verification.md).

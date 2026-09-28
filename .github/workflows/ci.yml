@@ -72,7 +72,7 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          FORCE_BACKEND: ${{ inputs.force_backend && 'true' || 'false' }}
+          FORCE_BACKEND: ${{ (inputs.force_backend || (github.event_name == 'workflow_dispatch' && inputs.native_android_run != '')) && 'true' || 'false' }}
         run: |
           args=(--base "$BASE_SHA" --head "$HEAD_SHA" --github-output "$GITHUB_OUTPUT")
           if [ "$FORCE_BACKEND" = 'true' ]; then args+=(--force-backend); fi
