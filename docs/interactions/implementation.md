@@ -126,7 +126,7 @@ The production restore rehearsal has passed (details below).
 - Expo simulator build was rejected by the monthly Free-plan quota. The GitHub
   macOS simulator build passed and its bundled app is installed on a dedicated
   iOS 18.3 simulator; installed-device flows remain under verification.
-  Its unsigned simulator artifact is not a store release. Signed release workflows
+  Its ad hoc simulator artifact is not a store release. Signed release workflows
   now point to the canonical API; checked-in native projects include link
   entitlements/intent filters and the locked ExpoCrypto dependency.
 - Root CI uncovered stale test mocks, generated specification inventory and
@@ -228,11 +228,26 @@ used the corrected ad hoc simulator binary with locally rebuilt feature
 JavaScript; it does not establish store signing or HTTPS association. The native
 focus regression waits for list layout, includes header height when retrying an
 unmeasured row, and announces only a visible target. Seven rendered regressions
-and type/lint pass; final hosted native artifacts remain pending.
+and type/lint pass. The unmodified hosted `a3c4b927` artifact then exposed an
+additional premature-viewability case: the reply was loaded but remained below
+the viewport. Follow-up `2f5db09` confirms native heading/viewport coordinates,
+corrects scroll offsets and refuses stale virtualized visibility before announcing
+focus. The rendered regression reproduces an offscreen view token and verifies
+both correction and delayed announcement. The locally rebundled follow-up passed
+notification focus, editing, parent deletion, reply retention and collapse/expand,
+followed by authoritative API assertions. Fresh hosted artifacts and their full
+installed journeys remain required.
 
 The initial Android CI device installed and launched the APK successfully. Its
 journey stopped at the welcome screen; the Maestro setup now follows the existing
-account action before login. No complete Android journey pass is claimed yet.
+account action before login. A subsequent run failed within Maestro's combined
+clear-and-launch operation despite a successful direct Android activity launch.
+The fixture now clears state separately and opens the registered auth intent.
+That retry reached the authenticated discussion, exposing Android system-bar overlap
+from React Native's legacy SafeAreaView. Follow-up `7f2e885` uses the existing
+safe-area-context provider. Seven rendered regressions, type checking and lint
+pass. All other jobs in run `36485841756` passed, including backend, migrations,
+API and persona browser journeys. No complete Android journey pass is claimed yet.
 The local iOS distribution profile lacks Associated Domains. Release preflight
 now rejects that profile before compilation; Apple Developer sign-in is pending
 for verification/replacement of the release profile. Ten release/signing tests
