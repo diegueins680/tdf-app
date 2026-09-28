@@ -69,3 +69,21 @@ access is pending. Play Console's latest uploaded Android version is 17; version
 App Store Connect history must be checked before selecting its successor.
 
 Use [the rollout runbook](rollout.md), preserving Trader and its shared Fly database.
+
+## Release-runtime follow-up
+
+Mobile PRs [116](https://github.com/diegueins680/TDF-mobile/pull/116) and
+[117](https://github.com/diegueins680/TDF-mobile/pull/117) merged through the normal
+workflow after validation. PR 117 separates OTA runtime `1.0.1-interactions.1`
+from old binaries lacking Expo Crypto; it changes compatibility metadata and
+release qualification, not interaction behavior. The root now pins merged commit
+`5eb05bc`; mobile main is `16202bf72f04e85f9f2bf624006eac7c033afa55`.
+Both Python guard suites run in Mobile Validate, including negative native/config
+runtime mismatch and mixed Android resource-value cases. Ten tests, resolved
+production Expo config, type checking, lint and hosted Mobile Validate pass.
+Signed candidates from the earlier main were cancelled before distribution.
+Their replacements are Android [36493153223](https://github.com/diegueins680/TDF-mobile/actions/runs/36493153223)
+(version code 18) and iOS [36493156554](https://github.com/diegueins680/TDF-mobile/actions/runs/36493156554)
+(candidate build 26); qualification and publication remain pending. No OTA update
+or channel mapping was changed. See the mobile repository's
+`docs/interaction-release-runtime.md` for the compatibility contract.

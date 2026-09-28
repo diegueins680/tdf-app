@@ -94,8 +94,10 @@ passing prototype fixture for production rollout.
 
 ## Verification and release state (2026-09-28)
 
-Draft pull requests: root [470](https://github.com/diegueins680/tdf-app/pull/470)
-and native [116](https://github.com/diegueins680/TDF-mobile/pull/116). Production
+Pull requests: root [470](https://github.com/diegueins680/tdf-app/pull/470)
+is ready for independent review. Native [116](https://github.com/diegueins680/TDF-mobile/pull/116)
+and release-runtime follow-up [117](https://github.com/diegueins680/TDF-mobile/pull/117)
+are merged. Production
 schema and activation gate remain unchanged. Independent review, full green CI,
 installed native verification and deployment are still release requirements.
 The production restore rehearsal has passed (details below).
@@ -261,3 +263,12 @@ Both installed platforms pass the complete fixture journey. See
 artifact provenance, CI run and remaining release boundaries. Earlier failure
 notes above document the regressions that led to the measured native focus,
 safe-area and automation corrections; they are superseded by this result.
+
+The signed-release follow-up isolates the new Expo Crypto/native capability from
+legacy OTA runtimes with `1.0.1-interactions.1`. `app.json` is the runtime authority;
+release checks enforce native mirrors, and artifact qualification checks actual
+compiled Android resources and iOS Expo.plist plus embedded configs. Old candidates
+were cancelled before distribution. Native main is now `16202bf72f04e85f9f2bf624006eac7c033afa55`;
+root pins its merged feature ancestor `5eb05bc`. The interaction screen/API code
+is unchanged from the successful installed journeys. No OTA bundle or channel
+mapping was published. Signed artifact qualification remains a release gate.
