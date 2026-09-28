@@ -1679,7 +1679,7 @@
     },
     {
       "path": "DEPLOYMENT_GUIDE.md",
-      "sha256": "0a1a1fd9462ee37ba234d2eb78a3b394bdefdb7fb37046b724dd87ec97e465b4",
+      "sha256": "9aac1e8f610d96006796aab818cde7c44b86b9f6847fa40e08cb20532fd10ce0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
