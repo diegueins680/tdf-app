@@ -210,7 +210,7 @@ async function readGitBlob(sha, relativePath) {
   return stdout;
 }
 
-async function resolveReleaseContext(options) {
+export async function resolveReleaseContext(options) {
   const sha = normalizeFullSha(options.sha);
   const app = validateSafeName(options.app, 'Fly app');
   const dbApp = validateSafeName(options.dbApp, 'Fly database app');
@@ -468,7 +468,7 @@ async function readSecurityEmergencyReadiness(context) {
   return parseSecurityEmergencyReadinessOutput(stdout);
 }
 
-async function verifyImageExists(image, sha) {
+export async function verifyImageExists(image, sha) {
   if (!(await commandExists('docker'))) throw new Error('docker CLI is required to inspect the release image.');
   const { stdout } = await run([
     'docker', 'buildx', 'imagetools', 'inspect', image,
