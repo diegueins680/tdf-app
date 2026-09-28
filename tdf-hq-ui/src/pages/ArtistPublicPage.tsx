@@ -272,11 +272,6 @@ export default function ArtistPublicPage() {
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
 
-  useEffect(() => {
-    if (!resumeFollow || !profileLink || followsQuery.isLoading || !isFollowing) return;
-    navigate(profileLink, { replace: true });
-  }, [followsQuery.isLoading, isFollowing, navigate, profileLink, resumeFollow]);
-
   useMetaTags({
     title: artist?.apDisplayName ?? 'Artista',
     description: artist?.apBio?.slice(0, 160),

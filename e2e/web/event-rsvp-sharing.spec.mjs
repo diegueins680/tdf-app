@@ -175,7 +175,7 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
 
   await expect(page).toHaveURL(/\/login\?.*signup=1.*redirect=%2Feventos%2F42/);
   const signup = page.getByRole('dialog', { name: /crear cuenta/i });
-  await expect(signup.getByRole('button', { name: 'Cancelar', exact: true })).toBeVisible();
+  await expect(signup.getByRole('button', { name: 'Ya tengo una cuenta', exact: true })).toBeVisible();
   await expect(signup.getByRole('button', { name: 'Crear e ingresar', exact: true })).toBeDisabled();
   await signup.getByLabel('Nombre').fill('Persona');
   await signup.getByLabel('Apellido').fill('Ficticia');

@@ -223,12 +223,12 @@ describe('ArtistPublicPage follow continuity', () => {
       ffArtistName: 'Las Sintéticas',
       ffStartedAt: '2026-09-06T12:00:00Z',
     }]);
-    const view = renderPage('/a/las-sinteticas?resume=follow&artistId=17');
+    const view = renderPage('/a/las-sinteticas?source=event&resume=follow&artistId=17#bio');
 
     const followedButton = await screen.findByRole('button', { name: 'Dejar de seguir a Las Sintéticas' });
     await waitFor(() => expect((followedButton as HTMLButtonElement).disabled).toBe(false));
     await waitFor(() => {
-      expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe('/a/las-sinteticas');
+      expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe('/a/las-sinteticas?source=event#bio');
     });
     expect(await screen.findByRole('button', { name: 'Dejar de seguir a Las Sintéticas' })).toBeTruthy();
     expect(followMock).not.toHaveBeenCalled();

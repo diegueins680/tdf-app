@@ -42,6 +42,10 @@ main's added single-feature-onboarding configuration; missing fields remain comp
 HTTP expiry fixtures commit a valid future expiry, observe the database clock crossing it,
 then use attributed retirement and replacement. Original attention, failure-code, privacy
 and completion assertions remain, with revisions accounting for retained history.
+Artist-follow resume cleanup now uses one session-fenced navigation that retains unrelated
+query parameters and the fragment, including when the artist is already followed. Browser
+and component regressions cover that case. The RSVP signup test uses the current dialog's
+"Ya tengo una cuenta" action while retaining the disabled-submit and full recovery assertions.
 No database guard is disabled
 for ordinary fixtures, no assertion is removed, and no CI job is skipped.
 
