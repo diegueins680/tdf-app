@@ -46,17 +46,20 @@ async function main() {
   const igSub = subs.data?.find(s => s.object === 'instagram');
   const fbSub = subs.data?.find(s => s.object === 'page');
 
-  check('Instagram webhook subscribed', !!igSub, igSub ? `callback=${igSub.callback_url}, active=${igSub.active}` : 'missing');
-  check('Facebook webhook subscribed', !!fbSub, fbSub ? `callback=${fbSub.callback_url}, active=${fbSub.active}` : 'missing');
+  const igSubscribed = igSub?.active === true && igSub.callback_url === 'https://api.tdfrecords.net/instagram/webhook';
+  const fbSubscribed = fbSub?.active === true && fbSub.callback_url === 'https://api.tdfrecords.net/facebook/webhook';
 
-  if (!igSub) {
+  check('Instagram webhook subscribed', igSubscribed, igSub ? `callback=${igSub.callback_url}, active=${igSub.active}` : 'missing');
+  check('Facebook webhook subscribed', fbSubscribed, fbSub ? `callback=${fbSub.callback_url}, active=${fbSub.active}` : 'missing');
+
+  if (!igSubscribed) {
     console.log('\n🔧 To fix Instagram subscription:');
     console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions" --data-urlencode "object=instagram" --data-urlencode "callback_url=https://api.tdfrecords.net/instagram/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${INSTAGRAM_VERIFY_TOKEN}" --data-urlencode "access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}"');
   }
 
-  if (!fbSub) {
+  if (!fbSubscribed) {
     console.log('\n🔧 To fix Facebook subscription:');
-    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions" --data-urlencode "object=page" --data-urlencode "callback_url=https://api.tdfrecords.net/facebook/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=YOUR_FACEBOOK_WEBHOOK_VERIFY_TOKEN" --data-urlencode "access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}"');
+    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions" --data-urlencode "object=page" --data-urlencode "callback_url=https://api.tdfrecords.net/facebook/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${FACEBOOK_MESSAGING_TOKEN:-${FACEBOOK_PAGE_ACCESS_TOKEN:-${INSTAGRAM_VERIFY_TOKEN}}}" --data-urlencode "access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}"');
   }
 
   // 3. Instagram messaging token
@@ -128,8 +131,8 @@ async function main() {
   // 5. Summary
   console.log('\n=== Summary ===');
   const issues = [];
-  if (!igSub) issues.push('Re-subscribe Instagram webhook');
-  if (!fbSub) issues.push('Re-subscribe Facebook webhook + set FACEBOOK_MESSAGING_TOKEN');
+  if (!igSubscribed) issues.push('Re-subscribe Instagram webhook');
+  if (!fbSubscribed) issues.push('Re-subscribe Facebook webhook + set FACEBOOK_MESSAGING_TOKEN');
   if (!IG_MSG_TOKEN || (await graph('/debug_token?input_token=' + encodeURIComponent(IG_MSG_TOKEN || 'x'), `${APP_ID}|${APP_SECRET}`)).error?.code === 190) {
     issues.push('Refresh INSTAGRAM_MESSAGING_TOKEN');
   }

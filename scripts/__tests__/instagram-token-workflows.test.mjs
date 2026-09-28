@@ -655,3 +655,64 @@ test('social repair diagnostics use current callbacks without printing supplied 
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test('social diagnostics reject stale or inactive callbacks and accept current active callbacks', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'tdf-social-subscriptions-'));
+  try {
+    const mock = join(directory, 'fetch.mjs');
+    await writeFile(mock, `globalThis.fetch = async url => ({ json: async () =>
+      url.includes('/subscriptions?') ? { data: JSON.parse(process.env.TEST_SUBSCRIPTIONS) }
+      : { data: { is_valid: true, scopes: [] } }
+    });`);
+    for (const [base, active, repair] of [
+      ['https://tdf-hq.fly.dev', true, true],
+      ['https://api.tdfrecords.net', false, true],
+      ['https://api.tdfrecords.net', true, false],
+    ]) {
+      const result = spawnSync(process.execPath, [
+        '--import', mock, new URL('../diagnose-social.mjs', import.meta.url).pathname,
+      ], {
+        encoding: 'utf8', timeout: 10000,
+        env: {
+          FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'do-not-log-app-secret',
+          INSTAGRAM_MESSAGING_TOKEN: 'do-not-log-ig-token',
+          FACEBOOK_MESSAGING_TOKEN: 'do-not-log-fb-token', FACEBOOK_MESSAGING_PAGE_ID: 'audit-page',
+          TEST_SUBSCRIPTIONS: JSON.stringify([
+            { object: 'instagram', callback_url: base + '/instagram/webhook', active },
+            { object: 'page', callback_url: base + '/facebook/webhook', active },
+          ]),
+        },
+      });
+      assert.equal(result.error, undefined);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stdout.includes('To fix Instagram subscription'), repair);
+      assert.equal(result.stdout.includes('To fix Facebook subscription'), repair);
+      assert.equal(result.stdout.includes('Re-subscribe Instagram webhook'), repair);
+      assert.equal(result.stdout.includes('Re-subscribe Facebook webhook'), repair);
+      assert.equal(result.stdout.includes('All checks passed'), !repair);
+      assert.doesNotMatch(result.stdout, /do-not-log-/);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('Facebook repair command expands a backend-supported token without a literal placeholder', async () => {
+  const source = await readFile(new URL('../diagnose-social.mjs', import.meta.url), 'utf8');
+  const line = source.split('\n').find(line => line.includes('console.log(') && line.includes('object=page'));
+  // Evaluate the printed command with a local curl stub: no network/provider writes.
+  const command = line.trim().slice("console.log('".length, -3);
+  for (const [env, expected] of [
+    [{ FACEBOOK_MESSAGING_TOKEN: 'test-primary', FACEBOOK_PAGE_ACCESS_TOKEN: 'test-alias', INSTAGRAM_VERIFY_TOKEN: 'test-fallback' }, 'test-primary'],
+    [{ FACEBOOK_PAGE_ACCESS_TOKEN: 'test-alias', INSTAGRAM_VERIFY_TOKEN: 'test-fallback' }, 'test-alias'],
+    [{ INSTAGRAM_VERIFY_TOKEN: 'test-fallback' }, 'test-fallback'],
+  ]) {
+    const result = spawnSync('/bin/bash', ['-c', 'curl() { printf "%s\\n" "$@"; }; ' + command], {
+      encoding: 'utf8', timeout: 10000, env: { ...env, FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'test-app' },
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.stdout.split('\n').includes('verify_token=' + expected));
+    assert.doesNotMatch(result.stdout, /YOUR_FACEBOOK/);
+  }
+});
