@@ -52,6 +52,7 @@
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
       "scripts/__tests__/onboarding-real-browser.mjs",
+      "scripts/__tests__/payment-readiness-helper.test.mjs",
       "scripts/__tests__/persona-test-program.test.mjs",
       "scripts/__tests__/production-entrypoint.test.mjs",
       "scripts/__tests__/production-release.test.mjs",
@@ -1804,21 +1805,21 @@
     },
     {
       "path": "SERVICE_STOREFRONT_DEPLOYMENT.md",
-      "sha256": "7389913502871d283a8427c4e9e9771eed2eb4ae405fdfff961d2957861c809c",
+      "sha256": "b0b17e5eaed5f179dcd9eef464b5d9431b22dbb66618a656396cee1d63c82b0d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_DEPLOYMENT_GUIDE.md",
-      "sha256": "0e4a55eeabd81cd50724b5ff6796c473158b470fd49dbb884704e5e32698b40d",
+      "sha256": "f7bd810863d4872dd09e0380dd61b275eb12a872ec02af96532c66fbea936a9c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_TICKETING_CHECKLIST.md",
-      "sha256": "5e6b745d79276b66ddaec925ecade60e1d83c8cb5db49c7d1629c5dbe3689588",
+      "sha256": "1eb933bc63fe39e9b80e135ff722387cd009c0e30d53619c0cca5beafcffa505",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

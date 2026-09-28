@@ -1,5 +1,14 @@
 # Stripe Ticketing Deployment Checklist
 
+> Current hosting (2026-09-28): the live API is `https://api.tdfrecords.net`.
+> Use [the current guarded deployment/recovery procedure](ops/hetzner/README.md)
+> for runtime secrets, releases, backups and logs. Former Fly deployment steps
+> below are historical and must not be executed against the retired app/database.
+> Preserve existing provider webhook IDs/signing secrets when changing callback
+> URLs; inspect existing endpoints before creating a replacement. Existing
+> provider/environment restrictions and payment-validation gates still apply.
+
+
 ## ✅ Completed (by Aria)
 
 - [x] Fixed `Config.hs` to load Stripe env vars from environment
@@ -18,21 +27,19 @@
 ### Step 2: Configure Webhook (5 mins)
 - [ ] Go to https://dashboard.stripe.com/test/webhooks
 - [ ] Click **+ Add endpoint**
-- [ ] Enter URL: `https://tdf-hq.fly.dev/social-events/stripe/webhook`
+- [ ] Enter URL: `https://api.tdfrecords.net/social-events/stripe/webhook`
 - [ ] Select events:
   - [ ] `payment_intent.succeeded`
   - [ ] `payment_intent.payment_failed`
 - [ ] Save and copy **Signing secret** (starts with `whsec_`)
 
-### Step 3: Deploy Backend (10 mins)
-```bash
-# Set secrets
-flyctl secrets set STRIPE_SECRET_KEY=sk_test_YOUR_KEY --app tdf-hq
-flyctl secrets set STRIPE_WEBHOOK_SECRET=whsec_YOUR_SECRET --app tdf-hq
+### Step 3: Apply the reviewed backend configuration
 
-# Deploy
-flyctl deploy --app tdf-hq
-```
+- [ ] Use [the current guarded deployment runbook](ops/hetzner/README.md) to
+  manage Stripe configuration in the protected Hetzner runtime environment.
+- [ ] Preserve webhook signing secrets, provider environment and release/recovery
+  controls; verify the current release and callback behavior before completion.
+- [ ] Do not update or restart the retired Fly app/database.
 
 ### Step 4: Deploy Frontend (5 mins)
 - [ ] Go to Cloudflare Pages dashboard
@@ -56,7 +63,7 @@ flyctl deploy --app tdf-hq
 ## 🚨 Important Notes
 
 1. **Test mode first** - Use `pk_test_` and `sk_test_` keys initially
-2. **Webhook URL** - Must be HTTPS (Fly.io handles this)
+2. **Webhook URL** - Must be HTTPS (the current API edge provides TLS)
 3. **Signing secret** - Different for each webhook endpoint
 4. **Environment variables** - Never commit keys to git
 

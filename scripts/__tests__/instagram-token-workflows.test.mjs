@@ -716,3 +716,24 @@ test('Facebook repair command expands a backend-supported token without a litera
     assert.doesNotMatch(result.stdout, /YOUR_FACEBOOK/);
   }
 });
+
+test('Instagram repair commands honor backend credential aliases without printing values', async () => {
+  const source = await readFile(new URL('../diagnose-social.mjs', import.meta.url), 'utf8');
+  const line = source.split('\n').find(line => line.includes('console.log(') && line.includes('object=instagram'));
+  const command = line.trim().slice("console.log('".length, -3);
+  for (const env of [
+    { FACEBOOK_APP_ID: 'test-app', FACEBOOK_APP_SECRET: 'test-secret', INSTAGRAM_VERIFY_TOKEN: 'test-verify' },
+    { META_APP_ID: 'test-app', META_APP_SECRET: 'test-secret', IG_VERIFY_TOKEN: 'test-verify' },
+  ]) {
+    const result = spawnSync('/bin/bash', ['-c', 'curl() { printf "%s\\n" "$@"; }; ' + command], {
+      encoding: 'utf8', timeout: 10000, env,
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    const args = result.stdout.split('\n');
+    assert.ok(args.includes('https://graph.facebook.com/v18.0/test-app/subscriptions'));
+    assert.ok(args.includes('verify_token=test-verify'));
+    assert.ok(args.includes('access_token=test-app|test-secret'));
+    assert.doesNotMatch(command, /test-app|test-secret|test-verify/);
+  }
+});
