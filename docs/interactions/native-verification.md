@@ -45,3 +45,12 @@ persisted `nativeBody`; routine verification should run the complete wrapper.
 An installed test-artifact pass is separate from release verification. Before
 activation, verify the signed store build's HTTPS comment links, account
 restoration and association responses against the deployed canonical hosts.
+
+For a resource-constrained local machine, dispatch the existing CI workflow with
+`force_backend=true`, `publish_backend_artifact=true`, and `native_android_run`
+set to a successful Android test-build run. The run must match the root checkout's
+mobile gitlink and the designated test-build workflow. CI downloads the backend
+from its own successful build, boots a dedicated Android 35 device on a Linux
+runner with hardware virtualization, and runs the same isolated HTTP/native
+journeys. It retains only synthetic screenshots; credentials remain ephemeral.
+The aggregate quality check includes this job when explicitly selected.

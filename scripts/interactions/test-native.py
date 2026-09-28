@@ -60,6 +60,10 @@ def flow(name, variables):
         log_path.chmod(0o600)
         result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=os.environ)
     if result.returncode:
+        excerpt = '\n'.join(log_path.read_text(errors='replace').splitlines()[-45:])
+        for secret in [fixture.get('nativePassword', ''), *fixture['tokens'].values()]:
+            if secret: excerpt = excerpt.replace(secret, '[redacted test credential]')
+        print(excerpt)
         raise SystemExit(f'Native flow {name} failed; private evidence: {log_path}')
 
 
