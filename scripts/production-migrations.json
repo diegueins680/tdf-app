@@ -785,6 +785,16 @@
       "id": "2026-09-29_interaction_nonblank_comments",
       "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_comments.sql",
       "introducedBy": "de95fbd6a631104880cc0fc88039a24932ecc84f"
+    },
+    {
+      "id": "2026-09-29_interaction_pause_boundary",
+      "path": "tdf-hq/sql/2026-09-29_interaction_pause_boundary.sql",
+      "introducedBy": "5ab4b9d09868f05b529fa4c230e64ef437441f1a"
+    },
+    {
+      "id": "2026-09-29_interaction_nonblank_reasons",
+      "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_reasons.sql",
+      "introducedBy": "5ab4b9d09868f05b529fa4c230e64ef437441f1a"
     }
   ]
 }

@@ -1,5 +1,6 @@
 \set ON_ERROR_STOP on
 BEGIN;
+UPDATE interaction_runtime SET enabled=true WHERE singleton;
 INSERT INTO party(id,display_name,is_org,created_at)
 SELECT n,'Interaction performance '||n,false,now() FROM generate_series(920000001,920002001) n;
 INSERT INTO user_credential(party_id,username,password_hash,active)
