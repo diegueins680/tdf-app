@@ -144,3 +144,9 @@ hiding retains ordinary authority, and social events never gain this fallback.
 Recipient access, blocks, preferences, deduplication and read-state watermarks
 remain enforced. A moderator who loses the necessary current scoped authority
 cannot use the fallback to deliver an otherwise inaccessible event.
+
+`2026-09-29_interaction_event_destinations` links private event and event-moment
+discussions to the existing protected event page. Route selection checks current
+public-view membership, independently of share eligibility: cancelled public
+events retain their readable public page. Existing grants and visibility checks
+remain authoritative; changing a destination never grants access.

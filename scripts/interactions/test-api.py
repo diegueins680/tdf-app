@@ -94,6 +94,18 @@ request(actors[0],f'/interactions/targets/artist_update/{actors[0]}',status=404)
 sql(f"INSERT INTO social_event(id,organizer_party_id,title,start_time,event_type_id,workflow_state_id) SELECT {actors[0]},'{actors[0]}','Moment compatibility event',now(),id,'00000000-0000-4000-8000-000000000232' FROM event_type WHERE code='concert'; INSERT INTO event_moment(event_id,author_party_id,author_name,media_url,media_type) SELECT {actors[0]},'{actors[0]}','API fixture','https://example.test/photo.jpg','image' FROM generate_series(1,60);")
 moments=request(actors[0],f'/social-events/events/{actors[0]}/moments')
 assert len(moments)==60 and len({m['emId'] for m in moments})==60, 'Canonical compatibility must retain older moments'
+# Private publication links must resolve to the existing authenticated event page.
+event_summary=request(actors[0],f'/interactions/targets/event/{actors[0]}')
+assert event_summary['route']==f'/social/eventos/{actors[0]}'
+moment_summary=request(actors[0],f"/interactions/targets/event_moment/{moments[0]['emId']}")
+assert moment_summary['route']==f"/social/eventos/{actors[0]}?moment={moments[0]['emId']}"
+request(actors[0],f'/social-events/events/{actors[0]}')
+request(None,f'/public/interactions/targets/event/{actors[0]}',status=404)
+sql(f"UPDATE social_event SET metadata='{{\"isPublic\":true}}',workflow_state_id='00000000-0000-4000-8000-000000000239' WHERE id={actors[0]};")
+assert request(None,f'/public/interactions/targets/event/{actors[0]}')['route']==f'/eventos/{actors[0]}'
+assert request(None,f"/public/interactions/targets/event_moment/{moments[0]['emId']}")['route']==f"/eventos/{actors[0]}?moment={moments[0]['emId']}"
+
+
 # Owner policies apply to stale clients and compose with current target access.
 version=request(actors[0],identity)['version']
 command(actors[0],{'operation':'settings.update','commentPolicy':'mentioned','expectedVersion':version,'mentionedPartyIds':[actors[2]]})

@@ -30,6 +30,9 @@ BEGIN
  ASSERT interaction_event_access(917000001,917000002);
  ASSERT NOT interaction_event_access(917000001,917000003), 'Legacy self-invitation is not an access grant';
  ASSERT NOT interaction_event_access(917000001,NULL);
+ ASSERT interaction_resolve('event','917000001',917000001)->>'route'='/social/eventos/917000001';
+ ASSERT interaction_resolve('event','917000001',917000002)->>'route'='/social/eventos/917000001';
+ ASSERT interaction_resolve('event_moment','917000001',917000002)->>'route'='/social/eventos/917000001?moment=917000001';
  INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version)
  SELECT 917000004,id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';
  PERFORM interaction_block(917000001,917000004,true,0,gen_random_uuid());
@@ -46,7 +49,18 @@ BEGIN
  ASSERT interaction_resolve('event_moment','917000001',917000002) IS NULL, 'Moment authors cannot bypass private parent access revocation';
  UPDATE social_event SET metadata='{"isPublic":true}' WHERE id=917000001;
  ASSERT interaction_resolve('event','917000001',NULL) IS NOT NULL;
+ ASSERT interaction_resolve('event','917000001',NULL)->>'route'='/eventos/917000001';
+ ASSERT interaction_resolve('event_moment','917000001',917000003)->>'route'='/eventos/917000001?moment=917000001';
  ASSERT interaction_resolve('event_moment','917000001',917000003) IS NOT NULL;
+ -- Cancelled public events are still readable even though sharing is disabled.
+ BEGIN
+ UPDATE social_event SET workflow_state_id='00000000-0000-4000-8000-000000000239' WHERE id=917000001;
+ ASSERT interaction_resolve('event','917000001',NULL)->>'public'='false';
+ ASSERT interaction_resolve('event','917000001',NULL)->>'route'='/eventos/917000001';
+ ASSERT interaction_resolve('event_moment','917000001',NULL)->>'route'='/eventos/917000001?moment=917000001';
+ RAISE EXCEPTION 'Rollback cancelled route fixture';
+ EXCEPTION WHEN raise_exception THEN ASSERT SQLERRM='Rollback cancelled route fixture';
+ END;
  target:=interaction_register('event_moment','917000001',917000003);
  result_value:=interaction_command(917000003,target,gen_random_uuid(),'{"operation":"reaction.set","reactionTypeId":"50900000-0000-4000-8000-000000000003"}');
  ASSERT NOT result_value ? 'error';

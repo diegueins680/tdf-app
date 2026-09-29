@@ -1373,6 +1373,7 @@
       "tdf-hq/sql/2026-09-28_interaction_read_optimization.sql",
       "tdf-hq/sql/2026-09-28_interaction_summary.sql",
       "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+      "tdf-hq/sql/2026-09-29_interaction_event_destinations.sql",
       "tdf-hq/sql/2026-09-29_interaction_legacy_reply_aliases.sql",
       "tdf-hq/sql/2026-09-29_interaction_moderation_access.sql",
       "tdf-hq/sql/2026-09-29_interaction_moderation_block_boundary.sql",
@@ -2693,14 +2694,14 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "9e1d02368fdeb20ac2ec1a9032e3f96453d5fd19b3844262a5ab46673b1e08b3",
+      "sha256": "08e7b63ff811f329a614ecc11078272de24e0ee63a2412798416fb9138503cd7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/interactions/verification-2026-09-29.md",
-      "sha256": "d0c0988c108d7e7b53dfb20445c0229c9baedb460002e46af7a25b4b929c75c3",
+      "sha256": "a644f8b05b8e92cfaa36054d2031fe4b1c40d330fda2e0d597089237c6163439",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

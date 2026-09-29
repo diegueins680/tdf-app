@@ -300,3 +300,21 @@ fresh local SQL suites plus concurrency,82 release tests, catalog audit and actu
 release planning pass. Android20 is saved in an unpublished held Play draft;
 Alpha17 remains active. iOS27 is not uploaded. Root independent approval, final
 hosted qualification, App Store Connect access and production release remain gates.
+
+
+## Event destination follow-up and Android qualification
+
+The final unchanged634 native app passed the hosted installed Android journey in
+run36509208004 against application sourceb0b780eeb. That source's full backend
+suite passed3539 examples with zero failures and six existing pending,1141 social
+examples and all real interaction HTTP regressions, including numeric reply aliases.
+Its immutable image run36509205423 passed; registry index
+sha256:39d2103123c8cd27334c0b60ef19efe697c47eaa71daf366ffd4afe62c243854
+matches the CI receipt.
+
+A subsequent review found private-event publication links pointed to the public
+page. The eighth forward repair uses the protected page for private events and
+moments. SQL and real HTTP regressions verify organizer/member access, denied
+anonymous/foreign context and public transitions. Cancelled public events retain
+the public route even when sharing is disabled. Existing publication grants are
+unchanged. The complete final manifest and hosted HTTP checks remain release gates.
