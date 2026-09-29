@@ -206,4 +206,8 @@ The third forward repair preserves current source visibility and account guards,
 allows only the actor's own removal, and marks new choices nonselectable. Actual
 SQL properties cover revoked/restored eligibility, own-slot isolation, repeat
 removal and authoritative counters; HTTP and rendered web regressions cover the
-same contract. New final CI and140-entry rehearsal must pass before release.
+same contract. The140-entry bundle and withdrawal properties passed on the isolated PostgreSQL17
+production restore; all seven PostgreSQL16 suites and concurrent-write checks
+pass. Eight rendered web tests and82 release tests pass. Real local HTTP checks
+confirm rejected new selections, own withdrawal, summary reconciliation and no
+resurrection after following again. Final hosted CI remains a release gate.

@@ -13988,7 +13988,7 @@
       }
     },
     {
-      "id": "5c72374fdb1b9b2549f6",
+      "id": "30feff1f9c4ee5804944",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
@@ -14257,6 +14257,21 @@
         "line": 15
       },
       "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "108f31d1bc07c62d8551",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Fixture-only reaction summaries must not become a separate product catalog.",
+      "justification": "Rendered regression fixture verifies own-reaction withdrawal and disabled alternate selections after domain write permission is revoked. Production choices remain server-authoritative.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
+        "line": 141
+      },
+      "reviewBatch": "universal-interactions-2026-09-29"
     }
   ]
 }

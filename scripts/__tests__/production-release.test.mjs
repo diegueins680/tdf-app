@@ -158,6 +158,7 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   for (const [prerequisite, dependent] of [
     ['2026-09-28_interaction_integrity', '2026-09-29_interaction_review_repairs'],
     ['2026-09-29_interaction_review_repairs', '2026-09-29_interaction_publication_authority'],
+    ['2026-09-29_interaction_publication_authority', '2026-09-29_interaction_reaction_withdrawal'],
     ['2026-09-06_user_onboarding_progress', '2026-09-07_user_experiment_assignment'],
     ['2026-09-07_directory_event_visibility_and_favorite_evidence', '2026-09-08_event_rsvp_identity_privacy_feed'],
     ['2026-09-07_directory_event_visibility_and_favorite_evidence', '2026-09-17_directory_event_privacy_composition'],

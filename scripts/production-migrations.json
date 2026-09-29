@@ -715,6 +715,11 @@
       "id": "2026-09-29_interaction_publication_authority",
       "path": "tdf-hq/sql/2026-09-29_interaction_publication_authority.sql",
       "introducedBy": "d6c52fad19c22062b6f85921ffc55335460c5724"
+    },
+    {
+      "id": "2026-09-29_interaction_reaction_withdrawal",
+      "path": "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
+      "introducedBy": "7d8de4c5d84aa8faf83b6558093bbb571dc0615d"
     }
   ]
 }
