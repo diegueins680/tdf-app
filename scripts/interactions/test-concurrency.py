@@ -95,3 +95,23 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
 result = json.loads(sql(f"SELECT interaction_command(930000003,{literal(target)},'{uuid.uuid4()}','{{\"operation\":\"comment.create\",\"body\":\"Blocked\"}}');"))
 assert result['error'] == 'unavailable', result
 print('PASS block/write serialization and immediate permission revocation')
+
+# Reply aliases have their own reaction slots, but share deletion's parent lock.
+# Either serialized order must end with no active reaction or count on the erased reply.
+for sequence in range(6):
+    payload = {'operation': 'legacy.comment', 'body': f'Alias race {sequence}', 'artistId': 930000001}
+    created = json.loads(sql(f"SELECT interaction_legacy_command(930000002,'club_post','930000001',{literal(json.dumps(payload))});"))
+    assert 'error' not in created, created
+    alias = str(created['fcpId'])
+    alias_target = sql(f"SELECT interaction_register('club_post',{literal(alias)},930000004);")
+    comment_id = sql(f"SELECT comment_id FROM interaction_legacy_mapping WHERE legacy_kind='club_reply' AND legacy_id={literal(alias)};")
+    reaction = {'operation': 'legacy.reaction', 'reactionTypeId': choices[1], 'artistId': 930000001}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        reacting = pool.submit(sql, f"SELECT interaction_legacy_command(930000004,'club_post',{literal(alias)},{literal(json.dumps(reaction))});")
+        deleting = pool.submit(command, 930000002, target, {'operation': 'comment.delete', 'commentId': comment_id, 'expectedVersion': 1})
+        result = json.loads(reacting.result())
+        assert 'error' not in result or result['error'] == 'unavailable', result
+        assert deleting.result()['state'] == 'deleted'
+    assert sql(f"SELECT NOT EXISTS(SELECT 1 FROM interaction_reaction WHERE target_id={literal(alias_target)});") == 't'
+    assert sql(f"SELECT coalesce(sum(total),0)=0 FROM interaction_reaction_total WHERE target_id={literal(alias_target)};") == 't'
+print('PASS reply-alias reaction/deletion interleavings: independent slots retire without stale counts')

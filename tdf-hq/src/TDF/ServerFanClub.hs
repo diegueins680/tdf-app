@@ -1064,17 +1064,18 @@ fanClubSecureArtistHandlers user artistId =
 
     reactToPost aId postId ContentReactionReq{..} = do
       artistKey <- requireArtistKey aId
-      requireFanClubPostAccess user artistKey
       postKey <- either throwError pure (validateFanClubPostPathId postId)
-      target <- runDB $ lookupFanClubPostMutationTarget artistKey postKey
-      _ <- either throwError pure target
-      reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
       canonical <- runDB Interactions.activated
       if canonical then do
         _ <- (Interactions.legacyCommand user "club_post" (T.pack (show (fromSqlKey postKey)))
-          (object ["operation" .= ("legacy.reaction" :: Text), "reactionTypeId" .= reactionTypeId]) :: AppM Value)
+          (object ["operation" .= ("legacy.reaction" :: Text), "reactionTypeId" .= crrReactionTypeId,
+                   "artistId" .= fromSqlKey artistKey]) :: AppM Value)
         runDB $ buildFanClubPostReactionSummary postKey (auPartyId user)
       else do
+        requireFanClubPostAccess user artistKey
+        target <- runDB $ lookupFanClubPostMutationTarget artistKey postKey
+        _ <- either throwError pure target
+        reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
         now <- liftIO getCurrentTime
         runDB $ do
           toggleFanClubPostReaction postKey (auPartyId user) reactionTypeId now

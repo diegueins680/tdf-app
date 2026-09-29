@@ -66,8 +66,15 @@ BEGIN
  new_alias:=result_value->>'fcpId';
  result_value:=interaction_legacy_command(915000003,'club_post',new_alias,jsonb_build_object('operation','legacy.comment','body','Nested new legacy alias','artistId',915000001));
  ASSERT result_value->>'fcpContent'='Nested new legacy alias';
+ ASSERT result_value->>'fcpParentId'=new_alias, 'Legacy DTO preserves immediate requested parent';
  ASSERT EXISTS(SELECT 1 FROM interaction_comment WHERE body='Nested new legacy alias' AND parent_id=(SELECT comment_id FROM interaction_legacy_mapping WHERE legacy_id=new_alias AND legacy_kind='club_reply'));
+ result_value:=interaction_legacy_command(915000002,'club_post',new_alias,jsonb_build_object('operation','legacy.reaction','artistId',915000001,'reactionTypeId','50900000-0000-4000-8000-000000000001'));
+ ASSERT NOT result_value ? 'error',result_value::text;
+ ASSERT interaction_legacy_reaction_summary(915000002,'club_post',new_alias)->>'rsTotal'='1';
+ ASSERT interaction_legacy_reaction_summary(915000002,'club_post','915000001')->>'rsTotal'='2', 'Reply reactions do not overwrite the parent post slot';
+ ASSERT interaction_legacy_command(915000002,'club_post',new_alias,jsonb_build_object('operation','legacy.reaction','artistId',915000003,'reactionTypeId','50900000-0000-4000-8000-000000000001'))->>'error'='unavailable';
  ASSERT interaction_legacy_command(915000001,'club_post',new_alias,'{"operation":"legacy.hide","artistId":915000001}')->>'state'='hidden';
+ ASSERT interaction_legacy_command(915000002,'club_post',new_alias,jsonb_build_object('operation','legacy.reaction','artistId',915000001,'reactionTypeId','50900000-0000-4000-8000-000000000001'))->>'error'='unavailable', 'Hidden aliases cannot accept reactions';
  ASSERT interaction_legacy_command(915000001,'club_post',new_alias,'{"operation":"legacy.restore","artistId":915000001}')->>'state'='visible';
  ASSERT interaction_legacy_command(915000001,'club_post',new_alias,'{"operation":"legacy.hide","artistId":915000003}')->>'error'='unavailable';
  BEGIN
@@ -78,8 +85,14 @@ BEGIN
  ASSERT result_value->>'state'='deleted';
  ASSERT (SELECT body='' FROM interaction_comment WHERE id=reply);
  ASSERT (SELECT content='' AND media_urls IS NULL AND title IS NULL FROM fan_club_post WHERE id=915000002);
+ ASSERT NOT EXISTS(SELECT 1 FROM interaction_reaction r JOIN interaction_target t ON t.id=r.target_id WHERE t.entity_kind='club_post' AND t.entity_key='915000002'), 'Deleted migrated replies retire independent reaction slots';
  ASSERT (SELECT NOT source_value ? 'mediaUrls' AND NOT source_value ? 'title' FROM interaction_legacy_mapping WHERE comment_id=reply);
  ASSERT (SELECT body='Nested legacy reply' AND parent_id=reply FROM interaction_comment WHERE id=child);
+ SELECT comment_id INTO moment_comment FROM interaction_legacy_mapping WHERE legacy_kind='club_reply' AND legacy_id=new_alias;
+ result_value:=interaction_command(915000003,target,gen_random_uuid(),jsonb_build_object('operation','comment.delete','commentId',moment_comment,'expectedVersion',3));
+ ASSERT result_value->>'state'='deleted',result_value::text;
+ ASSERT NOT EXISTS(SELECT 1 FROM interaction_reaction r JOIN interaction_target t ON t.id=r.target_id WHERE t.entity_kind='club_post' AND t.entity_key=new_alias);
+ ASSERT EXISTS(SELECT 1 FROM interaction_target WHERE entity_kind='club_post' AND entity_key=new_alias AND retired_at IS NOT NULL);
  SELECT comment_id INTO moment_comment FROM interaction_legacy_mapping WHERE legacy_kind='moment_comment' AND legacy_id='915000001';
  result_value:=interaction_command(915000001,(SELECT target_id FROM interaction_comment WHERE id=moment_comment),gen_random_uuid(),jsonb_build_object('operation','comment.delete','commentId',moment_comment,'expectedVersion',1));
  ASSERT result_value->>'state'='deleted';

@@ -76,6 +76,16 @@ context=request(actors[2],identity+'/comments/'+reply['id']); assert context['ro
 legacy=request(actors[2],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':None,'fcpReqContent':'Legacy client reply','fcpReqMediaUrls':[],'fcpReqParentId':post['fcpId']})
 assert legacy['fcpContent']=='Legacy client reply'
 assert sql(f"SELECT count(*) FROM fan_club_post WHERE id={legacy['fcpId']}")=='0'
+nested=request(actors[2],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':None,'fcpReqContent':'Nested legacy client reply','fcpReqMediaUrls':[],'fcpReqParentId':legacy['fcpId']})
+assert nested['fcpParentId']==legacy['fcpId']
+root_total=sum(r['count'] for r in request(actors[0],identity)['reactions'])
+legacy_reaction=request(actors[2],f"/fans/me/clubs/{actors[0]}/posts/{legacy['fcpId']}/react",{'crrReactionTypeId':like})
+assert legacy_reaction['rsTotal']==1 and legacy_reaction['rsMyReactionTypeId']==like
+assert sum(r['count'] for r in request(actors[0],identity)['reactions'])==root_total
+request(actors[2],f"/fans/me/clubs/{actors[2]}/posts/{legacy['fcpId']}/react",{'crrReactionTypeId':like},status=404)
+legacy_reaction=request(actors[2],f"/fans/me/clubs/{actors[0]}/posts/{legacy['fcpId']}/react",{'crrReactionTypeId':like})
+assert legacy_reaction['rsTotal']==0 and legacy_reaction['rsMyReactionTypeId'] is None
+
 # Imported artist updates do not carry public publication authority.
 sql(f"INSERT INTO artist_profile(artist_party_id,created_at) VALUES({actors[0]},now()); INSERT INTO social_sync_post(id,platform,external_post_id,artist_party_id,caption,fetched_at,ingest_source,created_at,updated_at) VALUES({actors[0]},'instagram','synthetic-api-private-update-{actors[0]}',{actors[0]},'Private ingestion caption',now(),'manual',now(),now());")
 request(None,f'/public/interactions/targets/artist_update/{actors[0]}',status=404)

@@ -128,3 +128,12 @@ or interaction counts. Commands select that authority only for administrative
 remove/restore/report resolution, rechecking under the existing locks. Active
 reaction catalogs and their workflow identity also govern projected selectability;
 historical choices remain readable and removable after catalog deactivation.
+
+`2026-09-29_interaction_legacy_reply_aliases` preserves numeric legacy reply
+identities without duplicating source posts. Nested legacy DTOs retain the requested
+immediate parent. Alias reactions use independent canonical targets, inherit the
+containing publication's current access/write grants, and validate the artist path.
+They never change the root post's reactions. Source/target locks serialize reply
+erasure with reactions; author deletion or moderator removal clears alias reactions
+and retires their target, while owner hiding remains reversible. Historical
+reaction slots and URLs are preserved; no engagement is reassigned to the root.

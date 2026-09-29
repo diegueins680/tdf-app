@@ -246,3 +246,26 @@ local SQL/concurrency and82 release tests pass. The real HTTP moderation journey
 now blocks both comment author and publication owner against the moderator,
 verifies read-only summary/queue/link access, denies social writes and completes
 scoped enforcement. Final hosted/artifact qualification remains pending.
+
+
+## Legacy reply identity and reactions
+
+Two further review findings identified incorrect parent DTOs for nested legacy
+replies and source-table-only reaction lookup for new reply aliases. The sixth
+forward repair preserves immediate parent identity and independent reply reaction
+slots. Database regressions cover nested identity, forged artist paths, hidden and
+deleted replies, root-count isolation, migrated and new alias retirement. All seven
+local SQL suites and concurrency checks pass, including six simultaneous alias
+reaction/deletion interleavings. Actual HTTP regressions are included; the changed
+Haskell compatibility branch still requires the final hosted backend run.
+
+Native PR121's Android test and iOS simulator artifact checks passed after its
+normal protected merge. Signed Android20 and iOS27 from native main3001e99 passed
+independent signature, production API, runtime and HTTPS-link configuration
+verification. Android20 SHA256:
+026ee3f388511df126d8be5a376d0689023ff4a0a125e10f3acce2f8ff7560f6.
+iOS27 SHA256:
+ff0924c3eff17ed2c802a2b0c26a6758f31e0f602b6ae7888b98294488af2d6c.
+The full installed final634 iOS journey is in progress. Root0bdb4aa's ordinary
+checks passed; final alias compatibility CI and production deployment remain
+pending. Store candidates remain unpublished.
