@@ -165,6 +165,20 @@ try:
 finally:
     sql(f"UPDATE catalog_definition SET active=true WHERE id IN (SELECT catalog_id FROM reaction_type WHERE id='{legacy_fire}' UNION SELECT catalog_id FROM content_reaction_type WHERE id='{moment_reaction}');")
 
+# Catalog provenance is not current ownership; revoke actual API authority.
+recording_id=sql("SELECT id FROM recording WHERE active ORDER BY id LIMIT 1;")
+recording_identity=f'/interactions/targets/recording/{recording_id}'
+sql(f"UPDATE recording SET created_by={actors[0]} WHERE id='{recording_id}'; INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT {actors[0]},id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';")
+recording_summary=request(actors[0],recording_identity)
+assert recording_summary['canManage'] and recording_summary['ownerId'] is None
+catalog_target=recording_summary['id']
+catalog_comment=request(actors[1],f'/interactions/targets/{catalog_target}/commands',{'requestKey':str(uuid.uuid4()),'command':{'operation':'comment.create','body':'Catalog authority test','mentions':[]}})
+sql(f"UPDATE party_security_role SET active=false WHERE party_id={actors[0]};")
+assert not request(actors[0],recording_identity)['canManage']
+request(actors[0],f'/interactions/targets/{catalog_target}/commands',{'requestKey':str(uuid.uuid4()),'command':{'operation':'settings.update','commentPolicy':'off','expectedVersion':request(actors[0],recording_identity)['version'],'mentionedPartyIds':[]}},status=403)
+request(actors[0],f'/interactions/targets/{catalog_target}/commands',{'requestKey':str(uuid.uuid4()),'command':{'operation':'comment.hide','commentId':catalog_comment['id'],'expectedVersion':1,'reason':'Historical creator'}},status=403)
+assert request(actors[1],recording_identity+'/comments/'+catalog_comment['id'])['comment']['state']=='visible'
+
 # Owner policies apply to stale clients and compose with current target access.
 version=request(actors[0],identity)['version']
 command(actors[0],{'operation':'settings.update','commentPolicy':'mentioned','expectedVersion':version,'mentionedPartyIds':[actors[2]]})

@@ -356,3 +356,16 @@ legacy choice, retire catalogs, withdraw and reconcile zero rows/totals; real
 HTTP covers both endpoints and rejected new additions. Final hosted qualification
 is required for these backend changes. Release requires a protected merge commit
 to retain registered migration provenance; squash/rebase is explicitly excluded.
+
+## Catalog authority and malformed reads
+
+The twelfth forward repair removes creator-provenance ownership for institutional
+recordings, sessions and releases. Real SQL tests cover all three, revocation of
+account grants and global catalog capability, rejected policy/hide operations and
+a different current manager. A real policy transaction holds the capability
+locks until commit; revocation then denies the next command. HTTP tests cover the
+public recording adapter as well. Shared web/native readers validate nested
+comments, context, destinations, reactors, blocks, preferences and moderation
+pages before caching. Both clients test malformed data, valid retries, tombstones
+and a rendered error/retry flow. These changes require fresh native artifacts;
+earlier signed Android20/iOS27 candidates are superseded and remain unpublished.

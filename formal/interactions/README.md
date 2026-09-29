@@ -96,3 +96,8 @@ Legacy moment reaction properties enumerate every mapped catalog choice, then
 withdraw it after catalog deactivation and assert zero authoritative rows/totals.
 Real HTTP additionally covers memory withdrawal after unfollow and both legacy
 endpoints after catalog deactivation, with rejected additions and scoped paths.
+
+Institutional catalog targets have no human owner inferred from audit metadata.
+Management requires current module-access and catalog-update grants; account,
+role, permission, action and module rows are locked during mutation. Entity SQL
+properties plus the real concurrent revocation test exercise this rule.

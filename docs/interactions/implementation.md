@@ -51,6 +51,11 @@ passing prototype fixture for production rollout.
   Artist/label/venue updates use their existing post/media authorities. Attached
   photos/video/audio share their containing publication's discussion unless they
   have an independently persisted publication identity. No duplicate media threads.
+- Label recordings, sessions and record releases belong to the institutional
+  catalog. Historical `created_by` remains audit metadata, never a social owner
+  or notification recipient. Current catalog module access plus `catalog.update`
+  grants policy/hide authority; revocation serializes with interaction commands.
+  Discussion subscriptions provide notifications without inventing a human owner.
 - One active reaction slot per actor/target, persisted catalog type. Defaults:
   like, heart, fire, clap. Changes/removal are desired-state operations, not unsafe
   retryable toggles. Old toggle endpoints preserve their documented compatibility.

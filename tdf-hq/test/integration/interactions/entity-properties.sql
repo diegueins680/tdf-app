@@ -85,4 +85,37 @@ BEGIN
  ASSERT interaction_target_context(target,917000001) IS NULL;
  ASSERT EXISTS(SELECT 1 FROM interaction_audit WHERE target_id=target AND operation='target.deleted');
 END $$;
+-- Label records use current catalog grants; created_by remains audit metadata.
+INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version)
+SELECT 917000001,id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';
+DO $$
+DECLARE kind_value text; source_id uuid; target_id_value uuid; comment_value jsonb; result_value jsonb; grant_id uuid;
+BEGIN
+ FOR kind_value IN SELECT unnest(ARRAY['recording','recording_session','record_release']) LOOP
+   EXECUTE format('SELECT id FROM %I WHERE active ORDER BY id LIMIT 1',kind_value) INTO source_id;
+   ASSERT source_id IS NOT NULL, 'Nonempty production catalog fixture required';
+   EXECUTE format('UPDATE %I SET created_by=$1 WHERE id=$2',kind_value) USING 917000001,source_id;
+   UPDATE party_security_role SET active=true WHERE party_id=917000001;
+   ASSERT interaction_catalog_manager(917000001);
+   result_value:=interaction_resolve(kind_value,source_id::text,917000001);
+   ASSERT result_value->>'ownerId' IS NULL, 'Creator provenance is not publication ownership';
+   ASSERT result_value->>'canManage'='true';
+   target_id_value:=interaction_register(kind_value,source_id::text,917000001);
+   comment_value:=interaction_command(917000002,target_id_value,gen_random_uuid(),'{"operation":"comment.create","body":"Institutional catalog discussion","mentions":[]}');
+   ASSERT NOT comment_value ? 'error',comment_value::text;
+   UPDATE party_security_role SET active=false WHERE party_id=917000001;
+   ASSERT interaction_resolve(kind_value,source_id::text,917000001)->>'canManage'='false';
+   ASSERT interaction_command(917000001,target_id_value,gen_random_uuid(),jsonb_build_object('operation','settings.update','commentPolicy','off','expectedVersion',(SELECT version FROM interaction_target WHERE id=target_id_value),'mentionedPartyIds','[]'::jsonb))->>'error'='forbidden';
+   ASSERT interaction_command(917000001,target_id_value,gen_random_uuid(),jsonb_build_object('operation','comment.hide','commentId',comment_value->>'id','expectedVersion',1,'reason','Revoked creator'))->>'error'='forbidden';
+   ASSERT interaction_resolve(kind_value,source_id::text,917000004)->>'canManage'='true', 'Another current catalog administrator retains authority';
+   result_value:=interaction_command(917000004,target_id_value,gen_random_uuid(),jsonb_build_object('operation','comment.hide','commentId',comment_value->>'id','expectedVersion',1,'reason','Current catalog administrator'));
+   ASSERT result_value->>'state'='hidden',result_value::text;
+   SELECT rp.id INTO grant_id FROM role_permission rp JOIN security_role r ON r.id=rp.role_id
+     JOIN security_permission p ON p.id=rp.permission_id WHERE r.code='admin' AND p.code='catalog.update';
+   UPDATE role_permission SET active=false WHERE id=grant_id;
+   ASSERT NOT interaction_catalog_manager(917000004), 'Role alone does not replace current catalog capability';
+   ASSERT interaction_resolve(kind_value,source_id::text,917000004)->>'canManage'='false';
+   UPDATE role_permission SET active=true WHERE id=grant_id;
+ END LOOP;
+END $$;
 ROLLBACK;

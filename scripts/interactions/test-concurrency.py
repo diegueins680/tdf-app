@@ -149,3 +149,28 @@ else:
     raise AssertionError('Synthetic notification drain exceeded its bound')
 assert sql(f"SELECT NOT EXISTS(SELECT 1 FROM interaction_notification WHERE comment_id={literal(mention['id'])} AND recipient_id=930000004 AND event_kind='mention');") == 't'
 print('PASS mention-policy/privacy serialization and queued notification revocation')
+
+# Current catalog capabilities, including global role permissions, serialize with
+# institutional discussion policy writes. Creator metadata grants no fallback.
+sql("INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT 930000001,id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';")
+record_key = sql("SELECT id FROM recording WHERE active ORDER BY id LIMIT 1;")
+record_target = sql(f"SELECT interaction_register('recording',{literal(record_key)},930000001);")
+grant_id = sql("SELECT rp.id FROM role_permission rp JOIN security_role r ON r.id=rp.role_id JOIN security_permission p ON p.id=rp.permission_id WHERE r.code='admin' AND p.code='catalog.update';")
+settings = {'operation': 'settings.update', 'commentPolicy': 'off', 'expectedVersion': int(sql(f"SELECT version FROM interaction_target WHERE id={literal(record_target)};")), 'mentionedPartyIds': []}
+writer = subprocess.Popen(['psql','-X','-qAt','-v','ON_ERROR_STOP=1','-d',DB], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,text=True)
+writer.stdin.write(f"BEGIN;\nSELECT interaction_command(930000001,{literal(record_target)},'{uuid.uuid4()}',{literal(json.dumps(settings))});\nSELECT 'catalog-policy-locked';\n")
+writer.stdin.flush()
+result = json.loads(writer.stdout.readline()); assert result.get('commentPolicy') == 'off', result
+assert writer.stdout.readline().strip() == 'catalog-policy-locked'
+with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+    revocation = pool.submit(sql, f"UPDATE role_permission SET active=false WHERE id={literal(grant_id)};")
+    time.sleep(.2)
+    assert not revocation.done(), 'Capability revocation bypassed the active policy transaction'
+    writer.stdin.write('COMMIT;\n\\q\n'); writer.stdin.flush(); writer.wait(timeout=10)
+    revocation.result(timeout=10)
+settings['expectedVersion'] = int(sql(f"SELECT version FROM interaction_target WHERE id={literal(record_target)};"))
+settings['commentPolicy'] = 'everyone'
+result = json.loads(sql(f"SELECT interaction_command(930000001,{literal(record_target)},'{uuid.uuid4()}',{literal(json.dumps(settings))});"))
+assert result.get('error') == 'forbidden', result
+sql(f"UPDATE role_permission SET active=true WHERE id={literal(grant_id)};")
+print('PASS catalog capability revocation serializes and immediately denies later policy writes')

@@ -161,3 +161,13 @@ test('lets owners hide blocked-author content from their scoped moderation queue
   fireEvent.click(screen.getByRole('button', { name: 'Ocultar en mi contenido' }));
   await waitFor(() => expect(command).toHaveBeenCalledWith(target, expect.objectContaining({ operation: 'comment.hide', commentId: rootId }), expect.any(String)));
 });
+
+test('keeps a malformed discussion page recoverable and renders a successful retry', async () => {
+  comments.mockRejectedValueOnce(new Error('Invalid interaction comments response'));
+  view({ initiallyExpanded: true });
+  await screen.findByRole('alert');
+  expect(screen.queryByText('Root comment')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
+  await screen.findByText('Root comment');
+  expect(screen.queryByRole('alert')).toBeNull();
+});
