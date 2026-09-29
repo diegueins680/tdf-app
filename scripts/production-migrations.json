@@ -740,6 +740,11 @@
       "id": "2026-09-29_interaction_moderation_delivery",
       "path": "tdf-hq/sql/2026-09-29_interaction_moderation_delivery.sql",
       "introducedBy": "96a2fc934a978dd10df235f9ac15567d4d4294c2"
+    },
+    {
+      "id": "2026-09-29_interaction_event_destinations",
+      "path": "tdf-hq/sql/2026-09-29_interaction_event_destinations.sql",
+      "introducedBy": "1a884dff86b51ccb7905a58a280bd9fbe7fa8d75"
     }
   ]
 }
