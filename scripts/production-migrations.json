@@ -735,6 +735,11 @@
       "id": "2026-09-29_interaction_legacy_reply_aliases",
       "path": "tdf-hq/sql/2026-09-29_interaction_legacy_reply_aliases.sql",
       "introducedBy": "e415244248058c13043bd1bbd3f40d12241e209f"
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_delivery",
+      "path": "tdf-hq/sql/2026-09-29_interaction_moderation_delivery.sql",
+      "introducedBy": "96a2fc934a978dd10df235f9ac15567d4d4294c2"
     }
   ]
 }
