@@ -770,6 +770,11 @@
       "id": "2026-09-29_interaction_report_reopen",
       "path": "tdf-hq/sql/2026-09-29_interaction_report_reopen.sql",
       "introducedBy": "712687c976075925d475e9c0ddbe6b06e6590bef"
+    },
+    {
+      "id": "2026-09-29_interaction_ownerless_policy",
+      "path": "tdf-hq/sql/2026-09-29_interaction_ownerless_policy.sql",
+      "introducedBy": "3624766ea78cc6663be0a8be5d4c7a9a94d2961c"
     }
   ]
 }
