@@ -195,6 +195,16 @@ assert request(actors[1],recording_identity+'/comments/'+catalog_comment['id'])[
 # Resolved reports can be reopened with new evidence, while old retries stay inert.
 sql(f"UPDATE party_security_role SET active=true WHERE party_id={actors[0]};")
 reported_comment=command(actors[1],{'operation':'comment.create','body':'Report lifecycle example','mentions':[]})
+# Required moderation reasons are nonblank text for every action.
+for operation in ('comment.report','comment.hide','comment.remove','comment.restore','comment.report.resolve'):
+    actor=actors[2] if operation=='comment.report' else actors[0]
+    for reason in ('\t\n\r ', '\u00a0\u2028'):
+        invalid={'operation':operation,'commentId':reported_comment['id'],'reason':reason}
+        if operation!='comment.report': invalid['expectedVersion']=1
+        if operation=='comment.report.resolve': invalid['decision']='dismissed'
+        command(actor,invalid,status=400)
+assert request(actors[0],identity+'/comments/'+reported_comment['id'])['comment']['version']==1
+assert sql(f"SELECT count(*) FROM interaction_report WHERE comment_id='{reported_comment['id']}'")== '0'
 report_payload={'operation':'comment.report','commentId':reported_comment['id'],'reason':'Initial evidence'}
 first_report_key=str(uuid.uuid4())
 assert command(actors[2],report_payload,first_report_key)['reported']
@@ -284,9 +294,15 @@ request(actors[0],f'/interactions/blocks/{moderator}',{'blockRequestKey':str(uui
 # but rejects every public mutation surface and stops notification delivery.
 pre_pause_count=request(actors[0],identity)['commentCount']
 pre_pause_preferences=request(actors[0],'/interactions/preferences')
+unregistered_post=sql(f"INSERT INTO fan_club_post(club_id,fan_party_id,content,created_at) VALUES({actors[0]},{actors[0]},'Unregistered at pause',now()) RETURNING id;")
+unregistered_identity=f'/interactions/targets/club_post/{unregistered_post}'
+pre_pause_targets=sql('SELECT count(*) FROM interaction_target;')
 sql('UPDATE interaction_runtime SET enabled=false WHERE singleton;')
 try:
     assert sql('SELECT activated_once FROM interaction_runtime WHERE singleton')=='t'
+    for suffix in ('','/comments?limit=20','/reactors?limit=20','/comments/'+reply['id']):
+        request(actors[0],unregistered_identity+suffix,status=404)
+    assert sql('SELECT count(*) FROM interaction_target;')==pre_pause_targets
     assert request(actors[0],identity)['commentCount']==pre_pause_count
     assert request(None,'/public'+recording_identity)['id']==catalog_target
     request(None,'/public'+identity,status=404)
@@ -309,6 +325,7 @@ try:
 finally:
     sql('UPDATE interaction_runtime SET enabled=true WHERE singleton;')
 assert request(actors[0],'/interactions/preferences')==pre_pause_preferences
+assert request(actors[0],unregistered_identity)['commentCount']==0
 # Explicitly restore this synthetic fixture's follow for subsequent browser/native flows.
 sql(f"INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES({actors[2]},{actors[0]},now());")
 # Leave actor 2 revoked. The UI E2E uses the current owner and third account.

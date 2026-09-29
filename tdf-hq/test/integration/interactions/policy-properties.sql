@@ -8,6 +8,7 @@ INSERT INTO fan_club_post(id,club_id,fan_party_id,content,created_at)
 VALUES(910000001,910000001,910000001,'Synthetic post',now());
 INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at)
 VALUES(910000002,910000001,now()),(910000003,910000001,now());
+UPDATE interaction_runtime SET enabled=true WHERE singleton;
 DO $$
 DECLARE target uuid; root uuid:=gen_random_uuid(); child uuid:=gen_random_uuid(); page jsonb;
 BEGIN
@@ -55,5 +56,21 @@ BEGIN
  ASSERT interaction_target_context(target,910000002) IS NULL;
  UPDATE fan_club_post SET is_hidden=true WHERE id=910000001;
  ASSERT interaction_target_context(target,910000001) IS NULL;
+END $$;
+DO $$
+DECLARE existing uuid; total_before bigint;
+BEGIN
+ UPDATE fan_club_post SET is_hidden=false WHERE id=910000001;
+ existing:=interaction_register('club_post','910000001',910000001);
+ INSERT INTO fan_club_post(id,club_id,fan_party_id,content,created_at)
+ VALUES(910000006,910000001,910000001,'Unregistered publication',now());
+ SELECT count(*) INTO total_before FROM interaction_target;
+ UPDATE interaction_runtime SET enabled=false WHERE singleton;
+ ASSERT interaction_register('club_post','910000006',910000001) IS NULL, 'Paused read registered a target';
+ ASSERT interaction_register('club_post','910000001',910000001)=existing, 'Existing paused target became unreadable';
+ ASSERT (SELECT count(*) FROM interaction_target)=total_before;
+ UPDATE interaction_runtime SET enabled=true WHERE singleton;
+ ASSERT interaction_register('club_post','910000006',910000001) IS NOT NULL;
+ ASSERT (SELECT count(*) FROM interaction_target)=total_before+1;
 END $$;
 ROLLBACK;

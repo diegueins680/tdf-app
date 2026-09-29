@@ -188,3 +188,40 @@ assert all(result['reported'] for result in results)
 assert sql(f"SELECT count(*)=1 FROM interaction_report WHERE comment_id={literal(reported['id'])} AND state='open' AND reason='New evidence';") == 't'
 assert sql(f"SELECT count(*)=1 FROM interaction_audit WHERE comment_id={literal(reported['id'])} AND operation='comment.report.reopen' AND reason='Original evidence';") == 't'
 print('PASS concurrent re-reports: one open report and one preserved prior-evidence audit')
+
+# Freeze waits for already admitted work; later reads never register new targets.
+sql("UPDATE interaction_request SET created_at=now()-interval '2 minutes'; UPDATE interaction_target SET comment_policy='everyone';")
+sql("INSERT INTO fan_club_post(id,club_id,fan_party_id,content,created_at) VALUES(930000010,930000001,930000001,'Registration freeze fixture',now()),(930000011,930000001,930000001,'Unregistered while paused',now());")
+block_version = sql("SELECT interaction_block_state(930000001,930000004)->>'version';")
+freeze_writers = [
+    "interaction_register('club_post','930000010',930000001)",
+    f"interaction_command(930000001,{literal(target)},'{uuid.uuid4()}','{{\"operation\":\"comment.create\",\"body\":\"Admitted before pause\"}}')",
+    "interaction_preferences(930000001,'{\"reactions\":true,\"comments\":true,\"replies\":true,\"mentions\":true}')",
+    f"interaction_block(930000001,930000004,true,{block_version},'{uuid.uuid4()}')",
+    "interaction_dispatch_events(1)",
+]
+for expression in freeze_writers:
+    writer = subprocess.Popen(['psql','-X','-qAt','-v','ON_ERROR_STOP=1','-d',DB], stdin=subprocess.PIPE,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    writer.stdin.write(f"BEGIN; SELECT {expression}; SELECT 'freeze-writer-locked';\n"); writer.stdin.flush()
+    while writer.stdout.readline().strip() != 'freeze-writer-locked':
+        assert writer.poll() is None, 'Freeze writer failed before lock marker'
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        pauser = pool.submit(sql, "SET application_name='tdf-interaction-pause-test'; UPDATE interaction_runtime SET enabled=false WHERE singleton; SELECT enabled FROM interaction_runtime;")
+        for _ in range(20):
+            if sql("SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND application_name='tdf-interaction-pause-test' AND wait_event_type='Lock');") == 't':
+                break
+            assert not pauser.done(), 'Pause bypassed admitted work'
+            time.sleep(.05)
+        else:
+            raise AssertionError('Pause did not reach the observed database lock')
+        writer.stdin.write('COMMIT;\n\\q\n'); writer.stdin.flush(); writer.wait(timeout=10)
+        assert pauser.result(timeout=10) == 'f'
+    count_before = sql('SELECT count(*) FROM interaction_target;')
+    assert sql("SELECT interaction_register('club_post','930000011',930000001) IS NULL;") == 't'
+    assert sql('SELECT count(*) FROM interaction_target;') == count_before
+    assert sql(f"SELECT interaction_register('club_post','930000001',930000001)={literal(target)}::uuid;") == 't'
+    assert sql('SELECT interaction_dispatch_events(1);') == '0'
+    sql('UPDATE interaction_runtime SET enabled=true WHERE singleton;')
+assert sql("SELECT interaction_register('club_post','930000011',930000001) IS NOT NULL;") == 't'
+print('PASS pause serializes registration, commands, preferences, blocking and delivery; paused reads cannot create targets')

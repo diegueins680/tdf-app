@@ -167,7 +167,9 @@ queryWith user access sql args = do
         gate <- if installed == [Single True]
           -- Pausing a converted installation fences writes/delivery, while
           -- its canonical read model remains the only source of engagement.
-          then rawSql "SELECT enabled OR (? AND activated_once) FROM interaction_runtime WHERE singleton" [PersistBool readAccess]
+          then rawSql
+            ("SELECT enabled OR (? AND activated_once) FROM interaction_runtime WHERE singleton" <> if readAccess then "" else " FOR SHARE")
+            [PersistBool readAccess]
           else pure []
         if gate /= [Single True] then pure (Left err404) else do
           budget <- case (user,access) of

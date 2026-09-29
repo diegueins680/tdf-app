@@ -11,12 +11,32 @@ SELECT 916000004,id,'bootstrap',true,now(),1 FROM security_role WHERE code='admi
 UPDATE interaction_runtime SET enabled=true WHERE singleton;
 DO $$
 DECLARE target uuid; comment_key uuid; result_value jsonb; version_value bigint;
+ bad_reason jsonb; op_value text; reason_actor bigint; audit_before bigint; events_before bigint; requests_before bigint;
 BEGIN
  ASSERT interaction_is_moderator(916000004);
  ASSERT NOT interaction_is_moderator(916000001);
  target:=interaction_register('club_post','916000001',916000001);
  result_value:=interaction_command(916000002,target,gen_random_uuid(),'{"operation":"comment.create","body":"Test report"}');
  comment_key:=(result_value->>'id')::uuid;
+ SELECT count(*) INTO audit_before FROM interaction_audit WHERE target_id=target;
+ SELECT count(*) INTO events_before FROM interaction_event WHERE target_id=target;
+ SELECT count(*) INTO requests_before FROM interaction_request WHERE target_id=target;
+ FOREACH op_value IN ARRAY ARRAY['comment.report','comment.hide','comment.remove','comment.restore','comment.report.resolve'] LOOP
+   reason_actor:=CASE op_value WHEN 'comment.report' THEN 916000003 WHEN 'comment.hide' THEN 916000001
+     WHEN 'comment.restore' THEN 916000001 ELSE 916000004 END;
+   FOR bad_reason IN SELECT value FROM jsonb_array_elements(jsonb_build_array(E'\t\n\r ',U&'\00A0\2028',repeat('x',1001),123,true,'{}'::jsonb,'[]'::jsonb)) LOOP
+     result_value:=interaction_command(reason_actor,target,gen_random_uuid(),jsonb_build_object(
+       'operation',op_value,'commentId',comment_key,'reason',bad_reason)
+       || CASE WHEN op_value='comment.report' THEN '{}'::jsonb ELSE '{"expectedVersion":1}'::jsonb END
+       || CASE WHEN op_value='comment.report.resolve' THEN '{"decision":"dismissed"}'::jsonb ELSE '{}'::jsonb END);
+     ASSERT result_value->>'error'='invalid',op_value||' accepted invalid reason: '||result_value::text;
+   END LOOP;
+ END LOOP;
+ ASSERT NOT EXISTS(SELECT 1 FROM interaction_report WHERE target_id=target);
+ ASSERT (SELECT state='visible' AND version=1 FROM interaction_comment WHERE id=comment_key);
+ ASSERT (SELECT count(*) FROM interaction_audit WHERE target_id=target)=audit_before;
+ ASSERT (SELECT count(*) FROM interaction_event WHERE target_id=target)=events_before;
+ ASSERT (SELECT count(*) FROM interaction_request WHERE target_id=target)=requests_before;
  result_value:=interaction_command(916000003,target,gen_random_uuid(),jsonb_build_object('operation','comment.report','commentId',comment_key,'reason','Please review'));
  ASSERT result_value->>'reported'='true';
  ASSERT interaction_report_inbox(916000001,NULL,20)->>'error'='forbidden';

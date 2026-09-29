@@ -189,3 +189,5 @@ record release, artist release, club post or memory, then scrolls to and focuses
 that card. Club links select the correct tab after authentication. Missing/hidden
 items show an unavailable state without fetching around source permissions. Source
 pagination remains bounded and returns to user control after initial selection.
+
+Emergency pause waits for admitted interaction writes and dispatch batches through a shared runtime-row admission lock. Existing authorized discussions remain readable without registration writes; an unregistered publication is unavailable to discussion reads until resume. Registration, commands, notification preferences, blocks and delivery share this boundary. The concurrency suite observes the pausing session waiting on a database lock before releasing each admitted writer, then verifies that paused reads cannot add targets.
