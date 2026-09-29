@@ -1083,19 +1083,19 @@ fanClubSecureArtistHandlers user artistId =
 
     reactToMemory aId memoryId ContentReactionReq{..} = do
       artistKey <- requireArtistKey aId
-      requireFanClubPostAccess user artistKey
       memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       clubKey <- maybe (throwError err404 { errBody = "Club no encontrado" }) (pure . entityKey) mClub
       target <- runDB $ lookupFanClubMemoryMutationTarget clubKey memoryKey
       _ <- either throwError pure target
-      reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
       canonical <- runDB Interactions.activated
       if canonical then do
         _ <- (Interactions.legacyCommand user "club_memory" (T.pack (show (fromSqlKey memoryKey)))
-          (object ["operation" .= ("legacy.reaction" :: Text), "reactionTypeId" .= reactionTypeId]) :: AppM Value)
+          (object ["operation" .= ("legacy.reaction" :: Text), "reactionTypeId" .= crrReactionTypeId]) :: AppM Value)
         runDB $ buildFanClubMemoryReactionSummary memoryKey (auPartyId user)
       else do
+        requireFanClubPostAccess user artistKey
+        reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
         now <- liftIO getCurrentTime
         runDB $ do
           toggleFanClubMemoryReaction memoryKey (auPartyId user) reactionTypeId now

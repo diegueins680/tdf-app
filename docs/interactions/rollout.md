@@ -15,7 +15,10 @@ is a schema-install side effect.
    `preview_deployment_setting` ([Cloudflare project API](https://developers.cloudflare.com/api/resources/pages/subresources/projects/)).
    Otherwise a protected main merge
    could publish the new web client before its backend/schema are ready.
-   Merge through normal protected review/CI; build an immutable backend image.
+   Merge through normal protected review/CI using a **merge commit**, preserving
+   the migration `introducedBy` ancestry. Do not squash or rebase this release:
+   those methods discard the registered source commits and the release planner
+   correctly refuses the resulting manifest. Build an immutable backend image.
    Apply only the exact merged manifest using the existing Hetzner release lane.
 2. Capture a fresh encrypted/off-host production backup and rehearse its restore.
    Capture exact legacy row counts and parent/reaction validation in a read-only

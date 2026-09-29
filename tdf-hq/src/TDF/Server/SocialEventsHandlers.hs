@@ -3913,15 +3913,16 @@ socialEventsServer user =
         _ <- requireExistingEvent envPool eventKey
         momentKey <- parseKeyOr400 "moment" momentIdStr
         _ <- requireMomentForEvent envPool eventKey momentKey
-        reactionTypeId <-
-            liftIO (runSqlPool (loadSelectableMomentReactionTypeId emrrReactionTypeId) envPool)
-                >>= either throwError pure
         canonical <- liftIO $ runSqlPool Interactions.activated envPool
         if canonical then void (Interactions.legacyCommand user "event_moment" (renderKeyText momentKey)
-            (Aeson.object ["operation" Aeson..= ("legacy.reaction" :: T.Text), "reactionTypeId" Aeson..= reactionTypeId,
+            (Aeson.object ["operation" Aeson..= ("legacy.reaction" :: T.Text), "reactionTypeId" Aeson..= emrrReactionTypeId,
                 "active" Aeson..= emrrActive]) :: AppM Aeson.Value)
-        else void $ liftIO $ runSqlPool
-            (toggleMomentReactionDb (auPartyId user) currentPartyId momentKey reactionTypeId emrrActive now) envPool
+        else do
+            reactionTypeId <-
+                liftIO (runSqlPool (loadSelectableMomentReactionTypeId emrrReactionTypeId) envPool)
+                    >>= either throwError pure
+            void $ liftIO $ runSqlPool
+                (toggleMomentReactionDb (auPartyId user) currentPartyId momentKey reactionTypeId emrrActive now) envPool
         liftIO $ loadMomentDTO envPool currentPartyId momentKey
 
     commentOnMoment :: T.Text -> T.Text -> EventMomentCommentCreateDTO -> AppM EventMomentCommentDTO

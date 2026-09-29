@@ -106,6 +106,27 @@ request(actors[2],f"/fans/me/clubs/{actors[2]}/posts/{legacy['fcpId']}/react",{'
 legacy_reaction=request(actors[2],f"/fans/me/clubs/{actors[0]}/posts/{legacy['fcpId']}/react",{'crrReactionTypeId':like})
 assert legacy_reaction['rsTotal']==0 and legacy_reaction['rsMyReactionTypeId'] is None
 
+# Old memory clients must be able to remove their own reaction after losing
+# write access, and after a once-valid choice is retired. Source/path checks stay.
+sql(f"INSERT INTO fan_club_member_profile(id,party_id,club_id) VALUES({actors[0]},{actors[0]},{actors[0]}); INSERT INTO fan_club_memory(id,member_profile_id,title) VALUES({actors[0]},{actors[0]},'Memory withdrawal fixture');")
+memory_path=f'/fans/me/clubs/{actors[0]}/memories/{actors[0]}/react'
+memory_identity=f'/interactions/targets/club_memory/{actors[0]}'
+assert request(actors[1],memory_path,{'crrReactionTypeId':like})['rsTotal']==1
+sql(f"DELETE FROM fan_follow WHERE fan_party_id={actors[1]} AND artist_party_id={actors[0]};")
+assert request(actors[1],memory_path,{'crrReactionTypeId':like})['rsTotal']==0
+request(actors[1],memory_path,{'crrReactionTypeId':like},status=400)
+sql(f"INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES({actors[1]},{actors[0]},now());")
+assert request(actors[1],memory_path,{'crrReactionTypeId':like})['rsTotal']==1
+sql(f"UPDATE content_reaction_type SET active=false WHERE id='{like}';")
+try:
+    removed=request(actors[1],memory_path,{'crrReactionTypeId':like})
+    assert removed['rsTotal']==0 and removed['rsMyReactionTypeId'] is None
+    request(actors[1],memory_path,{'crrReactionTypeId':like},status=400)
+    assert sum(row['count'] for row in request(actors[0],memory_identity)['reactions'])==0
+finally:
+    sql(f"UPDATE content_reaction_type SET active=true WHERE id='{like}';")
+request(actors[1],f'/fans/me/clubs/{actors[2]}/memories/{actors[0]}/react',{'crrReactionTypeId':like},status=404)
+
 # Imported artist updates do not carry public publication authority.
 sql(f"INSERT INTO artist_profile(artist_party_id,created_at) VALUES({actors[0]},now()); INSERT INTO social_sync_post(id,platform,external_post_id,artist_party_id,caption,fetched_at,ingest_source,created_at,updated_at) VALUES({actors[0]},'instagram','synthetic-api-private-update-{actors[0]}',{actors[0]},'Private ingestion caption',now(),'manual',now(),now());")
 request(None,f'/public/interactions/targets/artist_update/{actors[0]}',status=404)
@@ -125,6 +146,23 @@ sql(f"UPDATE social_event SET metadata='{{\"isPublic\":true}}',workflow_state_id
 assert request(None,f'/public/interactions/targets/event/{actors[0]}')['route']==f'/eventos/{actors[0]}'
 assert request(None,f"/public/interactions/targets/event_moment/{moments[0]['emId']}")['route']==f"/eventos/{actors[0]}?moment={moments[0]['emId']}"
 
+
+# Event legacy catalog validation must not strand historical reactions.
+moment_key=moments[0]['emId']
+moment_path=f'/social-events/events/{actors[0]}/moments/{moment_key}/reactions'
+moment_identity=f'/interactions/targets/event_moment/{moment_key}'
+legacy_like=sql("SELECT id FROM reaction_type WHERE code='like' LIMIT 1;")
+assert legacy_like
+request(actors[0],moment_path,{'emrrReactionTypeId':legacy_like,'emrrActive':True})
+assert request(actors[0],moment_identity)['myReactionTypeId']==like
+sql(f"UPDATE reaction_type SET active=false WHERE id='{legacy_like}'; UPDATE content_reaction_type SET active=false WHERE id='{like}';")
+try:
+    request(actors[0],moment_path,{'emrrReactionTypeId':legacy_like,'emrrActive':False})
+    withdrawn_moment=request(actors[0],moment_identity)
+    assert withdrawn_moment['myReactionTypeId'] is None and sum(row['count'] for row in withdrawn_moment['reactions'])==0
+    request(actors[0],moment_path,{'emrrReactionTypeId':legacy_like,'emrrActive':True},status=400)
+finally:
+    sql(f"UPDATE reaction_type SET active=true WHERE id='{legacy_like}'; UPDATE content_reaction_type SET active=true WHERE id='{like}';")
 
 # Owner policies apply to stale clients and compose with current target access.
 version=request(actors[0],identity)['version']
