@@ -39,4 +39,7 @@ it('leaves pagination under user control after revealing the requested item', as
   view.rerender(collection([...items, '30']));
   expect(screen.queryByTestId('item-17')).toBeNull();
   expect(screen.getByTestId('item-20')).toBeTruthy();
+  view.rerender(collection(['new', ...items, '30']));
+  await screen.findByTestId('item-19');
+  expect(screen.queryByTestId('item-17')).toBeNull();
 });
