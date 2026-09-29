@@ -9,7 +9,7 @@ live authenticated actor, C a comment, and R(T,U) its optional single reaction s
 
 | Transition | Preconditions | Result and executable evidence |
 | --- | --- | --- |
-| React(T,U,k) | Source readable, domain write grant, no bilateral block, published selectable catalog type | R(T,U)=k or absent for null; PK(target,actor); each type total equals authoritative rows. `schema-properties.sql`, `test-concurrency.py` |
+| React(T,U,k) | Source readable, no bilateral block; non-null k additionally requires domain write grant and published selectable catalog type | R(T,U)=k or absent for null; PK(target,actor); each type total equals authoritative rows. `schema-properties.sql`, `test-concurrency.py` |
 | Create(T,U,parent,body,key) | Current comment policy; valid source/session; optional parent belongs to T; bounded body/mentions | Immutable target/root/parent; deeper child retains root. Repeated actor/key+payload produces the same ID; changed payload conflicts. `command-properties.sql`, `legacy-properties.sql`, concurrency runner |
 | Edit(C,U,version) | Visible, own comment, current access, expected version | Version increments; body/mentions validated atomically; no ownership/root changes. `command-properties.sql` |
 | Delete(C,U,version) | Own visible/hidden comment, current access, expected version | Erase body/mentions/legacy presentation; deleted tombstone retains all descendants and identity. `command-properties.sql`, `moderation-properties.sql`, `legacy-properties.sql`, concurrency runner |
@@ -53,3 +53,8 @@ prevents an older/replayed event from making a read notification unread again.
 and pair version, stale unblocks fail, opposite-direction blocks remain effective,
 old follow grants stay revoked, and private report reasons are moderator-only.
 These are state/authorization properties of the actual migration functions.
+
+Withdrawal after lost write eligibility is verified against actual SQL and HTTP commands.
+An accessible target permits removal only from the actor's own slot. Summary
+choices become nonselectable, while the existing selected reaction remains
+removable in both clients; restoring eligibility never restores a withdrawn slot.

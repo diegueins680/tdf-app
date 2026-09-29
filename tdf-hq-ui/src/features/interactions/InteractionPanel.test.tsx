@@ -135,3 +135,16 @@ test('lets moderators read report reasons before making a decision', async () =>
   fireEvent.click(screen.getByRole('button', { name: 'Desestimar reportes' }));
   await waitFor(() => expect(command).toHaveBeenCalledWith(target, expect.objectContaining({ operation: 'comment.report.resolve', commentId: rootId }), expect.any(String)));
 });
+
+
+test('permits only withdrawing the selected reaction after write eligibility is revoked', async () => {
+  summary.mockResolvedValue({ ...data, canReact: true, myReactionTypeId: 'like', reactions: [
+    { ...data.reactions[0]!, count: 1, selectable: false },
+    { id: 'love', code: 'love', emoji: '❤️', label: 'Me encanta', count: 2, selectable: false },
+  ] });
+  view(); const selected = await screen.findByRole<HTMLButtonElement>('button', { name: 'Me gusta: 1' });
+  expect(selected.disabled).toBe(false);
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Me encanta: 2' }).disabled).toBe(true);
+  fireEvent.click(selected);
+  await waitFor(() => expect(command).toHaveBeenCalledWith(target, { operation: 'reaction.set', reactionTypeId: null }, expect.any(String)));
+});

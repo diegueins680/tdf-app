@@ -46,6 +46,18 @@ request(None,'/public'+identity,status=404)
 like=next(r['id'] for r in summary['reactions'] if r['code']=='like')
 command(actors[1],{'operation':'reaction.set','reactionTypeId':like})
 assert next(r['count'] for r in request(actors[0],identity)['reactions'] if r['id']==like)==1
+sql(f"DELETE FROM fan_follow WHERE fan_party_id={actors[1]} AND artist_party_id={actors[0]};")
+withdrawal=request(actors[1],identity)
+assert withdrawal['canReact'] and withdrawal['myReactionTypeId']==like
+assert not any(item['selectable'] for item in withdrawal['reactions'])
+command(actors[1],{'operation':'reaction.set','reactionTypeId':like},status=400)
+command(actors[1],{'operation':'reaction.set','reactionTypeId':None})
+withdrawn=request(actors[1],identity)
+assert not withdrawn['canReact'] and withdrawn['myReactionTypeId'] is None
+assert sum(item['count'] for item in withdrawn['reactions'])==0
+sql(f"INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES({actors[1]},{actors[0]},now());")
+assert request(actors[1],identity)['myReactionTypeId'] is None
+command(actors[1],{'operation':'reaction.set','reactionTypeId':like})
 key=str(uuid.uuid4()); payload={'operation':'comment.create','body':'Root discussion','mentions':[]}
 root=command(actors[1],payload,key); assert command(actors[1],payload,key)['id']==root['id']
 command(actors[1],{**payload,'body':'Different retry'},key,status=409)

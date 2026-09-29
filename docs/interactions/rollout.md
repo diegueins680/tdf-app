@@ -2,7 +2,7 @@
 
 Production schema migration is additive and separate from activation. The live
 baseline was 115 reviewed migrations on PostgreSQL 17.8; eight existing social
-compatibility migrations and sixteen interaction migrations are registered in
+compatibility migrations and seventeen interaction migrations are registered in
 order. Existing social-v2 rollout gates remain disabled. No feature activation
 is a schema-install side effect.
 
@@ -101,3 +101,9 @@ kind and makes its resolver unconditionally unavailable, including if a capabili
 flag is accidentally enabled. Social-sync ingestion has no publication/review
 state and must remain private. Imported rows are preserved. Published artist
 releases and ordinary club posts retain their existing publication paths.
+
+`2026-09-29_interaction_reaction_withdrawal` permits an actor to withdraw their
+existing reaction from a still-accessible target after losing domain write
+eligibility. New selections remain forbidden. The existing canReact/selectable
+contract exposes only withdrawal; no native binary or API schema change is needed.
+Current visibility, blocking, suspension, session, idempotency and count guards remain.

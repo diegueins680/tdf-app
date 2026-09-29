@@ -186,3 +186,24 @@ and persona-browser jobs also passed. The only failed gate was the migration
 registry's stale catalog-inventory fingerprint, narrowly refreshed and locally
 rechecked without changing its technical-constant classification. The later
 publication-authority HTTP checks still require qualification on the new head.
+
+
+## Final artifact qualification and withdrawal follow-up
+
+Root090b5a132 passed all hosted checks, full Android installed E2E run36500706927
+and immutable image run36500704280. The unmodified final iOS artifact from1117bca48
+(application tree identical to pinned66d6ee809) passed the complete installed
+journey locally against the139-migration disposable database; native full runner
+completed with authoritative API assertions. Its Mac API binary predates only the
+legacy moment batch change independently covered by the final Linux HTTP lane.
+Signed iOS26 from native main16278639 passed independent downloaded checksum,
+codesign, production API, runtime and associated-domain verification:
+SHA256 93c1b145425665145d93456dde65f5318122b7ec7a350ee7e6335a7a96934d86.
+No store upload or production deployment occurred.
+
+A subsequent review identified withdrawal after lost club write eligibility.
+The third forward repair preserves current source visibility and account guards,
+allows only the actor's own removal, and marks new choices nonselectable. Actual
+SQL properties cover revoked/restored eligibility, own-slot isolation, repeat
+removal and authoritative counters; HTTP and rendered web regressions cover the
+same contract. New final CI and140-entry rehearsal must pass before release.
