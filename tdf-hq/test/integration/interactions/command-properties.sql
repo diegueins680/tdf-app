@@ -10,6 +10,32 @@ INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at)
 VALUES(910000002,910000001,now()),(910000003,910000001,now());
 INSERT INTO social_v2_preference(party_id,discoverable) VALUES(910000003,true);
 UPDATE interaction_runtime SET enabled=true;
+-- Direct callers cannot turn whitespace into visible comments or edit away text.
+DO $$
+DECLARE target uuid; response jsonb; original jsonb; blank text; events_before bigint;
+BEGIN
+ INSERT INTO fan_club_post(id,club_id,fan_party_id,content,created_at)
+ VALUES(910000002,910000001,910000001,'Whitespace validation fixture',now());
+ target:=interaction_register('club_post','910000002',910000001);
+ original:=interaction_command(910000001,target,gen_random_uuid(),jsonb_build_object(
+   'operation','comment.create','body',E'First line\n\tSecond line 😀'));
+ ASSERT original->>'body'=E'First line\n\tSecond line 😀',original::text;
+ ASSERT interaction_body_has_text('vvv') AND interaction_body_has_text(E' \tv\n ');
+ SELECT count(*) INTO events_before FROM interaction_event WHERE target_id=target;
+ FOR blank IN SELECT repeat(chr(codepoint),3)||E' \t\r\n' FROM unnest(ARRAY[
+   9,10,13,32,133,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288,65279]) codepoint LOOP
+   response:=interaction_command(910000001,target,gen_random_uuid(),jsonb_build_object('operation','comment.create','body',blank));
+   ASSERT response->>'error'='invalid','Whitespace-only create accepted: '||response::text;
+   response:=interaction_command(910000001,target,gen_random_uuid(),jsonb_build_object('operation','comment.edit',
+     'commentId',original->>'id','expectedVersion',1,'body',blank));
+   ASSERT response->>'error'='invalid','Whitespace-only edit accepted: '||response::text;
+ END LOOP;
+ ASSERT (SELECT count(*) FROM interaction_comment WHERE target_id=target)=1;
+ ASSERT (SELECT body=original->>'body' AND version=1 FROM interaction_comment WHERE id=(original->>'id')::uuid);
+ ASSERT (interaction_summary(910000001,'club_post','910000002')->>'commentCount')::integer=1;
+ ASSERT (SELECT count(*) FROM interaction_event WHERE target_id=target)=events_before;
+ ASSERT (SELECT count(*) FROM interaction_request WHERE target_id=target)=1;
+END $$;
 DO $$
 DECLARE target uuid; response jsonb; created jsonb; child jsonb; command jsonb;
  request_id uuid:=gen_random_uuid(); root uuid; reaction uuid;

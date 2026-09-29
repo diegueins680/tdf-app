@@ -1386,6 +1386,7 @@
       "tdf-hq/sql/2026-09-29_interaction_moderation_access.sql",
       "tdf-hq/sql/2026-09-29_interaction_moderation_block_boundary.sql",
       "tdf-hq/sql/2026-09-29_interaction_moderation_delivery.sql",
+      "tdf-hq/sql/2026-09-29_interaction_nonblank_comments.sql",
       "tdf-hq/sql/2026-09-29_interaction_ownerless_policy.sql",
       "tdf-hq/sql/2026-09-29_interaction_publication_authority.sql",
       "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
@@ -2691,7 +2692,7 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "d543f3665d5df066b67743eb391165011b272e7ac0ae37bb86ad5764f7b7725b",
+      "sha256": "31295b82acb88495c9371a2e8327b21077e3e6e674cc5a3d27e3780ca9a9b7ab",
       "authority": "inferred",
       "authorityBasis": "Status: implementation and installed test journeys pass; protected review, signed releases and production rollout remain pending. No production schema or feature gate changed.",
       "kind": "requirement-candidate"

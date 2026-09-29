@@ -282,3 +282,5 @@ were cancelled before distribution. Native main is now `16202bf72f04e85f9f2bf624
 root pins its merged feature ancestor `5eb05bc`. The interaction screen/API code
 is unchanged from the successful installed journeys. No OTA bundle or channel
 mapping was published. Signed artifact qualification remains a release gate.
+
+Canonical comment create/edit rejects bodies consisting only of Unicode whitespace (including tabs, line breaks, nonbreaking spaces and BOM), independently of database locale. Nonblank multiline text is preserved verbatim so mention offsets remain stable. Rejected commands do not create comments, advance revisions/counts, persist idempotency results or enqueue notification events. Existing legacy text is not rewritten by this validation repair. Executable command properties generate blank variants and verify these invariants; HTTP coverage exercises both create and edit.

@@ -85,6 +85,13 @@ command(actors[1],{'operation':'reaction.set','reactionTypeId':like})
 key=str(uuid.uuid4()); payload={'operation':'comment.create','body':'Root discussion','mentions':[]}
 root=command(actors[1],payload,key); assert command(actors[1],payload,key)['id']==root['id']
 command(actors[1],{**payload,'body':'Different retry'},key,status=409)
+# Reject blank create/edit through HTTP, preserving the existing comment and counts.
+blank_count=request(actors[1],identity)['commentCount']
+for blank in ('\t\n\r ', '\u00a0\u2028\u3000'):
+    command(actors[1],{'operation':'comment.create','body':blank},status=400)
+    command(actors[1],{'operation':'comment.edit','commentId':root['id'],'expectedVersion':1,'body':blank},status=400)
+assert request(actors[1],identity)['commentCount']==blank_count
+assert request(actors[1],identity+'/comments/'+root['id'])['comment']['body']=='Root discussion'
 reply=command(actors[2],{'operation':'comment.create','body':'Reply discussion','parentId':root['id'],'mentions':[]})
 command(actors[2],{'operation':'comment.edit','commentId':root['id'],'expectedVersion':1,'body':'Unauthorized edit','mentions':[]},status=403)
 edited=command(actors[1],{'operation':'comment.edit','commentId':root['id'],'expectedVersion':1,'body':'Edited root','mentions':[]}); assert edited['version']==2
