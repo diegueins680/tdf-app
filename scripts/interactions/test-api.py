@@ -121,7 +121,7 @@ sql(f"UPDATE catalog_definition SET active=false WHERE id=(SELECT catalog_id FRO
 try:
     removed=request(actors[1],memory_path,{'crrReactionTypeId':like})
     assert removed['rsTotal']==0 and removed['rsMyReactionTypeId'] is None
-    request(actors[1],memory_path,{'crrReactionTypeId':like},status=400)
+    request(actors[1],memory_path,{'crrReactionTypeId':like},status=422)
     assert sum(row['count'] for row in request(actors[0],memory_identity)['reactions'])==0
 finally:
     sql(f"UPDATE catalog_definition SET active=true WHERE id=(SELECT catalog_id FROM content_reaction_type WHERE id='{like}');")
@@ -161,7 +161,7 @@ try:
     request(actors[0],moment_path,{'emrrReactionTypeId':legacy_fire,'emrrActive':False})
     withdrawn_moment=request(actors[0],moment_identity)
     assert withdrawn_moment['myReactionTypeId'] is None and sum(row['count'] for row in withdrawn_moment['reactions'])==0
-    request(actors[0],moment_path,{'emrrReactionTypeId':legacy_fire,'emrrActive':True},status=400)
+    request(actors[0],moment_path,{'emrrReactionTypeId':legacy_fire,'emrrActive':True},status=422)
 finally:
     sql(f"UPDATE catalog_definition SET active=true WHERE id IN (SELECT catalog_id FROM reaction_type WHERE id='{legacy_fire}' UNION SELECT catalog_id FROM content_reaction_type WHERE id='{moment_reaction}');")
 
