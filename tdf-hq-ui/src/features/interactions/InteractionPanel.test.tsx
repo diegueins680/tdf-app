@@ -148,3 +148,16 @@ test('permits only withdrawing the selected reaction after write eligibility is 
   fireEvent.click(selected);
   await waitFor(() => expect(command).toHaveBeenCalledWith(target, { operation: 'reaction.set', reactionTypeId: null }, expect.any(String)));
 });
+
+
+test('lets owners hide blocked-author content from their scoped moderation queue', async () => {
+  summary.mockResolvedValue({ ...data, canManage: true });
+  moderation.mockResolvedValue({ items: [{ ...root, author: null, body: '', moderationBody: 'Blocked author content', canEdit: false, canDelete: false }], nextCursor: null });
+  view({ initiallyExpanded: true });
+  fireEvent.click(await screen.findByRole('button', { name: 'Moderación' }));
+  await screen.findByText('Blocked author content');
+  expect(screen.queryByRole('button', { name: 'Retirar como administrador' })).toBeNull();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Motivo de la decisión' }), { target: { value: 'Publication policy' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Ocultar en mi contenido' }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith(target, expect.objectContaining({ operation: 'comment.hide', commentId: rootId }), expect.any(String)));
+});

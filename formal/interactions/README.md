@@ -58,3 +58,11 @@ Withdrawal after lost write eligibility is verified against actual SQL and HTTP 
 An accessible target permits removal only from the actor's own slot. Summary
 choices become nonselectable, while the existing selected reaction remains
 removable in both clients; restoring eligibility never restores a withdrawn slot.
+
+Social blocking is not an authorization revocation for scoped enforcement.
+`moderation-properties.sql` exercises an author blocking both owner and moderator:
+normal lists remain filtered, privileged queues retain evidence and actual state,
+redacted deep-link context remains reachable, owner hide/restore and moderator
+report resolution/removal succeed, owner administrative removal remains denied,
+and removed bodies are erased and audited. HTTP plus rendered web/native tests
+exercise the same state boundary, including the owner's queue action.

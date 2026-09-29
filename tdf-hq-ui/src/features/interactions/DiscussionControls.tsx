@@ -48,6 +48,10 @@ export function DiscussionControls({ summary, scope, run }: { summary: Interacti
             </Stack>}
           <Typography variant="caption">{comment.state === 'hidden' ? 'Oculto' : `${comment.openReports ?? 0} reportes`}</Typography>
           <Stack direction="row">
+            {summary.canManage && comment.state === 'visible' && <Button disabled={pending || !reason.trim()} onClick={() => {
+              setPending(true); void run({ operation: 'comment.hide', commentId: comment.id, expectedVersion: comment.version, reason })
+                .catch(() => setError('No se pudo ocultar el comentario.')).finally(() => setPending(false));
+            }}>Ocultar en mi contenido</Button>}
             {comment.state === 'hidden' && <Button disabled={pending || !reason.trim()} onClick={() => {
               setPending(true); void run({ operation: 'comment.restore', commentId: comment.id, expectedVersion: comment.version, reason })
                 .catch(() => setError('No se pudo restaurar el comentario.')).finally(() => setPending(false));

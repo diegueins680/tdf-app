@@ -2,7 +2,7 @@
 
 Production schema migration is additive and separate from activation. The live
 baseline was 115 reviewed migrations on PostgreSQL 17.8; eight existing social
-compatibility migrations and seventeen interaction migrations are registered in
+compatibility migrations and eighteen interaction migrations are registered in
 order. Existing social-v2 rollout gates remain disabled. No feature activation
 is a schema-install side effect.
 
@@ -107,3 +107,13 @@ existing reaction from a still-accessible target after losing domain write
 eligibility. New selections remain forbidden. The existing canReact/selectable
 contract exposes only withdrawal; no native binary or API schema change is needed.
 Current visibility, blocking, suspension, session, idempotency and count guards remain.
+
+`2026-09-29_interaction_moderation_block_boundary` separates scoped enforcement
+from ordinary social blocking. On currently accessible targets, content managers
+may hide/restore and current moderators may remove/resolve reports despite an
+author block. Only authorized queues expose moderation bodies and actual state;
+normal lists still exclude blocked authors. A scoped deep link yields redacted
+context so an authorized moderator can open the queue without ordinary body or
+identity disclosure. Owner queues include blocked visible comments and both
+clients offer the existing hide operation there; owners gain no administrative
+removal/report-decision powers. Current role/access/version checks and audits remain.

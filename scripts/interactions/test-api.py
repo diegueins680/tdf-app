@@ -120,6 +120,33 @@ for attempt in range(91):
 assert limited, 'Rejected requests escaped the HTTP abuse budget'
 sql(f"UPDATE api_token SET active=false WHERE party_id={actors[1]};")
 command(actors[1],payload,key,status=401)
+# Moderation survives author blocks without reopening ordinary social access.
+moderator=actor_base+3
+tokens[moderator]=str(uuid.uuid4())+str(uuid.uuid4())
+sql(f"INSERT INTO party(id,display_name,is_org,created_at) VALUES({moderator},'API moderation fixture',false,now()); INSERT INTO user_credential(party_id,username,password_hash,active) VALUES({moderator},'interaction-api-{moderator}','not-a-login-hash',true); INSERT INTO api_token(token,party_id,label,active) VALUES('{tokens[moderator]}',{moderator},'interaction-local-test',true); INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT {moderator},id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';")
+evidence=command(actors[2],{'operation':'comment.create','body':'Moderation block fixture','mentions':[]})
+command(actors[0],{'operation':'comment.report','commentId':evidence['id'],'reason':'Review blocked-author content'})
+for peer in [actors[0],moderator]:
+    state=request(actors[2],f'/interactions/blocks/{peer}')
+    request(actors[2],f'/interactions/blocks/{peer}',{'blockRequestKey':str(uuid.uuid4()),'blocked':True,'expectedVersion':state['version']},method='PUT')
+queue=request(actors[0],f'/interactions/moderation/{target}?limit=20')
+assert any(c['id']==evidence['id'] and c['state']=='visible' and c['moderationBody']=='Moderation block fixture' for c in queue['items'])
+reports=request(moderator,'/interactions/reports?limit=20')
+assert any(c['id']==evidence['id'] and c['reportReasons']==['Review blocked-author content'] for c in reports['items'])
+linked=request(moderator,f"/interactions/resolve/comment/{evidence['id']}")
+assert linked['context']['comment']['body']=='' and linked['context']['comment']['author'] is None
+assert not any(c['id']==evidence['id'] for c in request(actors[0],identity+'/comments?limit=20')['items'])
+command(actors[0],{'operation':'comment.remove','commentId':evidence['id'],'expectedVersion':1,'reason':'Owner is not a moderator'},status=404)
+command(actors[0],{'operation':'comment.hide','commentId':evidence['id'],'expectedVersion':1,'reason':'Scoped owner hide'})
+command(actors[0],{'operation':'comment.restore','commentId':evidence['id'],'expectedVersion':2,'reason':'Scoped owner restore'})
+command(moderator,{'operation':'comment.report.resolve','commentId':evidence['id'],'expectedVersion':3,'reason':'Reviewed report','decision':'reviewed'})
+removed=command(moderator,{'operation':'comment.remove','commentId':evidence['id'],'expectedVersion':3,'reason':'Administrative removal'})
+assert removed['state']=='removed' and removed['body']==''
+for peer in [actors[0],moderator]:
+    state=request(actors[2],f'/interactions/blocks/{peer}')
+    request(actors[2],f'/interactions/blocks/{peer}',{'blockRequestKey':str(uuid.uuid4()),'blocked':False,'expectedVersion':state['version']},method='PUT')
+# Explicitly restore this synthetic fixture's follow for subsequent browser/native flows.
+sql(f"INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES({actors[2]},{actors[0]},now());")
 # Leave actor 2 revoked. The UI E2E uses the current owner and third account.
 fixture=os.environ.get('TDF_INTERACTION_TEST_FIXTURE')
 if fixture:

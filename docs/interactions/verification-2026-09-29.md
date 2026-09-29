@@ -211,3 +211,15 @@ production restore; all seven PostgreSQL16 suites and concurrent-write checks
 pass. Eight rendered web tests and82 release tests pass. Real local HTTP checks
 confirm rejected new selections, own withdrawal, summary reconciliation and no
 resurrection after following again. Final hosted CI remains a release gate.
+
+
+## Block-evasion moderation follow-up
+
+A later review found author blocks could suppress moderation queues and commands.
+The fourth forward repair preserves ordinary block filtering but exempts existing
+scoped enforcement from author/moderator social blocks. Actual moderation states
+and evidence appear only in authorized queues. Both clients add owner hiding in
+that queue; mobile PR121 requires new artifacts before release. Prior signed
+Android19 remains held and must not be distributed. Nine rendered web and nine
+native flows plus direct SQL properties pass. Final141-entry migration, HTTP,
+hosted checks and artifact qualification are still pending for this follow-up.
