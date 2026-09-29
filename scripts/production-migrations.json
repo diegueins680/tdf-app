@@ -720,6 +720,11 @@
       "id": "2026-09-29_interaction_reaction_withdrawal",
       "path": "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
       "introducedBy": "7d8de4c5d84aa8faf83b6558093bbb571dc0615d"
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_block_boundary",
+      "path": "tdf-hq/sql/2026-09-29_interaction_moderation_block_boundary.sql",
+      "introducedBy": "e2dc17a5153d7f734f419d73c1d1575a696dfe30"
     }
   ]
 }
