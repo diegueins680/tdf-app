@@ -279,3 +279,24 @@ moderation events the same scoped fallback as enforcement commands. The test now
 passes, including nonmoderator owner hiding, exact removed-comment navigation,
 read-state preservation on retry, and recipient-block revocation. Social event
 delivery retains ordinary access. Final hosted qualification is still required.
+
+
+## Final native and PostgreSQL qualification
+
+The unmodified hosted simulator artifact98e280372 (tree identical to pinned
+634d8fbcd) passed the full installed iOS journey: login, reaction, comment, reply
+notification, exact deep-link focus, edit, author deletion, retained reply, collapse
+and re-expansion, followed by authoritative API assertions. One earlier attempt
+reported ENOSPC during notification focus; after deleting a superseded generated
+app, both the continuation and complete repeat passed without an app change. The
+simulator was shut down afterward. The local Mac binary excludes the later
+legacy compatibility Haskell changes, which remain in the hosted HTTP lane.
+
+The144-entry bundle and six post-activation property suites pass on the isolated
+PostgreSQL17.8 encrypted production restore. It remains paused; synthetic test
+transactions roll back. The updated10,000-comment/2,000-reaction benchmark measured
+18.400ms summary,6.826ms roots,4.910ms replies and5.067ms deep context. All seven
+fresh local SQL suites plus concurrency,82 release tests, catalog audit and actual
+release planning pass. Android20 is saved in an unpublished held Play draft;
+Alpha17 remains active. iOS27 is not uploaded. Root independent approval, final
+hosted qualification, App Store Connect access and production release remain gates.
