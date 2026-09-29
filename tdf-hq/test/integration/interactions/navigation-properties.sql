@@ -73,8 +73,16 @@ BEGIN
  PERFORM interaction_dispatch_events(50);
  SELECT notification_id INTO notif FROM interaction_notification WHERE comment_id=editable AND recipient_id=910000003 AND event_kind='mention';
  ASSERT notif IS NOT NULL AND interaction_notification_visible(notif,910000003),'Mutual connection allows private mention';
+ result_value:=interaction_command(910000001,target,gen_random_uuid(),jsonb_build_object('operation','settings.update','commentPolicy','mentioned',
+   'expectedVersion',(SELECT version FROM interaction_target WHERE id=target),'mentionedPartyIds',jsonb_build_array(910000003)));
+ ASSERT result_value->>'commentPolicy'='mentioned',result_value::text;
  UPDATE social_v2_pair SET consent_a=false WHERE party_a=910000001 AND party_b=910000003;
  ASSERT NOT interaction_notification_visible(notif,910000003),'Connection revocation must hide private mention activity';
+ -- A stale picker value must never prevent the owner from turning comments off.
+ result_value:=interaction_command(910000001,target,gen_random_uuid(),jsonb_build_object('operation','settings.update','commentPolicy','off',
+   'expectedVersion',(SELECT version FROM interaction_target WHERE id=target),'mentionedPartyIds',jsonb_build_array(910000003)));
+ ASSERT result_value->>'commentPolicy'='off',result_value::text;
+ ASSERT NOT EXISTS(SELECT 1 FROM interaction_target_mention WHERE target_id=target),'Inactive allowlist must be cleared';
  result_value:=interaction_command(910000001,target,gen_random_uuid(),jsonb_build_object('operation','comment.edit','commentId',editable,
    'expectedVersion',2,'body','Remove private mention','mentions','[]'::jsonb));
  ASSERT result_value->>'state'='visible',result_value::text;

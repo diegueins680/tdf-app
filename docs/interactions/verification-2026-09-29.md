@@ -333,3 +333,13 @@ and policy IDs, retains body/counts, admits mutual contacts and suppresses queue
 activity after consent revocation. Legitimate notification fixtures now explicitly
 opt in to discovery. The previous145-migration revision passed all ordinary CI
 checks; the mention repair still requires final hosted qualification.
+
+
+An adjacent privacy test showed that a retained picker selection could prevent an
+owner from disabling comments after the selected user became private. A tenth
+forward repair clears unused allowlists for off/followers/everyone; mention-only
+mode remains strict. The regression failed before the repair and passes afterward.
+Real HTTP covers all three mode changes with stale private selections and verifies
+that no inactive recipient identity persists. The actual allowlist transaction
+also passes a concurrent privacy-change test: opt-out waits for recipient locks,
+then rejects new mentions and suppresses queued mention delivery.

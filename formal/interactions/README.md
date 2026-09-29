@@ -85,3 +85,9 @@ consent alongside blocks), checks selector/write equivalence, and proves rejecte
 writes leave body/counts unchanged. It also proves queued notifications and
 existing notification visibility honor revoked consent. Submitted recipient party
 locks serialize these checks with existing preference/relationship mutations.
+
+Owner settings apply recipient eligibility only in mention-only mode. Other modes
+clear the unused recipient list, so stale/private picker IDs cannot obstruct an
+authorized owner from disabling comments. SQL and HTTP regressions verify this
+transition, while `test-concurrency.py` executes the real allowlist command and
+proves a concurrent privacy mutation waits for its recipient account lock.

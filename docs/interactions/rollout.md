@@ -159,3 +159,9 @@ Missing discovery preferences are private. Owner allowlist writes lock all
 submitted recipient accounts, matching comment mentions and existing preference
 and relationship mutations. Delivery and notification reads recheck current
 eligibility; old bodies and accepted identities are not silently rewritten.
+
+`2026-09-29_interaction_inactive_allowlists` clears recipient selections when
+leaving mention-only mode. Clients may still send stale picker IDs, but those
+unused IDs neither persist nor grant access. Owners can turn comments off or
+choose followers/everyone after a selected recipient changes privacy. Mention-only
+updates continue to enforce current eligibility and recipient account locks.
