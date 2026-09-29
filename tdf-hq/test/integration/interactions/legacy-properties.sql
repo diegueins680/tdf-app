@@ -40,7 +40,7 @@ DO $$ BEGIN
 END $$;
 UPDATE interaction_runtime SET enabled=true WHERE singleton;
 DO $$
-DECLARE target uuid; reply uuid; child uuid; moment_comment uuid; result_value jsonb; before_count bigint; new_alias text;
+DECLARE target uuid; reply uuid; child uuid; moment_comment uuid; result_value jsonb; before_count bigint; new_alias text; legacy_choice uuid; canonical_choice uuid; moment_target uuid;
 BEGIN
  ASSERT (SELECT activated_once FROM interaction_runtime WHERE singleton);
  ASSERT (SELECT source_counts=migrated_counts FROM interaction_legacy_cutover);
@@ -97,6 +97,23 @@ BEGIN
  result_value:=interaction_command(915000001,(SELECT target_id FROM interaction_comment WHERE id=moment_comment),gen_random_uuid(),jsonb_build_object('operation','comment.delete','commentId',moment_comment,'expectedVersion',1));
  ASSERT result_value->>'state'='deleted';
  ASSERT (SELECT body='' AND author_name='' FROM event_moment_comment WHERE id=915000001);
+ -- All old-client moment reaction mappings exercise the same canonical slot.
+ SELECT id INTO moment_target FROM interaction_target WHERE entity_kind='event_moment' AND entity_key='915000001';
+ FOR legacy_choice,canonical_choice IN SELECT r.id,choice.id FROM reaction_type r JOIN content_reaction_type choice
+   ON choice.code=CASE r.code WHEN 'love' THEN 'heart' WHEN 'applause' THEN 'clap' ELSE r.code END LOOP
+   result_value:=interaction_legacy_command(915000001,'event_moment','915000001',jsonb_build_object('operation','legacy.reaction','reactionTypeId',legacy_choice,'active',true));
+   ASSERT NOT result_value ? 'error',result_value::text;
+   ASSERT (SELECT reaction_type_id=canonical_choice FROM interaction_reaction WHERE target_id=moment_target AND actor_id=915000001);
+   UPDATE catalog_definition SET active=false WHERE id IN
+     (SELECT catalog_id FROM reaction_type WHERE id=legacy_choice UNION SELECT catalog_id FROM content_reaction_type WHERE id=canonical_choice);
+   result_value:=interaction_legacy_command(915000001,'event_moment','915000001',jsonb_build_object('operation','legacy.reaction','reactionTypeId',legacy_choice,'active',false));
+   ASSERT NOT result_value ? 'error',result_value::text;
+   ASSERT NOT EXISTS(SELECT 1 FROM interaction_reaction WHERE target_id=moment_target AND actor_id=915000001);
+   ASSERT NOT EXISTS(SELECT 1 FROM interaction_reaction_total WHERE target_id=moment_target AND total<>0);
+   ASSERT interaction_legacy_command(915000001,'event_moment','915000001',jsonb_build_object('operation','legacy.reaction','reactionTypeId',legacy_choice,'active',true)) ? 'error';
+   UPDATE catalog_definition SET active=true WHERE id IN
+     (SELECT catalog_id FROM reaction_type WHERE id=legacy_choice UNION SELECT catalog_id FROM content_reaction_type WHERE id=canonical_choice);
+ END LOOP;
  UPDATE interaction_runtime SET enabled=false WHERE singleton;
  ASSERT (SELECT activated_once FROM interaction_runtime WHERE singleton);
  ASSERT interaction_legacy_command(915000003,'club_post','915000001','{"operation":"legacy.comment","body":"Paused"}')->>'error'='disabled';

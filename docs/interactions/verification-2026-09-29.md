@@ -343,3 +343,16 @@ Real HTTP covers all three mode changes with stale private selections and verifi
 that no inactive recipient identity persists. The actual allowlist transaction
 also passes a concurrent privacy-change test: opt-out waits for recipient locks,
 then rejects new mentions and suppresses queued mention delivery.
+
+## Legacy endpoint withdrawal qualification
+
+The actual old memory endpoint reproduced 403 after unfollow; the actual old
+moment endpoint reproduced 422 after catalog deactivation. Activated adapters
+now delegate before legacy write/selectability checks while retaining source/path
+validation. New SQL coverage exposed a moment catalog alias shadowing a comment
+record, causing a database error. The eleventh forward repair renames that alias
+without changing registered migration bytes. Properties enumerate every mapped
+legacy choice, retire catalogs, withdraw and reconcile zero rows/totals; real
+HTTP covers both endpoints and rejected new additions. Final hosted qualification
+is required for these backend changes. Release requires a protected merge commit
+to retain registered migration provenance; squash/rebase is explicitly excluded.

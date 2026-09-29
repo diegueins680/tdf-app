@@ -91,3 +91,8 @@ clear the unused recipient list, so stale/private picker IDs cannot obstruct an
 authorized owner from disabling comments. SQL and HTTP regressions verify this
 transition, while `test-concurrency.py` executes the real allowlist command and
 proves a concurrent privacy mutation waits for its recipient account lock.
+
+Legacy moment reaction properties enumerate every mapped catalog choice, then
+withdraw it after catalog deactivation and assert zero authoritative rows/totals.
+Real HTTP additionally covers memory withdrawal after unfollow and both legacy
+endpoints after catalog deactivation, with rejected additions and scoped paths.

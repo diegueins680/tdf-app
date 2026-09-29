@@ -117,14 +117,14 @@ assert request(actors[1],memory_path,{'crrReactionTypeId':like})['rsTotal']==0
 request(actors[1],memory_path,{'crrReactionTypeId':like},status=400)
 sql(f"INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES({actors[1]},{actors[0]},now());")
 assert request(actors[1],memory_path,{'crrReactionTypeId':like})['rsTotal']==1
-sql(f"UPDATE content_reaction_type SET active=false WHERE id='{like}';")
+sql(f"UPDATE catalog_definition SET active=false WHERE id=(SELECT catalog_id FROM content_reaction_type WHERE id='{like}');")
 try:
     removed=request(actors[1],memory_path,{'crrReactionTypeId':like})
     assert removed['rsTotal']==0 and removed['rsMyReactionTypeId'] is None
     request(actors[1],memory_path,{'crrReactionTypeId':like},status=400)
     assert sum(row['count'] for row in request(actors[0],memory_identity)['reactions'])==0
 finally:
-    sql(f"UPDATE content_reaction_type SET active=true WHERE id='{like}';")
+    sql(f"UPDATE catalog_definition SET active=true WHERE id=(SELECT catalog_id FROM content_reaction_type WHERE id='{like}');")
 request(actors[1],f'/fans/me/clubs/{actors[2]}/memories/{actors[0]}/react',{'crrReactionTypeId':like},status=404)
 
 # Imported artist updates do not carry public publication authority.
@@ -151,18 +151,19 @@ assert request(None,f"/public/interactions/targets/event_moment/{moments[0]['emI
 moment_key=moments[0]['emId']
 moment_path=f'/social-events/events/{actors[0]}/moments/{moment_key}/reactions'
 moment_identity=f'/interactions/targets/event_moment/{moment_key}'
-legacy_like=sql("SELECT id FROM reaction_type WHERE code='like' LIMIT 1;")
-assert legacy_like
-request(actors[0],moment_path,{'emrrReactionTypeId':legacy_like,'emrrActive':True})
-assert request(actors[0],moment_identity)['myReactionTypeId']==like
-sql(f"UPDATE reaction_type SET active=false WHERE id='{legacy_like}'; UPDATE content_reaction_type SET active=false WHERE id='{like}';")
+moment_reaction=next(r['id'] for r in request(actors[0],moment_identity)['reactions'] if r['code']=='fire')
+legacy_fire=sql("SELECT id FROM reaction_type WHERE code='fire' LIMIT 1;")
+assert legacy_fire
+request(actors[0],moment_path,{'emrrReactionTypeId':legacy_fire,'emrrActive':True})
+assert request(actors[0],moment_identity)['myReactionTypeId']==moment_reaction
+sql(f"UPDATE catalog_definition SET active=false WHERE id IN (SELECT catalog_id FROM reaction_type WHERE id='{legacy_fire}' UNION SELECT catalog_id FROM content_reaction_type WHERE id='{moment_reaction}');")
 try:
-    request(actors[0],moment_path,{'emrrReactionTypeId':legacy_like,'emrrActive':False})
+    request(actors[0],moment_path,{'emrrReactionTypeId':legacy_fire,'emrrActive':False})
     withdrawn_moment=request(actors[0],moment_identity)
     assert withdrawn_moment['myReactionTypeId'] is None and sum(row['count'] for row in withdrawn_moment['reactions'])==0
-    request(actors[0],moment_path,{'emrrReactionTypeId':legacy_like,'emrrActive':True},status=400)
+    request(actors[0],moment_path,{'emrrReactionTypeId':legacy_fire,'emrrActive':True},status=400)
 finally:
-    sql(f"UPDATE reaction_type SET active=true WHERE id='{legacy_like}'; UPDATE content_reaction_type SET active=true WHERE id='{like}';")
+    sql(f"UPDATE catalog_definition SET active=true WHERE id IN (SELECT catalog_id FROM reaction_type WHERE id='{legacy_fire}' UNION SELECT catalog_id FROM content_reaction_type WHERE id='{moment_reaction}');")
 
 # Owner policies apply to stale clients and compose with current target access.
 version=request(actors[0],identity)['version']
