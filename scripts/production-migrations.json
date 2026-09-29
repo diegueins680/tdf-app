@@ -745,6 +745,11 @@
       "id": "2026-09-29_interaction_event_destinations",
       "path": "tdf-hq/sql/2026-09-29_interaction_event_destinations.sql",
       "introducedBy": "1a884dff86b51ccb7905a58a280bd9fbe7fa8d75"
+    },
+    {
+      "id": "2026-09-29_interaction_mention_privacy",
+      "path": "tdf-hq/sql/2026-09-29_interaction_mention_privacy.sql",
+      "introducedBy": "6334d897c573ae7b2e03c917ad26177e1c0b1958"
     }
   ]
 }

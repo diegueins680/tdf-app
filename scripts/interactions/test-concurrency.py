@@ -115,3 +115,37 @@ for sequence in range(6):
     assert sql(f"SELECT NOT EXISTS(SELECT 1 FROM interaction_reaction WHERE target_id={literal(alias_target)});") == 't'
     assert sql(f"SELECT coalesce(sum(total),0)=0 FROM interaction_reaction_total WHERE target_id={literal(alias_target)};") == 't'
 print('PASS reply-alias reaction/deletion interleavings: independent slots retire without stale counts')
+
+# The actual owner-allowlist command must lock submitted recipients. A privacy
+# opt-out waits for that transaction, then revokes new writes and queued delivery.
+sql("INSERT INTO social_v2_preference(party_id,discoverable) VALUES(930000004,true) ON CONFLICT(party_id) DO UPDATE SET discoverable=true;")
+mention_payload = {'operation': 'comment.create', 'body': '@Recipient', 'mentions': [{'partyId': 930000004, 'start': 0, 'end': 10}]}
+mention = command(930000001, target, mention_payload)
+settings = {'operation': 'settings.update', 'commentPolicy': 'mentioned', 'expectedVersion': int(sql(f"SELECT version FROM interaction_target WHERE id={literal(target)};")), 'mentionedPartyIds': [930000004]}
+writer = subprocess.Popen(['psql','-X','-qAt','-v','ON_ERROR_STOP=1','-d',DB], stdin=subprocess.PIPE,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE,text=True)
+writer.stdin.write(f"BEGIN;\nSELECT interaction_command(930000001,{literal(target)},'{uuid.uuid4()}',{literal(json.dumps(settings))});\nSELECT 'mention-policy-locked';\n")
+writer.stdin.flush()
+settings_result = json.loads(writer.stdout.readline())
+assert settings_result.get('commentPolicy') == 'mentioned', settings_result
+assert writer.stdout.readline().strip() == 'mention-policy-locked'
+previous_social_gate = sql('SELECT enabled FROM social_v2_runtime;')
+sql('UPDATE social_v2_runtime SET enabled=true;')
+revision = int(sql('SELECT revision FROM social_v2_preference WHERE party_id=930000004;'))
+with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+    privacy = pool.submit(sql, f'SELECT social_v2_preferences(930000004,false,false,{revision});')
+    time.sleep(.2)
+    assert not privacy.done(), 'Owner allowlist skipped the recipient privacy lock'
+    writer.stdin.write('COMMIT;\n\\q\n'); writer.stdin.flush(); writer.wait(timeout=10)
+    result = json.loads(privacy.result(timeout=10)); assert result['discoverable'] is False, result
+sql(f"UPDATE social_v2_runtime SET enabled={'true' if previous_social_gate == 't' else 'false'};")
+result = json.loads(sql(f"SELECT interaction_command(930000001,{literal(target)},'{uuid.uuid4()}',{literal(json.dumps(mention_payload))});"))
+assert result.get('error') == 'invalid', result
+for _ in range(20):
+    if sql('SELECT NOT EXISTS(SELECT 1 FROM interaction_event WHERE completed_at IS NULL);') == 't':
+        break
+    sql('SELECT interaction_dispatch_events(50);')
+else:
+    raise AssertionError('Synthetic notification drain exceeded its bound')
+assert sql(f"SELECT NOT EXISTS(SELECT 1 FROM interaction_notification WHERE comment_id={literal(mention['id'])} AND recipient_id=930000004 AND event_kind='mention');") == 't'
+print('PASS mention-policy/privacy serialization and queued notification revocation')
