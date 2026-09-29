@@ -77,7 +77,7 @@ legacy=request(actors[2],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':None
 assert legacy['fcpContent']=='Legacy client reply'
 assert sql(f"SELECT count(*) FROM fan_club_post WHERE id={legacy['fcpId']}")=='0'
 # Imported artist updates do not carry public publication authority.
-sql(f"INSERT INTO artist_profile(artist_party_id,created_at) VALUES({actors[0]},now()); INSERT INTO social_sync_post(id,platform,external_post_id,artist_party_id,caption,fetched_at,ingest_source,created_at,updated_at) VALUES({actors[0]},'instagram','synthetic-api-private-update',{actors[0]},'Private ingestion caption',now(),'manual',now(),now());")
+sql(f"INSERT INTO artist_profile(artist_party_id,created_at) VALUES({actors[0]},now()); INSERT INTO social_sync_post(id,platform,external_post_id,artist_party_id,caption,fetched_at,ingest_source,created_at,updated_at) VALUES({actors[0]},'instagram','synthetic-api-private-update-{actors[0]}',{actors[0]},'Private ingestion caption',now(),'manual',now(),now());")
 request(None,f'/public/interactions/targets/artist_update/{actors[0]}',status=404)
 request(actors[0],f'/interactions/targets/artist_update/{actors[0]}',status=404)
 # The legacy event-moment array has no cursor; activation must not truncate it.

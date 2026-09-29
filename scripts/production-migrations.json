@@ -725,6 +725,11 @@
       "id": "2026-09-29_interaction_moderation_block_boundary",
       "path": "tdf-hq/sql/2026-09-29_interaction_moderation_block_boundary.sql",
       "introducedBy": "e2dc17a5153d7f734f419d73c1d1575a696dfe30"
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_access",
+      "path": "tdf-hq/sql/2026-09-29_interaction_moderation_access.sql",
+      "introducedBy": "3f6a1b7528ed4a6b4a68e36337dcc5f37d5d6a2d"
     }
   ]
 }

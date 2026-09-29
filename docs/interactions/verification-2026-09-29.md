@@ -240,4 +240,9 @@ reads/social writes retain blocking. Moderation-only summaries admit queue acces
 without reaction/comment permissions or counters. Catalog selection now checks
 the same catalog activity, code and workflow identity as command validation.
 Direct SQL regressions pass, including private-grant revocation and deactivated
-catalog withdrawal. Final142-entry and hosted qualification remain pending.
+catalog withdrawal. The142-entry bundle and command/moderation/private-entity properties pass on
+PostgreSQL17.8; the restore remains paused with30 notifications retained. All
+local SQL/concurrency and82 release tests pass. The real HTTP moderation journey
+now blocks both comment author and publication owner against the moderator,
+verifies read-only summary/queue/link access, denies social writes and completes
+scoped enforcement. Final hosted/artifact qualification remains pending.
