@@ -269,3 +269,13 @@ ff0924c3eff17ed2c802a2b0c26a6758f31e0f602b6ae7888b98294488af2d6c.
 The full installed final634 iOS journey is in progress. Root0bdb4aa's ordinary
 checks passed; final alias compatibility CI and production deployment remain
 pending. Store candidates remain unpublished.
+
+
+## Moderation notification delivery
+
+A regression test reproduced a missing removal notification when the publication
+owner blocked a platform moderator. The seventh forward repair gives only queued
+moderation events the same scoped fallback as enforcement commands. The test now
+passes, including nonmoderator owner hiding, exact removed-comment navigation,
+read-state preservation on retry, and recipient-block revocation. Social event
+delivery retains ordinary access. Final hosted qualification is still required.

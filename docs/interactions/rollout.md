@@ -137,3 +137,10 @@ They never change the root post's reactions. Source/target locks serialize reply
 erasure with reactions; author deletion or moderator removal clears alias reactions
 and retires their target, while owner hiding remains reversible. Historical
 reaction slots and URLs are preserved; no engagement is reassigned to the root.
+
+`2026-09-29_interaction_moderation_delivery` uses the strict moderation context
+for queued moderation events when ordinary actor visibility is blocked. Owner
+hiding retains ordinary authority, and social events never gain this fallback.
+Recipient access, blocks, preferences, deduplication and read-state watermarks
+remain enforced. A moderator who loses the necessary current scoped authority
+cannot use the fallback to deliver an otherwise inaccessible event.

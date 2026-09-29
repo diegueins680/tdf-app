@@ -87,5 +87,43 @@ BEGIN
  INSERT INTO social_v2_pair(party_a,party_b,block_a) VALUES(910000001,910000002,true);
  SELECT notification_id INTO notif FROM interaction_notification WHERE comment_id=(reply->>'id')::uuid;
  ASSERT NOT interaction_notification_visible(notif,910000001), 'Block must revoke old mention notification';
+ -- Publication-owner blocks cannot suppress a valid moderation event for an
+ -- otherwise eligible author. Recipient blocking/preferences remain authoritative.
+ INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version)
+ SELECT 910000004,id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';
+ ASSERT interaction_is_moderator(910000004);
+ parent:=interaction_command(910000003,target,gen_random_uuid(),'{"operation":"comment.create","body":"Moderation delivery"}');
+ ASSERT NOT parent ? 'error',parent::text;
+ PERFORM interaction_dispatch_events(50);
+ edited:=interaction_command(910000001,target,gen_random_uuid(),jsonb_build_object('operation','comment.hide',
+   'commentId',parent->>'id','expectedVersion',1,'reason','Owner hiding'));
+ ASSERT edited->>'state'='hidden',edited::text;
+ PERFORM interaction_dispatch_events(50);
+ ASSERT EXISTS(SELECT 1 FROM interaction_notification WHERE comment_id=(parent->>'id')::uuid
+   AND recipient_id=910000003 AND event_kind='moderation'),'Nonmoderator owner hiding still notifies';
+ edited:=interaction_command(910000001,target,gen_random_uuid(),jsonb_build_object('operation','comment.restore',
+   'commentId',parent->>'id','expectedVersion',2,'reason','Owner restore'));
+ ASSERT edited->>'state'='visible',edited::text;
+ DELETE FROM notification WHERE id IN(SELECT notification_id FROM interaction_notification
+   WHERE comment_id=(parent->>'id')::uuid AND event_kind='moderation');
+ PERFORM interaction_block(910000001,910000004,true,0,gen_random_uuid());
+ ASSERT interaction_target_context(target,910000004) IS NULL;
+ ASSERT interaction_moderation_context(target,910000004) IS NOT NULL;
+ edited:=interaction_command(910000004,target,gen_random_uuid(),jsonb_build_object('operation','comment.remove',
+   'commentId',parent->>'id','expectedVersion',3,'reason','Platform enforcement'));
+ ASSERT edited->>'state'='removed',edited::text;
+ PERFORM interaction_dispatch_events(50);
+ SELECT notification_id INTO notif FROM interaction_notification WHERE comment_id=(parent->>'id')::uuid
+   AND recipient_id=910000003 AND event_kind='moderation';
+ ASSERT notif IS NOT NULL,'Owner block must not silently complete moderation without notifying the eligible author';
+ ASSERT interaction_notification_visible(notif,910000003);
+ ASSERT interaction_destination(910000003,'comment',(parent->>'id')::uuid)->'context'->'comment'->>'state'='removed';
+ UPDATE notification SET is_read=true WHERE id=notif;
+ PERFORM interaction_dispatch_events(50);
+ ASSERT (SELECT is_read FROM notification WHERE id=notif),'Moderation replay must not refresh read state';
+ -- A blocked social event still has no privileged delivery path.
+ ASSERT NOT interaction_notification_allowed(target,910000001,910000004,'comment');
+ PERFORM interaction_block(910000003,910000004,true,0,gen_random_uuid());
+ ASSERT NOT interaction_notification_visible(notif,910000003),'Recipient block still hides notification';
 END $$;
 ROLLBACK;

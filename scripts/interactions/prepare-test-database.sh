@@ -35,7 +35,8 @@ for interaction_sql in \
   2026-09-29_interaction_reaction_withdrawal \
   2026-09-29_interaction_moderation_block_boundary \
   2026-09-29_interaction_moderation_access \
-  2026-09-29_interaction_legacy_reply_aliases; do
+  2026-09-29_interaction_legacy_reply_aliases \
+  2026-09-29_interaction_moderation_delivery; do
   psql -X -v ON_ERROR_STOP=1 -d "$interaction_db" -f "$interaction_repo/tdf-hq/sql/$interaction_sql.sql" >/dev/null
 done
 printf 'Prepared isolated database %s\n' "$interaction_db"
