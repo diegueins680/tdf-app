@@ -780,6 +780,11 @@
       "id": "2026-09-29_interaction_author_moderation_notices",
       "path": "tdf-hq/sql/2026-09-29_interaction_author_moderation_notices.sql",
       "introducedBy": "d1ecc182f8041e0f5341514fc2c67e2b27269b4a"
+    },
+    {
+      "id": "2026-09-29_interaction_nonblank_comments",
+      "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_comments.sql",
+      "introducedBy": "de95fbd6a631104880cc0fc88039a24932ecc84f"
     }
   ]
 }
