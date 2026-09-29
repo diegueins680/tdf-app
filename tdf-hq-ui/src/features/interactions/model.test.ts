@@ -5,6 +5,7 @@ describe('mention identity transitions', () => {
   test('uses Unicode code points across emoji and preserves unchanged bindings', () => {
     const mention = { partyId: 42, start: 2, end: 6 };
     expect(reconcileMentions('🔥 @Ana', '🔥 wow @Ana', [mention])).toEqual([{ ...mention, start: 6, end: 10 }]);
+    expect(reconcileMentions('😀😀 @Ana', '😀😀 new @Ana', [{ ...mention, start: 3, end: 7 }])).toEqual([{ ...mention, start: 7, end: 11 }]);
     expect(reconcileMentions('🔥 @Ana', '🔥 @Eva', [mention])).toEqual([]);
     expect(reconcileMentions('🔥 @Ana', '🔥 @Anabel', [mention])).toEqual([]);
     expect(reconcileMentions('🔥 @Ana', '🔥 @Anañ', [mention])).toEqual([]);
@@ -15,7 +16,9 @@ describe('mention identity transitions', () => {
       const before = '🎵'.repeat(length) + ' @Persona';
       const mention = { partyId: 9, start: length + 1, end: length + 9 };
       const after = `New ${before}`;
-      for (const kept of reconcileMentions(before, after, [mention])) {
+      const reconciled = reconcileMentions(before, after, [mention]);
+      expect(reconciled).toHaveLength(1);
+      for (const kept of reconciled) {
         expect([...after].slice(kept.start, kept.end).join('')).toBe('@Persona');
         expect(kept.partyId).toBe(9);
       }

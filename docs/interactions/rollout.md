@@ -144,8 +144,8 @@ reaction slots and URLs are preserved; no engagement is reassigned to the root.
 `2026-09-29_interaction_moderation_delivery` uses the strict moderation context
 for queued moderation events when ordinary actor visibility is blocked. Owner
 hiding retains ordinary authority, and social events never gain this fallback.
-Recipient access, blocks, preferences, deduplication and read-state watermarks
-remain enforced. A moderator who loses the necessary current scoped authority
+Social recipient access and blocks, preferences, deduplication and read-state
+watermarks remain enforced. Audited author notices use the separate policy below. A moderator who loses the necessary current scoped authority
 cannot use the fallback to deliver an otherwise inaccessible event.
 
 `2026-09-29_interaction_event_destinations` links private event and event-moment
@@ -173,3 +173,12 @@ leaving mention-only mode. Clients may still send stale picker IDs, but those
 unused IDs neither persist nor grant access. Owners can turn comments off or
 choose followers/everyone after a selected recipient changes privacy. Mention-only
 updates continue to enforce current eligibility and recipient account locks.
+
+`2026-09-29_interaction_author_moderation_notices` delivers generic system notices
+about an author's own moderated comment even if they blocked the owner/moderator.
+An exact comment/target/actor audit entry is required; no other recipient qualifies.
+Active accounts, target retirement and discussion mute still apply. Delivery and
+inbox visibility share the predicate. Ordinary social notifications retain their
+block/visibility checks. The notice contains no actor name, body or private target
+metadata; opening a blocked or unavailable publication still fails closed through
+the normal destination resolver. Audit lookup uses a partial composite index.

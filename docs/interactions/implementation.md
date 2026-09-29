@@ -75,7 +75,9 @@ passing prototype fixture for production rollout.
   are separate audited transitions.
 - Existing notification rows remain canonical. Aggregate reactions by recipient,
   target and time bucket; dedupe comment/reply/mention recipients. Revalidate
-  current visibility/block/preferences when listing/delivering. No message bodies
+  current visibility/block/preferences when listing/delivering. Generic audited
+  moderation notices to the affected author survive social blocks, retain mute
+  and account/retirement checks, and grant no publication access. No message bodies
   in analytics; no new outbound email/push sender implied by this task.
 - Cache entries never grant rights. Reads are authorized at their database
   snapshot; writes serialize with revocation/block changes. Idempotency replay

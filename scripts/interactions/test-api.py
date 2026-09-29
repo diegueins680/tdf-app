@@ -256,10 +256,14 @@ assert linked['context']['comment']['body']=='' and linked['context']['comment']
 assert not any(c['id']==evidence['id'] for c in request(actors[0],identity+'/comments?limit=20')['items'])
 command(actors[0],{'operation':'comment.remove','commentId':evidence['id'],'expectedVersion':1,'reason':'Owner is not a moderator'},status=404)
 command(actors[0],{'operation':'comment.hide','commentId':evidence['id'],'expectedVersion':1,'reason':'Scoped owner hide'})
+sql('SELECT interaction_dispatch_events(50);')
+assert any(n.get('nTargetKey')==evidence['id'] and n['nType']=='interaction.moderation' for n in request(actors[2],'/fans/me/notifications'))
 command(actors[0],{'operation':'comment.restore','commentId':evidence['id'],'expectedVersion':2,'reason':'Scoped owner restore'})
 command(moderator,{'operation':'comment.report.resolve','commentId':evidence['id'],'expectedVersion':3,'reason':'Reviewed report','decision':'reviewed'})
 removed=command(moderator,{'operation':'comment.remove','commentId':evidence['id'],'expectedVersion':3,'reason':'Administrative removal'})
 assert removed['state']=='removed' and removed['body']==''
+sql('SELECT interaction_dispatch_events(50);')
+assert any(n.get('nTargetKey')==evidence['id'] and n['nType']=='interaction.moderation' for n in request(actors[2],'/fans/me/notifications'))
 for peer in [actors[0],moderator]:
     state=request(actors[2],f'/interactions/blocks/{peer}')
     request(actors[2],f'/interactions/blocks/{peer}',{'blockRequestKey':str(uuid.uuid4()),'blocked':False,'expectedVersion':state['version']},method='PUT')

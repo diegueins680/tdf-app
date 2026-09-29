@@ -1373,6 +1373,7 @@
       "tdf-hq/sql/2026-09-28_interaction_read_optimization.sql",
       "tdf-hq/sql/2026-09-28_interaction_summary.sql",
       "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+      "tdf-hq/sql/2026-09-29_interaction_author_moderation_notices.sql",
       "tdf-hq/sql/2026-09-29_interaction_catalog_authority.sql",
       "tdf-hq/sql/2026-09-29_interaction_event_destinations.sql",
       "tdf-hq/sql/2026-09-29_interaction_inactive_allowlists.sql",
@@ -2687,7 +2688,7 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "fa1cfee014d98c961345745242a495c2004745ac83c38081a5a7b57e650b416d",
+      "sha256": "d543f3665d5df066b67743eb391165011b272e7ac0ae37bb86ad5764f7b7725b",
       "authority": "inferred",
       "authorityBasis": "Status: implementation and installed test journeys pass; protected review, signed releases and production rollout remain pending. No production schema or feature gate changed.",
       "kind": "requirement-candidate"
@@ -2701,7 +2702,7 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "a8f2c5ab6429207f7648c8abd17fb282f8dc621dd694fd81ec242f0ff2bb0b37",
+      "sha256": "1b529d7c7916927471c8b17837b69fe2b98e508416b36e90d9e99ca0d805ec6b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
