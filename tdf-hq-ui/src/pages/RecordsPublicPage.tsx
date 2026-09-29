@@ -1,3 +1,4 @@
+import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { useTranslation } from 'react-i18next';
@@ -739,15 +740,15 @@ const mapRecordsSession = (session: RecordsSessionDTO): SessionItem | null => {
 const sortReleases = (items: ReleaseItem[]): ReleaseItem[] =>
   [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
 
-const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
+const RecordingsGrid = ({ items, selection }: { items: RecordingItem[]; selection: PublicationSelection }) => (
   <LazyPaginatedList
     items={items}
-    pagination={{ itemLabel: 'grabaciones', initialRowsPerPage: 6 }}
+    pagination={{ itemLabel: 'grabaciones', initialRowsPerPage: 6, selectedIndex: selection.index, resetKey: selection.requested }}
     renderItems={(visibleItems) => (
       <Grid container spacing={3}>
         {visibleItems.map((item) => (
       <Grid item key={`${item.sortOrder}-${item.title}`} xs={12} md={4}>
-        <Card
+        <Card component={PublicationAnchor} selected={selection.requested === item.id}
           sx={{
             height: '100%',
             bgcolor: 'rgba(255,255,255,0.03)',
@@ -824,10 +825,10 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
   />
 );
 
-const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
+const ReleasesGrid = ({ items, selection }: { items: ReleaseItem[]; selection: PublicationSelection }) => (
   <LazyPaginatedList
     items={items}
-    pagination={{ itemLabel: 'releases', initialRowsPerPage: 6 }}
+    pagination={{ itemLabel: 'releases', initialRowsPerPage: 6, selectedIndex: selection.index, resetKey: selection.requested }}
     renderItems={(visibleItems) => (
       <Grid container spacing={3}>
         {visibleItems.map((release) => {
@@ -835,7 +836,7 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
       const releaseMeta = release.duration ?? release.releasedOn;
       return (
         <Grid item xs={12} md={6} key={`${release.sortOrder}-${release.title}`}>
-          <Card
+          <Card component={PublicationAnchor} selected={selection.requested === release.id}
             sx={{
               display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
@@ -923,17 +924,17 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
   />
 );
 
-const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
+const SessionsGrid = ({ items, selection }: { items: SessionItem[]; selection: PublicationSelection }) => (
   <LazyPaginatedList
     items={items}
-    pagination={{ itemLabel: 'sesiones', initialRowsPerPage: 6 }}
+    pagination={{ itemLabel: 'sesiones', initialRowsPerPage: 6, selectedIndex: selection.index, resetKey: selection.requested }}
     renderItems={(visibleItems) => (
       <Grid container spacing={3}>
         {visibleItems.map((video) => {
       const sessionHref = video.url ?? `https://www.youtube.com/watch?v=${video.youtubeId}`;
       return (
         <Grid item xs={12} md={4} key={video.youtubeId}>
-          <Card
+          <Card component={PublicationAnchor} selected={selection.requested === video.id}
             sx={{
               height: '100%',
               bgcolor: 'rgba(255,255,255,0.03)',
@@ -1023,6 +1024,9 @@ export default function RecordsPublicPage() {
     () => sortRecordings((recordsFeedQuery.data?.recordings ?? []).map(mapRecordsRecording).filter((item): item is RecordingItem => item != null)),
     [recordsFeedQuery.data?.recordings],
   );
+  const recordingSelection = usePublicationSelection('recording', recordings.map((item) => item.id), recordsFeedQuery.isLoading);
+  const releaseSelection = usePublicationSelection('release', releases.map((item) => item.id), recordsFeedQuery.isLoading);
+  const sessionSelection = usePublicationSelection('session', sessions.map((item) => item.id), recordsFeedQuery.isLoading);
   const sessionsLoading = recordsFeedQuery.isLoading;
   const releasesLoading = recordsFeedQuery.isLoading;
   const recordingsLoading = recordsFeedQuery.isLoading;
@@ -1257,6 +1261,7 @@ export default function RecordsPublicPage() {
               {recordingsIntro}
             </Typography>
           </Stack>
+          {recordingSelection.notice}
           {recordingsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedRecordings')} />
@@ -1265,7 +1270,7 @@ export default function RecordsPublicPage() {
           ) : recordingsError ? (
             <Alert severity="warning">No pudimos cargar las grabaciones publicadas.</Alert>
           ) : recordings.length > 0 ? (
-            <RecordingsGrid items={recordings} />
+            <RecordingsGrid items={recordings} selection={recordingSelection} />
           ) : (
             <Alert severity="info">
               No hay grabaciones publicadas en esta colección todavía.
@@ -1297,6 +1302,7 @@ export default function RecordsPublicPage() {
               {releasesIntro}
             </Typography>
           </Stack>
+          {releaseSelection.notice}
           {releasesLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedReleases')} />
@@ -1305,7 +1311,7 @@ export default function RecordsPublicPage() {
           ) : releasesError ? (
             <Alert severity="warning">No pudimos cargar los lanzamientos publicados.</Alert>
           ) : releases.length > 0 ? (
-            <ReleasesGrid items={releases} />
+            <ReleasesGrid items={releases} selection={releaseSelection} />
           ) : (
             <Alert
               severity={canManageReleases ? 'info' : 'warning'}
@@ -1338,6 +1344,7 @@ export default function RecordsPublicPage() {
               {sessionsIntro}
             </Typography>
           </Stack>
+          {sessionSelection.notice}
           {sessionsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedSessions')} />
@@ -1346,7 +1353,7 @@ export default function RecordsPublicPage() {
           ) : sessionsError ? (
             <Alert severity="warning">No pudimos cargar las sesiones publicadas.</Alert>
           ) : sessions.length > 0 ? (
-            <SessionsGrid items={sessions} />
+            <SessionsGrid items={sessions} selection={sessionSelection} />
           ) : (
             <Alert severity="info">
               No hay sesiones publicadas en esta colección todavía.

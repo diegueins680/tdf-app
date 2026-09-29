@@ -633,6 +633,8 @@
       "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
       "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
       "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
+      "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx",
+      "tdf-hq-ui/src/features/interactions/PublicationSelection.tsx",
       "tdf-hq-ui/src/features/interactions/model.test.ts",
       "tdf-hq-ui/src/features/interactions/model.ts",
       "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
@@ -749,6 +751,7 @@
       "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
       "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
       "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx",
+      "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
       "tdf-hq-ui/src/pages/FanClubPage.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
@@ -2702,7 +2705,7 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "1b529d7c7916927471c8b17837b69fe2b98e508416b36e90d9e99ca0d805ec6b",
+      "sha256": "542ab2adc627418ef376d158dc099b683f29912e67b873916cb2250d6f3047a0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

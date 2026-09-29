@@ -182,3 +182,10 @@ inbox visibility share the predicate. Ordinary social notifications retain their
 block/visibility checks. The notice contains no actor name, body or private target
 metadata; opening a blocked or unavailable publication still fails closed through
 the normal destination resolver. Audit lookup uses a partial composite index.
+
+Publication source links retain their existing routes and IDs. Shared web selection
+opens the authorized collection page containing the requested recording, session,
+record release, artist release, club post or memory, then scrolls to and focuses
+that card. Club links select the correct tab after authentication. Missing/hidden
+items show an unavailable state without fetching around source permissions. Source
+pagination remains bounded and returns to user control after initial selection.

@@ -90,3 +90,27 @@ test('real authoring, notification destination, editing and parent deletion reta
     await expect(a.page.getByText(replyBody, { exact: true })).toBeVisible();
   } finally { await a.context.close(); await b.context.close(); }
 });
+
+test('publication links select a later catalog page and focus its media @critical', async ({ page }) => {
+  const ids = Array.from({ length: 24 }, (_, index) => `92500000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`);
+  const source = ids.map((id, index) => ({ id, title: `Linked catalog item ${index}`, sortOrder: index,
+    contributors: [], resources: [{ id, kind: 'video', primary: true, providerCode: 'youtube', externalCode: `video${index}`,
+      url: `https://www.youtube.com/watch?v=video${index}`, availability: 'available', providerMetadata: {}, thumbnailUrl: 'https://example.test/image.jpg' }] }));
+  await page.route('**/*', async route => {
+    const request = route.request(); const url = new URL(request.url());
+    if (url.pathname === '/records/feed') return route.fulfill({ json: { recordings: source, sessions: source, releases: source } });
+    if (['fetch', 'xhr'].includes(request.resourceType())) return route.fulfill({ status: 404, json: {} });
+    if (url.hostname !== '127.0.0.1' && url.hostname !== 'localhost') return route.abort();
+    return route.continue();
+  });
+  for (const parameter of ['recording', 'session', 'release']) {
+    await page.goto(`/records?${parameter}=${ids[17]}`);
+    const card = page.locator('.MuiCard-root[tabindex="-1"]').filter({ has: page.getByText('Linked catalog item 17', { exact: true }) });
+    await expect(card).toHaveCount(1);
+    await expect(card).toBeFocused();
+    await expect(card).toBeInViewport();
+    await expect(card.getByText('Linked catalog item 17', { exact: true })).toBeVisible();
+    await page.goto(`/records?${parameter}=missing`);
+    await expect(page.getByText('Esta publicación ya no está disponible o no tienes acceso.')).toBeVisible();
+  }
+});

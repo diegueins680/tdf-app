@@ -1,3 +1,4 @@
+import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { createElement, useEffect, useMemo } from 'react';
 import { useParams, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -47,6 +48,13 @@ export default function FanClubPage() {
   const isAuthenticated = Boolean(session);
   const [tab, setTab] = useLocalValue(0);
   const location = useLocation();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const params = new URLSearchParams(location.search);
+    if (params.has('post')) setTab(1);
+    else if (params.has('memory')) setTab(2);
+  }, [isAuthenticated, location.search, setTab]);
 
   const loginPath = useMemo(() => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`), [location]);
 
@@ -517,12 +525,14 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
     },
   });
 
-  if (loading) return <SkeletonCards count={3} />;
-
   const visiblePosts = posts.filter(p => !p.fcpIsHidden);
+  const selection = usePublicationSelection('post', visiblePosts.map((item) => item.fcpId), loading);
+
+  if (loading) return <SkeletonCards count={3} />;
 
   return (
     <Stack spacing={2}>
+      {selection.notice}
       <Stack direction="row" justifyContent="flex-end">
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
           Nuevo post
@@ -536,11 +546,11 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
       {visiblePosts.length > 0 && (
         <LazyPaginatedList
           items={visiblePosts}
-          pagination={{ itemLabel: 'posts', initialRowsPerPage: 10 }}
+          pagination={{ itemLabel: 'posts', initialRowsPerPage: 10, selectedIndex: selection.index, resetKey: selection.requested }}
           renderItems={(visibleForumPosts) => (
             <Stack spacing={2}>
               {visibleForumPosts.map(post => (
-                <Card key={post.fcpId} sx={{ opacity: post.fcpIsHidden ? 0.5 : 1 }}>
+                <Card component={PublicationAnchor} selected={selection.requested === String(post.fcpId)} key={post.fcpId} sx={{ opacity: post.fcpIsHidden ? 0.5 : 1 }}>
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -683,12 +693,14 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
     },
   });
 
-  if (loading) return <SkeletonCards count={3} />;
-
   const visibleMemories = memories.filter(m => !m.fcmIsHidden && !m.fcmIsDeleted);
+  const selection = usePublicationSelection('memory', visibleMemories.map((item) => item.fcmId), loading);
+
+  if (loading) return <SkeletonCards count={3} />;
 
   return (
     <Stack spacing={2}>
+      {selection.notice}
       <Stack direction="row" justifyContent="flex-end">
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
           Nuevo recuerdo
@@ -702,11 +714,11 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
       {visibleMemories.length > 0 && (
         <LazyPaginatedList
           items={visibleMemories}
-          pagination={{ itemLabel: 'recuerdos', initialRowsPerPage: 10 }}
+          pagination={{ itemLabel: 'recuerdos', initialRowsPerPage: 10, selectedIndex: selection.index, resetKey: selection.requested }}
           renderItems={(visibleClubMemories) => (
             <Stack spacing={2}>
               {visibleClubMemories.map(memory => (
-                <Card key={memory.fcmId}>
+                <Card component={PublicationAnchor} selected={selection.requested === String(memory.fcmId)} key={memory.fcmId}>
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -746,6 +758,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                         </Tooltip>
                       </Stack>
                       <Typography variant="h6">{memory.fcmTitle}</Typography>
+                      <InteractionPanel kind="club_memory" entityKey={String(memory.fcmId)} />
                       {memory.fcmDescription && <Typography variant="body1">{memory.fcmDescription}</Typography>}
                       {memory.fcmMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
