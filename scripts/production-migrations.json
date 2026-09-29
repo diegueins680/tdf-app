@@ -760,6 +760,11 @@
       "id": "2026-09-29_interaction_legacy_moment_choices",
       "path": "tdf-hq/sql/2026-09-29_interaction_legacy_moment_choices.sql",
       "introducedBy": "7c2f5d3246e19c424200aba206cebe8d06942401"
+    },
+    {
+      "id": "2026-09-29_interaction_catalog_authority",
+      "path": "tdf-hq/sql/2026-09-29_interaction_catalog_authority.sql",
+      "introducedBy": "70f9d3031f1c783070e087e295345f9f36c30720"
     }
   ]
 }
