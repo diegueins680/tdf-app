@@ -74,3 +74,14 @@ links work, a non-moderator cannot request the scoped adapter, and adding/removi
 a private logistics grant respectively admits/revokes scoped access even with a
 persistent owner block. Catalog-deactivation tests compare summary selectability
 with command validation while preserving own historical-reaction withdrawal.
+
+Mention eligibility is one executable predicate (`interaction_mention_eligible`)
+used by the selector, write validation, owner allowlists and notification delivery.
+It requires current target access, live non-organization peers, no self mention or
+block, and explicit discovery consent or a mutual connection. Missing preferences
+fail closed. `navigation-properties.sql` enumerates all ten valid combinations
+of discoverability, bilateral consent and blocking (the database disallows
+consent alongside blocks), checks selector/write equivalence, and proves rejected
+writes leave body/counts unchanged. It also proves queued notifications and
+existing notification visibility honor revoked consent. Submitted recipient party
+locks serialize these checks with existing preference/relationship mutations.

@@ -31,11 +31,25 @@ summary=request(actors[1],identity); target=summary['id']
 def command(actor, payload, key=None, status=200):
     return request(actor,f'/interactions/targets/{target}/commands',{'requestKey':key or str(uuid.uuid4()),'command':payload},status=status)
 # Reuse the actual scoped party selector and stable party IDs, with live privacy.
-sql(f"INSERT INTO social_v2_preference(party_id,discoverable) VALUES({actors[2]},true) ON CONFLICT(party_id) DO UPDATE SET discoverable=true;")
+sql(f"INSERT INTO social_v2_preference(party_id,discoverable) VALUES({actors[0]},true),({actors[2]},true) ON CONFLICT(party_id) DO UPDATE SET discoverable=true;")
 search=f'/parties/search?context=interaction_mention&scopeId={target}&q=API&limit=20'
 assert actors[2] in [item['partyId'] for item in request(actors[0],search)['items']]
 sql(f"UPDATE social_v2_preference SET discoverable=false WHERE party_id={actors[2]};")
 assert actors[2] not in [item['partyId'] for item in request(actors[0],search)['items']]
+private_mentions=[{'partyId':actors[2],'start':0,'end':8}]
+private_draft=command(actors[0],{'operation':'comment.create','body':'Unchanged private-mention draft','mentions':[]})
+private_count=request(actors[0],identity)['commentCount']
+command(actors[0],{'operation':'comment.create','body':'@Private','mentions':private_mentions},status=400)
+command(actors[0],{'operation':'comment.edit','commentId':private_draft['id'],'expectedVersion':1,'body':'@Private','mentions':private_mentions},status=400)
+assert request(actors[0],identity)['commentCount']==private_count
+assert request(actors[0],identity+'/comments/'+private_draft['id'])['comment']['body']=='Unchanged private-mention draft'
+command(actors[0],{'operation':'settings.update','commentPolicy':'mentioned','expectedVersion':request(actors[0],identity)['version'],'mentionedPartyIds':[actors[2]]},status=400)
+sql(f"INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b) VALUES({actors[0]},{actors[2]},true,true) ON CONFLICT(party_a,party_b) DO UPDATE SET consent_a=true,consent_b=true;")
+assert actors[2] in [item['partyId'] for item in request(actors[0],search)['items']]
+private_mention=command(actors[0],{'operation':'comment.create','body':'@Private','mentions':private_mentions})
+sql(f"UPDATE social_v2_pair SET consent_a=false,consent_b=false WHERE party_a={actors[0]} AND party_b={actors[2]}; SELECT interaction_dispatch_events(50);")
+assert not any(row.get('nTargetKey')==private_mention['id'] for row in request(actors[2],'/fans/me/notifications'))
+
 sql(f"UPDATE social_v2_preference SET discoverable=true WHERE party_id={actors[2]};")
 settings={'reactions':False,'comments':True,'replies':True,'mentions':False}
 assert request(actors[2],'/interactions/preferences',settings,method='PUT')==settings

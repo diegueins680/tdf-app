@@ -8,6 +8,7 @@ INSERT INTO fan_club_post(id,club_id,fan_party_id,content,created_at)
 VALUES(910000001,910000001,910000001,'Synthetic post',now());
 INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at)
 VALUES(910000002,910000001,now()),(910000003,910000001,now());
+INSERT INTO social_v2_preference(party_id,discoverable) VALUES(910000003,true);
 UPDATE interaction_runtime SET enabled=true;
 DO $$
 DECLARE target uuid; response jsonb; created jsonb; child jsonb; command jsonb;

@@ -150,3 +150,12 @@ discussions to the existing protected event page. Route selection checks current
 public-view membership, independently of share eligibility: cancelled public
 events retain their readable public page. Existing grants and visibility checks
 remain authoritative; changing a destination never grants access.
+
+`2026-09-29_interaction_mention_privacy` shares one eligibility function across
+autocomplete, comment create/edit, owner mention allowlists and notification
+delivery. A recipient must be live, individually addressable, able to read the
+target, unblocked, and either discoverable or mutually connected to the actor.
+Missing discovery preferences are private. Owner allowlist writes lock all
+submitted recipient accounts, matching comment mentions and existing preference
+and relationship mutations. Delivery and notification reads recheck current
+eligibility; old bodies and accepted identities are not silently rewritten.

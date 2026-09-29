@@ -318,3 +318,18 @@ moments. SQL and real HTTP regressions verify organizer/member access, denied
 anonymous/foreign context and public transitions. Cancelled public events retain
 the public route even when sharing is disabled. Existing publication grants are
 unchanged. The complete final manifest and hosted HTTP checks remain release gates.
+
+
+## Authoritative mention privacy
+
+Review identified that raw create/edit commands could bypass autocomplete privacy.
+A generated regression failed before the repair. The ninth forward migration
+shares eligibility across selection, commands, owner allowlists and delivery.
+Ten valid discovery/connection/block combinations, absent preferences, self
+mentions, rejected-create counts, unchanged rejected edits, owner-policy bypass,
+mutual private contacts, queued delivery revocation and notification visibility
+are covered by executable SQL tests. Real HTTP rejects crafted private mentions
+and policy IDs, retains body/counts, admits mutual contacts and suppresses queued
+activity after consent revocation. Legitimate notification fixtures now explicitly
+opt in to discovery. The previous145-migration revision passed all ordinary CI
+checks; the mention repair still requires final hosted qualification.
