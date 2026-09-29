@@ -1373,8 +1373,10 @@
       "tdf-hq/sql/2026-09-28_interaction_read_optimization.sql",
       "tdf-hq/sql/2026-09-28_interaction_summary.sql",
       "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+      "tdf-hq/sql/2026-09-29_interaction_legacy_reply_aliases.sql",
       "tdf-hq/sql/2026-09-29_interaction_moderation_access.sql",
       "tdf-hq/sql/2026-09-29_interaction_moderation_block_boundary.sql",
+      "tdf-hq/sql/2026-09-29_interaction_moderation_delivery.sql",
       "tdf-hq/sql/2026-09-29_interaction_publication_authority.sql",
       "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
       "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
@@ -2691,14 +2693,14 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "58c459c6839ce2027fecdab017b2953343ed3ae800ea0bf5057a96984a095c7a",
+      "sha256": "9e1d02368fdeb20ac2ec1a9032e3f96453d5fd19b3844262a5ab46673b1e08b3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/interactions/verification-2026-09-29.md",
-      "sha256": "c9057a0174891c6df6008d9123280058a8e056476392240fc0809fc7c71c9e4f",
+      "sha256": "d0c0988c108d7e7b53dfb20445c0229c9baedb460002e46af7a25b4b929c75c3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
