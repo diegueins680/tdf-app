@@ -2701,7 +2701,7 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "fc91291d9afaf3ed22f6c4278506329fa5690616e9aed1ed014cd611e7117b9e",
+      "sha256": "a8f2c5ab6429207f7648c8abd17fb282f8dc621dd694fd81ec242f0ff2bb0b37",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

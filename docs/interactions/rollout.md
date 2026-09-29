@@ -153,6 +153,11 @@ discussions to the existing protected event page. Route selection checks current
 public-view membership, independently of share eligibility: cancelled public
 events retain their readable public page. Existing grants and visibility checks
 remain authoritative; changing a destination never grants access.
+Public event URLs carrying a moment identifier continue through the existing
+protected media page after the public event resolves. This preserves previously
+copied links and the standard login return path; moment media is served by the
+authenticated event API. The destination loads, scrolls to and focuses the exact
+moment, or explains that it is unavailable without focusing unrelated media.
 
 `2026-09-29_interaction_mention_privacy` shares one eligibility function across
 autocomplete, comment create/edit, owner mention allowlists and notification

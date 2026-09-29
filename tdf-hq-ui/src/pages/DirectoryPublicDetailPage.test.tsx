@@ -21,6 +21,7 @@ let sessionMock: {
 jest.unstable_mockModule('../api/directory', () => ({
   Directory: {
     profile: profileMock,
+    event: profileMock,
     profileReviews: profileReviewsMock,
     reviewEligibility: reviewEligibilityMock,
     createReview: jest.fn(),
@@ -96,6 +97,8 @@ function renderPage(initialEntry: string) {
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path="/directorio/:slug" element={<DirectoryPublicDetailPage kind="profile" />} />
+          <Route path="/eventos/:eventId" element={<DirectoryPublicDetailPage kind="event" />} />
+          <Route path="/social/eventos/:eventId" element={<LocationProbe />} />
           <Route path="/mis-clasificados" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>
@@ -114,6 +117,23 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
 
   afterEach(() => {
     cleanup();
+  });
+
+  it('routes a public moment discussion to the existing media page', async () => {
+    const view = renderPage('/eventos/121?moment=987');
+    expect((await screen.findByLabelText('Destino protegido')).textContent).toBe('/social/eventos/121?moment=987');
+    expect(profileMock).toHaveBeenCalledWith('121');
+    view.unmount();
+    view.queryClient.clear();
+  });
+
+  it('does not redirect an unavailable public event to its protected contents', async () => {
+    profileMock.mockRejectedValue(new Error('unavailable'));
+    const view = renderPage('/eventos/121?moment=987');
+    expect(await screen.findByText('Este contenido no está publicado, vigente o disponible.')).toBeTruthy();
+    expect(screen.queryByLabelText('Destino protegido')).toBeNull();
+    view.unmount();
+    view.queryClient.clear();
   });
 
   it('gives profile, review, and eligibility loading states distinct accessible names', async () => {

@@ -1,5 +1,5 @@
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ImageIcon from '@mui/icons-material/Image';
@@ -7,7 +7,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import RouteIcon from '@mui/icons-material/Route';
 import ShareIcon from '@mui/icons-material/Share';
 import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography } from '@mui/material';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTierDTO } from '../api/socialEvents';
 import { EventTickets } from '../api/eventTickets';
@@ -36,6 +36,10 @@ const ticketFee = (faceValueCents: number) => {
 
 export default function SocialEventDetailPage() {
   const { eventId = '' } = useParams();
+  const { search } = useLocation();
+  const requestedMoment = new URLSearchParams(search).get('moment');
+  const focusedMomentRef = useRef<HTMLDivElement>(null);
+  const lastFocusedMoment = useRef<string | null>(null);
   const { session } = useSession();
   const { currency: preferredCurrency, locale, timezone } = useLocalePreferences();
   const queryClient = useQueryClient();
@@ -62,6 +66,13 @@ export default function SocialEventDetailPage() {
     queryFn: () => SocialEventsAPI.listMoments(eventId),
     enabled: Boolean(eventId),
   });
+  useEffect(() => {
+    const key = `${eventId}:${requestedMoment ?? ''}`;
+    if (!requestedMoment || !focusedMomentRef.current || lastFocusedMoment.current === key) return;
+    lastFocusedMoment.current = key;
+    focusedMomentRef.current.scrollIntoView({ block: 'center' });
+    focusedMomentRef.current.focus({ preventScroll: true });
+  }, [eventId, eventQuery.data, requestedMoment, momentsQuery.data]);
   const tiersQuery = useQuery({
     queryKey: ['social-event-ticket-tiers', eventId],
     queryFn: () => SocialEventsAPI.listTicketTiers(eventId),
@@ -293,10 +304,18 @@ export default function SocialEventDetailPage() {
         <Stack spacing={1.5}>
           <Typography variant="h5">Publicaciones</Typography>
           <InteractionPanel kind="event" entityKey={eventId} />
+          {requestedMoment && momentsQuery.isSuccess && !momentsQuery.data.some((moment) => moment.emId === requestedMoment) && (
+            <Alert severity="info" role="status">Esta publicación ya no está disponible o no tienes acceso.</Alert>
+          )}
           {momentsQuery.isLoading ? <CircularProgress size={24} /> : momentsQuery.data?.length === 0 ? (
             <EmptyState icon={<ImageIcon fontSize="inherit" />} title="Todavía no hay publicaciones" description="Sé la primera persona en compartir un momento de este evento." />
           ) : momentsQuery.data?.map((moment) => (
-            <Card key={moment.emId ?? `${moment.emAuthorPartyId}-${moment.emCreatedAt}`} variant="outlined">
+            <Card key={moment.emId ?? `${moment.emAuthorPartyId}-${moment.emCreatedAt}`} variant="outlined"
+              ref={moment.emId === requestedMoment ? focusedMomentRef : undefined}
+              tabIndex={moment.emId === requestedMoment ? -1 : undefined}
+              role="region" aria-label={`Publicación de ${moment.emAuthorName}`}
+              sx={{ '&:focus': { outline: '3px solid', outlineColor: 'primary.main', outlineOffset: 2 } }}
+            >
               <CardContent>
                 <Stack spacing={1.25}>
                   {moment.emAuthorPartyId ? (
