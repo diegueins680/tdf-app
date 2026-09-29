@@ -227,3 +227,17 @@ web/native type checks pass. Real local HTTP moderation/queue/link/role checks
 pass; only the old Mac binary moment-batching case is excluded locally and remains
 in the final Linux CI suite. Hosted checks and artifact qualification remain
 pending for this follow-up.
+
+
+## Publication-owner enforcement and catalog follow-up
+
+Root0f99959fa completed all ordinary checks; its later review found publication
+owner blocks could still suppress platform enforcement, and inactive reaction
+catalogs still projected selectable choices. A fifth forward repair shares one
+scoped source adapter, bypassing only social blocks for strict current moderators;
+source publication/lifecycle and private-event access remain enforced. Normal
+reads/social writes retain blocking. Moderation-only summaries admit queue access
+without reaction/comment permissions or counters. Catalog selection now checks
+the same catalog activity, code and workflow identity as command validation.
+Direct SQL regressions pass, including private-grant revocation and deactivated
+catalog withdrawal. Final142-entry and hosted qualification remain pending.

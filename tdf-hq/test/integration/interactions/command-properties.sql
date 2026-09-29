@@ -63,6 +63,16 @@ BEGIN
  SELECT id INTO reaction FROM content_reaction_type WHERE code='like';
  response:=interaction_command(910000002,target,gen_random_uuid(),jsonb_build_object('operation','reaction.set','reactionTypeId',reaction));
  ASSERT response->>'reactionTypeId'=reaction::text,response::text;
+ -- Catalog availability is part of selectability, while historical removal survives.
+ UPDATE catalog_definition SET active=false WHERE code='content-reaction-types';
+ response:=interaction_summary(910000002,'club_post','910000001');
+ ASSERT response->>'myReactionTypeId'=reaction::text AND response->>'canReact'='true';
+ ASSERT NOT EXISTS(SELECT 1 FROM jsonb_array_elements(response->'reactions') r WHERE (r->>'selectable')::boolean);
+ ASSERT interaction_command(910000002,target,gen_random_uuid(),jsonb_build_object('operation','reaction.set','reactionTypeId',reaction))->>'error'='invalid_reaction';
+ response:=interaction_command(910000002,target,gen_random_uuid(),'{"operation":"reaction.set","reactionTypeId":null}');
+ ASSERT response->'reactionTypeId'='null'::jsonb;
+ UPDATE catalog_definition SET active=true WHERE code='content-reaction-types';
+ PERFORM interaction_command(910000002,target,gen_random_uuid(),jsonb_build_object('operation','reaction.set','reactionTypeId',reaction));
  -- Losing follow eligibility permits only withdrawal, never a new or changed reaction.
  DELETE FROM fan_follow WHERE fan_party_id=910000002 AND artist_party_id=910000001;
  ASSERT NOT interaction_domain_write(target,910000002);

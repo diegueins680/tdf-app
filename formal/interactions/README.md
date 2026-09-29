@@ -66,3 +66,11 @@ redacted deep-link context remains reachable, owner hide/restore and moderator
 report resolution/removal succeed, owner administrative removal remains denied,
 and removed bodies are erased and audited. HTTP plus rendered web/native tests
 exercise the same state boundary, including the owner's queue action.
+
+An owner-to-moderator block cannot revoke platform enforcement: the scoped adapter
+ignores only social blocks, not publication state or private-event grants. Tests
+prove ordinary reads/social writes remain denied, authorized queues and exact
+links work, a non-moderator cannot request the scoped adapter, and adding/removing
+a private logistics grant respectively admits/revokes scoped access even with a
+persistent owner block. Catalog-deactivation tests compare summary selectability
+with command validation while preserving own historical-reaction withdrawal.

@@ -30,6 +30,17 @@ BEGIN
  ASSERT interaction_event_access(917000001,917000002);
  ASSERT NOT interaction_event_access(917000001,917000003), 'Legacy self-invitation is not an access grant';
  ASSERT NOT interaction_event_access(917000001,NULL);
+ INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version)
+ SELECT 917000004,id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';
+ PERFORM interaction_block(917000001,917000004,true,0,gen_random_uuid());
+ ASSERT interaction_resolve_scoped('event','917000001',917000004,true) IS NULL, 'Moderation cannot invent private-event access';
+ INSERT INTO event_logistics_member(event_id,party_id,member_role) VALUES(917000001,'917000004','viewer');
+ ASSERT NOT interaction_event_access(917000001,917000004);
+ ASSERT interaction_resolve_scoped('event','917000001',917000004,true) IS NOT NULL, 'Valid private grant survives owner block for enforcement';
+ DELETE FROM event_logistics_member WHERE event_id=917000001 AND party_id='917000004';
+ ASSERT interaction_resolve_scoped('event','917000001',917000004,true) IS NULL, 'Revoked private grant also revokes moderation access';
+ PERFORM interaction_block(917000001,917000004,false,(interaction_block_state(917000001,917000004)->>'version')::bigint,gen_random_uuid());
+
  ASSERT interaction_resolve('event_moment','917000001',917000002) IS NOT NULL;
  DELETE FROM event_logistics_member WHERE event_id=917000001 AND party_id='917000002';
  ASSERT interaction_resolve('event_moment','917000001',917000002) IS NULL, 'Moment authors cannot bypass private parent access revocation';

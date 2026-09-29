@@ -94,6 +94,19 @@ BEGIN
  PERFORM interaction_block(916000002,916000001,true,(interaction_block_state(916000002,916000001)->>'version')::bigint,gen_random_uuid());
  PERFORM interaction_block(916000002,916000004,true,0,gen_random_uuid());
  ASSERT interaction_blocked(916000001,916000002) AND interaction_blocked(916000004,916000002);
+ -- The publication owner cannot make the entire target disappear from enforcement.
+ PERFORM interaction_block(916000001,916000004,true,0,gen_random_uuid());
+ ASSERT interaction_target_context(target,916000004) IS NULL;
+ ASSERT interaction_moderation_context(target,916000004) IS NOT NULL;
+ ASSERT interaction_moderation_context(target,916000003) IS NULL;
+ ASSERT interaction_resolve_scoped('club_post','916000001',916000003,true) IS NULL;
+ result_value:=interaction_summary(916000004,'club_post','916000001');
+ ASSERT result_value->>'canModerate'='true' AND result_value->>'canReact'='false' AND result_value->>'canComment'='false';
+ ASSERT result_value->'reactions'='[]'::jsonb AND result_value->>'commentCount'='0';
+ ASSERT interaction_command(916000004,target,gen_random_uuid(),'{"operation":"comment.create","body":"Moderator social write"}')->>'error'='unavailable';
+ ASSERT interaction_command(916000004,target,gen_random_uuid(),'{"operation":"reaction.set","reactionTypeId":null}')->>'error'='unavailable';
+ ASSERT interaction_comments_page(target,916000004,NULL,'newest',NULL,20)->>'error'='unavailable';
+
  ASSERT interaction_report_inbox(916000004,NULL,20)->'items'->0->>'moderationBody'='Blocked author report';
  ASSERT interaction_report_inbox(916000004,NULL,20)->'items'->0->>'state'='visible';
  ASSERT interaction_report_reasons(916000004,comment_key)->>0='Blocking must not hide evidence';

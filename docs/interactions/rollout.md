@@ -2,7 +2,7 @@
 
 Production schema migration is additive and separate from activation. The live
 baseline was 115 reviewed migrations on PostgreSQL 17.8; eight existing social
-compatibility migrations and eighteen interaction migrations are registered in
+compatibility migrations and nineteen interaction migrations are registered in
 order. Existing social-v2 rollout gates remain disabled. No feature activation
 is a schema-install side effect.
 
@@ -117,3 +117,14 @@ context so an authorized moderator can open the queue without ordinary body or
 identity disclosure. Owner queues include blocked visible comments and both
 clients offer the existing hide operation there; owners gain no administrative
 removal/report-decision powers. Current role/access/version checks and audits remain.
+
+`2026-09-29_interaction_moderation_access` shares one scoped source adapter between
+ordinary access and platform enforcement. A current strict moderator may ignore
+source-owner/organizer social blocks for moderation, while publication, source
+lifecycle and private-event logistics grants remain mandatory. Ordinary reads and
+social writes continue to use the original block-aware wrapper. A moderation-only
+summary lets current clients reach the queue without reaction/comment permissions
+or interaction counts. Commands select that authority only for administrative
+remove/restore/report resolution, rechecking under the existing locks. Active
+reaction catalogs and their workflow identity also govern projected selectability;
+historical choices remain readable and removable after catalog deactivation.

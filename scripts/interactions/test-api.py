@@ -129,6 +129,12 @@ command(actors[0],{'operation':'comment.report','commentId':evidence['id'],'reas
 for peer in [actors[0],moderator]:
     state=request(actors[2],f'/interactions/blocks/{peer}')
     request(actors[2],f'/interactions/blocks/{peer}',{'blockRequestKey':str(uuid.uuid4()),'blocked':True,'expectedVersion':state['version']},method='PUT')
+owner_block=request(actors[0],f'/interactions/blocks/{moderator}')
+request(actors[0],f'/interactions/blocks/{moderator}',{'blockRequestKey':str(uuid.uuid4()),'blocked':True,'expectedVersion':owner_block['version']},method='PUT')
+moderator_summary=request(moderator,identity)
+assert moderator_summary['canModerate'] and not moderator_summary['canComment'] and not moderator_summary['canReact']
+command(moderator,{'operation':'comment.create','body':'Blocked social contact','mentions':[]},status=404)
+request(moderator,identity+'/comments?limit=20',status=404)
 queue=request(actors[0],f'/interactions/moderation/{target}?limit=20')
 assert any(c['id']==evidence['id'] and c['state']=='visible' and c['moderationBody']=='Moderation block fixture' for c in queue['items'])
 reports=request(moderator,'/interactions/reports?limit=20')
@@ -145,6 +151,8 @@ assert removed['state']=='removed' and removed['body']==''
 for peer in [actors[0],moderator]:
     state=request(actors[2],f'/interactions/blocks/{peer}')
     request(actors[2],f'/interactions/blocks/{peer}',{'blockRequestKey':str(uuid.uuid4()),'blocked':False,'expectedVersion':state['version']},method='PUT')
+owner_block=request(actors[0],f'/interactions/blocks/{moderator}')
+request(actors[0],f'/interactions/blocks/{moderator}',{'blockRequestKey':str(uuid.uuid4()),'blocked':False,'expectedVersion':owner_block['version']},method='PUT')
 # Explicitly restore this synthetic fixture's follow for subsequent browser/native flows.
 sql(f"INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES({actors[2]},{actors[0]},now());")
 # Leave actor 2 revoked. The UI E2E uses the current owner and third account.
