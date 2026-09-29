@@ -775,6 +775,11 @@
       "id": "2026-09-29_interaction_ownerless_policy",
       "path": "tdf-hq/sql/2026-09-29_interaction_ownerless_policy.sql",
       "introducedBy": "3624766ea78cc6663be0a8be5d4c7a9a94d2961c"
+    },
+    {
+      "id": "2026-09-29_interaction_author_moderation_notices",
+      "path": "tdf-hq/sql/2026-09-29_interaction_author_moderation_notices.sql",
+      "introducedBy": "d1ecc182f8041e0f5341514fc2c67e2b27269b4a"
     }
   ]
 }
