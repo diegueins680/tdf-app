@@ -765,6 +765,11 @@
       "id": "2026-09-29_interaction_catalog_authority",
       "path": "tdf-hq/sql/2026-09-29_interaction_catalog_authority.sql",
       "introducedBy": "70f9d3031f1c783070e087e295345f9f36c30720"
+    },
+    {
+      "id": "2026-09-29_interaction_report_reopen",
+      "path": "tdf-hq/sql/2026-09-29_interaction_report_reopen.sql",
+      "introducedBy": "712687c976075925d475e9c0ddbe6b06e6590bef"
     }
   ]
 }
