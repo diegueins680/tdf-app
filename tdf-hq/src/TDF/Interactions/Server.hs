@@ -159,10 +159,15 @@ query user mutation = queryWith user (if mutation then WriteSession Nothing else
 queryWith :: InteractionM m => Maybe AuthedUser -> SessionAccess -> Text -> [PersistValue] -> m InteractionResponse
 queryWith user access sql args = do
   pool <- asks envPool
-  let action = do
+  let readAccess = case access of
+        ReadSession -> True
+        WriteSession _ -> False
+      action = do
         installed <- rawSql "SELECT to_regclass('interaction_runtime') IS NOT NULL" [] :: SqlPersistT IO [Single Bool]
         gate <- if installed == [Single True]
-          then rawSql "SELECT enabled FROM interaction_runtime WHERE singleton" []
+          -- Pausing a converted installation fences writes/delivery, while
+          -- its canonical read model remains the only source of engagement.
+          then rawSql "SELECT enabled OR (? AND activated_once) FROM interaction_runtime WHERE singleton" [PersistBool readAccess]
           else pure []
         if gate /= [Single True] then pure (Left err404) else do
           budget <- case (user,access) of

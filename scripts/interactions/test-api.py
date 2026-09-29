@@ -24,6 +24,10 @@ def request(actor, path, data=None, method=None, status=200):
     return json.loads(body) if body and code < 400 else body
 for actor in actors:
     sql(f"INSERT INTO party(id,display_name,is_org,created_at) VALUES({actor},'API actor {actor}',false,now()); INSERT INTO user_credential(party_id,username,password_hash,active) VALUES({actor},'interaction-api-{actor}','not-a-login-hash',true); INSERT INTO api_token(token,party_id,label,active) VALUES('{tokens[actor]}',{actor},'interaction-local-test',true); INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT {actor},id,'bootstrap',true,now(),1 FROM security_role WHERE code='fan';")
+# A fresh, installed-but-unactivated system must keep canonical reads dark.
+if sql('SELECT activated_once FROM interaction_runtime WHERE singleton')=='f':
+    request(actors[0],'/interactions/preferences',status=404)
+    request(actors[0],'/interactions/blocked-accounts',status=404)
 sql(f"INSERT INTO fan_club(id,artist_party_id,name) VALUES({actors[0]},{actors[0]},'API test club'); INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES({actors[1]},{actors[0]},now()),({actors[2]},{actors[0]},now()); UPDATE interaction_runtime SET enabled=true WHERE singleton;")
 post=request(actors[0],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':'API publication','fcpReqContent':'A real HTTP test post','fcpReqMediaUrls':[],'fcpReqParentId':None})
 identity=f"/interactions/targets/club_post/{post['fcpId']}"
@@ -269,6 +273,35 @@ for peer in [actors[0],moderator]:
     request(actors[2],f'/interactions/blocks/{peer}',{'blockRequestKey':str(uuid.uuid4()),'blocked':False,'expectedVersion':state['version']},method='PUT')
 owner_block=request(actors[0],f'/interactions/blocks/{moderator}')
 request(actors[0],f'/interactions/blocks/{moderator}',{'blockRequestKey':str(uuid.uuid4()),'blocked':False,'expectedVersion':owner_block['version']},method='PUT')
+# Emergency pause keeps converted canonical reads, permissions and aliases live,
+# but rejects every public mutation surface and stops notification delivery.
+pre_pause_count=request(actors[0],identity)['commentCount']
+pre_pause_preferences=request(actors[0],'/interactions/preferences')
+sql('UPDATE interaction_runtime SET enabled=false WHERE singleton;')
+try:
+    assert sql('SELECT activated_once FROM interaction_runtime WHERE singleton')=='t'
+    assert request(actors[0],identity)['commentCount']==pre_pause_count
+    assert request(None,'/public'+recording_identity)['id']==catalog_target
+    request(None,'/public'+identity,status=404)
+    assert request(actors[0],identity+'/comments?limit=20')['items']
+    assert request(actors[0],identity+'/comments/'+reply['id'])['comment']['id']==reply['id']
+    assert request(actors[0],f"/interactions/resolve/comment/{reply['id']}")['commentId']==reply['id']
+    request(actors[0],identity+'/reactors?limit=20')
+    request(actors[0],'/interactions/blocked-accounts')
+    assert request(actors[0],'/interactions/preferences')==pre_pause_preferences
+    request(actors[0],f'/interactions/moderation/{target}?limit=20')
+    request(moderator,'/interactions/reports?limit=20')
+    request(actors[1],identity,status=401)  # Revoked bearer stays revoked while paused.
+    command(actors[0],{'operation':'comment.create','body':'Must not persist while paused'},status=404)
+    request(actors[0],'/interactions/preferences',pre_pause_preferences,method='PUT',status=404)
+    state=request(actors[0],f'/interactions/blocks/{actors[2]}')
+    request(actors[0],f'/interactions/blocks/{actors[2]}',{'blockRequestKey':str(uuid.uuid4()),'blocked':True,'expectedVersion':state['version']},method='PUT',status=404)
+    request(actors[0],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':None,'fcpReqContent':'Paused legacy reply','fcpReqMediaUrls':[],'fcpReqParentId':post['fcpId']},status=404)
+    assert sql('SELECT interaction_dispatch_events(50);')=='0'
+    assert request(actors[0],identity)['commentCount']==pre_pause_count
+finally:
+    sql('UPDATE interaction_runtime SET enabled=true WHERE singleton;')
+assert request(actors[0],'/interactions/preferences')==pre_pause_preferences
 # Explicitly restore this synthetic fixture's follow for subsequent browser/native flows.
 sql(f"INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES({actors[2]},{actors[0]},now());")
 # Leave actor 2 revoked. The UI E2E uses the current owner and third account.
