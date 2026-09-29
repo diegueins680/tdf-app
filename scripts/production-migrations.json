@@ -750,6 +750,11 @@
       "id": "2026-09-29_interaction_mention_privacy",
       "path": "tdf-hq/sql/2026-09-29_interaction_mention_privacy.sql",
       "introducedBy": "6334d897c573ae7b2e03c917ad26177e1c0b1958"
+    },
+    {
+      "id": "2026-09-29_interaction_inactive_allowlists",
+      "path": "tdf-hq/sql/2026-09-29_interaction_inactive_allowlists.sql",
+      "introducedBy": "8e6a2a80bafd9949f7f9aada2ec73301e02b2184"
     }
   ]
 }
