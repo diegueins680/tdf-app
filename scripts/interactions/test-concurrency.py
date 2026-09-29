@@ -174,3 +174,17 @@ result = json.loads(sql(f"SELECT interaction_command(930000001,{literal(record_t
 assert result.get('error') == 'forbidden', result
 sql(f"UPDATE role_permission SET active=true WHERE id={literal(grant_id)};")
 print('PASS catalog capability revocation serializes and immediately denies later policy writes')
+
+# Concurrent fresh re-reports reopen once, without overwriting open evidence.
+command(930000001, record_target, settings)
+reported = command(930000002, record_target, {'operation': 'comment.create', 'body': 'Re-report concurrency'})
+report = {'operation': 'comment.report', 'commentId': reported['id'], 'reason': 'Original evidence'}
+command(930000004, record_target, report)
+command(930000001, record_target, {'operation': 'comment.report.resolve', 'commentId': reported['id'], 'expectedVersion': 1, 'decision': 'dismissed', 'reason': 'Reviewed'})
+report['reason'] = 'New evidence'
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+    results = list(pool.map(lambda _: command(930000004, record_target, report), range(4)))
+assert all(result['reported'] for result in results)
+assert sql(f"SELECT count(*)=1 FROM interaction_report WHERE comment_id={literal(reported['id'])} AND state='open' AND reason='New evidence';") == 't'
+assert sql(f"SELECT count(*)=1 FROM interaction_audit WHERE comment_id={literal(reported['id'])} AND operation='comment.report.reopen' AND reason='Original evidence';") == 't'
+print('PASS concurrent re-reports: one open report and one preserved prior-evidence audit')

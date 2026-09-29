@@ -135,4 +135,43 @@ BEGIN
  ASSERT NOT interaction_is_moderator(916000004), 'Mixed privileged staff grants do not satisfy strict admin';
  ASSERT interaction_report_inbox(916000004,NULL,20)->>'error'='forbidden';
 END $$;
+-- A new report after resolution is actionable; replaying the old request is not.
+INSERT INTO party(id,display_name,is_org,created_at)
+SELECT n,'Re-report actor '||n,false,now() FROM generate_series(916000010,916000013) n;
+INSERT INTO user_credential(party_id,username,password_hash,active)
+SELECT n,'interaction-rereport-'||n,'not-a-login-hash',true FROM generate_series(916000010,916000013) n;
+INSERT INTO fan_club(id,artist_party_id,name) VALUES(916000010,916000010,'Re-report club');
+INSERT INTO fan_club_post(id,club_id,fan_party_id,content,created_at) VALUES(916000010,916000010,916000010,'Re-report post',now());
+INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES(916000011,916000010,now()),(916000012,916000010,now());
+INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version)
+SELECT 916000013,id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';
+DO $$
+DECLARE target uuid; comment_key uuid; result_value jsonb; first_request uuid:=gen_random_uuid(); next_request uuid:=gen_random_uuid(); payload jsonb;
+BEGIN
+ target:=interaction_register('club_post','916000010',916000010);
+ result_value:=interaction_command(916000011,target,gen_random_uuid(),'{"operation":"comment.create","body":"Original text"}');
+ comment_key:=(result_value->>'id')::uuid;
+ payload:=jsonb_build_object('operation','comment.report','commentId',comment_key,'reason','Original report reason');
+ ASSERT interaction_command(916000012,target,first_request,payload)->>'reported'='true';
+ ASSERT NOT interaction_command(916000013,target,gen_random_uuid(),jsonb_build_object('operation','comment.report.resolve','commentId',comment_key,'expectedVersion',1,'reason','First review','decision','dismissed')) ? 'error';
+ ASSERT interaction_command(916000012,target,first_request,payload)->>'reported'='true';
+ ASSERT (SELECT state='dismissed' FROM interaction_report WHERE comment_id=comment_key), 'An old request replay cannot reopen a resolved report';
+ ASSERT interaction_command(916000011,target,gen_random_uuid(),jsonb_build_object('operation','comment.edit','commentId',comment_key,'expectedVersion',1,'body','New abusive text','mentions','[]'::jsonb))->>'version'='2';
+ UPDATE interaction_report SET created_at=now()-interval '1 hour' WHERE comment_id=comment_key;
+ payload:=payload||jsonb_build_object('reason','New abusive content');
+ ASSERT interaction_command(916000012,target,next_request,payload)->>'reported'='true';
+ ASSERT (SELECT state='open' AND reason='New abusive content' AND created_at=now() FROM interaction_report WHERE comment_id=comment_key), 'A new request reopens resolved evidence';
+ ASSERT (SELECT count(*)=1 FROM interaction_report WHERE comment_id=comment_key);
+ ASSERT (SELECT count(*)=1 FROM interaction_audit WHERE comment_id=comment_key AND operation='comment.report.reopen' AND previous_state='dismissed' AND reason='Original report reason');
+ ASSERT interaction_report_inbox(916000013,NULL,20)->'items' @> jsonb_build_array(jsonb_build_object('id',comment_key));
+ ASSERT interaction_moderation_page(916000013,target,NULL,20)->'items'->0->'reportReasons'->>0='New abusive content';
+ PERFORM interaction_command(916000012,target,next_request,payload);
+ PERFORM interaction_command(916000012,target,gen_random_uuid(),payload||jsonb_build_object('reason','Repeated open report'));
+ ASSERT (SELECT reason='New abusive content' FROM interaction_report WHERE comment_id=comment_key), 'Open evidence is stable under repeated requests';
+ ASSERT (SELECT count(*)=1 FROM interaction_audit WHERE comment_id=comment_key AND operation='comment.report.reopen');
+ ASSERT NOT interaction_command(916000013,target,gen_random_uuid(),jsonb_build_object('operation','comment.report.resolve','commentId',comment_key,'expectedVersion',2,'reason','Second review','decision','reviewed')) ? 'error';
+ PERFORM interaction_command(916000012,target,gen_random_uuid(),payload||jsonb_build_object('reason','New evidence after review'));
+ ASSERT (SELECT state='open' AND reason='New evidence after review' FROM interaction_report WHERE comment_id=comment_key);
+ ASSERT (SELECT count(*)=2 FROM interaction_audit WHERE comment_id=comment_key AND operation='comment.report.reopen');
+END $$;
 ROLLBACK;

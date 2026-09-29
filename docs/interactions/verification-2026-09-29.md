@@ -369,3 +369,13 @@ comments, context, destinations, reactors, blocks, preferences and moderation
 pages before caching. Both clients test malformed data, valid retries, tombstones
 and a rendered error/retry flow. These changes require fresh native artifacts;
 earlier signed Android20/iOS27 candidates are superseded and remain unpublished.
+
+## Reopening resolved reports
+
+A failing executable regression confirmed that a new report after dismissal was
+silently ignored. The thirteenth forward repair reopens resolved rows on a new
+request with current reason/time, and records prior reason/state in the protected
+audit trail. Existing open reports and replayed idempotency keys remain stable.
+SQL/HTTP regressions cover edit-after-dismissal, old retries, reopened queues,
+repeat reports and reviewed-state reopening. Concurrent new requests must create
+one open row and one reopen audit event.

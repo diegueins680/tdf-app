@@ -179,6 +179,21 @@ request(actors[0],f'/interactions/targets/{catalog_target}/commands',{'requestKe
 request(actors[0],f'/interactions/targets/{catalog_target}/commands',{'requestKey':str(uuid.uuid4()),'command':{'operation':'comment.hide','commentId':catalog_comment['id'],'expectedVersion':1,'reason':'Historical creator'}},status=403)
 assert request(actors[1],recording_identity+'/comments/'+catalog_comment['id'])['comment']['state']=='visible'
 
+# Resolved reports can be reopened with new evidence, while old retries stay inert.
+sql(f"UPDATE party_security_role SET active=true WHERE party_id={actors[0]};")
+reported_comment=command(actors[1],{'operation':'comment.create','body':'Report lifecycle example','mentions':[]})
+report_payload={'operation':'comment.report','commentId':reported_comment['id'],'reason':'Initial evidence'}
+first_report_key=str(uuid.uuid4())
+assert command(actors[2],report_payload,first_report_key)['reported']
+command(actors[0],{'operation':'comment.report.resolve','commentId':reported_comment['id'],'expectedVersion':1,'decision':'dismissed','reason':'Reviewed original'})
+assert command(actors[2],report_payload,first_report_key)['reported']
+assert not any(item['id']==reported_comment['id'] for item in request(actors[0],'/interactions/reports')['items'])
+command(actors[1],{'operation':'comment.edit','commentId':reported_comment['id'],'expectedVersion':1,'body':'Changed reported content','mentions':[]})
+assert command(actors[2],{**report_payload,'reason':'New evidence'})['reported']
+reopened=next(item for item in request(actors[0],'/interactions/reports')['items'] if item['id']==reported_comment['id'])
+assert reopened['openReports']==1 and reopened['reportReasons']==['New evidence']
+sql(f"UPDATE party_security_role SET active=false WHERE party_id={actors[0]};")
+
 # Owner policies apply to stale clients and compose with current target access.
 version=request(actors[0],identity)['version']
 command(actors[0],{'operation':'settings.update','commentPolicy':'mentioned','expectedVersion':version,'mentionedPartyIds':[actors[2]]})

@@ -101,3 +101,8 @@ Institutional catalog targets have no human owner inferred from audit metadata.
 Management requires current module-access and catalog-update grants; account,
 role, permission, action and module rows are locked during mutation. Entity SQL
 properties plus the real concurrent revocation test exercise this rule.
+
+Reporting a visible comment after a resolved report reopens its unique reporter
+slot and audits the prior evidence. Idempotent retries never reopen it, and
+repeated open reports do not overwrite evidence. SQL, HTTP and concurrency tests
+exercise these transitions in the canonical command.
