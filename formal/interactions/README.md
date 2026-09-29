@@ -106,3 +106,9 @@ Reporting a visible comment after a resolved report reopens its unique reporter
 slot and audits the prior evidence. Idempotent retries never reopen it, and
 repeated open reports do not overwrite evidence. SQL, HTTP and concurrency tests
 exercise these transitions in the canonical command.
+
+Follower-only comment policy requires a non-null authoritative publication owner.
+Ownerless institutional targets reject it without changing revision/access. The
+forward repair preserves its formerly denied effective access as explicit off;
+`ownerless-policy-migration.sql` executes the actual repair twice and checks the
+revision and audit remain unchanged on repeat. Both clients test available choices.

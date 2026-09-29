@@ -379,3 +379,14 @@ audit trail. Existing open reports and replayed idempotency keys remain stable.
 SQL/HTTP regressions cover edit-after-dismissal, old retries, reopened queues,
 repeat reports and reviewed-state reopening. Concurrent new requests must create
 one open row and one reopen audit event.
+
+## Ownerless comment policies
+
+The fourteenth forward repair rejects follower-only settings without a real
+publication owner. Both clients use the shared capability predicate to omit the
+option and reconcile stale selections to the equivalent disabled state. Previously
+accepted institutional follower settings already denied all comments; migration
+makes that state explicit as off, increments the revision and records an audit
+without granting access. SQL/HTTP and rendered web/native cases cover ownerless
+and owned targets. The disposable migration test applies the actual repair twice
+to historical state and verifies access, version and audit idempotence.

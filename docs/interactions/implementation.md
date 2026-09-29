@@ -56,6 +56,8 @@ passing prototype fixture for production rollout.
   or notification recipient. Current catalog module access plus `catalog.update`
   grants policy/hide authority; revocation serializes with interaction commands.
   Discussion subscriptions provide notifications without inventing a human owner.
+  Institutional targets offer everyone/mentioned/off; follower-only mode requires
+  an actual publication owner and is rejected server-side otherwise.
 - One active reaction slot per actor/target, persisted catalog type. Defaults:
   like, heart, fire, clap. Changes/removal are desired-state operations, not unsafe
   retryable toggles. Old toggle endpoints preserve their documented compatibility.

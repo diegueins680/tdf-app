@@ -67,3 +67,7 @@ export function createDiscussionCursorHistory() {
     previous(cursor: string) { return cursor ? previous.get(cursor) : undefined; },
   };
 }
+
+/** Following an audit creator is not following an institutional publication. */
+export const commentPolicyAvailable = (policy: InteractionSummary['commentPolicy'], ownerId: number | null) =>
+  policy !== 'followers' || ownerId !== null;

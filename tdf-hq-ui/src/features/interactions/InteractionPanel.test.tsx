@@ -171,3 +171,14 @@ test('keeps a malformed discussion page recoverable and renders a successful ret
   await screen.findByText('Root comment');
   expect(screen.queryByRole('alert')).toBeNull();
 });
+
+test.each([null, 8])('offers follower policy only when publication owner exists: %s', async (ownerId) => {
+  summary.mockResolvedValue({ ...data, kind: 'recording', ownerId, canManage: true });
+  view({ initiallyExpanded: true }); fireEvent.click(await screen.findByRole('button', { name: 'Quién puede comentar' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Permiso para comentar' }));
+  if (ownerId === null) expect(screen.queryByRole('option', { name: 'Seguidores' })).toBeNull();
+  else expect(screen.getByRole('option', { name: 'Seguidores' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('option', { name: 'Comentarios desactivados' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar', exact: true }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith(target, expect.objectContaining({ operation: 'settings.update', commentPolicy: 'off' }), expect.any(String)));
+});

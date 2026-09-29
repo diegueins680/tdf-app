@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { commentPolicyAvailable } from './model';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Select, Stack, TextField, Typography } from '@mui/material';
 import { PartyMultiSelector } from '../../components/party-selector/PartySelector';
@@ -8,7 +9,7 @@ import type { InteractionCommand, InteractionSummary } from '../../api/interacti
 
 export function DiscussionControls({ summary, scope, run }: { summary: InteractionSummary; scope: string; run: (command: InteractionCommand) => Promise<void> }) {
   const [open, setOpen] = useState(false); const [moderationOpen, setModerationOpen] = useState(false);
-  const [policy, setPolicy] = useState(summary.commentPolicy);
+  const [policy, setPolicy] = useState(commentPolicyAvailable(summary.commentPolicy, summary.ownerId) ? summary.commentPolicy : 'off');
   const [people, setPeople] = useState<PartySelectorOption[]>([]);
   const [pending, setPending] = useState(false); const [error, setError] = useState(''); const [reason, setReason] = useState('');
   const queue = useInfiniteQuery({ queryKey: ['interactions', scope, summary.kind, summary.key, 'moderation'],
@@ -16,13 +17,13 @@ export function DiscussionControls({ summary, scope, run }: { summary: Interacti
     getNextPageParam: (page) => page.nextCursor ?? undefined, enabled: moderationOpen, retry: false });
   return <>
     <Stack direction="row" spacing={1}>
-      {summary.canManage && <Button onClick={() => { setPolicy(summary.commentPolicy); setPeople((summary.mentionedPeople ?? []).map((person) => ({ partyId: person.id, displayName: person.displayName, avatarUrl: person.avatarUrl, username: null, secondaryLabel: null, partyType: 'person', accountStatus: 'active' }))); setError(''); setOpen(true); }}>Quién puede comentar</Button>}
+      {summary.canManage && <Button onClick={() => { setPolicy(commentPolicyAvailable(summary.commentPolicy, summary.ownerId) ? summary.commentPolicy : 'off'); setPeople((summary.mentionedPeople ?? []).map((person) => ({ partyId: person.id, displayName: person.displayName, avatarUrl: person.avatarUrl, username: null, secondaryLabel: null, partyType: 'person', accountStatus: 'active' }))); setError(''); setOpen(true); }}>Quién puede comentar</Button>}
       {(summary.canManage || summary.canModerate) && <Button onClick={() => setModerationOpen(true)}>Moderación</Button>}
     </Stack>
     <Dialog open={open} onClose={() => { if (!pending) setOpen(false); }} aria-labelledby={`policy-${summary.id}`}>
       <DialogTitle id={`policy-${summary.id}`}>Quién puede comentar</DialogTitle><DialogContent><Stack spacing={2} sx={{ pt: 1 }}>
         <Select value={policy} inputProps={{ 'aria-label': 'Permiso para comentar' }} onChange={(event) => setPolicy(event.target.value as typeof policy)}>
-          <MenuItem value="everyone">Todos con acceso</MenuItem><MenuItem value="followers">Seguidores</MenuItem>
+          <MenuItem value="everyone">Todos con acceso</MenuItem>{commentPolicyAvailable('followers', summary.ownerId) && <MenuItem value="followers">Seguidores</MenuItem>}
           <MenuItem value="mentioned">Personas mencionadas</MenuItem><MenuItem value="off">Comentarios desactivados</MenuItem>
         </Select>
         {policy === 'mentioned' && <><Typography>Selecciona las personas que podrán comentar.</Typography><PartyMultiSelector value={people} onChange={setPeople}

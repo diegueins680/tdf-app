@@ -101,6 +101,8 @@ BEGIN
    ASSERT result_value->>'ownerId' IS NULL, 'Creator provenance is not publication ownership';
    ASSERT result_value->>'canManage'='true';
    target_id_value:=interaction_register(kind_value,source_id::text,917000001);
+   ASSERT interaction_command(917000001,target_id_value,gen_random_uuid(),jsonb_build_object('operation','settings.update','commentPolicy','followers','expectedVersion',(SELECT version FROM interaction_target WHERE id=target_id_value),'mentionedPartyIds','[]'::jsonb))->>'error'='invalid', 'An institutional publication cannot grant a fictional follower policy';
+   ASSERT (SELECT comment_policy='everyone' FROM interaction_target WHERE id=target_id_value), 'Rejected policies leave effective access unchanged';
    comment_value:=interaction_command(917000002,target_id_value,gen_random_uuid(),'{"operation":"comment.create","body":"Institutional catalog discussion","mentions":[]}');
    ASSERT NOT comment_value ? 'error',comment_value::text;
    UPDATE party_security_role SET active=false WHERE party_id=917000001;

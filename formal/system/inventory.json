@@ -1382,6 +1382,7 @@
       "tdf-hq/sql/2026-09-29_interaction_moderation_access.sql",
       "tdf-hq/sql/2026-09-29_interaction_moderation_block_boundary.sql",
       "tdf-hq/sql/2026-09-29_interaction_moderation_delivery.sql",
+      "tdf-hq/sql/2026-09-29_interaction_ownerless_policy.sql",
       "tdf-hq/sql/2026-09-29_interaction_publication_authority.sql",
       "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
       "tdf-hq/sql/2026-09-29_interaction_report_reopen.sql",
@@ -1678,6 +1679,7 @@
       "tdf-hq/test/integration/interactions/moderation-properties.sql",
       "tdf-hq/test/integration/interactions/navigation-properties.sql",
       "tdf-hq/test/integration/interactions/notification-properties.sql",
+      "tdf-hq/test/integration/interactions/ownerless-policy-migration.sql",
       "tdf-hq/test/integration/interactions/performance.sql",
       "tdf-hq/test/integration/interactions/policy-properties.sql",
       "tdf-hq/test/integration/interactions/schema-fixture.sql",
@@ -2685,7 +2687,7 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "91035eb33ebb2cd4f9baf65dc8136a9f086fbcbc02e6b0d80875634cc125a4e4",
+      "sha256": "fa1cfee014d98c961345745242a495c2004745ac83c38081a5a7b57e650b416d",
       "authority": "inferred",
       "authorityBasis": "Status: implementation and installed test journeys pass; protected review, signed releases and production rollout remain pending. No production schema or feature gate changed.",
       "kind": "requirement-candidate"
@@ -2706,7 +2708,7 @@
     },
     {
       "path": "docs/interactions/verification-2026-09-29.md",
-      "sha256": "ef81d65edf60254c59cbf841ea83ef2607dd5b51fa8aec9ce82f3d60ceeecfa1",
+      "sha256": "0aeddbdf53e83d9e205be16c08bd9383874e0c589f90083b87cd12273a309da7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4582,7 +4584,7 @@
     },
     {
       "path": "formal/interactions/README.md",
-      "sha256": "2a584d59f71c1ffda534898db0a77800bb929684f18de68301e26a572909b8d9",
+      "sha256": "5266cfd6cb12d332d44375d7a7707089388260ffd58aa3b1dfec2b9668ef46bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

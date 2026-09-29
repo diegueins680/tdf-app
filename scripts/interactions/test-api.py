@@ -172,6 +172,8 @@ sql(f"UPDATE recording SET created_by={actors[0]} WHERE id='{recording_id}'; INS
 recording_summary=request(actors[0],recording_identity)
 assert recording_summary['canManage'] and recording_summary['ownerId'] is None
 catalog_target=recording_summary['id']
+request(actors[0],f'/interactions/targets/{catalog_target}/commands',{'requestKey':str(uuid.uuid4()),'command':{'operation':'settings.update','commentPolicy':'followers','expectedVersion':recording_summary['version'],'mentionedPartyIds':[]}},status=400)
+assert request(actors[0],recording_identity)['commentPolicy']=='everyone'
 catalog_comment=request(actors[1],f'/interactions/targets/{catalog_target}/commands',{'requestKey':str(uuid.uuid4()),'command':{'operation':'comment.create','body':'Catalog authority test','mentions':[]}})
 sql(f"UPDATE party_security_role SET active=false WHERE party_id={actors[0]};")
 assert not request(actors[0],recording_identity)['canManage']
