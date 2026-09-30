@@ -35,10 +35,10 @@ class AccessTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(result.stdout, '')
 
-    def remote_fixture(self, mode, mutate=None, permissions=0o600):
+    def remote_fixture(self, mode, mutate=None, permissions=0o600, repo_digests=None, sql_override=None):
         def container(service):
-            return {'Id': service, 'Image': 'sha256:abc', 'State': {'Running': True},
-                    'Config': {'Labels': {'com.docker.compose.project': 'tdf-production',
+            return {'Id': service, 'Image': 'sha256:local-config', 'State': {'Running': True},
+                    'Config': {'Image': 'registry/image@sha256:manifest', 'Labels': {'com.docker.compose.project': 'tdf-production',
                         'com.docker.compose.service': service, 'com.docker.compose.project.working_dir': '/opt/tdf/production'},
                         'Env': ['DB_HOST=db', 'DB_NAME=tdf_hq', 'DB_PORT=5432', 'SMTP_USERNAME=u', 'SMTP_PASSWORD=p']},
                     'NetworkSettings': {'Networks': {'tdf-production_database': {'NetworkID': 'n', 'IPAddress': '172.1.1.2', 'Aliases': ['db']}}}}
@@ -48,12 +48,12 @@ class AccessTests(unittest.TestCase):
         calls = []
         def run(args, **kw):
             calls.append((args, kw))
-            text = json.dumps([api if args[-1] == 'tdf-production-api-1' else db]) if args[:2] == ['docker', 'inspect'] else '{"kind":"metadata"}\n'
+            text = (json.dumps([api if args[-1] == 'tdf-production-api-1' else db]) if args[:2] == ['docker', 'inspect'] else json.dumps([{'RepoDigests': repo_digests or []}]) if args[:3] == ['docker', 'image', 'inspect'] else 't\n' if '-c' in args else '{"kind":"metadata"}\n')
             return SimpleNamespace(returncode=0, stdout=text)
         def read(path, *args, **kw):
-            return 'TDF_IMAGE=registry/image@sha256:abc\n' if str(path).endswith('/.env') else 'SMTP_USERNAME=u\nSMTP_PASSWORD=p\n'
+            return 'TDF_IMAGE=registry/image@sha256:manifest\n' if str(path).endswith('/.env') else 'SMTP_USERNAME=u\nSMTP_PASSWORD=p\n'
         output = io.StringIO()
-        with patch.object(sys, 'argv', ['remote', mode]), patch.object(sys, 'stdin', io.StringIO('BEGIN READ ONLY; ROLLBACK;')), \
+        with patch.object(sys, 'argv', ['remote', mode]), patch.object(sys, 'stdin', io.StringIO(sql_override if sql_override is not None else pathlib.Path(__file__).with_name('production-catalog-inventory.mjs').read_text().split('const inventorySql = String.raw`', 1)[1].split('`;', 1)[0])), \
              patch.object(subprocess, 'run', side_effect=run), patch.object(pathlib.Path, 'read_text', read), \
              patch.object(pathlib.Path, 'stat', return_value=SimpleNamespace(st_mode=permissions)), contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
             exec(access.REMOTE, {})
@@ -65,16 +65,33 @@ class AccessTests(unittest.TestCase):
         self.assertIn('PGOPTIONS=-c default_transaction_read_only=on', args)
         self.assertIn('tdf-production-db-1', args)
         self.assertEqual(args[-1], 'tdf_hq')
-        self.assertIn('BEGIN READ ONLY', kw['input'])
+        self.assertIn('BEGIN TRANSACTION READ ONLY', kw['input'])
+        self.assertIn('tdf_catalog_inventory', args)
+        self.assertNotIn('postgres', args)
         self.assertIn('metadata', output)
         mutations = [lambda a, d: a['State'].update(Running=False),
                      lambda a, d: a['Config']['Labels'].update({'com.docker.compose.project': 'tdf-restore'}),
                      lambda a, d: a['Config']['Env'].append('DB_NAME=trader'),
                      lambda a, d: d['NetworkSettings']['Networks']['tdf-production_database'].update(NetworkID='other'),
-                     lambda a, d: a.update(Image='sha256:other')]
+                     lambda a, d: a['Config'].update(Image='registry/image@sha256:other')]
         for mutation in mutations:
             with self.subTest(mutation=mutation), self.assertRaises(SystemExit):
                 self.remote_fixture('inventory', mutation)
+
+    def test_registry_digest_is_distinct_from_local_image_id(self):
+        output, _ = self.remote_fixture('inventory',
+            lambda a, d: a['Config'].update(Image='sha256:local-config'),
+            repo_digests=['registry/image@sha256:manifest'])
+        self.assertIn('metadata', output)
+        with self.assertRaises(SystemExit):
+            self.remote_fixture('inventory',
+                lambda a, d: a['Config'].update(Image='sha256:local-config'),
+                repo_digests=['registry/image@sha256:wrong'])
+
+    def test_unreviewed_sql_and_readwrite_override_are_rejected(self):
+        for sql in ['SET default_transaction_read_only=off; SELECT 1;', '\\! echo unsafe', 'BEGIN READ WRITE; UPDATE country SET name=name;']:
+            with self.subTest(sql=sql), self.assertRaises(SystemExit):
+                self.remote_fixture('inventory', sql_override=sql)
 
     def test_world_readable_secret_file_is_rejected(self):
         with self.assertRaises(SystemExit):

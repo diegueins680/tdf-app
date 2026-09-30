@@ -224,3 +224,23 @@ The installed LaunchAgent copy needs both `monitor.py` (from
 `scripts/mail-deliverability-monitor.py`) and `production_access.py` alongside it;
 verify their hashes and a read-only run after an update. Updating these local
 tools does not deploy the application or rotate runtime credentials.
+
+
+Catalog SQL runs as the dedicated `tdf_catalog_inventory` role, never `postgres`.
+Its reviewed operational setup is `catalog-readonly-role.sql`: no superuser,
+role/database creation, inherited roles or row-security bypass; SELECT only in
+public, with no password or new network access. Provisioning an existing role
+name fails instead of changing it. Existing roles retain their effective CREATE capability explicitly before the
+ambient PUBLIC schema-CREATE grant is removed. Their login, membership and other
+privileges remain unchanged; the new reader cannot create persistent objects.
+The helper also accepts only the exact reviewed inventory SQL digest and refuses
+coverage gaps after new tables are added. Review SELECT grants for those tables
+before the next inventory; do not silently omit them or use the application role.
+An explicit read-write transaction must still receive permission denied on a
+zero-row UPDATE probe. The live setup/negative control is recorded by the audit.
+
+Immutable-image checks compare `TDF_IMAGE` with the container's configured image
+reference or the image's matching registry RepoDigest. Docker's local image/config
+ID is recorded for race detection, but is not assumed to equal a manifest digest.
+The root-level legacy Instagram diagnostic is also retired; use the existing
+read-only `scripts/check-messaging-token.mjs` instead.

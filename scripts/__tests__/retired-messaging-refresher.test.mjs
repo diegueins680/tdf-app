@@ -15,3 +15,14 @@ for (const args of [[], ['--auto']]) {
     assert.doesNotMatch(result.stderr, /flyctl|secrets set/);
   });
 }
+
+test('legacy Instagram diagnostic refuses without exposing supplied token prefixes', () => {
+  const secret = 'SENSITIVE_INSTAGRAM_CANARY';
+  const result = spawnSync(process.execPath, ['scripts/diagnose-instagram.mjs'], {
+    encoding: 'utf8', env: { ...process.env, INSTAGRAM_MESSAGING_TOKEN: secret, INSTAGRAM_MESSAGING_ACCOUNT_ID: 'test' },
+  });
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /check-messaging-token.mjs/);
+  assert.doesNotMatch(result.stderr, /SENSITIVE_|flyctl/);
+});

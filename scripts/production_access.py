@@ -13,7 +13,7 @@ DEFAULT_HOST = 'root@178.105.93.101'
 DEFAULT_KEY = Path.home() / '.ssh/tdf_hetzner_deploy_20260928'
 
 REMOTE = r'''
-import json, pathlib, stat, subprocess, sys, urllib.request
+import hashlib, json, pathlib, stat, subprocess, sys, urllib.request
 
 def capture(args, **kwargs):
     result = subprocess.run(args, capture_output=True, text=True, timeout=180, **kwargs)
@@ -50,7 +50,9 @@ def main(mode):
         or 'db' not in (dbnet.get('Aliases') or [])):
         raise RuntimeError('API is not bound to the expected production database')
     configured = raw_env(pathlib.Path('/opt/tdf/production/.env')).get('TDF_IMAGE', '')
-    if '@sha256:' not in configured or configured.rsplit('@', 1)[1] != api['Image']:
+    image = json.loads(capture(['docker', 'image', 'inspect', api['Image']]))[0]
+    if '@sha256:' not in configured or (api['Config'].get('Image') != configured
+            and configured not in (image.get('RepoDigests') or [])):
         raise RuntimeError('Running API does not match configured immutable image')
     if mode == 'credentials':
         path = pathlib.Path('/opt/tdf/production/api.env')
@@ -73,10 +75,18 @@ def main(mode):
                           'health': get('health'), 'version': get('version')}))
     elif mode == 'inventory':
         sql = sys.stdin.read()
+        if hashlib.sha256(sql.encode()).hexdigest() != 'f4c536d1d4554386817b1f44e6a7281ff7c0eb2a435234a8bd6a8ef9c06d394d':
+            raise RuntimeError('Only the reviewed catalog query is permitted')
+        reader = ['docker', 'exec', '-i', '-e', 'PGOPTIONS=-c default_transaction_read_only=on',
+                  'tdf-production-db-1', 'psql', '-X', '-v', 'ON_ERROR_STOP=1',
+                  '-qAt', '-U', 'tdf_catalog_inventory', '-d', 'tdf_hq']
+        coverage = capture(reader + ['-c', "SELECT NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p') AND NOT has_table_privilege(current_user,c.oid,'SELECT'))"]).strip()
+        if coverage != 't':
+            raise RuntimeError('Catalog reader lacks reviewed access to current tables')
         print(capture(['docker', 'exec', '-i',
                        '-e', 'PGOPTIONS=-c default_transaction_read_only=on',
                        'tdf-production-db-1', 'psql', '-X', '-v', 'ON_ERROR_STOP=1',
-                       '-qAt', '-U', 'postgres', '-d', 'tdf_hq'], input=sql), end='')
+                       '-qAt', '-U', 'tdf_catalog_inventory', '-d', 'tdf_hq'], input=sql), end='')
     else:
         raise RuntimeError('Unsupported read-only operation')
 
