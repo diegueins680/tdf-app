@@ -44,8 +44,9 @@ function CommentBody({ comment }: { comment: InteractionComment }) {
   </Stack>;
 }
 
-function CommentCard({ comment, summary, run, onReply, focused, refresh }: {
+function CommentCard({ comment, summary, run, onReply, focused, refresh, focusFallback }: {
   comment: InteractionComment; summary: InteractionSummary; run: Run; onReply: (comment: InteractionComment) => void; focused: boolean; refresh: () => Promise<void>;
+  focusFallback: () => void;
 }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [editing, setEditing] = useState(false);
@@ -54,6 +55,16 @@ function CommentCard({ comment, summary, run, onReply, focused, refresh }: {
   const [copied, setCopied] = useState(false);
   const article = useRef<HTMLElement>(null); const menuButton = useRef<HTMLButtonElement>(null);
   const { session } = useSession(); const actionKey = useRef<string | null>(null);
+  const focusRequest = useRef<'menu' | 'article' | null>(null);
+  const fallbackRef = useRef(focusFallback); fallbackRef.current = focusFallback;
+  useEffect(() => () => {
+    // A refetch can unmount the card (and its dialog) before the action settles.
+    if (focusRequest.current) window.setTimeout(() => fallbackRef.current(), 0);
+  }, []);
+  const restoreFocus = (toMenu = false) => {
+    focusRequest.current = toMenu ? 'menu' : 'article';
+    if (!article.current?.isConnected) window.setTimeout(() => fallbackRef.current(), 0);
+  };
   useEffect(() => {
     if (!focused) return;
     const timer = window.setTimeout(() => {
@@ -96,29 +107,38 @@ function CommentCard({ comment, summary, run, onReply, focused, refresh }: {
       {session && comment.author && comment.author.id !== session.partyId && <MenuItem onClick={() => choose('block')}>Bloquear usuario</MenuItem>}
     </Menu>
     {error && !action && <Alert severity="error">{error}</Alert>}
-    <Dialog open={action !== null} onClose={() => { if (!pending) setAction(null); }} aria-labelledby={`action-${comment.id}`}>
+    <Dialog open={action !== null} disableRestoreFocus
+      TransitionProps={{ onExited: () => {
+        // Retained cards must wait for the modal to release the page, including WebKit.
+        if (!focusRequest.current) return;
+        const target = focusRequest.current === 'menu' ? menuButton.current : article.current;
+        focusRequest.current = null;
+        if (target?.isConnected) target.focus(); else fallbackRef.current();
+      } }}
+      onClose={() => { if (!pending) { setAction(null); restoreFocus(true); } }} aria-labelledby={`action-${comment.id}`}>
       <DialogTitle id={`action-${comment.id}`}>{action === 'delete' ? 'Eliminar mi comentario' : action === 'block' ? 'Bloquear usuario' : action === 'report' ? 'Reportar comentario' : 'Moderar comentario'}</DialogTitle>
       <DialogContent>
         <Typography>{action === 'delete' ? 'El texto se eliminará. Las respuestas se conservarán.' : action === 'block' ? 'El bloqueo se aplica a la interacción entre ambas cuentas. Desbloquear no restaura conexiones anteriores.' : 'Explica brevemente el motivo.'}</Typography>
         {action && !['delete', 'block'].includes(action) && <TextField label="Motivo" fullWidth multiline value={reason} onChange={(event) => { setReason(event.target.value); actionKey.current = null; }} inputProps={{ maxLength: 1000 }} sx={{ mt: 2 }} />}
         {error && <Alert severity="error">{error}</Alert>}
       </DialogContent>
-      <DialogActions><Button disabled={pending} onClick={() => setAction(null)}>Cancelar</Button><Button disabled={pending || (!!action && !['delete', 'block'].includes(action) && !reason.trim())} onClick={() => {
+      <DialogActions><Button disabled={pending} onClick={() => { setAction(null); restoreFocus(true); }}>Cancelar</Button><Button disabled={pending || (!!action && !['delete', 'block'].includes(action) && !reason.trim())} onClick={() => {
         if (!action) return; setPending(true); setError(''); actionKey.current ??= crypto.randomUUID();
         const task = action === 'block' && comment.author
           ? Interactions.blockState(comment.author.id).then((state) => state.blocked ? state : Interactions.block(state.partyId, true, state.version, actionKey.current!)).then(() => refresh())
           : run(action === 'report' ? { operation: 'comment.report', commentId: comment.id, reason }
             : action === 'delete' ? { operation: 'comment.delete', commentId: comment.id, expectedVersion: comment.version }
               : { operation: action === 'hide' ? 'comment.hide' : 'comment.remove', commentId: comment.id, expectedVersion: comment.version, reason }, actionKey.current);
-        void task.then(() => { setAction(null); article.current?.focus(); }).catch((err: unknown) => setError(message(err))).finally(() => setPending(false));
+        void task.then(() => { setAction(null); restoreFocus(); }).catch((err: unknown) => setError(message(err))).finally(() => setPending(false));
       }}>{pending ? 'Guardando…' : 'Confirmar'}</Button></DialogActions>
     </Dialog>
   </Box>;
 }
 
-function Thread({ root, identity, summary, run, scope, authenticated, context, focusId, refresh }: {
+function Thread({ root, identity, summary, run, scope, authenticated, context, focusId, refresh, focusFallback }: {
   root: InteractionComment; identity: InteractionIdentity; summary: InteractionSummary; run: Run; scope: string; authenticated: boolean;
   context?: InteractionCommentContext; focusId?: string; refresh: () => Promise<void>;
+  focusFallback: () => void;
 }) {
   const key = `${scope}:thread:${root.id}`;
   const [expanded, setExpanded] = useState(() => Boolean(context) || getDisclosure(key));
@@ -136,7 +156,7 @@ function Thread({ root, identity, summary, run, scope, authenticated, context, f
     ...(replies.data?.pages.flatMap((page) => page.items) ?? [])]).sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
   const openReply = (comment: InteractionComment) => { setReply(comment); setExpanded(true); setDisclosure(key, true); };
   return <Box>
-    <CommentCard comment={root} summary={summary} run={run} onReply={openReply} focused={focusId === root.id} refresh={refresh} />
+    <CommentCard comment={root} summary={summary} run={run} onReply={openReply} focused={focusId === root.id} refresh={refresh} focusFallback={focusFallback} />
     {((root.replyCount ?? 0) > 0 || expanded) && <Button ref={toggleButton} aria-expanded={expanded} aria-controls={repliesId} onClick={() => {
       setExpanded(!expanded); setDisclosure(key, !expanded); track(expanded ? 'thread_collapsed' : 'thread_expanded', identity.kind);
       if (expanded) { setReply(null); toggleButton.current?.focus(); }
@@ -145,7 +165,7 @@ function Thread({ root, identity, summary, run, scope, authenticated, context, f
       {replies.hasPreviousPage && <Button disabled={replies.isFetchingPreviousPage} onClick={() => void replies.fetchPreviousPage()}>Ver respuestas anteriores</Button>}
       {replies.isPending && <Typography role="status">Cargando respuestas…</Typography>}
       {replies.isError ? <Alert severity="error" action={<Button onClick={() => void replies.refetch()}>Reintentar</Button>}>{message(replies.error)}</Alert>
-        : items.map((comment) => <CommentCard key={comment.id} comment={comment} summary={summary} run={run} onReply={openReply} focused={focusId === comment.id} refresh={refresh} />)}
+        : items.map((comment) => <CommentCard key={comment.id} comment={comment} summary={summary} run={run} onReply={openReply} focused={focusId === comment.id} refresh={refresh} focusFallback={focusFallback} />)}
       {replies.hasNextPage && <Button disabled={replies.isFetchingNextPage} onClick={() => void replies.fetchNextPage()}>Ver más respuestas</Button>}
       {reply && summary.canComment && <Box sx={{ pt: 1 }}><CommentComposer focusOnMount key={reply.id} targetId={summary.id}
         label={`Responder a ${reply.author?.displayName ?? 'este comentario'}`} onCancel={() => { setReply(null); toggleButton.current?.focus(); }}
@@ -169,6 +189,7 @@ export function InteractionPanel(props: PanelProps) {
 function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExpanded = false, beforeActivation, active }: PanelProps & { active: boolean }) {
   const { session } = useSession(); const authenticated = Boolean(session); const scope = session ? `account:${session.partyId ?? session.username}` : 'anonymous';
   const identity = { kind, entityKey }; const client = useQueryClient(); const sectionId = useId();
+  const discussionToggle = useRef<HTMLButtonElement>(null);
   const disclosureKey = `${scope}:${kind}:${entityKey}`;
   const [expanded, setExpanded] = useState(() => initiallyExpanded || Boolean(focusCommentId) || getDisclosure(disclosureKey));
   const [sort, setSort] = useState<InteractionSort>('newest'); const [error, setError] = useState('');
@@ -218,7 +239,7 @@ function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExp
         variant={data.myReactionTypeId === item.id ? 'outlined' : 'text'} disabled={!data.canReact || reaction.isPending || (!item.selectable && data.myReactionTypeId !== item.id)}
         onClick={() => reaction.mutate(data.myReactionTypeId === item.id ? null : item.id)}>{item.emoji}{item.count > 0 ? ` ${item.count}` : ''}</Button>)}
       {authenticated && totalReactions > 0 && <Button onClick={() => setReactorsOpen(true)}>Ver reacciones</Button>}
-      {data.commentable && <Button aria-expanded={expanded} aria-controls={sectionId} onClick={() => {
+      {data.commentable && <Button ref={discussionToggle} aria-expanded={expanded} aria-controls={sectionId} onClick={() => {
         setExpanded(!expanded); setDisclosure(disclosureKey, !expanded); track(expanded ? 'thread_collapsed' : 'thread_expanded', kind);
       }}>{expanded ? 'Ocultar comentarios' : data.commentCount > 0 ? `Ver los ${data.commentCount} comentarios` : 'Comentar'}</Button>}
     </Stack>
@@ -243,7 +264,7 @@ function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExp
       {comments.hasPreviousPage && <Button disabled={comments.isFetchingPreviousPage} onClick={() => void comments.fetchPreviousPage()}>Ver comentarios anteriores</Button>}
       {comments.isError ? <Alert severity="error" action={<Button onClick={() => void comments.refetch()}>Reintentar</Button>}>{message(comments.error)}</Alert>
         : roots.map((root) => <Thread key={root.id} root={root} identity={identity} summary={data} run={run} scope={scope} authenticated={authenticated}
-          context={context.data?.root.id === root.id ? context.data : undefined} focusId={focusCommentId} refresh={refresh} />)}
+          context={context.data?.root.id === root.id ? context.data : undefined} focusId={focusCommentId} refresh={refresh} focusFallback={() => discussionToggle.current?.focus()} />)}
       {!comments.isPending && !comments.isError && roots.length === 0 && <Typography color="text.secondary">Todavía no hay comentarios.</Typography>}
       {comments.hasNextPage && <Button disabled={comments.isFetchingNextPage} onClick={() => void comments.fetchNextPage()}>Ver más comentarios</Button>}
     </Stack>}
