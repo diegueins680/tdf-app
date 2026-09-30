@@ -12,8 +12,7 @@ final API assertions confirmed the tombstone and parent relationship.
 This local journey used the latest 155 interaction migration schema and the
 existing local backend executable. It does not qualify a newly integrated backend
 binary. Exact application revision `0a5653dc349f9faaf237a521aa50016a2fb1d6d9`
-already passed its hosted Linux HTTP/API suite. An additional hosted macOS run is
-building that exact backend for the same iOS journey. Android's matching installed
+already passed its hosted Linux HTTP/API suite. [Hosted macOS run 36653896221](https://github.com/diegueins680/tdf-app/actions/runs/36653896221) also passed the complete real HTTP suite and installed iOS journey against that exact backend. The current schema-157 application revision is being qualified by [run 36657712401](https://github.com/diegueins680/tdf-app/actions/runs/36657712401). Android's matching installed
 journey passed [run 36520750030](https://github.com/diegueins680/tdf-app/actions/runs/36520750030).
 
 Main advanced with event-ingestion PR #469 after the independent approval of
