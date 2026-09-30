@@ -246,6 +246,7 @@
       "scripts/test-distribution-accounting-migration.sh",
       "scripts/test-distribution-product-seeds-migration.sh",
       "scripts/test-domo-quote-checkout-runtime-migration.sh",
+      "scripts/test-event-ingestion-boundaries.sh",
       "scripts/test-event-operations-foundation-migration.sh",
       "scripts/test-event-relations-runtime.sh",
       "scripts/test-event-research-ingestion-migration.sh",
@@ -1343,6 +1344,8 @@
       "tdf-hq/sql/2026-09-18_trial_identity_requests_rollback.sql",
       "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
       "tdf-hq/sql/2026-09-20_records_ingestion_runtime_rollback.sql",
+      "tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql",
+      "tdf-hq/sql/2026-09-27_event_ingestion_boundaries_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -1567,6 +1570,7 @@
       "tdf-hq/templates/proposals/assets/tdf_logo_header.png",
       "tdf-hq/templates/proposals/assets/wide1.jpg",
       "tdf-hq/templates/proposals/tdf_live_sessions.tex",
+      "tdf-hq/test/EventPilotCountMain.hs",
       "tdf-hq/test/PaymentArithmeticProbe.hs",
       "tdf-hq/test/RecordsRuntimeProbe.hs",
       "tdf-hq/test/Spec.hs",
@@ -1634,6 +1638,7 @@
       "tdf-hq/test/integration/social_event_workflow_cutover_negative.sh",
       "tdf-hq/test/integration/social_event_workflow_cutover_postgres.sql",
       "tdf-hq/test/integration/social_event_workflow_postgres.sql",
+      "tdf-hq/test/sql/event_ingestion_boundaries.sql",
       "tdf-hq/test/sql/identity_reconciliation.sql",
       "tdf-hq/test/sql/records_ingestion_invariants.sql",
       "tdf-hq/test/sql/records_ingestion_runtime.sql"
@@ -1921,7 +1926,7 @@
     },
     {
       "path": "docs/Event_Discovery_Cron.md",
-      "sha256": "7bcd5161ff7dda115bfe2d6ef8ec309ef7fd24b5e46afa28253d933007f65e56",
+      "sha256": "a52b4a493cf1ec62fd8cc69a19f775a32d73378151a1897117e88e90d804749b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -5022,7 +5027,7 @@
     },
     {
       "path": "tdf-hq/docs/Event_Research_Ingestion.md",
-      "sha256": "e9e50a63ad8024acbcd8e8425f3ef5e94335c9337b6121d8098d1baf160f3cd6",
+      "sha256": "647dde3d322bdacd1925aa7f8df06a013b8957c3a8adf927faa69b3272a122e4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
