@@ -1765,7 +1765,7 @@
     },
     {
       "path": "PAYMENT_AUDIT.md",
-      "sha256": "6f5d108457acab6a3be3dbcd24f285ac8532a503b7a29852b5a7cf5793401374",
+      "sha256": "a6a490897076f5c0fc58ccea5bfd5bebe74d877f769293f5c6e99ae1235611cc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
