@@ -43,12 +43,14 @@ source `fd6cdcd22915384ab8dbbf9c5a128b40419505fc`.
   disk space during app reset/reinstallation and diagnostic creation. Earlier
   successful iOS journeys apply only to their earlier artifacts. On 30 September,
   starting the dedicated simulator reduced available space to about 1 GB; it was
-  stopped before another test attempt.
+  stopped before another test attempt. Free capacity subsequently fell below
+  500 MB again, and Chrome displayed its own low-storage warning.
 - Signed Android 22 and iOS 29 passed independent receipt/hash, signature,
   production API, runtime and associated-domain configuration checks. Android 22
   remains a saved, held, unpublished Play draft; Alpha 17 remains active. iOS 29
-  has not been uploaded. The user confirmed App Store Connect sign-in on
-  30 September; build history still needs inspection.
+  has not been uploaded. App Store Connect sign-in was verified on 30 September;
+  its TestFlight list shows build 25 as the newest listed build. Candidate 29
+  is absent. The collapsed upload-history section has not been inspected.
 - Physical VoiceOver/TalkBack and installed HTTPS association behavior remain
   unverified. Static signing/configuration checks do not establish those results.
 
