@@ -800,6 +800,11 @@
       "id": "2026-09-29_interaction_nonblank_reasons",
       "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_reasons.sql",
       "introducedBy": "5ab4b9d09868f05b529fa4c230e64ef437441f1a"
+    },
+    {
+      "id": "2026-09-30_interaction_report_content_version",
+      "path": "tdf-hq/sql/2026-09-30_interaction_report_content_version.sql",
+      "introducedBy": "0b63d746a5b720e7cacffd41ed04ae849e4a3284"
     }
   ]
 }

@@ -26,3 +26,17 @@ Production remains on the previous backend. This record does not establish store
 publication, physical-device VoiceOver/TalkBack behavior, installed signed HTTPS
 association, or completed production activation. Android 22 remains an unpublished
 store draft; signed iOS 29 has not been submitted.
+
+A subsequent report-abuse review is fixed by the additive
+`2026-09-30_interaction_report_content_version` migration (manifest 157).
+The unchanged-content regression failed before the repair and passes afterward.
+Focused real HTTP checks confirm that fresh request keys do not reopen unchanged
+resolved reports, while actual edits allow one audited reopen. SQL also covers
+no-op edits, owner hide/restore, and content changed while awaiting review.
+Existing report evidence is preserved. All seven SQL property suites and nine concurrency checks pass on fresh schema 157. A nonempty historical-report migration test proves baseline preservation and safe reapplication after a later edit; 82 release tests also pass. Fresh hosted CI remains required.
+
+The fresh encrypted off-host backup from 01:40 UTC restored successfully to an
+isolated PostgreSQL 17 database. Schema 156, first/repeated activation, pause and
+resume passed; all 77 current notifications remained, and exact legacy
+source/migrated engagement counts agreed. No rehearsal workers were started.
+The next report repair is checked separately before production use.

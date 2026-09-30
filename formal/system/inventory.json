@@ -2715,7 +2715,7 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "8d436955ccb7c80e79a5dbb3f5f3a1f8e0227c1abd63e0c3b66fb049162a5dfb",
+      "sha256": "f0f9c28794a872816385338e961edaf10dcdab29caf861a8e648a861910ef3fc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2729,7 +2729,7 @@
     },
     {
       "path": "docs/interactions/verification-2026-09-30.md",
-      "sha256": "2a031cb56adc6a0dc247c796faf0dd24deeca20994b3bf3e70d3f374fa43f0bd",
+      "sha256": "82efca0aa7b0a1f82ce64d7a70e30b7af31f88ab501373591e54f88a65368249",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
