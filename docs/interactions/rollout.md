@@ -3,7 +3,7 @@
 Production schema migration is additive and separate from activation. The live
 baseline was 115 reviewed migrations on PostgreSQL 17.8; eight existing social
 compatibility migrations and the canonical interaction migrations, including
-additive review repairs, are registered in order. The integrated release manifest now has 157 entries: the 116 current-main migrations (including the event ingestion boundary) followed by the 41 social compatibility and interaction migrations. Existing social-v2 rollout gates remain disabled. No feature activation
+additive review repairs, are registered in order. The integrated release manifest now has 158 entries: the 116 current-main migrations (including the event ingestion boundary) followed by the 42 social compatibility and interaction migrations. Existing social-v2 rollout gates remain disabled. No feature activation
 is a schema-install side effect.
 
 Before first activation, canonical reads return a non-cacheable 404 with the
@@ -208,3 +208,12 @@ reports retain their state/reason and conservatively baseline current content.
 Reapplication preserves later edits and reporting history. No private body hash
 is stored. The existing unique reporter slot, idempotency, rate limit, locks and
 prior-evidence audit remain authoritative.
+
+`2026-09-30_interaction_records_publication` requires recordings, sessions and
+record releases to belong to an active, published editorial collection of the
+matching type in the catalog-publication workflow. Ordinary reads, moderation,
+registration, deep links and writes share this authority. Withdrawal hides the
+discussion without deleting engagement; republication retains the same IDs.
+Commands lock membership and collection rows, serializing with withdrawal, and
+reverse membership indexes bound source lookups. The additive migration does not
+modify any publication or interaction rows and is safe to reapply.

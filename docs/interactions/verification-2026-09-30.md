@@ -60,3 +60,13 @@ branch settings were verified unchanged. The documented Apple team ID and both
 Android signing certificates are configured for the next deployment. The current
 web deployment continues serving; association responses must be verified after
 the new web deployment. Restore the saved production-build setting at rollout.
+
+A later publication-boundary regression failed on schema 157: removing a public
+record's collection membership still exposed its discussion. Additive migration
+158 now requires matching active/published collection membership for recordings,
+sessions and releases, including moderator access. Regression properties cover
+inactive, draft, mismatched and detached collections, anonymous/authenticated
+reads, target registration, deep links, commands and engagement preservation.
+All eight property suites and ten concurrency groups passed on fresh PostgreSQL 17, including six publication-withdrawal interleavings across the three record kinds. These exercise both membership deletion and
+collection withdrawal while a comment transaction is admitted. Focused actual HTTP checks also pass anonymous/authenticated withdrawal, denied reactions/comments and deep links, and recovery for all three publication kinds. The full HTTP suite includes these cases. This repair leaves the
+web/native code and API shapes unchanged; full hosted checks remain required. The encrypted production restore accepted all 158 migrations and repeated application, retained all 77 notifications and remains paused.

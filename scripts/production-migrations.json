@@ -805,6 +805,11 @@
       "id": "2026-09-30_interaction_report_content_version",
       "path": "tdf-hq/sql/2026-09-30_interaction_report_content_version.sql",
       "introducedBy": "0b63d746a5b720e7cacffd41ed04ae849e4a3284"
+    },
+    {
+      "id": "2026-09-30_interaction_records_publication",
+      "path": "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
+      "introducedBy": "9dd2cefc7af63096417b7e14a59a37e35022bd43"
     }
   ]
 }

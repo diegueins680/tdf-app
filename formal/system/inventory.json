@@ -1399,6 +1399,7 @@
       "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
       "tdf-hq/sql/2026-09-29_interaction_report_reopen.sql",
       "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
+      "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
       "tdf-hq/sql/2026-09-30_interaction_report_content_version.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
@@ -1696,6 +1697,7 @@
       "tdf-hq/test/integration/interactions/ownerless-policy-migration.sql",
       "tdf-hq/test/integration/interactions/performance.sql",
       "tdf-hq/test/integration/interactions/policy-properties.sql",
+      "tdf-hq/test/integration/interactions/records-publication-properties.sql",
       "tdf-hq/test/integration/interactions/report-content-migration.sql",
       "tdf-hq/test/integration/interactions/schema-fixture.sql",
       "tdf-hq/test/integration/interactions/schema-properties.sql",
@@ -2717,7 +2719,7 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "c634902dc85315862f2ac2f84948027a6cd629655f6ad2e9af979a518d4772a5",
+      "sha256": "9499f21c03ac671bbf6c7ec5fb9897a52194cfab25ce162bc1f818ea1dda0ce1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2731,7 +2733,7 @@
     },
     {
       "path": "docs/interactions/verification-2026-09-30.md",
-      "sha256": "e62ea85d8732cfe75f399bf6515b83b84dc9dc0f3d3f1619bb5fedace22725fd",
+      "sha256": "c7cb50e004ffb6bf6c7cf464e3978e313c72af7a6de97a24839bbb2b13cd523c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
