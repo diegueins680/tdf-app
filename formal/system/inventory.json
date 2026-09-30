@@ -54,6 +54,7 @@
       "scripts/__tests__/onboarding-real-browser.mjs",
       "scripts/__tests__/payment-readiness-helper.test.mjs",
       "scripts/__tests__/persona-test-program.test.mjs",
+      "scripts/__tests__/production-catalog-inventory.test.mjs",
       "scripts/__tests__/production-entrypoint.test.mjs",
       "scripts/__tests__/production-release.test.mjs",
       "scripts/__tests__/provider-rollback.test.mjs",
@@ -148,6 +149,7 @@
       "scripts/production-catalog-inventory.mjs",
       "scripts/production-migrations.json",
       "scripts/production-release.mjs",
+      "scripts/production_access.py",
       "scripts/quality-backend.sh",
       "scripts/quality-check.sh",
       "scripts/quality-mobile.sh",
@@ -285,6 +287,7 @@
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
       "scripts/test_mail_deliverability_monitor.py",
+      "scripts/test_production_access.py",
       "scripts/ui-static-audit.mjs",
       "scripts/upsert-course.mjs",
       "scripts/ux-audit-inventory.mjs",
@@ -2211,7 +2214,7 @@
     },
     {
       "path": "docs/catalog-persistence/README.md",
-      "sha256": "3aad94ace40a9a041ecbb3ccb42c5588fa4fe3b9a61ca142dd0504a9d398180c",
+      "sha256": "fa09e2a7297e4032b867298c70728038545359f221e4f34b926ccb65da15747e",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress. This directory records the immutable baseline, architecture,",
       "kind": "requirement-candidate"
@@ -3037,7 +3040,7 @@
     },
     {
       "path": "docs/operations/mail-deliverability-2026-09-18.md",
-      "sha256": "c7f2e69803c035f7a55bf51373f976aaef5b2f47f36e783f6591a51b39626ef7",
+      "sha256": "31c34f9de706a0db443f7df0627e1f18c5db259ba4e37e46c6c72fffbc83697f",
       "authority": "inferred",
       "authorityBasis": "Estado: diagnóstico y correcciones verificables, **no resolución completa del spam**.",
       "kind": "requirement-candidate"

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Read-only DNS and Webador mailbox monitor; no sending or automatic suppression.
 
-Credentials are read from the existing Fly app into memory only. Reports contain
+Credentials are read over verified SSH from the current protected Hetzner configuration
+into memory only. Reports contain
 aggregate counts, never message bodies, recipient addresses, or SMTP credentials.
 """
 import argparse
@@ -16,25 +17,15 @@ import json
 import os
 import pathlib
 import re
-import shlex
 import ssl
 import subprocess
 import zipfile
 import xml.etree.ElementTree as ET
 
+from production_access import mail_credentials
+
 DOMAIN = 'tdfrecords.net'
 LIMIT = 2 * 1024 * 1024
-
-
-def select_live_machine(status):
-    eligible = [machine['id'] for machine in status.get('Machines', [])
-                if machine.get('state') == 'started'
-                and re.fullmatch(r'[0-9a-f]+', machine.get('id', ''))
-                and machine.get('config', {}).get('metadata', {}).get('fly_process_group', 'app') == 'app'
-                and all(check.get('status') == 'passing' for check in machine.get('checks', []))]
-    if not eligible:
-        raise RuntimeError('No healthy application Machine available')
-    return sorted(eligible)[0]
 
 
 def aggregate_xml(payload):
@@ -119,21 +110,8 @@ def collect(output):
                     report['errors'].append('dns_query_failed:' + server + '/' + name)
             except (OSError, subprocess.TimeoutExpired):
                 report['errors'].append('dns_query_failed:' + server + '/' + name)
-    keys = ['SMTP_USERNAME', 'SMTP_PASSWORD']
-    command = 'for k in ' + ' '.join(keys) + '; do printf "%s=" "$k"; printenv "$k"; done'
     try:
-        status = subprocess.run(['flyctl', 'status', '-a', 'tdf-hq', '--json'],
-                                capture_output=True, text=True, timeout=20)
-        if status.returncode:
-            raise RuntimeError('Fly status unavailable')
-        machine = select_live_machine(json.loads(status.stdout))
-        result = subprocess.run(['flyctl', 'ssh', 'console', '-a', 'tdf-hq', '--machine',
-                                 machine, '-q', '-C', 'sh -lc ' + shlex.quote(command)],
-                                capture_output=True, text=True, timeout=50)
-        if result.returncode:
-            raise RuntimeError('Fly configuration unavailable')
-        config = dict(line.split('=', 1) for line in result.stdout.splitlines()
-                      if '=' in line and line.split('=', 1)[0] in keys)
+        config = mail_credentials()
         since = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=14)).strftime('%d-%b-%Y')
         statuses = collections.Counter()
         with imaplib.IMAP4_SSL('mail.webador.com', 993, ssl_context=ssl.create_default_context(), timeout=20) as mailbox:

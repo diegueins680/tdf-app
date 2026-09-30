@@ -4,10 +4,11 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
 
 const PRODUCTION_APP = 'tdf-hq';
-const PRODUCTION_DATABASE_APP = 'tdf-hq-db';
+const ACCESS = fileURLToPath(new URL('./production_access.py', import.meta.url));
 const PRODUCTION_DATABASE = 'tdf_hq';
 
 const inventorySql = String.raw`
@@ -150,8 +151,9 @@ function parseArgs(argv) {
   return options;
 }
 
-function run(command, args) {
+function run(command, args, input) {
   const result = spawnSync(command, args, {
+    input,
     cwd: process.cwd(),
     encoding: 'utf8',
     maxBuffer: 32 * 1024 * 1024,
@@ -165,12 +167,21 @@ function run(command, args) {
   return result.stdout;
 }
 
-function remotePsqlCommand(sql) {
-  const encoded = Buffer.from(sql).toString('base64');
-  return [
-    'sh -lc',
-    `'printf %s ${encoded} | base64 -d | su postgres -c "psql -X -v ON_ERROR_STOP=1 -qAt -p 5433 -d ${PRODUCTION_DATABASE}"'`,
-  ].join(' ');
+export function validateProvenance(health, version, before, after, metadata) {
+  for (const item of [health, before.health, after.health]) {
+    if (item?.status !== 'ok' || item?.db !== 'ok') throw new Error('Production API/database is not healthy.');
+  }
+  if (!/^[a-f0-9]{40}$/.test(version?.commit ?? '') ||
+      [before, after].some(x => x.version?.commit !== version.commit ||
+        x.provider !== 'hetzner' || x.project !== 'tdf-production' || x.database !== PRODUCTION_DATABASE)) {
+    throw new Error('Public API and SSH production provenance do not agree.');
+  }
+  for (const field of ['apiContainer', 'databaseContainer', 'apiImage', 'configuredImage', 'databaseImage']) {
+    if (!before[field] || before[field] !== after[field]) throw new Error('Deployment changed during inventory.');
+  }
+  if (metadata?.database !== PRODUCTION_DATABASE || metadata?.transactionReadOnly !== 'on') {
+    throw new Error('Production inventory database/read-only identity mismatch.');
+  }
 }
 
 async function fetchJson(url) {
@@ -190,27 +201,14 @@ async function main() {
   }
 
   const [health, version] = await Promise.all([
-    fetchJson(`https://${PRODUCTION_APP}.fly.dev/health`),
-    fetchJson(`https://${PRODUCTION_APP}.fly.dev/version`),
+    fetchJson('https://api.tdfrecords.net/health'),
+    fetchJson('https://api.tdfrecords.net/version'),
   ]);
-  const machines = JSON.parse(
-    run('flyctl', ['machine', 'list', '--app', PRODUCTION_APP, '--json']),
-  ).map((machine) => ({
-    id: machine.id,
-    region: machine.region,
-    state: machine.state,
-    version: machine.config?.metadata?.fly_release_version ?? null,
-    imageDigest: machine.image_ref?.digest ?? null,
-  }));
-
-  const stdout = run('flyctl', [
-    'ssh',
-    'console',
-    '--app',
-    PRODUCTION_DATABASE_APP,
-    '--command',
-    remotePsqlCommand(inventorySql),
-  ]);
+  const before = JSON.parse(run('python3', [ACCESS, 'metadata']));
+  // Fail closed before querying if the public origin is not the inspected API.
+  validateProvenance(health, version, before, before, { database: PRODUCTION_DATABASE, transactionReadOnly: 'on' });
+  const stdout = run('python3', [ACCESS, 'inventory'], inventorySql);
+  const after = JSON.parse(run('python3', [ACCESS, 'metadata']));
   const records = stdout
     .split('\n')
     .map((line) => line.trim())
@@ -220,31 +218,30 @@ async function main() {
     throw new Error('Production inventory returned no metadata record.');
   }
   const metadata = records.find(({ kind }) => kind === 'metadata');
-  if (metadata.transactionReadOnly !== 'on') {
-    throw new Error('Production inventory transaction was not read-only.');
-  }
+  validateProvenance(health, version, before, after, metadata);
 
   const report = {
     schemaVersion: 1,
     capturedAt: new Date().toISOString(),
     source: {
       app: PRODUCTION_APP,
-      databaseApp: PRODUCTION_DATABASE_APP,
+      provider: 'hetzner',
+      composeProject: 'tdf-production',
       database: PRODUCTION_DATABASE,
       querySha256: createHash('sha256').update(inventorySql).digest('hex'),
       readOnly: true,
     },
     health,
     version,
-    machines,
+    deployment: after,
     records,
   };
   const rendered = `${JSON.stringify(report, null, 2)}\n`;
-  if (options.output) writeFileSync(resolve(options.output), rendered);
+  if (options.output) writeFileSync(resolve(options.output), rendered, { mode: 0o600 });
   else process.stdout.write(rendered);
 }
 
-main().catch((error) => {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main().catch((error) => {
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exitCode = 1;
 });

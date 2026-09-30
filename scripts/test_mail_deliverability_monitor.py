@@ -43,27 +43,30 @@ class MonitorTests(unittest.TestCase):
                 mailbox.uid.side_effect = [('OK', [b'1 2']), ('OK', [(b'1', messages[0])]),
                                            ('OK', [(b'2', messages[1])]), ('OK', [b''])]
                 process = MagicMock(returncode=0, stdout='DNS answer')
-                live = MagicMock(returncode=0, stdout=json.dumps({'Machines': [{'id': 'abcd', 'state': 'started'}]}))
-                config = MagicMock(returncode=0, stdout='SMTP_USERNAME=test\nSMTP_PASSWORD=test\n')
                 with tempfile.TemporaryDirectory() as directory, \
-                     patch.object(monitor.subprocess, 'run', side_effect=[process] * 20 + [live, config]), \
+                     patch.object(monitor.subprocess, 'run', side_effect=[process] * 20), \
+                     patch.object(monitor, 'mail_credentials', return_value={'SMTP_USERNAME': 'test', 'SMTP_PASSWORD': 'test'}), \
                      patch.object(monitor.imaplib, 'IMAP4_SSL') as client, patch('builtins.print'):
                     client.return_value.__enter__.return_value = mailbox
                     self.assertEqual(monitor.collect(pathlib.Path(directory)), 1)
                     report = json.loads((pathlib.Path(directory) / 'latest.json').read_text())
                 self.assertTrue(report['mailboxReadSucceeded'])
+                self.assertEqual(mailbox.select.call_args_list[0].kwargs, {'readonly': True})
+                self.assertIn('(BODY.PEEK[]<0.2097153>)', str(mailbox.uid.call_args_list))
                 self.assertEqual(report['errors'], ['unparseable_report'])
                 self.assertEqual(report['aggregateReports'], [{'messages': 1, 'aligned': 1}])
 
-    def test_discovers_replacement_and_rejects_unhealthy_or_wrong_process(self):
-        self.assertEqual(monitor.select_live_machine({'Machines': [
-            {'id': 'aabb', 'state': 'stopped'},
-            {'id': 'bbcc', 'state': 'started', 'checks': [{'status': 'critical'}]},
-            {'id': 'ccdd', 'state': 'started', 'config': {'metadata': {'fly_process_group': 'worker'}}},
-            {'id': 'ddee', 'state': 'started', 'checks': [{'status': 'passing'}]},
-        ]}), 'ddee')
-        with self.assertRaises(RuntimeError):
-            monitor.select_live_machine({'Machines': []})
+    def test_credential_failure_is_redacted_and_mailbox_is_not_opened(self):
+        process = MagicMock(returncode=0, stdout='DNS answer')
+        with tempfile.TemporaryDirectory() as directory, \
+             patch.object(monitor.subprocess, 'run', return_value=process), \
+             patch.object(monitor, 'mail_credentials', side_effect=RuntimeError('secret-canary')), \
+             patch.object(monitor.imaplib, 'IMAP4_SSL') as client, patch('builtins.print') as output:
+            self.assertEqual(monitor.collect(pathlib.Path(directory)), 1)
+            report = (pathlib.Path(directory) / 'latest.json').read_text()
+            self.assertNotIn('secret-canary', report + str(output.call_args))
+            self.assertEqual(json.loads(report)['errors'], ['mailbox_read_failed:RuntimeError'])
+            client.assert_not_called()
 
     def test_alignment_uses_policy_evaluated_not_isolated_authentication(self):
         xml = b'''<feedback><policy_published><domain>tdfrecords.net</domain></policy_published>

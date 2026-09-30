@@ -26,7 +26,10 @@ bodies, contact fields, notes, payloads, metadata, URLs, hashes, and external id
   duplicates, and normalized variants. CI requires an explicit reviewed decision and justification
   for every fingerprint and rejects stale decisions.
 - `scripts/production-catalog-inventory.mjs` runs a bounded, anonymized production inventory inside
-  `BEGIN TRANSACTION READ ONLY` with statement and lock timeouts.
+  `BEGIN TRANSACTION READ ONLY` with statement and lock timeouts. It uses the verified
+  current Hetzner SSH/container binding and public API provenance; see the
+  [read-only operational access runbook](../../ops/hetzner/README.md#read-only-operational-tools-after-cutover).
+  It never falls back to the retained Fly database.
 - `reports/static-list-inventory.json` is the machine-readable static baseline.
 - `reports/list-consumer-matrix.csv` is the review-friendly consumer matrix.
 - `reports/production-distinct-values.json` is the sanitized production baseline.

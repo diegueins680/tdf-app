@@ -198,3 +198,29 @@ timeouts, and failure policy, and verify a successful run. Repository CI must
 continue reporting failures until that external configuration is corrected.
 These repository changes do not deploy, rotate production credentials, or
 claim that the pending authentication/upload gates have been performed.
+
+## Read-only operational tools after cutover
+
+The catalog inventory and daily mail monitor use the existing dedicated TDF SSH
+connection through `scripts/production_access.py`. The recorded connection is
+`root@178.105.93.101` with `~/.ssh/tdf_hetzner_deploy_20260928`; set
+`TDF_PRODUCTION_SSH_HOST` / `TDF_PRODUCTION_SSH_KEY` only when moving that
+already-authorized connection. Strict host-key checking, batch authentication
+and the dedicated identity are required. Never disable host verification.
+
+Both tools require the running `tdf-production` API and database under
+`/opt/tdf/production`, their expected database/network binding, and the configured
+immutable API image. They fail closed instead of falling back to Fly or the
+quarantined restore database. Catalog inventory also compares the public API
+commit/health with the inspected deployment before and after its existing bounded,
+anonymized read-only SQL. PostgreSQL defaults to read-only before the transaction;
+statement/lock timeouts and sensitive-column exclusions remain in force.
+
+The mail monitor reads only `SMTP_USERNAME` and `SMTP_PASSWORD` from the protected
+mode-0600 `api.env` into memory and requires agreement with the running API.
+Neither subprocess diagnostics nor credentials are logged. It retains read-only
+IMAP selection, BODY.PEEK, size limits, aggregate-only reports and error status.
+The installed LaunchAgent copy needs both `monitor.py` (from
+`scripts/mail-deliverability-monitor.py`) and `production_access.py` alongside it;
+verify their hashes and a read-only run after an update. Updating these local
+tools does not deploy the application or rotate runtime credentials.
