@@ -13988,13 +13988,13 @@
       }
     },
     {
-      "id": "864462ef981d79740c19",
+      "id": "7bf93825f1431a6d52d6",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered, checksum-pinned 158-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 42 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
+      "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
