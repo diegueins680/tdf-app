@@ -6,14 +6,14 @@ This workflow stores evidence-backed web research separately from published soci
 
 - Every route under `/social-events/event-research` requires strict administrator access.
 - Candidate upserts never create or publish a `social_event`.
-- Before explicit pilot approval, the database permits at most 20 active pilot candidates across all runs. A discarded candidate frees one slot; no record is deleted.
+- Before explicit pilot approval, the database permits at most 20 active items shared by research and structured discovery across all runs. A linked candidate and its canonical event count once. Discarding an unlinked candidate frees one slot; records are retained. The 2026-09-27 boundary migration enforces this across both writers.
 - Pilot approval is an explicit `POST /social-events/event-research/pilot/approve` with a durable reference. It is append-audited and cannot be silently replaced with a different reference.
 - `web` discovery sources are registry entries for manual research only. They require an HTTPS official URL and must remain disabled, so the structured-feed cron never treats HTML as a feed.
 - A candidate records its IANA timezone, primary source, evidence list, verification time, confidence, source-owned fields, and the complete normalized payload.
 
 ## Idempotent batch flow
 
-1. Read `GET /social-events/event-research/pilot` and the latest runs. Do not start a new unapproved pilot if 20 active candidates already exist.
+1. Read `GET /social-events/event-research/pilot` and the latest runs. `erPilotActiveCandidates` reports the shared research/discovery identity count used by the database guard, retaining the existing response field for compatibility. Do not start a new unapproved pilot if 20 active identities already exist. A linked research candidate and imported event consume one slot; suppressed references do not count unless another active reference still represents that event.
 2. `POST /social-events/event-research/runs` with a stable run key such as `ecuador-events-2026-08-16`. Reusing the key returns the existing run.
 3. Process bounded source batches. `PUT /social-events/event-research/candidates` uses `(provider, externalId)` as its unique key.
 4. Commit the last confirmed source position with `PUT /social-events/event-research/runs/{runId}`. A retry with the same content creates neither a candidate duplicate nor a duplicate change entry.
