@@ -92,8 +92,8 @@ DO $$
 DECLARE kind_value text; source_id uuid; target_id_value uuid; comment_value jsonb; result_value jsonb; grant_id uuid;
 BEGIN
  FOR kind_value IN SELECT unnest(ARRAY['recording','recording_session','record_release']) LOOP
-   EXECUTE format('SELECT id FROM %I WHERE active ORDER BY id LIMIT 1',kind_value) INTO source_id;
-   ASSERT source_id IS NOT NULL, 'Nonempty production catalog fixture required';
+   EXECUTE format('SELECT id FROM %I WHERE active AND interaction_resolve(%L,id::text,NULL) IS NOT NULL ORDER BY id LIMIT 1',kind_value,kind_value) INTO source_id;
+   ASSERT source_id IS NOT NULL, 'Published public-feed catalog fixture required';
    EXECUTE format('UPDATE %I SET created_by=$1 WHERE id=$2',kind_value) USING 917000001,source_id;
    UPDATE party_security_role SET active=true WHERE party_id=917000001;
    ASSERT interaction_catalog_manager(917000001);

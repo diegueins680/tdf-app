@@ -179,7 +179,7 @@ finally:
     sql(f"UPDATE catalog_definition SET active=true WHERE id IN (SELECT catalog_id FROM reaction_type WHERE id='{legacy_fire}' UNION SELECT catalog_id FROM content_reaction_type WHERE id='{moment_reaction}');")
 
 # Catalog provenance is not current ownership; revoke actual API authority.
-recording_id=sql("SELECT id FROM recording WHERE active ORDER BY id LIMIT 1;")
+recording_id=sql("SELECT id FROM recording WHERE active AND interaction_resolve('recording',id::text,NULL) IS NOT NULL ORDER BY id LIMIT 1;")
 recording_identity=f'/interactions/targets/recording/{recording_id}'
 sql(f"UPDATE recording SET created_by={actors[0]} WHERE id='{recording_id}'; INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT {actors[0]},id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';")
 recording_summary=request(actors[0],recording_identity)

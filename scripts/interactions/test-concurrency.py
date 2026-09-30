@@ -153,7 +153,7 @@ print('PASS mention-policy/privacy serialization and queued notification revocat
 # Current catalog capabilities, including global role permissions, serialize with
 # institutional discussion policy writes. Creator metadata grants no fallback.
 sql("INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT 930000001,id,'bootstrap',true,now(),1 FROM security_role WHERE code='admin';")
-record_key = sql("SELECT id FROM recording WHERE active ORDER BY id LIMIT 1;")
+record_key = sql("SELECT id FROM recording WHERE active AND interaction_resolve('recording',id::text,NULL) IS NOT NULL ORDER BY id LIMIT 1;")
 record_target = sql(f"SELECT interaction_register('recording',{literal(record_key)},930000001);")
 grant_id = sql("SELECT rp.id FROM role_permission rp JOIN security_role r ON r.id=rp.role_id JOIN security_permission p ON p.id=rp.permission_id WHERE r.code='admin' AND p.code='catalog.update';")
 settings = {'operation': 'settings.update', 'commentPolicy': 'off', 'expectedVersion': int(sql(f"SELECT version FROM interaction_target WHERE id={literal(record_target)};")), 'mentionedPartyIds': []}
