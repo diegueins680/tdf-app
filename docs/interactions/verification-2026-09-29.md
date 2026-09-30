@@ -1,11 +1,15 @@
 # Interaction verification — 29 September 2026
 
+Historical evidence: results below apply to the revisions named in each section.
+Use [30 September release evidence](verification-2026-09-30.md) for the current
+candidate, qualification gaps and deployment status.
+
 Implementation is verified in disposable environments. Production remains on the
 previous release; no interaction schema migration or activation has been applied
 there. This record does not establish store signing, HTTPS app-link association,
 physical-device VoiceOver/TalkBack behavior or a completed production rollout.
 
-## Current review follow-up
+## Initial review follow-up
 
 The historical evidence below remains tied to its stated commits. The new forward
 repair migration and moderator-reason clients are undergoing fresh qualification.
