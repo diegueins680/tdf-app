@@ -232,3 +232,43 @@ for expression in freeze_writers:
     sql('UPDATE interaction_runtime SET enabled=true WHERE singleton;')
 assert sql("SELECT interaction_register('club_post','930000011',930000001) IS NOT NULL;") == 't'
 print('PASS pause serializes registration, commands, preferences, blocking and delivery; paused reads cannot create targets')
+
+# Source withdrawal must wait for an admitted comment, then deny subsequent work.
+for kind, membership, key in [('recording','collection_recording','recording_id'), ('recording_session','collection_session','session_id'), ('record_release','collection_release','release_id')]:
+    source = sql(f"SELECT id FROM {kind} WHERE interaction_resolve('{kind}',id::text,NULL) IS NOT NULL ORDER BY id LIMIT 1;")
+    assert source, 'Published source fixture missing'
+    publication = sql(f"SELECT interaction_register('{kind}',{literal(source)},930000001);")
+    saved = sql(f"SELECT json_agg(m) FROM {membership} m WHERE {key}={literal(source)};")
+    for withdrawal in ['membership', 'collection']:
+        writer = subprocess.Popen(['psql','-X','-qAt','-v','ON_ERROR_STOP=1','-d',DB], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            payload = json.dumps({'operation':'comment.create','body':'Publication withdrawal concurrency'})
+            writer.stdin.write(f"BEGIN; SELECT interaction_command(930000001,{literal(publication)},'{uuid.uuid4()}',{literal(payload)}); SELECT 'publication-writer-locked';\n"); writer.stdin.flush()
+            result = json.loads(writer.stdout.readline()); assert 'error' not in result, result
+            assert writer.stdout.readline().strip() == 'publication-writer-locked'
+            withdraw_sql = (f"DELETE FROM {membership} WHERE {key}={literal(source)};" if withdrawal == 'membership' else
+                f"UPDATE editorial_collection SET active=false WHERE id IN (SELECT collection_id FROM {membership} WHERE {key}={literal(source)});")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                revocation = pool.submit(sql, "SET application_name='tdf-interaction-publication-test'; " + withdraw_sql)
+                for _ in range(30):
+                    if sql("SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND application_name='tdf-interaction-publication-test' AND wait_event_type='Lock');") == 't':
+                        break
+                    assert not revocation.done(), 'Publication withdrawal bypassed the admitted comment'
+                    time.sleep(.05)
+                else:
+                    raise AssertionError('Publication withdrawal never reached the observed lock')
+                writer.stdin.write('COMMIT;\n\\q\n'); writer.stdin.flush(); writer.wait(timeout=10)
+                revocation.result(timeout=10)
+            assert sql(f"SELECT interaction_resolve('{kind}',{literal(source)},NULL) IS NULL;") == 't'
+            denied = json.loads(sql(f"SELECT interaction_command(930000001,{literal(publication)},'{uuid.uuid4()}',{literal(payload)});"))
+            assert denied.get('error') == 'unavailable', denied
+            assert sql(f"SELECT body='Publication withdrawal concurrency' FROM interaction_comment WHERE id={literal(result['id'])};") == 't'
+        finally:
+            if writer.poll() is None:
+                writer.stdin.write('ROLLBACK;\n\\q\n'); writer.stdin.flush(); writer.wait(timeout=10)
+            if withdrawal == 'membership':
+                sql(f"INSERT INTO {membership} SELECT * FROM json_populate_recordset(NULL::{membership},{literal(saved)}) ON CONFLICT DO NOTHING;")
+            else:
+                sql(f"UPDATE editorial_collection SET active=true WHERE id IN (SELECT collection_id FROM {membership} WHERE {key}={literal(source)});")
+        assert sql(f"SELECT interaction_register('{kind}',{literal(source)},930000001)={literal(publication)}::uuid;") == 't'
+print('PASS recording/session/release membership and collection withdrawal serialize with comments and preserve engagement')

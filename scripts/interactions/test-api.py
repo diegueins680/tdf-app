@@ -194,6 +194,24 @@ request(actors[0],f'/interactions/targets/{catalog_target}/commands',{'requestKe
 request(actors[0],f'/interactions/targets/{catalog_target}/commands',{'requestKey':str(uuid.uuid4()),'command':{'operation':'comment.hide','commentId':catalog_comment['id'],'expectedVersion':1,'reason':'Historical creator'}},status=403)
 assert request(actors[1],recording_identity+'/comments/'+catalog_comment['id'])['comment']['state']=='visible'
 
+# Public discussion access follows live editorial membership for every record kind.
+for kind, membership, key in [('recording','collection_recording','recording_id'), ('recording_session','collection_session','session_id'), ('record_release','collection_release','release_id')]:
+    source=sql(f"SELECT id FROM {kind} WHERE interaction_resolve('{kind}',id::text,NULL) IS NOT NULL ORDER BY id LIMIT 1;")
+    assert source
+    source_path=f'/interactions/targets/{kind}/{source}'
+    source_target=request(actors[0],source_path)['id']
+    saved=sql(f"SELECT json_agg(m) FROM {membership} m WHERE {key}='{source}';")
+    try:
+        sql(f"DELETE FROM {membership} WHERE {key}='{source}';")
+        request(None,'/public'+source_path,status=404)
+        request(actors[0],source_path,status=404)
+        request(actors[0],f'/interactions/resolve/target/{source_target}',status=404)
+        request(actors[0],f'/interactions/targets/{source_target}/commands',{'requestKey':str(uuid.uuid4()),'command':{'operation':'comment.create','body':'Withdrawn source cannot accept comments'}},status=404)
+    finally:
+        escaped=saved.replace("'","''")
+        sql(f"INSERT INTO {membership} SELECT * FROM json_populate_recordset(NULL::{membership},'{escaped}');")
+    assert request(None,'/public'+source_path)['id']==source_target
+
 # Resolved reports can be reopened with new evidence, while old retries stay inert.
 sql(f"UPDATE party_security_role SET active=true WHERE party_id={actors[0]};")
 reported_comment=command(actors[1],{'operation':'comment.create','body':'Report lifecycle example','mentions':[]})
