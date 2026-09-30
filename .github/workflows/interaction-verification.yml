@@ -107,13 +107,20 @@ jobs:
           PY
           gh run download "$MOBILE_RUN" --repo diegueins680/TDF-mobile --pattern 'interaction-simulator-*' --dir "$RUNNER_TEMP/interaction-simulator"
           python3 - <<'PY'
-          import json, os, pathlib
+          import json, os, pathlib, subprocess
           root=pathlib.Path(os.environ['RUNNER_TEMP'])
           run=json.loads((root/'mobile-run.json').read_text())
           receipts=list((root/'interaction-simulator').rglob('tdf-interaction-source.txt'))
           archives=list((root/'interaction-simulator').rglob('tdf-interaction-simulator.tgz'))
           assert len(receipts)==len(archives)==1
-          assert receipts[0].read_text().strip()==run['head_sha']
+          # PR builds record GitHub's tested merge commit, while run metadata
+          # identifies the branch head. Both must have the exact pinned tree.
+          source=receipts[0].read_text().strip()
+          assert len(source)==40 and all(c in '0123456789abcdef' for c in source)
+          subprocess.run(['git','-C','tdf-mobile','fetch','--no-tags','--depth=1','origin',source],check=True)
+          def tree(ref):
+              return subprocess.check_output(['git','-C','tdf-mobile','rev-parse',ref+'^{tree}'],text=True).strip()
+          assert tree(source)==tree('HEAD'), 'Artifact receipt source differs from the pinned native tree'
           PY
           mkdir "$RUNNER_TEMP/interaction-app"
           tar -xzf "$(find "$RUNNER_TEMP/interaction-simulator" -name tdf-interaction-simulator.tgz -print -quit)" -C "$RUNNER_TEMP/interaction-app"
