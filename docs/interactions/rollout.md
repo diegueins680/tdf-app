@@ -191,3 +191,12 @@ items show an unavailable state without fetching around source permissions. Sour
 pagination remains bounded and returns to user control after initial selection.
 
 Emergency pause waits for admitted interaction writes and dispatch batches through a shared runtime-row admission lock. Existing authorized discussions remain readable without registration writes; an unregistered publication is unavailable to discussion reads until resume. Registration, commands, notification preferences, blocks and delivery share this boundary. The concurrency suite observes the pausing session waiting on a database lock before releasing each admitted writer, then verifies that paused reads cannot add targets.
+
+`2026-09-30_interaction_report_content_version` records the last revision that
+changed a comment's text or stable mention spans. Resolved reporter slots can
+reopen only after a later content change. Resolution snapshots current content;
+no-op edits and owner hide/restore do not reset the reporting baseline. Existing
+reports retain their state/reason and conservatively baseline current content.
+Reapplication preserves later edits and reporting history. No private body hash
+is stored. The existing unique reporter slot, idempotency, rate limit, locks and
+prior-evidence audit remain authoritative.

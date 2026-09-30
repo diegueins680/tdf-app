@@ -211,6 +211,8 @@ assert command(actors[2],report_payload,first_report_key)['reported']
 command(actors[0],{'operation':'comment.report.resolve','commentId':reported_comment['id'],'expectedVersion':1,'decision':'dismissed','reason':'Reviewed original'})
 assert command(actors[2],report_payload,first_report_key)['reported']
 assert not any(item['id']==reported_comment['id'] for item in request(actors[0],'/interactions/reports')['items'])
+assert command(actors[2],{**report_payload,'reason':'Repeated unchanged evidence'})['reported']
+assert not any(item['id']==reported_comment['id'] for item in request(actors[0],'/interactions/reports')['items'])
 command(actors[1],{'operation':'comment.edit','commentId':reported_comment['id'],'expectedVersion':1,'body':'Changed reported content','mentions':[]})
 assert command(actors[2],{**report_payload,'reason':'New evidence'})['reported']
 reopened=next(item for item in request(actors[0],'/interactions/reports')['items'] if item['id']==reported_comment['id'])

@@ -176,6 +176,8 @@ BEGIN
  ASSERT NOT interaction_command(916000013,target,gen_random_uuid(),jsonb_build_object('operation','comment.report.resolve','commentId',comment_key,'expectedVersion',1,'reason','First review','decision','dismissed')) ? 'error';
  ASSERT interaction_command(916000012,target,first_request,payload)->>'reported'='true';
  ASSERT (SELECT state='dismissed' FROM interaction_report WHERE comment_id=comment_key), 'An old request replay cannot reopen a resolved report';
+ PERFORM interaction_command(916000012,target,gen_random_uuid(),payload||jsonb_build_object('reason','Repeated unchanged report'));
+ ASSERT (SELECT state='dismissed' FROM interaction_report WHERE comment_id=comment_key), 'Fresh report keys cannot reopen unchanged reviewed content';
  ASSERT interaction_command(916000011,target,gen_random_uuid(),jsonb_build_object('operation','comment.edit','commentId',comment_key,'expectedVersion',1,'body','New abusive text','mentions','[]'::jsonb))->>'version'='2';
  UPDATE interaction_report SET created_at=now()-interval '1 hour' WHERE comment_id=comment_key;
  payload:=payload||jsonb_build_object('reason','New abusive content');
@@ -189,7 +191,17 @@ BEGIN
  PERFORM interaction_command(916000012,target,gen_random_uuid(),payload||jsonb_build_object('reason','Repeated open report'));
  ASSERT (SELECT reason='New abusive content' FROM interaction_report WHERE comment_id=comment_key), 'Open evidence is stable under repeated requests';
  ASSERT (SELECT count(*)=1 FROM interaction_audit WHERE comment_id=comment_key AND operation='comment.report.reopen');
- ASSERT NOT interaction_command(916000013,target,gen_random_uuid(),jsonb_build_object('operation','comment.report.resolve','commentId',comment_key,'expectedVersion',2,'reason','Second review','decision','reviewed')) ? 'error';
+ -- Resolution reviews the current content even if it changed while open.
+ ASSERT interaction_command(916000011,target,gen_random_uuid(),jsonb_build_object('operation','comment.edit','commentId',comment_key,'expectedVersion',2,'body','Edited while review pending','mentions','[]'::jsonb))->>'version'='3';
+ ASSERT NOT interaction_command(916000013,target,gen_random_uuid(),jsonb_build_object('operation','comment.report.resolve','commentId',comment_key,'expectedVersion',3,'reason','Second review','decision','reviewed')) ? 'error';
+ -- No-op author edits and owner hide/restore change optimistic revisions but
+ -- cannot reset the moderation queue's content baseline.
+ ASSERT interaction_command(916000011,target,gen_random_uuid(),jsonb_build_object('operation','comment.edit','commentId',comment_key,'expectedVersion',3,'body','Edited while review pending','mentions','[]'::jsonb))->>'version'='4';
+ PERFORM interaction_command(916000010,target,gen_random_uuid(),jsonb_build_object('operation','comment.hide','commentId',comment_key,'expectedVersion',4,'reason','Owner hides'));
+ PERFORM interaction_command(916000010,target,gen_random_uuid(),jsonb_build_object('operation','comment.restore','commentId',comment_key,'expectedVersion',5,'reason','Owner restores'));
+ PERFORM interaction_command(916000012,target,gen_random_uuid(),payload);
+ ASSERT (SELECT state='reviewed' AND reported_version=3 FROM interaction_report WHERE comment_id=comment_key), 'No-op edits or visibility transitions cannot reopen unchanged content';
+ ASSERT interaction_command(916000011,target,gen_random_uuid(),jsonb_build_object('operation','comment.edit','commentId',comment_key,'expectedVersion',6,'body','Subsequent changed content','mentions','[]'::jsonb))->>'version'='7';
  PERFORM interaction_command(916000012,target,gen_random_uuid(),payload||jsonb_build_object('reason','New evidence after review'));
  ASSERT (SELECT state='open' AND reason='New evidence after review' FROM interaction_report WHERE comment_id=comment_key);
  ASSERT (SELECT count(*)=2 FROM interaction_audit WHERE comment_id=comment_key AND operation='comment.report.reopen');
