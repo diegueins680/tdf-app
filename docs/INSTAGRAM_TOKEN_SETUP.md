@@ -189,3 +189,8 @@ No schema migration or application deployment is needed for this change.
 Reverting it restores the old, potentially mutating manual `check` behavior;
 stop using manual checks on a reverted revision. Reverting code does not undo
 any separately authorized credential update.
+
+The standalone `scripts/refresh-messaging-token.mjs` is retired in both manual
+and `--auto` modes. It exits before exchanging or displaying tokens and cannot
+write secrets or restart any service. Use the protected current-host procedure
+above; automatic persistence remains unimplemented.

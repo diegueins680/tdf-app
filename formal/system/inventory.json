@@ -59,6 +59,7 @@
       "scripts/__tests__/production-release.test.mjs",
       "scripts/__tests__/provider-rollback.test.mjs",
       "scripts/__tests__/public-catalog-http-runtime.mjs",
+      "scripts/__tests__/retired-messaging-refresher.test.mjs",
       "scripts/__tests__/sri-invoice.test.mjs",
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
@@ -1829,7 +1830,7 @@
     },
     {
       "path": "STRIPE_TICKETING_DEPLOYMENT_SUMMARY.md",
-      "sha256": "233c8f6d7ae87da8a2ca1ecfa3790bf7c35e73847328618c805303cdb6f0217b",
+      "sha256": "3c62e6b167447dd3e960909e650ec4a68c60715096e0df1a841ff6c839a8d2bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -1885,7 +1886,7 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "9fb5bedf943d7060f5eb1a80c8792220de83c1062bc291346cc6221801bf370d",
+      "sha256": "b44d6e91c84e4db737c9abe9fdef57e0705d149916d94a56f5f6722edeae8dcf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -1927,7 +1928,7 @@
     },
     {
       "path": "docs/INSTAGRAM_TOKEN_SETUP.md",
-      "sha256": "d358888640ae8a167a9b6668ad4cfb1a35590458c12a6b7e7d34b53a6bb4e73f",
+      "sha256": "96df0fdb94aece332d69b649bc587d58ddbeece255bd13b7f0d22186d162b54c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
