@@ -2701,7 +2701,7 @@
     },
     {
       "path": "docs/interactions/native-verification.md",
-      "sha256": "9d56a15dcbf8d848c61b30d0c5e33ff1d73f355e689141ae9612c691dc02afd6",
+      "sha256": "08c9c8738ec589a4f4b49e3e671035f800ed53d1021e9793b559e18a2be75367",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
