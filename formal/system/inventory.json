@@ -2701,14 +2701,14 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "25c86d984493a96f83ab2ec72f127783de6c9ccfe813ef3b0b8a8a44a2f05d9c",
+      "sha256": "68775aeb3d400fc9bf0d20438cdf45fe8c14e04cd82840e546812e49644ffc73",
       "authority": "inferred",
-      "authorityBasis": "Status: implementation and installed test journeys pass; protected review, signed releases and production rollout remain pending. No production schema or feature gate changed.",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/interactions/native-verification.md",
-      "sha256": "9d56a15dcbf8d848c61b30d0c5e33ff1d73f355e689141ae9612c691dc02afd6",
+      "sha256": "08c9c8738ec589a4f4b49e3e671035f800ed53d1021e9793b559e18a2be75367",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2722,14 +2722,14 @@
     },
     {
       "path": "docs/interactions/verification-2026-09-29.md",
-      "sha256": "0aeddbdf53e83d9e205be16c08bd9383874e0c589f90083b87cd12273a309da7",
+      "sha256": "273508810c76537770682789c1d827cc65fdd51613f1cf4d8aa4140c8d68b432",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/interactions/verification-2026-09-30.md",
-      "sha256": "82efca0aa7b0a1f82ce64d7a70e30b7af31f88ab501373591e54f88a65368249",
+      "sha256": "e219c44a2ab714d3cd794c0c7742d3f78d24b3331a7ea4c01cff65665c876952",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

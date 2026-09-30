@@ -57,3 +57,15 @@ from its own successful build, boots a dedicated Android 35 device on a Linux
 runner with hardware virtualization, and runs the same isolated HTTP/native
 journeys. It retains only synthetic screenshots; credentials remain ephemeral.
 The aggregate quality check includes this job when explicitly selected.
+
+The `Universal interaction verification` workflow also supports an explicit
+hosted iOS run. Supply `native_ios_run` with a successful mobile simulator-build
+run and `application_sha` with the full immutable root commit to qualify. The
+macOS runner checks out that exact commit, verifies that the artifact's source
+tree equals its pinned mobile tree, verifies the original app signature, builds
+the backend with the project's Stack resolver, and starts an isolated PostgreSQL
+17 database. It runs the same complete HTTP/native runner on a dedicated iOS 18
+simulator. No rebundling, resigning, production credentials or live services are
+used. Only synthetic screenshots are retained; fixture credentials and database
+contents remain on the disposable runner. This optional job is not selected by
+ordinary pull requests, and must pass explicitly before claiming iOS qualification.

@@ -1,6 +1,6 @@
 # Universal interactions — implementation and acceptance
 
-Status: implementation and installed test journeys pass; protected review, signed releases and production rollout remain pending. No production schema or feature gate changed.
+Status (2026-09-30): current installed Android and iOS journeys pass. Integration with the latest main branch is undergoing fresh backend/web CI and protected review. Signed-client and production rollout remain pending. No production schema or feature gate changed. See the [current release evidence](verification-2026-09-30.md); dated results below apply only to their stated revisions.
 User authorization (2026-09-28): implement, test, review, merge, deploy and verify
 universal interactions across web/mobile. This supersedes historical draft-only
 instructions in the old social design packets, but not release protections.
@@ -266,13 +266,14 @@ is pending for build-history and submission verification. Ten release/signing te
 reject stale API hosts, wrong signed associations and missing profile capability.
 Reproduction commands and artifact boundaries: [native verification](native-verification.md).
 
-## Final installed verification (2026-09-29)
+## Earlier installed verification (2026-09-29)
 
-Both installed platforms pass the complete fixture journey. See
+Both installed platforms passed the complete fixture journey at the revisions below. This does not qualify subsequent native changes. See
 [verification evidence](verification-2026-09-29.md) for exact application source,
 artifact provenance, CI run and remaining release boundaries. Earlier failure
 notes above document the regressions that led to the measured native focus,
-safe-area and automation corrections; they are superseded by this result.
+safe-area and automation corrections; the current release boundary is recorded in
+[current release evidence](verification-2026-09-30.md).
 
 The signed-release follow-up isolates the new Expo Crypto/native capability from
 legacy OTA runtimes with `1.0.1-interactions.1`. `app.json` is the runtime authority;
