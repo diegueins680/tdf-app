@@ -1,6 +1,6 @@
 # Universal interactions — implementation and acceptance
 
-Status (2026-09-30): backend/web checks and the current installed Android journey pass. The latest iOS installed journey is not qualified: local disk exhaustion prevented completion. Independent review is approved; remaining device qualification and production rollout are pending. No production schema or feature gate changed. See the [current release evidence](verification-2026-09-30.md); dated results below apply only to their stated revisions.
+Status (2026-09-30): current installed Android and iOS journeys pass. Integration with the latest main branch is undergoing fresh backend/web CI and protected review. Signed-client and production rollout remain pending. No production schema or feature gate changed. See the [current release evidence](verification-2026-09-30.md); dated results below apply only to their stated revisions.
 User authorization (2026-09-28): implement, test, review, merge, deploy and verify
 universal interactions across web/mobile. This supersedes historical draft-only
 instructions in the old social design packets, but not release protections.

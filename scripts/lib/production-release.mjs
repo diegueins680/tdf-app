@@ -1436,6 +1436,15 @@ BEGIN
     RAISE EXCEPTION 'Records ingestion controls, metadata or source locking are incomplete';
   END IF;
 
+  IF to_regclass('public.event_discovery_publication_approval') IS NULL
+    OR to_regprocedure('public.tdf_event_pilot_keys(bigint,bigint)') IS NULL
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='external_event_ref'::regclass
+      AND tgname='event_discovery_pilot_limit_trigger' AND tgenabled='O')
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='event_discovery_source'::regclass
+      AND tgname='event_source_publication_scope' AND tgenabled='O') THEN
+    RAISE EXCEPTION 'Shared event pilot or publication authority is incomplete';
+  END IF;
+
   FOREACH social_table IN ARRAY ARRAY[
     'social_sync_account',
     'social_sync_post',
