@@ -2359,6 +2359,20 @@ BEGIN
   ) <> 7 THEN
     RAISE EXCEPTION 'Account-bound experiment assignment constraints are incomplete';
   END IF;
+  IF to_regclass('public.interaction_runtime') IS NULL
+     OR to_regclass('public.interaction_report_comment_open') IS NULL
+     OR to_regprocedure('interaction_command(bigint,uuid,uuid,jsonb)') IS NULL
+     OR to_regprocedure('interaction_dispatch_events(integer)') IS NULL
+     OR to_regprocedure('interaction_report_reasons(bigint,uuid)') IS NULL
+     OR EXISTS(SELECT 1 FROM interaction_entity_kind WHERE code='artist_update' AND enabled)
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+       AND table_name='interaction_event' AND column_name='mention_party_ids'
+       AND udt_name='_int8' AND is_nullable='NO')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+       AND table_name='interaction_notification' AND column_name='last_event_id'
+       AND data_type='bigint' AND is_nullable='NO') THEN
+    RAISE EXCEPTION 'Canonical interaction schema and review repairs are missing or incomplete';
+  END IF;
 END
 $verify$;`;
 }

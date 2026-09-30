@@ -13857,54 +13857,6 @@
       "reviewed": true
     },
     {
-      "id": "21babc54d68f0c44d55e",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "notification-navigation-2026-09-17",
-      "evidence": {
-        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-        "line": 55,
-        "kind": "array",
-        "name": "mobileFeatureRegistry",
-        "valueCount": 156
-      }
-    },
-    {
-      "id": "90b7090b2e3e6abfa3fb",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Arbitrary URLs or display-name matching could disclose or navigate to the wrong target.",
-      "justification": "This exhaustive dispatch maps persisted target kinds to fixed internal routes. It grants no resource permission and cannot create selectable business values.",
-      "reviewed": true,
-      "reviewBatch": "notification-navigation-2026-09-17"
-    },
-    {
-      "id": "72486d7881b2bef49793",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Arbitrary URLs or display-name matching could disclose or navigate to the wrong target.",
-      "justification": "This exhaustive dispatch maps persisted target kinds to fixed internal routes. It grants no resource permission and cannot create selectable business values.",
-      "reviewed": true,
-      "reviewBatch": "notification-navigation-2026-09-17",
-      "evidence": {
-        "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-        "line": 15,
-        "kind": "switch-cases",
-        "name": "notification.nTargetType",
-        "valueCount": 9
-      }
-    },
-    {
       "id": "1848a88a99f437444f6d",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -13940,25 +13892,6 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3
-      }
-    },
-    {
-      "id": "ffa26fc8430840b541e1",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Reviewed the 116-entry release registry: all 115 current-main entries and immutable introduction commits remain in order, including records ingestion. The additive shared event pilot/publication boundary migration is appended at its original introduction commit; it grants no approval or enablement.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "event-discovery-integration-2026-09-28",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 115
       }
     },
     {
@@ -14053,6 +13986,307 @@
         "name": "resource",
         "valueCount": 3
       }
+    },
+    {
+      "id": "7bf93825f1431a6d52d6",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "f4937ace95206e118d30",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Typed pagination protocol selects implemented ordering algorithms; relevant explicitly falls back to newest until a ranking implementation exists.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/interactions.ts",
+        "line": 14
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "c00c55e2971664dc1166",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Names of typed HTTP client functions. These are executable API operations, not product catalog entries.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/interactions.ts",
+        "line": 19
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "d8058e9fe53556cbf690",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "notification_destination_registry",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+        "line": 14
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "e2d91c3b81ac18393c38",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "interaction_target.comment_policy",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Four server-enforced permission modes select explicit authorization predicates. Owners configure a persisted policy, never arbitrary new predicates.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
+        "line": 25
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "c25090a373c0cc176ce6",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "interaction_subscription and interaction pagination protocol",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "UI selectors reflect server-enforced persisted subscription policy and cursor ordering; this scanner combines two independent controls.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
+        "line": 222
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "8d7556a0b6efa31e8870",
+      "classification": "dynamic-business-catalog",
+      "disposition": "canonical-contract",
+      "specializedModel": "content_reaction_type",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Synthetic reaction fixture for executable optimistic-state properties. Production reaction options always come from the canonical persisted catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/interactions/model.test.ts",
+        "line": 28
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "2c98fd35b78f7fe7eade",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "interaction_notification_event",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Durable event dispatcher discriminator with explicit handling and privacy filters per implemented event operation.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-28_interaction_notifications.sql",
+        "line": 22
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "3a537181b8d95ee64ee0",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "interaction_target.comment_policy",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Persisted authorization modes constrain SQL predicates, with matching API/UI validation; administrators cannot add executable permission modes as data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+        "line": 34
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "f8da5a671d5b46b21271",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "interaction_comment.state",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Deletion and moderation state machine enforced by SQL commands, audit, tombstone semantics and executable state-transition properties.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+        "line": 71
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "157e8175d06c926eb08e",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "interaction_comment.state and body constraint",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Only visible and hidden comments retain nonempty bodies; deleted and administratively removed comments require an empty body. This is the enforced deletion state invariant.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+        "line": 87
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "d26b835131f3d6055dcd",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "interaction_subscription.mode",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Persisted notification delivery policy selects explicitly implemented privacy-respecting dispatcher predicates.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+        "line": 176
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "e843e1d289fa8776884f",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "interaction_event.kind",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Implemented interaction event discriminators determine notification recipient rules, aggregation and authorized exact destinations.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+        "line": 195
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "7db817f41c2fe5485aa8",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "interaction_report.status",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Moderation case lifecycle with guarded review and dismissal transitions, independent of catalog-editable public labels.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+        "line": 226
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "ff027b38ec49a958b3ed",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Typed pagination protocol selects implemented ordering algorithms; relevant explicitly falls back to newest until a ranking implementation exists.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/api/interactions.ts",
+        "line": 15
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "6c64f986bca657f905ce",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Names of typed HTTP client functions. These are executable API operations, not product catalog entries.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/api/interactions.ts",
+        "line": 20
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "5147eb2751a01d8b4c73",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true,
+      "reviewMethod": "deterministic-policy-v3",
+      "reviewBatch": "universal-interactions-2026-09-28",
+      "evidence": {
+        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "line": 55
+      }
+    },
+    {
+      "id": "2c23d0fa2bac40b01a98",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "notification_destination_registry",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+        "line": 15
+      },
+      "reviewBatch": "universal-interactions-2026-09-28"
+    },
+    {
+      "id": "108f31d1bc07c62d8551",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Fixture-only reaction summaries must not become a separate product catalog.",
+      "justification": "Rendered regression fixture verifies own-reaction withdrawal and disabled alternate selections after domain write permission is revoked. Production choices remain server-authoritative.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
+        "line": 141
+      },
+      "reviewBatch": "universal-interactions-2026-09-29"
+    },
+    {
+      "id": "d27cf7f21ec689e1b8d0",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "A destination type must not grant publication or substitute for the authoritative catalog.",
+      "justification": "TypeScript prop union for the three implemented record destination adapters. It selects an existing API target kind; publication membership, visibility, title and capabilities are resolved by the permission-enforcing server summary. This list supplies no selectable catalog values or publication grants.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
+        "line": 10
+      },
+      "reviewBatch": "universal-interactions-2026-09-30"
     }
   ]
 }

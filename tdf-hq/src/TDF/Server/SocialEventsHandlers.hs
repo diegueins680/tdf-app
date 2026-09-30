@@ -128,6 +128,8 @@ import Control.Monad (filterM, forM, forM_, join, unless, void, when)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (ReaderT, ask)
+import qualified TDF.Interactions.Legacy as Interactions
+import qualified TDF.Interactions.Server as Interactions
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
@@ -2976,7 +2978,8 @@ socialEventsServer user =
                 deleteWhere [EventRsvpEventId ==. eventKey]
                 deleteWhere [EventInvitationEventId ==. eventKey]
                 momentKeys <- selectKeysList [EventMomentEventId ==. eventKey] []
-                unless (null momentKeys) $ do
+                canonicalInteractions <- Interactions.activated
+                unless (canonicalInteractions || null momentKeys) $ do
                     deleteWhere [EventMomentReactionMomentId <-. momentKeys]
                     deleteWhere [EventMomentCommentMomentId <-. momentKeys]
                 deleteWhere [EventMomentEventId ==. eventKey]
@@ -3793,6 +3796,8 @@ socialEventsServer user =
     listMoments eventIdStr = do
         Env{..} <- ask
         eventKey <- parseVisibleEventKey eventIdStr
+        allowed <- liftIO $ runSqlPool (Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)) envPool
+        unless allowed $ throwError err404{errBody = "Event not found"}
         _ <- requireExistingEvent envPool eventKey
         liftIO $ loadEventMoments envPool currentPartyId eventKey
 
@@ -3801,6 +3806,8 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
+        allowed <- liftIO $ runSqlPool (Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)) envPool
+        unless allowed $ throwError err404{errBody = "Event not found"}
         _ <- requireExistingEvent envPool eventKey
         mediaUrl <- maybe (throwError err400{errBody = "Moment media URL is required"}) pure (cleanMaybeText (Just emCreateMediaUrl))
         mediaType <- maybe (throwError err400{errBody = "Moment media type must be image or video"}) pure (normalizeMomentMediaType emCreateMediaType)
@@ -3901,16 +3908,21 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
+        allowed <- liftIO $ runSqlPool (Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)) envPool
+        unless allowed $ throwError err404{errBody = "Event not found"}
         _ <- requireExistingEvent envPool eventKey
         momentKey <- parseKeyOr400 "moment" momentIdStr
         _ <- requireMomentForEvent envPool eventKey momentKey
-        reactionTypeId <-
-            liftIO (runSqlPool (loadSelectableMomentReactionTypeId emrrReactionTypeId) envPool)
-                >>= either throwError pure
-        liftIO $
-            runSqlPool
-                (toggleMomentReactionDb (auPartyId user) currentPartyId momentKey reactionTypeId emrrActive now)
-                envPool
+        canonical <- liftIO $ runSqlPool Interactions.activated envPool
+        if canonical then void (Interactions.legacyCommand user "event_moment" (renderKeyText momentKey)
+            (Aeson.object ["operation" Aeson..= ("legacy.reaction" :: T.Text), "reactionTypeId" Aeson..= emrrReactionTypeId,
+                "active" Aeson..= emrrActive]) :: AppM Aeson.Value)
+        else do
+            reactionTypeId <-
+                liftIO (runSqlPool (loadSelectableMomentReactionTypeId emrrReactionTypeId) envPool)
+                    >>= either throwError pure
+            void $ liftIO $ runSqlPool
+                (toggleMomentReactionDb (auPartyId user) currentPartyId momentKey reactionTypeId emrrActive now) envPool
         liftIO $ loadMomentDTO envPool currentPartyId momentKey
 
     commentOnMoment :: T.Text -> T.Text -> EventMomentCommentCreateDTO -> AppM EventMomentCommentDTO
@@ -3918,29 +3930,35 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
+        allowed <- liftIO $ runSqlPool (Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)) envPool
+        unless allowed $ throwError err404{errBody = "Event not found"}
         _ <- requireExistingEvent envPool eventKey
         momentKey <- parseKeyOr400 "moment" momentIdStr
         _ <- requireMomentForEvent envPool eventKey momentKey
         body <- either throwError pure (normalizeMomentCommentBody emccBody)
-        let authorName = resolveMomentAuthorName currentPartyId emccAuthorName
-        commentKey <-
-            liftIO $
-                runSqlPool
-                    ( insert
-                        EventMomentComment
-                            { eventMomentCommentMomentId = momentKey
-                            , eventMomentCommentAuthorPartyId = Just currentPartyId
-                            , eventMomentCommentAuthorName = authorName
-                            , eventMomentCommentBody = body
-                            , eventMomentCommentCreatedAt = now
-                            , eventMomentCommentUpdatedAt = now
-                            }
-                    )
-                    envPool
-        mComment <- liftIO $ runSqlPool (get commentKey) envPool
-        case mComment of
-            Nothing -> throwError err500{errBody = "Moment comment could not be loaded after insert"}
-            Just commentRow -> pure (momentCommentEntityToDTO commentKey commentRow)
+        canonical <- liftIO $ runSqlPool Interactions.activated envPool
+        if canonical then Interactions.legacyCommand user "event_moment" (renderKeyText momentKey)
+            (Aeson.object ["operation" Aeson..= ("legacy.comment" :: T.Text), "body" Aeson..= body])
+        else do
+            let authorName = resolveMomentAuthorName currentPartyId emccAuthorName
+            commentKey <-
+                liftIO $
+                    runSqlPool
+                        ( insert
+                            EventMomentComment
+                                { eventMomentCommentMomentId = momentKey
+                                , eventMomentCommentAuthorPartyId = Just currentPartyId
+                                , eventMomentCommentAuthorName = authorName
+                                , eventMomentCommentBody = body
+                                , eventMomentCommentCreatedAt = now
+                                , eventMomentCommentUpdatedAt = now
+                                }
+                        )
+                        envPool
+            mComment <- liftIO $ runSqlPool (get commentKey) envPool
+            case mComment of
+                Nothing -> throwError err500{errBody = "Moment comment could not be loaded after insert"}
+                Just commentRow -> pure (momentCommentEntityToDTO commentKey commentRow)
 
     -- Live broadcasts
     listLiveBroadcasts :: T.Text -> AppM [EventLiveBroadcastDTO]
@@ -9447,14 +9465,18 @@ loadMomentDTO pool viewerPartyId momentKey =
             case mMoment of
                 Nothing -> liftIO (ioError (userError "Moment not found"))
                 Just momentRow -> do
-                    reactionRows <- selectList [EventMomentReactionMomentId ==. momentKey] [Asc EventMomentReactionCreatedAt]
-                    reactionTypes <- loadMomentReactionTypes reactionRows
-                    commentRows <- selectList [EventMomentCommentMomentId ==. momentKey] [Asc EventMomentCommentCreatedAt]
-                    let reactions = mapMaybe (momentReactionEntityToDTO viewerPartyId reactionTypes) reactionRows
-                        comments = map (\(Entity commentKey commentRow) -> momentCommentEntityToDTO commentKey commentRow) commentRows
-                    when (length reactions /= length reactionRows) $
-                        liftIO (ioError (userError "Moment reaction is missing its canonical reaction type"))
-                    pure (momentEntityToDTO momentKey momentRow reactions comments)
+                    canonical <- Interactions.momentPreview viewerPartyId (renderKeyText momentKey)
+                    case canonical of
+                        Just (reactions,comments) -> pure (momentEntityToDTO momentKey momentRow reactions comments)
+                        Nothing -> do
+                            reactionRows <- selectList [EventMomentReactionMomentId ==. momentKey] [Asc EventMomentReactionCreatedAt]
+                            reactionTypes <- loadMomentReactionTypes reactionRows
+                            commentRows <- selectList [EventMomentCommentMomentId ==. momentKey] [Asc EventMomentCommentCreatedAt]
+                            let reactions = mapMaybe (momentReactionEntityToDTO viewerPartyId reactionTypes) reactionRows
+                                comments = map (\(Entity commentKey commentRow) -> momentCommentEntityToDTO commentKey commentRow) commentRows
+                            when (length reactions /= length reactionRows) $
+                                liftIO (ioError (userError "Moment reaction is missing its canonical reaction type"))
+                            pure (momentEntityToDTO momentKey momentRow reactions comments)
         )
         pool
 
@@ -9462,34 +9484,43 @@ loadEventMoments :: ConnectionPool -> T.Text -> SocialEventId -> IO [EventMoment
 loadEventMoments pool viewerPartyId eventKey =
     runSqlPool
         ( do
-            momentRows <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt]
-            let momentKeys = map entityKey momentRows
-            reactionRows <- selectList [EventMomentReactionMomentId <-. momentKeys] [Asc EventMomentReactionCreatedAt]
-            reactionTypes <- loadMomentReactionTypes reactionRows
-            commentRows <- selectList [EventMomentCommentMomentId <-. momentKeys] [Asc EventMomentCommentCreatedAt]
-            let reactionsByMoment = Map.fromListWith (<>)
-                    [ ( eventMomentReactionMomentId reactionRow
-                      , maybe [] pure (momentReactionEntityToDTO viewerPartyId reactionTypes reactionEntity)
-                      )
-                    | reactionEntity@(Entity _ reactionRow) <- reactionRows
+            canonical <- Interactions.activated
+            if canonical then do
+                sources <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt]
+                previews <- Interactions.momentPreviews viewerPartyId (map (renderKeyText . entityKey) sources)
+                pure [ momentEntityToDTO key row reactions comments
+                     | Entity key row <- sources
+                     , Just (reactions, comments) <- [Map.lookup (renderKeyText key) previews]
+                     ]
+            else do
+                momentRows <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt]
+                let momentKeys = map entityKey momentRows
+                reactionRows <- selectList [EventMomentReactionMomentId <-. momentKeys] [Asc EventMomentReactionCreatedAt]
+                reactionTypes <- loadMomentReactionTypes reactionRows
+                commentRows <- selectList [EventMomentCommentMomentId <-. momentKeys] [Asc EventMomentCommentCreatedAt]
+                let reactionsByMoment = Map.fromListWith (<>)
+                        [ ( eventMomentReactionMomentId reactionRow
+                          , maybe [] pure (momentReactionEntityToDTO viewerPartyId reactionTypes reactionEntity)
+                          )
+                        | reactionEntity@(Entity _ reactionRow) <- reactionRows
+                        ]
+                    commentsByMoment = Map.fromListWith (<>)
+                        [ ( eventMomentCommentMomentId commentRow
+                          , [momentCommentEntityToDTO commentKey commentRow]
+                          )
+                        | Entity commentKey commentRow <- commentRows
+                        ]
+                    canonicalReactionCount = sum (map length (Map.elems reactionsByMoment))
+                when (canonicalReactionCount /= length reactionRows) $
+                    liftIO (ioError (userError "Moment reaction is missing its canonical reaction type"))
+                pure
+                    [ momentEntityToDTO
+                        momentKey
+                        momentRow
+                        (Map.findWithDefault [] momentKey reactionsByMoment)
+                        (Map.findWithDefault [] momentKey commentsByMoment)
+                    | Entity momentKey momentRow <- momentRows
                     ]
-                commentsByMoment = Map.fromListWith (<>)
-                    [ ( eventMomentCommentMomentId commentRow
-                      , [momentCommentEntityToDTO commentKey commentRow]
-                      )
-                    | Entity commentKey commentRow <- commentRows
-                    ]
-                canonicalReactionCount = sum (map length (Map.elems reactionsByMoment))
-            when (canonicalReactionCount /= length reactionRows) $
-                liftIO (ioError (userError "Moment reaction is missing its canonical reaction type"))
-            pure
-                [ momentEntityToDTO
-                    momentKey
-                    momentRow
-                    (Map.findWithDefault [] momentKey reactionsByMoment)
-                    (Map.findWithDefault [] momentKey commentsByMoment)
-                | Entity momentKey momentRow <- momentRows
-                ]
         )
         pool
 

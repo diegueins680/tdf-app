@@ -1,3 +1,4 @@
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useState } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -120,6 +121,7 @@ function MemoryCard({ memory }: { memory: FanClubMemoryDTO }) {
       <CardContent>
         <Stack spacing={1}>
           <Typography variant="h6">{memory.fcmTitle}</Typography>
+          <InteractionPanel kind="club_memory" entityKey={String(memory.fcmId)} />
           {memory.fcmDescription && (
             <Typography variant="body2" color="text.secondary">
               {memory.fcmDescription}

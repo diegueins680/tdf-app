@@ -17,6 +17,9 @@ import qualified TDF.Social.RelationshipReads as SocialReads
 import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
 import TDF.Social.Server (socialV2Server)
+import qualified TDF.Interactions.Legacy as InteractionLegacy
+import qualified TDF.Interactions.Server as InteractionsServer
+import qualified TDF.Interactions.Notifications as InteractionNotifications
 import           Control.Applicative ((<|>))
 import           Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
 import           Control.Concurrent (forkIO)
@@ -746,6 +749,7 @@ server env =
   :<|> inventoryPublicServer
   :<|> feedbackServer
   :<|> CatalogServer.publicCatalogServer
+  :<|> InteractionsServer.publicInteractionsServer
   :<|> DirectoryServer.directoryPublicServer
   :<|> MerchServer.merchPublicServer
   :<|> publicUpcomingEventsServer
@@ -3814,6 +3818,7 @@ protectedServer user =
   :<|> OperationsServer.operationsServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
   :<|> ReviewsServer.reviewsProtectedServer user
+  :<|> InteractionsServer.interactionsServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
 navigationPreferencesServer user =
@@ -8454,18 +8459,17 @@ artistUpdateOwnPhoto user ArtistProfilePhotoUpdate{..} = do
 
 notifList :: AuthedUser -> Maybe Bool -> AppM [NotificationDTO]
 notifList user mUnreadOnly = do
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    let filters = [NotificationRecipientPartyId ==. auPartyId user]
-                  ++ [NotificationIsRead ==. False | mUnreadOnly == Just True]
-    notifs <- selectList filters [Desc NotificationCreatedAt, LimitTo 50]
-    pure $ map notificationToDTO notifs
+  result <- runDB $ InteractionNotifications.notificationRows user (mUnreadOnly == Just True) Nothing
+  rows <- either throwError pure result
+  pure (map notificationToDTO rows)
 
 notifGet :: AuthedUser -> Int64 -> AppM NotificationDTO
 notifGet user ident = do
-  entity <- runDB (selectFirst [NotificationId ==. toSqlKey ident,
-    NotificationRecipientPartyId ==. auPartyId user] []) >>= maybe (throwError err404) pure
-  pure (notificationToDTO entity)
+  result <- runDB $ InteractionNotifications.notificationRows user False (Just ident)
+  rows <- either throwError pure result
+  case rows of
+    [entity] -> pure (notificationToDTO entity)
+    _ -> throwError err404
 
 notificationToDTO :: Entity Notification -> NotificationDTO
 notificationToDTO (Entity nid n) = NotificationDTO
@@ -8482,9 +8486,8 @@ notificationToDTO (Entity nid n) = NotificationDTO
 
 notifCount :: AuthedUser -> AppM NotificationCountDTO
 notifCount user = do
-  Env pool _ <- ask
-  cnt <- liftIO $ flip runSqlPool pool $
-    count [NotificationRecipientPartyId ==. auPartyId user, NotificationIsRead ==. False]
+  result <- runDB $ InteractionNotifications.notificationUnreadCount user
+  cnt <- either throwError pure result
   pure NotificationCountDTO { ncUnread = cnt }
 
 notifMarkRead :: AuthedUser -> Int64 -> AppM NoContent
@@ -8523,7 +8526,8 @@ discoveryFeed user mLimit = do
       case boostedContentTargetType bc of
         "post" -> do
           let postKey = toSqlKey (fromIntegral (boostedContentTargetId bc)) :: FanClubPostId
-          mPost <- get postKey
+          readable <- InteractionLegacy.visible (auPartyId user) "club_post" (T.pack (show (fromSqlKey postKey)))
+          mPost <- if readable then get postKey else pure Nothing
           case mPost of
             Nothing -> pure Nothing
             Just p -> do
@@ -8897,7 +8901,19 @@ searchParties
   -> Maybe Int64
   -> Maybe Int
   -> AppM PartySelectorPageDTO
-searchParties user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit = do
+searchParties user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit
+  | (T.toLower . T.strip <$> rawContext) == Just "interaction_mention" = do
+      queryText <- either throwError pure (validatePartySelectorQuery rawQuery)
+      limit <- either throwError pure (validatePartySelectorLimit rawLimit)
+      scope <- maybe (throwError err400 {errBody="scopeId is required"}) pure rawScopeId
+      DirectoryServer.consumeRate user "party_selector:interaction_mention" 300
+      InteractionsServer.searchMentions user scope queryText rawCursor (Just limit)
+  | otherwise = searchPartiesStandard user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit
+
+searchPartiesStandard
+  :: AuthedUser -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Bool -> [Int64] -> Maybe Int64 -> Maybe Int
+  -> AppM PartySelectorPageDTO
+searchPartiesStandard user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit = do
   query <- either throwError pure (validatePartySelectorQuery rawQuery)
   context <- either throwError pure (validatePartySelectorContext rawContext)
   for_ (partySelectorContextModule context) (requireModule user)

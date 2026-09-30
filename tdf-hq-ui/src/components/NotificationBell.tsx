@@ -8,6 +8,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { getAnalyticsClient } from '../analytics/posthog';
 import { Fans } from '../api/fans';
 import type { NotificationDTO } from '../api/types';
 import LazyPaginatedList from './LazyPaginatedList';
@@ -125,6 +126,7 @@ export default function NotificationBell() {
     if (event.button !== 0 && event.button !== 1) return;
     if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
       event.preventDefault();
+      getAnalyticsClient()?.capture('notification_opened', { platform: 'web', notification_type: notification.nType });
       if (!notification.nIsRead) markReadMut.mutate(notification.nId);
       setAnchorEl(null);
       navigate(notificationTargetPath(notification) ?? notificationLink(notification), { state: { activatedNotificationId: notification.nId } });

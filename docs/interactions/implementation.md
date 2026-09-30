@@ -1,0 +1,296 @@
+# Universal interactions — implementation and acceptance
+
+Status (2026-09-30): current installed Android and iOS journeys pass. Integration with the latest main branch is undergoing fresh backend/web CI and protected review. Signed-client and production rollout remain pending. No production schema or feature gate changed. See the [current release evidence](verification-2026-09-30.md); dated results below apply only to their stated revisions.
+Record discussion publication follows approved editorial membership, independently
+of the feed's preview requirements and 200-membership presentation window. A
+specific `/records` link outside that rendered window performs one authorized
+canonical lookup and displays the requested title/discussion with accessible
+focus. It does not expand the feed, scan pages, grant publication, or add missing
+media cards to ordinary browsing. Denials remove cached detail immediately.
+
+User authorization (2026-09-28): implement, test, review, merge, deploy and verify
+universal interactions across web/mobile. This supersedes historical draft-only
+instructions in the old social design packets, but not release protections.
+
+## Observed baseline
+
+Root main `7e7106b36e7ac427711c2f64af650527d619f9ce`; backend production
+`cc244b1f86603055997b51379b297baebfd3e7ce`; mobile main `2a0e5a9`.
+API: Hetzner / PostgreSQL 17.8, reviewed SQL migrations (115), Persistent boot
+migration disabled. Web: Cloudflare Pages. Old TDF Fly API stopped/cordoned;
+shared Fly database remains for Trader and must not be changed by this project.
+Production inspection used read-only transactions and schema/aggregate metadata;
+no private discussion bodies or notification text were included in inventory output.
+
+| Existing implementation | Current authority / reuse decision |
+| --- | --- |
+| FanClubPost, parentId replies; ServerFanClub | Preserve posts, IDs, ownership and club permission. Replies become canonical discussion comments with stable legacy mappings; existing endpoints become adapters. |
+| fan_club_post_reaction, fan_club_memory_reaction | One slot per actor/target already. Consolidate storage and retain compatibility adapters and migration journal. No new parallel like table. |
+| EventMomentReaction, EventMomentComment | Preserve moment/comment IDs and first-value evidence. Adapt legacy operations to shared rules; cross-event parent and identity validation required. |
+| content_reaction_type vs reaction_type catalogs | Reuse catalog authority; explicit mappings for existing types. Four default selectable types; retain historical extra reaction identities. |
+| Social v2 pair/preferences/session/relationship SQL + Haskell | Already reviewed account/block/consent boundary; absent from live DB. Stage all compatibility prerequisites together before new block controls; never grant consent from legacy follow rows. |
+| PartyFollow, FanFollow, ArtistFollow, club membership/officers | Distinct semantics. Reuse each only for its actual ownership/access/subscription contract. |
+| Directory profile blocks, moderation, reviews, classifieds | Compose canonical profile visibility/blocking. Reviews are transaction-backed reputation, not generic comments; preserve review authority separately. |
+| notification + target_key, generated web/native resolver | Existing inbox, unread state, recipient ownership and route generator are canonical. Add typed discussion destinations and aggregated events here. |
+| PartySelector / UserSelector, /parties/search | Reuse presentation/search infrastructure with a target-scoped mention context; never expose CRM-only candidate fields to public discussions. |
+| EngagementEvent and PostHog conventions | Interaction analytics use identifiers/actions only, no comment body or mention text. |
+| OperationsMention; internal feedback comments/history | Operational assignment and internal case notes, not public discussion. Keep scoped existing authorities. |
+| SocialSyncPost external counts | Provider metrics are external observations, not local reactions. Never import aggregate numbers as local user engagement. |
+| Existing polling/query invalidation, Expo router | Reuse bounded query refresh and native navigation; no new websocket service. |
+
+Live estimates from pg_stat_user_tables: both fan reaction tables, fan posts,
+event moment reactions/comments, directory blocks and synced posts currently zero;
+notification approximately 30, PartyFollow 116, FanFollow 52, engagement events 5.
+These estimates are not migration proof: exact counts, references, checksums and
+concurrent-write fencing must be captured during the final rehearsal/cutover.
+Social v2 tables are absent, although their code is present. Do not mistake a
+passing prototype fixture for production rollout.
+
+## Canonical decisions
+
+- Explicit target-kind registry plus trusted domain adapters. Entity existence,
+  visibility, live ownership and capability are checked server-side on every
+  operation. Unknown kinds/system records default denied. Target registration is
+  a server concern, never an arbitrary client-owned resource.
+- Eligible standalone entities: club posts/memories, event moments, published
+  events, recordings/videos/audio, recording sessions, record and artist releases,
+  classified ads/opportunities, published directory profiles where appropriate.
+  Artist/label/venue updates use their existing post/media authorities. Attached
+  photos/video/audio share their containing publication's discussion unless they
+  have an independently persisted publication identity. No duplicate media threads.
+- Label recordings, sessions and record releases belong to the institutional
+  catalog. Historical `created_by` remains audit metadata, never a social owner
+  or notification recipient. Current catalog module access plus `catalog.update`
+  grants policy/hide authority; revocation serializes with interaction commands.
+  Discussion subscriptions provide notifications without inventing a human owner.
+  Institutional targets offer everyone/mentioned/off; follower-only mode requires
+  an actual publication owner and is rejected server-side otherwise.
+- One active reaction slot per actor/target, persisted catalog type. Defaults:
+  like, heart, fire, clap. Changes/removal are desired-state operations, not unsafe
+  retryable toggles. Old toggle endpoints preserve their documented compatibility.
+- One comment model: stable UUID, immutable target/parent/root, revision, client
+  request identity, tombstone/moderation state, plain text plus stable mention
+  spans, extensible attachment relation. Replies stay flat under their root in
+  presentation beyond two visual levels. Parent deletion never deletes replies.
+- Keyset pages for roots/replies/reactors; separate authorized target-comment
+  resolution for deep links. Newest is the default until meaningful relevance
+  signals exist. Hidden/blocked rows are filtered before pagination and counts.
+- Comment policy is everyone/followers/mentioned/off; composes with entity access,
+  current sessions, account state, bilateral blocks and explicit moderation scopes.
+  An owner may hide a comment on their content but cannot edit it or gain admin
+  removal rights. Author deletion, owner hide, report, block and moderator removal
+  are separate audited transitions.
+- Existing notification rows remain canonical. Aggregate reactions by recipient,
+  target and time bucket; dedupe comment/reply/mention recipients. Revalidate
+  current visibility/block/preferences when listing/delivering. Generic audited
+  moderation notices to the affected author survive social blocks, retain mute
+  and account/retirement checks, and grant no publication access. No message bodies
+  in analytics; no new outbound email/push sender implied by this task.
+- Cache entries never grant rights. Reads are authorized at their database
+  snapshot; writes serialize with revocation/block changes. Idempotency replay
+  checks current authority and rejects reuse with a different payload.
+- Additive migration with legacy identity mapping and retained source evidence.
+  Rollback after new writes pauses features while preserving data and new privacy
+  enforcement; it cannot route users to legacy paths that ignore blocks.
+
+## Delivery checklist
+
+- [x] Isolated root/mobile worktrees; inspect live architecture and schema.
+- [x] Complete source/caller inventory and adapter authorization matrix.
+- [x] Canonical schema, legacy conversion and rollback rehearsal.
+- [x] Backend operations, session/permissions, moderation and abuse controls.
+- [x] Shared web/native components and every eligible existing entry point.
+- [x] Mentions, notification aggregation/preferences, exact deep-link resolution.
+- [x] Unit/property/model/database/concurrency/migration coverage.
+- [x] Desktop/mobile interaction flows, semantic controls, focus regressions and browser accessibility checks.
+- [x] Large synthetic discussion EXPLAIN/query-budget evidence.
+- [x] OpenAPI/generated contracts, documentation, full relevant local checks.
+- [ ] Independent repository review, protected green CI, merge and immutable build.
+- [ ] Backup/guarded migration/recovery drill/deployment/live verification.
+
+## Verification and release state (2026-09-28)
+
+Pull requests: root [470](https://github.com/diegueins680/tdf-app/pull/470)
+is ready for independent review. Native [116](https://github.com/diegueins680/TDF-mobile/pull/116)
+and release-runtime follow-up [117](https://github.com/diegueins680/TDF-mobile/pull/117)
+are merged. Production
+schema and activation gate remain unchanged. Independent review, full green CI,
+installed native verification and deployment are still release requirements.
+The production restore rehearsal has passed (details below).
+
+- Full normal Stack build and the full Stack test suite passed after compatibility
+  updates. PostgreSQL 17 hosted property checks and fresh 137-entry migration
+  rehearsal pass, including source retirement, legacy conversion, moderation,
+  current privacy, session revocation and concurrency. Existing source engagement
+  remains archived and mapped; no aggregate provider counts become local reactions.
+- Real HTTP checks pass publication, desired reactions, duplicate/conflicting
+  request keys, comments/replies, edit, parent tombstone, exact notification
+  context, legacy adapters, pagination, blocking, bearer revocation, scoped mention
+  search/discoverability, stable mention IDs, notification preferences and owner
+  mentioned-only/off policies.
+- All ten real-API browser journeys pass across desktop, phone and tablet Chromium,
+  Firefox and WebKit, including
+  exact notification navigation, focused deep links, editing and parent deletion.
+  Browser axe serious/critical findings are zero. Native rendered flows and all
+  523 native tests pass. Type/lint/release checks are rerun after follow-up edits.
+- Rendered pagination test walks eight pages, verifies only five remain, verifies
+  refresh issues five page requests, and navigates backward without a full-tree
+  fetch. Both clients share cursor-history semantics; each response stays at 20
+  comments. Earlier page controls restore evicted pages.
+- Synthetic 10,000-comment / 2,000-reactor PostgreSQL 16 measurements: summary
+  154 ms, root page 44 ms, replies 21 ms, deep context 38 ms. Nested auto_explain
+  confirms batched author policy and indexed reaction lookup; instrumentation
+  overhead raises these timings. These are local measurements, not production SLOs.
+- Expo simulator build was rejected by the monthly Free-plan quota. The GitHub
+  macOS simulator build passed and its bundled app is installed on a dedicated
+  iOS 18.3 simulator; the final unmodified artifact passes the full installed journey.
+  Its ad hoc simulator artifact is not a store release. Signed release workflows
+  now point to the canonical API; checked-in native projects include link
+  entitlements/intent filters and the locked ExpoCrypto dependency.
+- Root CI uncovered stale test mocks, generated specification inventory and
+  reviewed catalog decisions, a setup-node major mismatch, an outdated mobile
+  gitlink, and overlap between mocked persona and real-API test discovery. Fixes
+  are under verification. The external Datadog monitor was retargeted with unchanged assertions;
+  its GitHub rerun passed (details below).
+
+### Content integration and boundaries
+
+| Authority | Web entry points | Native entry points |
+| --- | --- | --- |
+| club_post | FanClubPage feed and posts | Existing fan-club web destination; native opaque discussion links |
+| club_memory | FanClubPage, FanClubMemberProfilePage | Existing web destination; native opaque discussion links |
+| recording, recording_session, record_release | RecordsPublicPage | Existing Records web destination; native opaque discussion links |
+| artist_release | ArtistPublicPage, ReleaseFeed | Existing artist web destination; native opaque discussion links |
+| event | SocialEventDetailPage, DirectoryPublicDetailPage | eventDetail, DirectoryPublicDetailScreen |
+| event_moment | SocialEventDetailPage | EventMomentCard for persisted remote moments |
+| directory_profile | DirectoryPublicDetailPage | DirectoryPublicDetailScreen |
+| classified / opportunities | DirectoryPublicDetailPage | DirectoryPublicDetailScreen |
+| artist_update | Reserved and disabled: social_sync_post is private ingestion with no publication authority | No target registration or public/authenticated discussion; future adoption requires an explicit reviewed publication model |
+
+Label/venue publication content follows its actual persisted post/media authority.
+Operational venue records do not acquire social discussions merely because they
+have a directory route. Private device drafts retain device-only editing controls;
+remote failures never become successful local engagement. Verified transaction
+reviews, operational notes, and external provider metrics retain distinct models.
+
+Compatibility clients receive bounded moment previews (20 comments/100 reaction
+identities); exact totals and full traversal are canonical interaction endpoints.
+Old array-count-only clients can undercount beyond that preview and need the new
+client. Catalog administrative usage_count is a legacy summary; canonical target
+counters and reference-protection triggers remain authoritative for this layer.
+
+### Verified mobile association identities
+
+Read from the signed iOS artifact and Google Play Console App signing page on
+2026-09-28 (public certificate metadata only):
+
+- iOS application identifier: `83J23NPXG7.com.tdfrecords.app`.
+- Android package: `com.tdf.records`.
+- Google Play app-signing SHA-256:
+  `08:76:1D:24:F5:A8:45:2C:89:11:65:82:C7:C8:5D:0A:E2:B1:A7:24:C1:B4:8B:C0:7B:B1:9F:A2:8A:80:8E:B0`.
+- Upload/EAS certificate SHA-256 (distinct from Play distribution):
+  `34:E4:2C:EB:CD:7B:CA:3E:6D:F7:10:BD:8B:B1:0A:2C:76:CA:69:E2:1D:D8:E1:24:7A:3D:43:A6:62:CB:24:32`.
+
+Set the existing Cloudflare association-function deployment variables
+`APPLE_TEAM_ID` and `ANDROID_APP_LINK_SHA256_CERT_FINGERPRINTS` during release.
+Include both Android certificates when supporting EAS and Play builds. Native
+associated domains include `www.tdfrecords.net` and the existing Pages host;
+event routes remain supported alongside discussion links. The bare
+`tdfrecords.net` domain is a separate redirect-only host, so it is excluded from
+native verified-host declarations. Copied discussion links use the canonical
+www host. Association endpoints and an installed signed build still require
+deployed verification.
+
+Actual desktop and Pixel 7 browser flows passed against the isolated real API:
+pagination/disclosure, reactions, deep focus, authoring/replies, notification
+navigation, edit and parent deletion. Browser axe serious/critical findings: zero.
+Five native rendered flows passed optimistic rollback, same-key draft retries,
+progressive disclosure, linked-reply accessibility announcement/tombstone and
+immediate removal of cached bodies after access revocation.
+
+### Production-data and monitoring verification
+
+A fresh 72 MB production database was exported and restored into the isolated
+`tdf_interaction_restore_20260928` PostgreSQL 17.8 database. The complete reviewed
+137-migration manifest applied without error. First activation, repeated enable,
+pause, and resume passed; the conversion ledger remained one row and source counts
+matched migrated counts. Exact production legacy post/reply/reaction/moment counts
+were zero; all 30 existing notifications survived without any rehearsal delivery.
+The clone is paused and has no application workers. Live production schema/gates
+remain unchanged. Nonempty migration behavior is covered by synthetic properties.
+
+The full Stack suite passed 3,539 examples with zero failures and six pre-existing
+pending examples after preserving the pre-interaction SQLite inbox path. Installed
+interaction authority always retains current bearer locks, including while paused.
+The isolated HTTP runner now joins the backend CI job and can optionally run the
+real-browser suite using `TDF_INTERACTION_BROWSER_E2E=1`.
+
+Datadog API health test `r2d-i82-3jy` now targets
+`https://api.tdfrecords.net/health`. Browser form comparison verified all other 85
+fields unchanged. Persisted assertions remain HTTP 200, JSON content type,
+`$.status == ok`, and `$.db == ok`; location, retries, scheduling state and blocking
+CI rule are unchanged. GitHub Datadog rerun `36468621062` passed. No unrelated
+monitor or application was changed.
+
+The records thumbnail regression fixture now returns the actual unavailable-target
+404 contract for synthetic rows. All ten records tests pass across five browser
+configurations. The real HTTP suite also verifies that repeated unauthorized
+moderation attempts exhaust the account write budget and return 429.
+
+The root revision `4c9ef6a3891733a3f0f687fb43efc57242ed5521` passed all 23
+GitHub checks, including the complete persona browser and backend HTTP suites.
+Installed iOS passed login, reaction, comment creation, cold notification opening,
+automatic exact-reply focus, editing, parent deletion, reply preservation,
+collapse and expansion, followed by authoritative API assertions. Verification
+used the corrected ad hoc simulator binary with locally rebuilt feature
+JavaScript; it does not establish store signing or HTTPS association. The native
+focus regression waits for list layout, includes header height when retrying an
+unmeasured row, and announces only a visible target. Seven rendered regressions
+and type/lint pass. The unmodified hosted `a3c4b927` artifact then exposed an
+additional premature-viewability case: the reply was loaded but remained below
+the viewport. Follow-up `2f5db09` confirms native heading/viewport coordinates,
+corrects scroll offsets and refuses stale virtualized visibility before announcing
+focus. The rendered regression reproduces an offscreen view token and verifies
+both correction and delayed announcement. The locally rebundled follow-up passed
+notification focus, editing, parent deletion, reply retention and collapse/expand,
+followed by authoritative API assertions. Fresh hosted artifacts and their full
+installed journeys remain required.
+
+The initial Android CI device installed and launched the APK successfully. Its
+journey stopped at the welcome screen; the Maestro setup now follows the existing
+account action before login. A subsequent run failed within Maestro's combined
+clear-and-launch operation despite a successful direct Android activity launch.
+The fixture now clears state separately and opens the registered auth intent.
+That retry reached the authenticated discussion, exposing Android system-bar overlap
+from React Native's legacy SafeAreaView. Follow-up `7f2e885` uses the existing
+safe-area-context provider. Seven rendered regressions, type checking and lint
+pass. All other jobs in run `36485841756` passed, including backend, migrations,
+API and persona browser journeys. No complete Android journey pass is claimed yet.
+The older local iOS distribution profile lacks Associated Domains and release
+preflight rejects it. GitHub's stored profile passed that preflight in signed
+release run 36493156554; the local profile is not used. App Store Connect access
+is pending for build-history and submission verification. Ten release/signing tests
+reject stale API hosts, wrong signed associations and missing profile capability.
+Reproduction commands and artifact boundaries: [native verification](native-verification.md).
+
+## Earlier installed verification (2026-09-29)
+
+Both installed platforms passed the complete fixture journey at the revisions below. This does not qualify subsequent native changes. See
+[verification evidence](verification-2026-09-29.md) for exact application source,
+artifact provenance, CI run and remaining release boundaries. Earlier failure
+notes above document the regressions that led to the measured native focus,
+safe-area and automation corrections; the current release boundary is recorded in
+[current release evidence](verification-2026-09-30.md).
+
+The signed-release follow-up isolates the new Expo Crypto/native capability from
+legacy OTA runtimes with `1.0.1-interactions.1`. `app.json` is the runtime authority;
+release checks enforce native mirrors, and artifact qualification checks actual
+compiled Android resources and iOS Expo.plist plus embedded configs. Old candidates
+were cancelled before distribution. Native main is now `16202bf72f04e85f9f2bf624006eac7c033afa55`;
+root pins its merged feature ancestor `5eb05bc`. The interaction screen/API code
+is unchanged from the successful installed journeys. No OTA bundle or channel
+mapping was published. Signed artifact qualification remains a release gate.
+
+Canonical comment create/edit rejects bodies consisting only of Unicode whitespace (including tabs, line breaks, nonbreaking spaces and BOM), independently of database locale. Nonblank multiline text is preserved verbatim so mention offsets remain stable. Rejected commands do not create comments, advance revisions/counts, persist idempotency results or enqueue notification events. Existing legacy text is not rewritten by this validation repair. Executable command properties generate blank variants and verify these invariants; HTTP coverage exercises both create and edit.
+
+Reports, hides, removals, restores and report decisions require a JSON string reason with at most 1,000 characters and at least one non-whitespace character. Invalid reasons leave comment state, revisions, reports, audits, requests and notification events unchanged. Existing moderation evidence is preserved.

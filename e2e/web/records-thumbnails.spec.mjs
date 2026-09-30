@@ -31,6 +31,8 @@ async function fixture(page, baseURL, verified) {
     }
     if (url.pathname === '/records/feed') return route.fulfill({ json: { locale: 'es', revision: 1, collections: [], releases: [], sessions: [], recordings } });
     if (['fetch', 'xhr'].includes(request.resourceType())) {
+      // These synthetic YouTube rows have no persisted interaction target.
+      if (url.pathname.startsWith('/public/interactions/')) return route.fulfill({ status: 404, json: { error: 'unavailable' } });
       if (url.pathname === '/session') return route.fulfill({ status: 401, json: {} });
       if (url.pathname.startsWith('/catalog')) return route.fulfill({ json: { catalogs: [], items: [], defaults: [] } });
       return route.fulfill({ json: [] });
