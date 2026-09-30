@@ -1,6 +1,7 @@
 import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import RecordThumbnail from '../features/records/RecordThumbnail';
+import { SelectedRecordPublication } from '../features/records/SelectedRecordPublication';
 import { useTranslation } from 'react-i18next';
 import { useContactCreation } from '../hooks/useContactCreation';
 import { logger } from '../utils/logger';
@@ -1261,7 +1262,7 @@ export default function RecordsPublicPage() {
               {recordingsIntro}
             </Typography>
           </Stack>
-          {recordingSelection.notice}
+          <SelectedRecordPublication kind="recording" selection={recordingSelection} loading={recordingsLoading} />
           {recordingsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedRecordings')} />
@@ -1302,7 +1303,7 @@ export default function RecordsPublicPage() {
               {releasesIntro}
             </Typography>
           </Stack>
-          {releaseSelection.notice}
+          <SelectedRecordPublication kind="record_release" selection={releaseSelection} loading={releasesLoading} />
           {releasesLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedReleases')} />
@@ -1344,7 +1345,7 @@ export default function RecordsPublicPage() {
               {sessionsIntro}
             </Typography>
           </Stack>
-          {sessionSelection.notice}
+          <SelectedRecordPublication kind="recording_session" selection={sessionSelection} loading={sessionsLoading} />
           {sessionsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedSessions')} />

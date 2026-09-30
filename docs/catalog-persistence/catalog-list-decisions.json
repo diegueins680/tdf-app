@@ -14272,6 +14272,21 @@
         "line": 141
       },
       "reviewBatch": "universal-interactions-2026-09-29"
+    },
+    {
+      "id": "d27cf7f21ec689e1b8d0",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "A destination type must not grant publication or substitute for the authoritative catalog.",
+      "justification": "TypeScript prop union for the three implemented record destination adapters. It selects an existing API target kind; publication membership, visibility, title and capabilities are resolved by the permission-enforcing server summary. This list supplies no selectable catalog values or publication grants.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
+        "line": 10
+      },
+      "reviewBatch": "universal-interactions-2026-09-30"
     }
   ]
 }

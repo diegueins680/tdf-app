@@ -1,6 +1,13 @@
 # Universal interactions — implementation and acceptance
 
 Status (2026-09-30): current installed Android and iOS journeys pass. Integration with the latest main branch is undergoing fresh backend/web CI and protected review. Signed-client and production rollout remain pending. No production schema or feature gate changed. See the [current release evidence](verification-2026-09-30.md); dated results below apply only to their stated revisions.
+Record discussion publication follows approved editorial membership, independently
+of the feed's preview requirements and 200-membership presentation window. A
+specific `/records` link outside that rendered window performs one authorized
+canonical lookup and displays the requested title/discussion with accessible
+focus. It does not expand the feed, scan pages, grant publication, or add missing
+media cards to ordinary browsing. Denials remove cached detail immediately.
+
 User authorization (2026-09-28): implement, test, review, merge, deploy and verify
 universal interactions across web/mobile. This supersedes historical draft-only
 instructions in the old social design packets, but not release protections.

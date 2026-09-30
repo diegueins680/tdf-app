@@ -70,3 +70,15 @@ reads, target registration, deep links, commands and engagement preservation.
 All eight property suites and ten concurrency groups passed on fresh PostgreSQL 17, including six publication-withdrawal interleavings across the three record kinds. These exercise both membership deletion and
 collection withdrawal while a comment transaction is admitted. Focused actual HTTP checks also pass anonymous/authenticated withdrawal, denied reactions/comments and deep links, and recovery for all three publication kinds. The full HTTP suite includes these cases. This repair leaves the
 web/native code and API shapes unchanged; full hosted checks remain required. The encrypted production restore accepted all 158 migrations and repeated application, retained all 77 notifications and remains paused.
+
+The final web destination repair handles a published record beyond the bounded
+feed or without a media preview through one permission-enforcing detail lookup.
+It preserves publication authority and existing discussion identities when feed
+position or preview availability changes. Twelve rendered regressions cover all
+three record kinds, missing previews, denial after cached success, retry, no
+duplicate ordinary-grid lookup and malformed identifiers. All 36 focused
+selection/panel tests pass, as do real-API browser journeys on Chromium desktop, phone and tablet, Firefox
+and WebKit across the three beyond-window and two preview-less cases. Keyboard
+collapse/expansion and axe checks of the selected publication pass in all five
+projects with no serious or critical violations. Type/lint pass.
+Backend, native artifacts, schemas and API shapes are unchanged by this web fix.

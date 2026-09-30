@@ -114,3 +114,51 @@ test('publication links select a later catalog page and focus its media @critica
     await expect(page.getByText('Esta publicación ya no está disponible o no tienes acceso.')).toBeVisible();
   }
 });
+
+test('record destinations remain reachable outside the feed window or without a preview @critical', async ({ page, context, request }) => {
+  const fixtures = [];
+  for (const [kind, parameter, table] of [['recording', 'recording', 'recording'], ['recording_session', 'session', 'recording_session'], ['record_release', 'release', 'record_release']]) {
+    const id = execFileSync('psql', ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', fixture.database, '-c',
+      `SELECT id FROM ${table} WHERE interaction_resolve('${kind}',id::text,NULL) IS NOT NULL ORDER BY id LIMIT 1;`], { encoding: 'utf8' }).trim();
+    expect(id).toBeTruthy();
+    const response = await request.get(`${fixture.base}/public/interactions/targets/${kind}/${id}`);
+    expect(response.status()).toBe(200);
+    fixtures.push({ kind, parameter, id, summary: await response.json() });
+  }
+  const others = Array.from({ length: 200 }, (_, i) => ({ id: `92510000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+    title: `Feed preview ${i}`, sortOrder: i, contributors: [], resources: [{ kind: 'video', primary: true,
+      providerCode: 'youtube', externalCode: `fixture${i}`, url: 'https://example.test/video', providerMetadata: {} }] }));
+  let feed; const summaryLookups = [];
+  await page.route('**/*', async route => {
+    const incoming = route.request(); const url = new URL(incoming.url());
+    if (url.pathname === '/records/feed') return route.fulfill({ json: feed });
+    if (url.pathname.startsWith('/public/interactions/')) {
+      summaryLookups.push(url.pathname);
+      const response = await context.request.get(fixture.base + url.pathname + url.search);
+      return route.fulfill({ response });
+    }
+    if (['fetch', 'xhr'].includes(incoming.resourceType())) return route.fulfill({ status: 404, json: {} });
+    if (!['127.0.0.1', 'localhost'].includes(url.hostname)) return route.abort();
+    return route.continue();
+  });
+  for (const source of fixtures) {
+    for (const scenario of source.kind === 'record_release' ? ['window'] : ['window', 'no-preview']) {
+      const items = scenario === 'window' ? others : [{ id: source.id, title: source.summary.title, sortOrder: 0, contributors: [], resources: [] }];
+      feed = { recordings: source.kind === 'recording' ? items : [], sessions: source.kind === 'recording_session' ? items : [], releases: source.kind === 'record_release' ? items : [] };
+      summaryLookups.length = 0;
+      await page.goto(`/records?${source.parameter}=${source.id}`);
+      const card = page.locator('.MuiCard-root[tabindex="-1"]').filter({ has: page.getByRole('heading', { name: source.summary.title, exact: true }) });
+      await expect(card).toBeVisible(); await expect(card).toBeFocused(); await expect(card).toBeInViewport();
+      await expect(card.getByRole('region', { name: 'Reacciones y conversación' })).toBeVisible();
+      expect(summaryLookups.filter(path => path === `/public/interactions/targets/${source.kind}/${source.id}`).length).toBeLessThanOrEqual(3);
+      await expect(page.getByText('Esta publicación ya no está disponible o no tienes acceso.')).toHaveCount(0);
+    }
+  }
+  const selected = page.locator('.MuiCard-root[tabindex="-1"]');
+  const disclosure = selected.getByRole('region', { name: 'Reacciones y conversación' }).locator('button[aria-controls]').first();
+  await disclosure.focus(); await page.keyboard.press('Enter'); await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('Enter'); await expect(disclosure).toHaveAttribute('aria-expanded', 'true');
+  await page.addScriptTag({ content: axe.source });
+  const violations = await selected.evaluate(async node => (await window.axe.run(node)).violations.filter(v => ['serious', 'critical'].includes(v.impact)));
+  expect(violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) }))).toEqual([]);
+});

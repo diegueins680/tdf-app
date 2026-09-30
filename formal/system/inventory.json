@@ -642,6 +642,8 @@
       "tdf-hq-ui/src/features/interactions/model.ts",
       "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
+      "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
+      "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
       "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
       "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
       "tdf-hq-ui/src/features/releases/ReleaseArtwork.test.tsx",
@@ -2705,7 +2707,7 @@
     },
     {
       "path": "docs/interactions/implementation.md",
-      "sha256": "68775aeb3d400fc9bf0d20438cdf45fe8c14e04cd82840e546812e49644ffc73",
+      "sha256": "c1c18a5a352ff8dc86809cc7967a4e654e0b17c2c22f893fc884b8a10801f1f4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2733,7 +2735,7 @@
     },
     {
       "path": "docs/interactions/verification-2026-09-30.md",
-      "sha256": "c7cb50e004ffb6bf6c7cf464e3978e313c72af7a6de97a24839bbb2b13cd523c",
+      "sha256": "83c526b968cd1f0af77ef2276b8f2f7a94a93eb79937c94a0ae4c8602ecd27c4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
