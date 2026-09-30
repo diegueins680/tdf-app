@@ -26,7 +26,9 @@ for actor in actors:
     sql(f"INSERT INTO party(id,display_name,is_org,created_at) VALUES({actor},'API actor {actor}',false,now()); INSERT INTO user_credential(party_id,username,password_hash,active) VALUES({actor},'interaction-api-{actor}','not-a-login-hash',true); INSERT INTO api_token(token,party_id,label,active) VALUES('{tokens[actor]}',{actor},'interaction-local-test',true); INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT {actor},id,'bootstrap',true,now(),1 FROM security_role WHERE code='fan';")
 # A fresh, installed-but-unactivated system must keep canonical reads dark.
 if sql('SELECT activated_once FROM interaction_runtime WHERE singleton')=='f':
-    request(actors[0],'/interactions/preferences',status=404)
+    assert request(actors[0],'/interactions/preferences',status=404)=='interaction_not_activated'
+    assert request(actors[0],'/interactions/targets/club_post/1',status=404)=='interaction_not_activated'
+    assert request(None,'/public/interactions/targets/recording/missing',status=404)=='interaction_not_activated'
     request(actors[0],'/interactions/blocked-accounts',status=404)
 sql(f"INSERT INTO fan_club(id,artist_party_id,name) VALUES({actors[0]},{actors[0]},'API test club'); INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES({actors[1]},{actors[0]},now()),({actors[2]},{actors[0]},now()); UPDATE interaction_runtime SET enabled=true WHERE singleton;")
 post=request(actors[0],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':'API publication','fcpReqContent':'A real HTTP test post','fcpReqMediaUrls':[],'fcpReqParentId':None})
@@ -303,7 +305,7 @@ sql('UPDATE interaction_runtime SET enabled=false WHERE singleton;')
 try:
     assert sql('SELECT activated_once FROM interaction_runtime WHERE singleton')=='t'
     for suffix in ('','/comments?limit=20','/reactors?limit=20','/comments/'+reply['id']):
-        request(actors[0],unregistered_identity+suffix,status=404)
+        assert request(actors[0],unregistered_identity+suffix,status=404)!='interaction_not_activated'
     assert sql('SELECT count(*) FROM interaction_target;')==pre_pause_targets
     assert request(actors[0],identity)['commentCount']==pre_pause_count
     assert request(None,'/public'+recording_identity)['id']==catalog_target

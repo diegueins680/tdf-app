@@ -24,7 +24,10 @@ manifest requires fresh merged-source checks and protected review.
 Production remains on the previous backend. This record does not establish store
 publication, physical-device VoiceOver/TalkBack behavior, installed signed HTTPS
 association, or completed production activation. Android 22 remains an unpublished
-store draft; signed iOS 29 has been uploaded to EAS Submit and is queued for App Store Connect processing (submission `d2a6ee83-7c1a-406e-979c-3c79e6460b73`). Store publication is not complete.
+store draft. Apple validation and direct upload of unchanged signed iOS 29 succeeded
+on 30 September (delivery `0b1fda64-c760-4b91-9f32-de889b520092`). The queued
+Expo submission was confirmed cancelled before direct upload, avoiding duplicate
+delivery. Apple API now reports build 29 as `VALID`; tester distribution and store publication remain pending.
 
 A subsequent report-abuse review is fixed by the additive
 `2026-09-30_interaction_report_content_version` migration (manifest 157).
@@ -33,6 +36,17 @@ Focused real HTTP checks confirm that fresh request keys do not reopen unchanged
 resolved reports, while actual edits allow one audited reopen. SQL also covers
 no-op edits, owner hide/restore, and content changed while awaiting review.
 Existing report evidence is preserved. All seven SQL property suites and nine concurrency checks pass on fresh schema 157. A nonempty historical-report migration test proves baseline preservation and safe reapplication after a later edit; 82 release tests also pass. Fresh hosted CI remains required.
+
+The schema-157 revision `f6c00278b` passed full required CI
+[36657877447](https://github.com/diegueins680/tdf-app/actions/runs/36657877447).
+A later review caught loss of existing club reactions during pre-activation
+staging. The repair preserves the existing reaction bar only for an explicit
+server pre-activation response, never for ordinary authorization or availability
+errors. Rendered tests cover both club publication kinds, existing counts, failed
+writes/retry, transition to canonical controls and no fallback on 401/403/404/500.
+Actual HTTP assertions cover the marker before activation and its absence during
+a converted pause. This backend/web repair requires fresh hosted verification;
+the native source and signed artifacts are unchanged.
 
 The fresh encrypted off-host backup from 01:40 UTC restored successfully to an
 isolated PostgreSQL 17 database. Schema 156, first/repeated activation, pause and

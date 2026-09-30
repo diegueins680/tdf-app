@@ -616,6 +616,8 @@
       "tdf-hq-ui/src/features/ddex/PartnerManagementPage.tsx",
       "tdf-hq-ui/src/features/fanclubs/FanClubPreview.test.tsx",
       "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
+      "tdf-hq-ui/src/features/fanclubs/LegacyClubReactions.test.tsx",
+      "tdf-hq-ui/src/features/fanclubs/LegacyClubReactions.tsx",
       "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx",
       "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
       "tdf-hq-ui/src/features/fans/FollowedArtists.tsx",
@@ -2715,7 +2717,7 @@
     },
     {
       "path": "docs/interactions/rollout.md",
-      "sha256": "f0f9c28794a872816385338e961edaf10dcdab29caf861a8e648a861910ef3fc",
+      "sha256": "c634902dc85315862f2ac2f84948027a6cd629655f6ad2e9af979a518d4772a5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2729,7 +2731,7 @@
     },
     {
       "path": "docs/interactions/verification-2026-09-30.md",
-      "sha256": "e219c44a2ab714d3cd794c0c7742d3f78d24b3331a7ea4c01cff65665c876952",
+      "sha256": "e62ea85d8732cfe75f399bf6515b83b84dc9dc0f3d3f1619bb5fedace22725fd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

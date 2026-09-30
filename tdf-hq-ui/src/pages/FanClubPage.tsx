@@ -28,6 +28,7 @@ import {
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
+import { LegacyClubReactions } from '../features/fanclubs/LegacyClubReactions';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -328,7 +329,8 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                           ))}
                         </ImageList>
                       )}
-                      <InteractionPanel kind={item.fcfKind === 'post' ? 'club_post' : 'club_memory'} entityKey={String(item.fcfId)} />
+                      <InteractionPanel kind={item.fcfKind === 'post' ? 'club_post' : 'club_memory'} entityKey={String(item.fcfId)}
+                        beforeActivation={<LegacyClubReactions artistId={artistId} item={item} />} />
                       <Typography variant="caption" color="text.secondary">
                         {new Date(item.fcfCreatedAt).toLocaleString()}
                       </Typography>

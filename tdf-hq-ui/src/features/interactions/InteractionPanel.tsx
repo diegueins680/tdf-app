@@ -154,7 +154,7 @@ function Thread({ root, identity, summary, run, scope, authenticated, context, f
   </Box>;
 }
 
-type PanelProps = InteractionIdentity & { focusCommentId?: string; initiallyExpanded?: boolean };
+type PanelProps = InteractionIdentity & { focusCommentId?: string; initiallyExpanded?: boolean; beforeActivation?: ReactNode };
 export function InteractionPanel(props: PanelProps) {
   const container = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(Boolean(props.focusCommentId ?? props.initiallyExpanded));
@@ -166,7 +166,7 @@ export function InteractionPanel(props: PanelProps) {
   }, []);
   return <div ref={container}><InteractionPanelContent {...props} active={active} /></div>;
 }
-function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExpanded = false, active }: PanelProps & { active: boolean }) {
+function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExpanded = false, beforeActivation, active }: PanelProps & { active: boolean }) {
   const { session } = useSession(); const authenticated = Boolean(session); const scope = session ? `account:${session.partyId ?? session.username}` : 'anonymous';
   const identity = { kind, entityKey }; const client = useQueryClient(); const sectionId = useId();
   const disclosureKey = `${scope}:${kind}:${entityKey}`;
@@ -205,6 +205,8 @@ function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExp
   });
   useEffect(() => { if (focusCommentId && context.data) { setExpanded(true); track('comment_deep_link_opened', kind); } }, [focusCommentId, context.data, kind]);
   if (summary.isPending) return <Typography role="status" variant="caption">Cargando conversación…</Typography>;
+  if (summary.isError && summary.error instanceof ApiError && summary.error.status === 404
+      && summary.error.message === 'interaction_not_activated') return beforeActivation ?? null;
   if (summary.isError) return unavailable(summary.error) ? null : <Alert severity="warning" action={<Button onClick={() => void summary.refetch()}>Reintentar</Button>}>No se pudo cargar la conversación.</Alert>;
   const data = summary.data; if (!data) return null;
   const roots = unique([...(context.data ? [context.data.root] : []), ...(comments.data?.pages.flatMap((page) => page.items) ?? [])]);

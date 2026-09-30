@@ -6,6 +6,14 @@ compatibility migrations and the canonical interaction migrations, including
 additive review repairs, are registered in order. The integrated release manifest now has 157 entries: the 116 current-main migrations (including the event ingestion boundary) followed by the 41 social compatibility and interaction migrations. Existing social-v2 rollout gates remain disabled. No feature activation
 is a schema-install side effect.
 
+Before first activation, canonical reads return a non-cacheable 404 with the
+explicit `interaction_not_activated` body. The club feed uses this signal to keep
+its existing reaction bar and authorized legacy mutations available. Ordinary
+authorization/not-found errors never enable the fallback. Once converted, even
+an emergency pause retains canonical reads and cannot return this signal.
+Reaction settlement refreshes both source counts and canonical availability so
+an open feed transitions when activation succeeds.
+
 ## Release gates
 
 1. Preserve the Cloudflare Pages project settings, then temporarily pause only

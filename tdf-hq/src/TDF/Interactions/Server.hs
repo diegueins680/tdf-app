@@ -171,7 +171,12 @@ queryWith user access sql args = do
             ("SELECT enabled OR (? AND activated_once) FROM interaction_runtime WHERE singleton" <> if readAccess then "" else " FOR SHARE")
             [PersistBool readAccess]
           else pure []
-        if gate /= [Single True] then pure (Left err404) else do
+        -- Only a never-activated read may offer a legacy client fallback.
+        -- Converted installations (including pauses) must retain canonical privacy.
+        if gate /= [Single True] then pure (Left err404
+          { errBody = if readAccess then "interaction_not_activated" else ""
+          , errHeaders = [("Cache-Control","no-store")]
+          }) else do
           budget <- case (user,access) of
             (Just principal,WriteSession _) -> rawSql "SELECT interaction_consume_write_budget(?)"
               [PersistInt64 (fromSqlKey (auPartyId principal))]

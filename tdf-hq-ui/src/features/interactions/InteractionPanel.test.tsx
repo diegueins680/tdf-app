@@ -20,6 +20,7 @@ jest.unstable_mockModule('../../session/SessionContext', () => ({ useSession: ()
 jest.unstable_mockModule('../../analytics/posthog', () => ({ getAnalyticsClient: () => ({ capture: jest.fn() }) }));
 jest.unstable_mockModule('../../components/party-selector/PartySelector', () => ({ UserSelector: () => null, PartyMultiSelector: () => null }));
 const { InteractionPanel } = await import('./InteractionPanel');
+const { ApiError } = await import('../../api/client');
 let client: QueryClient; let ordinal = 0;
 const data: InteractionSummary = { id: target, kind: 'recording', key: 'record', ownerId: 8, title: 'Session', route: '/records', public: true,
   canManage: false, reactable: true, commentable: true, shareable: true, version: 1, commentPolicy: 'everyone', canReact: true, canComment: true,
@@ -43,6 +44,24 @@ beforeEach(() => {
   command.mockResolvedValue({});
 });
 afterEach(() => { cleanup(); client?.clear(); });
+
+test('preserves the explicit legacy fallback before activation, then replaces it with canonical reactions', async () => {
+  summary.mockRejectedValue(new ApiError('interaction_not_activated', 404));
+  view({ beforeActivation: <button>Existing club reactions</button> });
+  await screen.findByRole('button', { name: 'Existing club reactions' });
+  expect(comments).not.toHaveBeenCalled();
+  summary.mockResolvedValue(data);
+  await act(async () => { await client.invalidateQueries({ queryKey: ['interactions'] }); });
+  await screen.findByRole('button', { name: 'Me gusta: 0' });
+  expect(screen.queryByRole('button', { name: 'Existing club reactions' })).toBeNull();
+});
+
+test.each([401, 403, 404, 500])('never falls back to legacy engagement for an ordinary %i response', async (status) => {
+  summary.mockRejectedValue(new ApiError('Unavailable', status));
+  view({ beforeActivation: <button>Existing club reactions</button> });
+  await waitFor(() => expect(screen.queryByText('Cargando conversación…')).toBeNull());
+  expect(screen.queryByRole('button', { name: 'Existing club reactions' })).toBeNull();
+});
 
 test('loads only expanded comments and replies, with accessible disclosure controls', async () => {
   view(); const disclosure = await screen.findByRole('button', { name: 'Ver los 2 comentarios' });
