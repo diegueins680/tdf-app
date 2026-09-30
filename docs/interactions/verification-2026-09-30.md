@@ -82,3 +82,27 @@ and WebKit across the three beyond-window and two preview-less cases. Keyboard
 collapse/expansion and axe checks of the selected publication pass in all five
 projects with no serious or critical violations. Type/lint pass.
 Backend, native artifacts, schemas and API shapes are unchanged by this web fix.
+
+Two subsequent review regressions were reproduced before repair. Refreshing a
+feed across a page boundary now reselects and focuses the linked publication;
+unchanged selection still leaves manual pagination under user control. Five
+rendered source-kind regressions cover movement in both directions. Classified
+discussions now require the same non-null future expiry as their public detail
+endpoint. SQL tests cover null/current/past expiry, anonymous/owner/moderator
+access, rejected registration/writes/links and preserved engagement on renewal.
+Focused real HTTP checks also pass against public detail and interaction routes.
+
+The complete backend/web checks for `0fcad7e00` passed. Hosted iOS run
+[36659729464](https://github.com/diegueins680/tdf-app/actions/runs/36659729464)
+passed the installed journey; the later schema-158 run passed real HTTP but timed
+out while starting the XCTest driver before executing the app flow. The hosted
+workflow now allows a bounded five-minute driver startup, following
+[Maestro's documented startup setting](https://docs.maestro.dev/maestro-cli/environment-variables).
+The unchanged signed native artifact still needs qualification against the final
+schema after these repairs.
+
+The expiry repair passes all nine property suites and ten concurrency groups on
+PostgreSQL 17. The encrypted restored database accepted and reapplied the exact
+159-entry manifest, remains paused, and retains all 77 notifications. The 27
+focused web tests, typecheck, scoped lint, catalog audit, 65 release checks and
+three specification-inventory checks pass. Production still runs schema 115.

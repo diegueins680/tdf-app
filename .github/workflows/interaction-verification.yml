@@ -62,6 +62,8 @@ jobs:
       STACK_ROOT: ${{ github.workspace }}/.stack-root-ios
       HOMEBREW_NO_AUTO_UPDATE: '1'
       HOMEBREW_NO_INSTALL_CLEANUP: '1'
+      # Allow bounded cold XCTest startup on hosted Macs; app assertions still fail normally.
+      MAESTRO_DRIVER_STARTUP_TIMEOUT: '300000'
     steps:
       - name: Validate immutable application identity
         env:

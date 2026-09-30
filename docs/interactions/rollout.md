@@ -3,7 +3,7 @@
 Production schema migration is additive and separate from activation. The live
 baseline was 115 reviewed migrations on PostgreSQL 17.8; eight existing social
 compatibility migrations and the canonical interaction migrations, including
-additive review repairs, are registered in order. The integrated release manifest now has 158 entries: the 116 current-main migrations (including the event ingestion boundary) followed by the 42 social compatibility and interaction migrations. Existing social-v2 rollout gates remain disabled. No feature activation
+additive review repairs, are registered in order. The integrated release manifest now has 159 entries: the 116 current-main migrations (including the event ingestion boundary) followed by the 43 social compatibility and interaction migrations. Existing social-v2 rollout gates remain disabled. No feature activation
 is a schema-install side effect.
 
 Before first activation, canonical reads return a non-cacheable 404 with the
@@ -217,3 +217,10 @@ discussion without deleting engagement; republication retains the same IDs.
 Commands lock membership and collection rows, serializing with withdrawal, and
 reverse membership indexes bound source lookups. The additive migration does not
 modify any publication or interaction rows and is safe to reapply.
+
+`2026-09-30_interaction_classified_expiry` aligns classified and opportunity
+discussions with the existing public detail endpoint: expiry must be strictly
+later than the current transaction time. Null and elapsed expiry deny anonymous,
+authenticated and scoped moderation access, registration, commands and links.
+No source or engagement records are rewritten. Renewal makes the original
+discussion and comment identities accessible again.

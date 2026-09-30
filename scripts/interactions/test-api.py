@@ -212,6 +212,32 @@ for kind, membership, key in [('recording','collection_recording','recording_id'
         sql(f"INSERT INTO {membership} SELECT * FROM json_populate_recordset(NULL::{membership},'{escaped}');")
     assert request(None,'/public'+source_path)['id']==source_target
 
+# Classified discussions and their public destination must share expiry rules.
+classified_profile,classified_source=str(uuid.uuid4()),str(uuid.uuid4())
+classified_slug=f'interaction-expiry-{actors[0]}'
+sql(f"INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status) VALUES('{classified_profile}',{actors[0]},'person','Classified expiry fixture','{classified_slug}','published','public','allowed'); INSERT INTO classified(id,author_profile_id,category_id,title,slug,description,status,expires_at,created_at) SELECT '{classified_source}','{classified_profile}',id,'Classified expiry fixture','{classified_slug}','Synthetic public detail expiry regression','published',now()+interval '1 day',now()-interval '2 days' FROM classified_category ORDER BY id LIMIT 1;")
+classified_identity=f'/interactions/targets/classified/{classified_source}'
+classified_detail=f'/directory/classifieds/{classified_slug}'
+assert request(None,classified_detail)['id']==classified_source
+classified_target=request(actors[0],classified_identity)['id']
+classified_command=f'/interactions/targets/{classified_target}/commands'
+classified_comment=request(actors[1],classified_command,{'requestKey':str(uuid.uuid4()),'command':{'operation':'comment.create','body':'Keep this opportunity conversation'}})
+try:
+    for expiry in ('NULL','now()',"now()-interval '1 day'"):
+        sql(f"UPDATE classified SET expires_at={expiry} WHERE id='{classified_source}';")
+        request(None,classified_detail,status=404)
+        request(None,'/public'+classified_identity,status=404)
+        request(actors[0],classified_identity,status=404)
+        request(actors[1],f"/interactions/resolve/comment/{classified_comment['id']}",status=404)
+        request(actors[1],classified_command,{'requestKey':str(uuid.uuid4()),'command':{'operation':'comment.create','body':'Expired discussion'}},status=404)
+        request(actors[1],classified_command,{'requestKey':str(uuid.uuid4()),'command':{'operation':'reaction.set','reactionTypeId':like}},status=404)
+finally:
+    sql(f"UPDATE classified SET expires_at=now()+interval '1 day' WHERE id='{classified_source}';")
+assert request(None,classified_detail)['id']==classified_source
+assert request(None,'/public'+classified_identity)['id']==classified_target
+assert request(actors[1],f"/interactions/resolve/comment/{classified_comment['id']}")['commentId']==classified_comment['id']
+assert request(None,'/public'+classified_identity)['commentCount']==1
+
 # Resolved reports can be reopened with new evidence, while old retries stay inert.
 sql(f"UPDATE party_security_role SET active=true WHERE party_id={actors[0]};")
 reported_comment=command(actors[1],{'operation':'comment.create','body':'Report lifecycle example','mentions':[]})

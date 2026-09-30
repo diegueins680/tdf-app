@@ -75,8 +75,8 @@ export default function LazyPaginatedList<T>({
   useEffect(() => {
     if (selectedIndex !== undefined && Number.isSafeInteger(selectedIndex) && selectedIndex >= 0 && selectedIndex < totalItems) {
       const applied = appliedSelection.current;
-      // Refreshes can shift an item without changing the requested navigation.
-      if (applied && (resetKey !== undefined || applied.index === selectedIndex)
+      // Reposition when a refresh moves the linked item; otherwise retain user pagination.
+      if (applied?.index === selectedIndex
         && applied.pageSize === rowsPerPage && Object.is(applied.resetKey, resetKey)) return;
       appliedSelection.current = { index: selectedIndex, pageSize: rowsPerPage, resetKey };
       setPage(Math.floor(selectedIndex / rowsPerPage));

@@ -39,7 +39,18 @@ it('leaves pagination under user control after revealing the requested item', as
   view.rerender(collection([...items, '30']));
   expect(screen.queryByTestId('item-17')).toBeNull();
   expect(screen.getByTestId('item-20')).toBeTruthy();
-  view.rerender(collection(['new', ...items, '30']));
-  await screen.findByTestId('item-19');
-  expect(screen.queryByTestId('item-17')).toBeNull();
+});
+
+it.each(['recording', 'session', 'release', 'post', 'memory'])('keeps the linked %s visible and focused when refresh moves it across a page boundary', async (parameter) => {
+  const items = Array.from({ length: 12 }, (_, index) => String(index));
+  const collection = (ids: string[]) => <MemoryRouter initialEntries={[`/collection?${parameter}=4`]}><Collection parameter={parameter} ids={ids} /></MemoryRouter>;
+  const view = render(collection(items));
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId('item-4')));
+  view.rerender(collection(['new', ...items]));
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId('item-4')));
+  expect(screen.queryByTestId('item-new')).toBeNull();
+  expect(screen.getAllByTestId(/^item-/)).toHaveLength(5);
+  view.rerender(collection(items));
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId('item-4')));
+  expect(screen.getByTestId('item-0')).toBeTruthy();
 });

@@ -162,3 +162,37 @@ test('record destinations remain reachable outside the feed window or without a 
   const violations = await selected.evaluate(async node => (await window.axe.run(node)).violations.filter(v => ['serious', 'critical'].includes(v.impact)));
   expect(violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) }))).toEqual([]);
 });
+
+test('a refreshed record feed keeps the linked publication on its current page @critical', async ({ page, context, request }) => {
+  const id = execFileSync('psql', ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', fixture.database, '-c',
+    "SELECT id FROM record_release WHERE interaction_resolve('record_release',id::text,NULL) IS NOT NULL ORDER BY id LIMIT 1;"], { encoding: 'utf8' }).trim();
+  const response = await request.get(`${fixture.base}/public/interactions/targets/record_release/${id}`);
+  expect(response.status()).toBe(200); const summary = await response.json();
+  const releases = Array.from({ length: 12 }, (_, i) => ({ id: i === 5 ? id : `92520000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+    title: i === 5 ? summary.title : `Refresh fixture ${i}`, sortOrder: i + 1, contributors: [], resources: [] }));
+  let feed = { recordings: [], sessions: [], releases };
+  await page.route('**/*', async route => {
+    const incoming = route.request(); const url = new URL(incoming.url());
+    if (url.pathname === '/records/feed') return route.fulfill({ json: feed });
+    if (url.pathname.startsWith('/public/interactions/')) return route.fulfill({ response: await context.request.get(fixture.base + url.pathname + url.search) });
+    if (['fetch', 'xhr'].includes(incoming.resourceType())) return route.fulfill({ status: 404, json: {} });
+    if (!['127.0.0.1', 'localhost'].includes(url.hostname)) return route.abort();
+    return route.continue();
+  });
+  await page.clock.install();
+  await page.goto(`/records?release=${id}`);
+  const card = page.locator('.MuiCard-root[tabindex="-1"]').filter({ has: page.getByRole('heading', { name: summary.title, exact: true }) });
+  await expect(card).toBeFocused();
+  for (const insert of [true, false]) {
+    feed = { recordings: [], sessions: [], releases: insert ? [{ ...releases[0], id: '92520000-0000-4000-8000-999999999999', title: 'New first release', sortOrder: 0 }, ...releases] : releases };
+    await page.clock.fastForward(6 * 60 * 1000);
+    const refreshed = page.waitForResponse(url => new URL(url.url()).pathname === '/records/feed');
+    await page.evaluate(() => { window.dispatchEvent(new Event('offline')); window.dispatchEvent(new Event('online')); });
+    await refreshed;
+    // Wait for the new page contents, not just the response or the previously focused card.
+    await expect(page.getByRole('heading', { name: insert ? 'Refresh fixture 6' : 'Refresh fixture 0', exact: true })).toBeVisible();
+    await expect(card).toBeFocused(); await expect(card).toBeInViewport();
+    await expect(card.getByRole('region', { name: 'Reacciones y conversación' })).toBeVisible();
+  }
+  await page.unrouteAll({ behavior: 'wait' });
+});

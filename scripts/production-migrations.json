@@ -810,6 +810,11 @@
       "id": "2026-09-30_interaction_records_publication",
       "path": "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
       "introducedBy": "9dd2cefc7af63096417b7e14a59a37e35022bd43"
+    },
+    {
+      "id": "2026-09-30_interaction_classified_expiry",
+      "path": "tdf-hq/sql/2026-09-30_interaction_classified_expiry.sql",
+      "introducedBy": "5966161d8cf7c31a776ea5c2778068fbbd78b920"
     }
   ]
 }

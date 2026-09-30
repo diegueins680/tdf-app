@@ -115,3 +115,10 @@ Ownerless institutional targets reject it without changing revision/access. The
 forward repair preserves its formerly denied effective access as explicit off;
 `ownerless-policy-migration.sql` executes the actual repair twice and checks the
 revision and audit remain unchanged on repeat. Both clients test available choices.
+Publications must remain resolvable through their authorized source destination.
+`records-publication-properties.sql` checks collection withdrawal and restoration;
+`classified-expiry-properties.sql` checks null, current and past expiry against the
+public-detail rule. Both deny ordinary and moderator resolution, registration,
+commands and deep links without deleting prior engagement. Renewal restores the
+same target/comment identities and counts. Real HTTP tests compare the classified
+detail endpoint with anonymous/authenticated discussion access and write denial.

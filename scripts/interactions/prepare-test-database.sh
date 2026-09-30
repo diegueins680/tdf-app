@@ -49,7 +49,8 @@ for interaction_sql in \
   2026-09-29_interaction_pause_boundary \
   2026-09-29_interaction_nonblank_reasons \
   2026-09-30_interaction_report_content_version \
-  2026-09-30_interaction_records_publication; do
+  2026-09-30_interaction_records_publication \
+  2026-09-30_interaction_classified_expiry; do
   psql -X -v ON_ERROR_STOP=1 -d "$interaction_db" -f "$interaction_repo/tdf-hq/sql/$interaction_sql.sql" >/dev/null
 done
 printf 'Prepared isolated database %s\n' "$interaction_db"
