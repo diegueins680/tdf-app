@@ -10,4 +10,5 @@ for interaction_suite in policy command notification navigation legacy moderatio
 done
 python3 "$interaction_repo/scripts/interactions/test-concurrency.py" "$interaction_db"
 psql -X -v ON_ERROR_STOP=1 -d "$interaction_db" -f "$interaction_repo/tdf-hq/test/integration/interactions/ownerless-policy-migration.sql"
+psql -X -v ON_ERROR_STOP=1 -d "$interaction_db" -f "$interaction_repo/tdf-hq/test/integration/interactions/report-content-migration.sql"
 printf 'PASS isolated interaction database properties and concurrency\n'

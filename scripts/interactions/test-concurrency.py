@@ -181,6 +181,13 @@ reported = command(930000002, record_target, {'operation': 'comment.create', 'bo
 report = {'operation': 'comment.report', 'commentId': reported['id'], 'reason': 'Original evidence'}
 command(930000004, record_target, report)
 command(930000001, record_target, {'operation': 'comment.report.resolve', 'commentId': reported['id'], 'expectedVersion': 1, 'decision': 'dismissed', 'reason': 'Reviewed'})
+# Fresh keys against unchanged content must stay resolved even under concurrency.
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+    results = list(pool.map(lambda _: command(930000004, record_target, report), range(4)))
+assert all(result['reported'] for result in results)
+assert sql(f"SELECT state='dismissed' FROM interaction_report WHERE comment_id={literal(reported['id'])};") == 't'
+assert sql(f"SELECT count(*)=0 FROM interaction_audit WHERE comment_id={literal(reported['id'])} AND operation='comment.report.reopen';") == 't'
+command(930000002, record_target, {'operation': 'comment.edit', 'commentId': reported['id'], 'expectedVersion': 1, 'body': 'Changed report concurrency', 'mentions': []})
 report['reason'] = 'New evidence'
 with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
     results = list(pool.map(lambda _: command(930000004, record_target, report), range(4)))

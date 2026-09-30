@@ -25,4 +25,25 @@ manifest requires fresh merged-source checks and protected review.
 Production remains on the previous backend. This record does not establish store
 publication, physical-device VoiceOver/TalkBack behavior, installed signed HTTPS
 association, or completed production activation. Android 22 remains an unpublished
-store draft; signed iOS 29 has not been submitted.
+store draft; signed iOS 29 has been uploaded to EAS Submit and is queued for App Store Connect processing (submission `d2a6ee83-7c1a-406e-979c-3c79e6460b73`). Store publication is not complete.
+
+A subsequent report-abuse review is fixed by the additive
+`2026-09-30_interaction_report_content_version` migration (manifest 157).
+The unchanged-content regression failed before the repair and passes afterward.
+Focused real HTTP checks confirm that fresh request keys do not reopen unchanged
+resolved reports, while actual edits allow one audited reopen. SQL also covers
+no-op edits, owner hide/restore, and content changed while awaiting review.
+Existing report evidence is preserved. All seven SQL property suites and nine concurrency checks pass on fresh schema 157. A nonempty historical-report migration test proves baseline preservation and safe reapplication after a later edit; 82 release tests also pass. Fresh hosted CI remains required.
+
+The fresh encrypted off-host backup from 01:40 UTC restored successfully to an
+isolated PostgreSQL 17 database. Schema 156, first/repeated activation, pause and
+resume passed; all 77 current notifications remained, and exact legacy
+source/migrated engagement counts agreed. No rehearsal workers were started.
+The restored copy subsequently accepted schema 157 and remains paused with all 77 notifications intact.
+
+Cloudflare production settings were saved privately before pausing automatic
+production deployments. Preview builds, existing variables, build settings and
+branch settings were verified unchanged. The documented Apple team ID and both
+Android signing certificates are configured for the next deployment. The current
+web deployment continues serving; association responses must be verified after
+the new web deployment. Restore the saved production-build setting at rollout.

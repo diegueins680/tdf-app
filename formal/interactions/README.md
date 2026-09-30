@@ -103,9 +103,12 @@ role, permission, action and module rows are locked during mutation. Entity SQL
 properties plus the real concurrent revocation test exercise this rule.
 
 Reporting a visible comment after a resolved report reopens its unique reporter
-slot and audits the prior evidence. Idempotent retries never reopen it, and
-repeated open reports do not overwrite evidence. SQL, HTTP and concurrency tests
-exercise these transitions in the canonical command.
+slot only when the author changed its text or stable mentions after the reviewed
+content version. Resolution snapshots current content even if edited while open.
+Fresh request keys, no-op edits and hide/restore cannot reopen unchanged content.
+A real content edit permits one reopen and preserves prior evidence in the audit;
+concurrent and idempotent retries never overwrite open evidence. SQL, HTTP and
+concurrency tests exercise these transitions in the canonical command.
 
 Follower-only comment policy requires a non-null authoritative publication owner.
 Ownerless institutional targets reject it without changing revision/access. The
