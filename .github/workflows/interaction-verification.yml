@@ -59,7 +59,7 @@ jobs:
     env:
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
-      STACK_ROOT: ${{ runner.temp }}/interaction-stack
+      STACK_ROOT: ${{ github.workspace }}/.stack-root-ios
       HOMEBREW_NO_AUTO_UPDATE: '1'
       HOMEBREW_NO_INSTALL_CLEANUP: '1'
     steps:
