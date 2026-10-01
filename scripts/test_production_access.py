@@ -1,6 +1,8 @@
 import contextlib
 import io
 import json
+import os
+import urllib.request
 import pathlib
 import subprocess
 import sys
@@ -55,9 +57,15 @@ class AccessTests(unittest.TestCase):
         output = io.StringIO()
         with patch.object(sys, 'argv', ['remote', mode]), patch.object(sys, 'stdin', io.StringIO(sql_override if sql_override is not None else pathlib.Path(__file__).with_name('production-catalog-inventory.mjs').read_text().split('const inventorySql = String.raw`', 1)[1].split('`;', 1)[0])), \
              patch.object(subprocess, 'run', side_effect=run), patch.object(pathlib.Path, 'read_text', read), \
-             patch.object(pathlib.Path, 'stat', return_value=SimpleNamespace(st_mode=permissions)), contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
+             patch.object(pathlib.Path, 'stat', return_value=SimpleNamespace(st_mode=permissions)), \
+             patch.dict(os.environ, {'SSH_CONNECTION': '192.0.2.10 50000 178.105.93.101 22'}), \
+             patch.object(urllib.request, 'urlopen', side_effect=lambda *a, **kw: io.StringIO('{}')), contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
             exec(access.REMOTE, {})
         return output.getvalue(), calls
+
+    def test_metadata_origin_comes_from_authenticated_ssh_connection(self):
+        output, _ = self.remote_fixture('metadata')
+        self.assertEqual(json.loads(output)['sshServerAddress'], '178.105.93.101')
 
     def test_remote_inventory_forces_readonly_before_psql_and_checks_target(self):
         output, calls = self.remote_fixture('inventory')

@@ -244,3 +244,10 @@ reference or the image's matching registry RepoDigest. Docker's local image/conf
 ID is recorded for race detection, but is not assumed to equal a manifest digest.
 The root-level legacy Instagram diagnostic is also retired; use the existing
 read-only `scripts/check-messaging-token.mjs` instead.
+
+The catalog public health/version reads require normal certificate/hostname TLS
+validation and require every DNS answer and the actual HTTPS socket peer to match
+the server address reported by the authenticated SSH connection. A healthy copy of
+the same Git SHA on another host is rejected before the inventory query runs.
+Introducing a CDN or load balancer requires a reviewed replacement for this direct
+origin binding; the inventory intentionally fails closed in that topology.

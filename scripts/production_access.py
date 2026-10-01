@@ -13,7 +13,7 @@ DEFAULT_HOST = 'root@178.105.93.101'
 DEFAULT_KEY = Path.home() / '.ssh/tdf_hetzner_deploy_20260928'
 
 REMOTE = r'''
-import hashlib, json, pathlib, stat, subprocess, sys, urllib.request
+import hashlib, json, os, pathlib, stat, subprocess, sys, urllib.request
 
 def capture(args, **kwargs):
     result = subprocess.run(args, capture_output=True, text=True, timeout=180, **kwargs)
@@ -72,6 +72,7 @@ def main(mode):
                           'apiContainer': api['Id'], 'databaseContainer': db['Id'],
                           'apiImage': api['Image'], 'configuredImage': configured,
                           'databaseImage': db['Image'], 'database': 'tdf_hq',
+                          'sshServerAddress': os.environ['SSH_CONNECTION'].split()[2],
                           'health': get('health'), 'version': get('version')}))
     elif mode == 'inventory':
         sql = sys.stdin.read()

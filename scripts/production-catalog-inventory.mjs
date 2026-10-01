@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { lookup as dnsLookup } from 'node:dns';
+import { get as httpsGet } from 'node:https';
+import { isIP } from 'node:net';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -176,7 +179,7 @@ export function validateProvenance(health, version, before, after, metadata) {
         x.provider !== 'hetzner' || x.project !== 'tdf-production' || x.database !== PRODUCTION_DATABASE)) {
     throw new Error('Public API and SSH production provenance do not agree.');
   }
-  for (const field of ['apiContainer', 'databaseContainer', 'apiImage', 'configuredImage', 'databaseImage']) {
+  for (const field of ['sshServerAddress', 'apiContainer', 'databaseContainer', 'apiImage', 'configuredImage', 'databaseImage']) {
     if (!before[field] || before[field] !== after[field]) throw new Error('Deployment changed during inventory.');
   }
   if (metadata?.database !== PRODUCTION_DATABASE || metadata?.transactionReadOnly !== 'on') {
@@ -184,13 +187,57 @@ export function validateProvenance(health, version, before, after, metadata) {
   }
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url, {
-    headers: { accept: 'application/json' },
-    signal: AbortSignal.timeout(15_000),
+export function validateOriginAddress(actual, expected) {
+  const normalize = value => typeof value === 'string' && value.startsWith('::ffff:')
+    ? value.slice(7) : value;
+  actual = normalize(actual);
+  expected = normalize(expected);
+  if (!isIP(actual ?? '') || !isIP(expected ?? '') || actual !== expected) {
+    throw new Error('Public API does not reach the SSH-authenticated production host.');
+  }
+}
+
+export function fetchJson(url, expectedAddress, { lookup = dnsLookup, get = httpsGet } = {}) {
+  // The current deployment serves TLS directly on the SSH-authenticated host.
+  // A new proxy/load balancer needs an explicitly reviewed origin binding.
+  validateOriginAddress(expectedAddress, expectedAddress);
+  return new Promise((resolve, reject) => {
+    const request = get(url, {
+      agent: false,
+      headers: { accept: 'application/json' },
+      signal: AbortSignal.timeout(15_000),
+      lookup(hostname, options, callback) {
+        lookup(hostname, { ...options, all: true }, (error, addresses) => {
+          if (error) return callback(error);
+          try {
+            if (!addresses?.length) throw new Error('Public API has no origin address.');
+            for (const { address } of addresses) validateOriginAddress(address, expectedAddress);
+            callback(null, options.all ? addresses : addresses[0].address, addresses[0].family);
+          } catch (error) { callback(error); }
+        });
+      },
+    }, response => {
+      try {
+        validateOriginAddress(response.socket.remoteAddress, expectedAddress);
+        if (response.statusCode !== 200) throw new Error(`Public API returned HTTP ${response.statusCode}`);
+      } catch (error) {
+        response.destroy();
+        reject(error);
+        return;
+      }
+      let body = '';
+      response.setEncoding('utf8');
+      response.on('data', chunk => {
+        body += chunk;
+        if (body.length > 65536) response.destroy(new Error('Public API response exceeds limit.'));
+      });
+      response.on('error', reject);
+      response.on('end', () => {
+        try { resolve(JSON.parse(body)); } catch (error) { reject(error); }
+      });
+    });
+    request.on('error', reject);
   });
-  if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
-  return response.json();
 }
 
 async function main() {
@@ -200,11 +247,11 @@ async function main() {
     return;
   }
 
-  const [health, version] = await Promise.all([
-    fetchJson('https://api.tdfrecords.net/health'),
-    fetchJson('https://api.tdfrecords.net/version'),
-  ]);
   const before = JSON.parse(run('python3', [ACCESS, 'metadata']));
+  const [health, version] = await Promise.all([
+    fetchJson('https://api.tdfrecords.net/health', before.sshServerAddress),
+    fetchJson('https://api.tdfrecords.net/version', before.sshServerAddress),
+  ]);
   // Fail closed before querying if the public origin is not the inspected API.
   validateProvenance(health, version, before, before, { database: PRODUCTION_DATABASE, transactionReadOnly: 'on' });
   const stdout = run('python3', [ACCESS, 'inventory'], inventorySql);
