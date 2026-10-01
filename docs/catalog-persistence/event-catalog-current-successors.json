@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-  "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+  "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+  "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
   "successors": [
     {
       "historicalReplacementId": "91952765f2d528c2a6c6",
@@ -53,11 +53,18 @@
     },
     {
       "historicalReplacementId": "ffb84e8fd3972fd0730d",
-      "currentId": "21babc54d68f0c44d55e",
+      "currentId": "5147eb2751a01d8b4c73",
       "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
       "kind": "array",
       "name": "mobileFeatureRegistry",
-      "valueCount": 156
+      "valueCount": 157,
+      "previousResolution": {
+        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+        "currentId": "21babc54d68f0c44d55e",
+        "valueCount": 156
+      },
+      "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
     },
     {
       "historicalReplacementId": "34d5f2f94d1a165783ba",
@@ -69,11 +76,18 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "07da55e81a186d26df37",
+      "currentId": "7bf93825f1431a6d52d6",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 115
+      "valueCount": 159,
+      "previousResolution": {
+        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+        "currentId": "07da55e81a186d26df37",
+        "valueCount": 115
+      },
+      "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
     }
   ]
 }

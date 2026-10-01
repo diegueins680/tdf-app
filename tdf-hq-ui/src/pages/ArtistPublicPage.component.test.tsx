@@ -304,6 +304,40 @@ describe('ArtistPublicPage follow continuity', () => {
     view.queryClient.clear();
   });
 
+  it.each([false, true])('refreshes committed follow state after navigation (wasFollowing=%s)', async (wasFollowing) => {
+    sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
+    let committed = false;
+    const follow = { ffArtistId: 17, ffArtistName: 'Las Sintéticas', ffStartedAt: '2026-09-14T12:00:00Z' };
+    listFollowsMock.mockImplementation(async () => (committed ? !wasFollowing : wasFollowing) ? [follow] : []);
+    let complete: (() => void) | undefined;
+    if (wasFollowing) unfollowMock.mockImplementationOnce(() => new Promise<void>((resolve) => {
+      complete = () => { committed = true; resolve(); };
+    }));
+    else followMock.mockImplementationOnce(() => new Promise((resolve) => {
+      complete = () => { committed = true; resolve(follow); };
+    }));
+    const view = renderPage('/a/las-sinteticas');
+    const button = await screen.findByRole('button', { name: wasFollowing ? 'Dejar de seguir a Las Sintéticas' : 'Seguir a Las Sintéticas' });
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(button);
+    await waitFor(() => expect(complete).toBeDefined());
+    getPublicArtistMock.mockResolvedValue({ ...artist, apArtistId: 99, apSlug: 'otra-artista', apDisplayName: 'Otra Artista' });
+    fireEvent.click(screen.getByRole('link', { name: 'Otro perfil de prueba' }));
+    await screen.findByRole('heading', { name: 'Otra Artista', level: 1 });
+    const readsBeforeCompletion = listFollowsMock.mock.calls.length;
+    await act(async () => { complete?.(); });
+    await waitFor(() => expect(listFollowsMock.mock.calls.length).toBeGreaterThan(readsBeforeCompletion));
+    await waitFor(() => expect(view.queryClient.getQueryData(['fan-follows', 42])).toEqual(wasFollowing ? [] : [follow]));
+    expect(captureFirstValueMock).not.toHaveBeenCalled();
+    expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent)
+      .toBe('/a/otra-artista?resume=follow&artistId=99#bio');
+    getPublicArtistMock.mockResolvedValue(artist);
+    fireEvent.click(screen.getByRole('link', { name: 'Volver al perfil de prueba' }));
+    await screen.findByRole('button', { name: wasFollowing ? 'Seguir ahora' : 'Dejar de seguir a Las Sintéticas' });
+    view.unmount();
+    view.queryClient.clear();
+  });
+
   it.each(['logout', 'replace session', 'unmount', 'change profile', 'leave and return'])('suppresses a late follow callback after %s', async (change) => {
     sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
     let resolveFollow: ((value: Awaited<ReturnType<typeof followMock>>) => void) | undefined;

@@ -232,10 +232,11 @@ export default function ArtistPublicPage() {
       }
     },
     onSuccess: (_result, command) => {
-      if (!command.isCurrent()) return;
+      // The server write committed even if this profile or navigation lifetime ended.
       void qc.invalidateQueries({ queryKey: ['fan-follows', command.viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
       void qc.invalidateQueries({ queryKey: ['public-artist', command.segment] });
+      if (!command.isCurrent()) return;
       if (!command.wasFollowing) {
         void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
           .catch(() => undefined);

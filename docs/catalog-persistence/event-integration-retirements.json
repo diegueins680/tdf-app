@@ -125,8 +125,15 @@
         "kind": "array",
         "name": "mobileFeatureRegistry"
       },
-      "replacementId": "21babc54d68f0c44d55e",
-      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+      "replacementId": "5147eb2751a01d8b4c73",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+      "previousReplacementId": "21babc54d68f0c44d55e",
+      "currentResolution": {
+        "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+        "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+        "valueCount": 157,
+        "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+      }
     },
     {
       "originalDecision": {
@@ -228,8 +235,15 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "07da55e81a186d26df37",
-      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+      "replacementId": "7bf93825f1431a6d52d6",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+      "previousReplacementId": "07da55e81a186d26df37",
+      "currentResolution": {
+        "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+        "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+        "valueCount": 159,
+        "reason": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+      }
     }
   ]
 }

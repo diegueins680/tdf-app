@@ -2622,7 +2622,7 @@
     },
     {
       "path": "docs/event-operations/gap-matrix.md",
-      "sha256": "21fe9e25e1d618d0a8d8b1150b9906bb279a351b6fa9c9753f5e3eecf8182966",
+      "sha256": "a5fadfa6a31ec50f4337d654c23c57e5f55b3d4adaff44ea7ba7e0db8a32806d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -3091,7 +3091,7 @@
     },
     {
       "path": "docs/event-operations/task-view-contract.md",
-      "sha256": "1e9eeb895055df2f0476f6cd16b68600a193fcafbec3dc100e9aa47423d6c732",
+      "sha256": "a571fbba3bc44f0c275d915a440e370a4222f3e221adbde82f182385f5eba493",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

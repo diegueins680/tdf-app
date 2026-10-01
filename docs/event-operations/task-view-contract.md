@@ -46,3 +46,7 @@ No backend/schema/client-generation change, no permission expansion, no provider
 Rollback the web route/link and optional API options together; old task callers remain compatible.
 Task commands, rich fields, search/list APIs, aggregate concurrency, event overview, logistics
 templates, native mobile and full-stack browser verification remain separate increments.
+
+## Activation boundary
+
+The direct task route remains available for the isolated, explicitly enabled adapter validation lane. The production logistics page does not expose a task CTA while adapter migrations remain outside the production manifest and `event.operations.api` defaults to disabled. Adding a discoverable entry requires an authenticated backend availability contract and the separate reviewed activation gate; this integration does not enable the feature.
