@@ -1,5 +1,86 @@
 # Interaction verification — 30 September 2026
 
+## Production release (11:27 UTC)
+
+PR [#470](https://github.com/diegueins680/tdf-app/pull/470) received independent
+approval on `fd87416e99af3176d107178832f238ef00003be5`, passed required CI and
+merged normally as `645f56fcc44f81609fbfd0e03d683b40376ce77a`, preserving both
+the reviewed tree and migration introduction ancestry. All post-merge checks
+passed, including the [immutable image build](https://github.com/diegueins680/tdf-app/actions/runs/36703425146).
+
+- Hetzner runs that exact revision, amd64 image
+  `sha256:38e6264b82db2d81a5b51c3a78740b6a305538b4cdae8d53ced067ccbb1e8fe0`.
+  Source, architecture and embedded migration bundle were independently checked.
+  `/health` reports database/status OK; the API container has no restart or OOM.
+- The reviewed 159-entry migration ledger is applied. Canonical interactions are
+  enabled and activated; the release lease is released. Legacy engagement source
+  and migrated counts match (all zero). All 77 preexisting notifications survived.
+- A fresh final backup was taken with old writers stopped, encrypted off-host,
+  and restored into an isolated PostgreSQL 17 database before live migration.
+  Backup SHA-256: `282d21898cccb5261cefe5202dacfb586cbc178cbd761741a47eef1d9f7d5436`.
+  Exact migration application twice, first/repeated activation and pause/resume
+  passed. Restore databases remain paused without application workers.
+- Cloudflare production deployment `2e2a984b-f3c9-4391-9cc9-95fa20daac8d`
+  serves the same revision. Automatic production builds were restored; the
+  temporary release hook was deleted. Existing source/build/env/binding settings
+  were preserved. Trader and its shared Fly database were untouched.
+- Both verified hosts serve the expected Apple and Android association documents
+  as HTTP 200 JSON without redirects, including actual Apple association client
+  user agents. This verifies hosted documents, not OS handoff on a physical device.
+
+After activation, recovery means pausing this compatible interaction backend and
+fixing forward. Do not downgrade to the old backend, reset activation, reopen
+legacy writers, or overwrite new interactions with a stale database restore.
+
+## Final verification and mobile distribution
+
+The [final installed iOS run](https://github.com/diegueins680/tdf-app/actions/runs/36700761570)
+passed real HTTP checks and the installed native journey against schema 159.
+Its application revision has identical backend/SQL/web/native code to the release;
+only catalog-audit metadata differs. The original simulator artifact was verified
+and installed unchanged. The matching [installed Android journey](https://github.com/diegueins680/TDF-mobile/actions/runs/36520750030)
+also passed. The native source is `3ee82fe403b358b405568ed5164cf7798eb45e0b`,
+whose tree matches the signed release merge `12a472ecb68e9a9c0bcba81baf0fafa551d59253`.
+
+All nine SQL property suites and ten concurrency groups passed on PostgreSQL 17,
+including publication withdrawal, pause admission, blocking, duplicate requests,
+counts, thread integrity and privacy. Nonempty legacy/report migration fixtures
+cover data preservation despite empty production legacy engagement. The restored
+production benchmark with 10,000 comments and 2,000 reactions measured 18.415 ms
+for summary, 6.838 ms for roots, 5.104 ms for replies and 4.655 ms for comment
+context; synthetic rows were rolled back. These are measured fixture timings,
+not a production latency guarantee.
+
+Production qualification used owned temporary accounts and real HTTP requests:
+reaction selection/change/removal/counts, idempotence, comments/replies/mentions,
+edit authorization, notification dispatch and exact destinations, owner hide and
+restore, deletion tombstones, blocking and unblock. Actual desktop and phone
+browser flows passed authoring/edit/delete, reaction reconciliation, exact focus,
+disclosure and axe with no serious/critical violations. Fixture bodies were
+deleted, its source hidden, and credentials/tokens/roles revoked afterward.
+
+A further active-focus check found a web defect: deleting a leaf comment left
+focus on the document body. The small follow-up returns focus to a retained
+comment or its own discussion toggle after dialog cleanup, and restores the menu
+on cancellation. The regression fails before repair. All 19 focused rendered tests, typecheck,
+scoped lint, bundle build and catalog audit pass. Ten real-API browser journeys
+pass across Chromium desktop/phone/tablet, Firefox and WebKit, including keyboard
+cancellation, leaf deletion, parent tombstone focus and retained replies. An
+initial timer-only repair failed WebKit; retained cards now restore focus from
+the dialog exit callback. These browser tests use an isolated API/database; the
+web fix still needs post-deployment verification. This follow-up does not
+change the backend, schema, native source or API contract and requires its own
+protected review and web deployment.
+
+As of 11:35 UTC, iOS build 29 is Apple `VALID` and `IN_BETA_TESTING` internally.
+Specific tester-group membership cannot be verified with the available submission
+key. Android build 22 has been submitted to the existing Alpha closed-test track
+and is **in review**, not yet verified live. Neither is claimed as a public-store
+release. Physical-device VoiceOver/TalkBack and installed signed HTTPS handoff
+remain unverified; simulator/rendered/browser checks do not establish those results.
+
+## Earlier checkpoints (historical, superseded by release evidence above)
+
 The current mobile source `3ee82fe403b358b405568ed5164cf7798eb45e0b`
 (tree `474467f45df50a4cfd6690d8d84fecee8903ef13`) passed the complete installed
 iOS journey on a dedicated iOS 18.3 simulator. The original artifact from

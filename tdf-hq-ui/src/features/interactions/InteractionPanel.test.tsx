@@ -120,6 +120,30 @@ test('author deletion leaves a parent placeholder and replies intact', async () 
   fireEvent.click(await screen.findByRole('menuitem', { name: 'Eliminar mi comentario' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Confirmar' }));
   await screen.findByText('Comentario eliminado'); expect(screen.queryByText('Root comment')).toBeNull(); expect(screen.getByText('A reply')).toBeTruthy();
+  await waitFor(() => expect(document.activeElement?.id).toBe(`comment-${rootId}`));
+});
+
+test('cancelling deletion restores focus to the comment menu without a mutation', async () => {
+  view({ initiallyExpanded: true }); await screen.findByText('Root comment');
+  const menu = screen.getByRole('button', { name: 'Opciones del comentario' }); menu.focus(); fireEvent.click(menu);
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Eliminar mi comentario' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Cancelar' }));
+  await waitFor(() => expect(document.activeElement).toBe(menu));
+  expect(command).not.toHaveBeenCalled();
+});
+
+test('deleting the last leaf comment restores focus to this discussion control', async () => {
+  let deleted = false;
+  root = { ...root, replyCount: 0 };
+  summary.mockImplementation(async () => ({ ...data, commentCount: deleted ? 0 : 1, rootCount: deleted ? 0 : 1 }));
+  comments.mockImplementation(async () => ({ items: deleted ? [] : [root], nextCursor: null, sort: 'newest' }));
+  command.mockImplementation(async (_target, input) => { if (input.operation === 'comment.delete') deleted = true; return {}; });
+  view({ initiallyExpanded: true }); await screen.findByText('Root comment');
+  const menu = screen.getByRole('button', { name: 'Opciones del comentario' }); menu.focus(); fireEvent.click(menu);
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Eliminar mi comentario' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Confirmar' }));
+  await screen.findByText('Todavía no hay comentarios.');
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Ocultar comentarios', exact: true })));
 });
 
 test('bounds retained discussion pages and refetches while allowing backward navigation', async () => {

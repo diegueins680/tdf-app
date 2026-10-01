@@ -1,6 +1,13 @@
 # Universal interactions — implementation and acceptance
 
-Status (2026-09-30): current installed Android and iOS journeys pass. Integration with the latest main branch is undergoing fresh backend/web CI and protected review. Signed-client and production rollout remain pending. No production schema or feature gate changed. See the [current release evidence](verification-2026-09-30.md); dated results below apply only to their stated revisions.
+Status (2026-09-30): backend/web release `645f56fcc44f81609fbfd0e03d683b40376ce77a`
+is deployed; all 159 reviewed migrations are applied and canonical interactions
+are active. Protected review, CI, both installed native journeys, encrypted restore
+rehearsal and live API/browser qualification passed. iOS 29 is in internal beta;
+Android 22 awaits closed-test review. A web deletion-focus follow-up is being
+qualified separately. Physical-device accessibility and signed HTTPS handoff are
+not yet verified. See the [current release evidence](verification-2026-09-30.md);
+dated historical results below apply only to their stated revisions.
 Record discussion publication follows approved editorial membership, independently
 of the feed's preview requirements and 200-membership presentation window. A
 specific `/records` link outside that rendered window performs one authorized
@@ -105,8 +112,8 @@ passing prototype fixture for production rollout.
 - [x] Desktop/mobile interaction flows, semantic controls, focus regressions and browser accessibility checks.
 - [x] Large synthetic discussion EXPLAIN/query-budget evidence.
 - [x] OpenAPI/generated contracts, documentation, full relevant local checks.
-- [ ] Independent repository review, protected green CI, merge and immutable build.
-- [ ] Backup/guarded migration/recovery drill/deployment/live verification.
+- [x] Independent repository review, protected green CI, merge and immutable build.
+- [x] Backup/guarded migration/recovery drill/deployment/live verification.
 
 ## Verification and release state (2026-09-28)
 

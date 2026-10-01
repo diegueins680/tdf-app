@@ -53,6 +53,32 @@ test('real discussion: disclosure, pagination, reaction reconciliation and acces
   expect(violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) }))).toEqual([]);
 });
 
+test('real leaf deletion restores keyboard focus after confirmation and cancellation @critical', async ({ context, baseURL, request }) => {
+  const actor = fixture.actors[0];
+  const { page } = await client({ newContext: async () => context }, baseURL, actor);
+  await page.goto(`/conversacion/target/${fixture.targetId}`);
+  const section = page.getByRole('region', { name: 'Reacciones y conversación' });
+  const composer = section.getByRole('textbox', { name: 'Escribe un comentario', exact: true });
+  const body = `Browser deletion focus ${randomUUID()}`;
+  await composer.fill(body); await section.getByRole('button', { name: 'Publicar', exact: true }).click();
+  await expect(composer).toHaveValue('');
+  const roots = await api(request, actor, `/interactions/targets/club_post/${fixture.postId}/comments?sort=newest&limit=20`);
+  const root = roots.items.find(row => row.body === body); expect(root).toBeTruthy();
+  const card = page.locator(`#comment-${root.id}`);
+  const menu = card.getByRole('button', { name: 'Opciones del comentario' });
+  await menu.focus(); await page.keyboard.press('Enter');
+  await page.getByRole('menuitem', { name: 'Eliminar mi comentario' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancelar' }).click();
+  await expect(menu).toBeFocused(); await expect(card.getByText(body, { exact: true })).toBeVisible();
+  await page.keyboard.press('Enter');
+  await page.getByRole('menuitem', { name: 'Eliminar mi comentario' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click();
+  await expect(card).toHaveCount(0);
+  await expect(section.getByRole('button', { name: 'Ocultar comentarios', exact: true })).toBeFocused();
+  const deleted = await api(request, actor, `/interactions/targets/club_post/${fixture.postId}/comments/${root.id}`);
+  expect(deleted.comment.state).toBe('deleted'); expect(deleted.comment.body).toBe('');
+});
+
 test('real authoring, notification destination, editing and parent deletion retain replies @critical', async ({ browser, baseURL, request }, info) => {
   const owner = fixture.actors[0], fan = fixture.actors[2];
   const options = Object.fromEntries(['viewport', 'hasTouch', 'isMobile', 'deviceScaleFactor', 'userAgent', 'colorScheme'].filter(key => key in info.project.use).map(key => [key, info.project.use[key]]));
@@ -87,6 +113,7 @@ test('real authoring, notification destination, editing and parent deletion reta
     await parent.getByRole('button', { name: 'Opciones del comentario' }).click(); await a.page.getByRole('menuitem', { name: 'Eliminar mi comentario' }).click();
     await a.page.getByRole('dialog').getByRole('button', { name: /Confirmar|Eliminar/ }).click();
     await expect(parent.getByText('Comentario eliminado', { exact: true })).toBeVisible();
+    await expect(parent).toBeFocused();
     await expect(a.page.getByText(replyBody, { exact: true })).toBeVisible();
   } finally { await a.context.close(); await b.context.close(); }
 });
