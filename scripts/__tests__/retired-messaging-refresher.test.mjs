@@ -26,7 +26,7 @@ test('legacy Instagram diagnostic refuses without exposing supplied token prefix
   });
   assert.equal(result.status, 1);
   assert.equal(result.stdout, '');
-  assert.match(result.stderr, /check-messaging-token.mjs/);
+  assert.match(result.stderr, /check-messaging-token\.mjs --check/);
   assert.doesNotMatch(result.stderr, /SENSITIVE_|flyctl/);
 });
 
@@ -38,6 +38,7 @@ test('legacy stored-token helper refuses without reading or exposing token state
     assert.equal(result.status, 1);
     assert.equal(result.stdout, '');
     assert.match(result.stderr, /token helper is retired/);
+    assert.match(result.stderr, /check-messaging-token\.mjs --check/);
     assert.doesNotMatch(result.stderr, /PRIVATE_|flyctl/);
   } finally {
     rmSync(directory, { recursive: true });
