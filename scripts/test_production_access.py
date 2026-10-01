@@ -45,6 +45,7 @@ class AccessTests(unittest.TestCase):
                         'Env': ['DB_HOST=db', 'DB_NAME=tdf_hq', 'DB_PORT=5432', 'SMTP_USERNAME=u', 'SMTP_PASSWORD=p']},
                     'NetworkSettings': {'Networks': {'tdf-production_database': {'NetworkID': 'n', 'IPAddress': '172.1.1.2', 'Aliases': ['db']}}}}
         api, db = container('api'), container('db')
+        db['Mounts'] = [{'Type': 'volume', 'Name': 'tdf_production_postgres_data', 'Destination': '/var/lib/postgresql/data'}]
         if mutate:
             mutate(api, db)
         calls = []
@@ -85,6 +86,19 @@ class AccessTests(unittest.TestCase):
         for mutation in mutations:
             with self.subTest(mutation=mutation), self.assertRaises(SystemExit):
                 self.remote_fixture('inventory', mutation)
+
+    def test_wrong_missing_bind_or_shadowing_database_store_is_rejected(self):
+        for mode in ['metadata', 'inventory', 'credentials']:
+            for mounts in [[],
+                [{'Type': 'volume', 'Name': 'restore_data', 'Destination': '/var/lib/postgresql/data'}],
+                [{'Type': 'bind', 'Name': 'tdf_production_postgres_data', 'Destination': '/var/lib/postgresql/data'}],
+                [{'Type': 'volume', 'Name': 'tdf_production_postgres_data', 'Destination': '/somewhere/else'}],
+                [{'Type': 'volume', 'Name': 'tdf_production_postgres_data', 'Destination': '/var/lib/postgresql/data'},
+                 {'Type': 'bind', 'Destination': '/var/lib/postgresql/data/base'}]]:
+                with self.subTest(mode=mode, mounts=mounts), self.assertRaises(SystemExit):
+                    self.remote_fixture(mode, lambda a, d: d.update(Mounts=mounts))
+        output, _ = self.remote_fixture('metadata')
+        self.assertEqual(json.loads(output)['databaseVolume'], 'tdf_production_postgres_data')
 
     def test_registry_digest_is_distinct_from_local_image_id(self):
         output, _ = self.remote_fixture('inventory',

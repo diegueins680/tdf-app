@@ -41,6 +41,13 @@ def main(mode):
     db = inspect('tdf-production-db-1')
     binding(api, 'api')
     binding(db, 'db')
+    mounts = [mount for mount in db.get('Mounts', [])
+              if mount.get('Destination') == '/var/lib/postgresql/data']
+    if (len(mounts) != 1 or mounts[0].get('Type') != 'volume'
+        or mounts[0].get('Name') != 'tdf_production_postgres_data'
+        or any(mount.get('Destination', '').startswith('/var/lib/postgresql/data/')
+               for mount in db.get('Mounts', []))):
+        raise RuntimeError('Database is not using the authoritative production volume')
     env = dict(entry.split('=', 1) for entry in api['Config']['Env'])
     dbnet = db['NetworkSettings']['Networks'].get('tdf-production_database', {})
     apinet = api['NetworkSettings']['Networks'].get('tdf-production_database', {})
@@ -72,6 +79,7 @@ def main(mode):
                           'apiContainer': api['Id'], 'databaseContainer': db['Id'],
                           'apiImage': api['Image'], 'configuredImage': configured,
                           'databaseImage': db['Image'], 'database': 'tdf_hq',
+                          'databaseVolume': mounts[0]['Name'],
                           'sshServerAddress': os.environ['SSH_CONNECTION'].split()[2],
                           'health': get('health'), 'version': get('version')}))
     elif mode == 'inventory':

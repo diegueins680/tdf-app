@@ -6,14 +6,14 @@ import { fetchJson, validateOriginAddress, validateProvenance } from '../product
 const health = { status: 'ok', db: 'ok' };
 const version = { commit: 'a'.repeat(40) };
 const deployment = { provider: 'hetzner', project: 'tdf-production', database: 'tdf_hq', health, version,
-  sshServerAddress: '178.105.93.101', apiContainer: 'api', databaseContainer: 'db', apiImage: 'digest', configuredImage: 'digest', databaseImage: 'pg17' };
+  databaseVolume: 'tdf_production_postgres_data', sshServerAddress: '178.105.93.101', apiContainer: 'api', databaseContainer: 'db', apiImage: 'digest', configuredImage: 'digest', databaseImage: 'pg17' };
 const metadata = { database: 'tdf_hq', transactionReadOnly: 'on' };
 test('accepts a stable current API/database deployment', () => {
   assert.doesNotThrow(() => validateProvenance(health, version, deployment, deployment, metadata));
 });
 test('refuses mismatched public origin, unhealthy database, stale target and deployment races', () => {
   for (const change of [{ version: { commit: 'b'.repeat(40) } }, { health: { status: 'ok', db: 'down' } },
-    { database: 'trader' }, { provider: 'fly' }, { apiContainer: 'replaced' }, { databaseImage: 'replaced' }]) {
+    { database: 'trader' }, { databaseVolume: 'restore_data' }, { provider: 'fly' }, { apiContainer: 'replaced' }, { databaseImage: 'replaced' }]) {
     assert.throws(() => validateProvenance(health, version, deployment, { ...deployment, ...change }, metadata));
   }
   assert.throws(() => validateProvenance(health, version, deployment, deployment, { ...metadata, transactionReadOnly: 'off' }));

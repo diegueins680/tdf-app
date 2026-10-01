@@ -251,3 +251,8 @@ the server address reported by the authenticated SSH connection. A healthy copy 
 the same Git SHA on another host is rejected before the inventory query runs.
 Introducing a CDN or load balancer requires a reviewed replacement for this direct
 origin binding; the inventory intentionally fails closed in that topology.
+
+The shared access helper also requires the database container to mount the named
+`tdf_production_postgres_data` volume at `/var/lib/postgresql/data`, with no child
+mount shadowing that store. A replacement volume, bind mount or missing mount is
+rejected before metadata, credentials or inventory are returned.

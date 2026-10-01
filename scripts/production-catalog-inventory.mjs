@@ -179,7 +179,7 @@ export function validateProvenance(health, version, before, after, metadata) {
         x.provider !== 'hetzner' || x.project !== 'tdf-production' || x.database !== PRODUCTION_DATABASE)) {
     throw new Error('Public API and SSH production provenance do not agree.');
   }
-  for (const field of ['sshServerAddress', 'apiContainer', 'databaseContainer', 'apiImage', 'configuredImage', 'databaseImage']) {
+  for (const field of ['databaseVolume', 'sshServerAddress', 'apiContainer', 'databaseContainer', 'apiImage', 'configuredImage', 'databaseImage']) {
     if (!before[field] || before[field] !== after[field]) throw new Error('Deployment changed during inventory.');
   }
   if (metadata?.database !== PRODUCTION_DATABASE || metadata?.transactionReadOnly !== 'on') {
