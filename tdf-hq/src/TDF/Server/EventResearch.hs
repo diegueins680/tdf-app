@@ -57,6 +57,7 @@ import TDF.DTO.EventResearchDTO
 import TDF.Models.SocialEventsModels hiding (eventResearchCandidateContentHash)
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.SocialEventLifecycle as EventLifecycle
+import TDF.Services.EventDiscovery (countEventPilotIdentitiesDb)
 import qualified TDF.Trials.Server as TrialsServer
 
 type AppM = ReaderT Env Handler
@@ -1050,7 +1051,7 @@ loadPilotDTO = do
     case control of
         Nothing -> pure (Left err500{errBody = "Event research pilot control is not initialized"})
         Just (Entity _ row) -> do
-            activeCount <- count [EventResearchCandidateIsPilot ==. True, EventResearchCandidateReviewState !=. "discarded"]
+            activeCount <- countEventPilotIdentitiesDb
             pure . Right $
                 EventResearchPilotDTO
                     { erPilotApproved = eventResearchPilotControlApproved row

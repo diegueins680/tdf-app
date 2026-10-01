@@ -45,6 +45,11 @@ async function mockRsvpApi(page) {
   const bodies = [];
 
   await page.route('**/health', (route) => route.fulfill({ json: { status: 'ok' } }));
+  // A missing API route may be served by a stale deployment's SPA fallback.
+  // Discussion failure must not take down the event or its RSVP controls.
+  await page.route('**/interactions/targets/**', (route) => route.fulfill({
+    contentType: 'text/html', body: '<!doctype html><html>Unavailable API</html>',
+  }));
   await page.route('**/session', (route) => authenticated
     ? route.fulfill({
       json: {
@@ -167,10 +172,14 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   test.setTimeout(90_000);
   test.skip(testInfo.project.name !== 'chromium-desktop', 'The complete mutation journey runs once on desktop Chromium.');
   const api = await mockRsvpApi(page);
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
   await page.goto('/eventos/42?utm_source=tdf_web&utm_medium=share&utm_campaign=event_rsvp');
   await expect(page.getByRole('heading', { name: event.title })).toBeVisible();
+  await page.getByText(/Cargando conversación…|No se pudo cargar la conversación\./).scrollIntoViewIfNeeded();
+  await expect(page.getByText('No se pudo cargar la conversación.')).toBeVisible();
   await page.getByRole('button', { name: 'Voy' }).dblclick();
 
   await expect(page).toHaveURL(/\/login\?.*signup=1.*redirect=%2Feventos%2F42/);
@@ -207,6 +216,7 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await expect.poll(() => api.getState().currentRsvp?.rsvpStatus).toBe('declined');
   await page.goto('/perfil/101');
   await expect(page.getByText('Todavía no hay actividad de RSVP visible.')).toBeVisible();
+  expect(pageErrors).toEqual([]);
 });
 
 test('private events do not enumerate and cancelled public events disable RSVP and sharing', async ({ page }, testInfo) => {

@@ -1,0 +1,42 @@
+#cloud-config
+# Dedicated TDF host. No credentials belong in cloud-init or provider metadata.
+package_update: true
+package_upgrade: true
+packages:
+  - docker.io
+  - docker-compose-v2
+  - unattended-upgrades
+  - ca-certificates
+  - curl
+  - jq
+  - rsync
+ssh_pwauth: false
+disable_root: false
+write_files:
+  - path: /etc/ssh/sshd_config.d/10-tdf.conf
+    permissions: '0644'
+    content: |
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PermitRootLogin prohibit-password
+      X11Forwarding no
+  - path: /etc/docker/daemon.json
+    permissions: '0644'
+    content: |
+      {"log-driver":"local","log-opts":{"max-size":"10m","max-file":"3"},"live-restore":true}
+  - path: /etc/sysctl.d/90-tdf-memory.conf
+    permissions: '0644'
+    content: |
+      vm.swappiness=10
+runcmd:
+  - [install, -d, -m, '0700', /opt/tdf, /opt/tdf/restore, /opt/tdf/backups]
+  - [systemctl, enable, --now, docker]
+  - [systemctl, restart, docker]
+  - [systemctl, reload, ssh]
+  - [sysctl, --system]
+  # Swap is a last-resort OOM buffer, not additional application capacity.
+  - [fallocate, -l, 1G, /swapfile]
+  - [chmod, '0600', /swapfile]
+  - [mkswap, /swapfile]
+  - [swapon, /swapfile]
+  - [sh, -c, 'echo "/swapfile none swap sw 0 0" >> /etc/fstab']

@@ -19,8 +19,10 @@ module TDF.Services.EventDiscovery
   , fetchTicketmasterEventsForCity
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
+  , completeEventDiscoverySourceRun
   , loadActiveUserCities
   , loadSubscribedDiscoveryCities
+  , loadEcuadorDiscoveryCities
   , decodeBuenPlanResponse
   , normalizeTicketmasterResponse
   , normalizeUserCities
@@ -29,14 +31,16 @@ module TDF.Services.EventDiscovery
   , reconcileProviderEvents
   , discoveredEventFitsPilotLimit
   , countImportedDiscoveryEvents
+  , countEventPilotIdentitiesDb
   , isDiscoveredEventKnown
+  , discoveredEventPublicationReady
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
   ) where
 
 import Control.Applicative ((<|>))
 import Control.Exception (try)
-import Control.Monad (filterM, forM, forM_, unless)
+import Control.Monad (filterM, forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (threadDelay)
 import Data.Aeson
@@ -52,6 +56,7 @@ import Data.Aeson
   , (.!=)
   , (.=)
   )
+import Data.Int (Int64)
 import Data.Aeson.Types (parseMaybe)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BS8
@@ -154,7 +159,7 @@ data DiscoveredEvent = DiscoveredEvent
   , discoveredEventTitle :: Text
   , discoveredEventDescription :: Maybe Text
   , discoveredEventStart :: UTCTime
-  , discoveredEventEnd :: UTCTime
+  , discoveredEventEnd :: Maybe UTCTime
   , discoveredEventVenue :: DiscoveredVenue
   , discoveredEventArtists :: [DiscoveredArtist]
   , discoveredEventPriceCents :: Maybe Int
@@ -252,22 +257,59 @@ finishEventDiscoveryRun ::
   Int ->
   DiscoverySyncStats ->
   IO ()
-finishEventDiscoveryRun pool (EventDiscoveryRunHandle runKey) now citiesCount stats =
-  runSqlPool
-    ( update
-        runKey
-        [ Social.ExternalEventDiscoveryRunStatus =. "completed"
-        , Social.ExternalEventDiscoveryRunCitiesCount =. citiesCount
-        , Social.ExternalEventDiscoveryRunEventsSeen =. discoveryEventsSeen stats
-        , Social.ExternalEventDiscoveryRunEventsCreated =. discoveryEventsCreated stats
-        , Social.ExternalEventDiscoveryRunEventsUpdated =. discoveryEventsUpdated stats
-        , Social.ExternalEventDiscoveryRunVenuesCreated =. discoveryVenuesCreated stats
-        , Social.ExternalEventDiscoveryRunArtistsCreated =. discoveryArtistsCreated stats
-        , Social.ExternalEventDiscoveryRunErrorMessage =. Nothing
-        , Social.ExternalEventDiscoveryRunFinishedAt =. Just now
+finishEventDiscoveryRun pool handle now citiesCount stats =
+  runSqlPool (finishEventDiscoveryRunDb handle now citiesCount stats) pool
+
+finishEventDiscoveryRunDb ::
+  EventDiscoveryRunHandle -> UTCTime -> Int -> DiscoverySyncStats -> SqlPersistT IO ()
+finishEventDiscoveryRunDb (EventDiscoveryRunHandle runKey) now citiesCount stats =
+  update runKey
+    [ Social.ExternalEventDiscoveryRunStatus =. "completed"
+    , Social.ExternalEventDiscoveryRunCitiesCount =. citiesCount
+    , Social.ExternalEventDiscoveryRunEventsSeen =. discoveryEventsSeen stats
+    , Social.ExternalEventDiscoveryRunEventsCreated =. discoveryEventsCreated stats
+    , Social.ExternalEventDiscoveryRunEventsUpdated =. discoveryEventsUpdated stats
+    , Social.ExternalEventDiscoveryRunVenuesCreated =. discoveryVenuesCreated stats
+    , Social.ExternalEventDiscoveryRunArtistsCreated =. discoveryArtistsCreated stats
+    , Social.ExternalEventDiscoveryRunErrorMessage =. Nothing
+    , Social.ExternalEventDiscoveryRunFinishedAt =. Just now
+    ]
+
+-- | Fetches happen outside the transaction. Completion rechecks source authority
+-- under its row lock before any absence reconciliation, including empty feeds.
+-- Disablement either wins first (no completion writes) or follows this commit.
+completeEventDiscoverySourceRun ::
+  ConnectionPool -> Social.EventDiscoverySourceId -> EventDiscoveryRunHandle ->
+  UTCTime -> Text -> [EventDiscoveryCity] -> [Text] -> DiscoverySyncStats -> IO ()
+completeEventDiscoverySourceRun pool sourceKey handle now provider cities seen stats =
+  runSqlPool complete pool
+  where
+    complete = do
+      backend <- T.toCaseFold <$> getRDBMS
+      sources <- if "postgres" `T.isInfixOf` backend
+        then rawSql "SELECT ?? FROM event_discovery_source WHERE id=? FOR UPDATE"
+          [toPersistValue sourceKey]
+        else maybe [] (pure . Entity sourceKey) <$> get sourceKey
+      case sources of
+        [Entity _ source]
+          | Social.eventDiscoverySourceEnabled source
+            && Social.eventDiscoverySourceSourceKey source == provider -> pure ()
+        _ -> liftIO (fail "Event source disabled or unavailable before completion")
+      -- Reference status updates acquire the pilot lock in their trigger.
+      -- Match imports' source -> pilot -> event order before reconciliation.
+      when ("postgres" `T.isInfixOf` backend) $ do
+        controls <- rawSql
+          "SELECT approved FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE"
+          [] :: SqlPersistT IO [Single Bool]
+        unless (length controls == 1) (liftIO (fail "Event pilot control unavailable"))
+      _ <- reconcileProviderEventsDb now provider cities seen
+      finishEventDiscoveryRunDb handle now (length cities) stats
+      update sourceKey
+        [ Social.EventDiscoverySourceConsecutiveFailures =. 0
+        , Social.EventDiscoverySourceLastSuccessAt =. Just now
+        , Social.EventDiscoverySourceLastError =. Nothing
+        , Social.EventDiscoverySourceUpdatedAt =. now
         ]
-    )
-    pool
 
 failEventDiscoveryRun ::
   ConnectionPool ->
@@ -702,7 +744,7 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
       , discoveredEventTitle = title
       , discoveredEventDescription = description
       , discoveredEventStart = buenPlanEventStart
-      , discoveredEventEnd = addUTCTime (3 * 60 * 60) buenPlanEventStart
+      , discoveredEventEnd = Nothing
       , discoveredEventVenue =
           DiscoveredVenue
             { discoveredVenueExternalId = venueExternalId
@@ -1002,8 +1044,8 @@ normalizeStructuredEvent cfg sourceKey city now StructuredFeedEvent{..} = do
   venueName <- cleanSingleLine 300 structuredEventVenue
   let endTime =
         case structuredEventEnd of
-          Just candidate | candidate > structuredEventStart -> candidate
-          _ -> addUTCTime (3 * 60 * 60) structuredEventStart
+          Just candidate | candidate > structuredEventStart -> Just candidate
+          _ -> Nothing
       lookaheadEnd =
         addUTCTime
           (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400))
@@ -1075,13 +1117,13 @@ normalizeStructuredArtist sourceKey rawName = do
 normalizeStructuredStatus ::
   UTCTime ->
   UTCTime ->
-  UTCTime ->
+  Maybe UTCTime ->
   Maybe Text ->
   Text
 normalizeStructuredStatus now startsAt endsAt rawStatus
-  | endsAt < now = "completed"
-  | startsAt <= now && endsAt >= now = "live"
   | normalized `elem` ["cancelled", "canceled"] = "cancelled"
+  | maybe False (< now) endsAt = "completed"
+  | startsAt <= now && maybe False (>= now) endsAt = "live"
   | normalized `elem` ["on_sale", "onsale", "confirmed"] = "on_sale"
   | otherwise = "announced"
   where
@@ -1187,6 +1229,15 @@ normalizeCityKey = T.toCaseFold . T.unwords . T.words . T.strip
 loadActiveUserCities :: ConnectionPool -> IO [Text]
 loadActiveUserCities pool =
   map eventDiscoveryCityName <$> loadSubscribedDiscoveryCities pool
+
+-- Discovery scope is independent of personal follow preferences. Reuse the
+-- canonical city registry, including places attached to approved venue feeds.
+loadEcuadorDiscoveryCities :: ConnectionPool -> IO [EventDiscoveryCity]
+loadEcuadorDiscoveryCities pool = do
+  rows <- runSqlPool (rawSql
+    "SELECT name,country_code,time_zone FROM event_city WHERE country_code='EC' ORDER BY CASE WHEN normalized_name='quito' THEN 0 ELSE 1 END,normalized_name"
+    [] :: SqlPersistT IO [(Single Text,Single Text,Single (Maybe Text))]) pool
+  pure [EventDiscoveryCity name country zone | (Single name,Single country,Single zone) <- rows]
 
 loadSubscribedDiscoveryCities :: ConnectionPool -> IO [EventDiscoveryCity]
 loadSubscribedDiscoveryCities pool = do
@@ -1416,8 +1467,8 @@ normalizeTicketmasterEvent configuredDefault requestedCity now TicketmasterEvent
         endText <- ticketmasterEndDateTime endData
         iso8601ParseM (T.unpack endText)
       end = case parsedEnd of
-        Just candidate | candidate > start -> candidate
-        _ -> addUTCTime (3 * 60 * 60) start
+        Just candidate | candidate > start -> Just candidate
+        _ -> Nothing
       classifications = ticketmasterEventClassifications
       segmentName = firstClassificationName ticketmasterSegment classifications
       genreNames = classificationGenreNames classifications
@@ -1551,13 +1602,13 @@ normalizeEventType title segment
 normalizeEventStatus ::
   UTCTime ->
   UTCTime ->
-  UTCTime ->
+  Maybe UTCTime ->
   Maybe Text ->
   Bool ->
   Text
 normalizeEventStatus now startsAt endsAt sourceStatus saleOpen
   | normalizedSource `elem` ["cancelled", "canceled"] = "cancelled"
-  | now >= startsAt && now <= endsAt = "live"
+  | now >= startsAt && maybe False (>= now) endsAt = "live"
   | saleOpen = "on_sale"
   | otherwise = "announced"
   where
@@ -1661,6 +1712,17 @@ joinDescription parts =
     [] -> Nothing
     values -> Just (T.intercalate "\n\n" values)
 
+-- Approval cannot make an incomplete provider record publishable. Missing
+-- confirmed end remains valid; venue, sale reference and lineup are required.
+discoveredEventPublicationReady :: DiscoveredEvent -> Bool
+discoveredEventPublicationReady DiscoveredEvent{..} =
+  not (T.null (T.strip discoveredEventTitle))
+    && not (T.null (T.strip (discoveredVenueName discoveredEventVenue)))
+    && not ("Ubicación publicada en Buen Plan" `T.isPrefixOf` discoveredVenueName discoveredEventVenue)
+    && not (null discoveredEventArtists)
+    && maybe False ("https://" `T.isPrefixOf`) discoveredEventTicketUrl
+    && discoveredVenueCountryCode discoveredEventVenue == Just "EC"
+
 syncDiscoveredEvent :: ConnectionPool -> UTCTime -> DiscoveredEvent -> IO DiscoverySyncStats
 syncDiscoveredEvent pool now event =
   runSqlPool (syncDiscoveredEventDb True now event) pool
@@ -1706,7 +1768,25 @@ discoveredEventFitsPilotLimit pool pilotLimit event =
           mergeCandidate <- findCanonicalEventCandidate event
           case mergeCandidate of
             Just _ -> pure True
-            Nothing -> (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
+            Nothing -> do
+              backend <- T.toCaseFold <$> getRDBMS
+              if "postgres" `T.isInfixOf` backend then do
+                approved <- rawSql
+                  "SELECT approved FROM event_research_pilot_control WHERE control_key='default'"
+                  [] :: SqlPersistT IO [Single Bool]
+                if approved == [Single True] then pure True else do
+                  total <- countEventPilotIdentitiesDb
+                  pure (total < min 20 (max 0 pilotLimit))
+              else (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
+
+-- | The status endpoint and PostgreSQL writer preflight share the same canonical
+-- identities as the database capacity guard, including linked research/imports.
+countEventPilotIdentitiesDb :: SqlPersistT IO Int
+countEventPilotIdentitiesDb = do
+  rows <- rawSql "SELECT count(*) FROM tdf_event_pilot_keys()" []
+  case rows of
+    [Single total] -> pure total
+    _ -> liftIO (fail "Event pilot capacity could not be read")
 
 countImportedDiscoveryEventsDb :: SqlPersistT IO Int
 countImportedDiscoveryEventsDb = do
@@ -1807,7 +1887,11 @@ reconcileProviderEvents ::
   [Text] ->
   IO Int
 reconcileProviderEvents pool now provider targetCities seenExternalIds =
-  runSqlPool reconcile pool
+  runSqlPool (reconcileProviderEventsDb now provider targetCities seenExternalIds) pool
+
+reconcileProviderEventsDb ::
+  UTCTime -> Text -> [EventDiscoveryCity] -> [Text] -> SqlPersistT IO Int
+reconcileProviderEventsDb now provider targetCities seenExternalIds = reconcile
   where
     seen =
       Map.fromList
@@ -2028,7 +2112,25 @@ resolveAllowedImportedUpdateStateId currentStateId desiredStateId =
       pure (if allowed then desiredStateId else currentState)
 
 syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
-syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
+syncDiscoveredEventDb requestedPublication now event@DiscoveredEvent{..} = do
+  -- Every automated entry point locks its enabled source and the existing
+  -- pilot before event/entity locks. Database triggers enforce the shared cap in the same transaction.
+  backend <- T.toCaseFold <$> getRDBMS
+  autoPublish <- if "postgres" `T.isInfixOf` backend then do
+    sources <- rawSql
+      "SELECT id FROM event_discovery_source WHERE source_key=? AND enabled AND source_type IN ('ticketmaster','buenplan','ical','json') FOR SHARE"
+      [toPersistValue discoveredEventProvider] :: SqlPersistT IO [Single Int64]
+    unless (length sources == 1) (liftIO (fail "Event source disabled or unavailable"))
+    controls <- rawSql
+      "SELECT approved FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE"
+      [] :: SqlPersistT IO [Single Bool]
+    unless (length controls == 1) (liftIO (fail "Event pilot control unavailable"))
+    authority <- rawSql
+      "SELECT true FROM event_discovery_publication_approval approval JOIN event_discovery_source source ON source.id=approval.source_id WHERE source.source_key=? AND source.enabled AND approval.revoked_at IS NULL AND approval.approved_at<=? LIMIT 1"
+      [toPersistValue discoveredEventProvider,toPersistValue now] :: SqlPersistT IO [Single Bool]
+    pure (requestedPublication && controls == [Single True] && authority == [Single True]
+      && discoveredEventPublicationReady event)
+    else pure requestedPublication -- SQLite unit fixtures; deployed storage is PostgreSQL.
   initialExistingRef <-
     getBy
       (Social.UniqueExternalEventRef discoveredEventProvider discoveredEventExternalId)
@@ -2039,6 +2141,8 @@ syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
         _ <- lockDiscoveredSocialEvent (Social.externalEventRefEventId ref)
         fmap (Entity refKey) <$> get refKey
   case existingRef of
+    Just (Entity _ ref) | now < Social.externalEventRefLastSeenAt ref ->
+      pure emptyDiscoverySyncStats { discoveryEventsSeen=1 }
     Just (Entity refKey ref)
       | Social.externalEventRefIsSuppressed ref -> do
           update
@@ -2203,7 +2307,7 @@ syncUnsuppressedDiscoveredEventDb
               , Social.SocialEventVenueId =. Just venueKey
               , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
               , Social.SocialEventStartTime =. discoveredEventStart
-              , Social.SocialEventEndTime =. Just discoveredEventEnd
+              , Social.SocialEventEndTime =. discoveredEventEnd
               , Social.SocialEventPriceCents =. discoveredEventPriceCents
               , Social.SocialEventEventTypeId =. Just eventTypeUuid
               , Social.SocialEventWorkflowStateId =. Just workflowStateId
@@ -2246,7 +2350,7 @@ syncUnsuppressedDiscoveredEventDb
                     , Social.SocialEventVenueId =. Just venueKey
                     , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
                     , Social.SocialEventStartTime =. discoveredEventStart
-                    , Social.SocialEventEndTime =. Just discoveredEventEnd
+                    , Social.SocialEventEndTime =. discoveredEventEnd
                     , Social.SocialEventPriceCents =. discoveredEventPriceCents
                     , Social.SocialEventEventTypeId =. Just eventTypeUuid
                     , Social.SocialEventWorkflowStateId =. Just workflowStateId
@@ -2267,7 +2371,7 @@ syncUnsuppressedDiscoveredEventDb
                     , Social.socialEventEventTypeId = Just eventTypeUuid
                     , Social.socialEventWorkflowStateId = Just desiredWorkflowStateId
                     , Social.socialEventStartTime = discoveredEventStart
-                    , Social.socialEventEndTime = Just discoveredEventEnd
+                    , Social.socialEventEndTime = discoveredEventEnd
                     , Social.socialEventPriceCents = discoveredEventPriceCents
                     , Social.socialEventCurrencyId = Nothing
                     , Social.socialEventCapacity = Nothing

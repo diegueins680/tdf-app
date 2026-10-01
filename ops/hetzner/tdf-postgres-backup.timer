@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily TDF PostgreSQL logical backup
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+Unit=tdf-postgres-backup.service
+
+[Install]
+WantedBy=timers.target

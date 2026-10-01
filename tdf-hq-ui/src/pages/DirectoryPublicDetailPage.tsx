@@ -1,3 +1,4 @@
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import {
   Alert,
   Box,
@@ -23,7 +24,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
+import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
 import { API_BASE_URL } from '../api/client';
@@ -153,6 +154,13 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   if (detail.isLoading) return <Stack minHeight="55vh" alignItems="center" justifyContent="center"><CircularProgress aria-label="Cargando perfil del directorio" /></Stack>;
   if (detail.isError) return <Container maxWidth="md" sx={{ py: 8 }}><Alert severity="error">Este contenido no está publicado, vigente o disponible.</Alert></Container>;
 
+  // Moment media uses the existing authenticated event endpoint. Preserve old
+  // public discussion URLs while sending them through the normal login route.
+  const requestedMoment = new URLSearchParams(location.search).get('moment');
+  if (kind === 'event' && requestedMoment && /^[1-9][0-9]{0,17}$/.test(requestedMoment)) {
+    return <Navigate replace to={`/social/eventos/${encodeURIComponent(identifier)}?moment=${requestedMoment}`} />;
+  }
+
   const locationValue = record(value['location']) ?? rows(value['locations'])[0];
   const professions = rows(value['professions']);
   const instruments = rows(value['instruments']);
@@ -274,6 +282,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                 </Stack>
               )}
 
+              {kind !== 'venue' && targetId && <InteractionPanel kind={kind === 'profile' ? 'directory_profile' : kind} entityKey={targetId} />}
               {kind === 'profile' && <ProfileReviews slug={identifier} profileId={targetId} authenticated={Boolean(session)} />}
 
               {shouldResumeContact ? (

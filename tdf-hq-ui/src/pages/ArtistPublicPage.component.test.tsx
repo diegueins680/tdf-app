@@ -1,14 +1,15 @@
 import { jest } from '@jest/globals';
+jest.unstable_mockModule('../features/interactions/InteractionPanel', () => ({ InteractionPanel: () => null }));
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
-import type { ArtistProfileDTO, FanFollowDTO } from '../api/types';
+import type { ArtistProfileDTO, ArtistReleaseDTO, FanFollowDTO } from '../api/types';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
 const getPublicArtistMock = jest.fn<(artistRef: number | string) => Promise<ArtistProfileDTO>>();
-const getReleasesMock = jest.fn(async () => []);
+const getReleasesMock = jest.fn<() => Promise<ArtistReleaseDTO[]>>(async () => []);
 const listFollowsMock = jest.fn<() => Promise<FanFollowDTO[]>>();
 const followMock = jest.fn(async () => ({
   ffArtistId: 17,
@@ -52,9 +53,9 @@ jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
 jest.unstable_mockModule('../components/ArtistFansList', () => ({ default: () => null }));
-jest.unstable_mockModule('../components/LazyPaginatedList', () => ({ default: () => null }));
 jest.unstable_mockModule('../components/merch/MerchReputationSummary', () => ({ ArtistMerchStores: () => null }));
 jest.unstable_mockModule('react-i18next', () => ({
+  initReactI18next: { type: '3rdParty', init: () => undefined },
   useTranslation: () => ({
     i18n: { language: 'es', resolvedLanguage: 'es' },
     t: (key: string, options?: { artist?: string }) => ({
@@ -130,6 +131,16 @@ describe('ArtistPublicPage follow continuity', () => {
 
   afterEach(() => {
     cleanup();
+  });
+
+  it('selects and focuses an artist release beyond the first source page', async () => {
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: jest.fn() });
+    getReleasesMock.mockResolvedValue(Array.from({ length: 25 }, (_, index) => ({ arArtistId: 17, arReleaseId: index + 1, arTitle: `Artist release ${index + 1}` })));
+    const view = renderPage('/a/las-sinteticas?release=17');
+    const title = await screen.findByRole('heading', { name: 'Artist release 17' });
+    await waitFor(() => expect(document.activeElement).toBe(title.closest('[tabindex="-1"]')));
+    expect(screen.queryByRole('heading', { name: 'Artist release 1' })).toBeNull();
+    view.unmount(); view.queryClient.clear();
   });
 
   it('names both the artist and release loading states', async () => {

@@ -43,6 +43,7 @@ const PublicReputationRightsPage = lazy(() => import('../pages/PublicReputationR
 const PublicEventTicketsPage = lazy(() => import('../pages/PublicEventTicketsPage'));
 const PublicWhatsAppConsentPage = lazy(() => import('../pages/PublicWhatsAppConsentPage'));
 const PublicWhatsAppConsentSuccessPage = lazy(() => import('../pages/PublicWhatsAppConsentSuccessPage'));
+const InteractionPage = lazy(() => import('../pages/InteractionPage'));
 const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
 const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const TrialsPage = lazy(() => import('../pages/TrialsPage'));
@@ -78,6 +79,7 @@ export function renderPublicRoutes() {
       <Route path="/eventos/:eventId/entradas" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/eventos/:eventId/orden/:orderId" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/venues/:venueId" element={<PublicBranding><DirectoryPublicDetailPage kind="venue" /></PublicBranding>} />
+      <Route path="/conversacion/:destinationKind/:destinationId" element={<PublicBranding><InteractionPage /></PublicBranding>} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
       <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />
       <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />

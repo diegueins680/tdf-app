@@ -21,6 +21,19 @@ on:
       - '.github/workflows/**'
       - 'fly.toml'
   workflow_dispatch:
+    inputs:
+      force_backend:
+        description: Build the backend even when path classification would skip it.
+        type: boolean
+        default: false
+      publish_backend_artifact:
+        description: Retain the tested backend executable for one day.
+        type: boolean
+        default: false
+      native_android_run:
+        description: Successful TDF-mobile Android test-build run matching the checked-in mobile commit.
+        type: string
+        default: ''
   workflow_call:
     inputs:
       force_backend:
@@ -59,7 +72,7 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          FORCE_BACKEND: ${{ inputs.force_backend && 'true' || 'false' }}
+          FORCE_BACKEND: ${{ (inputs.force_backend || (github.event_name == 'workflow_dispatch' && inputs.native_android_run != '')) && 'true' || 'false' }}
         run: |
           args=(--base "$BASE_SHA" --head "$HEAD_SHA" --github-output "$GITHUB_OUTPUT")
           if [ "$FORCE_BACKEND" = 'true' ]; then args+=(--force-backend); fi
@@ -203,7 +216,7 @@ jobs:
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev postgresql-client nodejs pkg-config git curl ca-certificates
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client nodejs python3 pkg-config git curl ca-certificates
 
       - name: Restore immutable Stack dependencies
         uses: actions/cache@v6
@@ -305,6 +318,14 @@ jobs:
           createdb -h postgres -U postgres tdf_records_runtime_test
           ./scripts/test-records-ingestion-runtime.sh
 
+      - name: Verify shared event pilot and publication boundaries
+        env:
+          PGPASSWORD: postgres
+          TDF_EVENT_BOUNDARY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_event_boundary_test
+        run: |
+          createdb -h postgres -U postgres tdf_event_boundary_test
+          ./scripts/test-event-ingestion-boundaries.sh
+
       - name: Verify automatic migrations against the production schema
         env:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
@@ -352,14 +373,135 @@ jobs:
           TDF_PUBLIC_BOOKING_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-public-booking-http-concurrency.sh
 
+      - name: Verify universal interactions through real HTTP sessions
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_INTERACTION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: bash scripts/interactions/test-http.sh
+
       - name: Upload tested backend executable
-        if: inputs.publish_backend_artifact == true
+        if: inputs.publish_backend_artifact == true || (github.event_name == 'workflow_dispatch' && inputs.native_android_run != '')
         uses: actions/upload-artifact@v7
         with:
           name: tdf-hq-binary-${{ github.sha }}
           path: tdf-hq/.release/tdf-hq-exe
           if-no-files-found: error
           retention-days: 1
+
+  native-android-e2e:
+    if: github.event_name == 'workflow_dispatch' && inputs.native_android_run != ''
+    needs: backend-quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      actions: read
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - uses: actions/checkout@v7
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@v8
+        with:
+          name: tdf-hq-binary-${{ github.sha }}
+          path: artifacts/interaction-backend
+      - name: Verify and download the matching native test artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MOBILE_RUN: ${{ inputs.native_android_run }}
+        run: |
+          [[ "$MOBILE_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/diegueins680/TDF-mobile/actions/runs/$MOBILE_RUN" > "$RUNNER_TEMP/mobile-run.json"
+          python3 - <<'PYVERIFY'
+          import json, os, pathlib, subprocess
+          run=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'mobile-run.json').read_text())
+          expected=subprocess.check_output(['git','-C','tdf-mobile','rev-parse','HEAD'],text=True).strip()
+          assert run['conclusion']=='success' and run['path']=='.github/workflows/interaction-android.yml'
+          source=run['head_sha']
+          assert len(source)==40 and all(c in '0123456789abcdef' for c in source)
+          if source != expected:
+              subprocess.run(['git','-C','tdf-mobile','fetch','--no-tags','--depth=1','origin',source],check=True)
+              changed=subprocess.check_output(['git','-C','tdf-mobile','diff','--name-only',source,expected],text=True).splitlines()
+              # Only Maestro YAML may differ. App, dependencies, native projects,
+              # release scripts and build workflows must remain byte-identical.
+              assert changed and all(p.startswith('e2e/interactions/') and p.endswith('.yaml') for p in changed), 'Native artifact application source differs'
+          print('Verified native application source; test fixtures may advance independently')
+          PYVERIFY
+          gh run download "$MOBILE_RUN" --repo diegueins680/TDF-mobile --pattern 'interaction-android-*' --dir artifacts/interaction-apk
+      - name: Install test runtime and verified Maestro CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client libpq5 libgmp10 libnuma1
+          chmod +x artifacts/interaction-backend/tdf-hq-exe
+          ldd artifacts/interaction-backend/tdf-hq-exe
+          curl --fail --location --silent --show-error https://github.com/mobile-dev-inc/Maestro/releases/download/cli-2.5.1/maestro.zip -o "$RUNNER_TEMP/maestro.zip"
+          printf '%s  %s\n' '2d924bfd37cccabca438a727213648cbfe4f8bb711559ec8e9d199dc09a5ce52' "$RUNNER_TEMP/maestro.zip" | sha256sum --check
+          unzip -q "$RUNNER_TEMP/maestro.zip" -d "$RUNNER_TEMP/maestro-cli"
+          echo "$RUNNER_TEMP/maestro-cli/maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable hardware virtualization on the disposable runner
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run installed Android discussion journeys
+        uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_INTERACTION_SERVER_BIN: ${{ github.workspace }}/artifacts/interaction-backend/tdf-hq-exe
+          TDF_INTERACTION_SERVER_PORT: '18128'
+          TDF_INTERACTION_NATIVE_DEVICE: emulator-5554
+          TDF_INTERACTION_NATIVE_APP_ID: com.tdf.records
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          cores: 2
+          ram-size: 2048M
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install "$(find artifacts/interaction-apk -name '*.apk' -print -quit)"
+            adb reverse tcp:18128 tcp:18128
+            adb shell am start -W -n com.tdf.records/.MainActivity
+            bash scripts/interactions/test-http.sh || { adb logcat -b crash -d; find "$HOME/.maestro/tests" -name '*.png' -exec cp {} /tmp/ \;; exit 1; }
+      - name: Retain synthetic native screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: interaction-android-evidence-${{ github.sha }}
+          path: |
+            /tmp/tdf-interaction-native-*.png
+            /tmp/screenshot-*.png
+          if-no-files-found: ignore
+          retention-days: 7
 
   quality:
     if: always()
@@ -370,6 +512,7 @@ jobs:
       - persona-web-e2e
       - mobile-quality
       - backend-quality
+      - native-android-e2e
     runs-on: ubuntu-latest
     steps:
       - name: Require every selected quality job to pass
@@ -380,8 +523,9 @@ jobs:
           PERSONA_WEB_E2E_RESULT: ${{ needs.persona-web-e2e.result }}
           MOBILE_RESULT: ${{ needs.mobile-quality.result }}
           BACKEND_RESULT: ${{ needs.backend-quality.result }}
+          NATIVE_ANDROID_RESULT: ${{ needs.native-android-e2e.result }}
         run: |
-          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$PERSONA_WEB_E2E_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT"; do
+          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$PERSONA_WEB_E2E_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT" "$NATIVE_ANDROID_RESULT"; do
             case "$result" in
               success|skipped) ;;
               *) echo "Selected quality job did not pass: $result" >&2; exit 1 ;;
