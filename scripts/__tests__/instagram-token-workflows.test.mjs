@@ -737,3 +737,21 @@ test('Instagram repair commands honor backend credential aliases without printin
     assert.doesNotMatch(command, /test-app|test-secret|test-verify/);
   }
 });
+
+test('printed webhook repairs reject missing or empty verify credentials before curl', async () => {
+  const source = await readFile(new URL('../diagnose-social.mjs', import.meta.url), 'utf8');
+  for (const object of ['instagram', 'page']) {
+    const line = source.split('\n').find(line => line.includes('console.log(') && line.includes('object=' + object));
+    const command = line.trim().slice("console.log('".length, -3);
+    for (const empty of [{}, { INSTAGRAM_VERIFY_TOKEN: '', IG_VERIFY_TOKEN: '', FACEBOOK_MESSAGING_TOKEN: '', FACEBOOK_PAGE_ACCESS_TOKEN: '' }]) {
+      const result = spawnSync('/bin/bash', ['-c', 'curl() { echo UNEXPECTED_PROVIDER_CALL; }; ' + command], {
+        encoding: 'utf8', timeout: 10000,
+        env: { ...empty, FACEBOOK_APP_ID: 'test-app', FACEBOOK_APP_SECRET: 'UNLOGGED_SECRET' },
+      });
+      assert.notEqual(result.status, 0);
+      assert.equal(result.stdout, '');
+      assert.match(result.stderr, /Set INSTAGRAM_VERIFY_TOKEN or IG_VERIFY_TOKEN/);
+      assert.doesNotMatch(result.stderr, /UNLOGGED_SECRET/);
+    }
+  }
+});

@@ -54,12 +54,12 @@ async function main() {
 
   if (!igSubscribed) {
     console.log('\n🔧 To fix Instagram subscription:');
-    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID:-${META_APP_ID}}/subscriptions" --data-urlencode "object=instagram" --data-urlencode "callback_url=https://api.tdfrecords.net/instagram/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${INSTAGRAM_VERIFY_TOKEN:-${IG_VERIFY_TOKEN}}" --data-urlencode "access_token=${FACEBOOK_APP_ID:-${META_APP_ID}}|${FACEBOOK_APP_SECRET:-${META_APP_SECRET}}"');
+    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID:-${META_APP_ID}}/subscriptions" --data-urlencode "object=instagram" --data-urlencode "callback_url=https://api.tdfrecords.net/instagram/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${INSTAGRAM_VERIFY_TOKEN:-${IG_VERIFY_TOKEN:?Set INSTAGRAM_VERIFY_TOKEN or IG_VERIFY_TOKEN from the current protected configuration}}" --data-urlencode "access_token=${FACEBOOK_APP_ID:-${META_APP_ID}}|${FACEBOOK_APP_SECRET:-${META_APP_SECRET}}"');
   }
 
   if (!fbSubscribed) {
     console.log('\n🔧 To fix Facebook subscription:');
-    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID:-${META_APP_ID}}/subscriptions" --data-urlencode "object=page" --data-urlencode "callback_url=https://api.tdfrecords.net/facebook/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${FACEBOOK_MESSAGING_TOKEN:-${FACEBOOK_PAGE_ACCESS_TOKEN:-${INSTAGRAM_VERIFY_TOKEN:-${IG_VERIFY_TOKEN}}}}" --data-urlencode "access_token=${FACEBOOK_APP_ID:-${META_APP_ID}}|${FACEBOOK_APP_SECRET:-${META_APP_SECRET}}"');
+    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID:-${META_APP_ID}}/subscriptions" --data-urlencode "object=page" --data-urlencode "callback_url=https://api.tdfrecords.net/facebook/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${FACEBOOK_MESSAGING_TOKEN:-${FACEBOOK_PAGE_ACCESS_TOKEN:-${INSTAGRAM_VERIFY_TOKEN:-${IG_VERIFY_TOKEN:?Set INSTAGRAM_VERIFY_TOKEN or IG_VERIFY_TOKEN from the current protected configuration}}}}" --data-urlencode "access_token=${FACEBOOK_APP_ID:-${META_APP_ID}}|${FACEBOOK_APP_SECRET:-${META_APP_SECRET}}"');
   }
 
   // 3. Instagram messaging token
