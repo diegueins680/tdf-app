@@ -13,6 +13,8 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Char (chr)
 import Data.Int (Int64)
 import Data.List (sort)
@@ -73,7 +75,8 @@ import TDF.DB (Env (..))
 import TDF.Models (Party (..), RoleEnum (Admin, Fan))
 import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
-    ( decodeStoredPromoCodeTierIds
+    ( postgresVisibleImportedMetadataClause
+    , decodeStoredPromoCodeTierIds
     , followArtistDb
     , removeSocialEventAssets
     , resolveExistingPartyIdText
@@ -307,7 +310,8 @@ spec = describe "social event handler helpers" $ do
             writeFile uploadSource "png"
             _ <- runSqlPool
                 ( do
-                    insertKey visibleEventKey (seedSocialEvent "3" "Visible event" now)
+                    insertKey visibleEventKey ((seedSocialEvent "3" "Visible event" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"imageUrl\":null,\"_discoveryOwned\":{\"title\":\"Visible event\",\"imageUrl\":null,\"isPublic\":true}}" })
                     insertKey
                         suppressedEventKey
                         (seedSocialEvent "3" "Suppressed event" now)
@@ -340,6 +344,13 @@ spec = describe "social event handler helpers" $ do
                 Left err -> expectationFailure ("Expected event image upload to succeed, got: " <> show err)
                 Right response ->
                     doesFileExist (assetsRoot </> T.unpack (eiuPath response)) `shouldReturn` True
+
+            storedAfterUpload <- runSqlPool (get visibleEventKey) pool
+            case storedAfterUpload >>= socialEventMetadata >>= Aeson.decode . BL8.pack . T.unpack of
+                Just (Aeson.Object fields) ->
+                    AesonKeyMap.lookup "_discoveryOwned" fields `shouldBe`
+                        Just (Aeson.object ["title" Aeson..= ("Visible event" :: T.Text), "isPublic" Aeson..= True])
+                _ -> expectationFailure "Upload lost canonical ownership metadata"
 
             rejected <-
                 runHandler $
@@ -715,6 +726,22 @@ spec = describe "social event handler helpers" $ do
                 _ <- insert (sourceRef "ticketmaster" "maximum-budget-21" maximumBudgetEventKey "on_sale" "https://tickets.example.com/maximum-budget")
                 _ <- insert (sourceRef "ticketmaster" "minimum-budget-22" minimumBudgetEventKey "on_sale" "https://tickets.example.com/minimum-budget")
                 _ <- insert (sourceRef "ticketmaster" "duplicate-visibility-23" duplicateVisibilityEventKey "on_sale" "https://tickets.example.com/duplicate-visibility")
+                forM_
+                    [ (24, "{\"isPublic\":true,\"_discoveryOwned\":{\"title\":\"Provider title\",\"isPublic\":true}}")
+                    , (25, "{\"isPublic\":true,\"_discoveryOwned\":null}")
+                    , (26, "{\"isPublic\":true,\"_discoveryOwned\":false}")
+                    , (27, "{\"isPublic\":true,\"_discoveryOwned\":{},\"unexpected\":1}")
+                    , (28, "{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}")
+                    ]
+                    $ \(rawKey, metadata) -> do
+                        let eventKey = toSqlKey rawKey
+                        insertKey eventKey
+                            ((seedSocialEvent "system:event-discovery" "Ownership boundary" now)
+                                { socialEventMetadata = Just metadata
+                                , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                                })
+                        _ <- insert (sourceRef "ticketmaster" ("ownership-" <> T.pack (show rawKey)) eventKey "on_sale" "https://tickets.example.com/ownership")
+                        pure ()
                 insertKey hiddenTierKey (ticketTier hiddenEventKey "hidden-tier" "Hidden tier")
                 insertKey publicTierKey (ticketTier publicEventKey "public-tier" "Public tier")
                 insertKey
@@ -790,7 +817,7 @@ spec = describe "social event handler helpers" $ do
         case listResult of
             Right events -> do
                 map eventId events
-                    `shouldMatchList` [Just "14", Just "17", Just "18", Just "21", Just "22"]
+                    `shouldMatchList` [Just "14", Just "17", Just "18", Just "21", Just "22", Just "24"]
                 case filter ((== Just "14") . eventId) events of
                     [publicEvent] ->
                         map eventSourceProvider (maybe [] id (eventSources publicEvent))
@@ -822,7 +849,7 @@ spec = describe "social event handler helpers" $ do
                     env
         case paginatedListResult of
             Right [event] ->
-                eventId event `shouldSatisfy` (`elem` [Just "14", Just "17", Just "18", Just "21", Just "22"])
+                eventId event `shouldSatisfy` (`elem` [Just "14", Just "17", Just "18", Just "21", Just "22", Just "24"])
             Right events ->
                 expectationFailure
                     ("Expected filtered and paginated list to contain only the public canonical event, got: " <> show events)
@@ -853,6 +880,16 @@ spec = describe "social event handler helpers" $ do
             Left err ->
                 expectationFailure
                     ("Expected the canonical event with an active public source to remain visible, got: " <> show err)
+
+        ownershipGetResult <- runHandler $ runReaderT (socialEventGetHandlerFor ordinaryUser "24") env
+        case ownershipGetResult of
+            Right event -> do
+                eventId event `shouldBe` Just "24"
+                BL8.unpack (Aeson.encode event) `shouldNotContain` "_discoveryOwned"
+            Left err -> expectationFailure ("Expected private ownership evidence to permit a public projection: " <> show err)
+        forM_ ["25", "26", "27", "28"] $ \rawKey -> do
+            result <- runHandler $ runReaderT (socialEventGetHandlerFor ordinaryUser rawKey) env
+            assertHiddenEventRoute "invalid internal ownership metadata" result
 
         malformedGetResult <-
             runHandler $
@@ -1627,6 +1664,27 @@ spec = describe "social event handler helpers" $ do
                     ("Expected non-organizer invitation creation to fail, got: " <> show value)
 
     invitationDatabaseUrl <- runIO (lookupEnv "TDF_INVITATION_TEST_DATABASE_URL")
+    forM_ invitationDatabaseUrl $ \databaseUrl ->
+        it "validates internal ownership in the actual PostgreSQL visibility predicate" $ do
+            pool <- runNoLoggingT $ createPostgresqlPool (BS8.pack databaseUrl) 1
+            forM_
+                [ ("{\"isPublic\":true,\"_discoveryOwned\":{\"title\":\"Source\",\"isPublic\":true}}", True)
+                , ("{\"isPublic\":true,\"_discoveryOwned\":{}}", True)
+                , ("{\"isPublic\":false,\"_discoveryOwned\":{}}", False)
+                , ("{\"isPublic\":true,\"_discoveryOwned\":null}", False)
+                , ("{\"isPublic\":true,\"_discoveryOwned\":false}", False)
+                , ("{\"isPublic\":true,\"_discoveryOwned\":[]}", False)
+                , ("{\"isPublic\":true,\"_discoveryOwned\":{},\"unexpected\":1}", False)
+                , ("{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}", False)
+                , ("{\"isPublic\":true,\"budgetCents\":1.5,\"_discoveryOwned\":{}}", False)
+                , ("{\"isPublic\":true,\"budgetCents\":9223372036854775807.0,\"_discoveryOwned\":{}}", True)
+                ]
+                $ \(metadata, expected) -> do
+                    rows <- runSqlPool
+                        (rawSql ("SELECT " <> postgresVisibleImportedMetadataClause "metadata"
+                            <> " FROM (VALUES (?::text)) AS candidate(metadata)")
+                            [toPersistValue (metadata :: T.Text)] :: SqlPersistT IO [Single Bool]) pool
+                    map unSingle rows `shouldBe` [expected]
     case invitationDatabaseUrl of
         Nothing -> pure ()
         Just databaseUrl -> it "serializes a stale invitation response behind an organizer transfer in PostgreSQL" $ do

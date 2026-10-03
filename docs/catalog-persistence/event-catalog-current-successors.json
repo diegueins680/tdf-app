@@ -76,18 +76,27 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "7bf93825f1431a6d52d6",
+      "currentId": "dc6d60d733c6eb69ebbf",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 159,
+      "valueCount": 160,
       "previousResolution": {
-        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-        "currentId": "07da55e81a186d26df37",
-        "valueCount": 115
+        "historicalReplacementId": "7578a30aa3cc5aa23870",
+        "currentId": "7bf93825f1431a6d52d6",
+        "file": "scripts/production-migrations.json",
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 159,
+        "previousResolution": {
+          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+          "currentId": "07da55e81a186d26df37",
+          "valueCount": 115
+        },
+        "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
       },
-      "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+      "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
     }
   ]
 }

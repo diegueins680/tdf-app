@@ -1458,6 +1458,7 @@
       "tdf-hq/sql/2026-09-30_interaction_classified_expiry.sql",
       "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
       "tdf-hq/sql/2026-09-30_interaction_report_content_version.sql",
+      "tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2090,7 +2091,7 @@
     },
     {
       "path": "docs/Event_Discovery_Cron.md",
-      "sha256": "a52b4a493cf1ec62fd8cc69a19f775a32d73378151a1897117e88e90d804749b",
+      "sha256": "b7790a5027207efd6409ebd8efb207d8f8747e606b2cb855c3fafb6321cc3ef3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

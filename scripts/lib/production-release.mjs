@@ -929,6 +929,13 @@ BEGIN
        NOT ILIKE '%directory_social_event_metadata_is_public%' THEN
     RAISE EXCEPTION 'directory_public_event does not enforce event metadata privacy';
   END IF;
+  IF directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{}}') IS DISTINCT FROM TRUE
+     OR directory_social_event_metadata_is_public('{"isPublic":false,"_discoveryOwned":{}}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":null}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{},"unexpected":1}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{},"_discoveryOwned":{}}') IS DISTINCT FROM FALSE THEN
+    RAISE EXCEPTION 'Directory metadata ownership/privacy boundary is missing or invalid';
+  END IF;
   IF pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)
        NOT ILIKE '%directory_public_event%'
      OR pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)

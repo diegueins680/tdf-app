@@ -242,3 +242,37 @@ retaining imported records, pilot decisions and publication approval history.
 Re-enable only after verifying the deployed code's controls. The regression script
 `scripts/test-event-ingestion-boundaries.sh` covers shared-cap races, duplicate
 canonical links, discard semantics, separate approval, revocation and reapplication.
+
+### Editorial ownership on refresh
+
+Newly imported event fields retain the last source value in the existing event
+metadata. Refresh compares that value with the current canonical value, preserves
+editorial changes and unrelated metadata, and permanently relinquishes an edited
+field so later coincidental agreement does not reclaim it. Legacy events without
+ownership evidence stay protected; their source references still refresh.
+Venue and artist profile ownership is a separate remaining limitation. A failure
+to persist an event now fails its source run before absence reconciliation, rather
+than logging the error and reporting a successful run.
+
+Buen Plan's ten-page request budget now fails incomplete inventories explicitly.
+A truncated prefix cannot mark unseen events missing or count as a successful
+reconciliation. Continuing beyond that cap still requires the pending resumable
+provider-page implementation and verified source permission.
+
+### Ownership compatibility and reconciliation
+
+`_discoveryOwned` is an internal stored-data object. The stored event decoder recognizes that object before applying the unchanged public-field allowlist; malformed ownership objects, unknown public fields and duplicate top-level keys still fail closed. Public requests cannot supply the namespace, and event responses do not expose it.
+
+Editorial updates and image uploads compare against the row locked for that write. Changed fields permanently lose ingestion ownership; unchanged fields retain their prior source evidence. Metadata edits and lineup replacement commit with the event update. A concurrent ownership, suppression or explicit workflow change is rechecked before writing.
+
+Both provider and subscription reconciliation retain editorial visibility, ticket URLs and workflow choices. Source expiry or disappearance can still hide an event, but returning source data cannot claim an editor-owned or unproven legacy publication flag. Reconciliation advances the snapshot only for fields it still owns. No feature activation or production rollout is introduced.
+
+The forward migration `2026-10-03_discovery_ownership_metadata_boundary.sql`
+aligns the anonymous directory predicate with this stored-data boundary. It
+changes only the existing function, preserving metadata validation, the composed
+suppression view and all source data. Apply/reapply and both historical privacy
+migration orders are covered by the production-schema rehearsal. Recovery is
+forward-only: preserve the private snapshot and suppression predicates; restoring
+the older allowlist would hide otherwise public imported events. If ingestion
+must be paused operationally, use its existing source enablement controls and
+retain all canonical/editorial data. This change does not activate any source.

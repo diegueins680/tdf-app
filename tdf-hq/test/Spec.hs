@@ -126,6 +126,7 @@ import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.CourseCheckout as CourseCheckout
 import qualified TDF.Commerce.DomoQuotes as DomoQuotes
 import qualified TDF.Commerce.EventTickets as EventTickets
+import qualified TDF.Server.SocialEventsHandlers as EventMetadataServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
@@ -10901,6 +10902,10 @@ main = hspec $ do
                 Right parsed ->
                     expectationFailure ("Expected unexpected event update keys to be rejected, got " <> show parsed)
 
+        it "rejects attempts to supply the private ingestion ownership namespace in public updates" $
+            (eitherDecode "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"_discoveryOwned\":{\"isPublic\":true}}"
+                :: Either String EventUpdateDTO) `shouldSatisfy` isLeft
+
         it "captures venue contact nulls and invitation message nulls in update payloads" $ do
             let venuePayload = "{\"venueName\":\"Sala Uno\",\"venuePhone\":null}"
                 invitationPayload = "{\"invitationToPartyId\":\"12\",\"invitationMessage\":null}"
@@ -11958,6 +11963,35 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 409
                     BL.unpack (errBody err) `shouldContain` "server-verified checkout"
                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
+
+    describe "stored discovery ownership metadata boundary" $ do
+        it "accepts internal evidence without exposing it through the public projection" $ do
+            let raw = "{\"isPublic\":true,\"ticketUrl\":\"https://tickets.example/event\",\"_discoveryOwned\":{\"isPublic\":true}}"
+            case EventMetadataServer.decodeStoredEventMetadata (Just raw) of
+                Left err -> expectationFailure (show err)
+                Right metadata -> do
+                    EventMetadataServer.emIsPublic metadata `shouldBe` Just True
+                    EventMetadataServer.emTicketUrl metadata `shouldBe` Just "https://tickets.example/event"
+                    BL.unpack (A.encode metadata) `shouldSatisfy` (not . isInfixOf "_discoveryOwned")
+            validateTicketPurchaseEventEligibility (Just raw) True `shouldSatisfy` isRight
+
+        it "keeps ownership evidence out of public projections for arbitrary stored titles and visibility" $
+            QC.property $ \title public ->
+                let raw = TE.decodeUtf8 . BL.toStrict . A.encode $ A.object
+                        [ "isPublic" .= (public :: Bool)
+                        , "_discoveryOwned" .= A.object ["title" .= (title :: String), "isPublic" .= public]
+                        ]
+                 in case EventMetadataServer.decodeStoredEventMetadata (Just raw) of
+                        Left _ -> False
+                        Right metadata -> EventMetadataServer.emIsPublic metadata == Just public
+                            && not ("_discoveryOwned" `isInfixOf` BL.unpack (A.encode metadata))
+
+        it "retains strict validation for unknown fields, malformed evidence and duplicate namespaces" $ do
+            forM_
+                [ "{\"isPublic\":true,\"rogue\":1,\"_discoveryOwned\":{}}"
+                , "{\"isPublic\":true,\"_discoveryOwned\":true}"
+                , "{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}"
+                ] $ \raw -> (EventMetadataServer.emIsPublic <$> EventMetadataServer.decodeStoredEventMetadata (Just raw)) `shouldSatisfy` isLeft
 
     describe "ticket purchase event eligibility" $ do
         it "allows only public events in buyer-facing sale states" $ do
