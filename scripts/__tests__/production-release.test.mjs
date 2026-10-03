@@ -156,10 +156,16 @@ test('production migration manifest uses immutable full commit SHAs', () => {
 
   const migrationIndex = (id) => manifest.migrations.findIndex((migration) => migration.id === id);
   for (const [prerequisite, dependent] of [
+    ['2026-09-28_interaction_integrity', '2026-09-29_interaction_review_repairs'],
+    ['2026-09-29_interaction_review_repairs', '2026-09-29_interaction_publication_authority'],
+    ['2026-09-29_interaction_publication_authority', '2026-09-29_interaction_reaction_withdrawal'],
+    ['2026-09-29_interaction_reaction_withdrawal', '2026-09-29_interaction_moderation_block_boundary'],
+    ['2026-09-29_interaction_moderation_block_boundary', '2026-09-29_interaction_moderation_access'],
     ['2026-09-06_user_onboarding_progress', '2026-09-07_user_experiment_assignment'],
     ['2026-09-07_directory_event_visibility_and_favorite_evidence', '2026-09-08_event_rsvp_identity_privacy_feed'],
     ['2026-09-07_directory_event_visibility_and_favorite_evidence', '2026-09-17_directory_event_privacy_composition'],
     ['2026-09-09_music_directory_suppressed_event_privacy', '2026-09-17_directory_event_privacy_composition'],
+    ['2026-09-17_directory_event_privacy_composition', '2026-10-03_discovery_ownership_metadata_boundary'],
     ['2026-09-07_artist_merch_storefronts', '2026-09-08_merch_reputation'],
     ['2026-09-09_canonical_payment_lifecycle', '2026-09-10_payment_attempt_intent_binding'],
   ]) {
@@ -945,6 +951,9 @@ test('buildMigrationBatchSql rejects unexpanded include directives', () => {
 
 test('buildSchemaVerificationSql fails closed over every registered runtime schema contract', () => {
   const sql = buildSchemaVerificationSql();
+  assert.match(sql, /interaction_report_reasons/);
+  assert.match(sql, /mention_party_ids/);
+  assert.match(sql, /last_event_id/);
 
   assert.match(sql, /\\set\s+ON_ERROR_STOP\s+(?:on|1)/i);
   for (const triggerMarker of [

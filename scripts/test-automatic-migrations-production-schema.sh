@@ -87,6 +87,7 @@ node "${repo_root}/scripts/render-production-schema-verification.mjs" \
 # Both historical orders occurred: late registration can apply an older view
 # after a newer privacy repair is already recorded in the immutable ledger.
 privacy_repair="${repo_root}/tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql"
+ownership_repair="${repo_root}/tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql"
 for older_view in \
   2026-09-07_directory_event_visibility_and_favorite_evidence \
   2026-09-09_music_directory_suppressed_event_privacy; do
@@ -100,6 +101,8 @@ for older_view in \
   # A fresh migration entry repairs either ledger history; retries are safe.
   psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${privacy_repair}" >/dev/null
   psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${privacy_repair}" >/dev/null
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${ownership_repair}" >/dev/null
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${ownership_repair}" >/dev/null
   node "${repo_root}/scripts/render-production-schema-verification.mjs" \
     | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
   psql "${database_url}" -X -v ON_ERROR_STOP=1 \

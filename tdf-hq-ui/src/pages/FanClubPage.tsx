@@ -1,3 +1,4 @@
+import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { createElement, useEffect, useMemo } from 'react';
 import { useParams, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -26,7 +27,8 @@ import {
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
-import ReactionBar from '../components/ReactionBar';
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
+import { LegacyClubReactions } from '../features/fanclubs/LegacyClubReactions';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -47,6 +49,13 @@ export default function FanClubPage() {
   const isAuthenticated = Boolean(session);
   const [tab, setTab] = useLocalValue(0);
   const location = useLocation();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const params = new URLSearchParams(location.search);
+    if (params.has('post')) setTab(1);
+    else if (params.has('memory')) setTab(2);
+  }, [isAuthenticated, location.search, setTab]);
 
   const loginPath = useMemo(() => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`), [location]);
 
@@ -257,19 +266,6 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
     },
   });
 
-  const reactMut = useMutation({
-    mutationFn: ({ itemId, kind, reactionTypeId }: { itemId: number; kind: string; reactionTypeId: string }) => {
-      if (kind === 'post') {
-        return Fans.reactToPost(artistId, itemId, { crrReactionTypeId: reactionTypeId });
-      } else {
-        return Fans.reactToMemory(artistId, itemId, { crrReactionTypeId: reactionTypeId });
-      }
-    },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
-    },
-  });
-
   if (loading) return <SkeletonCards count={3} />;
 
   const visibleItems = displayFeed.filter(item => !item.fcfIsHidden);
@@ -333,12 +329,8 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                           ))}
                         </ImageList>
                       )}
-                      <ReactionBar
-                        reactions={item.fcfReactions}
-                        onReact={(reactionTypeId) => reactMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, reactionTypeId })}
-                        disabled={reactMut.isPending}
-                        loading={reactMut.isPending}
-                      />
+                      <InteractionPanel kind={item.fcfKind === 'post' ? 'club_post' : 'club_memory'} entityKey={String(item.fcfId)}
+                        beforeActivation={<LegacyClubReactions artistId={artistId} item={item} />} />
                       <Typography variant="caption" color="text.secondary">
                         {new Date(item.fcfCreatedAt).toLocaleString()}
                       </Typography>
@@ -535,12 +527,14 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
     },
   });
 
-  if (loading) return <SkeletonCards count={3} />;
-
   const visiblePosts = posts.filter(p => !p.fcpIsHidden);
+  const selection = usePublicationSelection('post', visiblePosts.map((item) => item.fcpId), loading);
+
+  if (loading) return <SkeletonCards count={3} />;
 
   return (
     <Stack spacing={2}>
+      {selection.notice}
       <Stack direction="row" justifyContent="flex-end">
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
           Nuevo post
@@ -554,11 +548,11 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
       {visiblePosts.length > 0 && (
         <LazyPaginatedList
           items={visiblePosts}
-          pagination={{ itemLabel: 'posts', initialRowsPerPage: 10 }}
+          pagination={{ itemLabel: 'posts', initialRowsPerPage: 10, selectedIndex: selection.index, resetKey: selection.requested }}
           renderItems={(visibleForumPosts) => (
             <Stack spacing={2}>
               {visibleForumPosts.map(post => (
-                <Card key={post.fcpId} sx={{ opacity: post.fcpIsHidden ? 0.5 : 1 }}>
+                <Card component={PublicationAnchor} selected={selection.requested === String(post.fcpId)} key={post.fcpId} sx={{ opacity: post.fcpIsHidden ? 0.5 : 1 }}>
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -591,6 +585,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                       </Stack>
                       {post.fcpTitle && <Typography variant="h6">{post.fcpTitle}</Typography>}
                       <Typography variant="body1">{post.fcpContent}</Typography>
+                      <InteractionPanel kind="club_post" entityKey={String(post.fcpId)} />
                       {post.fcpMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
                           {post.fcpMediaUrls.map((url, idx) => (
@@ -700,12 +695,14 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
     },
   });
 
-  if (loading) return <SkeletonCards count={3} />;
-
   const visibleMemories = memories.filter(m => !m.fcmIsHidden && !m.fcmIsDeleted);
+  const selection = usePublicationSelection('memory', visibleMemories.map((item) => item.fcmId), loading);
+
+  if (loading) return <SkeletonCards count={3} />;
 
   return (
     <Stack spacing={2}>
+      {selection.notice}
       <Stack direction="row" justifyContent="flex-end">
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
           Nuevo recuerdo
@@ -719,11 +716,11 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
       {visibleMemories.length > 0 && (
         <LazyPaginatedList
           items={visibleMemories}
-          pagination={{ itemLabel: 'recuerdos', initialRowsPerPage: 10 }}
+          pagination={{ itemLabel: 'recuerdos', initialRowsPerPage: 10, selectedIndex: selection.index, resetKey: selection.requested }}
           renderItems={(visibleClubMemories) => (
             <Stack spacing={2}>
               {visibleClubMemories.map(memory => (
-                <Card key={memory.fcmId}>
+                <Card component={PublicationAnchor} selected={selection.requested === String(memory.fcmId)} key={memory.fcmId}>
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -763,6 +760,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                         </Tooltip>
                       </Stack>
                       <Typography variant="h6">{memory.fcmTitle}</Typography>
+                      <InteractionPanel kind="club_memory" entityKey={String(memory.fcmId)} />
                       {memory.fcmDescription && <Typography variant="body1">{memory.fcmDescription}</Typography>}
                       {memory.fcmMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>

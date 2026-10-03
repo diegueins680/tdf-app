@@ -35,6 +35,9 @@ concurrency:
 
 jobs:
   required-tests:
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/ci.yml
     with:
       force_backend: true
