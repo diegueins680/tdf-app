@@ -6,5 +6,8 @@ tdf_test_db_init tdf_invitation_test
 cd "$repo_root/tdf-hq"
 test_binary="$(stack path --dist-dir)/build/tdf-hq-test/tdf-hq-test"
 test -x "$test_binary"
+# This predicate also protects imported event visibility before invitation access.
+TDF_INVITATION_TEST_DATABASE_URL="$TDF_TEST_DATABASE_URL" \
+ "$test_binary" --match="actual PostgreSQL visibility predicate" --fail-on=empty
 TDF_INVITATION_TEST_DATABASE_URL="$TDF_TEST_DATABASE_URL" \
  "$test_binary" --match=invitation --fail-on=empty

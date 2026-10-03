@@ -36,6 +36,8 @@ module TDF.Server.SocialEventsHandlers (
     sendTicketConfirmationForOrder,
     sendTicketConfirmationForOrderIO,
     normalizeTicketStatus,
+    EventMetadataDTO (..),
+    decodeStoredEventMetadata,
     validateEventMetadataUpdate,
     validateEventMetadataUrlField,
     validateBudgetLineTypeInput,
@@ -130,6 +132,7 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import qualified TDF.Interactions.Legacy as Interactions
 import qualified TDF.Interactions.Server as Interactions
+import qualified TDF.Services.EventDiscovery as EventDiscoveryOwnership
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
@@ -2721,33 +2724,7 @@ socialEventsServer user =
         mVenueKey <- case eventVenueId dto of
             Nothing -> pure Nothing
             Just txt -> Just <$> either throwError pure (parseVenueIdEither txt)
-        liftIO $
-            runSqlPool
-                ( update
-                    eventKey
-                    [ SocialEventTitle =. titleVal
-                    , SocialEventDescription =. eventDescription dto
-                    , SocialEventVenueId =. mVenueKey
-                    , SocialEventTimezone =. timezoneVal
-                    , SocialEventStartTime =. eventStart dto
-                    , SocialEventEndTime =. eventEnd dto
-                    , SocialEventPriceCents =. eventPriceCents dto
-                    , SocialEventCapacity =. eventCapacity dto
-                    , SocialEventEventTypeId =. Just eventTypeUuid
-                    , SocialEventWorkflowStateId =. Just workflowStateId
-                    , SocialEventMetadata =. encodeEventMetadata mergedMetadata
-                    , SocialEventUpdatedAt =. now
-                    ]
-                )
-                envPool
-        liftIO $ runSqlPool (deleteWhere [EventArtistEventId ==. eventKey]) envPool
-        liftIO $
-            runSqlPool
-                ( forM_ artistKeys $ \artistKey ->
-                    insert_ (EventArtist eventKey artistKey Nothing)
-                )
-                envPool
-        let updatedEvent =
+        let proposedEvent =
                 managedEvent
                     { socialEventTitle = titleVal
                     , socialEventDescription = eventDescription dto
@@ -2762,6 +2739,52 @@ socialEventsServer user =
                     , socialEventMetadata = encodeEventMetadata mergedMetadata
                     , socialEventUpdatedAt = now
                     }
+        updatedEvent <- liftIO (runSqlPool (do
+            locked <- lockSocialEventForMutation eventKey
+            case locked of
+                Nothing -> pure (Left err404{errBody = "Event not found"})
+                Just (Entity _ currentEvent)
+                    | cleanMaybeText (socialEventOrganizerPartyId currentEvent) /= Just currentPartyId ->
+                        pure (Left err403{errBody = "Only the event organizer can manage this event"})
+                    | socialEventWorkflowStateId currentEvent /= socialEventWorkflowStateId managedEvent
+                        && (case eudWorkflowStateIdUpdate of FieldMissing -> False; _ -> True) ->
+                        pure (Left err409{errBody = "Event workflow changed; reload before updating"})
+                    | otherwise -> do
+                        currentRefs <- selectList [ExternalEventRefEventId ==. eventKey] []
+                        if any (externalEventRefIsSuppressed . entityVal) currentRefs
+                            then pure (Left err404{errBody = "Event not found"})
+                            else
+                                case decodeStoredEventMetadata (socialEventMetadata currentEvent) of
+                                    Left message -> pure (Left (storedEventMetadataServerError message))
+                                    Right currentMetadata -> do
+                                        let nextWorkflow = case eudWorkflowStateIdUpdate of
+                                                FieldMissing -> socialEventWorkflowStateId currentEvent
+                                                _ -> Just workflowStateId
+                                            proposed = proposedEvent
+                                                { socialEventWorkflowStateId = nextWorkflow
+                                                , socialEventMetadata = encodeEventMetadata
+                                                    (applyEventMetadataUpdate validatedMetadataUpdate currentMetadata)
+                                                }
+                                            updated = proposed{socialEventMetadata =
+                                                EventDiscoveryOwnership.preserveEventOwnership currentEvent proposed}
+                                        update eventKey
+                                            [ SocialEventTitle =. socialEventTitle updated
+                                            , SocialEventDescription =. socialEventDescription updated
+                                            , SocialEventVenueId =. socialEventVenueId updated
+                                            , SocialEventTimezone =. socialEventTimezone updated
+                                            , SocialEventStartTime =. socialEventStartTime updated
+                                            , SocialEventEndTime =. socialEventEndTime updated
+                                            , SocialEventPriceCents =. socialEventPriceCents updated
+                                            , SocialEventCapacity =. socialEventCapacity updated
+                                            , SocialEventEventTypeId =. socialEventEventTypeId updated
+                                            , SocialEventWorkflowStateId =. socialEventWorkflowStateId updated
+                                            , SocialEventMetadata =. socialEventMetadata updated
+                                            , SocialEventUpdatedAt =. now
+                                            ]
+                                        deleteWhere [EventArtistEventId ==. eventKey]
+                                        forM_ artistKeys $ \artistKey -> insert_ (EventArtist eventKey artistKey Nothing)
+                                        pure (Right updated)
+            ) envPool) >>= either throwError pure
         liftIO (runSqlPool (eventEntityToDTO (defaultCurrency envConfig) eventKey updatedEvent (eventArtists dto)) envPool)
             >>= either throwError pure
 
@@ -2829,8 +2852,9 @@ socialEventsServer user =
                                                     update
                                                         eventKey
                                                         [ SocialEventMetadata =.
-                                                            encodeEventMetadata
-                                                                existingMeta{emImageUrl = Just publicUrl}
+                                                            EventDiscoveryOwnership.preserveEventOwnership eventRow
+                                                                eventRow{socialEventMetadata = encodeEventMetadata
+                                                                    existingMeta{emImageUrl = Just publicUrl}}
                                                         , SocialEventUpdatedAt =. now
                                                         ]
                                                     pure (Right ())
@@ -8744,7 +8768,7 @@ decodeStoredEventMetadata Nothing = Right emptyEventMetadata
 decodeStoredEventMetadata (Just raw)
     | T.null (T.strip raw) = Right emptyEventMetadata
     | otherwise =
-        case Aeson.eitherDecodeStrict' (TE.encodeUtf8 raw) of
+        case decodeStoredEventMetadataValue raw of
             Right metadata ->
                 case duplicateTopLevelJsonKeys raw of
                     [] -> Right metadata
@@ -8754,6 +8778,21 @@ decodeStoredEventMetadata (Just raw)
                                 <> T.intercalate ", " duplicates
                             )
             Left err -> Left (storedEventMetadataDecodeError err)
+
+-- Only this stored-data decoder recognizes ingestion's private namespace. Public
+-- request DTOs keep their strict allowlists, and output projections never expose it.
+decodeStoredEventMetadataValue :: T.Text -> Either String EventMetadataDTO
+decodeStoredEventMetadataValue raw = do
+    value <- Aeson.eitherDecodeStrict' (TE.encodeUtf8 raw)
+    publicValue <- case value of
+        Aeson.Object fields -> case AesonKeyMap.lookup "_discoveryOwned" fields of
+            Nothing -> Right value
+            Just (Aeson.Object _) -> Right (Aeson.Object (AesonKeyMap.delete "_discoveryOwned" fields))
+            Just _ -> Left "Stored event ownership evidence must be an object"
+        _ -> Right value
+    case Aeson.fromJSON publicValue of
+        Aeson.Success metadata -> Right metadata
+        Aeson.Error message -> Left message
 
 duplicateTopLevelJsonKeys :: T.Text -> [T.Text]
 duplicateTopLevelJsonKeys raw =
@@ -9730,12 +9769,17 @@ sqliteVisibleImportedMetadataClause metadataColumn =
         <> " AND NOT EXISTS (SELECT 1 FROM json_each("
         <> metadataColumn
         <> ") AS metadata_field WHERE metadata_field.key"
-        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents'))"
+        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents','_discoveryOwned'))"
         <> " AND (SELECT count(*) FROM json_each("
         <> metadataColumn
         <> "))=(SELECT count(DISTINCT metadata_field.key) FROM json_each("
         <> metadataColumn
         <> ") AS metadata_field)"
+        <> " AND (json_type("
+        <> metadataColumn
+        <> ",'$._discoveryOwned') IS NULL OR json_type("
+        <> metadataColumn
+        <> ",'$._discoveryOwned')='object')"
         <> sqliteOptionalMetadataType metadataColumn "ticketUrl" "text"
         <> sqliteOptionalMetadataType metadataColumn "imageUrl" "text"
         <> sqliteOptionalMetadataType metadataColumn "currency" "text"
@@ -9829,7 +9873,12 @@ postgresVisibleImportedMetadataClause metadataColumn =
         <> " AND NOT EXISTS (SELECT 1 FROM jsonb_object_keys("
         <> jsonMetadata
         <> ") AS metadata_key WHERE metadata_key"
-        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents'))"
+        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents','_discoveryOwned'))"
+        <> " AND (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'_discoveryOwned') IS NULL OR jsonb_typeof("
+        <> jsonMetadata
+        <> "->'_discoveryOwned')='object')"
         <> postgresOptionalMetadataType jsonMetadata "ticketUrl" "string"
         <> postgresOptionalMetadataType jsonMetadata "imageUrl" "string"
         <> postgresOptionalMetadataType jsonMetadata "currency" "string"

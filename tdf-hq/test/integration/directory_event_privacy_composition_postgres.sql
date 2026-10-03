@@ -6,6 +6,7 @@ DECLARE
   public_event_type_id UUID;
   fixture_venue_id BIGINT;
   fixture_event_id BIGINT;
+  invalid_metadata TEXT;
 BEGIN
   SELECT state.id INTO STRICT public_state_id
   FROM workflow_state state
@@ -67,13 +68,37 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id) THEN
     RAISE EXCEPTION 'Public active event is missing';
   END IF;
+  UPDATE social_event
+  SET metadata='{"isPublic":true,"_discoveryOwned":{"title":"Source title","isPublic":true}}'
+  WHERE id=fixture_event_id;
+  IF NOT EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id)
+    OR NOT EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind='event' AND entity_id=fixture_event_id::text)
+    OR NOT EXISTS (SELECT 1 FROM directory_public_venue WHERE id=fixture_venue_id) THEN
+    RAISE EXCEPTION 'Valid private ownership evidence hid a public directory projection';
+  END IF;
+  FOREACH invalid_metadata IN ARRAY ARRAY[
+    '{"isPublic":false,"_discoveryOwned":{}}',
+    '{"isPublic":true,"_discoveryOwned":null}',
+    '{"isPublic":true,"_discoveryOwned":false}',
+    '{"isPublic":true,"_discoveryOwned":[]}',
+    '{"isPublic":true,"_discoveryOwned":{},"unexpected":1}',
+    '{"isPublic":true,"_discoveryOwned":{},"_discoveryOwned":{}}',
+    '{"isPublic":true,"budgetCents":1.5,"_discoveryOwned":{}}'
+  ] LOOP
+    UPDATE social_event SET metadata=invalid_metadata WHERE id=fixture_event_id;
+    IF EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id)
+      OR EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind='event' AND entity_id=fixture_event_id::text)
+      OR EXISTS (SELECT 1 FROM directory_public_venue WHERE id=fixture_venue_id) THEN
+      RAISE EXCEPTION 'Invalid/private ownership metadata leaked through a public projection';
+    END IF;
+  END LOOP;
   UPDATE social_event SET metadata='{"isPublic":false}' WHERE id=fixture_event_id;
   IF EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id)
     OR EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind='event' AND entity_id=fixture_event_id::text)
     OR EXISTS (SELECT 1 FROM directory_public_venue WHERE id=fixture_venue_id) THEN
     RAISE EXCEPTION 'Private metadata leaked through a public projection';
   END IF;
-  UPDATE social_event SET metadata='{"isPublic":true}' WHERE id=fixture_event_id;
+  UPDATE social_event SET metadata='{"isPublic":true,"_discoveryOwned":{}}' WHERE id=fixture_event_id;
   UPDATE external_event_ref SET source_status=' Suppressed ' WHERE event_id=fixture_event_id;
   IF EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id)
     OR EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind='event' AND entity_id=fixture_event_id::text)
