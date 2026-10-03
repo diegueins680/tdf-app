@@ -13988,19 +13988,24 @@
       }
     },
     {
-      "id": "7bf93825f1431a6d52d6",
+      "id": "dc6d60d733c6eb69ebbf",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
+      "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "universal-interactions-2026-09-28"
+      "reviewBatch": "event-editorial-ownership-2026-10-03",
+      "previousDecision": {
+        "id": "7bf93825f1431a6d52d6",
+        "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
+        "reviewBatch": "universal-interactions-2026-09-28"
+      }
     },
     {
       "id": "f4937ace95206e118d30",

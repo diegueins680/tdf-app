@@ -265,4 +265,14 @@ provider-page implementation and verified source permission.
 
 Editorial updates and image uploads compare against the row locked for that write. Changed fields permanently lose ingestion ownership; unchanged fields retain their prior source evidence. Metadata edits and lineup replacement commit with the event update. A concurrent ownership, suppression or explicit workflow change is rechecked before writing.
 
-Both provider and subscription reconciliation retain editorial visibility, ticket URLs and workflow choices. Source expiry or disappearance can still hide an event, but returning source data cannot claim an editor-owned or unproven legacy publication flag. Reconciliation advances the snapshot only for fields it still owns. No migration, feature activation or production rollout is introduced.
+Both provider and subscription reconciliation retain editorial visibility, ticket URLs and workflow choices. Source expiry or disappearance can still hide an event, but returning source data cannot claim an editor-owned or unproven legacy publication flag. Reconciliation advances the snapshot only for fields it still owns. No feature activation or production rollout is introduced.
+
+The forward migration `2026-10-03_discovery_ownership_metadata_boundary.sql`
+aligns the anonymous directory predicate with this stored-data boundary. It
+changes only the existing function, preserving metadata validation, the composed
+suppression view and all source data. Apply/reapply and both historical privacy
+migration orders are covered by the production-schema rehearsal. Recovery is
+forward-only: preserve the private snapshot and suppression predicates; restoring
+the older allowlist would hide otherwise public imported events. If ingestion
+must be paused operationally, use its existing source enablement controls and
+retain all canonical/editorial data. This change does not activate any source.

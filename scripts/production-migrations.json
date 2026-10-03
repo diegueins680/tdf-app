@@ -815,6 +815,11 @@
       "id": "2026-09-30_interaction_classified_expiry",
       "path": "tdf-hq/sql/2026-09-30_interaction_classified_expiry.sql",
       "introducedBy": "5966161d8cf7c31a776ea5c2778068fbbd78b920"
+    },
+    {
+      "id": "2026-10-03_discovery_ownership_metadata_boundary",
+      "path": "tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql",
+      "introducedBy": "6e7b87d8ad3a4c56b033484fe7174dceacec5961"
     }
   ]
 }
