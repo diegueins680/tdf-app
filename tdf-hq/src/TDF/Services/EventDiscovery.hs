@@ -20,6 +20,7 @@ module TDF.Services.EventDiscovery
   , fetchTicketmasterEventsForCity
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
+  , completeEventDiscoverySourceRun
   , loadActiveUserCities
   , loadSubscribedDiscoveryCities
   , loadEcuadorDiscoveryCities
@@ -31,15 +32,17 @@ module TDF.Services.EventDiscovery
   , reconcileProviderEvents
   , discoveredEventFitsPilotLimit
   , countImportedDiscoveryEvents
+  , countEventPilotIdentitiesDb
   , isDiscoveredEventKnown
   , discoveredEventPublicationReady
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
+  , preserveEventOwnership
   ) where
 
 import Control.Applicative ((<|>))
 import Control.Exception (try)
-import Control.Monad (filterM, forM, forM_, unless)
+import Control.Monad (filterM, forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (threadDelay)
 import Data.Aeson
@@ -259,22 +262,59 @@ finishEventDiscoveryRun ::
   Int ->
   DiscoverySyncStats ->
   IO ()
-finishEventDiscoveryRun pool (EventDiscoveryRunHandle runKey) now citiesCount stats =
-  runSqlPool
-    ( update
-        runKey
-        [ Social.ExternalEventDiscoveryRunStatus =. "completed"
-        , Social.ExternalEventDiscoveryRunCitiesCount =. citiesCount
-        , Social.ExternalEventDiscoveryRunEventsSeen =. discoveryEventsSeen stats
-        , Social.ExternalEventDiscoveryRunEventsCreated =. discoveryEventsCreated stats
-        , Social.ExternalEventDiscoveryRunEventsUpdated =. discoveryEventsUpdated stats
-        , Social.ExternalEventDiscoveryRunVenuesCreated =. discoveryVenuesCreated stats
-        , Social.ExternalEventDiscoveryRunArtistsCreated =. discoveryArtistsCreated stats
-        , Social.ExternalEventDiscoveryRunErrorMessage =. Nothing
-        , Social.ExternalEventDiscoveryRunFinishedAt =. Just now
+finishEventDiscoveryRun pool handle now citiesCount stats =
+  runSqlPool (finishEventDiscoveryRunDb handle now citiesCount stats) pool
+
+finishEventDiscoveryRunDb ::
+  EventDiscoveryRunHandle -> UTCTime -> Int -> DiscoverySyncStats -> SqlPersistT IO ()
+finishEventDiscoveryRunDb (EventDiscoveryRunHandle runKey) now citiesCount stats =
+  update runKey
+    [ Social.ExternalEventDiscoveryRunStatus =. "completed"
+    , Social.ExternalEventDiscoveryRunCitiesCount =. citiesCount
+    , Social.ExternalEventDiscoveryRunEventsSeen =. discoveryEventsSeen stats
+    , Social.ExternalEventDiscoveryRunEventsCreated =. discoveryEventsCreated stats
+    , Social.ExternalEventDiscoveryRunEventsUpdated =. discoveryEventsUpdated stats
+    , Social.ExternalEventDiscoveryRunVenuesCreated =. discoveryVenuesCreated stats
+    , Social.ExternalEventDiscoveryRunArtistsCreated =. discoveryArtistsCreated stats
+    , Social.ExternalEventDiscoveryRunErrorMessage =. Nothing
+    , Social.ExternalEventDiscoveryRunFinishedAt =. Just now
+    ]
+
+-- | Fetches happen outside the transaction. Completion rechecks source authority
+-- under its row lock before any absence reconciliation, including empty feeds.
+-- Disablement either wins first (no completion writes) or follows this commit.
+completeEventDiscoverySourceRun ::
+  ConnectionPool -> Social.EventDiscoverySourceId -> EventDiscoveryRunHandle ->
+  UTCTime -> Text -> [EventDiscoveryCity] -> [Text] -> DiscoverySyncStats -> IO ()
+completeEventDiscoverySourceRun pool sourceKey handle now provider cities seen stats =
+  runSqlPool complete pool
+  where
+    complete = do
+      backend <- T.toCaseFold <$> getRDBMS
+      sources <- if "postgres" `T.isInfixOf` backend
+        then rawSql "SELECT ?? FROM event_discovery_source WHERE id=? FOR UPDATE"
+          [toPersistValue sourceKey]
+        else maybe [] (pure . Entity sourceKey) <$> get sourceKey
+      case sources of
+        [Entity _ source]
+          | Social.eventDiscoverySourceEnabled source
+            && Social.eventDiscoverySourceSourceKey source == provider -> pure ()
+        _ -> liftIO (fail "Event source disabled or unavailable before completion")
+      -- Reference status updates acquire the pilot lock in their trigger.
+      -- Match imports' source -> pilot -> event order before reconciliation.
+      when ("postgres" `T.isInfixOf` backend) $ do
+        controls <- rawSql
+          "SELECT approved FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE"
+          [] :: SqlPersistT IO [Single Bool]
+        unless (length controls == 1) (liftIO (fail "Event pilot control unavailable"))
+      _ <- reconcileProviderEventsDb now provider cities seen
+      finishEventDiscoveryRunDb handle now (length cities) stats
+      update sourceKey
+        [ Social.EventDiscoverySourceConsecutiveFailures =. 0
+        , Social.EventDiscoverySourceLastSuccessAt =. Just now
+        , Social.EventDiscoverySourceLastError =. Nothing
+        , Social.EventDiscoverySourceUpdatedAt =. now
         ]
-    )
-    pool
 
 failEventDiscoveryRun ::
   ConnectionPool ->
@@ -1750,9 +1790,18 @@ discoveredEventFitsPilotLimit pool pilotLimit event =
                   "SELECT approved FROM event_research_pilot_control WHERE control_key='default'"
                   [] :: SqlPersistT IO [Single Bool]
                 if approved == [Single True] then pure True else do
-                  totals <- rawSql "SELECT count(*) FROM tdf_event_pilot_keys()" [] :: SqlPersistT IO [Single Int]
-                  pure (case totals of [Single n] -> n < min 20 (max 0 pilotLimit); _ -> False)
+                  total <- countEventPilotIdentitiesDb
+                  pure (total < min 20 (max 0 pilotLimit))
               else (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
+
+-- | The status endpoint and PostgreSQL writer preflight share the same canonical
+-- identities as the database capacity guard, including linked research/imports.
+countEventPilotIdentitiesDb :: SqlPersistT IO Int
+countEventPilotIdentitiesDb = do
+  rows <- rawSql "SELECT count(*) FROM tdf_event_pilot_keys()" []
+  case rows of
+    [Single total] -> pure total
+    _ -> liftIO (fail "Event pilot capacity could not be read")
 
 countImportedDiscoveryEventsDb :: SqlPersistT IO Int
 countImportedDiscoveryEventsDb = do
@@ -1834,13 +1883,7 @@ reconcileImportedEvents pool now activeCities =
         resolveAllowedImportedUpdateStateId
           (Social.socialEventWorkflowStateId eventRow)
           desiredWorkflowStateId
-      update
-        eventKey
-        [ Social.SocialEventWorkflowStateId =. Just workflowStateId
-        , Social.SocialEventMetadata =.
-            updateImportedEventMetadata isPublic (Social.socialEventMetadata eventRow)
-        , Social.SocialEventUpdatedAt =. now
-        ]
+      update eventKey (reconciledEventUpdates now workflowStateId isPublic Nothing eventRow)
 
 -- | Mark provider records that disappeared from a successful full run. A
 -- record remains usable for one missed run to absorb transient upstream
@@ -1853,7 +1896,11 @@ reconcileProviderEvents ::
   [Text] ->
   IO Int
 reconcileProviderEvents pool now provider targetCities seenExternalIds =
-  runSqlPool reconcile pool
+  runSqlPool (reconcileProviderEventsDb now provider targetCities seenExternalIds) pool
+
+reconcileProviderEventsDb ::
+  UTCTime -> Text -> [EventDiscoveryCity] -> [Text] -> SqlPersistT IO Int
+reconcileProviderEventsDb now provider targetCities seenExternalIds = reconcile
   where
     seen =
       Map.fromList
@@ -1927,36 +1974,39 @@ reconcileProviderEvents pool now provider targetCities seenExternalIds =
         )
         targetCities
 
-updateImportedEventMetadata :: Bool -> Maybe Text -> Maybe Text
-updateImportedEventMetadata isPublic rawMetadata =
-  updateImportedEventMetadataWithTicket isPublic Nothing rawMetadata
-
 updateImportedEventMetadataWithTicket ::
   Bool ->
   Maybe Text ->
   Maybe Text ->
   Maybe Text
 updateImportedEventMetadataWithTicket isPublic replacementTicketUrl rawMetadata =
-  Just . TE.decodeUtf8 . BL.toStrict . encode $
-    Object
-      ( AesonKeyMap.insert "ticketUrl" ticketUrlValue
-          . AesonKeyMap.insert "isPublic" (Bool isPublic)
-          . AesonKeyMap.delete "eventStatus"
-          $ originalObject
-      )
+  Just . encodeMetadata $ AesonKeyMap.insert "_discoveryOwned" (Object nextOwned) effective
   where
-    originalObject =
-      case rawMetadata >>= decodeStrict' . TE.encodeUtf8 of
-        Just (Object value) -> value
-        _ -> AesonKeyMap.empty
-    ticketUrlValue =
-      if isPublic
-        then
-          maybe
-            (fromMaybe Null (AesonKeyMap.lookup "ticketUrl" originalObject))
-            String
-            replacementTicketUrl
-        else Null
+    original = AesonKeyMap.delete "eventStatus" (metadataObject rawMetadata)
+    previous = case AesonKeyMap.lookup "_discoveryOwned" original of
+      Just (Object snapshot) -> snapshot
+      _ -> AesonKeyMap.empty
+    stillOwned key = AesonKeyMap.member key previous
+      && AesonKeyMap.lookup key previous == AesonKeyMap.lookup key original
+    incoming = AesonKeyMap.fromList
+      [ ("isPublic", Bool isPublic)
+      , ("ticketUrl", if isPublic then maybe
+          (fromMaybe Null (AesonKeyMap.lookup "ticketUrl" original)) String replacementTicketUrl
+          else Null)
+      ]
+    apply acc key
+      | stillOwned key = maybe acc (\v -> AesonKeyMap.insert key v acc)
+          (AesonKeyMap.lookup key incoming)
+      | otherwise = acc
+    merged = foldl apply original ["isPublic", "ticketUrl"]
+    -- Source disappearance/expiry can hide any imported event, but can never
+    -- publish an editorially hidden or legacy event by claiming ownership.
+    effective = if isPublic then merged else AesonKeyMap.insert "isPublic" (Bool False) merged
+    nextOwned = foldl advance previous ["isPublic", "ticketUrl"]
+    advance acc key
+      | stillOwned key = maybe acc (\v -> AesonKeyMap.insert key v acc)
+          (AesonKeyMap.lookup key effective)
+      | otherwise = AesonKeyMap.delete key acc
 
 refreshCanonicalVisibility ::
   UTCTime ->
@@ -2008,16 +2058,34 @@ refreshCanonicalVisibility now eventKey = do
         resolveAllowedImportedUpdateStateId
           (Social.socialEventWorkflowStateId eventRow)
           desiredWorkflowStateId
-      update
-        eventKey
-        [ Social.SocialEventWorkflowStateId =. Just workflowStateId
-        , Social.SocialEventMetadata =.
-            updateImportedEventMetadataWithTicket
-              isPublic
-              ticketUrl
-              (Social.socialEventMetadata eventRow)
-        , Social.SocialEventUpdatedAt =. now
-        ]
+      update eventKey (reconciledEventUpdates now workflowStateId isPublic ticketUrl eventRow)
+
+-- Reconciliation shares the import ownership boundary; it must not silently
+-- reclaim a workflow field changed by an editor or an unproven legacy writer.
+reconciledEventUpdates :: UTCTime -> UUID -> Bool -> Maybe Text
+  -> Social.SocialEvent -> [Update Social.SocialEvent]
+reconciledEventUpdates now desiredState isPublic ticketUrl current =
+  [ Social.SocialEventWorkflowStateId =. nextState
+  , Social.SocialEventMetadata =. Just (encodeMetadata finalMetadata)
+  , Social.SocialEventUpdatedAt =. now
+  ]
+  where
+    original = metadataObject (Social.socialEventMetadata current)
+    previous = case AesonKeyMap.lookup "_discoveryOwned" original of
+      Just (Object snapshot) -> snapshot
+      _ -> AesonKeyMap.empty
+    ownsState = AesonKeyMap.lookup "workflowStateId" previous
+      == Just (toJSON (Social.socialEventWorkflowStateId current))
+    nextState = if ownsState then Just desiredState else Social.socialEventWorkflowStateId current
+    updatedMetadata = metadataObject (updateImportedEventMetadataWithTicket
+      isPublic ticketUrl (Social.socialEventMetadata current))
+    updatedOwned = case AesonKeyMap.lookup "_discoveryOwned" updatedMetadata of
+      Just (Object snapshot) -> snapshot
+      _ -> AesonKeyMap.empty
+    nextOwned = if ownsState
+      then AesonKeyMap.insert "workflowStateId" (toJSON nextState) updatedOwned
+      else AesonKeyMap.delete "workflowStateId" updatedOwned
+    finalMetadata = AesonKeyMap.insert "_discoveryOwned" (Object nextOwned) updatedMetadata
 
 sourceRefIsActive :: Social.ExternalEventRef -> Bool
 sourceRefIsActive ref =
@@ -2381,17 +2449,7 @@ ownedEventUpdates current now event@DiscoveredEvent{..} venueKey typeId stateId 
     nextOwned = AesonKeyMap.filterWithKey
       (\key _ -> AesonKeyMap.member key previous
         && AesonKeyMap.lookup key previous == AesonKeyMap.lookup key actualSnapshot) next
-    actualSnapshot = AesonKeyMap.fromList
-      [ ("title", toJSON (Social.socialEventTitle current))
-      , ("description", toJSON (Social.socialEventDescription current))
-      , ("venueId", toJSON (Social.socialEventVenueId current))
-      , ("timezone", toJSON (Social.socialEventTimezone current))
-      , ("startTime", toJSON (Social.socialEventStartTime current))
-      , ("endTime", toJSON (Social.socialEventEndTime current))
-      , ("priceCents", toJSON (Social.socialEventPriceCents current))
-      , ("eventTypeId", toJSON (Social.socialEventEventTypeId current))
-      , ("workflowStateId", toJSON (Social.socialEventWorkflowStateId current))
-      ] <> oldMetadata
+    actualSnapshot = currentEventSnapshot current
     keep :: ToJSON a => Key -> a -> a -> a
     keep key actual incoming =
       if AesonKeyMap.lookup key previous == Just (toJSON actual) then incoming else actual
@@ -2420,6 +2478,33 @@ ownedEventSnapshot DiscoveredEvent{..} venueKey typeId stateId metadata = AesonK
   , ("eventTypeId", toJSON (Just typeId))
   , ("workflowStateId", toJSON (Just stateId))
   ] <> metadataObject metadata
+
+-- Stored ingestion evidence is internal. An editorial writer carries it forward
+-- only for fields whose canonical values it did not change, under the event lock.
+preserveEventOwnership :: Social.SocialEvent -> Social.SocialEvent -> Maybe Text
+preserveEventOwnership current proposed =
+  case AesonKeyMap.lookup "_discoveryOwned" (metadataObject (Social.socialEventMetadata current)) of
+    Just (Object previous) -> Just . encodeMetadata $
+      AesonKeyMap.insert "_discoveryOwned" (Object remaining)
+        (metadataObject (Social.socialEventMetadata proposed))
+      where
+        remaining = AesonKeyMap.filterWithKey
+          (\key _ -> AesonKeyMap.lookup key (currentEventSnapshot current)
+            == AesonKeyMap.lookup key (currentEventSnapshot proposed)) previous
+    _ -> Social.socialEventMetadata proposed
+
+currentEventSnapshot :: Social.SocialEvent -> AesonKeyMap.KeyMap Value
+currentEventSnapshot current = AesonKeyMap.fromList
+  [ ("title", toJSON (Social.socialEventTitle current))
+  , ("description", toJSON (Social.socialEventDescription current))
+  , ("venueId", toJSON (Social.socialEventVenueId current))
+  , ("timezone", toJSON (Social.socialEventTimezone current))
+  , ("startTime", toJSON (Social.socialEventStartTime current))
+  , ("endTime", toJSON (Social.socialEventEndTime current))
+  , ("priceCents", toJSON (Social.socialEventPriceCents current))
+  , ("eventTypeId", toJSON (Social.socialEventEventTypeId current))
+  , ("workflowStateId", toJSON (Social.socialEventWorkflowStateId current))
+  ] <> metadataObject (Social.socialEventMetadata current)
 
 metadataObject :: Maybe Text -> AesonKeyMap.KeyMap Value
 metadataObject value = case value >>= decodeStrict' . TE.encodeUtf8 of

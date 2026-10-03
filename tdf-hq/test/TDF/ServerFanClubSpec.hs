@@ -300,7 +300,7 @@ spec = do
           (replicate 11 "https://cdn.tdf.app/a.jpg")
 
   describe "fan club post access validation" $
-    it "requires followers or officers before creating fan-club posts" $ do
+    it "allows the artist, followers or officers to create fan-club posts" $ do
       let artistKey = toSqlKey 42
           follower = mkFollow 99 42
           wrongArtistFollow = mkFollow 99 43
@@ -311,6 +311,8 @@ spec = do
         fanClubUser
         False
         (Just (Entity (toSqlKey 1) follower))
+        `shouldBe` Right ()
+      validateFanClubPostAccess (auPartyId fanClubUser) fanClubUser False Nothing
         `shouldBe` Right ()
       validateFanClubPostAccess artistKey fanClubUser True Nothing
         `shouldBe` Right ()

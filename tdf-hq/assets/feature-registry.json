@@ -39,6 +39,60 @@
   },
   "features": [
     {
+      "id": "community.discussion",
+      "parentId": null,
+      "webRoute": "/conversacion/:destinationKind/:destinationId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": {
+        "es": "Conversación",
+        "en": "Discussion"
+      },
+      "synonyms": {
+        "es": [
+          "comentarios",
+          "respuestas"
+        ],
+        "en": [
+          "comments",
+          "replies"
+        ]
+      },
+      "keywords": [
+        "discussion",
+        "comments",
+        "reactions"
+      ],
+      "description": {
+        "es": "Reacciones y conversaciones sujetas a los permisos de la publicación.",
+        "en": "Reactions and discussions governed by publication permissions."
+      },
+      "navigationGroup": "people",
+      "icon": "chat",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "searchable": false,
+      "mobilePresentation": {
+        "kind": "native-contextual",
+        "destination": "/conversacion/[destinationKind]/[destinationId]",
+        "documentedException": null
+      },
+      "accessRequestEligible": false,
+      "apiScopes": [
+        {
+          "pathPrefix": "/interactions",
+          "methods": {
+            "GET": "view",
+            "POST": "view",
+            "PUT": "view"
+          }
+        }
+      ]
+    },
+    {
       "id": "public.platform",
       "parentId": null,
       "webRoute": "/tdf",

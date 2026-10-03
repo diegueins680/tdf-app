@@ -7,6 +7,7 @@ import qualified Data.Aeson.KeyMap as KM
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Control.Monad (forM_)
 import Control.Monad.Logger (runNoLoggingT)
 import Data.Pool (destroyAllResources)
 import Data.Time (UTCTime(..), addUTCTime, fromGregorian, secondsToDiffTime, utctDay)
@@ -17,7 +18,7 @@ import Test.Hspec
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
 import Data.Maybe (isJust, isNothing)
-import Test.QuickCheck (property, forAll, chooseInt)
+import Test.QuickCheck (property, forAll, chooseInt, quickCheckResult, isSuccess)
 import qualified Data.Text as T
 import qualified Data.UUID as UUID
 
@@ -45,6 +46,7 @@ import TDF.Services.EventDiscovery
   , isDiscoveredEventKnown
   , reconcileImportedEvents
   , reconcileProviderEvents
+  , preserveEventOwnership
   , discoveredEventPublicationReady
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
@@ -445,6 +447,99 @@ spec = do
           KM.lookup "isPublic" fields `shouldBe` Just (Bool False)
         _ -> expectationFailure "Expected retained metadata"
       runSqlPool (count ([] :: [Filter Social.SocialEvent])) pool `shouldReturn` 1
+      destroyAllResources pool
+
+    forM_ [False, True] $ \legacy ->
+      it ("keeps editorial visibility and ticket URLs through full provider reconciliation; legacy=" <> show legacy) $ do
+        event <- case eitherDecode ticketmasterFixture of
+          Left err -> fail err
+          Right response -> case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            _ -> fail "Expected one fixture event"
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeEventDiscoverySchema pool
+        _ <- syncDiscoveredEvent pool (fixtureTime 10 5) event
+        Just (Entity _ ref) <- runSqlPool (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1")) pool
+        let eventKey = Social.externalEventRefEventId ref
+        Just original <- runSqlPool (get eventKey) pool
+        let editedMetadata = case Social.socialEventMetadata original >>= decodeStrict' . TE.encodeUtf8 of
+              Just (Object fields) -> Just . TE.decodeUtf8 . BL.toStrict . encode . Object $
+                (if legacy then KM.delete "_discoveryOwned" else id) $
+                KM.insert "isPublic" (Bool False) $
+                KM.insert "ticketUrl" (String "https://editor.example/tickets") fields
+              _ -> Nothing
+        let editorialState = UUID.fromString "00000000-0000-4000-8000-000000000231"
+        runSqlPool (update eventKey
+          [Social.SocialEventMetadata =. editedMetadata, Social.SocialEventWorkflowStateId =. editorialState]) pool
+        forM_ [10, 12, 15] $ \minute -> do
+          _ <- syncDiscoveredEvent pool (fixtureTime 10 minute) event
+          _ <- reconcileProviderEvents pool (fixtureTime 10 minute) "ticketmaster"
+            [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")] ["tm-event-1"]
+          _ <- reconcileImportedEvents pool (fixtureTime 10 minute)
+            [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
+          Just stored <- runSqlPool (get eventKey) pool
+          Social.socialEventWorkflowStateId stored `shouldBe` editorialState
+          case Social.socialEventMetadata stored >>= decodeStrict' . TE.encodeUtf8 of
+            Just (Object fields) -> do
+              KM.lookup "isPublic" fields `shouldBe` Just (Bool False)
+              KM.lookup "ticketUrl" fields `shouldBe` Just (String "https://editor.example/tickets")
+              case KM.lookup "_discoveryOwned" fields of
+                Just (Object owned) -> do
+                  KM.lookup "isPublic" owned `shouldBe` Nothing
+                  KM.lookup "ticketUrl" owned `shouldBe` Nothing
+                  KM.lookup "workflowStateId" owned `shouldBe` Nothing
+                _ -> expectationFailure "Expected explicit non-adoption evidence"
+            _ -> expectationFailure "Expected metadata"
+        destroyAllResources pool
+
+    it "relinquishes only changed fields at the editorial write, before provider values can coincide" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> fail err
+        Right response -> case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+          [normalized] -> pure normalized
+          _ -> fail "Expected one fixture event"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
+      Just (Entity _ ref) <- runSqlPool (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1")) pool
+      let eventKey = Social.externalEventRefEventId ref
+      Just original <- runSqlPool (get eventKey) pool
+      let proposed = original{Social.socialEventTitle = "Editorial title"}
+          metadata = preserveEventOwnership original proposed
+      runSqlPool (update eventKey [Social.SocialEventTitle =. "Editorial title", Social.SocialEventMetadata =. metadata]) pool
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 10) event{discoveredEventTitle = "Editorial title"}
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 15) event
+        {discoveredEventTitle = "Provider changed again", discoveredEventDescription = Just "Fresh provider description"}
+      Just final <- runSqlPool (get eventKey) pool
+      Social.socialEventTitle final `shouldBe` "Editorial title"
+      Social.socialEventDescription final `shouldBe` Just "Fresh provider description"
+      destroyAllResources pool
+
+    it "keeps editorial ownership removal monotone and idempotent for arbitrary edits" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> fail err
+        Right response -> case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+          [normalized] -> pure normalized
+          _ -> fail "Expected one fixture event"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
+      Just (Entity _ ref) <- runSqlPool (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1")) pool
+      Just original <- runSqlPool (get (Social.externalEventRefEventId ref)) pool
+      result <- quickCheckResult $ property $ \title ->
+        let proposed = original{Social.socialEventTitle = T.pack title}
+            first = proposed{Social.socialEventMetadata = preserveEventOwnership original proposed}
+            repeated = preserveEventOwnership first first
+            reverted = first{Social.socialEventTitle = Social.socialEventTitle original}
+            final = preserveEventOwnership first reverted
+            ownedTitle raw = case raw >>= decodeStrict' . TE.encodeUtf8 of
+              Just (Object fields) -> case KM.lookup "_discoveryOwned" fields of
+                Just (Object owned) -> KM.lookup "title" owned
+                _ -> Nothing
+              _ -> Nothing
+         in repeated == Social.socialEventMetadata first
+            && (T.pack title == Social.socialEventTitle original || ownedTitle final == Nothing)
+      result `shouldSatisfy` isSuccess
       destroyAllResources pool
 
     it "does not claim legacy event fields without provider ownership evidence" $ do

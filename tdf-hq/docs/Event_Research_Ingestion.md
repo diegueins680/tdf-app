@@ -13,7 +13,7 @@ This workflow stores evidence-backed web research separately from published soci
 
 ## Idempotent batch flow
 
-1. Read `GET /social-events/event-research/pilot` and the latest runs. Do not start a new unapproved pilot if 20 active candidates already exist.
+1. Read `GET /social-events/event-research/pilot` and the latest runs. `erPilotActiveCandidates` reports the shared research/discovery identity count used by the database guard, retaining the existing response field for compatibility. Do not start a new unapproved pilot if 20 active identities already exist. A linked research candidate and imported event consume one slot; suppressed references do not count unless another active reference still represents that event.
 2. `POST /social-events/event-research/runs` with a stable run key such as `ecuador-events-2026-08-16`. Reusing the key returns the existing run.
 3. Process bounded source batches. `PUT /social-events/event-research/candidates` uses `(provider, externalId)` as its unique key.
 4. Commit the last confirmed source position with `PUT /social-events/event-research/runs/{runId}`. A retry with the same content creates neither a candidate duplicate nor a duplicate change entry.

@@ -142,6 +142,13 @@ can be disabled without affecting Ticketmaster or venue feeds. Source failures
 record the last error and consecutive failure count without stopping other
 sources.
 
+Per-event persistence failures abort their source run. After fetching, completion
+locks and rechecks the enabled source before absence reconciliation, including
+empty feeds. Reconciliation, the completed run ledger and the source success
+timestamp commit in one transaction; a disabled source or failed final write
+cannot leave partial success evidence. The source-row lock is held only during
+completion, not across network requests.
+
 ## Configuration
 
 ```env
@@ -251,3 +258,11 @@ Buen Plan's ten-page request budget now fails incomplete inventories explicitly.
 A truncated prefix cannot mark unseen events missing or count as a successful
 reconciliation. Continuing beyond that cap still requires the pending resumable
 provider-page implementation and verified source permission.
+
+### Ownership compatibility and reconciliation
+
+`_discoveryOwned` is an internal stored-data object. The stored event decoder recognizes that object before applying the unchanged public-field allowlist; malformed ownership objects, unknown public fields and duplicate top-level keys still fail closed. Public requests cannot supply the namespace, and event responses do not expose it.
+
+Editorial updates and image uploads compare against the row locked for that write. Changed fields permanently lose ingestion ownership; unchanged fields retain their prior source evidence. Metadata edits and lineup replacement commit with the event update. A concurrent ownership, suppression or explicit workflow change is rechecked before writing.
+
+Both provider and subscription reconciliation retain editorial visibility, ticket URLs and workflow choices. Source expiry or disappearance can still hide an event, but returning source data cannot claim an editor-owned or unproven legacy publication flag. Reconciliation advances the snapshot only for fields it still owns. No migration, feature activation or production rollout is introduced.

@@ -1,4 +1,7 @@
+import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import RecordThumbnail from '../features/records/RecordThumbnail';
+import { SelectedRecordPublication } from '../features/records/SelectedRecordPublication';
 import { useTranslation } from 'react-i18next';
 import { useContactCreation } from '../hooks/useContactCreation';
 import { logger } from '../utils/logger';
@@ -611,6 +614,7 @@ const GradientCard = ({
 );
 
 interface RecordingItem {
+  id: string;
   title: string;
   artist: string;
   description: string;
@@ -629,6 +633,7 @@ interface ReleaseLink {
 }
 
 interface ReleaseItem {
+  id: string;
   title: string;
   artist: string;
   blurb: string;
@@ -640,10 +645,12 @@ interface ReleaseItem {
   sortOrder: number;
 }
 interface SessionItem {
+  id: string;
   title: string;
   guests: string;
   youtubeId: string;
-  embedUrl: string;
+  embedUrl?: string;
+  resource: RecordsResourceDTO;
   duration: string;
   description: string;
   url: string;
@@ -681,6 +688,7 @@ const mapRecordsRelease = (release: RecordsReleaseDTO): ReleaseItem => {
   const resource = primaryResource(release.resources, 'audio-track');
   const duration = formatDurationMs(resource?.durationMs);
   return {
+    id: release.id,
     title: release.title,
     artist: release.contributors.map((contributor) => contributor.name).join(', ') || 'TDF Records',
     releasedOn: release.releaseDate ?? duration,
@@ -698,6 +706,7 @@ const mapRecordsRecording = (recording: RecordsRecordingDTO): RecordingItem | nu
   if (!resource) return null;
   const duration = formatDurationMs(recording.durationMs ?? resource.durationMs);
   return {
+    id: recording.id,
     title: recording.title,
     artist: recording.contributors.map((contributor) => contributor.name).join(', '),
     description: recording.description ?? '',
@@ -715,10 +724,13 @@ const mapRecordsSession = (session: RecordsSessionDTO): SessionItem | null => {
   const resource = primaryResource(session.resources, 'video');
   if (resource?.providerCode !== 'youtube') return null;
   return {
+    id: session.id,
     title: session.title,
     guests: session.contributors.map((contributor) => contributor.name).join(', '),
     youtubeId: resource.externalCode,
-    embedUrl: `https://www.youtube.com/embed/${resource.externalCode}`,
+    resource,
+    embedUrl: resource.availability === 'unavailable' || resource.providerMetadata?.['embeddable'] === false
+      ? undefined : `https://www.youtube.com/embed/${resource.externalCode}`,
     duration: formatDurationMs(resource.durationMs),
     description: session.description ?? '',
     url: resource.url,
@@ -729,15 +741,15 @@ const mapRecordsSession = (session: RecordsSessionDTO): SessionItem | null => {
 const sortReleases = (items: ReleaseItem[]): ReleaseItem[] =>
   [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
 
-const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
+const RecordingsGrid = ({ items, selection }: { items: RecordingItem[]; selection: PublicationSelection }) => (
   <LazyPaginatedList
     items={items}
-    pagination={{ itemLabel: 'grabaciones', initialRowsPerPage: 6 }}
+    pagination={{ itemLabel: 'grabaciones', initialRowsPerPage: 6, selectedIndex: selection.index, resetKey: selection.requested }}
     renderItems={(visibleItems) => (
       <Grid container spacing={3}>
         {visibleItems.map((item) => (
       <Grid item key={`${item.sortOrder}-${item.title}`} xs={12} md={4}>
-        <Card
+        <Card component={PublicationAnchor} selected={selection.requested === item.id}
           sx={{
             height: '100%',
             bgcolor: 'rgba(255,255,255,0.03)',
@@ -804,6 +816,7 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
                 </Button>
               </Box>
             )}
+            <InteractionPanel kind="recording" entityKey={item.id} />
           </CardContent>
         </Card>
       </Grid>
@@ -813,10 +826,10 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
   />
 );
 
-const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
+const ReleasesGrid = ({ items, selection }: { items: ReleaseItem[]; selection: PublicationSelection }) => (
   <LazyPaginatedList
     items={items}
-    pagination={{ itemLabel: 'releases', initialRowsPerPage: 6 }}
+    pagination={{ itemLabel: 'releases', initialRowsPerPage: 6, selectedIndex: selection.index, resetKey: selection.requested }}
     renderItems={(visibleItems) => (
       <Grid container spacing={3}>
         {visibleItems.map((release) => {
@@ -824,7 +837,7 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
       const releaseMeta = release.duration ?? release.releasedOn;
       return (
         <Grid item xs={12} md={6} key={`${release.sortOrder}-${release.title}`}>
-          <Card
+          <Card component={PublicationAnchor} selected={selection.requested === release.id}
             sx={{
               display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
@@ -901,6 +914,7 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
                   </Button>
                 ))}
               </Stack>
+              <InteractionPanel kind="record_release" entityKey={release.id} />
             </CardContent>
           </Card>
         </Grid>
@@ -911,17 +925,17 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
   />
 );
 
-const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
+const SessionsGrid = ({ items, selection }: { items: SessionItem[]; selection: PublicationSelection }) => (
   <LazyPaginatedList
     items={items}
-    pagination={{ itemLabel: 'sesiones', initialRowsPerPage: 6 }}
+    pagination={{ itemLabel: 'sesiones', initialRowsPerPage: 6, selectedIndex: selection.index, resetKey: selection.requested }}
     renderItems={(visibleItems) => (
       <Grid container spacing={3}>
         {visibleItems.map((video) => {
       const sessionHref = video.url ?? `https://www.youtube.com/watch?v=${video.youtubeId}`;
       return (
         <Grid item xs={12} md={4} key={video.youtubeId}>
-          <Card
+          <Card component={PublicationAnchor} selected={selection.requested === video.id}
             sx={{
               height: '100%',
               bgcolor: 'rgba(255,255,255,0.03)',
@@ -933,7 +947,7 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
             }}
           >
             <Box sx={{ position: 'relative', pt: '56.25%', backgroundColor: '#0f1117' }}>
-              <Box
+              {video.embedUrl ? <Box
                 component="iframe"
                 src={video.embedUrl}
                 title={video.title}
@@ -946,7 +960,10 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
                   height: '100%',
                   border: 0,
                 }}
-              />
+              /> : <Box component="a" href={sessionHref} target="_blank" rel="noopener noreferrer"
+                aria-label={`Consultar en YouTube: ${video.title}`} sx={{ position: 'absolute', inset: 0 }}>
+                <RecordThumbnail resource={video.resource} title={video.title} />
+              </Box>}
             </Box>
             <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Stack direction="row" spacing={1} alignItems="center">
@@ -972,6 +989,7 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {video.description}
               </Typography>
+              <InteractionPanel kind="recording_session" entityKey={video.id} />
             </CardContent>
           </Card>
         </Grid>
@@ -1007,6 +1025,9 @@ export default function RecordsPublicPage() {
     () => sortRecordings((recordsFeedQuery.data?.recordings ?? []).map(mapRecordsRecording).filter((item): item is RecordingItem => item != null)),
     [recordsFeedQuery.data?.recordings],
   );
+  const recordingSelection = usePublicationSelection('recording', recordings.map((item) => item.id), recordsFeedQuery.isLoading);
+  const releaseSelection = usePublicationSelection('release', releases.map((item) => item.id), recordsFeedQuery.isLoading);
+  const sessionSelection = usePublicationSelection('session', sessions.map((item) => item.id), recordsFeedQuery.isLoading);
   const sessionsLoading = recordsFeedQuery.isLoading;
   const releasesLoading = recordsFeedQuery.isLoading;
   const recordingsLoading = recordsFeedQuery.isLoading;
@@ -1241,6 +1262,7 @@ export default function RecordsPublicPage() {
               {recordingsIntro}
             </Typography>
           </Stack>
+          <SelectedRecordPublication kind="recording" selection={recordingSelection} loading={recordingsLoading} />
           {recordingsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedRecordings')} />
@@ -1249,7 +1271,7 @@ export default function RecordsPublicPage() {
           ) : recordingsError ? (
             <Alert severity="warning">No pudimos cargar las grabaciones publicadas.</Alert>
           ) : recordings.length > 0 ? (
-            <RecordingsGrid items={recordings} />
+            <RecordingsGrid items={recordings} selection={recordingSelection} />
           ) : (
             <Alert severity="info">
               No hay grabaciones publicadas en esta colección todavía.
@@ -1281,6 +1303,7 @@ export default function RecordsPublicPage() {
               {releasesIntro}
             </Typography>
           </Stack>
+          <SelectedRecordPublication kind="record_release" selection={releaseSelection} loading={releasesLoading} />
           {releasesLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedReleases')} />
@@ -1289,7 +1312,7 @@ export default function RecordsPublicPage() {
           ) : releasesError ? (
             <Alert severity="warning">No pudimos cargar los lanzamientos publicados.</Alert>
           ) : releases.length > 0 ? (
-            <ReleasesGrid items={releases} />
+            <ReleasesGrid items={releases} selection={releaseSelection} />
           ) : (
             <Alert
               severity={canManageReleases ? 'info' : 'warning'}
@@ -1322,6 +1345,7 @@ export default function RecordsPublicPage() {
               {sessionsIntro}
             </Typography>
           </Stack>
+          <SelectedRecordPublication kind="recording_session" selection={sessionSelection} loading={sessionsLoading} />
           {sessionsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" aria-label={t('auditAccessibility.loadingPublishedSessions')} />
@@ -1330,7 +1354,7 @@ export default function RecordsPublicPage() {
           ) : sessionsError ? (
             <Alert severity="warning">No pudimos cargar las sesiones publicadas.</Alert>
           ) : sessions.length > 0 ? (
-            <SessionsGrid items={sessions} />
+            <SessionsGrid items={sessions} selection={sessionSelection} />
           ) : (
             <Alert severity="info">
               No hay sesiones publicadas en esta colección todavía.

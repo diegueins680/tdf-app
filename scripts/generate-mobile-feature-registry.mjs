@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sourcePath = path.join(workspaceRoot, 'tdf-hq/assets/feature-registry.json');
-const outputPath = path.join(workspaceRoot, 'tdf-mobile/src/features/generatedFeatureRegistry.ts');
+const outputPath = path.join(process.env.TDF_MOBILE_ROOT ?? path.join(workspaceRoot, 'tdf-mobile'), 'src/features/generatedFeatureRegistry.ts');
 const raw = await readFile(sourcePath, 'utf8');
 const registry = JSON.parse(raw);
 const defaults = registry.defaults ?? {};

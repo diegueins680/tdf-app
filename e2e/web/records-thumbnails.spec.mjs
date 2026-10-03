@@ -31,6 +31,8 @@ async function fixture(page, baseURL, verified) {
     }
     if (url.pathname === '/records/feed') return route.fulfill({ json: { locale: 'es', revision: 1, collections: [], releases: [], sessions: [], recordings } });
     if (['fetch', 'xhr'].includes(request.resourceType())) {
+      // These synthetic YouTube rows have no persisted interaction target.
+      if (url.pathname.startsWith('/public/interactions/')) return route.fulfill({ status: 404, json: { error: 'unavailable' } });
       if (url.pathname === '/session') return route.fulfill({ status: 401, json: {} });
       if (url.pathname.startsWith('/catalog')) return route.fulfill({ json: { catalogs: [], items: [], defaults: [] } });
       return route.fulfill({ json: [] });
@@ -66,4 +68,5 @@ test('Records preserves source identities, keyboard links and responsive unavail
   await expect(page.getByRole('img', { name: 'Video no disponible en la fuente' })).toHaveCount(4);
   expect(requests.some(p => p.includes('ooPsIHsikYU') || p.includes('Cb7VGZJ6apo'))).toBe(false);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath('records-unavailable.png'), fullPage: true });
 });

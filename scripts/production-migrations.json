@@ -592,9 +592,229 @@
       "introducedBy": "bec94317473fa8f2016ba165b5813a391c81b9ac"
     },
     {
+      "id": "2026-09-20_records_ingestion_runtime",
+      "path": "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
+      "introducedBy": "633d3dc8f2451397c8bb51beee51700c172aad98"
+    },
+    {
       "id": "2026-09-27_event_ingestion_boundaries",
       "path": "tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql",
       "introducedBy": "441dfcc968559f829e84c89751f008657566138c"
+    },
+    {
+      "id": "2026-09-14_social_v2_foundation",
+      "path": "tdf-hq/sql/2026-09-14_social_v2_foundation.sql",
+      "introducedBy": "fa6b99e7a4e718f7e6db7226ed01301ff762e4f9"
+    },
+    {
+      "id": "2026-09-14_social_v2_read_models",
+      "path": "tdf-hq/sql/2026-09-14_social_v2_read_models.sql",
+      "introducedBy": "aa56289c3b01d0d74d45c5e590882eca98fd5b2c"
+    },
+    {
+      "id": "2026-09-15_social_v2_dm_write_boundary",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql",
+      "introducedBy": "efc827f7628afe084db173be627d0d7f71d0142a"
+    },
+    {
+      "id": "2026-09-15_social_v2_chat_api",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
+      "introducedBy": "02755bc410eecb5c3e03938121f1197102c709e1"
+    },
+    {
+      "id": "2026-09-15_social_v2_relationship_reads",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql",
+      "introducedBy": "8b2d1557a5e72e0346af1fd43dc7cf36033da067"
+    },
+    {
+      "id": "2026-09-15_social_v2_profile_reads",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql",
+      "introducedBy": "7706258a9e8ecbe0b99b4fd23903df606848ad03"
+    },
+    {
+      "id": "2026-09-16_social_v2_legacy_writes",
+      "path": "tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql",
+      "introducedBy": "7e601607f60b2987e502c4a14db821bbf37df296"
+    },
+    {
+      "id": "2026-09-16_social_v2_fan_effects",
+      "path": "tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql",
+      "introducedBy": "daf6c5a680b81928c2e2c66df98063328e6d5e9c"
+    },
+    {
+      "id": "2026-09-28_universal_interactions",
+      "path": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_policy",
+      "path": "tdf-hq/sql/2026-09-28_interaction_policy.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_discussions",
+      "path": "tdf-hq/sql/2026-09-28_interaction_discussions.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_locks",
+      "path": "tdf-hq/sql/2026-09-28_interaction_locks.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_commands",
+      "path": "tdf-hq/sql/2026-09-28_interaction_commands.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_blocks",
+      "path": "tdf-hq/sql/2026-09-28_interaction_blocks.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_summary",
+      "path": "tdf-hq/sql/2026-09-28_interaction_summary.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_notifications",
+      "path": "tdf-hq/sql/2026-09-28_interaction_notifications.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_navigation",
+      "path": "tdf-hq/sql/2026-09-28_interaction_navigation.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_read_optimization",
+      "path": "tdf-hq/sql/2026-09-28_interaction_read_optimization.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_legacy",
+      "path": "tdf-hq/sql/2026-09-28_interaction_legacy.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_compatibility",
+      "path": "tdf-hq/sql/2026-09-28_interaction_compatibility.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_account_controls",
+      "path": "tdf-hq/sql/2026-09-28_interaction_account_controls.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_integrity",
+      "path": "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-29_interaction_review_repairs",
+      "path": "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
+      "introducedBy": "5eb0ac922528c814951aafa9f9fc57a435d48b98"
+    },
+    {
+      "id": "2026-09-29_interaction_publication_authority",
+      "path": "tdf-hq/sql/2026-09-29_interaction_publication_authority.sql",
+      "introducedBy": "d6c52fad19c22062b6f85921ffc55335460c5724"
+    },
+    {
+      "id": "2026-09-29_interaction_reaction_withdrawal",
+      "path": "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
+      "introducedBy": "7d8de4c5d84aa8faf83b6558093bbb571dc0615d"
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_block_boundary",
+      "path": "tdf-hq/sql/2026-09-29_interaction_moderation_block_boundary.sql",
+      "introducedBy": "e2dc17a5153d7f734f419d73c1d1575a696dfe30"
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_access",
+      "path": "tdf-hq/sql/2026-09-29_interaction_moderation_access.sql",
+      "introducedBy": "3f6a1b7528ed4a6b4a68e36337dcc5f37d5d6a2d"
+    },
+    {
+      "id": "2026-09-29_interaction_legacy_reply_aliases",
+      "path": "tdf-hq/sql/2026-09-29_interaction_legacy_reply_aliases.sql",
+      "introducedBy": "e415244248058c13043bd1bbd3f40d12241e209f"
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_delivery",
+      "path": "tdf-hq/sql/2026-09-29_interaction_moderation_delivery.sql",
+      "introducedBy": "96a2fc934a978dd10df235f9ac15567d4d4294c2"
+    },
+    {
+      "id": "2026-09-29_interaction_event_destinations",
+      "path": "tdf-hq/sql/2026-09-29_interaction_event_destinations.sql",
+      "introducedBy": "1a884dff86b51ccb7905a58a280bd9fbe7fa8d75"
+    },
+    {
+      "id": "2026-09-29_interaction_mention_privacy",
+      "path": "tdf-hq/sql/2026-09-29_interaction_mention_privacy.sql",
+      "introducedBy": "6334d897c573ae7b2e03c917ad26177e1c0b1958"
+    },
+    {
+      "id": "2026-09-29_interaction_inactive_allowlists",
+      "path": "tdf-hq/sql/2026-09-29_interaction_inactive_allowlists.sql",
+      "introducedBy": "8e6a2a80bafd9949f7f9aada2ec73301e02b2184"
+    },
+    {
+      "id": "2026-09-29_interaction_legacy_moment_choices",
+      "path": "tdf-hq/sql/2026-09-29_interaction_legacy_moment_choices.sql",
+      "introducedBy": "7c2f5d3246e19c424200aba206cebe8d06942401"
+    },
+    {
+      "id": "2026-09-29_interaction_catalog_authority",
+      "path": "tdf-hq/sql/2026-09-29_interaction_catalog_authority.sql",
+      "introducedBy": "70f9d3031f1c783070e087e295345f9f36c30720"
+    },
+    {
+      "id": "2026-09-29_interaction_report_reopen",
+      "path": "tdf-hq/sql/2026-09-29_interaction_report_reopen.sql",
+      "introducedBy": "712687c976075925d475e9c0ddbe6b06e6590bef"
+    },
+    {
+      "id": "2026-09-29_interaction_ownerless_policy",
+      "path": "tdf-hq/sql/2026-09-29_interaction_ownerless_policy.sql",
+      "introducedBy": "3624766ea78cc6663be0a8be5d4c7a9a94d2961c"
+    },
+    {
+      "id": "2026-09-29_interaction_author_moderation_notices",
+      "path": "tdf-hq/sql/2026-09-29_interaction_author_moderation_notices.sql",
+      "introducedBy": "d1ecc182f8041e0f5341514fc2c67e2b27269b4a"
+    },
+    {
+      "id": "2026-09-29_interaction_nonblank_comments",
+      "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_comments.sql",
+      "introducedBy": "de95fbd6a631104880cc0fc88039a24932ecc84f"
+    },
+    {
+      "id": "2026-09-29_interaction_pause_boundary",
+      "path": "tdf-hq/sql/2026-09-29_interaction_pause_boundary.sql",
+      "introducedBy": "5ab4b9d09868f05b529fa4c230e64ef437441f1a"
+    },
+    {
+      "id": "2026-09-29_interaction_nonblank_reasons",
+      "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_reasons.sql",
+      "introducedBy": "5ab4b9d09868f05b529fa4c230e64ef437441f1a"
+    },
+    {
+      "id": "2026-09-30_interaction_report_content_version",
+      "path": "tdf-hq/sql/2026-09-30_interaction_report_content_version.sql",
+      "introducedBy": "0b63d746a5b720e7cacffd41ed04ae849e4a3284"
+    },
+    {
+      "id": "2026-09-30_interaction_records_publication",
+      "path": "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
+      "introducedBy": "9dd2cefc7af63096417b7e14a59a37e35022bd43"
+    },
+    {
+      "id": "2026-09-30_interaction_classified_expiry",
+      "path": "tdf-hq/sql/2026-09-30_interaction_classified_expiry.sql",
+      "introducedBy": "5966161d8cf7c31a776ea5c2778068fbbd78b920"
     }
   ]
 }

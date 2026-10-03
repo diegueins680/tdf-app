@@ -1,0 +1,1281 @@
+# Canonical web and native interaction contract. Generated clients consume this file.
+openapi: 3.0.3
+info:
+  title: TDF universal interactions
+  version: 1.0.0
+paths:
+  /interactions/targets/{kind}/{entityKey}:
+    get:
+      operationId: getInteractionSummary
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters: &id005
+      - &id001
+        name: kind
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/InteractionKind'
+      - &id002
+        name: entityKey
+        in: path
+        required: true
+        schema: &id009
+          type: string
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSummary'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /interactions/targets/{kind}/{entityKey}/comments:
+    get:
+      operationId: getInteractionComments
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - *id001
+      - *id002
+      - &id006
+        name: cursor
+        in: query
+        required: false
+        schema: &id003
+          type: string
+          format: uuid
+      - &id004
+        name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+      - name: root
+        in: query
+        required: false
+        schema: *id003
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - relevant
+          - newest
+          - oldest
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionPage'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /interactions/targets/{kind}/{entityKey}/comments/{commentId}:
+    get:
+      operationId: getInteractionComment
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - *id001
+      - *id002
+      - name: commentId
+        in: path
+        required: true
+        schema: *id003
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionCommentContext'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /interactions/targets/{kind}/{entityKey}/reactors:
+    get:
+      operationId: getInteractionReactors
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - *id001
+      - *id002
+      - name: cursor
+        in: query
+        required: false
+        schema: &id007
+          type: integer
+          minimum: 0
+      - *id004
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionReactors'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /interactions/resolve/{destinationKind}/{destinationId}:
+    get:
+      operationId: resolveInteractionDestination
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: destinationKind
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - target
+          - comment
+      - name: destinationId
+        in: path
+        required: true
+        schema: *id003
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionDestination'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /public/interactions/targets/{kind}/{entityKey}:
+    get:
+      operationId: getPublicInteractionSummary
+      tags:
+      - Interactions
+      security: []
+      parameters: *id005
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSummary'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /public/interactions/targets/{kind}/{entityKey}/comments:
+    get:
+      operationId: getPublicInteractionComments
+      tags:
+      - Interactions
+      security: []
+      parameters:
+      - *id001
+      - *id002
+      - *id006
+      - *id004
+      - name: root
+        in: query
+        required: false
+        schema: *id003
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - relevant
+          - newest
+          - oldest
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionPage'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /public/interactions/targets/{kind}/{entityKey}/comments/{commentId}:
+    get:
+      operationId: getPublicInteractionComment
+      tags:
+      - Interactions
+      security: []
+      parameters:
+      - *id001
+      - *id002
+      - name: commentId
+        in: path
+        required: true
+        schema: *id003
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionCommentContext'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /public/interactions/targets/{kind}/{entityKey}/reactors:
+    get:
+      operationId: getPublicInteractionReactors
+      tags:
+      - Interactions
+      security: []
+      parameters:
+      - *id001
+      - *id002
+      - name: cursor
+        in: query
+        required: false
+        schema: *id007
+      - *id004
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionReactors'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /public/interactions/resolve/{destinationKind}/{destinationId}:
+    get:
+      operationId: resolvePublicInteractionDestination
+      tags:
+      - Interactions
+      security: []
+      parameters:
+      - name: destinationKind
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - target
+          - comment
+      - name: destinationId
+        in: path
+        required: true
+        schema: *id003
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionDestination'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /interactions/targets/{targetId}/commands:
+    post:
+      operationId: executeInteractionCommand
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: targetId
+        in: path
+        required: true
+        schema: *id003
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionCommandResult'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteractionCommandRequest'
+  /interactions/blocks/{partyId}:
+    get:
+      operationId: getInteractionBlock
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: partyId
+        in: path
+        required: true
+        schema: *id007
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionBlock'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+    put:
+      operationId: setInteractionBlock
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: partyId
+        in: path
+        required: true
+        schema: *id007
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionBlock'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteractionBlockRequest'
+  /interactions/preferences:
+    get:
+      operationId: getInteractionPreferences
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters: &id008 []
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionPreferences'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+    put:
+      operationId: setInteractionPreferences
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters: *id008
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionPreferences'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteractionPreferences'
+  /interactions/moderation/{targetId}:
+    get:
+      operationId: getInteractionModeration
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: targetId
+        in: path
+        required: true
+        schema: *id003
+      - *id006
+      - *id004
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionPage'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /interactions/blocked-accounts:
+    get:
+      operationId: listInteractionBlockedAccounts
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionBlockedAccounts'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+  /interactions/reports:
+    get:
+      operationId: listInteractionReports
+      tags:
+      - Interactions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+      responses:
+        '200':
+          description: Current authorized state; Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionPage'
+        '400':
+          description: Invalid input
+        '401':
+          description: Session expired
+        '403':
+          description: Forbidden
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision or request key conflict
+        '429':
+          description: Rate limited
+        '503':
+          description: Retry using the same request key
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    InteractionKind:
+      type: string
+      enum:
+      - club_post
+      - club_memory
+      - event
+      - event_moment
+      - recording
+      - recording_session
+      - record_release
+      - artist_release
+      - classified
+      - directory_profile
+      - artist_update
+    InteractionMention:
+      type: object
+      additionalProperties: false
+      required:
+      - partyId
+      - start
+      - end
+      properties:
+        partyId: *id007
+        start: *id007
+        end: *id007
+    InteractionAuthor:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - displayName
+      - avatarUrl
+      properties:
+        id: *id007
+        displayName: *id009
+        avatarUrl:
+          type: string
+          nullable: true
+    InteractionComment:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - targetId
+      - parentId
+      - rootId
+      - depth
+      - version
+      - createdAt
+      - editedAt
+      - state
+      - body
+      - author
+      - canEdit
+      - canDelete
+      - mentions
+      properties:
+        id: *id003
+        targetId: *id003
+        parentId:
+          type: string
+          format: uuid
+          nullable: true
+        rootId: *id003
+        depth: *id007
+        version: *id007
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+          nullable: true
+        state:
+          type: string
+          enum:
+          - visible
+          - deleted
+          - hidden
+          - removed
+          - unavailable
+        body: *id009
+        author:
+          allOf:
+          - $ref: '#/components/schemas/InteractionAuthor'
+          nullable: true
+        canEdit:
+          type: boolean
+          nullable: true
+        canDelete:
+          type: boolean
+          nullable: true
+        mentions:
+          type: array
+          items:
+            $ref: '#/components/schemas/InteractionMention'
+        replyCount: *id007
+        moderationBody: *id009
+        openReports: *id007
+        reportReasons:
+          description: Latest 20 open report reasons, visible only to authorized moderators; reporter identities are omitted.
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            maxLength: 1000
+        legacyPresentation:
+          type: object
+          nullable: true
+          properties:
+            title:
+              type: string
+              nullable: true
+            mediaUrls:
+              type: array
+              items:
+                type: string
+    InteractionReaction:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - code
+      - emoji
+      - label
+      - count
+      - selectable
+      properties:
+        id: *id003
+        code: *id009
+        emoji: *id009
+        label: *id009
+        count: *id007
+        selectable: &id010
+          type: boolean
+    InteractionContext:
+      type: object
+      required:
+      - kind
+      - key
+      - ownerId
+      - title
+      - route
+      - public
+      - canManage
+      - reactable
+      - commentable
+      - shareable
+      properties:
+        kind:
+          $ref: '#/components/schemas/InteractionKind'
+        key: *id009
+        ownerId:
+          type: integer
+          minimum: 0
+          nullable: true
+        title: *id009
+        route: *id009
+        public: *id010
+        canManage: *id010
+        reactable: *id010
+        commentable: *id010
+        shareable: *id010
+    InteractionSummary:
+      allOf:
+      - $ref: '#/components/schemas/InteractionContext'
+      - type: object
+        required:
+        - id
+        - version
+        - commentPolicy
+        - canReact
+        - canComment
+        - canModerate
+        - commentCount
+        - rootCount
+        - reactions
+        - myReactionTypeId
+        - subscription
+        - defaultSort
+        properties:
+          id: *id003
+          version: *id007
+          commentPolicy:
+            type: string
+            enum:
+            - everyone
+            - followers
+            - mentioned
+            - 'off'
+          canReact: *id010
+          canComment: *id010
+          canModerate: *id010
+          commentCount: *id007
+          rootCount: *id007
+          reactions:
+            type: array
+            items:
+              $ref: '#/components/schemas/InteractionReaction'
+          myReactionTypeId:
+            type: string
+            format: uuid
+            nullable: true
+          subscription:
+            type: string
+            enum:
+            - all
+            - participating
+            - muted
+          defaultSort:
+            type: string
+            enum:
+            - newest
+            - oldest
+            - relevant
+          mentionedPeople:
+            type: array
+            items:
+              $ref: '#/components/schemas/InteractionAuthor'
+    InteractionPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InteractionComment'
+        nextCursor:
+          type: string
+          format: uuid
+          nullable: true
+        sort:
+          type: string
+          enum:
+          - newest
+          - oldest
+    InteractionCommentContext:
+      type: object
+      additionalProperties: false
+      required:
+      - target
+      - root
+      - comment
+      - parent
+      - surrounding
+      properties:
+        target:
+          $ref: '#/components/schemas/InteractionContext'
+        root:
+          $ref: '#/components/schemas/InteractionComment'
+        comment:
+          $ref: '#/components/schemas/InteractionComment'
+        parent:
+          allOf:
+          - $ref: '#/components/schemas/InteractionComment'
+          nullable: true
+        surrounding:
+          type: array
+          items:
+            $ref: '#/components/schemas/InteractionComment'
+    InteractionDestination:
+      allOf:
+      - $ref: '#/components/schemas/InteractionContext'
+      - type: object
+        required:
+        - targetId
+        - commentId
+        - context
+        properties:
+          targetId: *id003
+          commentId:
+            type: string
+            format: uuid
+            nullable: true
+          context:
+            allOf:
+            - $ref: '#/components/schemas/InteractionCommentContext'
+            nullable: true
+    InteractionReactors:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - author
+            - reactionTypeId
+            properties:
+              author:
+                $ref: '#/components/schemas/InteractionAuthor'
+              reactionTypeId: *id003
+        nextCursor:
+          type: integer
+          minimum: 0
+          nullable: true
+    InteractionBlock:
+      type: object
+      required:
+      - partyId
+      - blocked
+      - version
+      properties:
+        partyId: *id007
+        blocked: *id010
+        version: *id007
+        replay: *id010
+    InteractionBlockRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - blockRequestKey
+      - blocked
+      - expectedVersion
+      properties:
+        blockRequestKey: *id003
+        blocked: *id010
+        expectedVersion: *id007
+    InteractionPreferences:
+      type: object
+      additionalProperties: false
+      required:
+      - reactions
+      - comments
+      - replies
+      - mentions
+      properties:
+        reactions: *id010
+        comments: *id010
+        replies: *id010
+        mentions: *id010
+    InteractionCommand:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - reactionTypeId
+        properties:
+          operation:
+            type: string
+            enum:
+            - reaction.set
+          reactionTypeId:
+            type: string
+            format: uuid
+            nullable: true
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - body
+        properties:
+          operation:
+            type: string
+            enum:
+            - comment.create
+          body:
+            type: string
+            minLength: 1
+            maxLength: 4096
+          parentId:
+            type: string
+            format: uuid
+            nullable: true
+          mentions:
+            type: array
+            items:
+              $ref: '#/components/schemas/InteractionMention'
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - commentId
+        - body
+        - mentions
+        - expectedVersion
+        properties:
+          operation:
+            type: string
+            enum:
+            - comment.edit
+          commentId: *id003
+          body: *id009
+          mentions:
+            type: array
+            items:
+              $ref: '#/components/schemas/InteractionMention'
+          expectedVersion: *id007
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - commentId
+        - expectedVersion
+        properties:
+          operation:
+            type: string
+            enum:
+            - comment.delete
+          commentId: *id003
+          expectedVersion: *id007
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - commentId
+        - expectedVersion
+        - reason
+        properties:
+          operation:
+            type: string
+            enum:
+            - comment.hide
+          commentId: *id003
+          expectedVersion: *id007
+          reason: *id009
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - commentId
+        - expectedVersion
+        - reason
+        properties:
+          operation:
+            type: string
+            enum:
+            - comment.remove
+          commentId: *id003
+          expectedVersion: *id007
+          reason: *id009
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - commentId
+        - expectedVersion
+        - reason
+        properties:
+          operation:
+            type: string
+            enum:
+            - comment.restore
+          commentId: *id003
+          expectedVersion: *id007
+          reason: *id009
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - commentId
+        - reason
+        properties:
+          operation:
+            type: string
+            enum:
+            - comment.report
+          commentId: *id003
+          reason: *id009
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - mode
+        properties:
+          operation:
+            type: string
+            enum:
+            - subscription.set
+          mode:
+            type: string
+            enum:
+            - all
+            - participating
+            - muted
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - commentPolicy
+        - expectedVersion
+        - mentionedPartyIds
+        properties:
+          operation:
+            type: string
+            enum:
+            - settings.update
+          commentPolicy:
+            type: string
+            enum:
+            - everyone
+            - followers
+            - mentioned
+            - 'off'
+          expectedVersion: *id007
+          mentionedPartyIds:
+            type: array
+            items: *id007
+      - type: object
+        additionalProperties: false
+        required:
+        - operation
+        - commentId
+        - expectedVersion
+        - reason
+        - decision
+        properties:
+          operation:
+            type: string
+            enum:
+            - comment.report.resolve
+          commentId:
+            type: string
+            format: uuid
+          expectedVersion:
+            type: integer
+            minimum: 1
+          reason:
+            type: string
+            minLength: 1
+            maxLength: 1000
+          decision:
+            type: string
+            enum:
+            - reviewed
+            - dismissed
+    InteractionCommandRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - requestKey
+      - command
+      properties:
+        requestKey: *id003
+        command:
+          $ref: '#/components/schemas/InteractionCommand'
+    InteractionCommandResult:
+      type: object
+      properties:
+        id: *id003
+        reactionTypeId:
+          type: string
+          format: uuid
+          nullable: true
+        version: *id007
+        replay: *id010
+        reported: *id010
+        mode: *id009
+        commentPolicy: *id009
+    InteractionBlockedAccounts:
+      type: object
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/InteractionBlock'
+            - type: object
+              required:
+              - displayName
+              properties:
+                displayName:
+                  type: string
+        nextCursor:
+          type: integer
+          nullable: true

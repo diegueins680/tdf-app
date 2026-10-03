@@ -8,7 +8,10 @@ export function onRequestGet({ env }) {
       apps: [],
       details: [{
         appID: `${teamId}.com.tdfrecords.app`,
-        components: [{ '/': '/eventos/*', comment: 'Public event links only; the app allowlists attribution parameters.' }],
+        components: [
+          { '/': '/eventos/*', comment: 'Public event links; the app allowlists attribution parameters.' },
+          { '/': '/conversacion/*', comment: 'Stable discussion targets; access is checked by the API.' },
+        ],
       }],
     },
   }, {

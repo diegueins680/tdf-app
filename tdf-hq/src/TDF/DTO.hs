@@ -72,6 +72,7 @@ data PartySelectorOptionDTO = PartySelectorOptionDTO
   } deriving (Show, Generic)
 
 instance ToJSON PartySelectorOptionDTO
+instance FromJSON PartySelectorOptionDTO
 
 data PartySelectorPageDTO = PartySelectorPageDTO
   { items      :: [PartySelectorOptionDTO]
@@ -79,6 +80,7 @@ data PartySelectorPageDTO = PartySelectorPageDTO
   } deriving (Show, Generic)
 
 instance ToJSON PartySelectorPageDTO
+instance FromJSON PartySelectorPageDTO
 
 data SocialPartyProfileDTO = SocialPartyProfileDTO
   { sppPartyId     :: Int64
@@ -1320,6 +1322,7 @@ data FanClubPostDTO = FanClubPostDTO
   , fcpUpdatedAt   :: Maybe UTCTime
   } deriving (Show, Generic)
 instance ToJSON FanClubPostDTO
+instance FromJSON FanClubPostDTO
 
 data FanClubEventDTO = FanClubEventDTO
   { fceId            :: Int64
@@ -1525,6 +1528,7 @@ data ReactionSummaryDTO = ReactionSummaryDTO
   , rsMyReactionTypeId :: Maybe UUID
   } deriving (Show, Generic)
 instance ToJSON ReactionSummaryDTO
+instance FromJSON ReactionSummaryDTO
 
 data ReactionSummaryItemDTO = ReactionSummaryItemDTO
   { rsiReactionTypeId :: UUID
@@ -1535,6 +1539,7 @@ data ReactionSummaryItemDTO = ReactionSummaryItemDTO
   , rsiCount          :: Int
   } deriving (Show, Generic)
 instance ToJSON ReactionSummaryItemDTO
+instance FromJSON ReactionSummaryItemDTO
 
 data ContentReactionReq = ContentReactionReq
   { crrReactionTypeId :: UUID

@@ -1,11 +1,12 @@
 import { jest } from '@jest/globals';
+jest.unstable_mockModule('../features/interactions/InteractionPanel', () => ({ InteractionPanel: () => null }));
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import type { SocialEventDTO, SocialTicketTierDTO } from '../api/socialEvents';
+import type { SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
 
 const getEventMock = jest.fn<(eventId: string) => Promise<SocialEventDTO>>();
-const listMomentsMock = jest.fn<(eventId: string) => Promise<never[]>>();
+const listMomentsMock = jest.fn<(eventId: string) => Promise<SocialEventMomentDTO[]>>();
 const listTicketTiersMock = jest.fn<(eventId: string) => Promise<SocialTicketTierDTO[]>>();
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<{ checkoutAvailable: boolean }>>();
 
@@ -72,13 +73,13 @@ const tierFixture: SocialTicketTierDTO = {
   ticketTierActive: true,
 };
 
-const renderPage = () => {
+const renderPage = (entry = '/social/eventos/121') => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
   const view = render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/social/eventos/121']}>
+      <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} />
         </Routes>
@@ -103,6 +104,32 @@ describe('SocialEventDetailPage ticket sharing', () => {
     getStorefrontMock.mockReset().mockResolvedValue({ checkoutAvailable: true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+  });
+
+  it('loads, displays and focuses the exact deep-linked moment after the list arrives', async () => {
+    const scroll = jest.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scroll });
+    let resolveEvent!: (event: SocialEventDTO) => void;
+    getEventMock.mockImplementation(() => new Promise((resolve) => { resolveEvent = resolve; }));
+    listMomentsMock.mockResolvedValue([
+      { emId: '986', emAuthorName: 'Other', emMediaUrl: 'https://example.test/other.jpg', emMediaType: 'image' },
+      { emId: '987', emAuthorName: 'Ana', emCaption: 'Exact moment', emMediaUrl: 'https://example.test/moment.jpg', emMediaType: 'image' },
+    ]);
+    const view = renderPage('/social/eventos/121?moment=987');
+    await waitFor(() => expect(listMomentsMock).toHaveBeenCalledWith('121'));
+    resolveEvent(eventFixture);
+    const region = await screen.findByRole('region', { name: 'Publicación de Ana' });
+    await waitFor(() => expect(document.activeElement).toBe(region));
+    expect(screen.getByAltText('Exact moment').getAttribute('src')).toBe('https://example.test/moment.jpg');
+    expect(scroll).toHaveBeenCalledTimes(1);
+    expect(listMomentsMock).toHaveBeenCalledWith('121');
+    view.unmount();
+  });
+
+  it('explains unavailable moment links without focusing unrelated media', async () => {
+    const view = renderPage('/social/eventos/121?moment=987');
+    expect(await screen.findByText('Esta publicación ya no está disponible o no tienes acceso.')).toBeTruthy();
+    view.unmount();
   });
 
   it('shows the share action only after a ticket tier exists', async () => {

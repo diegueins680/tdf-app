@@ -1,6 +1,6 @@
 import { env } from '../utils/env';
 
-export const DEFAULT_DEPLOYED_API_BASE = 'https://tdf-hq.fly.dev';
+export const DEFAULT_DEPLOYED_API_BASE = 'https://api.tdfrecords.net';
 const LEGACY_KOYEB_API_BASE = 'https://the-dream-factory.koyeb.app';
 
 const stripTrailingSlash = (value: string): string => value.replace(/\/+$/, '');
