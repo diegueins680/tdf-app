@@ -54,7 +54,7 @@
       "log": "merch-commission-postgres.log",
       "sha256": "0dcca36eec2a40696cce6f06d1c9fecb67fc2e51226500915c44051a4557c929",
       "command": "TDF_MERCH_RUNTIME_DATABASE_URL=<isolated PG16 URL> node scripts/__tests__/merch-commission-postgres.mjs",
-      "revision": "f8494a20a",
+      "revision": "f8494a20a11e5b9df7b0a948cddbdfeac4930519",
       "result": "PASS:30 actual inserts match BigInt oracle; invalid-result denial and3 SQL controls"
     },
     {
@@ -96,6 +96,16 @@
       "revision": "834fad2aa025f84f3d0e1ceb9fac577c3935988e",
       "url": "https://github.com/diegueins680/tdf-app/actions/runs/37228029307",
       "result": "all CI jobs passed; includes cart arithmetic, predates new SQL/Merch"
+    },
+    {
+      "revision": "7ecfdace549ab091f2089d393d8a23ef9da048e2",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/37229601572",
+      "result": "all CI jobs passed, including PG17 checkout/Merch migrations and actual runtime controls; predates final runner-safety and stock-assertion refinement"
+    },
+    {
+      "revision": "982ade380e0826dcdad582f8da92023b863b9dfa",
+      "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/37230238117",
+      "result": "Mobile Validate passed: release checks,tests,signing/artifact guards and ExpoDoctor"
     }
   ],
   "review": {
@@ -141,5 +151,14 @@
     "Canonical routine Hetzner release execution/recovery lane",
     "Provider/refund/settlement and JavaScript precision obligations",
     "Production migration/config rollout and post-deploy verification"
-  ]
+  ],
+  "migrationPreservation": {
+    "startingRoot": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "result": "git diff --name-status startingRoot..187685212 -- tdf-hq/sql lists only three added files; no historical SQL modified or deleted",
+    "added": [
+      "2026-10-04_auth_recovery_expiry.sql",
+      "2026-10-04_checkout_amount_correspondence.sql",
+      "2026-10-04_merch_commission_exact.sql"
+    ]
+  }
 }
