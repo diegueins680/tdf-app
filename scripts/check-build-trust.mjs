@@ -12,9 +12,9 @@ export function checkAptTrust(source) {
   const instructions = source.split('\n').filter(line => !line.trimStart().startsWith('#')).join('\n');
   for (const bypass of [
     /--allow-unauthenticated/i,
-    /(?:AllowInsecureRepositories|AllowDowngradeToInsecureRepositories|AllowUnauthenticated)\s*(?:=|\s)\s*["']?(?:true|yes|1)/i,
-    /(?:Check-Valid-Until|Check-Date|Verify-Peer|Verify-Host)\s*(?:=|\s)\s*["']?(?:false|no|0)/i,
-    /(?:trusted|allow-insecure|allow-weak|allow-downgrade-to-insecure)\s*=\s*["']?yes/i,
+    /(?:AllowInsecureRepositories|AllowDowngradeToInsecureRepositories|AllowUnauthenticated)\s*(?:=|:|\s)\s*["']?(?:true|yes|1)/i,
+    /(?:Check-Valid-Until|Check-Date|Verify-Peer|Verify-Host)\s*(?:=|:|\s)\s*["']?(?:false|no|0)/i,
+    /(?:trusted|allow-insecure|allow-weak|allow-downgrade-to-insecure)\s*(?:=|:)\s*["']?yes/i,
   ]) assert.doesNotMatch(instructions, bypass, 'DEPLOY-BUILD-001: package trust bypass');
   const commands = [...instructions.matchAll(/\bapt-get\s+([^&;\n]+)/g)].map(match => match[1]);
   assert.ok(commands.length >= 2, 'Expected explicit APT update/install policy');

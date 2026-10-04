@@ -2380,7 +2380,7 @@
     {
       "id": "SURFACE-d06f40dc4caf72e4",
       "path": "scripts/__tests__/build-trust.test.mjs",
-      "sha256": "f4a3e27d0f5d5e9751ef5e7cc88a894f3fb53cb00807c3dc6569fa8d5741a0e4",
+      "sha256": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2776,7 +2776,7 @@
     {
       "id": "SURFACE-26a97266f867ecd7",
       "path": "scripts/check-build-trust.mjs",
-      "sha256": "bda659b3bd46171c7043e5e7a6f945f459ea452f1c340be0dbc57dcd9342749f",
+      "sha256": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
       "semanticConformance": "not-established-by-discovery"
     },
     {

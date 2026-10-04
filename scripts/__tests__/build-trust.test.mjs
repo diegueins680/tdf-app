@@ -15,6 +15,10 @@ for (const recipe of imageRecipes) {
     ['override appended later', s => `${s}\nRUN apt-get --allow-unauthenticated install curl\n`],
     ['trusted repository override', s => `${s}\nRUN echo 'deb [trusted=yes] http://untrusted.invalid stable main' > /etc/apt/sources.list\n`],
     ['transient mirror failure tolerated', s => s.replace('--error-on=any ', '')],
+    ['Deb822 trusted source', s => `${s}\nRUN sed -i '/^Types: deb/a Trusted: yes' /etc/apt/sources.list.d/debian.sources\n`],
+    ['Deb822 expired metadata', s => `${s}\nRUN sed -i '/^Types: deb/a Check-Valid-Until: no' /etc/apt/sources.list.d/debian.sources\n`],
+    ['Deb822 insecure source', s => `${s}\nRUN sed -i '/^Types: deb/a Allow-Insecure: yes' /etc/apt/sources.list.d/debian.sources\n`],
+    ['Deb822 weak source', s => `${s}\nRUN sed -i '/^Types: deb/a Allow-Weak: yes' /etc/apt/sources.list.d/debian.sources\n`],
     ['removed explicit policy', s => s.replace('-o Acquire::AllowInsecureRepositories=false ', '')],
   ]) test(`${recipe}: rejects ${name}`, () => {
     const mutation = change(source);

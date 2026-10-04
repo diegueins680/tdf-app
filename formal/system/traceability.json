@@ -1618,7 +1618,7 @@
     "formal/event-operations/RecoveryExpiry.tla": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
-    "scripts/__tests__/build-trust.test.mjs": "f4a3e27d0f5d5e9751ef5e7cc88a894f3fb53cb00807c3dc6569fa8d5741a0e4",
+    "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "891bc1ec960707fd01853e47f585e8fcfe609dde84964dd058cdf88200f76dcb",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -1628,7 +1628,7 @@
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/verification-evidence.test.mjs": "62e23312cd0f60dd3ec08597ca45071071f116bd10d15303c8b9bab55668fb84",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
-    "scripts/check-build-trust.mjs": "bda659b3bd46171c7043e5e7a6f945f459ea452f1c340be0dbc57dcd9342749f",
+    "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-generated-api.mjs": "216256d09571f6fe741460f64541c62f0e341ccbd975db8353964d9b41d8d09c",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/lib/verification-evidence.mjs": "57a76761fbe10452d1c664c3a0ff6b0fe291a1267dd7e9007b1f09fa1657f525",
@@ -2648,7 +2648,7 @@
     {
       "id": "SURFACE-d06f40dc4caf72e4",
       "path": "scripts/__tests__/build-trust.test.mjs",
-      "sha256": "f4a3e27d0f5d5e9751ef5e7cc88a894f3fb53cb00807c3dc6569fa8d5741a0e4",
+      "sha256": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -3192,7 +3192,7 @@
     {
       "id": "SURFACE-26a97266f867ecd7",
       "path": "scripts/check-build-trust.mjs",
-      "sha256": "bda659b3bd46171c7043e5e7a6f945f459ea452f1c340be0dbc57dcd9342749f",
+      "sha256": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
