@@ -55,7 +55,8 @@ jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn()
 jest.unstable_mockModule('../api/socialEvents', () => ({
   SocialEventsAPI: { listDirectoryProfileRsvpFeed: directoryRsvpFeedMock },
 }));
-jest.unstable_mockModule('../api/client', () => ({ API_BASE_URL: 'https://tdf-hq.example.test' }));
+const { ApiError } = await import('../api/client');
+jest.unstable_mockModule('../api/client', () => ({ ApiError, API_BASE_URL: 'https://tdf-hq.example.test' }));
 
 const { default: DirectoryPublicDetailPage } = await import('./DirectoryPublicDetailPage');
 
