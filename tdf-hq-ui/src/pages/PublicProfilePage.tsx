@@ -1,13 +1,18 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Avatar,
   Box,
   Button,
+  ButtonBase,
   Card,
   CardContent,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Stack,
   Tooltip,
   Typography,
@@ -39,6 +44,7 @@ export default function PublicProfilePage() {
   const { session } = useSession();
   const { locale } = useLocalePreferences();
   const isSelf = session?.partyId === parsedId;
+  const [previewPartyId, setPreviewPartyId] = useState<number | null>(null);
 
   const partyQuery = useQuery({
     queryKey: ['social-profile', session?.partyId, parsedId],
@@ -142,6 +148,11 @@ export default function PublicProfilePage() {
 
   const party = partyQuery.data;
   const avatarUrl = party.sppAvatarUrl?.trim();
+  const avatar = (
+    <Avatar src={avatarUrl === '' ? undefined : avatarUrl} alt={party.sppDisplayName} sx={{ width: 72, height: 72, bgcolor: '#1d4ed8' }}>
+      {party.sppDisplayName?.[0]?.toUpperCase() ?? '?'}
+    </Avatar>
+  );
 
   return (
     <Box p={{ xs: 2, md: 4 }}>
@@ -150,9 +161,16 @@ export default function PublicProfilePage() {
         <CardContent>
           <Stack spacing={2}>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar src={avatarUrl === '' ? undefined : avatarUrl} alt={party.sppDisplayName} sx={{ width: 72, height: 72, bgcolor: '#1d4ed8' }}>
-              {party.sppDisplayName?.[0]?.toUpperCase() ?? '?'}
-            </Avatar>
+            {avatarUrl ? (
+              <ButtonBase
+                aria-label={`Ampliar foto de ${party.sppDisplayName}`}
+                aria-haspopup="dialog"
+                onClick={() => setPreviewPartyId(parsedId)}
+                sx={{ borderRadius: '50%', flexShrink: 0, '&.Mui-focusVisible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 4 } }}
+              >
+                {avatar}
+              </ButtonBase>
+            ) : avatar}
             <Box flex={1}>
               <Typography variant="h5" fontWeight={800}>
                 {party.sppDisplayName}
@@ -244,6 +262,26 @@ export default function PublicProfilePage() {
         <EventRsvpFeed partyId={String(parsedId)} isSelf={isSelf} locale={locale} />
       </Box>
       </Stack>
+      <Dialog
+        open={Boolean(avatarUrl) && previewPartyId === parsedId}
+        onClose={() => setPreviewPartyId(null)}
+        maxWidth="md"
+        fullWidth
+        aria-labelledby="profile-photo-title"
+      >
+        <DialogTitle id="profile-photo-title">Foto de {party.sppDisplayName}</DialogTitle>
+        <DialogContent>
+          <Box
+            component="img"
+            src={avatarUrl}
+            alt={party.sppDisplayName}
+            sx={{ display: 'block', width: '100%', maxHeight: '70vh', objectFit: 'contain' }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPreviewPartyId(null)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
