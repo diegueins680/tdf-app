@@ -48,7 +48,10 @@ const server = await createServer({
       });
     },
   }],
-  optimizeDeps: { entries: [], include: ['react', 'react-dom/client', '@tanstack/react-query', 'react-router-dom'] },
+  // This synthetic entry is outside Vite's HTML dependency scan. Include its
+  // component library up front so the first browser navigation does not trigger
+  // dependency re-optimization and replace modules while React is mounting.
+  optimizeDeps: { entries: [], include: ['react', 'react-dom/client', '@tanstack/react-query', 'react-router-dom', '@mui/material'] },
   server: { host: '127.0.0.1', port: 5199, strictPort: true, fs: { allow: [root] } },
 });
 await server.listen();
