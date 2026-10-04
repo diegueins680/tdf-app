@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
+  "mobileRevision": "5580bd0dada1a13679dcd2ba0dde4c43ddf2a6d3",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -1110,7 +1110,7 @@
       "actors": [
         "anonymous registrant",
         "authenticated claimant",
-        "strict administrator reviewer"
+        "distinct Admin-role and Admin-module reviewer"
       ],
       "preconditions": [
         "Existing artist may have no credential, no email, or a matching email; none establishes caller ownership."
@@ -1142,7 +1142,7 @@
         "Independent credential and customer policy on successful signup",
         "No identity, credential, token or grant changes on rejected claim"
       ],
-      "authorization": "Contact values are not identity proof; directory submission requires authentication and approval retains its strict-admin boundary.",
+      "authorization": "Contact values are not identity proof; directory submission requires authentication; approval requires a distinct reviewer with the Admin role and Admin module.",
       "concurrency": "Signup validation rejects claims before database access; directory claim concurrency retains its separate contract.",
       "idempotency": "A rejected claim never issues a session. Directory claim creation uses its actor-scoped idempotency receipt.",
       "failure": "403 for positive legacy claim IDs; 400 for malformed IDs; other signup errors follow API contract.",
@@ -1312,6 +1312,96 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth.hs"
       ]
+    },
+    {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "source-confirmed defect and repair; runtime conformance pending",
+      "ambiguity": [
+        "Full directory moderation, verification and profile-merge lifecycle reconciliation remains open.",
+        "In-flight global-role revocation is not established by the request snapshot."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
+      },
+      "source": "User audit sections 12-15; formal/system/identity-lifecycle.md; verified implementation review; docs/music-directory/formal-model.yaml",
+      "verification": "Actual validator properties, rendered UI, real backend HTTP with PostgreSQL lock barrier and failure injection, bounded TLA+ with named negative controls; exhaust all known state pairs and unknown targets through real HTTP from the canonical YAML graph; rendered UI actions match outgoing edges",
+      "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
+      "domain": "AUTH",
+      "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
+      "observability": "Append directory_audit_event for actual transitions with reviewer, old/new state, version and reason; no fake events on identical-state retry.",
+      "formalModels": [
+        "formal/event-operations/DirectoryClaimReview.tla"
+      ],
+      "tests": [
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx"
+      ],
+      "id": "ID-CLAIM-REVIEW-001",
+      "title": "Claim review requires separated authority and atomic decisions",
+      "statement": "Directory claim review shall require Admin role and Admin module, forbid self-review, serialize state decisions with grants and audit evidence, and make identical-state replay observational.",
+      "property": "GrantMatchesClaim /\\ AdminRoleRequired /\\ SeparatedReview /\\ NoReplayRegrant",
+      "actors": [
+        "Admin-role and Admin-module reviewer",
+        "claimant including Admin claimant",
+        "module-only actor",
+        "concurrent reviewer"
+      ],
+      "preconditions": [
+        "Existing claim",
+        "Reviewer is authenticated and distinct from claimant"
+      ],
+      "inputs": [
+        "Claim UUID",
+        "Declared target status",
+        "Optional reviewer reason"
+      ],
+      "state": {
+        "claim": [
+          "submitted",
+          "under_review",
+          "approved",
+          "rejected",
+          "withdrawn"
+        ],
+        "manager grant": [
+          "active",
+          "revoked"
+        ],
+        "review evidence": "current receipt plus transactional audit events"
+      },
+      "allowedTransitions": [
+        "submitted -> under_review or withdrawn",
+        "under_review -> approved, rejected or withdrawn",
+        "rejected -> submitted",
+        "same state -> same receipt without effects"
+      ],
+      "forbiddenTransitions": [
+        "Claimant -> own review",
+        "Module without Admin role -> review",
+        "Conflicting stale decision -> overwrites terminal state",
+        "Approved replay -> reactivates revoked manager"
+      ],
+      "effects": [
+        "Actual transition updates reviewer, status, version and timestamps",
+        "Approval creates manager grant and appends review audit in the same transaction",
+        "Identical-state retry changes nothing"
+      ],
+      "authorization": "Admin role AND Admin module; extra Artist role does not deny access. Reviewer Party differs from claimant. Request-bound role/session checks do not prove universal in-flight revocation.",
+      "concurrency": "One PostgreSQL transaction locks the claim row FOR UPDATE before transition validation; decision, grant, audit and response remain inside it.",
+      "idempotency": "Same-status retry preserves evidence and does not re-grant authority. Conflicting terminal transitions return 409.",
+      "failure": "401 unauthenticated; 403 missing role/module or self-review; 404 absent claim; 409 illegal current-state transition; DB failure rolls back all effects.",
+      "recovery": "Reload current receipt after conflict or lost response. Regranting a revoked manager requires a separate authorized management operation.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx"
+      ]
     }
   ],
   "sourceFingerprints": {
@@ -1319,6 +1409,7 @@
     ".github/workflows/event-operations-formal.yml": "210f59ede61c720ebd87399246c98dc9e58903e856dd01356c8336384d70feed",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
+    "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
     "formal/event-operations/ProviderRollback.tla": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
@@ -1326,7 +1417,7 @@
     "scripts/__tests__/ci-pipeline.test.mjs": "891bc1ec960707fd01853e47f585e8fcfe609dde84964dd058cdf88200f76dcb",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/generated-api-conformance.test.mjs": "da6a8039a136268283e11a054c981c16990db543e4154a391a2c3ff90873018e",
-    "scripts/__tests__/identity-http-runtime.mjs": "b6443eb62969dccefcc27f0335dc714240146980b950f1ba8a6b131c3dc274ad",
+    "scripts/__tests__/identity-http-runtime.mjs": "f4b3edac130587ce5675a39633f3d7c9a470bfc53c351157103f2d2f85515e52",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/provider-rollback.test.mjs": "844ee550d28b2ec0884b0d2792060ba97a826b26823207c51b32e5e9fce9245a",
     "scripts/__tests__/verification-evidence.test.mjs": "62e23312cd0f60dd3ec08597ca45071071f116bd10d15303c8b9bab55668fb84",
@@ -1341,24 +1432,28 @@
     "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "8acc313424d081d76aa5cc23914e583e92fe01b1f50a51aca8b29ae373b9ae9c",
+    "scripts/verify-event-operations-formal.sh": "eb150cc70038dc3a979010049d60f07f67fcc52d98d3d752ba2a42059a0b5baa",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "6518277395cc99a25df3ffa5469d5150a5a7cd5c3d10f4409ecb695fb49ca03e",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
-    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "f4eb3904be5ad58fc3aa8b5fda5fc464f3d1a17ec05024a718dc69fa708413ca",
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "30c4473e456be67a629f4527a9ddc785cbbfc81eaa3379b2d2718aa4fbc84ca9",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "d7e2e4ba531266075903e7aedc88927a6af29745110530347cdb72a3ea9319b8",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "366cdb1ebadb0ff0494260e7c98edfd6da1d622f70df415b5627bf60dbdd95ad",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq/assets/feature-registry.json": "5f4665b6b15488748eb7fa69a585dd88fd7e94c8d5f7437cf99bb161783b28b0",
     "tdf-hq/docs/openapi/api.yaml": "0393bc36a0788dbcf63c93e222a4ab493d13c62026d07d49d27f5a0f6bfb8a54",
+    "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/src/TDF/API.hs": "52899306d6b3d74f542a87ca135c1f8395e0fe5b42a4a1ee6396edc7a38d987c",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "955ca2a1d362eae9e9a14c7e7a6169df8b4825221f46ba2b4800db03380de481",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "f3b3183fc1a089b71c135b5fc6e7ca4ef370e6e42b376230815a82a9ae5b7b03",
     "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
+    "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Server.hs": "5d3e606250b9fc225ed3d040b5e044703ac16f8691c2261e166ada53b72f8c86",
-    "tdf-hq/src/TDF/Server/Directory.hs": "2298e7bca51c67317a0fbe0efaa08605c0583bc6a5fa8fe7b1c0a42e0bf3fadb",
+    "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "e6b468d13049965cb1c2890dcdce62a59d408842e1ba9bb678e2b3703370b1c8",
@@ -1366,7 +1461,7 @@
     "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "c8bb937d220c853b825debd235c09462da09160c70dfa36aef30d0cd7543c220",
-    "tdf-hq/test/TDF/ServerSpec.hs": "f12466d586dd02b05815c53ee6c5e34e1049bb796585547f6eb201ab1ccbb18c",
+    "tdf-hq/test/TDF/ServerSpec.hs": "61ea4d5ae55167aa92337c6292b0248988274885aedcedc677a3117ebc10aabd",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "b250d29d8515d9d978f1ce65e63e7a5ab0acf71695c8cdf12b0314e5455f2d57"
   },
   "reverseTraceability": {
@@ -1690,6 +1785,10 @@
       {
         "requirement": "AUTH-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": [
@@ -1728,6 +1827,10 @@
       {
         "requirement": "ID-ARTIST-CLAIM-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/roles.ts": [
@@ -1759,6 +1862,10 @@
       },
       {
         "requirement": "ID-SESSION-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "tests"
       }
     ],
@@ -1797,6 +1904,36 @@
       },
       {
         "requirement": "ID-SESSION-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/docs/openapi/directory.yaml": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Directory/Policy.hs": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/DirectoryClaimReview.tla": [
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "formalModels"
       }
     ]
@@ -2379,7 +2516,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "b6443eb62969dccefcc27f0335dc714240146980b950f1ba8a6b131c3dc274ad",
+      "sha256": "f4b3edac130587ce5675a39633f3d7c9a470bfc53c351157103f2d2f85515e52",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -2392,6 +2529,10 @@
         },
         {
           "requirement": "ID-SESSION-002",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
           "relationship": "tests"
         }
       ]
@@ -4383,7 +4524,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "8acc313424d081d76aa5cc23914e583e92fe01b1f50a51aca8b29ae373b9ae9c",
+      "sha256": "eb150cc70038dc3a979010049d60f07f67fcc52d98d3d752ba2a42059a0b5baa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5037,7 +5178,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "090bffc4a07286995ca92023eb7fcfa0e7b865a014f2d7db73b6e03722d1f368",
+      "sha256": "64bdd0d214daaee3a6b2aa5c1dc35e766c3a140b608e90a8e00a6e507ff05434",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -7091,11 +7232,28 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-bf406241ca9e0491",
+      "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
+      "sha256": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "23bdcb8b08f8406a5dc437c738884e2a99c08ab3420ea18cccc1a2684dfa7047",
+      "sha256": "30c4473e456be67a629f4527a9ddc785cbbfc81eaa3379b2d2718aa4fbc84ca9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-ac24f384b7949bc7",
@@ -7534,7 +7692,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "f4eb3904be5ad58fc3aa8b5fda5fc464f3d1a17ec05024a718dc69fa708413ca",
+      "sha256": "d7e2e4ba531266075903e7aedc88927a6af29745110530347cdb72a3ea9319b8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9173,6 +9331,10 @@
         {
           "requirement": "AUTH-REGISTRY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -9254,9 +9416,14 @@
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "18e7eca75897711da63ffce6fb9282da5d7e36e4613263eee86436e4c7462849",
+      "sha256": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-97b9b67f8301207c",
@@ -12405,9 +12572,14 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "f55856eb09575e637f866a1084832a032edf39999b0f4fc0a48e3db030464d25",
+      "sha256": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5a5861ba5432460f",
@@ -12715,11 +12887,15 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "2298e7bca51c67317a0fbe0efaa08605c0583bc6a5fa8fe7b1c0a42e0bf3fadb",
+      "sha256": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "ID-ARTIST-CLAIM-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ID-CLAIM-REVIEW-001",
           "relationship": "implementation"
         }
       ]
@@ -13450,7 +13626,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "f12466d586dd02b05815c53ee6c5e34e1049bb796585547f6eb201ab1ccbb18c",
+      "sha256": "61ea4d5ae55167aa92337c6292b0248988274885aedcedc677a3117ebc10aabd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15381,7 +15557,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "090bffc4a07286995ca92023eb7fcfa0e7b865a014f2d7db73b6e03722d1f368",
+      "sha256": "64bdd0d214daaee3a6b2aa5c1dc35e766c3a140b608e90a8e00a6e507ff05434",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -17114,7 +17290,6 @@
     "SURFACE-bf79c7904e71c2d9",
     "SURFACE-3a0858e52f7dba9e",
     "SURFACE-8bf82e65fbe7190d",
-    "SURFACE-34192568166d29c1",
     "SURFACE-ac24f384b7949bc7",
     "SURFACE-b1d115adebe79a56",
     "SURFACE-814a4782598cab3d",
@@ -17413,7 +17588,6 @@
     "SURFACE-2444de7d7e9ccfcb",
     "SURFACE-21287588522c7094",
     "SURFACE-9fabc23fb22f2b5b",
-    "SURFACE-a71412cb6bda4d46",
     "SURFACE-97b9b67f8301207c",
     "SURFACE-8a3e77e3810443f4",
     "SURFACE-b3201d04d25aac3b",
@@ -17850,7 +18024,6 @@
     "SURFACE-1be6b33abdbda822",
     "SURFACE-3ff9ad29b119eeb6",
     "SURFACE-d8b4f1e2ff66bf87",
-    "SURFACE-71ddbe63c1cda5e1",
     "SURFACE-5a5861ba5432460f",
     "SURFACE-d333d9e42e7c8cfc",
     "SURFACE-185047159b48a7cf",
@@ -24792,7 +24965,12 @@
         }
       ],
       "responses": [
-        "200"
+        "200",
+        "401",
+        "403",
+        "404",
+        "409",
+        "500"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -40070,7 +40248,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 20,
+    "PARTIAL": 21,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
+  "mobileRevision": "5580bd0dada1a13679dcd2ba0dde4c43ddf2a6d3",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -752,6 +752,7 @@
       "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
       "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
       "tdf-hq-ui/src/pages/DavidCelayaReportPage.tsx",
+      "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
       "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
       "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts",
       "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
@@ -2518,7 +2519,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "b6443eb62969dccefcc27f0335dc714240146980b950f1ba8a6b131c3dc274ad",
+      "sha256": "f4b3edac130587ce5675a39633f3d7c9a470bfc53c351157103f2d2f85515e52",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4144,7 +4145,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "8acc313424d081d76aa5cc23914e583e92fe01b1f50a51aca8b29ae373b9ae9c",
+      "sha256": "eb150cc70038dc3a979010049d60f07f67fcc52d98d3d752ba2a42059a0b5baa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4684,7 +4685,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "090bffc4a07286995ca92023eb7fcfa0e7b865a014f2d7db73b6e03722d1f368",
+      "sha256": "64bdd0d214daaee3a6b2aa5c1dc35e766c3a140b608e90a8e00a6e507ff05434",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6440,9 +6441,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-bf406241ca9e0491",
+      "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
+      "sha256": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "23bdcb8b08f8406a5dc437c738884e2a99c08ab3420ea18cccc1a2684dfa7047",
+      "sha256": "30c4473e456be67a629f4527a9ddc785cbbfc81eaa3379b2d2718aa4fbc84ca9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6820,7 +6827,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "f4eb3904be5ad58fc3aa8b5fda5fc464f3d1a17ec05024a718dc69fa708413ca",
+      "sha256": "d7e2e4ba531266075903e7aedc88927a6af29745110530347cdb72a3ea9319b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8266,7 +8273,7 @@
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "18e7eca75897711da63ffce6fb9282da5d7e36e4613263eee86436e4c7462849",
+      "sha256": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10924,7 +10931,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "f55856eb09575e637f866a1084832a032edf39999b0f4fc0a48e3db030464d25",
+      "sha256": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11182,7 +11189,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "2298e7bca51c67317a0fbe0efaa08605c0583bc6a5fa8fe7b1c0a42e0bf3fadb",
+      "sha256": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11764,7 +11771,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "f12466d586dd02b05815c53ee6c5e34e1049bb796585547f6eb201ab1ccbb18c",
+      "sha256": "61ea4d5ae55167aa92337c6292b0248988274885aedcedc677a3117ebc10aabd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13408,7 +13415,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "090bffc4a07286995ca92023eb7fcfa0e7b865a014f2d7db73b6e03722d1f368",
+      "sha256": "64bdd0d214daaee3a6b2aa5c1dc35e766c3a140b608e90a8e00a6e507ff05434",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17272,6 +17279,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/DirectoryClaimReview.cfg",
+      "sha256": "59984f003c88bf5175061ec403fa705c2bc96a6bbc268bb6d0f4151cad152e1c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DirectoryClaimReview.tla",
+      "sha256": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/DirectoryClaimReviewConcurrent.cfg",
+      "sha256": "114a281f586c96b9198c772549042e401e53f05b5d21281bef7d0fe5b76b9d84",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DirectoryClaimReviewModuleOnly.cfg",
+      "sha256": "114cb22b721a16f7cdff3b0211e17cad256ce7f0b35146543bbdf2edcd6526b3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DirectoryClaimReviewReplay.cfg",
+      "sha256": "907e3f7f219797d4c5634a40521f5ae621cb74febae56f6d92b954fe30b97469",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DirectoryClaimReviewSelfReview.cfg",
+      "sha256": "e115b7c1bc1d7bbc2a82c6a6e27ebb7af5da705c0a5388bd06d64be118c45dae",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/DirectoryFavoriteAuthority.cfg",
       "sha256": "f4ebbf26f0544faa9113e675ba10a3d0a6b7822abed944c2b9a6b5a0cf35bdd4",
       "authority": "inferred",
@@ -18792,7 +18841,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "4c93edce7d479682fcdb2a8a548d562e0a7b4b571f748fe6648bdc22e74d96f2",
+      "sha256": "1139402b4adb998979164f539628924aaf58169b2f1082964dbffa01914fe543",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18820,7 +18869,7 @@
     },
     {
       "path": "formal/system/identity-lifecycle.md",
-      "sha256": "ade626f8ff0bfce88a1757d501cdd5a347ae8348172748d9a9c29315acd188b3",
+      "sha256": "c85eaac5f0d52e1915d7a3edb137bd02824f7b7341e54c11216f53cd1f2c7840",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18848,7 +18897,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2665cf854ce714741c37c60ac365395149b82e4f6c40e275dbc13c1b7f35cd4d",
+      "sha256": "5fe46c55c98fcd6772054f6144477940d53c2ece95ddbbf7fd6472852fc19a90",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -19002,7 +19051,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "18e7eca75897711da63ffce6fb9282da5d7e36e4613263eee86436e4c7462849",
+      "sha256": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -21923,6 +21972,89 @@
         "  SingleUseReset",
         "  NoSessionsAfterDisable",
         "  AtomicChallengeConsumption"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DirectoryClaimReview.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Serialize = TRUE",
+        "  RequireAdminRole = TRUE",
+        "  SeparateReviewer = TRUE",
+        "  ReadOnlyReplay = TRUE",
+        "INVARIANTS",
+        "  GrantMatchesClaim",
+        "  AdminRoleRequired",
+        "  SeparatedReview",
+        "  NoReplayRegrant"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DirectoryClaimReviewConcurrent.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Serialize = FALSE",
+        "  RequireAdminRole = TRUE",
+        "  SeparateReviewer = TRUE",
+        "  ReadOnlyReplay = TRUE",
+        "INVARIANTS",
+        "  GrantMatchesClaim"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DirectoryClaimReviewModuleOnly.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Serialize = TRUE",
+        "  RequireAdminRole = FALSE",
+        "  SeparateReviewer = TRUE",
+        "  ReadOnlyReplay = TRUE",
+        "INVARIANTS",
+        "  AdminRoleRequired"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DirectoryClaimReviewReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Serialize = TRUE",
+        "  RequireAdminRole = TRUE",
+        "  SeparateReviewer = TRUE",
+        "  ReadOnlyReplay = FALSE",
+        "INVARIANTS",
+        "  NoReplayRegrant"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DirectoryClaimReviewSelfReview.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Serialize = TRUE",
+        "  RequireAdminRole = TRUE",
+        "  SeparateReviewer = FALSE",
+        "  ReadOnlyReplay = TRUE",
+        "INVARIANTS",
+        "  SeparatedReview"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
