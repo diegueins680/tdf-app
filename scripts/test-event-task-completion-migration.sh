@@ -160,8 +160,14 @@ for expiry in metadata activity party raci; do
   wait_backend completion_expiry_waiter Lock
   assert_blocked_by completion_expiry_holder completion_expiry_waiter
   attempt=0
+  # Even with negligible query latency, allow the full 15-second validity
+  # window to elapse. The old 100 polls allowed only 10 seconds on fast runners.
   until [ "$(sql -qAtc "SELECT clock_timestamp()>=($expiry_query)")" = t ]; do
-    attempt=$((attempt+1)); test "$attempt" -lt 100 || exit 1
+    attempt=$((attempt+1))
+    if [ "$attempt" -ge 200 ]; then
+      echo "Permission did not expire for $expiry; logs: $test_logs" >&2
+      exit 1
+    fi
     sleep 0.1
   done
   release_coordinator
