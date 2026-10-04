@@ -244,12 +244,13 @@ WHERE environment='sandbox'
 
 -- The canonical provider catalog is fail-closed. Activate only the synthetic
 -- sandbox manual-review rail needed by this isolated runtime test; no provider
--- endpoint, credential, settlement account, or funds are involved.
+-- endpoint, credential, settlement account, or funds are involved. The local
+-- manual adapter's identity must match PaymentAvailability's merchant binding.
 UPDATE commerce_provider_account
 SET status='ready',
     contract_status='approved',
     credential_status='validated',
-    merchant_account_ref='synthetic-merch-runtime-bank-review',
+    merchant_account_ref='tdf-manual-settlement',
     enabled=TRUE,
     verified_at=now(),
     verified_by=1,
