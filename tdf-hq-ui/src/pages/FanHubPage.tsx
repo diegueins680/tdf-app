@@ -406,7 +406,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed').catch(() => undefined);
     },
   });
 
@@ -1481,7 +1481,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 <Stack spacing={2}>
                   {artistProfileQuery.isLoading && (
                     <Box display="flex" justifyContent="center" py={1}>
-                      <CircularProgress size={20} aria-label="Cargando perfil de fan" />
+                      <CircularProgress size={20} aria-label={t('fanHubOnboarding.artistLoading')} />
                     </Box>
                   )}
                   {artistProfileQuery.isError && (
@@ -1517,7 +1517,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </Stack>
               ) : (
                 <>
-                  {artistProfileQuery.isLoading && <CircularProgress size={20} aria-label="Cargando perfil de artista" />}
+                  {artistProfileQuery.isLoading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.artistLoading')} />}
                   {artistProfileQuery.isError && (
                     <Alert severity="error">No pudimos cargar tu perfil de artista.</Alert>
                   )}
@@ -1757,7 +1757,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         {!isHomeManagerView && isLoading && (
           <Card sx={{ p: 3, borderRadius: 3 }}>
             <Stack spacing={1.5} alignItems="center" textAlign="center">
-              <CircularProgress size={22} aria-label="Cargando artistas" />
+              <CircularProgress size={22} aria-label={t('fanHubOnboarding.catalogLoading')} />
               <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                 Cargando catálogo de artistas
               </Typography>

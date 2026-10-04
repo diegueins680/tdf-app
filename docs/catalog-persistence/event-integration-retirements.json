@@ -1,0 +1,276 @@
+{
+  "schemaVersion": 1,
+  "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+  "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+  "retirements": [
+    {
+      "originalDecision": {
+        "id": "466aa6b7847efbc61fda",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "domain-specific catalog table selected during consumer refactor",
+        "priority": "P0-cutover",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "689ce09dbdde4d380f0338e9b3429c0ae75ba8c11d53e3c29234e6106d20f17c",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "scripts/build-catalog-decisions.mjs",
+        "kind": "object-registry",
+        "name": "options"
+      },
+      "replacementId": "b53cc0e14f15058ad16e",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+    },
+    {
+      "originalDecision": {
+        "id": "465def35066189c2212f",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "5ccf014c71fb8a171a189a4a010ba2f5d3996db3ce5a3721cc1c0c69d28e8b11",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "scripts/refresh-instagram-token.mjs",
+        "kind": "switch-cases",
+        "name": "command"
+      },
+      "replacementId": null,
+      "reason": "Current scripts/refresh-instagram-token.mjs implements runLifecycle with an explicit --check/--setup/--refresh validation and if branches; the historical command switch no longer exists. Lifecycle tests cover the replacement; no runtime capability is removed by archiving this scanner fingerprint."
+    },
+    {
+      "originalDecision": {
+        "id": "26a352668341118b54ee",
+        "classification": "security-system-registry",
+        "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+        "specializedModel": "security_role, party_security_role, role_permission",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "2abd36c31da731735e95875272d929f0b3a42520eae30474eac10e32ea12d2c4",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "tdf-hq/src/TDF/Catalog/Security.hs",
+        "kind": "haskell-list",
+        "name": "expectedSecurityRoleAssignmentPolicyBindings"
+      },
+      "replacementId": "0886e6835c7f5c533d9c",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+    },
+    {
+      "originalDecision": {
+        "id": "2d43a4c97f70b8e8a5bc",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "navigation_item",
+        "priority": "P3-retain",
+        "risk": "Changing UI constants could break rendering or user experience.",
+        "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "e190ff348b15296725b17873e6a122a8709a7d04a14922e915ab16176a968974",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "kind": "array",
+        "name": "PUBLIC_NAV_ITEMS"
+      },
+      "replacementId": "f9819fa4b81bdd8f3f21",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+    },
+    {
+      "originalDecision": {
+        "id": "91ec5702d1c3efd7777e",
+        "classification": "security-system-registry",
+        "disposition": "retain-in-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-retain",
+        "risk": "Changing navigation or UI constants could break rendering or user experience.",
+        "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "16e460121b7e63b85116eff90b7bbe96d0deef8f7cb696cada91b91fb2a82ccf",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "kind": "array",
+        "name": "items"
+      },
+      "replacementId": "2223179c95a61ccff02d",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+    },
+    {
+      "originalDecision": {
+        "id": "ffb84e8fd3972fd0730d",
+        "classification": "security-system-registry",
+        "disposition": "generated-consumer-pending-governance-cutover",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+        "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "kind": "array",
+        "name": "mobileFeatureRegistry"
+      },
+      "replacementId": "5147eb2751a01d8b4c73",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+      "previousReplacementId": "21babc54d68f0c44d55e",
+      "currentResolution": {
+        "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+        "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+        "valueCount": 157,
+        "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+      }
+    },
+    {
+      "originalDecision": {
+        "id": "faf664611d7ab0aa954d",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "b49e338b36bb900bb1a3a27a3420c5b03ed22aafcd2266897141fd52ab8a29ba",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "tdf-mobile/src/navigation/mobileSurface.ts",
+        "kind": "array",
+        "name": "NEW_USER_VISIBLE_TABS"
+      },
+      "replacementId": "bffc5decb0aa4633b170",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+    },
+    {
+      "originalDecision": {
+        "id": "82e3ab110124708c621c",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+        "priority": "P1-cross-platform",
+        "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
+        "justification": "Onboarding intents are cross-client product choices whose identifiers, labels, order, and availability require one governed source.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "a8e774126ffe600cdc31b2f2d46115388b6f18233ff2c964d8237003f6e41227",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+        "kind": "literal-union",
+        "name": "OnboardingIntent"
+      },
+      "replacementId": null,
+      "reason": "Current pinned mobile imports and re-exports OnboardingIntent from src/api/onboarding.ts. The old local literal union no longer exists; API authority and reviewed current onboarding options remain."
+    },
+    {
+      "originalDecision": {
+        "id": "29021a526fad50de4bf4",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+        "priority": "P1-cross-platform",
+        "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
+        "justification": "Onboarding intent labels and ordering are user-visible cross-client product data and must follow the governed intent registry.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "acf90683d4a6dcfb22c581e62944f2ba9be1e1ab26f59cff727f6ae05e459941",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+        "kind": "array",
+        "name": "ONBOARDING_INTENT_OPTIONS"
+      },
+      "replacementId": "12abca4fa517da75ad03",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+    },
+    {
+      "originalDecision": {
+        "id": "34d5f2f94d1a165783ba",
+        "classification": "dynamic-business-catalog",
+        "disposition": "consumer-update-required",
+        "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+        "risk": "Local routing and completion hints can diverge from governed intent or authoritative account progress.",
+        "justification": "The six intent switch labels only changed order at fingerprint level. Current routing uses local role/module hints and falls back to MOBILE_LANDING_ROUTE; unlike historical code, this file stores progress locally. Retain business-catalog classification and require authoritative consumer alignment; this is not approval of end-to-end onboarding correctness.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "a99149087b2b90f21b6371e42e0e9f830ac3dd2b1f586269cc55f81c041461b2",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+        "kind": "switch-cases",
+        "name": "intent"
+      },
+      "replacementId": "3b37706d3daff89e8890",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+    },
+    {
+      "originalDecision": {
+        "id": "7578a30aa3cc5aa23870",
+        "classification": "security-system-registry",
+        "disposition": "retain-reviewed-deployment-manifest",
+        "specializedModel": "production migration manifest and applied migration ledger",
+        "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+        "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+      "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "source": {
+        "file": "scripts/production-migrations.json",
+        "kind": "json-array",
+        "name": "migrations"
+      },
+      "replacementId": "dc6d60d733c6eb69ebbf",
+      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+      "previousReplacementId": "07da55e81a186d26df37",
+      "currentResolution": {
+        "mainRevision": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+        "valueCount": 160,
+        "reason": "The reviewed forward discovery ownership migration follows all 159 unchanged production entries. Preserve the full prior retirement and mapping, including the original decision hash."
+      },
+      "previousResolution": {
+        "originalDecision": {
+          "id": "7578a30aa3cc5aa23870",
+          "classification": "security-system-registry",
+          "disposition": "retain-reviewed-deployment-manifest",
+          "specializedModel": "production migration manifest and applied migration ledger",
+          "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+          "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+          "reviewed": true
+        },
+        "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+        "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+        "source": {
+          "file": "scripts/production-migrations.json",
+          "kind": "json-array",
+          "name": "migrations"
+        },
+        "replacementId": "7bf93825f1431a6d52d6",
+        "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+        "previousReplacementId": "07da55e81a186d26df37",
+        "currentResolution": {
+          "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+          "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+          "valueCount": 159,
+          "reason": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+        }
+      }
+    }
+  ]
+}

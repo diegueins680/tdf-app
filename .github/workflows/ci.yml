@@ -251,6 +251,11 @@ jobs:
         run: |
           createdb -h postgres -U postgres tdf_hq_social_session_test
           bash scripts/social/test-http.sh
+      - name: Verify event operations HTTP runner safety guards
+        run: node --test scripts/__tests__/event-operations-http-runner.test.mjs
+
+      - name: Verify event operations authenticated HTTP boundary
+        run: sh scripts/test-event-operations-http-ci.sh
 
       - name: Verify authenticated artist merch HTTP runtime
         env:
@@ -642,6 +647,9 @@ jobs:
 
       - name: Rehearse merch reputation migration with synthetic evidence
         run: ./scripts/test-merch-reputation-migration.sh
+
+      - name: Rehearse merch checkout expiry and storefront migration
+        run: ./scripts/test-artist-merch-storefronts-migration.sh
 
       - name: Rehearse service booking checkout runtime migration
         run: ./scripts/test-service-booking-checkout-runtime-migration.sh

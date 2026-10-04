@@ -35,6 +35,22 @@ async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');
 }
 
+test('UI quality keeps the lazy-validation regression and production artifact gate', async () => {
+  const quality = await source('scripts/quality-ui.sh');
+  assert.match(quality, /node --test "\$ROOT\/scripts\/__tests__\/ui-validation-bundle\.test\.mjs"/);
+  assert.match(quality, /run_npm run build --workspace=tdf-hq-ui/);
+  const ui = JSON.parse(await source('tdf-hq-ui/package.json'));
+  assert.match(ui.scripts.build, /node scripts\/check-initial-bundle\.mjs/);
+});
+
+test('backend CI retains event operations HTTP and runner-safety checks', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const backendJob = workflow.split('  backend-quality:')[1].split('\n  quality:')[0];
+  assert.match(backendJob, /run: sh scripts\/test-event-operations-http-ci\.sh/);
+  assert.match(backendJob, /run: node --test scripts\/__tests__\/event-operations-http-runner\.test\.mjs/);
+  assert.doesNotMatch(backendJob, /continue-on-error: true/);
+});
+
 test('CI splits component checks and preserves Stack build caches', async () => {
   const workflow = await source('.github/workflows/ci.yml');
   // General config tests must not inherit the runtime fixture's libpq password.
@@ -70,6 +86,15 @@ test('configured Datadog checks fail when tests or results are missing', async (
   assert.match(workflow, /api_key: \$\{\{ secrets\.DD_API_KEY \}\}/);
   assert.match(workflow, /app_key: \$\{\{ secrets\.DD_APP_KEY \}\}/);
   assert.match(workflow, /steps\.datadog-config\.outputs\.configured == 'true'/);
+});
+
+test('migration CI runs the owning merch checkout expiry assertions without waiving failures', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const migrationJob = workflow.split('  migration-tests:')[1].split('\n  production-migrations:')[0];
+  assert.match(migrationJob, /run: \.\/scripts\/test-artist-merch-storefronts-migration\.sh/);
+  assert.doesNotMatch(migrationJob, /continue-on-error: true/);
+  const runner = await source('scripts/test-artist-merch-storefronts-migration.sh');
+  assert.match(runner, /apply_file "\$TDF_MERCH_DATABASE" "\$TDF_MERCH_ROOT\/tdf-hq\/test\/integration\/merch_checkout_expiry_assertions\.sql"/);
 });
 
 test('persona browser journeys are artifacted and gate aggregate quality', async () => {

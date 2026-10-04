@@ -122,6 +122,7 @@ moduleAccessSpec = describe "validateModuleAccess" $ do
           , auRoles = roles
           , auModules = modulesForRoles roles
           , auApiTokenId = Nothing
+          , auSessionWitness = Nothing
           }
       assertRejected expectedMessage result =
         case result of

@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "parentRevision": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+  "currentMobileRevision": "53569fc4baa842a6882235d9a12c4ee68c44ff24",
+  "digestEncoding": "SHA-256 of UTF-8 JSON.stringify(originalDecision), preserving property order",
+  "scope": "Nine individually reviewed stale catalog decisions; historical evidence only, not active approvals.",
+  "retirements": [
+    {
+      "originalDecision": {
+        "id": "1467b26fe9075c13f2f7",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+        "priority": "P2-domain",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "fccf45905a2fc0b97d9c7374830f68a1546740e3d512560f2511a722ef7d4f5f",
+      "replacementId": "91952765f2d528c2a6c6",
+      "file": "tdf-hq-ui/src/api/socialEvents.ts",
+      "kind": "literal-union",
+      "name": "SocialRsvpStatus",
+      "historicalRootRevision": "38932deace96cb1ace1c63bf3b687fb427fb5e67",
+      "historicalSourceRevision": "38932deace96cb1ace1c63bf3b687fb427fb5e67",
+      "oldValueCount": 3,
+      "newValueCount": 3,
+      "removed": [
+        "Accepted",
+        "Declined",
+        "Maybe"
+      ],
+      "added": [
+        "accepted",
+        "maybe",
+        "declined"
+      ],
+      "orderOnly": false,
+      "change": "Lowercase RSVP wire vocabulary replaces title-case labels and changes ordering."
+    },
+    {
+      "originalDecision": {
+        "id": "2245e57c3a5e6500548e",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "78edbdbcc66f02cf24d112282f955517449c253fe217528093a94a6d9fdd5547",
+      "replacementId": "74f76e178df15df54768",
+      "file": "tdf-hq-ui/src/api/socialEvents.ts",
+      "kind": "object-registry",
+      "name": "SocialEventsAPI",
+      "historicalRootRevision": "849444cdcce0254c3091293edce8a4cc5f8175fa",
+      "historicalSourceRevision": "849444cdcce0254c3091293edce8a4cc5f8175fa",
+      "oldValueCount": 61,
+      "newValueCount": 66,
+      "removed": [
+        "rsvp"
+      ],
+      "added": [
+        "getMyRsvp",
+        "getRsvpSummary",
+        "upsertMyRsvp",
+        "deleteMyRsvp",
+        "listRsvpFeed",
+        "listDirectoryProfileRsvpFeed"
+      ],
+      "orderOnly": false,
+      "change": "One legacy RSVP function replaced by six self-scoped or feed client methods."
+    },
+    {
+      "originalDecision": {
+        "id": "e56ffb099089c4e7309f",
+        "classification": "security-system-registry",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "security_role, party_security_role, role_permission",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "bf8c3f9a0ef03d85d35dab06cb7d253df16629eac46000bfd9f23e66e2382ca9",
+      "replacementId": "c7c31a11cdb3859ae4bb",
+      "file": "tdf-hq/docs/openapi/api.yaml",
+      "kind": "openapi-enum",
+      "name": "Role",
+      "historicalRootRevision": "38932deace96cb1ace1c63bf3b687fb427fb5e67",
+      "historicalSourceRevision": "38932deace96cb1ace1c63bf3b687fb427fb5e67",
+      "oldValueCount": 30,
+      "newValueCount": 31,
+      "removed": [],
+      "added": [
+        "Agency"
+      ],
+      "orderOnly": false,
+      "change": "Agency added to the OpenAPI security role contract."
+    },
+    {
+      "originalDecision": {
+        "id": "3916642c4d54d32e3205",
+        "classification": "security-system-registry",
+        "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+        "specializedModel": "workflow_definition, workflow_state, workflow_transition, workflow_default_state, workflow_state_capability",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Persisted workflow-state capability rows own assignments. Code recognizes only the two executable behavior boundaries, startup rejects unknown enabled capabilities, and missing rows deny access by default.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "2b1a0fa73a1809dcb560c08e739dcc11645132f25dc9a40190f6982b60dee680",
+      "replacementId": "0eb0488703525594608c",
+      "file": "tdf-hq/src/TDF/SocialEventLifecycle.hs",
+      "kind": "haskell-list",
+      "name": "recognizedSocialEventCapabilityCodes",
+      "historicalRootRevision": "38932deace96cb1ace1c63bf3b687fb427fb5e67",
+      "historicalSourceRevision": "38932deace96cb1ace1c63bf3b687fb427fb5e67",
+      "oldValueCount": 2,
+      "newValueCount": 3,
+      "removed": [],
+      "added": [
+        "rsvp"
+      ],
+      "orderOnly": false,
+      "change": "RSVP is a third executable lifecycle capability; assignment remains persisted."
+    },
+    {
+      "originalDecision": {
+        "id": "dbd19df5feca0af20a2c",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "67229710c213119d39c813c270ce0e8aa516bd8f1a9ae7f747533484b981d2d3",
+      "replacementId": "068d6f3f0c164631ab35",
+      "file": "tdf-mobile/src/api/events.ts",
+      "kind": "object-registry",
+      "name": "Events",
+      "historicalRootRevision": "38932deace96cb1ace1c63bf3b687fb427fb5e67",
+      "historicalSourceRevision": "0d0a5b458fea98b31e08a5ddc39d416d6b397b5f",
+      "oldValueCount": 24,
+      "newValueCount": 29,
+      "removed": [],
+      "added": [
+        "getPublicById",
+        "getMyRSVP",
+        "getRSVPSummary",
+        "deleteRSVP",
+        "listRSVPFeed"
+      ],
+      "orderOnly": false,
+      "change": "Five client functions added: public detail plus RSVP read, summary, delete and feed."
+    },
+    {
+      "originalDecision": {
+        "id": "3f00137f715a55f77dc3",
+        "classification": "governed-reference-data",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing reference constants could break parsing, transport, or implementation dispatch.",
+        "justification": "These reference constants form closed unions used for validation and dispatch mechanics and are not governed business catalog data.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "27a32d1ba4558f21ea8784cfa9f58af5c9ca44ed5974816ef5bd7da8d321ea8e",
+      "replacementId": "2a1f5ad58ef7b8fc4bf3",
+      "file": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+      "kind": "haskell-list",
+      "name": "eventUpdateAllowedKeys",
+      "historicalRootRevision": "3776dbb522cf19a4ee9cf1706c1788b4f821e4e8",
+      "historicalSourceRevision": "3776dbb522cf19a4ee9cf1706c1788b4f821e4e8",
+      "oldValueCount": 25,
+      "newValueCount": 26,
+      "removed": [],
+      "added": [
+        "eventRsvpEligible"
+      ],
+      "orderOnly": false,
+      "change": "eventRsvpEligible added; correct prior inconsistent reference-data classification to request security boundary."
+    },
+    {
+      "originalDecision": {
+        "id": "b98598fcc3a39ba88a8d",
+        "classification": "security-system-registry",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "The generated mobile feature registry mirrors the reviewed navigation and permission contract; persisted assignments remain authoritative and backend capabilities remain exhaustive.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "2f92c6a2204542662f7b206ae14d3f9f849779adf1013db13ffcb794bb143c2e",
+      "replacementId": "ffb84e8fd3972fd0730d",
+      "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+      "kind": "array",
+      "name": "mobileFeatureRegistry",
+      "historicalRootRevision": "1f6d49da23f93ebf6186e3189f9adb70b60c88a6",
+      "historicalSourceRevision": "e8bd0a3aefe1dd9974a8463ff6cd8691d029a9d4",
+      "oldValueCount": 143,
+      "newValueCount": 144,
+      "removed": [],
+      "added": [
+        "{id=reputation.consents, parentId=profile.self, webRoute=/reputation/consents, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=people, icon=privacy-tip, breadcrumb, "
+      ],
+      "orderOnly": false,
+      "change": "reputation.consents added to the generated navigation mirror; governance cutover remains pending."
+    },
+    {
+      "originalDecision": {
+        "id": "3b37706d3daff89e8890",
+        "classification": "dynamic-business-catalog",
+        "disposition": "consumer-update",
+        "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+        "priority": "P3-consumer",
+        "risk": "A governed onboarding intent could become unreachable or route to the wrong product surface.",
+        "justification": "This switch maps governed onboarding intent identifiers to fixed client routes and must reject unknown values safely.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "f8e3f0b1d6b27a3ac3d20ff23e8272fbdc6d1a9a0580a0d2bbefb1f89c13ef3f",
+      "replacementId": "34d5f2f94d1a165783ba",
+      "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+      "kind": "switch-cases",
+      "name": "intent",
+      "historicalRootRevision": "2b98e2d7dbc70b0a0a7dec2db1b0766fb95fa3d2",
+      "historicalSourceRevision": "ad16d28e3df1a8b5b358542f5823c5b3ec0dfd04",
+      "oldValueCount": 6,
+      "newValueCount": 6,
+      "removed": [],
+      "added": [],
+      "orderOnly": true,
+      "change": "Same six labels reordered. Function-body changes include local progress and role/module hints; scanner fingerprints do not prove behavioral equivalence."
+    },
+    {
+      "originalDecision": {
+        "id": "1af20293af1230e9fbb9",
+        "classification": "security-system-registry",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the migration list could break deployment execution or skip the Party selector compatibility repair.",
+        "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+        "reviewed": true
+      },
+      "originalDecisionSha256": "7327e90e2936da4a827a3c26530e42ddbd308aeafc90cf7e7262894d1264237f",
+      "replacementId": "7578a30aa3cc5aa23870",
+      "file": "scripts/production-migrations.json",
+      "kind": "json-array",
+      "name": "migrations",
+      "historicalRootRevision": "7a100471c74439f4738241f8f6ffe0b14ed1c9f4",
+      "historicalSourceRevision": "7a100471c74439f4738241f8f6ffe0b14ed1c9f4",
+      "oldValueCount": 91,
+      "newValueCount": 98,
+      "removed": [],
+      "added": [
+        "{id=2026-09-08_event_rsvp_identity_privacy_feed}",
+        "{id=2026-09-07_artist_merch_storefronts}",
+        "{id=2026-09-08_merch_reputation}",
+        "{id=2026-09-10_contextual_reputation_pilot_cohort}",
+        "{id=2026-09-06_user_onboarding_progress}",
+        "{id=2026-09-09_canonical_payment_lifecycle}",
+        "{id=2026-09-10_payment_attempt_intent_binding}"
+      ],
+      "orderOnly": false,
+      "change": "Seven migration entries added and contextual reputation moved ahead of Party selector indexes. No migration execution or manifest edit."
+    }
+  ]
+}

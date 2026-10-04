@@ -116,6 +116,74 @@ run_tlc ReservationRace.tla ReservationRace.cfg reservation-race
 run_tlc ReservationRace.tla ReservationOverride.cfg reservation-override
 run_tlc InvitationSafety.tla InvitationSafety.cfg invitation
 run_tlc TaskRaci.tla TaskRaci.cfg task-raci
+run_tlc TaskCommit.tla TaskCommit.cfg task-commit
+# Mutation checks must expose the precise regression, not just fail parsing.
+expect_counterexample() {
+  local config="$1" invariant="$2" slug="$3" module="${4:-TaskCommit.tla}" result=0
+  run_tlc "${module}" "${config}" "${slug}" > "${run_root}/${slug}.log" 2>&1 || result=$?
+  if [[ "${result}" != 12 ]] || ! grep -q "Invariant ${invariant} is violated" "${run_root}/${slug}.log"; then
+    cat "${run_root}/${slug}.log"
+    echo "Expected counterexample not detected: ${config}" >&2
+    exit 1
+  fi
+  echo "Expected mutation counterexample: ${config}: ${invariant}"
+}
+expect_counterexample TaskCommitEarlyValidation.cfg NoBlockedCompletion early-validation
+expect_counterexample TaskCommitWriteSkew.cfg NoOrphanResponsibilities write-skew
+run_tlc TaskCompletion.tla TaskCompletion.cfg task-completion
+expect_counterexample TaskCompletionAuthority.cfg CurrentAuthority task-completion-authority TaskCompletion.tla
+expect_counterexample TaskCompletionVersion.cfg NoStaleCompletion task-completion-version TaskCompletion.tla
+expect_counterexample TaskCompletionDependencies.cfg NoBlockedCompletion task-completion-dependencies TaskCompletion.tla
+expect_counterexample TaskCompletionRaci.cfg CurrentAccountability task-completion-raci TaskCompletion.tla
+expect_counterexample TaskCompletionLifecycle.cfg ValidLifecycle task-completion-lifecycle TaskCompletion.tla
+expect_counterexample TaskCompletionReplay.cfg ExactRetry task-completion-replay TaskCompletion.tla
+expect_counterexample TaskCompletionAudit.cfg AuditCoupled task-completion-audit TaskCompletion.tla
+run_tlc TaskRevision.tla TaskRevision.cfg task-revision
+expect_counterexample TaskRevisionRaci.cfg NoStaleCommit task-revision-raci TaskRevision.tla
+expect_counterexample TaskRevisionEarly.cfg NoStaleCommit task-revision-early TaskRevision.tla
+run_tlc TaskRevisionRead.tla TaskRevisionRead.cfg task-revision-read
+expect_counterexample TaskRevisionReadMixed.cfg CoherentRevisionRead task-revision-read-mixed TaskRevisionRead.tla
+expect_counterexample TaskRevisionReadEarly.cfg NoExpiredDisclosure task-revision-read-early TaskRevisionRead.tla
+run_tlc RaciReassignment.tla RaciReassignment.cfg raci-reassignment
+run_tlc CommandBoundary.tla CommandBoundary.cfg command-boundary
+run_tlc TaskCompletionClient.tla TaskCompletionClient.cfg task-completion-client
+expect_counterexample TaskCompletionClientCapture.cfg OriginalRequestSent completion-client-capture TaskCompletionClient.tla
+expect_counterexample TaskCompletionClientShape.cfg ValidatedReceipt completion-client-shape TaskCompletionClient.tla
+expect_counterexample TaskCompletionClientBinding.cfg ValidatedReceipt completion-client-binding TaskCompletionClient.tla
+expect_counterexample TaskCompletionClientRetry.cfg SingleDispatch completion-client-retry TaskCompletionClient.tla
+run_tlc RaciEditorContext.tla RaciEditorContext.cfg raci-editor-context
+run_tlc RaciWebEditor.tla RaciWebEditor.cfg raci-web-editor
+expect_counterexample RaciWebEditorConsent.cfg ExplicitConfirmation raci-web-consent RaciWebEditor.tla
+expect_counterexample RaciWebEditorContext.cfg CurrentEditor raci-web-context RaciWebEditor.tla
+expect_counterexample RaciWebEditorFlight.cfg OneFlight raci-web-flight RaciWebEditor.tla
+expect_counterexample RaciWebEditorRetry.cfg SameRetry raci-web-retry RaciWebEditor.tla
+expect_counterexample RaciWebEditorReceipt.cfg ValidatedSuccess raci-web-receipt RaciWebEditor.tla
+expect_counterexample RaciEditorContextEarly.cfg PrivateOptions raci-context-early RaciEditorContext.tla
+expect_counterexample RaciEditorContextCandidate.cfg EligibleOptions raci-context-candidate RaciEditorContext.tla
+expect_counterexample RaciEditorContextMixed.cfg CoherentContext raci-context-mixed RaciEditorContext.tla
+expect_counterexample CommandBoundaryEarly.cfg ValidatedCommit command-boundary-early CommandBoundary.tla
+expect_counterexample CommandBoundaryUnbound.cfg ValidatedCommit command-boundary-unbound CommandBoundary.tla
+expect_counterexample RaciReassignmentEarly.cfg CurrentAuthority raci-reassignment-early RaciReassignment.tla
+expect_counterexample RaciReassignmentVersion.cfg NoStaleReassignment raci-reassignment-version RaciReassignment.tla
+expect_counterexample RaciReassignmentReplay.cfg ExactRetry raci-reassignment-replay RaciReassignment.tla
+expect_counterexample RaciReassignmentScope.cfg TaskKeyIsolation raci-reassignment-scope RaciReassignment.tla
+expect_counterexample RaciReassignmentSplit.cfg NoOrphanResponsibilities raci-reassignment-split RaciReassignment.tla
+expect_counterexample RaciReassignmentAudit.cfg AuditCoupled raci-reassignment-audit RaciReassignment.tla
+run_tlc ReceiptReplay.tla ReceiptReplay.cfg receipt-replay
+expect_counterexample ReceiptReplayBypass.cfg NoUnauthorizedDisclosure replay-bypass ReceiptReplay.tla
+expect_counterexample ReceiptReplayStaleClock.cfg NoUnauthorizedDisclosure replay-clock ReceiptReplay.tla
+expect_counterexample ReceiptReplayStaleSnapshot.cfg NoUnauthorizedDisclosure replay-snapshot ReceiptReplay.tla
+run_tlc SnapshotRead.tla SnapshotRead.cfg snapshot-read
+expect_counterexample SnapshotReadEarlyAuth.cfg NoUnauthorizedSnapshot snapshot-auth SnapshotRead.tla
+expect_counterexample SnapshotReadMixedClock.cfg CoherentProjection snapshot-clock SnapshotRead.tla
+expect_counterexample SnapshotReadRawLog.cfg LogFieldsAllowlisted snapshot-log SnapshotRead.tla
+run_tlc CommandPrivacy.tla CommandPrivacy.cfg command-privacy
+expect_counterexample CommandPrivacyExistenceLeak.cfg OpaqueTarget command-existence CommandPrivacy.tla
+expect_counterexample CommandPrivacyReceiptLeak.cfg OpaqueTarget command-receipt CommandPrivacy.tla
+run_tlc SessionFence.tla SessionFence.cfg session-fence
+for mutation in Stale Unlocked Party Credential Purpose Witness; do
+  expect_counterexample "SessionFence${mutation}.cfg" CurrentBoundSession "session-${mutation}" SessionFence.tla
+done
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
 run_tlc CheckoutReadiness.tla CheckoutReadiness.cfg checkout-readiness
 run_tlc CheckoutCancellation.tla CheckoutCancellation.cfg checkout-cancellation
@@ -154,6 +222,24 @@ run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc TaskRead.tla TaskRead.cfg task-read
+run_tlc TaskView.tla TaskView.cfg task-view
+expect_counterexample TaskViewLate.cfg CurrentView task-view-late TaskView.tla
+expect_counterexample TaskViewRetained.cfg CurrentView task-view-retained TaskView.tla
+expect_counterexample TaskViewInvalid.cfg ValidatedView task-view-invalid TaskView.tla
+for mutation in Scope Event Early; do
+  expect_counterexample "TaskRead${mutation}.cfg" NoUnauthorizedTask "task-read-${mutation}" TaskRead.tla
+done
+expect_counterexample TaskReadMixed.cfg CoherentTaskProjection task-read-mixed TaskRead.tla
+run_tlc WebOnboardingRecovery.tla WebOnboardingRecovery.cfg web-onboarding
+expect_counterexample WebOnboardingRecoveryStale.cfg CurrentSessionOnly web-onboarding-stale WebOnboardingRecovery.tla
+expect_counterexample WebOnboardingRecoveryReceipt.cfg AuthoritativeOnly web-onboarding-receipt WebOnboardingRecovery.tla
+expect_counterexample WebOnboardingRecoveryOverlap.cfg SingleFlight web-onboarding-overlap WebOnboardingRecovery.tla
+run_tlc ArtistFollowConsent.tla ArtistFollowConsent.cfg artist-follow
+expect_counterexample ArtistFollowConsentClick.cfg NoUnconfirmedMutation artist-follow-click ArtistFollowConsent.tla
+expect_counterexample ArtistFollowConsentUnknown.cfg NoUnconfirmedMutation artist-follow-unknown ArtistFollowConsent.tla
+expect_counterexample ArtistFollowConsentStale.cfg CurrentTargetReceipt artist-follow-stale ArtistFollowConsent.tla
+
 
 scenario_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
   -c 0 -s sat4j -t none -o "${run_root}/alloy-scenario" EventStructure.als 2>&1)"
@@ -170,6 +256,22 @@ for command_index in 1 2 3 4 5 6 7 8; do
   printf '%s\n' "${check_output}"
   if ! grep -q 'UNSAT' <<<"${check_output}"; then
     echo "Alloy command ${command_index} found a counterexample or did not complete." >&2
+    exit 1
+  fi
+done
+
+for command_index in 0 1 2 3 4 5; do
+  task_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
+    -c "${command_index}" -s sat4j -t none \
+    -o "${run_root}/alloy-task-read-${command_index}" TaskReadStructure.als 2>&1)"
+  printf '%s\n' "${task_output}"
+  if [[ "${command_index}" = 0 ]]; then
+    if grep -q 'UNSAT' <<<"${task_output}" || ! grep -q 'SAT' <<<"${task_output}"; then
+      echo 'Alloy task read scenario must be satisfiable.' >&2
+      exit 1
+    fi
+  elif ! grep -q 'UNSAT' <<<"${task_output}"; then
+    echo "Alloy task read assertion ${command_index} failed." >&2
     exit 1
   fi
 done

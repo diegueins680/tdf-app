@@ -510,4 +510,5 @@ fanClubUser =
     , auRoles = [Fan, Customer]
     , auModules = modulesForRoles [Fan, Customer]
     , auApiTokenId = Nothing
+    , auSessionWitness = Nothing
     }

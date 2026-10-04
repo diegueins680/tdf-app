@@ -79,6 +79,7 @@ import           TDF.API.PaymentCapabilities (PaymentCapabilitiesAPI)
 import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
 import           TDF.API.Reviews (ReviewsPublicAPI, ReviewsProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
+import           TDF.EventOperations.API (EventOperationsAPI)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -625,6 +626,7 @@ type ProtectedAPI =
   :<|> DirectoryProtectedAPI
   :<|> MerchProtectedAPI
   :<|> OperationsAPI
+  :<|> EventOperationsAPI
   :<|> CommerceOperationsAPI
   :<|> ReviewsProtectedAPI
   :<|> InteractionsAPI

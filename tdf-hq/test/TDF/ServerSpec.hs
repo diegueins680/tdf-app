@@ -535,6 +535,7 @@ mkUser roles =
         , auRoles = roles
         , auModules = modulesForRoles roles
         , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 futureAdminUser :: AuthedUser

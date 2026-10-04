@@ -169,7 +169,7 @@ editStudent user =
         :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> handler = privateTrialsServer user
   in handler
 actor :: Int64 -> [RoleEnum] -> AuthedUser
-actor key roles = AuthedUser (toSqlKey key) roles (modulesForRoles roles) Nothing
+actor key roles = AuthedUser (toSqlKey key) roles (modulesForRoles roles) Nothing Nothing
 scalar :: ConnectionPool -> Text -> IO Int64
 scalar pool query = do
   rows <- runSqlPool (rawSql query []) pool
