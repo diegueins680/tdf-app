@@ -23,6 +23,16 @@ BEGIN
 END
 $preflight$;
 
+-- An old repeatable-read snapshot may predate the now-valid preflight state.
+-- It cannot see this row created by the enforcing migration, so it must retry
+-- rather than validate a newly appended line against obsolete financial rows.
+CREATE TABLE IF NOT EXISTS commerce_checkout_amount_boundary (
+  singleton boolean PRIMARY KEY CHECK (singleton),
+  established_at timestamptz NOT NULL DEFAULT clock_timestamp()
+);
+INSERT INTO commerce_checkout_amount_boundary(singleton) VALUES (true)
+ON CONFLICT DO NOTHING;
+
 CREATE OR REPLACE FUNCTION commerce_protect_checkout_money()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -46,6 +56,10 @@ DECLARE
   actual_total numeric;
   line_count bigint;
 BEGIN
+  IF NOT EXISTS (SELECT 1 FROM commerce_checkout_amount_boundary WHERE singleton) THEN
+    RAISE EXCEPTION 'Checkout snapshot predates monetary enforcement; retry transaction'
+      USING ERRCODE = '40001';
+  END IF;
   IF TG_TABLE_NAME = 'commerce_checkout_session' THEN
     target_id := NEW.id;
   ELSE
@@ -79,6 +93,7 @@ CREATE CONSTRAINT TRIGGER trg_commerce_checkout_line_total
 -- already sums exactly; a positive append cannot pass alone or in a race. Zero
 -- appends preserve the invariant. An uncommitted parent cannot be referenced by
 -- another transaction until its foreign-key check sees the committed parent.
+-- Pre-enforcement repeatable-read snapshots fail the visibility fence above.
 -- Assumes normal triggers/constraints enabled; privileged DDL is outside scope.
 -- No down migration: retain constraints for compatible forward recovery.
 COMMIT;

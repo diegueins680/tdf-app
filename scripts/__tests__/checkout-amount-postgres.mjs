@@ -3,6 +3,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { randomInt, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { disposablePostgresUrl } from '../lib/disposable-postgres-url.mjs';
+import { buildSchemaVerificationSql } from '../lib/production-release.mjs';
 
 const db = process.env.TDF_CHECKOUT_AMOUNT_DATABASE_URL;
 disposablePostgresUrl(db, { ci: process.env.CI === 'true' });
@@ -31,6 +32,23 @@ const noPreflight = body.replace(/DO \$preflight\$[\s\S]*?\$preflight\$;/, '');
 assert.notEqual(noPreflight, body);
 pass(`BEGIN; ${drop} ${header(oldBad)} ${noPreflight} SET CONSTRAINTS ALL IMMEDIATE; ROLLBACK;`, 'negative control: omitted preflight admits old incomplete snapshot');
 pass(`BEGIN; ${drop} ${body} COMMIT;`, 'additive migration on valid prior state');
+const schemaCheck = buildSchemaVerificationSql({ includePsqlHeader: false });
+pass(schemaCheck, 'full production schema gate accepts intended schema');
+for (const [table, trigger] of [
+  ['commerce_checkout_session', 'trg_commerce_checkout_total'],
+  ['commerce_checkout_line_item', 'trg_commerce_checkout_line_total'],
+  ['commerce_checkout_session', 'trg_commerce_checkout_money_immutable'],
+]) {
+  reject(`BEGIN; ALTER TABLE ${table} DISABLE TRIGGER ${trigger}; ${schemaCheck} COMMIT;`, /correspondence triggers are missing or disabled/, 'schema drift fails closed');
+}
+reject(`BEGIN; DROP TRIGGER trg_commerce_checkout_total ON commerce_checkout_session;
+ CREATE CONSTRAINT TRIGGER trg_commerce_checkout_total AFTER INSERT ON commerce_checkout_session
+ DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (false) EXECUTE FUNCTION commerce_check_checkout_line_total();
+ ${schemaCheck} COMMIT;`, /correspondence triggers are missing or disabled/, 'conditional trigger bypass rejected');
+reject(`BEGIN; DROP TRIGGER trg_commerce_checkout_money_immutable ON commerce_checkout_session;
+ CREATE TRIGGER trg_commerce_checkout_money_immutable BEFORE UPDATE OF updated_at ON commerce_checkout_session
+ FOR EACH ROW EXECUTE FUNCTION commerce_protect_checkout_money();
+ ${schemaCheck} COMMIT;`, /correspondence triggers are missing or disabled/, 'column-restricted trigger bypass rejected');
 
 for (const [label, total, amounts] of [
   ['missing lines', '100', []],
@@ -100,4 +118,42 @@ for (const isolation of ['READ COMMITTED', 'REPEATABLE READ', 'SERIALIZABLE']) {
   for (const r of results) { assert.notEqual(r.status, 0); assert.match(r.stderr, /does not match|could not serialize/); }
   assert.equal(pass(`SELECT sum(total_minor) FROM commerce_checkout_line_item WHERE checkout_id='${valid}';`, isolation), '100');
 }
-console.log('Checkout amount PostgreSQL: migration preflight/rollback, commit-time bounds, shipping compatibility, immutability, four negative controls and six concurrent append transactions passed.');
+// Reproduce a pre-enforcement transaction retaining an incomplete RR snapshot.
+// Another transaction completes the old snapshot before migration preflight.
+// Only the new visibility fence distinguishes that old view from current truth.
+const withoutFence = body.replace(/  IF NOT EXISTS \(SELECT 1 FROM commerce_checkout_amount_boundary WHERE singleton\) THEN[\s\S]*?  END IF;/, '');
+assert.notEqual(withoutFence, body);
+for (const broken of [false, true]) {
+  const old = randomUUID();
+  pass(`BEGIN; ${drop} DROP TABLE commerce_checkout_amount_boundary;
+    ${header(old)} ${line(old, '50')} COMMIT;`, 'synthetic pre-enforcement state');
+  const child = spawn('psql', args, { stdio: ['pipe', 'pipe', 'pipe'] });
+  let output = '', stderr = '';
+  child.stderr.on('data', data => { stderr += data; });
+  const done = new Promise((resolve, rejectPromise) => {
+    child.on('error', rejectPromise); child.on('close', status => resolve({ status, stderr }));
+  });
+  const ready = new Promise((resolve, rejectPromise) => {
+    child.stdout.on('data', data => { output += data; if (output.includes('old_snapshot_ready')) resolve(); });
+    child.on('error', rejectPromise);
+    child.on('close', () => rejectPromise(new Error('old-snapshot transaction exited before barrier')));
+  });
+  child.stdin.write(`BEGIN ISOLATION LEVEL REPEATABLE READ;
+    SET LOCAL statement_timeout='15s'; SELECT sum(total_minor) FROM commerce_checkout_line_item WHERE checkout_id='${old}';
+    SELECT 'old_snapshot_ready';\n`);
+  try {
+    await ready;
+    pass(line(old, '50', 2), 'old writer completes snapshot before preflight');
+    pass(`BEGIN; ${broken ? withoutFence : body} COMMIT;`, 'preflight sees complete current state');
+    child.stdin.end(`${line(old, '50', 3)} ${broken ? 'SET CONSTRAINTS ALL IMMEDIATE; ROLLBACK;' : 'COMMIT;'}\n`);
+    const result = await done;
+    if (broken) assert.equal(result.status, 0, `negative control must admit old snapshot: ${result.stderr}`);
+    else { assert.notEqual(result.status, 0); assert.match(result.stderr, /snapshot predates monetary enforcement/); }
+  } finally {
+    if (!child.stdin.writableEnded) child.stdin.end('ROLLBACK;\n');
+    await done;
+  }
+  assert.equal(pass(`SELECT sum(total_minor) FROM commerce_checkout_line_item WHERE checkout_id='${old}';`, 'stale snapshot rollback'), '100');
+  pass(`BEGIN; ${drop} ${body} COMMIT;`, 'restore intended constraints after control');
+}
+console.log('Checkout amount PostgreSQL: migration preflight/rollback, commit-time bounds, shipping compatibility, immutability, five negative controls, structural drift rejection, six concurrent append transactions and pre-migration snapshot fence passed.');

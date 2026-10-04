@@ -8,6 +8,7 @@ import Data.Int (Int32, Int64)
 import Test.Hspec
 import Test.QuickCheck
 import TDF.Commerce.Money (checkedCheckoutSubtotals, checkedCartSubtotal, checkedCartTotal)
+import qualified TDF.Commerce.Merch as Merch
 
 spec :: Spec
 spec = describe "PAY-CHECKOUT-001 exact line arithmetic" $ do
@@ -62,6 +63,35 @@ spec = describe "PAY-CHECKOUT-001 exact line arithmetic" $ do
     checkedCartTotal [] `shouldBe` Right 0
     checkedCartSubtotal 1 (-1) `shouldSatisfy` isLeft
     checkedCartTotal [-1,2] `shouldSatisfy` isLeft
+  describe "PAY-CHECKOUT-003 merchandise snapshot and commission" $ do
+    it "rejects wrapped merchandise line and aggregate amounts" $ do
+      Merch.checkedMerchSubtotals [(3,6148914691236517206)] `shouldSatisfy` isLeft
+      Merch.checkedMerchSubtotals [(1,cap),(1,cap),(1,3)] `shouldSatisfy` isLeft
+    it "enforces quantity boundaries before storing merchandise" $ do
+      forM_ [0,-1,101,maxBound] $ \quantity ->
+        Merch.checkedMerchSubtotals [(quantity,1),(1,1)] `shouldSatisfy` isLeft
+    it "retains free lines in a positive payable snapshot" $
+      Merch.checkedMerchSubtotals [(100,0),(1,cap)] `shouldBe` Right (cap,[0,cap])
+    it "calculates maximal commission without overflowing the intermediate product" $
+      fmap Merch.merchCommissionMinor (Merch.calculateMerchMoney cap 0 0 0 0 10000) `shouldBe` Right cap
+    it "rejects an overflowing shipping total" $
+      Merch.calculateMerchMoney cap 0 0 1 0 0 `shouldSatisfy` isLeft
+    it "rejects a wrapped positive shipping and tax total" $
+      Merch.calculateMerchMoney cap 0 cap 3 0 0 `shouldSatisfy` isLeft
+    it "rejects a nonpayable fully discounted order" $
+      Merch.calculateMerchMoney 1 1 0 0 0 0 `shouldSatisfy` isLeft
+    it "uses exact floor commission and preserves the seller equation" $
+      withMaxSuccess 1000 $ forAll (chooseInteger (1,toInteger cap)) $ \subtotal ->
+        forAll (chooseInt (0,10000)) $ \bps ->
+          let result = Merch.calculateMerchMoney (fromInteger subtotal) 0 0 0 0 bps
+              commission = subtotal * toInteger bps `div` 10000
+          in case result of
+            Left reason -> counterexample (show reason) False
+            Right money -> conjoin
+              [ toInteger (Merch.merchCommissionMinor money) === commission
+              , toInteger (Merch.merchSellerNetMinor money) + commission === subtotal
+              , toInteger (Merch.merchTotalMinor money) === subtotal
+              ]
   where
     validLines = do
       count <- chooseInt (1,8)

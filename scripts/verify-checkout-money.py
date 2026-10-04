@@ -10,12 +10,14 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / 'tdf-hq/src/TDF/Commerce/Money.hs'
+MERCH_SOURCE = ROOT / 'tdf-hq/src/TDF/Commerce/Merch.hs'
 TEST = ROOT / 'tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs'
 MAIN = 'import Test.Hspec\nimport qualified TDF.Commerce.CheckoutMoneySpec as Money\nmain = hspec Money.spec\n'
 
 
 def run():
     source = SOURCE.read_text()
+    merch_source = MERCH_SOURCE.read_text()
     controls = {
         'wrapped-checkout-aggregate': ('sum subtotals /= toInteger expected',
             'toInteger (fromInteger (sum subtotals) :: Int64) /= toInteger expected'),
@@ -24,6 +26,12 @@ def run():
         'wrapped-cart-aggregate': ('sum (map toInteger amounts)', 'toInteger (sum amounts)'),
         'wrapped-cart-product': ('narrowCartAmount (toInteger quantity * toInteger unit)',
             'narrowCartAmount (toInteger (quantity * unit))'),
+        'merch-wrapped-lines': ('toInteger quantity * toInteger price', 'toInteger (quantity * price)'),
+        'merch-wrapped-aggregate': ('total = sum amounts', 'total = toInteger (fromInteger (sum amounts) :: Int64)'),
+        'merch-wrapped-commission': ('commissionBase * toInteger commissionBps `div` 10000',
+            'toInteger ((fromInteger commissionBase :: Int64) * fromIntegral commissionBps `div` 10000)'),
+        'merch-wrapped-payable': ('total = commissionBase + toInteger tax + toInteger shipping',
+            'total = toInteger ((fromInteger commissionBase :: Int64) + tax + shipping)'),
     }
     records = []
     with tempfile.TemporaryDirectory(prefix='tdf-money-controls-') as temporary:
@@ -34,13 +42,16 @@ def run():
             variant = directory/name
             module = variant/'TDF/Commerce/Money.hs'
             module.parent.mkdir(parents=True)
+            merch_module = variant/'TDF/Commerce/Merch.hs'
+            module.write_text(source)
+            merch_module.write_text(merch_source)
             if replacement:
                 old, new = replacement
-                if source.count(old) != 1:
+                target_source = merch_source if name.startswith('merch-') else source
+                target_module = merch_module if name.startswith('merch-') else module
+                if target_source.count(old) != 1:
                     raise RuntimeError(f'Mutation shape drift: {name}')
-                module.write_text(source.replace(old, new))
-            else:
-                module.write_text(source)
+                target_module.write_text(target_source.replace(old, new))
             command = ['stack', '--stack-yaml', str(ROOT/'tdf-hq/stack.yaml'),
                        'exec', '--', 'runghc', '-i'+str(variant),
                        '-i'+str(ROOT/'tdf-hq/test'), str(main), '--seed=20261004']
@@ -55,9 +66,10 @@ def run():
             if not passed:
                 print(json.dumps({'runs': records}, indent=2))
                 raise SystemExit(f'Checkout money conformance failed: {name}')
-    print(json.dumps({'scope': '53 executable examples, including two 1000-case properties; five source mutation controls',
+    print(json.dumps({'scope': '61 executable examples, including three 1000-case properties; nine source mutation controls',
                      'seed': 20261004,
                      'sourceSha256': hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
+                     'merchSourceSha256': hashlib.sha256(MERCH_SOURCE.read_bytes()).hexdigest(),
                      'testSha256': hashlib.sha256(TEST.read_bytes()).hexdigest(),
                      'runs': records}, indent=2))
 

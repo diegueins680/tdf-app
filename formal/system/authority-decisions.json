@@ -142,6 +142,17 @@
       "conflict": "Fixed-width products and sums can wrap to a positive value accepted as a parent total despite the declared exact line-total invariant. Per-line PostgreSQL checks do not enforce the cross-line aggregate.",
       "authority": "formal/system/checkout-arithmetic.md",
       "resolution": "Repair application calculations with exact arithmetic and explicit narrowing checks; retain cross-line database enforcement as an open additive-migration obligation. Do not redefine wrapped amounts as valid."
+    },
+    {
+      "id": "AUTHORITY-014",
+      "sources": [
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "formal/system/checkout-arithmetic.md"
+      ],
+      "conflict": "Generic parent-subtotal equality would reject shipped merchandise shipping represented as both header fee and payable line. Fixed-width arithmetic can disagree with exact monetary equations.",
+      "authority": "formal/system/checkout-arithmetic.md",
+      "resolution": "Require exact payable-total equality at the database boundary; preserve existing shipping representation and floor commission while repairing unchecked intermediates. Historical applied SQL remains unchanged; use additive migrations."
     }
   ]
 }

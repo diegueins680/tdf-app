@@ -1665,18 +1665,18 @@
         "scripts/__tests__/identity-http-runtime.mjs"
       ],
       "formalModels": [],
-      "verification": "53 Hspec examples including two 1000-case generated properties and five source mutations; actual HTTP refinement required.",
+      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa.",
       "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "high for pure arithmetic; final adapter/HTTP execution remains pending",
+      "confidence": "high for checked CheckoutStore/cart scope; final newer candidate and deployment pending",
       "ambiguity": [
         "Additive database aggregate enforcement is separately specified by PAY-CHECKOUT-002.",
         "Other monetary writers, rounding and provider finality are not established by this requirement."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Pure properties and five negative controls passed; final current-candidate HTTP execution remains pending."
+        "reason": "Pure controls and actual cart HTTP rollback passed; final combined candidate and deployment remain pending."
       }
     },
     {
@@ -1720,20 +1720,21 @@
       ],
       "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
       "privacy": "Synthetic tests use no real customer data or provider credentials.",
-      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable.",
+      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry.",
       "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
       "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch.",
       "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence.",
       "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
       "implementation": [
-        "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql"
+        "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "scripts/__tests__/checkout-amount-postgres.mjs"
       ],
       "formalModels": [],
-      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; four invalid-schema negative controls.",
-      "evidence": "checkout-amount-postgres-barriers.log",
+      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls.",
+      "evidence": "checkout-amount-postgres-fence.log",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high within immutable/nonnegative schema assumptions; final hosted and deployed execution pending",
@@ -1743,7 +1744,79 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local PG16 boundary and negative controls pass; manifest integration, final PG17 CI and deployment remain pending."
+        "reason": "Local PG16 boundary, five negative controls and migration-era snapshot race pass; final PG17 CI and deployment pending."
+      }
+    },
+    {
+      "id": "PAY-CHECKOUT-003",
+      "title": "Exact merchandise snapshot and floor commission",
+      "statement": "Validate merchandise line quantities/prices and compute exact products, subtotal, payable total, floor commission and seller net before narrowing or persistence.",
+      "domain": "PAY",
+      "authority": "inferred",
+      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Commerce/Merch.hs",
+      "property": "Accepted values fit Int64; quantities1..100; commission=floor((subtotal-discount)*basisPoints/10000); sellerNet=total-commission-processorFee is nonnegative.",
+      "contract": "formal/system/checkout-arithmetic.md",
+      "actors": [
+        "Merchandise buyer",
+        "Merchant",
+        "Merch checkout adapter"
+      ],
+      "preconditions": [
+        "Server-loaded active merchandise lines and shipping/commission configuration within the checkout transaction."
+      ],
+      "inputs": [
+        "Int64 prices and quantities",
+        "Discount, tax, shipping, processor fees and commission basis points"
+      ],
+      "state": {
+        "initial": "unvalidated numeric snapshot",
+        "terminal": [
+          "rejected without committed mutation",
+          "validated exact snapshot"
+        ]
+      },
+      "allowedTransitions": [
+        "Preserve free lines in a positive payable snapshot.",
+        "Persist previously validated line subtotals; calculate exact floor commission."
+      ],
+      "forbiddenTransitions": [
+        "Wrap before validation or before commission division.",
+        "Accept nonpositive payable totals or negative seller net."
+      ],
+      "effects": [
+        "Reject invalid snapshot before shipping decision/order inserts.",
+        "Persist unchanged rounding semantics using exact intermediate arithmetic."
+      ],
+      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
+      "privacy": "Synthetic tests use no real customer data or provider credentials.",
+      "concurrency": "Existing cart/variant and buyer-scope locks retained; this requirement adds no new stock or provider concurrency claim.",
+      "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
+      "failure": "Reject malformed or out-of-range values; no canonical checkout insert occurs, and failed cart mutations roll back.",
+      "recovery": "Correct source pricing or quantities through authorized workflows; never rewrite immutable financial evidence to hide a mismatch.",
+      "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "tdf-hq/sql/2026-10-04_merch_commission_exact.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+        "scripts/verify-checkout-money.py",
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
+        "scripts/test-artist-merch-runtime.sh"
+      ],
+      "formalModels": [],
+      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required.",
+      "evidence": "merch-money-controls.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for pure arithmetic; new migration and full runtime execution pending",
+      "ambiguity": [
+        "Refund/settlement SQL arithmetic and JavaScript precision remain separate obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "All61 pure examples and nine mutation controls pass; final full build/runtime and deployment remain pending."
       }
     }
   ]

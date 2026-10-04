@@ -525,7 +525,8 @@ createCheckoutRows now expiresAt environment cartId token shippingZoneId orderId
       :: SqlPersistT IO [Single Bool])
     when (buyerLimitExceeded == [Single True]) $
       liftIO (ioError (userError "A per-buyer product limit would be exceeded"))
-    let subtotal = sum [price * quantity | (_,_,_,_,_,Single price,Single quantity,_,_,_) <- linesFound]
+    (subtotal, lineSubtotals) <- either (liftIO . ioError . userError . T.unpack) pure $
+      checkedMerchSubtotals [(quantity, price) | (_,_,_,_,_,Single price,Single quantity,_,_,_) <- linesFound]
     zoneRows <- (rawSql
       "SELECT zone.delivery_method,CASE WHEN zone.free_shipping_min_minor IS NOT NULL AND ? >= zone.free_shipping_min_minor THEN 0 ELSE zone.rate_minor END,zone.id::text\
       \ FROM merch_shipping_zone zone WHERE zone.id=?::uuid AND zone.store_id=?::uuid AND zone.active\
@@ -568,18 +569,16 @@ createCheckoutRows now expiresAt environment cartId token shippingZoneId orderId
               , PersistText (jsonText policySnapshot),PersistText (jsonText commissionSnapshot)
               , PersistText idempotencyKey,PersistText requestHash
               ]
-            forM_ (zip [1 :: Int64 ..] linesFound) $ \(lineNumber,(Single variantId,Single productId,Single productName,Single variantName,Single sku,Single price,Single quantity,Single variantVersion,Single productVersion,_)) -> do
+            forM_ (zip3 [1 :: Int64 ..] linesFound lineSubtotals) $ \(lineNumber,(Single variantId,Single productId,Single productName,Single variantName,Single sku,Single price,Single quantity,Single variantVersion,Single productVersion,_),lineSubtotal) -> do
               let productSnapshot = object ["id" .= productId,"name" .= productName,"version" .= productVersion]
                   variantSnapshot = object ["id" .= variantId,"name" .= variantName,"sku" .= sku,"version" .= variantVersion]
-                  lineSubtotal = price * quantity
               rawExecute
                 "INSERT INTO merch_order_line(order_id,line_number,product_id,variant_id,quantity,unit_price_minor,subtotal_minor,total_minor,product_snapshot,variant_snapshot,policy_snapshot) VALUES(?::uuid,?,?::uuid,?::uuid,?,?,?,?,?::jsonb,?::jsonb,?::jsonb)"
                 [PersistText orderIdText,PersistInt64 lineNumber,PersistText productId,PersistText variantId,PersistInt64 quantity,PersistInt64 price,PersistInt64 lineSubtotal,PersistInt64 lineSubtotal,PersistText (jsonText productSnapshot),PersistText (jsonText variantSnapshot),PersistText (jsonText policySnapshot)]
             rawExecute
               "INSERT INTO commerce_checkout_session(id,domain_type,domain_order_id,status,environment,currency,subtotal_minor,fee_minor,total_minor,customer_email,lookup_token_hash,idempotency_key,expires_at) VALUES(?::uuid,'merch_order',?,'holding',?,?,?,?,?,?,?,?,?)"
               [PersistText checkoutIdText,PersistText orderIdText,PersistText environment,PersistText currency,PersistInt64 (merchProductSubtotalMinor money),PersistInt64 (merchShippingMinor money),PersistInt64 (merchTotalMinor money),PersistText (mrrEmail recipient),PersistText (hashText token),PersistText idempotencyKey,PersistUTCTime expiresAt]
-            forM_ (zip [1 :: Int64 ..] linesFound) $ \(lineNumber,(Single variantId,_,Single productName,Single variantName,Single sku,Single price,Single quantity,Single variantVersion,_,_)) -> do
-              let lineSubtotal = price * quantity
+            forM_ (zip3 [1 :: Int64 ..] linesFound lineSubtotals) $ \(lineNumber,(Single variantId,_,Single productName,Single variantName,Single sku,Single price,Single quantity,Single variantVersion,_,_),lineSubtotal) -> do
               rawExecute
                 "INSERT INTO commerce_checkout_line_item(checkout_id,line_number,product_type,product_id,product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot) VALUES(?::uuid,?,'merch_variant',?,?,?, ?,?,?,?,?::jsonb)"
                 [PersistText checkoutIdText,PersistInt64 lineNumber,PersistText variantId,PersistText (T.pack (show variantVersion)),PersistText (productName<>" — "<>variantName),PersistInt64 quantity,PersistInt64 price,PersistInt64 lineSubtotal,PersistInt64 lineSubtotal,PersistText (jsonText (object ["sku" .= sku,"storeId" .= storeId]))]

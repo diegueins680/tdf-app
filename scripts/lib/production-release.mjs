@@ -698,6 +698,31 @@ DECLARE
   ticketing_table TEXT;
   enrichment_table TEXT;
 BEGIN
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('commerce_checkout_session', 'trg_commerce_checkout_total', 'commerce_check_checkout_line_total', true, 5),
+      ('commerce_checkout_line_item', 'trg_commerce_checkout_line_total', 'commerce_check_checkout_line_total', true, 5),
+      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19)
+    ) expected(table_name, trigger_name, function_name, deferred, trigger_type)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
+      WHERE t.tgrelid=to_regclass('public.' || expected.table_name)
+        AND t.tgname=expected.trigger_name AND p.proname=expected.function_name
+        AND p.pronamespace='public'::regnamespace
+        AND t.tgenabled IN ('O','A') AND NOT t.tgisinternal
+        AND t.tgtype=expected.trigger_type
+        AND t.tgqual IS NULL AND t.tgattr=''::int2vector
+        AND t.tgdeferrable=expected.deferred AND t.tginitdeferred=expected.deferred
+    )
+  ) THEN
+    RAISE EXCEPTION 'Checkout monetary correspondence triggers are missing or disabled';
+  END IF;
+  IF to_regclass('public.commerce_checkout_amount_boundary') IS NULL THEN
+    RAISE EXCEPTION 'Checkout monetary migration snapshot fence is missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.commerce_checkout_amount_boundary WHERE singleton) THEN
+    RAISE EXCEPTION 'Checkout monetary migration snapshot fence is empty';
+  END IF;
   IF to_regclass('public.google_calendar_config') IS NULL
      OR to_regclass('public.google_calendar_event') IS NULL THEN
     RAISE EXCEPTION 'Calendar runtime relations are missing';
