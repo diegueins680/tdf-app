@@ -25,6 +25,7 @@ module TDF.ServerAuth
   , normalizeAuthEmailAddress
   , parsePasswordChangeAuthToken
   , resolvePasswordResetDelivery
+  , recoveryWindowValid
   , runPasswordResetConfirm
   , selectUniqueGoogleLoginCredential
   , selectUniqueLoginEmailCredential
@@ -86,7 +87,8 @@ import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, toPersistValue, update, upsert, upsertBy, (=.), (==.), (<=.), (>=.), (<-.))
 import Database.Persist.Sql (Single (..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, transactionUndo, updateWhereCount, SqlPersistT)
-import Database.Persist.Types (PersistValue (PersistBool, PersistText))
+import Database.Persist.Types (PersistValue (PersistBool, PersistText, PersistInt64))
+import Database.Persist.SqlBackend (getRDBMS)
 import Network.HTTP.Client (Manager, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import Network.HTTP.Types.Status (statusCode)
 import Network.HTTP.Types.URI (urlEncode)
@@ -1653,7 +1655,7 @@ passwordReset redirect locale PasswordResetRequest{..} = do
             (Just (Entity _ cred), Just (Entity currentId _, recipientEmail, displayName))
               | currentId == credentialId, userCredentialActive cred -> do
                   deactivatePasswordResetTokens (userCredentialPartyId cred)
-                  resetToken <- createPasswordResetToken (userCredentialPartyId cred) recipientEmail
+                  resetToken <- createPasswordResetToken (Entity credentialId cred) recipientEmail
                   pure (Just (resetToken, displayName, recipientEmail))
             _ -> pure Nothing
 
@@ -2173,52 +2175,82 @@ runPasswordResetConfirm
 runPasswordResetConfirm tokenVal passwordVal = do
   mToken <- getBy (UniqueApiToken tokenVal)
   case mToken of
-    Nothing -> pure (Left PasswordResetInvalidToken)
     Just (Entity tokenId apiToken)
-      | not (apiTokenActive apiToken) -> pure (Left PasswordResetInvalidToken)
-      | not (isResetToken (apiTokenLabel apiToken)) -> pure (Left PasswordResetInvalidToken)
-      | otherwise -> do
-          let mResetIdentifier = do
-                labelText <- apiTokenLabel apiToken
-                guardResetTokenIdentifier labelText
-          case mResetIdentifier of
-            Nothing -> pure (Left PasswordResetInvalidToken)
-            Just resetIdentifier -> do
-              mCred <- lookupCredentialLocked resetIdentifier
+      | apiTokenActive apiToken, isResetToken (apiTokenLabel apiToken) -> do
+          -- Labels are delivery hints, never a mutable-email identity binding.
+          discovered <- rawSql
+            "SELECT credential_id FROM auth_recovery_challenge WHERE api_token_id=?"
+            [toPersistValue tokenId] :: SqlPersistT IO [Single UserCredentialId]
+          case discovered of
+            [Single credentialId] -> do
+              mCred <- lockCredentialForSession credentialId
               case mCred of
-                Nothing -> pure (Left PasswordResetInvalidToken)
                 Just (Entity credId cred)
-                  | userCredentialPartyId cred /= apiTokenPartyId apiToken ->
-                      pure (Left PasswordResetInvalidToken)
-                  | not (userCredentialActive cred) ->
-                      pure (Left PasswordResetAccountDisabled)
-                  | otherwise -> do
-                      -- Conditional consumption checks the current row after any wait.
-                      consumed <- updateWhereCount
-                        [ ApiTokenId ==. tokenId, ApiTokenToken ==. tokenVal
-                        , ApiTokenPartyId ==. userCredentialPartyId cred
-                        , ApiTokenLabel ==. apiTokenLabel apiToken, ApiTokenActive ==. True ]
-                        [ApiTokenActive =. False]
-                      if consumed /= 1
-                        then pure (Left PasswordResetInvalidToken)
-                        else do
-                          hashed <- liftIO (hashPasswordText passwordVal)
-                          update credId [UserCredentialPasswordHash =. hashed]
-                          revokeInteractiveSessions (userCredentialPartyId cred)
-                          sessionToken <- createSessionToken (userCredentialPartyId cred) (userCredentialUsername cred)
-                          mUser <- loadAuthedUser sessionToken
-                          case mUser of
-                            Nothing -> transactionUndo >> pure (Left PasswordResetProfileError)
-                            Just user -> pure (Right (toLoginResponse sessionToken user))
-
+                  | userCredentialPartyId cred == apiTokenPartyId apiToken
+                  , userCredentialActive cred -> do
+                      backend <- getRDBMS
+                      let lockSuffix = if backend == "postgresql" then " FOR UPDATE" else ""
+                      currentTokens <- rawSql
+                        ("SELECT ?? FROM api_token WHERE id=?" <> lockSuffix)
+                        [toPersistValue tokenId] :: SqlPersistT IO [Entity ApiToken]
+                      metadata <- rawSql
+                        ("SELECT credential_id,issued_at_epoch,expires_at_epoch FROM auth_recovery_challenge WHERE api_token_id=?" <> lockSuffix)
+                        [toPersistValue tokenId] :: SqlPersistT IO [(Single UserCredentialId, Single Int64, Single Int64)]
+                      -- Sample after every lock wait. PostgreSQL now() is the
+                      -- transaction start time and is unsafe for this purpose.
+                      currentTime <- recoveryClockEpoch
+                      case (currentTokens, metadata) of
+                        ([Entity _ current], [(Single boundCredential, Single issued, Single expires)])
+                          | boundCredential == credId
+                          , apiTokenActive current
+                          , apiTokenToken current == tokenVal
+                          , apiTokenPartyId current == userCredentialPartyId cred
+                          , apiTokenLabel current == apiTokenLabel apiToken
+                          , recoveryWindowValid issued expires currentTime -> do
+                              consumed <- updateWhereCount
+                                [ ApiTokenId ==. tokenId, ApiTokenToken ==. tokenVal
+                                , ApiTokenPartyId ==. userCredentialPartyId cred
+                                , ApiTokenLabel ==. apiTokenLabel apiToken, ApiTokenActive ==. True ]
+                                [ApiTokenActive =. False]
+                              if consumed /= 1
+                                then pure (Left PasswordResetInvalidToken)
+                                else do
+                                  hashed <- liftIO (hashPasswordText passwordVal)
+                                  update credId [UserCredentialPasswordHash =. hashed]
+                                  revokeInteractiveSessions (userCredentialPartyId cred)
+                                  sessionToken <- createSessionToken (userCredentialPartyId cred) (userCredentialUsername cred)
+                                  mUser <- loadAuthedUser sessionToken
+                                  case mUser of
+                                    Nothing -> transactionUndo >> pure (Left PasswordResetProfileError)
+                                    Just user -> pure (Right (toLoginResponse sessionToken user))
+                        _ -> pure (Left PasswordResetInvalidToken)
+                Just (Entity _ cred) | not (userCredentialActive cred) ->
+                  pure (Left PasswordResetAccountDisabled)
+                _ -> pure (Left PasswordResetInvalidToken)
+            _ -> pure (Left PasswordResetInvalidToken)
+    _ -> pure (Left PasswordResetInvalidToken)
   where
     isResetToken Nothing = False
     isResetToken (Just lbl) = "password-reset:" `T.isPrefixOf` lbl
 
-    guardResetTokenIdentifier lbl =
-      if "password-reset:" `T.isPrefixOf` T.strip lbl
-        then resolveUsernameFromLabel lbl
-        else Nothing
+recoveryWindowValid :: Int64 -> Int64 -> Int64 -> Bool
+recoveryWindowValid issued expires current =
+  issued >= 0 && issued <= current && current < expires
+    && toInteger expires - toInteger issued == 900
+
+-- One-second UTC precision, with an exclusive deadline. The database clock is
+-- trusted; a backwards clock before issuance is rejected, not renewed.
+recoveryClockEpoch :: SqlPersistT IO Int64
+recoveryClockEpoch = do
+  backend <- getRDBMS
+  query <- case backend of
+    "postgresql" -> pure "SELECT floor(extract(epoch FROM clock_timestamp()))::bigint"
+    "sqlite" -> pure "SELECT CAST(strftime('%s','now') AS INTEGER)"
+    _ -> liftIO (fail "Unsupported recovery clock database")
+  rows <- rawSql query [] :: SqlPersistT IO [Single Int64]
+  case rows of
+    [Single value] -> pure value
+    _ -> liftIO (fail "Recovery database clock unavailable")
 
 hashPasswordText :: Text -> IO Text
 hashPasswordText pwd = do
@@ -2237,9 +2269,18 @@ createSessionToken :: PartyId -> Text -> SqlPersistT IO Text
 createSessionToken pid uname =
   createReusableSessionToken pid (Just ("password-login:" <> uname))
 
-createPasswordResetToken :: PartyId -> Text -> SqlPersistT IO Text
-createPasswordResetToken pid emailVal =
-  createTokenWithLabel pid (Just ("password-reset:" <> emailVal))
+createPasswordResetToken :: Entity UserCredential -> Text -> SqlPersistT IO Text
+createPasswordResetToken (Entity credentialId credential) emailVal = do
+  tokenValue <- createTokenWithLabel (userCredentialPartyId credential) (Just ("password-reset:" <> emailVal))
+  mToken <- getBy (UniqueApiToken tokenValue)
+  case mToken of
+    Nothing -> liftIO (fail "Recovery token missing inside issuance transaction")
+    Just (Entity tokenId _) -> do
+      issued <- recoveryClockEpoch
+      rawExecute
+        "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,?,?)"
+        [toPersistValue tokenId,toPersistValue credentialId,PersistInt64 issued,PersistInt64 (issued+900)]
+      pure tokenValue
 
 createReusableSessionToken :: PartyId -> Maybe Text -> SqlPersistT IO Text
 -- Never commit an outer credential/consent/provider transaction during issuance.

@@ -1359,13 +1359,7 @@
         "Optional reviewer reason"
       ],
       "state": {
-        "claim": [
-          "submitted",
-          "under_review",
-          "approved",
-          "rejected",
-          "withdrawn"
-        ],
+        "claim": "docs/music-directory/formal-model.yaml#state_machines.claim",
         "manager grant": [
           "active",
           "revoked"
@@ -1373,10 +1367,8 @@
         "review evidence": "current receipt plus transactional audit events"
       },
       "allowedTransitions": [
-        "submitted -> under_review or withdrawn",
-        "under_review -> approved, rejected or withdrawn",
-        "rejected -> submitted",
-        "same state -> same receipt without effects"
+        "The canonical state_machines.claim.transitions relation in docs/music-directory/formal-model.yaml",
+        "Same known state -> same receipt without effects"
       ],
       "forbiddenTransitions": [
         "Claimant -> own review",
@@ -1400,6 +1392,78 @@
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx"
+      ]
+    },
+    {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "Candidate repair; exact-head integration and rollout pending",
+      "ambiguity": [
+        "Rate limits, hashed token storage, delivery retry policy and separate login after recovery remain open.",
+        "Production release sequencing and compatible recovery are not yet verified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
+      },
+      "source": "formal/system/identity-lifecycle.md; OWASP Forgot Password Cheat Sheet; source-derived absence of baseline expiry",
+      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls",
+      "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
+      "domain": "ID",
+      "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
+      "observability": "No token or password in production receipts; retain migration identity, exact tested source and bounded-model logs.",
+      "formalModels": [
+        "formal/event-operations/RecoveryExpiry.tla"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "id": "ID-SESSION-003",
+      "title": "Recovery challenges expire and bind the exact credential",
+      "statement": "Recovery must require bound metadata and a current database time within the 900-second issuance interval, sampled after lock waits; legacy, expired or rebound challenges must not mutate credentials or sessions.",
+      "property": "UnexpiredAtConsumption /\\ LegacyFailsClosed /\\ BoundCredential",
+      "actors": [
+        "holder of recovery challenge",
+        "concurrent retry",
+        "database failure environment"
+      ],
+      "preconditions": [
+        "Challenge identifies one active credential on its bound Party"
+      ],
+      "inputs": [
+        "Opaque recovery token",
+        "New password",
+        "Database UTC clock"
+      ],
+      "state": {
+        "binding": "api_token -> auth_recovery_challenge -> user_credential",
+        "time": "UTC epoch seconds; expires=issued+900"
+      },
+      "allowedTransitions": [
+        "Issue token and binding atomically",
+        "Valid bound active token -> consumed with password/session transaction"
+      ],
+      "forbiddenTransitions": [
+        "Missing metadata -> recovery",
+        "now >= expires -> recovery",
+        "Binding change during wait -> recovery",
+        "Metadata failure -> orphan token"
+      ],
+      "effects": [
+        "Same-transaction issuance or consumption; denied challenge leaves password, token and sessions unchanged"
+      ],
+      "authorization": "Possession of a valid active recovery token bound to the currently locked active credential and same Party; mutable email is not authority.",
+      "concurrency": "Party -> credential -> token -> metadata locks; sample clock_timestamp only after waits; one transaction and conditional consumption.",
+      "idempotency": "Single-use; replay fails without new effects. Issuance does not renew legacy metadata.",
+      "failure": "400 invalid challenge; disabled credential 403 where reached; database failure rolls back transaction.",
+      "recovery": "Request a new challenge. Drain old recovery handlers; never recover using a pre-enforcement binary; retain additive metadata.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql"
       ]
     }
   ]

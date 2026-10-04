@@ -103,9 +103,8 @@ The audit's two intended models and six named controls were locally exercised on
 2026-10-04. Exact final-head HTTP/PostgreSQL execution and deployment remain pending;
 no current conformance PASS is asserted here.
 
-Open P1: recovery challenges currently have no expiry field/check. Single-use
-consumption is not expiry. A compatible additive expiry policy, legacy-token
-handling and clock-boundary tests remain required before full identity conformance.
+The baseline recovery challenges had no expiry. ID-SESSION-003 below specifies
+the additive repair; its runtime and rollout evidence remain pending.
 
 ## Directory review refinement — ID-CLAIM-REVIEW-001
 
@@ -161,3 +160,57 @@ The review card displays the submitted evidence as escaped text and the claimant
 Party identifier. Human review remains an environment assumption: neither a
 filled note nor a model-checker result proves that the underlying evidence is
 true or that an operator evaluated it correctly.
+
+## Recovery expiry — ID-SESSION-003
+
+A recovery challenge binds one `api_token` to one immutable `user_credential` ID
+in additive `auth_recovery_challenge`. Labels remain in the `password-reset:`
+namespace and are delivery hints only. Public email changes cannot redirect this
+binding. Missing metadata, mismatched ownership/binding, future issuance and an
+elapsed deadline fail without credential/session mutations. Existing tokens are
+not backfilled: users must request a fresh challenge.
+
+Issuance samples the database clock once and records UTC Unix seconds, with a
+900-second lifetime. This is a TDF policy choice, not an OWASP-mandated duration.
+The validity interval is `[issued_at_epoch, expires_at_epoch)`. Confirmation locks
+Party → credential → token → metadata, rechecks the binding and samples the
+current database clock **after** all waits. PostgreSQL uses `clock_timestamp()`,
+not the transaction-start `now()`. Validity is required at atomic consumption;
+a transaction may finish afterward. The database clock and its synchronization
+are trusted. A clock before issuance fails; arbitrary clock rollback within a
+window is outside this guarantee. The SQLite test adapter uses UTC epoch seconds
+but does not establish PostgreSQL concurrency behavior.
+
+Token deletion cascades its metadata; credential deletion restricts while a
+challenge references it. No background expiry deletion is required for denial,
+and expiry does not erase audit evidence. Retention duration and coordinated
+account deletion remain separate open privacy obligations. Identity consolidation
+must not move these bindings; its current retirement guard blocks Parties with
+credential/token references. Token/metadata creation is one transaction; failure
+leaves no new token and rolls back preceding challenge revocations. Consumption,
+password replacement, revocations and replacement session remain one transaction.
+
+Deployment requires the additive migration before the enforcing API. Stop/drain
+**every** older recovery handler before admitting traffic to the new version;
+a mixed fleet can still accept expired or metadata-free challenges through an old
+replica. A rollback must preserve enforcement. Keep the table on recovery; there
+is no supported destructive down migration or backfill that renews old links.
+The canonical Hetzner routine release must enforce this sequencing and the
+recovery floor before this change is production eligible.
+
+`RecoveryExpiry.tla` bounds time to 0..3, an abstract deadline of 2, one request,
+one optional metadata row and two credential bindings. It explores a lock-wait
+interval and binding change before consumption. Four controls omit expiry, use
+a stale sampled clock, admit legacy metadata-free challenges or ignore a changed
+binding. It proves no liveness property and assumes eventual lock/transaction
+behavior only in the concrete tests. It excludes cryptography, delivery,
+credential/session side effects (covered separately), clock rollback and cleanup.
+The arithmetic helper is property tested across Int64 inputs, including overflow
+shapes and deadline equality; HTTP checks exercise the actual PostgreSQL clock,
+controlled token lock wait, atomic metadata failure and bound recovery after a
+contact change. Final candidate execution remains required.
+
+Remaining recovery obligations include rate limits, secure hashed token storage,
+notification/delivery retry policy and whether to replace automatic post-reset
+login with a separate login step. The expiry repair does not claim those OWASP
+recommendations are already implemented.

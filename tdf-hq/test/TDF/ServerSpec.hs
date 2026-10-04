@@ -9166,6 +9166,9 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
                     }
+                rawExecute
+                    "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
+                    [toPersistValue tokenId, toPersistValue credId]
                 result <- runPasswordResetConfirm "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
@@ -9213,6 +9216,9 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
                     }
+                rawExecute
+                    "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
+                    [toPersistValue tokenId, toPersistValue credId]
                 result <- runPasswordResetConfirm "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
@@ -16041,6 +16047,9 @@ initializeAuthSchema = do
         \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
         \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS auth_recovery_challenge (api_token_id INTEGER PRIMARY KEY REFERENCES api_token(id),credential_id INTEGER NOT NULL REFERENCES user_credential(id),issued_at_epoch INTEGER NOT NULL,expires_at_epoch INTEGER NOT NULL,CHECK(expires_at_epoch-issued_at_epoch=900))"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"course_registration\" (\

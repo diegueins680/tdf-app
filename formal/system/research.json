@@ -101,6 +101,15 @@
       "applicability": "Credential lifecycle versus Social/Event locks",
       "decision": "adopted",
       "rationale": "Party NO KEY UPDATE precedes credential and token mutation. Avoid an inner commit and revalidate after waits. Real database races remain required."
+    },
+    {
+      "id": "RES-RECOVERY-001",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html",
+      "title": "OWASP Forgot Password Cheat Sheet",
+      "recommendation": "Bind recovery tokens to individual accounts, make them single-use and expire after an appropriate period.",
+      "applicability": "ID-SESSION-003 recovery expiry and immutable credential binding",
+      "decision": "adopted with scope",
+      "rationale": "900 seconds is an explicit TDF policy, not a mandated OWASP duration. Rate limiting, hashed storage, delivery guarantees and separate post-reset login remain independent conformance gaps."
     }
   ]
 }

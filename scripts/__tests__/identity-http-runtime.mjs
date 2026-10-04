@@ -106,6 +106,7 @@ try {
     'parties',(SELECT jsonb_agg(to_jsonb(p) ORDER BY id) FROM party p),
     'credentials',(SELECT jsonb_agg(to_jsonb(c) ORDER BY id) FROM user_credential c),
     'tokens',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM api_token t),
+    'recovery',(SELECT jsonb_agg(to_jsonb(c) ORDER BY api_token_id) FROM auth_recovery_challenge c),
     'roles',(SELECT jsonb_agg(to_jsonb(r) ORDER BY id) FROM party_security_role r))`);
   const beforeRejectedClaim = identitySnapshot();
   for (const claimArtistId of artistIds) {
@@ -186,10 +187,19 @@ try {
   assert.equal(await session(passwordFamilies.google), null);
   assert.ok(await session(passwordFamilies.service));
 
+  const bindRecovery = (token, secondsRemaining = 900, boundCredential = credentialId) => {
+    assert.ok(Number.isInteger(secondsRemaining) && Math.abs(secondsRemaining) <= 900);
+    assert.ok(Number.isSafeInteger(boundCredential) && boundCredential > 0);
+    sql(`WITH sampled AS MATERIALIZED (SELECT floor(extract(epoch FROM clock_timestamp()))::bigint AS epoch)
+      INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch)
+      SELECT t.id,${boundCredential},sampled.epoch+${secondsRemaining}-900,sampled.epoch+${secondsRemaining}
+      FROM api_token t CROSS JOIN sampled WHERE token='${token}';`);
+  };
   let winningPassword;
   const resetToken = randomUUID();
   sql(`INSERT INTO api_token(token,party_id,label,active) VALUES
     ('${resetToken}',${independent.partyId},'password-reset:claimant@example.test',true);`);
+  bindRecovery(resetToken);
   const confirm = (token, password) => fetch(`${base}/v1/password-reset/confirm`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, newPassword: password }), signal: AbortSignal.timeout(30000),
@@ -293,6 +303,7 @@ try {
         RAISE EXCEPTION 'synthetic session issuance failure'; END IF; RETURN NEW; END $$;
     CREATE TRIGGER identity_http_reject_session BEFORE INSERT ON api_token
       FOR EACH ROW EXECUTE FUNCTION identity_http_reject_session();`);
+  bindRecovery(failureToken);
   const beforeFailedIssuance = identitySnapshot();
   try {
     assert.equal((await confirm(failureToken, 'synthetic-must-rollback-42')).status, 500);
@@ -300,6 +311,80 @@ try {
   } finally {
     sql('DROP TRIGGER identity_http_reject_session ON api_token; DROP FUNCTION identity_http_reject_session();');
   }
+  // ID-SESSION-003: legacy, expired, future and wrong-owner challenges fail
+  // without consuming the token, changing credentials, or issuing a session.
+  for (const scenario of ['legacy', 'expired', 'deadline', 'future', 'wrong-owner']) {
+    const value = randomUUID();
+    sql(`INSERT INTO api_token(token,party_id,label,active) VALUES
+      ('${value}',${independent.partyId},'password-reset:claimant@example.test',true)`);
+    if (scenario !== 'legacy') {
+      if (scenario === 'wrong-owner') {
+        sql(`INSERT INTO user_credential(party_id,username,password_hash,active)
+          SELECT ${actor},'identity-wrong-owner',password_hash,true FROM user_credential WHERE id=${credentialId}`);
+      }
+      bindRecovery(value, scenario === 'expired' ? -1 : scenario === 'deadline' ? 0 : 900,
+        scenario === 'wrong-owner' ? Number(sql("SELECT id FROM user_credential WHERE username='identity-wrong-owner'")) : credentialId);
+      if (scenario === 'future') sql(`UPDATE auth_recovery_challenge SET issued_at_epoch=issued_at_epoch+900,expires_at_epoch=expires_at_epoch+900 WHERE api_token_id=(SELECT id FROM api_token WHERE token='${value}')`);
+    }
+    const before = identitySnapshot();
+    assert.equal((await confirm(value, 'synthetic-must-not-change-42')).status, 400, scenario);
+    assert.equal(identitySnapshot(), before, `${scenario} must have no persisted effects`);
+  }
+  // Hold the TOKEN row, after credential locking. A transaction-start timestamp
+  // or a clock sampled before this wait would incorrectly accept the challenge.
+  const expiresWaiting = randomUUID();
+  sql(`INSERT INTO api_token(token,party_id,label,active) VALUES
+    ('${expiresWaiting}',${independent.partyId},'password-reset:claimant@example.test',true)`);
+  bindRecovery(expiresWaiting, 5);
+  const expiryHolder = spawn('psql', [db, '-X', '-qAt', '-v', 'ON_ERROR_STOP=1'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  try {
+    await new Promise((resolve, reject) => {
+      let output = '';
+      const timeout = setTimeout(() => reject(new Error('expiry barrier timed out')), 10000);
+      expiryHolder.stdout.on('data', chunk => {
+        output += chunk.toString();
+        if (output.includes('expiry-barrier-ready')) { clearTimeout(timeout); resolve(); }
+      });
+      expiryHolder.once('error', error => { clearTimeout(timeout); reject(error); });
+      expiryHolder.stdin.write(`BEGIN; SELECT id FROM api_token WHERE token='${expiresWaiting}' FOR UPDATE; SELECT 'expiry-barrier-ready';\n`);
+    });
+    const before = identitySnapshot();
+    const pending = confirm(expiresWaiting, 'synthetic-expired-during-wait-42');
+    await waitBlocked(1);
+    assert.equal(sql(`SELECT expires_at_epoch>floor(extract(epoch FROM clock_timestamp()))::bigint FROM auth_recovery_challenge WHERE api_token_id=(SELECT id FROM api_token WHERE token='${expiresWaiting}')`), 't', 'request must reach barrier before expiry');
+    for (let attempt = 0; attempt < 120; attempt++) {
+      if (sql(`SELECT expires_at_epoch<=floor(extract(epoch FROM clock_timestamp()))::bigint FROM auth_recovery_challenge WHERE api_token_id=(SELECT id FROM api_token WHERE token='${expiresWaiting}')`) === 't') break;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    expiryHolder.stdin.end('COMMIT;\n');
+    assert.equal((await pending).status, 400, 'expiry must use the post-wait clock');
+    assert.equal(identitySnapshot(), before);
+  } finally { expiryHolder.kill('SIGTERM'); }
+  sql("UPDATE user_credential SET active=false WHERE username='identity-http-alternate'");
+  const requestReset = () => fetch(`${base}/v1/password-reset`, { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: signupBody.email }),
+    signal: AbortSignal.timeout(30000),
+  });
+  sql(`CREATE FUNCTION identity_http_reject_challenge() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+    RAISE EXCEPTION 'synthetic challenge metadata failure'; END $$;
+    CREATE TRIGGER identity_http_reject_challenge BEFORE INSERT ON auth_recovery_challenge
+    FOR EACH ROW EXECUTE FUNCTION identity_http_reject_challenge();`);
+  try {
+    const before = identitySnapshot();
+    assert.equal((await requestReset()).status, 500);
+    assert.equal(identitySnapshot(), before, 'metadata failure rolls back token insertion and prior challenge revocation');
+  } finally {
+    sql('DROP TRIGGER identity_http_reject_challenge ON auth_recovery_challenge; DROP FUNCTION identity_http_reject_challenge();');
+  }
+  assert.equal((await requestReset()).status, 200);
+  const issued = JSON.parse(sql(`SELECT jsonb_build_object('token',t.token,'credential',c.credential_id,'duration',c.expires_at_epoch-c.issued_at_epoch)
+    FROM api_token t JOIN auth_recovery_challenge c ON c.api_token_id=t.id
+    WHERE t.party_id=${independent.partyId} AND t.active AND t.label LIKE 'password-reset:%'`));
+  assert.equal(issued.credential, credentialId); assert.equal(issued.duration, 900);
+  // A later change in public contact data cannot redirect a bound challenge.
+  sql(`UPDATE party SET primary_email='changed-contact@example.test' WHERE id=${independent.partyId}`);
+  assert.equal((await confirm(issued.token, 'synthetic-bound-recovery-42')).status, 200);
+  console.log('Recovery expiry HTTP: missing metadata, elapsed deadline, future issuance, owner binding and expiry during a token lock wait passed.');
   // ID-CLAIM-REVIEW-001: database-serialized decisions and separated authority.
   sql(`INSERT INTO party(display_name,is_org,created_at) VALUES ('Identity HTTP module-only reviewer',false,now());
     INSERT INTO party_security_role(party_id,role_id,approval_mode,active)

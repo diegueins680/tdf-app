@@ -86,6 +86,11 @@ run_negative_tlc() {
     exit 1
   fi
 }
+run_tlc RecoveryExpiry.tla RecoveryExpiry.cfg recovery-expiry
+run_negative_tlc RecoveryExpiryNoExpiry.cfg recovery-no-expiry 'Invariant UnexpiredAtConsumption is violated' RecoveryExpiry.tla
+run_negative_tlc RecoveryExpiryStaleClock.cfg recovery-stale-clock 'Invariant UnexpiredAtConsumption is violated' RecoveryExpiry.tla
+run_negative_tlc RecoveryExpiryLegacy.cfg recovery-legacy 'Invariant LegacyFailsClosed is violated' RecoveryExpiry.tla
+run_negative_tlc RecoveryExpiryRebound.cfg recovery-rebound 'Invariant BoundCredential is violated' RecoveryExpiry.tla
 run_tlc DirectoryClaimReview.tla DirectoryClaimReview.cfg directory-claim-review
 run_negative_tlc DirectoryClaimReviewConcurrent.cfg directory-claim-race 'Invariant GrantMatchesClaim is violated' DirectoryClaimReview.tla
 run_negative_tlc DirectoryClaimReviewModuleOnly.cfg directory-claim-module-only 'Invariant AdminRoleRequired is violated' DirectoryClaimReview.tla

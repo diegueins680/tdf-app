@@ -29,6 +29,7 @@ import TDF.Models (RoleEnum (..), UserCredential (..), roleFromText, roleToText)
 import TDF.ServerAuth
   ( GoogleIdTokenInfo (..)
   , GoogleProfile (..)
+  , recoveryWindowValid
   , normalizeAuthEmailAddress
   , parsePasswordChangeAuthToken
   , selectUniqueGoogleLoginCredential
@@ -55,6 +56,7 @@ import TDF.ServerAuth
 
 spec :: Spec
 spec = do
+  recoveryWindowSpec
   authEmailSpec
   moduleAccessSpec
   loginRequestSpec
@@ -810,3 +812,20 @@ selectedGoogleCredentialKey
   -> Either T.Text (Maybe (Key UserCredential))
 selectedGoogleCredentialKey =
   fmap (fmap credentialEntityKey) . selectUniqueGoogleLoginCredential
+
+recoveryWindowSpec :: Spec
+recoveryWindowSpec = describe "ID-SESSION-003 recovery expiry" $ do
+  it "accepts issuance and rejects equality at expiry" $ do
+    recoveryWindowValid 1000 1900 1000 `shouldBe` True
+    recoveryWindowValid 1000 1900 1899 `shouldBe` True
+    recoveryWindowValid 1000 1900 1900 `shouldBe` False
+    recoveryWindowValid 1000 1900 999 `shouldBe` False
+  it "matches the bounded interval without Int64 overflow" $
+    property $ \issued expires current ->
+      recoveryWindowValid issued expires current ==
+        (issued >= 0 && toInteger expires - toInteger issued == 900
+          && issued <= current && current < expires)
+  it "does not accept malformed or overflow-shaped windows" $ do
+    recoveryWindowValid (-1) 899 1 `shouldBe` False
+    recoveryWindowValid 0 901 1 `shouldBe` False
+    recoveryWindowValid (maxBound - 899) minBound maxBound `shouldBe` False
