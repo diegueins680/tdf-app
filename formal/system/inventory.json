@@ -5206,7 +5206,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "6523c1e8624f33b608d2208a67f49fb1f112e377f75a7d49172c45884f0b8a8f",
+      "sha256": "ff9b12e4bd6a8298c1ac12d3c98214a112753849cd2aab74dea611a7a22a4e33",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

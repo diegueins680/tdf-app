@@ -23,6 +23,41 @@ import TDF.EventOperations.Types
 
 spec :: Spec
 spec = describe "event operations database privacy boundary" $ do
+  it "binds lifecycle receipts to the exact event, command, state and next version" $ do
+    let command = EventTransitionCommand 1 PendingApproval Nothing "transition-boundary"
+        result = EventTransitionOutcomeDTO 10 PendingApproval 2 UUID.nil "owner" False
+        decodeRows = decodeTransitionRows 10 UUID.nil command
+    decodeRows [taskRow (toJSON result)] `shouldBe` Right (Right result)
+    decodeRows [taskRow (toJSON result { etoReplayed=True })]
+      `shouldBe` Right (Right result { etoReplayed=True })
+    forM_ [result { etoEventId=11 }, result { etoCommandId=UUID.fromWords 1 0 0 0 },
+      result { etoCanonicalState=Approved }, result { etoVersion=1 }, result { etoVersion=3 },
+      result { etoAuthorityCode="invented" }] $ \bad ->
+        decodeRows [taskRow (toJSON bad)] `shouldBe` Left SnapshotDecodeError
+    decodeTransitionRows 10 UUID.nil (command { etcExpectedVersion=maxBound })
+      [taskRow (toJSON result { etoVersion=minBound })] `shouldBe` Left SnapshotDecodeError
+
+  it "strictly validates lifecycle row shape and minimal or bound rejection envelopes" $ do
+    let command = EventTransitionCommand 1 Planning Nothing "transition-boundary"
+        decodeRows = decodeTransitionRows 10 UUID.nil command
+        rejected = object ["error" .= ("version_conflict" :: Text), "eventId" .= (10 :: Int),
+          "commandId" .= UUID.nil, "currentVersion" .= (3 :: Int),
+          "canonicalState" .= Planning, "replayed" .= True]
+        patch key value = case rejected of Object fields -> Object (KM.insert key value fields); _ -> Null
+    decodeRows [taskRow rejected] `shouldBe` Right (Left "version_conflict")
+    decodeRows [taskRow (object ["error" .= ("feature_disabled" :: Text)])]
+      `shouldBe` Right (Left "feature_disabled")
+    decodeRows [taskRow (object ["error" .= ("idempotency_conflict" :: Text),
+      "eventId" .= (10 :: Int), "commandId" .= UUID.nil])]
+      `shouldBe` Right (Left "idempotency_conflict")
+    forM_ [[], [Single Nothing], [Single (Just "not JSON")], [taskRow rejected, taskRow rejected]]
+      $ \rows -> decodeRows rows `shouldBe` Left SnapshotDecodeError
+    forM_ [Null, object [], patch "eventId" (Number 11), patch "commandId" (toJSON (UUID.fromWords 1 0 0 0)),
+      patch "currentVersion" (Number 0), patch "currentVersion" (Number 1.5),
+      patch "canonicalState" (String "invented"), patch "replayed" Null,
+      patch "private" (String "diagnostic"), patch "error" (String "private diagnostic")]
+      $ \bad -> decodeRows [taskRow bad] `shouldBe` Left SnapshotDecodeError
+
   it "binds a completion receipt to target, command, completed status and exact next revision" $ do
     let result = completionResult "5"
         decodeRows = decodeTaskCompletionRows 10 100 UUID.nil (completionCommand "4")

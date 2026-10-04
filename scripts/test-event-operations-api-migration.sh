@@ -158,6 +158,70 @@ test_snapshot_disable_race() {
     updated_by_party_id=1,change_reason='snapshot test restore' WHERE feature_code='event.operations.api';" >/dev/null
 }
 
+test_transition_disable_order() {
+  race_event="$1"; race_isolation="$2"; race_order="$3"
+  race_command="40000000-0000-4000-8000-000000000$race_event"
+  psql_exec -c "UPDATE event_operation_feature_flag SET enabled=TRUE,
+    updated_by_party_id=1,change_reason='lifecycle race setup';
+    INSERT INTO social_event(id,organizer_party_id) VALUES($race_event,'1');
+    INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence)
+      VALUES($race_event,'planning',1,'lifecycle disable race');
+    INSERT INTO event_operation_relationship(event_id,party_id,relationship_kind)
+      VALUES($race_event,1,'primary_owner');" >/dev/null
+  race_call="SELECT event_operation_apply_transition($race_event,1,'$race_command',1,
+    'pending_approval',NULL,'lifecycle-disable-race',encode(digest('lifecycle-race','sha256'),'hex'));"
+  race_disable="UPDATE event_operation_feature_flag SET enabled=FALSE,
+    updated_by_party_id=1,change_reason='lifecycle race disable' WHERE feature_code='event.operations.api';"
+  psql_exec -c "SET application_name='transition_flag_coordinator';
+    SELECT pg_advisory_lock(887,$race_event); SELECT pg_sleep(60);" > "$result_dir/transition-coordinator.log" 2>&1 &
+  race_coordinator=$!
+  wait_for_replay_barrier transition_flag_coordinator Timeout
+  if [ "$race_order" = command-first ]; then
+    race_first="$race_call"; race_second="$race_disable"
+  else
+    race_first="$race_disable"; race_second="$race_call"
+  fi
+  psql_exec --set=VERBOSITY=verbose -qAtc "BEGIN ISOLATION LEVEL $race_isolation;
+    SET LOCAL application_name='transition_flag_first'; $race_first
+    SELECT pg_advisory_xact_lock(887,$race_event); COMMIT;" > "$result_dir/transition-first.log" 2>&1 &
+  race_first_pid=$!
+  wait_for_replay_barrier transition_flag_first Lock
+  psql_exec --set=VERBOSITY=verbose -qAtc "BEGIN ISOLATION LEVEL $race_isolation;
+    SET LOCAL application_name='transition_flag_second'; $race_second COMMIT;" > "$result_dir/transition-second.log" 2>&1 &
+  race_second_pid=$!
+  # Observe the conflicting row lock, not merely a timed overlap.
+  wait_for_replay_barrier transition_flag_second Lock
+  test "$(psql_exec -qAtc "SELECT count(*) FROM pg_stat_activity second
+    JOIN pg_stat_activity first ON first.pid=ANY(pg_blocking_pids(second.pid))
+    WHERE second.application_name='transition_flag_second' AND first.application_name='transition_flag_first'")" = 1
+  psql_exec -qAtc "SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+    WHERE datname=current_database() AND application_name='transition_flag_coordinator'" >/dev/null
+  wait "$race_coordinator" || true
+  wait "$race_first_pid"
+  if [ "$race_order" = disable-first ] && [ "$race_isolation" != 'READ COMMITTED' ]; then
+    if wait "$race_second_pid"; then
+      echo "Stale lifecycle command did not abort after disable: $race_isolation" >&2; exit 1
+    fi
+    grep -q 40001 "$result_dir/transition-second.log"
+  else
+    wait "$race_second_pid"
+  fi
+  if [ "$race_order" = command-first ]; then
+    test "$(head -n 1 "$result_dir/transition-first.log" | jq -r '.version')" = 2
+    race_expected=1; race_version=2
+  else
+    if [ "$race_isolation" = 'READ COMMITTED' ]; then
+      test "$(head -n 1 "$result_dir/transition-second.log" | jq -r '.error')" = feature_disabled
+    fi
+    race_expected=0; race_version=1
+  fi
+  test "$(psql_exec -qAtc "SELECT version FROM event_operation_event_state WHERE event_id=$race_event")" = "$race_version"
+  for race_table in event_operation_transition event_operation_audit_event event_operation_command_receipt; do
+    test "$(psql_exec -qAtc "SELECT count(*) FROM $race_table WHERE event_id=$race_event")" = "$race_expected"
+  done
+  test "$(transition_json "$race_event" 1 "$race_command" 1 pending_approval NULL lifecycle-disabled lifecycle-race | jq -r '.error')" = feature_disabled
+}
+
 apply_sql "$fixture_sql"
 apply_sql "$foundation_migration"
 apply_sql "$api_migration"
@@ -297,4 +361,11 @@ test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_feature_flag_his
 test "$(psql_exec -qAtc 'SELECT event_operation_read_snapshot(10,1) IS NULL')" = t
 test "$(psql_exec -qAt -c "SELECT to_regprocedure('event_operation_apply_transition(bigint,bigint,uuid,bigint,text,text,text,text)') IS NOT NULL;")" = "t"
 
-echo "Event operations API migration passed replay/snapshot privacy, fresh-clock coherent projection, approval visibility, concurrent revocation (RC/RR/Serializable), flag-disable race, immutable history, idempotency, lifecycle guards, rollback and reapply."
+test_transition_disable_order 140 'READ COMMITTED' command-first
+test_transition_disable_order 141 'REPEATABLE READ' command-first
+test_transition_disable_order 142 'SERIALIZABLE' command-first
+test_transition_disable_order 143 'READ COMMITTED' disable-first
+test_transition_disable_order 144 'REPEATABLE READ' disable-first
+test_transition_disable_order 145 'SERIALIZABLE' disable-first
+
+echo "Event operations API migration passed replay/snapshot privacy, fresh-clock coherent projection, approval visibility, concurrent revocation (RC/RR/Serializable), both lifecycle flag-disable orders at all three isolation levels, immutable history, idempotency, lifecycle guards, rollback and reapply."

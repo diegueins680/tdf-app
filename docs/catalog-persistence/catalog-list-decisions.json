@@ -14006,13 +14006,23 @@
       "reviewed": true
     },
     {
-      "id": "9f7714307b6856ea63cf",
+      "id": "97afdce2d664e5ba3586",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "risk": "Expanding exception details can expose database internals or mishandle cancellation and retryable conflicts.",
-      "justification": "DatabaseFailure is the Haskell exception-classification boundary: SQL serialization/deadlock errors map to TransactionConflict, other synchronous failures to DatabaseUnavailable, and asynchronous cancellation is rethrown. These are sanitized runtime variants, not business catalog entries.",
-      "reviewed": true
+      "justification": "DatabaseFailure is a sanitized Haskell runtime exception boundary, not a selectable business catalog. Serialization/deadlock remains TransactionConflict, other synchronous faults remain DatabaseUnavailable, and asynchronous cancellation is rethrown. InvalidTransitionResponse preserves the existing lifecycle invalid_database_response HTTP envelope after a private typed decode exception aborts the transaction. No raw database or receipt diagnostic is retained or returned.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "9f7714307b6856ea63cf",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "risk": "Expanding exception details can expose database internals or mishandle cancellation and retryable conflicts.",
+        "justification": "DatabaseFailure is the Haskell exception-classification boundary: SQL serialization/deadlock errors map to TransactionConflict, other synchronous failures to DatabaseUnavailable, and asynchronous cancellation is rethrown. These are sanitized runtime variants, not business catalog entries.",
+        "reviewed": true
+      },
+      "reviewBatch": "event-lifecycle-transaction-review-2026-10-03"
     },
     {
       "id": "747165e201d9c11c2215",

@@ -12,16 +12,13 @@ import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import Crypto.Hash (Digest, SHA256, hash)
-import Data.Aeson (Value(..), decodeStrict', encode, fromJSON, object, Result(..), (.=))
-import qualified Data.Aeson.KeyMap as KeyMap
+import Data.Aeson (encode, object, (.=))
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.UUID as UUID
-import Database.Persist (PersistValue(..))
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
 import Servant
 
@@ -29,8 +26,8 @@ import TDF.Auth (AuthedUser(..), withCurrentAuthSession)
 import TDF.DB (Env(..))
 import TDF.EventOperations.API (EventOperationsAPI)
 import TDF.EventOperations.DatabaseBoundary
-  ( databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, reassignRaci,
-    loadRaciEditorContext, completeTask, tryDatabaseAction )
+  ( DatabaseFailure(..), databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, reassignRaci,
+    loadRaciEditorContext, completeTask, applyTransition, tryDatabaseAction )
 import qualified TDF.EventOperations.Types as EventOps
 
 type EventOperationsM = ReaderT Env Handler
@@ -127,10 +124,12 @@ runEventOperationsDb action = do
     Right value -> pure value
     Left failure -> do
       liftIO $ BL8.putStrLn $ encode (databaseFailureLog failure)
-      throwError err503
-        { errBody = encode (object ["code" .= ("event_operations_unavailable" :: Text)])
-        , errHeaders = [("Content-Type", "application/json")]
-        }
+      case failure of
+        InvalidTransitionResponse -> throwError (eventOperationDomainError "invalid_database_response")
+        _ -> throwError err503
+          { errBody = encode (object ["code" .= ("event_operations_unavailable" :: Text)])
+          , errHeaders = [("Content-Type", "application/json")]
+          }
 
 requireEventOperationsEnabled :: EventOperationsM ()
 requireEventOperationsEnabled = do
@@ -172,39 +171,13 @@ applyEventTransition
   -> EventOperationsM EventOps.EventTransitionOutcomeDTO
 applyEventTransition user eventId commandId command = do
   requireEventOperationsEnabled
-  responseRows <- runEventOperationsSessionDb user $ rawSql
-    "SELECT event_operation_apply_transition(?, ?, ?::uuid, ?, ?, ?, ?, ?)::text"
-    [ PersistInt64 eventId
-    , PersistInt64 actorPartyId
-    , PersistText (UUID.toText commandId)
-    , PersistInt64 (EventOps.etcExpectedVersion command)
-    , PersistText (EventOps.eventLifecycleStateText (EventOps.etcTargetState command))
-    , maybe PersistNull PersistText (EventOps.etcReason command)
-    , PersistText (EventOps.etcCorrelationId command)
-    , PersistText requestHash
-    ] :: EventOperationsM [Single Text]
-  responseValue <- case responseRows of
-    [Single rawResponse] ->
-      maybe
-        (throwError (eventOperationDomainError "invalid_database_response"))
-        pure
-        (decodeStrict' (TE.encodeUtf8 rawResponse))
-    _ -> throwError (eventOperationDomainError "invalid_database_response")
-  case eventOperationErrorCode responseValue of
-    Just errorCode -> throwError (eventOperationDomainError errorCode)
-    Nothing -> case fromJSON responseValue of
-      Success outcome -> pure outcome
-      Error _ -> throwError (eventOperationDomainError "invalid_database_response")
+  result <- runEventOperationsSessionDb user $
+    applyTransition eventId actorPartyId commandId command requestHash
+  either (throwError . eventOperationDomainError) pure result
   where
     actorPartyId = fromSqlKey (auPartyId user)
     requestHash = T.pack $ show
       (hash (BL.toStrict (encode command)) :: Digest SHA256)
-
-eventOperationErrorCode :: Value -> Maybe Text
-eventOperationErrorCode (Object fields) = case KeyMap.lookup "error" fields of
-  Just (String errorCode) -> Just errorCode
-  _ -> Nothing
-eventOperationErrorCode _ = Nothing
 
 eventOperationDomainError :: Text -> ServerError
 eventOperationDomainError errorCode =

@@ -247,6 +247,29 @@ httpSpec pool manager port = describe "event operations authenticated HTTP / Pos
     countFor "event_operation_command_receipt" 61 `shouldReturn` 0
     countFor "event_operation_audit_event" 61 `shouldReturn` 0
 
+  it "rolls back lifecycle state, transitions, audit and receipts before rejecting a corrupt result" $ do
+    execute "INSERT INTO social_event(id,organizer_party_id) VALUES(84,'1'); INSERT INTO event_operation_event_state(event_id,canonical_state,version,migration_evidence) VALUES(84,'draft',1,'lifecycle receipt rollback test'); INSERT INTO event_operation_relationship(event_id,party_id,relationship_kind) VALUES(84,1,'primary_owner')"
+    let signature = "(BIGINT,BIGINT,UUID,BIGINT,TEXT,TEXT,TEXT,TEXT)"
+        restore = execute ("DROP FUNCTION event_operation_apply_transition" <> signature
+          <> "; ALTER FUNCTION transition_http_saved" <> signature <> " RENAME TO event_operation_apply_transition")
+    forM_ ["NULL", "'{}'::jsonb", "result || '{\"eventId\":999}'::jsonb",
+      "result || '{\"commandId\":\"00000000-0000-0000-0000-000000000000\"}'::jsonb",
+      "result || '{\"version\":3}'::jsonb", "result || '{\"canonicalState\":\"approved\"}'::jsonb",
+      "result || '{\"private\":true}'::jsonb", "'{\"error\":\"private diagnostic\"}'::jsonb"] $ \bad ->
+      bracket_ (execute ("ALTER FUNCTION event_operation_apply_transition" <> signature
+        <> " RENAME TO transition_http_saved; CREATE FUNCTION event_operation_apply_transition(bigint,bigint,uuid,bigint,text,text,text,text) RETURNS jsonb LANGUAGE plpgsql AS $$ DECLARE result jsonb; BEGIN result := transition_http_saved($1,$2,$3,$4,$5,$6,$7,$8); RETURN " <> bad <> "; END $$")) restore $ do
+        post 84 400 owner (body 1 "planning") >>= expectError 500 "invalid_database_response"
+        scalar "SELECT version FROM event_operation_event_state WHERE event_id=84" `shouldReturn` 1
+        scalar "SELECT count(*) FROM event_operation_event_state WHERE event_id=84 AND canonical_state='draft'" `shouldReturn` 1
+        forM_ ["event_operation_transition", "event_operation_audit_event", "event_operation_command_receipt"] $
+          \table -> countFor table 84 `shouldReturn` 0
+    first <- post 84 400 owner (body 1 "planning")
+    expectStatus 200 first
+    replay <- post 84 400 owner (body 1 "planning")
+    expectReplay first replay
+    countFor "event_operation_transition" 84 `shouldReturn` 1
+    countFor "event_operation_command_receipt" 84 `shouldReturn` 1
+
   it "returns exact historical replay and conflicts on a changed command body" $ do
     first <- post 62 4 owner (body 1 "planning")
     expectStatus 200 first

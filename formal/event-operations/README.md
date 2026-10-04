@@ -158,6 +158,15 @@ The runner requires the exact named failures from all three negative controls.
 - `CommandBoundary.tla`: application validation before committing a SQL command and exact
   receipt binding, complementary to `SessionFence` and `RaciReassignment`; see the
   [HTTP contract](../../docs/event-operations/raci-api-contract.md). Does not prove SQL refinement.
+  The same obligation applies to lifecycle transitions: their database adapter validates
+  event, command, target state and exact next version inside the session transaction.
+  The lifecycle HTTP regression corrupts real SQL results after writes and checks rollback
+  of state, transition, audit and receipt rows while retaining the existing error envelope.
+  The feature-disable boundary is checked separately against PostgreSQL: an enabled flag
+  row is share-locked before the event row until transaction completion. Both command-first
+  and disable-first orders are observed at READ COMMITTED, REPEATABLE READ and SERIALIZABLE;
+  the pre-fix implementation is a failing control. These executions do not establish a
+  universal refinement proof or authorize enabling the feature in production.
 
 - `RaciReassignment.tla`: private planning-stage assignment replacement, retry before
   expected-version comparison, task-scoped keys and atomic obligation/audit commit.

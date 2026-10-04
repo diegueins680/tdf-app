@@ -18,12 +18,14 @@ module TDF.EventOperations.DatabaseBoundary
   , loadRaciEditorContext
   , decodeTaskCompletionRows
   , completeTask
+  , decodeTransitionRows
+  , applyTransition
   ) where
 
 import Control.Exception
   ( Exception, SomeAsyncException, SomeException, fromException, throwIO, tryJust )
 import Control.Monad.IO.Class (liftIO)
-import Data.Aeson (Value(..), Result(..), fromJSON, eitherDecodeStrict', object, (.=))
+import Data.Aeson (Value(..), Result(..), fromJSON, toJSON, eitherDecodeStrict', object, (.=))
 import qualified Data.Aeson.KeyMap as KM
 import Data.Int (Int64)
 import qualified Data.Set as Set
@@ -37,19 +39,24 @@ import Database.PostgreSQL.Simple (SqlError(..))
 
 import TDF.EventOperations.Types
 
-data DatabaseFailure = TransactionConflict | DatabaseUnavailable
+data DatabaseFailure = TransactionConflict | DatabaseUnavailable | InvalidTransitionResponse
   deriving (Eq, Show)
 
 -- No raw response or decoder diagnostic is retained in this exception.
 data SnapshotDecodeError = SnapshotDecodeError deriving (Eq, Show)
 instance Exception SnapshotDecodeError
 
+data TransitionDecodeError = TransitionDecodeError deriving (Show)
+instance Exception TransitionDecodeError
+
 classifyDatabaseFailure :: SomeException -> Maybe DatabaseFailure
 classifyDatabaseFailure failure = case fromException failure :: Maybe SomeAsyncException of
   Just _ -> Nothing
-  Nothing -> Just $ case fromException failure :: Maybe SqlError of
-    Just sqlFailure | sqlState sqlFailure `elem` ["40001", "40P01"] -> TransactionConflict
-    _ -> DatabaseUnavailable
+  Nothing -> Just $ case fromException failure :: Maybe TransitionDecodeError of
+    Just _ -> InvalidTransitionResponse
+    Nothing -> case fromException failure :: Maybe SqlError of
+      Just sqlFailure | sqlState sqlFailure `elem` ["40001", "40P01"] -> TransactionConflict
+      _ -> DatabaseUnavailable
 
 databaseFailureLog :: DatabaseFailure -> Value
 databaseFailureLog failure = object
@@ -61,10 +68,67 @@ databaseFailureLog failure = object
     category = case failure of
       TransactionConflict -> "transaction_conflict"
       DatabaseUnavailable -> "unavailable"
+      InvalidTransitionResponse -> "invalid_transition_response"
 
 -- tryJust rethrows asynchronous cancellation, allowing pool/transaction cleanup.
 tryDatabaseAction :: IO a -> IO (Either DatabaseFailure a)
 tryDatabaseAction = tryJust classifyDatabaseFailure
+
+decodeTransitionRows :: Int64 -> UUID.UUID -> EventTransitionCommand
+  -> [Single (Maybe Text)]
+  -> Either SnapshotDecodeError (Either Text EventTransitionOutcomeDTO)
+decodeTransitionRows eventId commandId command [Single (Just raw)] =
+  case eitherDecodeStrict' (TE.encodeUtf8 raw) of
+    Right value@(Object fields) -> case KM.lookup "error" fields of
+      Just (String code) | code `elem` allowedErrors && validError fields -> Right (Left code)
+      Nothing -> case fromJSON value of
+        Success result
+          | all isSafePositiveInteger [eventId, etcExpectedVersion command, etoVersion result]
+          && etoEventId result == eventId && etoCommandId result == commandId
+          && etoCanonicalState result == etcTargetState command
+          && toInteger (etoVersion result) == toInteger (etcExpectedVersion command) + 1
+          && etoAuthorityCode result `elem` ["owner", "event_approver", "finance_approver", "records_manager"]
+            -> Right (Right result)
+        _ -> Left SnapshotDecodeError
+      _ -> Left SnapshotDecodeError
+    _ -> Left SnapshotDecodeError
+  where
+    allowedErrors = ["feature_disabled", "invalid_request", "not_found", "forbidden",
+      "idempotency_conflict", "version_conflict", "transition_invalid",
+      "transition_effects_not_ready", "reason_required", "separation_of_duties"]
+    -- Preserve both minimal errors and the existing bound rejection/replay envelope.
+    validError fields = KM.size fields == 1 ||
+      (all (`elem` ["error", "eventId", "commandId", "canonicalState", "currentVersion", "replayed"])
+        (KM.keys fields)
+       && KM.lookup "eventId" fields == Just (toJSON eventId)
+       && KM.lookup "commandId" fields == Just (toJSON commandId)
+       && optionalState (KM.lookup "canonicalState" fields)
+       && optionalVersion (KM.lookup "currentVersion" fields)
+       && optionalReplay (KM.lookup "replayed" fields))
+    optionalState Nothing = True
+    optionalState (Just value) = case fromJSON value :: Result EventLifecycleState of
+      Success _ -> True
+      Error _ -> False
+    optionalVersion Nothing = True
+    optionalVersion (Just value) = case fromJSON value :: Result Int64 of
+      Success version -> isSafePositiveInteger version
+      Error _ -> False
+    optionalReplay Nothing = True
+    optionalReplay (Just (Bool _)) = True
+    optionalReplay _ = False
+decodeTransitionRows _ _ _ _ = Left SnapshotDecodeError
+
+-- Throw before runSqlPool can commit state, transition, audit or receipt writes.
+applyTransition :: Int64 -> Int64 -> UUID.UUID -> EventTransitionCommand -> Text
+  -> SqlPersistT IO (Either Text EventTransitionOutcomeDTO)
+applyTransition eventId actorPartyId commandId command requestHash = do
+  rows <- rawSql "SELECT event_operation_apply_transition(?, ?, ?::uuid, ?, ?, ?, ?, ?)::text"
+    [PersistInt64 eventId, PersistInt64 actorPartyId, PersistText (UUID.toText commandId),
+     PersistInt64 (etcExpectedVersion command), PersistText (eventLifecycleStateText (etcTargetState command)),
+     maybe PersistNull PersistText (etcReason command), PersistText (etcCorrelationId command),
+     PersistText requestHash]
+  either (const (liftIO (throwIO TransitionDecodeError))) pure
+    (decodeTransitionRows eventId commandId command rows)
 
 decodeSnapshotRows
   :: Int64 -> [Single (Maybe Text)] -> Either SnapshotDecodeError (Maybe EventOperationSnapshotDTO)

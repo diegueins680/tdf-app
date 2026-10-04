@@ -360,10 +360,11 @@ DECLARE
     'command:' || target_command_id::TEXT
   );
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM event_operation_feature_flag flag
-    WHERE flag.feature_code = 'event.operations.api' AND flag.enabled
-  ) THEN
+  -- Serialize operator disable with the entire command, including receipt replay.
+  -- Match snapshot/task lock ordering: feature row before event state.
+  PERFORM 1 FROM event_operation_feature_flag flag
+    WHERE flag.feature_code = 'event.operations.api' AND flag.enabled FOR SHARE;
+  IF NOT FOUND THEN
     RETURN jsonb_build_object('error', 'feature_disabled');
   END IF;
 
@@ -378,14 +379,6 @@ BEGIN
   FOR UPDATE;
   IF NOT FOUND THEN
     RETURN jsonb_build_object('error', 'not_found');
-  END IF;
-
-  -- A lock wait must not retain a previously enabled feature decision.
-  IF NOT EXISTS (
-    SELECT 1 FROM event_operation_feature_flag flag
-    WHERE flag.feature_code = 'event.operations.api' AND flag.enabled
-  ) THEN
-    RETURN jsonb_build_object('error', 'feature_disabled');
   END IF;
 
   SELECT * INTO prior_receipt
