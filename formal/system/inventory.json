@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "5580bd0dada1a13679dcd2ba0dde4c43ddf2a6d3",
+  "mobileRevision": "1246147ecb5686fc30bbefd543713cd43e87d0c8",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -293,6 +293,7 @@
       "scripts/test-artist-merch-runtime.sh",
       "scripts/test-artist-merch-storefronts-migration.sh",
       "scripts/test-artist-self-service.sh",
+      "scripts/test-auth-recovery-migration.sh",
       "scripts/test-automatic-migrations-production-schema.sh",
       "scripts/test-canonical-payment-lifecycle-migration.sh",
       "scripts/test-catalog-production-cutover.sh",
@@ -1388,6 +1389,7 @@
       "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
       "tdf-hq/sql/2026-09-30_interaction_report_content_version.sql",
       "tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql",
+      "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2105,7 +2107,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "17df7a3a045c05035d05e54ece2202efd608af9483613e097a8a7ef136be3c69",
+      "sha256": "58c4b1fc25d6ccb42013b4e1c8ef6780e7ad45345d613cdc4aa63aef0c3526b2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2519,7 +2521,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "f4b3edac130587ce5675a39633f3d7c9a470bfc53c351157103f2d2f85515e52",
+      "sha256": "93bed1ebbb38d24d0e51fbb1565e4c6e0fcfd17502bcba83536271aeff869188",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2597,7 +2599,7 @@
     {
       "id": "SURFACE-1615c0a50aabc162",
       "path": "scripts/__tests__/provider-rollback.test.mjs",
-      "sha256": "844ee550d28b2ec0884b0d2792060ba97a826b26823207c51b32e5e9fce9245a",
+      "sha256": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3185,13 +3187,13 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "061167a0ebbbb1313ee1e41cda3f2e806bf47a9fddc9f3a60fdf2dd7fdfddff3",
+      "sha256": "c541d7ae3b38e6c0c55ed3d5f23c2dc5a68e51580392b7b7f3b909b5fa330c61",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-566be2960a2d6029",
       "path": "scripts/production-release.mjs",
-      "sha256": "23bb02c3e1d0517565f4cb0bfe22b794137c8b8fb427e22e2526a2179f66bb54",
+      "sha256": "f79231d797d83c953f1bf15d64e93d962e9b3bc72efe192c4243af6ccfe051ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3711,6 +3713,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2b91f113b39e2bf6",
+      "path": "scripts/test-auth-recovery-migration.sh",
+      "sha256": "795950845a26cb38a20ba6ebaa41d8d67c9e5d63aa9ec3889444a0f72f8eda56",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
       "sha256": "a0362cdf94afc7a3bd8d108075dcb88a453cd2ddf7dcc6e63fd30d594b834670",
@@ -4145,7 +4153,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "eb150cc70038dc3a979010049d60f07f67fcc52d98d3d752ba2a42059a0b5baa",
+      "sha256": "63893939763aec0eea4a7c9ffe74c34b0f08b57c2789464136801f2675d29ebc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4685,7 +4693,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "64bdd0d214daaee3a6b2aa5c1dc35e766c3a140b608e90a8e00a6e507ff05434",
+      "sha256": "3902818d9c4858118f7d0cdafda0a5f32533b683bb8fa1dd59ad244c0aed89d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8267,7 +8275,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "0393bc36a0788dbcf63c93e222a4ab493d13c62026d07d49d27f5a0f6bfb8a54",
+      "sha256": "e95d737fada4a5a1f45e3fdc4c1bf1c88361d77aac6dd6617316d3203950d2ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10245,6 +10253,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7100ef2b57c51e1c",
+      "path": "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
+      "sha256": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -11273,7 +11287,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "e6b468d13049965cb1c2890dcdce62a59d408842e1ba9bb678e2b3703370b1c8",
+      "sha256": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11747,7 +11761,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "c8bb937d220c853b825debd235c09462da09160c70dfa36aef30d0cd7543c220",
+      "sha256": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11771,7 +11785,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "61ea4d5ae55167aa92337c6292b0248988274885aedcedc677a3117ebc10aabd",
+      "sha256": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13415,7 +13429,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "64bdd0d214daaee3a6b2aa5c1dc35e766c3a140b608e90a8e00a6e507ff05434",
+      "sha256": "3902818d9c4858118f7d0cdafda0a5f32533b683bb8fa1dd59ad244c0aed89d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17944,6 +17958,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/RecoveryExpiry.cfg",
+      "sha256": "ba5b42ee5538275771e23bc917e77fda7787a78c8e6f35e4e4a0326061b663f3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RecoveryExpiry.tla",
+      "sha256": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/RecoveryExpiryLegacy.cfg",
+      "sha256": "cffabd1c35615f4962b8d435f4acb7b2139e7956eb839c15c3df1416a79e246d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RecoveryExpiryNoExpiry.cfg",
+      "sha256": "74ce3698b9cc61bc113feab95dbaf0af4e577d015a7032a8e660cb3a5614456c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RecoveryExpiryRebound.cfg",
+      "sha256": "e0de6a65fbc6008f1b14230ed6b413609414757a149d40084edc22e8e4107545",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RecoveryExpiryStaleClock.cfg",
+      "sha256": "4da264aa9560def6dbb1e10a301a6af59c6b3973b77aa5300c9c8fdf1d030669",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/ReservationOverride.cfg",
       "sha256": "d42367fad32145f991def9b5b8bdc47e0de76ad536ca659068bece1d24c45dcf",
       "authority": "inferred",
@@ -18869,7 +18925,7 @@
     },
     {
       "path": "formal/system/identity-lifecycle.md",
-      "sha256": "c85eaac5f0d52e1915d7a3edb137bd02824f7b7341e54c11216f53cd1f2c7840",
+      "sha256": "8777bd78f6ab61090305e2a404100617e8fed52091cb0cf9b5a1ada1c4c794ca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18897,14 +18953,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5fe46c55c98fcd6772054f6144477940d53c2ece95ddbbf7fd6472852fc19a90",
+      "sha256": "097449e0174f9a310558c2903f0ec3920eb335be1673b02ab9e400a776c51afd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "d73dc84d8ad384ea17f395f54acde2eecdb36ab6ddae55508009fe4777a3337f",
+      "sha256": "9437392b00125deaae0013ca30bc8ae26f984a64b7364aeeb683d757b4e667de",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19044,7 +19100,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "0393bc36a0788dbcf63c93e222a4ab493d13c62026d07d49d27f5a0f6bfb8a54",
+      "sha256": "e95d737fada4a5a1f45e3fdc4c1bf1c88361d77aac6dd6617316d3203950d2ba",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -22974,6 +23030,96 @@
         "CONSTANTS Reauthorize = TRUE FreshClock = TRUE Fence = FALSE",
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK NoUnauthorizedDisclosure ReceiptBindingPreserved",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RecoveryExpiry.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "CheckExpiry = TRUE",
+        "FreshClock = TRUE",
+        "RequireMetadata = TRUE",
+        "CheckBinding = TRUE",
+        "INVARIANTS",
+        "UnexpiredAtConsumption",
+        "LegacyFailsClosed",
+        "BoundCredential",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RecoveryExpiryLegacy.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "CheckExpiry = TRUE",
+        "FreshClock = TRUE",
+        "RequireMetadata = FALSE",
+        "CheckBinding = TRUE",
+        "INVARIANTS",
+        "UnexpiredAtConsumption",
+        "LegacyFailsClosed",
+        "BoundCredential",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RecoveryExpiryNoExpiry.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "CheckExpiry = FALSE",
+        "FreshClock = TRUE",
+        "RequireMetadata = TRUE",
+        "CheckBinding = TRUE",
+        "INVARIANTS",
+        "UnexpiredAtConsumption",
+        "LegacyFailsClosed",
+        "BoundCredential",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RecoveryExpiryRebound.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "CheckExpiry = TRUE",
+        "FreshClock = TRUE",
+        "RequireMetadata = TRUE",
+        "CheckBinding = FALSE",
+        "INVARIANTS",
+        "UnexpiredAtConsumption",
+        "LegacyFailsClosed",
+        "BoundCredential",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RecoveryExpiryStaleClock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "CheckExpiry = TRUE",
+        "FreshClock = FALSE",
+        "RequireMetadata = TRUE",
+        "CheckBinding = TRUE",
+        "INVARIANTS",
+        "UnexpiredAtConsumption",
+        "LegacyFailsClosed",
+        "BoundCredential",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
