@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -119,6 +119,24 @@
       "applicability": "Recovery expiry after lock waits",
       "decision": "adopted",
       "rationale": "Sample actual database time after lifecycle locks and floor UTC seconds consistently with the test adapter. Transaction-start time could accept a token expired while blocked."
+    },
+    {
+      "id": "RES-BUILD-001",
+      "source": "https://manpages.debian.org/bookworm/apt/apt-secure.8.en.html",
+      "title": "Debian apt-secure(8)",
+      "recommendation": "Authenticate archive metadata and reject repositories that lose authentication; insecure repository overrides undermine this chain of trust.",
+      "applicability": "Backend build and runtime image package installation",
+      "decision": "adopted",
+      "rationale": "Remove existing insecure overrides. This protects APT archive authenticity; it does not prove installed packages or upstream images free of vulnerabilities."
+    },
+    {
+      "id": "RES-BUILD-002",
+      "source": "https://manpages.debian.org/bookworm/apt/apt-get.8.en.html",
+      "title": "Debian bookworm apt-get(8) error-on option",
+      "recommendation": "Use --error-on=any on update to fail even on transient errors.",
+      "applicability": "Fail-closed image builds when a mirror or proxy fails",
+      "decision": "adopted",
+      "rationale": "Authenticated cached indexes alone do not establish a successful refresh; stop the build and diagnose infrastructure."
     }
   ]
 }

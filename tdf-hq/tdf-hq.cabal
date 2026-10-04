@@ -287,6 +287,7 @@ test-suite tdf-hq-test
   other-modules:
     TDF.LiveIntakeIdentitySpec
     TDF.ProviderIdentitySpec
+    TDF.CredentialLifecycleSpec
     TDF.CourseIdentitySpec
     TDF.TrialIdentitySpec
     TDF.MarketplaceIdentitySpec

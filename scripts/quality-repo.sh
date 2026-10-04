@@ -13,6 +13,8 @@ run_npm() {
 }
 
 echo "▶ Verifying repository-wide invariants"
+node "$ROOT/scripts/check-build-trust.mjs"
+node --test "$ROOT/scripts/__tests__/build-trust.test.mjs"
 run_npm run generate:studio-internship-audit --prefix "$ROOT"
 git -C "$ROOT" diff --exit-code -- \
   docs/internships/studio-audit/generated-summary.json \

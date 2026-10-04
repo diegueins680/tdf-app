@@ -70,6 +70,7 @@
       "scripts/__tests__/artist-claim-target-runtime.mjs",
       "scripts/__tests__/artist-enrichment.test.mjs",
       "scripts/__tests__/artist-import-idempotency.test.mjs",
+      "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
       "scripts/__tests__/ci-change-scope.test.mjs",
@@ -135,6 +136,7 @@
       "scripts/capture-feature-audit-visuals.mjs",
       "scripts/capture-music-directory-visuals.mjs",
       "scripts/catalog-list-audit.mjs",
+      "scripts/check-build-trust.mjs",
       "scripts/check-generated-api.mjs",
       "scripts/check-messaging-token.mjs",
       "scripts/ci-change-scope.mjs",
@@ -301,6 +303,7 @@
       "scripts/test-contextual-reputation-worker-migration.sh",
       "scripts/test-course-checkout-runtime-migration.sh",
       "scripts/test-course-identity.sh",
+      "scripts/test-credential-lifecycle.sh",
       "scripts/test-ddex-partner-legacy-compatibility.sh",
       "scripts/test-directory-event-visibility-migration.sh",
       "scripts/test-distribution-accounting-migration.sh",
@@ -1068,7 +1071,6 @@
       "tdf-hq/docs/openapi/trials-identity.yaml",
       "tdf-hq/docs/openapi/user-roles.yaml",
       "tdf-hq/migrations/0001_create_social_events.sql",
-      "tdf-hq/package.yaml",
       "tdf-hq/production-entrypoint.sh",
       "tdf-hq/schemas/_tdf_common.schema.json",
       "tdf-hq/schemas/anexo_cronograma.schema.json",
@@ -1622,6 +1624,7 @@
       "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
       "tdf-hq/test/TDF/CorsSpec.hs",
       "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+      "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
       "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
       "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
       "tdf-hq/test/TDF/Directory/PolicySpec.hs",
@@ -2107,7 +2110,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "58c4b1fc25d6ccb42013b4e1c8ef6780e7ad45345d613cdc4aa63aef0c3526b2",
+      "sha256": "38d73e3df3a57efd43b9aa3181e2e24e8bf4e91104477e7399e175bec2f5e57c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2372,6 +2375,12 @@
       "id": "SURFACE-35a1af26327814c1",
       "path": "scripts/__tests__/artist-import-idempotency.test.mjs",
       "sha256": "9c609808b544c0e00863b2f54e6c41bdd348bf443279c15f4e3dcb291b69ed9c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d06f40dc4caf72e4",
+      "path": "scripts/__tests__/build-trust.test.mjs",
+      "sha256": "f4a3e27d0f5d5e9751ef5e7cc88a894f3fb53cb00807c3dc6569fa8d5741a0e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2762,6 +2771,12 @@
       "id": "SURFACE-74289e89f4a7d171",
       "path": "scripts/catalog-list-audit.mjs",
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-26a97266f867ecd7",
+      "path": "scripts/check-build-trust.mjs",
+      "sha256": "bda659b3bd46171c7043e5e7a6f945f459ea452f1c340be0dbc57dcd9342749f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3217,7 +3232,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "d09044d6bf4c9da5bb575a8d39121ff72dca35735dd314c88cd70064355a02a9",
+      "sha256": "3ac9522552153ccea4156a939a85206d7f229e9c0ff887fdbf9484071c40487f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3758,6 +3773,12 @@
       "id": "SURFACE-2984fa67245a1328",
       "path": "scripts/test-course-identity.sh",
       "sha256": "a5015eb97b9548529eb7b7165379ed7c78f2c62a8d8186707b131927870cbbd9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a05d9dbe9017a8ac",
+      "path": "scripts/test-credential-lifecycle.sh",
+      "sha256": "6f2c2eac057aa22a4b4c856245bb46367de186f8522e49381b5172d8f808a03e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8161,13 +8182,13 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "5aa9a5edbb824f2d1cc44a111b948412ab66e88fce0f78da9d9f4a5a66684763",
+      "sha256": "d5afe1363da6c68cba251ab928fe10ad4c47aafea2924c27402e50c9d323fb1a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-355fc91289eee809",
       "path": "tdf-hq/Dockerfile.runtime",
-      "sha256": "f58798e9b40ecd86aa804b08f26e529fb0cb110bbcfd0e34cdd718386c9b9eb8",
+      "sha256": "cc561dc926a491699de7b34ad3d01e1dd0e13d53cdc5dc87484aeb7e303129b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8324,12 +8345,6 @@
       "id": "SURFACE-b3b38a6c8f715e98",
       "path": "tdf-hq/migrations/0001_create_social_events.sql",
       "sha256": "40adf70e3845cb1190659848fa3740298e9b5dede6102028f78460319b043133",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-24e1cdd050cd5b9b",
-      "path": "tdf-hq/package.yaml",
-      "sha256": "8a6c09592e8c5ed5c56be182ee7903f1cf2be835f752ed999867e6bbca77b665",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11545,7 +11560,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "65d0626c9d0e3d3b7e239986d0e0455f00afeffefe48ba8c9b669dbc0a41872c",
+      "sha256": "0b10427dbe46318850e913dd4e669342cec2fb94102533f1734a7c43b4907af1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11587,7 +11602,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "f117f022a1e8a6f344402b1ab9b811ed6b989b6ea7964fadbba830a0cd2cfa17",
+      "sha256": "a784abd416316f1664cae7570cd90e0fae7adf98418723516d7b9ce396f1ab38",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11648,6 +11663,12 @@
       "id": "SURFACE-d181bc4924c66a49",
       "path": "tdf-hq/test/TDF/CourseIdentitySpec.hs",
       "sha256": "dda271fddc5136622ea77685a08fc700286fc86c17a818a80cbb992a68840d9f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f0dabee697205b0c",
+      "path": "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+      "sha256": "e6c97c5f203f9f6803bfa945492ed38069efad59619c119dca8e2db0addbd1ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14312,7 +14333,7 @@
   "artifacts": [
     {
       "path": "AI_WORKFLOW.md",
-      "sha256": "c9cf90d49481fc4047dd22804762c118e9b3cb9f79cbae862d70d37e4fd5939b",
+      "sha256": "fffce07bc6eb5be9e72bf9472d409307f0fa768d7227b6dba56c96b229df4dc8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -14777,6 +14798,13 @@
       "sha256": "e2f1d41df2782cfc07ad1398079ba6b343cb3f9ca9d708ffecb7e8178ac8bb5e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/archive/backend-package-legacy.yaml",
+      "sha256": "7fcaf9bb624e6eaa34fbba81cfd5df061012f6056367b44d624332048fd50951",
+      "authority": "historical",
+      "authorityBasis": "Status: historical; retired by AUTHORITY-011",
       "kind": "requirement-candidate"
     },
     {
@@ -18897,7 +18925,14 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "1139402b4adb998979164f539628924aaf58169b2f1082964dbffa01914fe543",
+      "sha256": "2cdde405702c13208c8f75e09125cde83d1f5afeb341470e801e7fd3c933572e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/build-trust.md",
+      "sha256": "a151c33756459b9de9133382fa93d32dec616abf063c5ac6401f6954c89aef4f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18925,7 +18960,7 @@
     },
     {
       "path": "formal/system/identity-lifecycle.md",
-      "sha256": "8777bd78f6ab61090305e2a404100617e8fed52091cb0cf9b5a1ada1c4c794ca",
+      "sha256": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18953,14 +18988,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "097449e0174f9a310558c2903f0ec3920eb335be1673b02ab9e400a776c51afd",
+      "sha256": "2bb40affbee19f74485935beb1051e758691fedfd2b640a9bd26915f431f1500",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "9437392b00125deaae0013ca30bc8ae26f984a64b7364aeeb683d757b4e667de",
+      "sha256": "e5116e74584b5b589ee6e1fdcb94bfb815af7dc7a744fb2f2a88582dafa286b4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

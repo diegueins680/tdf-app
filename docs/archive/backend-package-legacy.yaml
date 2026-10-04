@@ -1,3 +1,7 @@
+Status: historical; retired by AUTHORITY-011
+# HISTORICAL ONLY — retired 2026-10-04 (AUTHORITY-011).
+# Active package authority: tdf-hq/tdf-hq.cabal via tdf-hq/stack.yaml.
+# Never copy this obsolete Hpack description into the active package directory.
 name: tdf-hq
 version: 1.0.0
 github: "diegueins680/tdf-app"

@@ -1178,7 +1178,9 @@
       ],
       "tests": [
         "scripts/__tests__/identity-http-runtime.mjs",
-        "tdf-hq/test/TDF/ProviderIdentitySpec.hs"
+        "tdf-hq/test/TDF/ProviderIdentitySpec.hs",
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+        "scripts/test-credential-lifecycle.sh"
       ],
       "id": "ID-SESSION-001",
       "title": "Credential mutation invalidates existing interactive sessions atomically",
@@ -1469,6 +1471,140 @@
         "scripts/production-release.mjs",
         "scripts/production-migrations.json"
       ]
+    },
+    {
+      "id": "SYS-BUILD-001",
+      "title": "Single backend package authority",
+      "statement": "Build and test the backend with the Stack-selected toolchain and hand-maintained Cabal package; the retired Hpack description must remain outside the active package.",
+      "domain": "SYS",
+      "authority": "inferred",
+      "source": "formal/system/authority-decisions.json; formal/system/research.json",
+      "property": "No active tdf-hq/package.yaml; Stack and Cabal package definitions exist.",
+      "contract": "formal/system/build-trust.md",
+      "actors": [
+        "CI image builder",
+        "Developer using Stack",
+        "Release operator"
+      ],
+      "preconditions": [
+        "Reviewed source checkout and declared build inputs; registry and toolchain infrastructure are trusted separately."
+      ],
+      "inputs": [
+        "Stack snapshot, Cabal package and checked-in Docker image recipes"
+      ],
+      "state": {
+        "initial": "unvalidated source",
+        "terminal": [
+          "source policy rejected",
+          "source policy accepted; runtime build still required"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate source policy before build; require actual build success before release eligibility."
+      ],
+      "forbiddenTransitions": [
+        "Treat a source-policy pass as successful compilation or an authenticated image build.",
+        "Disable package authentication to recover from network failure."
+      ],
+      "effects": [
+        "Source-policy rejection blocks the repository gate.",
+        "No database or production mutation is performed by this checker."
+      ],
+      "authorization": "Reviewed changes to package/image inputs follow the normal protected branch and release review policy.",
+      "privacy": "Build checks do not need application/provider credentials.",
+      "concurrency": "Checks read one candidate checkout; source changes require a new receipt.",
+      "idempotency": "Repeated source checks at identical bytes must return the same result.",
+      "failure": "Abort the gate; preserve failing evidence and repair the input or build infrastructure.",
+      "recovery": "Rebuild from reviewed authentic inputs; never weaken archive trust to restore availability.",
+      "observability": "Retain source SHA, test mutations, command, exit status and actual CI image-build logs.",
+      "implementation": [
+        "tdf-hq/stack.yaml",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/check-build-trust.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/build-trust.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Deterministic source-policy checks with intentionally invalid actual-recipe mutations; full candidate build remains necessary.",
+      "evidence": "build-trust-controls.log and current CI image-build receipt",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "high for the explicitly recognized source forms; no claim about arbitrary shell evaluation or upstream provenance",
+      "ambiguity": [
+        "Base-image signing, mutable tags and reproducible binaries remain outside this scoped checker."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local source-policy checks and negative controls pass; exact final candidate compilation/image construction and deployed correspondence remain pending."
+      }
+    },
+    {
+      "id": "DEPLOY-BUILD-001",
+      "title": "Authenticated operating-system package inputs",
+      "statement": "Backend image recipes must reject unsigned archive metadata, unauthenticated packages and expired metadata; proxy or mirror failures must stop construction.",
+      "domain": "DEPLOY",
+      "authority": "inferred",
+      "source": "formal/system/authority-decisions.json; formal/system/research.json",
+      "property": "Every declared APT update/install retains explicit authentication/freshness policy and no recognized bypass.",
+      "contract": "formal/system/build-trust.md",
+      "actors": [
+        "CI image builder",
+        "Developer using Stack",
+        "Release operator"
+      ],
+      "preconditions": [
+        "Reviewed source checkout and declared build inputs; registry and toolchain infrastructure are trusted separately."
+      ],
+      "inputs": [
+        "Stack snapshot, Cabal package and checked-in Docker image recipes"
+      ],
+      "state": {
+        "initial": "unvalidated source",
+        "terminal": [
+          "source policy rejected",
+          "source policy accepted; runtime build still required"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate source policy before build; require actual build success before release eligibility."
+      ],
+      "forbiddenTransitions": [
+        "Treat a source-policy pass as successful compilation or an authenticated image build.",
+        "Disable package authentication to recover from network failure."
+      ],
+      "effects": [
+        "Source-policy rejection blocks the repository gate.",
+        "No database or production mutation is performed by this checker."
+      ],
+      "authorization": "Reviewed changes to package/image inputs follow the normal protected branch and release review policy.",
+      "privacy": "Build checks do not need application/provider credentials.",
+      "concurrency": "Checks read one candidate checkout; source changes require a new receipt.",
+      "idempotency": "Repeated source checks at identical bytes must return the same result.",
+      "failure": "Abort the gate; preserve failing evidence and repair the input or build infrastructure.",
+      "recovery": "Rebuild from reviewed authentic inputs; never weaken archive trust to restore availability.",
+      "observability": "Retain source SHA, test mutations, command, exit status and actual CI image-build logs.",
+      "implementation": [
+        "tdf-hq/Dockerfile",
+        "tdf-hq/Dockerfile.runtime",
+        "scripts/check-build-trust.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/build-trust.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Deterministic source-policy checks with intentionally invalid actual-recipe mutations; full candidate build remains necessary.",
+      "evidence": "build-trust-controls.log and current CI image-build receipt",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for the explicitly recognized source forms; no claim about arbitrary shell evaluation or upstream provenance",
+      "ambiguity": [
+        "Base-image signing, mutable tags and reproducible binaries remain outside this scoped checker."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local source-policy checks and negative controls pass; exact final candidate compilation/image construction and deployed correspondence remain pending."
+      }
     }
   ]
 }

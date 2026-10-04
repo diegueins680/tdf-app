@@ -596,6 +596,7 @@ import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
+import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
@@ -17089,6 +17090,7 @@ main = hspec $ do
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
     ProviderIdentitySpec.spec
+    CredentialLifecycleSpec.spec
     LiveIntakeIdentitySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec

@@ -214,3 +214,10 @@ Remaining recovery obligations include rate limits, secure hashed token storage,
 notification/delivery retry policy and whether to replace automatic post-reset
 login with a separate login step. The expiry repair does not claim those OWASP
 recommendations are already implemented.
+
+`CredentialLifecycleSpec` calls the actual `completeGoogleLogin` helper on the
+fully migrated PostgreSQL fixture using a synthetic already-verified issuer/subject.
+Controlled barriers exercise disable-before-login and issuance-before-disable;
+the first must deny login and the second must revoke the issued Google session.
+This boundary does not exercise provider signature verification or contact Google.
+The runner fails on an empty selected suite; its execution remains required.

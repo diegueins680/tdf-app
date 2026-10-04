@@ -1179,7 +1179,9 @@
       ],
       "tests": [
         "scripts/__tests__/identity-http-runtime.mjs",
-        "tdf-hq/test/TDF/ProviderIdentitySpec.hs"
+        "tdf-hq/test/TDF/ProviderIdentitySpec.hs",
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+        "scripts/test-credential-lifecycle.sh"
       ],
       "id": "ID-SESSION-001",
       "title": "Credential mutation invalidates existing interactive sessions atomically",
@@ -1470,10 +1472,144 @@
         "scripts/production-release.mjs",
         "scripts/production-migrations.json"
       ]
+    },
+    {
+      "id": "SYS-BUILD-001",
+      "title": "Single backend package authority",
+      "statement": "Build and test the backend with the Stack-selected toolchain and hand-maintained Cabal package; the retired Hpack description must remain outside the active package.",
+      "domain": "SYS",
+      "authority": "inferred",
+      "source": "formal/system/authority-decisions.json; formal/system/research.json",
+      "property": "No active tdf-hq/package.yaml; Stack and Cabal package definitions exist.",
+      "contract": "formal/system/build-trust.md",
+      "actors": [
+        "CI image builder",
+        "Developer using Stack",
+        "Release operator"
+      ],
+      "preconditions": [
+        "Reviewed source checkout and declared build inputs; registry and toolchain infrastructure are trusted separately."
+      ],
+      "inputs": [
+        "Stack snapshot, Cabal package and checked-in Docker image recipes"
+      ],
+      "state": {
+        "initial": "unvalidated source",
+        "terminal": [
+          "source policy rejected",
+          "source policy accepted; runtime build still required"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate source policy before build; require actual build success before release eligibility."
+      ],
+      "forbiddenTransitions": [
+        "Treat a source-policy pass as successful compilation or an authenticated image build.",
+        "Disable package authentication to recover from network failure."
+      ],
+      "effects": [
+        "Source-policy rejection blocks the repository gate.",
+        "No database or production mutation is performed by this checker."
+      ],
+      "authorization": "Reviewed changes to package/image inputs follow the normal protected branch and release review policy.",
+      "privacy": "Build checks do not need application/provider credentials.",
+      "concurrency": "Checks read one candidate checkout; source changes require a new receipt.",
+      "idempotency": "Repeated source checks at identical bytes must return the same result.",
+      "failure": "Abort the gate; preserve failing evidence and repair the input or build infrastructure.",
+      "recovery": "Rebuild from reviewed authentic inputs; never weaken archive trust to restore availability.",
+      "observability": "Retain source SHA, test mutations, command, exit status and actual CI image-build logs.",
+      "implementation": [
+        "tdf-hq/stack.yaml",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/check-build-trust.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/build-trust.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Deterministic source-policy checks with intentionally invalid actual-recipe mutations; full candidate build remains necessary.",
+      "evidence": "build-trust-controls.log and current CI image-build receipt",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "high for the explicitly recognized source forms; no claim about arbitrary shell evaluation or upstream provenance",
+      "ambiguity": [
+        "Base-image signing, mutable tags and reproducible binaries remain outside this scoped checker."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local source-policy checks and negative controls pass; exact final candidate compilation/image construction and deployed correspondence remain pending."
+      }
+    },
+    {
+      "id": "DEPLOY-BUILD-001",
+      "title": "Authenticated operating-system package inputs",
+      "statement": "Backend image recipes must reject unsigned archive metadata, unauthenticated packages and expired metadata; proxy or mirror failures must stop construction.",
+      "domain": "DEPLOY",
+      "authority": "inferred",
+      "source": "formal/system/authority-decisions.json; formal/system/research.json",
+      "property": "Every declared APT update/install retains explicit authentication/freshness policy and no recognized bypass.",
+      "contract": "formal/system/build-trust.md",
+      "actors": [
+        "CI image builder",
+        "Developer using Stack",
+        "Release operator"
+      ],
+      "preconditions": [
+        "Reviewed source checkout and declared build inputs; registry and toolchain infrastructure are trusted separately."
+      ],
+      "inputs": [
+        "Stack snapshot, Cabal package and checked-in Docker image recipes"
+      ],
+      "state": {
+        "initial": "unvalidated source",
+        "terminal": [
+          "source policy rejected",
+          "source policy accepted; runtime build still required"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate source policy before build; require actual build success before release eligibility."
+      ],
+      "forbiddenTransitions": [
+        "Treat a source-policy pass as successful compilation or an authenticated image build.",
+        "Disable package authentication to recover from network failure."
+      ],
+      "effects": [
+        "Source-policy rejection blocks the repository gate.",
+        "No database or production mutation is performed by this checker."
+      ],
+      "authorization": "Reviewed changes to package/image inputs follow the normal protected branch and release review policy.",
+      "privacy": "Build checks do not need application/provider credentials.",
+      "concurrency": "Checks read one candidate checkout; source changes require a new receipt.",
+      "idempotency": "Repeated source checks at identical bytes must return the same result.",
+      "failure": "Abort the gate; preserve failing evidence and repair the input or build infrastructure.",
+      "recovery": "Rebuild from reviewed authentic inputs; never weaken archive trust to restore availability.",
+      "observability": "Retain source SHA, test mutations, command, exit status and actual CI image-build logs.",
+      "implementation": [
+        "tdf-hq/Dockerfile",
+        "tdf-hq/Dockerfile.runtime",
+        "scripts/check-build-trust.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/build-trust.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Deterministic source-policy checks with intentionally invalid actual-recipe mutations; full candidate build remains necessary.",
+      "evidence": "build-trust-controls.log and current CI image-build receipt",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for the explicitly recognized source forms; no claim about arbitrary shell evaluation or upstream provenance",
+      "ambiguity": [
+        "Base-image signing, mutable tags and reproducible binaries remain outside this scoped checker."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local source-policy checks and negative controls pass; exact final candidate compilation/image construction and deployed correspondence remain pending."
+      }
     }
   ],
   "sourceFingerprints": {
-    ".github/workflows/ci.yml": "58c4b1fc25d6ccb42013b4e1c8ef6780e7ad45345d613cdc4aa63aef0c3526b2",
+    ".github/workflows/ci.yml": "38d73e3df3a57efd43b9aa3181e2e24e8bf4e91104477e7399e175bec2f5e57c",
     ".github/workflows/event-operations-formal.yml": "210f59ede61c720ebd87399246c98dc9e58903e856dd01356c8336384d70feed",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
@@ -1482,6 +1618,7 @@
     "formal/event-operations/RecoveryExpiry.tla": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
+    "scripts/__tests__/build-trust.test.mjs": "f4a3e27d0f5d5e9751ef5e7cc88a894f3fb53cb00807c3dc6569fa8d5741a0e4",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "891bc1ec960707fd01853e47f585e8fcfe609dde84964dd058cdf88200f76dcb",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -1491,6 +1628,7 @@
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/verification-evidence.test.mjs": "62e23312cd0f60dd3ec08597ca45071071f116bd10d15303c8b9bab55668fb84",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
+    "scripts/check-build-trust.mjs": "bda659b3bd46171c7043e5e7a6f945f459ea452f1c340be0dbc57dcd9342749f",
     "scripts/check-generated-api.mjs": "216256d09571f6fe741460f64541c62f0e341ccbd975db8353964d9b41d8d09c",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/lib/verification-evidence.mjs": "57a76761fbe10452d1c664c3a0ff6b0fe291a1267dd7e9007b1f09fa1657f525",
@@ -1499,6 +1637,7 @@
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
     "scripts/specification-inventory.py": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
     "scripts/test-auth-recovery-migration.sh": "795950845a26cb38a20ba6ebaa41d8d67c9e5d63aa9ec3889444a0f72f8eda56",
+    "scripts/test-credential-lifecycle.sh": "6f2c2eac057aa22a4b4c856245bb46367de186f8522e49381b5172d8f808a03e",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
@@ -1513,6 +1652,8 @@
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "d7e2e4ba531266075903e7aedc88927a6af29745110530347cdb72a3ea9319b8",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "366cdb1ebadb0ff0494260e7c98edfd6da1d622f70df415b5627bf60dbdd95ad",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
+    "tdf-hq/Dockerfile": "d5afe1363da6c68cba251ab928fe10ad4c47aafea2924c27402e50c9d323fb1a",
+    "tdf-hq/Dockerfile.runtime": "cc561dc926a491699de7b34ad3d01e1dd0e13d53cdc5dc87484aeb7e303129b8",
     "tdf-hq/assets/feature-registry.json": "5f4665b6b15488748eb7fa69a585dd88fd7e94c8d5f7437cf99bb161783b28b0",
     "tdf-hq/docs/openapi/api.yaml": "e95d737fada4a5a1f45e3fdc4c1bf1c88361d77aac6dd6617316d3203950d2ba",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
@@ -1529,8 +1670,11 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
+    "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+    "tdf-hq/tdf-hq.cabal": "0b10427dbe46318850e913dd4e669342cec2fb94102533f1734a7c43b4907af1",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
+    "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e6c97c5f203f9f6803bfa945492ed38069efad59619c119dca8e2db0addbd1ed",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
@@ -1993,6 +2137,18 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": [
+      {
+        "requirement": "ID-SESSION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-credential-lifecycle.sh": [
+      {
+        "requirement": "ID-SESSION-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/CredentialLifecycle.tla": [
       {
         "requirement": "ID-SESSION-001",
@@ -2056,6 +2212,50 @@
         "requirement": "ID-SESSION-003",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq/stack.yaml": [
+      {
+        "requirement": "SYS-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/tdf-hq.cabal": [
+      {
+        "requirement": "SYS-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/check-build-trust.mjs": [
+      {
+        "requirement": "SYS-BUILD-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/build-trust.test.mjs": [
+      {
+        "requirement": "SYS-BUILD-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-BUILD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/Dockerfile": [
+      {
+        "requirement": "DEPLOY-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/Dockerfile.runtime": [
+      {
+        "requirement": "DEPLOY-BUILD-001",
+        "relationship": "implementation"
+      }
     ]
   },
   "surfaces": [
@@ -2097,7 +2297,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "58c4b1fc25d6ccb42013b4e1c8ef6780e7ad45345d613cdc4aa63aef0c3526b2",
+      "sha256": "38d73e3df3a57efd43b9aa3181e2e24e8bf4e91104477e7399e175bec2f5e57c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -2444,6 +2644,22 @@
       "sha256": "9c609808b544c0e00863b2f54e6c41bdd348bf443279c15f4e3dcb291b69ed9c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-d06f40dc4caf72e4",
+      "path": "scripts/__tests__/build-trust.test.mjs",
+      "sha256": "f4a3e27d0f5d5e9751ef5e7cc88a894f3fb53cb00807c3dc6569fa8d5741a0e4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-BUILD-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-BUILD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d96822f506e6f794",
@@ -2972,6 +3188,22 @@
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-26a97266f867ecd7",
+      "path": "scripts/check-build-trust.mjs",
+      "sha256": "bda659b3bd46171c7043e5e7a6f945f459ea452f1c340be0dbc57dcd9342749f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-BUILD-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9306a961784ddefa",
@@ -3534,7 +3766,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "d09044d6bf4c9da5bb575a8d39121ff72dca35735dd314c88cd70064355a02a9",
+      "sha256": "3ac9522552153ccea4156a939a85206d7f229e9c0ff887fdbf9484071c40487f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -4186,6 +4418,18 @@
       "sha256": "a5015eb97b9548529eb7b7165379ed7c78f2c62a8d8186707b131927870cbbd9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-a05d9dbe9017a8ac",
+      "path": "scripts/test-credential-lifecycle.sh",
+      "sha256": "6f2c2eac057aa22a4b4c856245bb46367de186f8522e49381b5172d8f808a03e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-a4e14129b2b375a9",
@@ -9411,16 +9655,26 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "5aa9a5edbb824f2d1cc44a111b948412ab66e88fce0f78da9d9f4a5a66684763",
+      "sha256": "d5afe1363da6c68cba251ab928fe10ad4c47aafea2924c27402e50c9d323fb1a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-355fc91289eee809",
       "path": "tdf-hq/Dockerfile.runtime",
-      "sha256": "f58798e9b40ecd86aa804b08f26e529fb0cb110bbcfd0e34cdd718386c9b9eb8",
+      "sha256": "cc561dc926a491699de7b34ad3d01e1dd0e13d53cdc5dc87484aeb7e303129b8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e9aa9f40d6e4aec3",
@@ -9620,13 +9874,6 @@
       "id": "SURFACE-b3b38a6c8f715e98",
       "path": "tdf-hq/migrations/0001_create_social_events.sql",
       "sha256": "40adf70e3845cb1190659848fa3740298e9b5dede6102028f78460319b043133",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-24e1cdd050cd5b9b",
-      "path": "tdf-hq/package.yaml",
-      "sha256": "8a6c09592e8c5ed5c56be182ee7903f1cf2be835f752ed999867e6bbca77b665",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -13478,14 +13725,24 @@
       "path": "tdf-hq/stack.yaml",
       "sha256": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "65d0626c9d0e3d3b7e239986d0e0455f00afeffefe48ba8c9b669dbc0a41872c",
+      "sha256": "0b10427dbe46318850e913dd4e669342cec2fb94102533f1734a7c43b4907af1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-62789f17ffbc8c94",
@@ -13532,7 +13789,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "f117f022a1e8a6f344402b1ab9b811ed6b989b6ea7964fadbba830a0cd2cfa17",
+      "sha256": "a784abd416316f1664cae7570cd90e0fae7adf98418723516d7b9ce396f1ab38",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -13623,6 +13880,18 @@
       "sha256": "dda271fddc5136622ea77685a08fc700286fc86c17a818a80cbb992a68840d9f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-f0dabee697205b0c",
+      "path": "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+      "sha256": "e6c97c5f203f9f6803bfa945492ed38069efad59619c119dca8e2db0addbd1ed",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f95dd5bf2d71650c",
@@ -17742,8 +18011,6 @@
     "SURFACE-084ed605284f4be6",
     "SURFACE-c7d9ad67bbab6f41",
     "SURFACE-c6183dfcf6eaddfa",
-    "SURFACE-349b3c6baf0c525b",
-    "SURFACE-355fc91289eee809",
     "SURFACE-e9aa9f40d6e4aec3",
     "SURFACE-20a931f02cd6a32b",
     "SURFACE-a53cc38173461f9a",
@@ -17767,7 +18034,6 @@
     "SURFACE-af0ef2d62b14be08",
     "SURFACE-1d0e7cde14b56140",
     "SURFACE-b3b38a6c8f715e98",
-    "SURFACE-24e1cdd050cd5b9b",
     "SURFACE-5b0f4c12394c077d",
     "SURFACE-59023216a652a6ca",
     "SURFACE-4026eec5cc239695",
@@ -18289,8 +18555,6 @@
     "SURFACE-6f165e3ac5d9480f",
     "SURFACE-424d590d8771f755",
     "SURFACE-824cc950db597cff",
-    "SURFACE-ffc0969f98bd3624",
-    "SURFACE-f0d2532f872b8258",
     "SURFACE-62789f17ffbc8c94",
     "SURFACE-fab784f3f5226e09",
     "SURFACE-f3207e26907e5169",
@@ -18761,7 +19025,8 @@
     "SYS-INVENTORY-001",
     "SYS-TRACE-001",
     "AUTH-CORS-001",
-    "AUTH-REGISTRY-001"
+    "AUTH-REGISTRY-001",
+    "DEPLOY-BUILD-001"
   ],
   "stateMachines": [
     {
@@ -40420,7 +40685,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 22,
+    "PARTIAL": 24,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

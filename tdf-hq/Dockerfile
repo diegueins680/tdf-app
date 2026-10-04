@@ -4,12 +4,12 @@ FROM haskell:9.10.3-bookworm AS builder
 WORKDIR /app
 
 # OS deps for building persistent-postgresql + basic tools
-# Some CI networks inject MITM proxies that break apt signature checks; allow insecure
-# repositories only during image build (no secrets involved).
+# Package signatures and metadata expiry remain mandatory in every stage.
+# A proxy or mirror failure must fail the build, never disable authentication.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
-    apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
+    apt-get -o Acquire::AllowInsecureRepositories=false -o Acquire::Check-Valid-Until=true --error-on=any update && \
+    apt-get -o APT::Get::AllowUnauthenticated=false install -y --no-install-recommends \
     libpq-dev pkg-config git curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
@@ -42,7 +42,7 @@ RUN stack --version || true
 COPY tdf-hq/stack.yaml stack.yaml
 COPY tdf-hq/stack.yaml.lock stack.yaml.lock
 COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
-# COPY tdf-hq/package.yaml ./   # uncomment if you have it
+# The hand-maintained Cabal file is authoritative; historical Hpack input is retired.
 
 # Build dependencies with the system compiler that matches the resolver.
 RUN --mount=type=cache,target=/root/.stack,sharing=locked set -e; \
@@ -108,8 +108,8 @@ WORKDIR /app
 # Runtime libs for Postgres + CA certs for Neon TLS + xmllint for DDEX validation
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
-    apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
+    apt-get -o Acquire::AllowInsecureRepositories=false -o Acquire::Check-Valid-Until=true --error-on=any update && \
+    apt-get -o APT::Get::AllowUnauthenticated=false install -y --no-install-recommends \
     libpq5 postgresql-client ca-certificates tzdata libxml2-utils && \
     rm -rf /var/lib/apt/lists/*
 

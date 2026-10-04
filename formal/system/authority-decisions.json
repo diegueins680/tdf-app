@@ -107,6 +107,29 @@
       "conflict": "Backend directory administration accepted module-only actors; claims allowed self-review, separate transaction status checks and approval replay that restored revoked grants.",
       "authority": "formal/system/identity-lifecycle.md",
       "resolution": "Enforce the declared Admin role plus module and reviewer separation. Preserve multi-role Admin composition. Serialize review, grant, audit and response; identical-state retries are read-only. Do not redefine concurrent rejected/approved mismatches as valid product behavior. Implement the existing full claim transition graph, including evidence requests; keep every review edge Admin-only and same-state retries observational. Exhaust the declared graph through HTTP."
+    },
+    {
+      "id": "AUTHORITY-011",
+      "sources": [
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/stack.yaml",
+        "docs/archive/backend-package-legacy.yaml",
+        "tdf-hq/Dockerfile"
+      ],
+      "conflict": "Ignored Hpack input declared version 1.0.0, a library and executable tdf-hq; actual Stack and image builds use hand-maintained Cabal version 0.1.0.0, executable tdf-hq-exe and test suite.",
+      "authority": "tdf-hq/tdf-hq.cabal",
+      "resolution": "Archive the stale Hpack description outside the active package. Stack snapshot remains toolchain authority. No switch to a Cabal CLI build and no regeneration from the retired input."
+    },
+    {
+      "id": "AUTHORITY-012",
+      "sources": [
+        "tdf-hq/Dockerfile",
+        "tdf-hq/Dockerfile.runtime",
+        "formal/system/build-trust.md"
+      ],
+      "conflict": "Image recipes disabled Debian package authentication and metadata freshness to tolerate network failures, allowing untrusted build/runtime inputs.",
+      "authority": "formal/system/build-trust.md",
+      "resolution": "Remove the bypasses and require fail-closed APT verification in both image recipes. Diagnose proxy/mirror trust failures instead of weakening package trust."
     }
   ]
 }
