@@ -197,11 +197,15 @@ Hetzner deployment and synchronize the GitHub health-check credentials; a check
 of GitHub credentials alone does not verify the running service's credentials.
 Do not use the legacy no-argument Fly refresh command after this cutover.
 
-Datadog API synthetic test `r2d-i82-3jy` still targets the retired
-`https://tdf-hq.fly.dev/health`. Its owner must retarget it to
-`https://api.tdfrecords.net/health`, preserving its assertions, locations,
-timeouts, and failure policy, and verify a successful run. Repository CI must
-continue reporting failures until that external configuration is corrected.
+Datadog API synthetic test `r2d-i82-3jy` now targets
+`https://api.tdfrecords.net/health`: root workflow run `37209188359` on
+2026-10-04 passed that request and web test `rv2-x2n-epx`, with zero critical
+errors. The web test still targets `https://tdf-app.pages.dev/`; its owner must
+verify coverage of the canonical `https://www.tdfrecords.net` surface as well.
+Mobile's separate Datadog credentials were rejected with HTTP 403 in run
+`37184643181`; its green status was caused by disabled critical-error failure,
+not successful synthetic tests. Correct those credentials and require critical
+errors to fail before treating Mobile's synthetic result as release evidence.
 These repository changes do not deploy, rotate production credentials, or
 claim that the pending authentication/upload gates have been performed.
 
