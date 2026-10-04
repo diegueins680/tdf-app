@@ -49,11 +49,11 @@ const session = (state: string, canRetryOrFallback: boolean) => ({
   canRetryOrFallback,
 });
 
-const renderPage = () => {
+const renderPage = (entry = '/pagos/retorno') => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={['/pagos/retorno']}>
+      <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path="/pagos/retorno" element={<ProviderPaymentReturnPage />} />
           <Route path="/orden" element={<div>Orden</div>} />
@@ -68,6 +68,28 @@ describe('ProviderPaymentReturnPage', () => {
     window.sessionStorage.clear();
     getMock.mockReset();
     resume();
+  });
+
+  it('uses the server-bound checkout selector even after another checkout starts', async () => {
+    saveProviderPaymentResume({ version: 1,
+      checkoutId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', attemptId,
+      provider: 'placetopay', paymentMethod: 'card', lookupToken: 'other-private-lookup',
+      returnPath: '/other-order', createdAt: Date.now() });
+    getMock.mockResolvedValue(session('succeeded', false));
+    renderPage(`/pagos/retorno?tdf_checkout=${checkoutId}`);
+    await screen.findByText(/servidor verificó el pago/);
+    expect(getMock).toHaveBeenCalledWith(checkoutId, attemptId, 'secure-checkout-lookup-token');
+    expect(screen.getByRole('link', { name: 'Volver a la orden' }).getAttribute('href')).toBe('/orden');
+  });
+
+  it.each(['', '?tdf_checkout=', '?tdf_checkout=unknown'])('never guesses a checkout for an ambiguous or invalid return %s', (query) => {
+    saveProviderPaymentResume({ version: 1,
+      checkoutId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', attemptId,
+      provider: 'placetopay', paymentMethod: 'card', lookupToken: 'other-private-lookup',
+      returnPath: '/other-order', createdAt: Date.now() });
+    renderPage(`/pagos/retorno${query}`);
+    expect(screen.getByText(/no tiene la capacidad privada/)).toBeTruthy();
+    expect(getMock).not.toHaveBeenCalled();
   });
 
   it('retains the private recovery lock when the result is ambiguous', async () => {

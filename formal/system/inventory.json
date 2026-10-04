@@ -4063,7 +4063,7 @@
     },
     {
       "path": "docs/payments/stack-integration-2026-09-16.md",
-      "sha256": "f68397653935c2f2ffba1ec142bfbf84a947ba12c1435cd4856ee4510f7746d3",
+      "sha256": "1d5556521dc303e6d92990448f47317c4beb782cd370d6a5e2470416aad539e7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -5553,6 +5553,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/PaymentRecovery.cfg",
+      "sha256": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecovery.tla",
+      "sha256": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecoveryCompleted.cfg",
+      "sha256": "6098dc9a9461b295d2e546b932ef710099f2a45e5ea502630c646206f81e0b7d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecoveryOverwrite.cfg",
+      "sha256": "ceb606c1e65996f2b72bcfc367255e149b22e42c2cc9ef72c2e6a9cd881b205c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecoveryReturn.cfg",
+      "sha256": "ac3bcb7094ab0c465b34347bc6282ec4038ac40dc6f464579ed069690a145643",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/ProviderRollback.cfg",
       "sha256": "a27970ead639d87ddc54113bc53930ababed2b580f4ecb59a9a24c7d20e845ec",
       "authority": "inferred",
@@ -6254,7 +6289,7 @@
     },
     {
       "path": "formal/event-operations/refund-recovery-correspondence.md",
-      "sha256": "8606dd024b4eaf0e712b2b8ac92684ca3d392b80d01e534636ce7f06b66f31ff",
+      "sha256": "b1a79260b9d0a5737be58d99392bb78383e4d70f1326ccfb0d5c99bef4b9ff45",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -10669,6 +10704,73 @@
         "INVARIANTS NoRequestWithoutToken NoInventedToken FragmentPrecedence",
         "PROPERTY RecoverySettles",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecovery.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = FALSE",
+        "  UnsafeReturn = FALSE",
+        "  UnsafeCompletedFlow = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  NoLostRecovery",
+        "  CorrectReturn",
+        "  NoCompletedFlowHijack"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecoveryCompleted.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = FALSE",
+        "  UnsafeReturn = FALSE",
+        "  UnsafeCompletedFlow = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoCompletedFlowHijack"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecoveryOverwrite.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = TRUE",
+        "  UnsafeReturn = FALSE",
+        "  UnsafeCompletedFlow = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoLostRecovery"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecoveryReturn.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = FALSE",
+        "  UnsafeReturn = TRUE",
+        "  UnsafeCompletedFlow = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  CorrectReturn"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

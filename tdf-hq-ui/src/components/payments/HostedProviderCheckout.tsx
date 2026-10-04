@@ -26,6 +26,7 @@ import {
   loadExistingPaymentIdempotencyKey,
   loadProviderPaymentPending,
   loadProviderPaymentResume,
+  markProviderPaymentResumeCompleted,
   safePaymentReturnPath,
   saveProviderPaymentPending,
   saveProviderPaymentResume,
@@ -182,6 +183,7 @@ export default function HostedProviderCheckout({
   const [session, setSession] = useState<ProviderPaymentSession | null>(null);
   const [pendingCreation, setPendingCreation] = useState<ProviderPaymentPending | null>(null);
   const [busy, setBusy] = useState(false);
+  const [recoveryRevision, setRecoveryRevision] = useState(0);
   const [potentiallyAmbiguous, setPotentiallyAmbiguous] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [buyerCountryCode, setBuyerCountryCode] = useState('593');
@@ -205,6 +207,7 @@ export default function HostedProviderCheckout({
     setPotentiallyAmbiguous(false);
     onSessionChangeRef.current?.(next);
     if (next.state === 'succeeded') {
+      markProviderPaymentResumeCompleted(next.checkoutId);
       try {
         const refresh = onPaymentConfirmedRef.current?.();
         if (refresh) void refresh.catch(() => undefined);
@@ -237,12 +240,13 @@ export default function HostedProviderCheckout({
     setError(null);
     setBusy(false);
     const expectedCheckoutId = checkout?.checkoutId;
-    const resume = loadProviderPaymentResume(expectedCheckoutId);
+    const pending = loadProviderPaymentPending(expectedCheckoutId, pendingReturnPathPrefix);
+    const resume = loadProviderPaymentResume(expectedCheckoutId, pendingReturnPathPrefix);
     const resumedMethod = resume && HOSTED_PAYMENT_METHODS.find((candidate) =>
       candidate.provider === resume.provider && candidate.paymentMethod === resume.paymentMethod);
     const resumeInScope = resume && (expectedCheckoutId !== undefined
       || (pendingReturnPathPrefix && resume.returnPath.startsWith(pendingReturnPathPrefix)));
-    if (resume && resumedMethod && resumeInScope) {
+    if (!pending && resume && resumedMethod && resumeInScope) {
       const context = {
         checkoutId: resume.checkoutId,
         lookupToken: resume.lookupToken,
@@ -254,7 +258,18 @@ export default function HostedProviderCheckout({
       setSelected(resumedMethod);
       setBusy(true);
       getProviderPaymentSession(context.checkoutId, resume.attemptId, context.lookupToken)
-        .then((next) => { if (!cancelled) publishSession(next); })
+        .then((next) => {
+          if (cancelled) return;
+          if (!expectedCheckoutId && next.state === 'succeeded') {
+            if (markProviderPaymentResumeCompleted(context.checkoutId)) {
+              setRecoveryRevision((revision) => revision + 1);
+            }
+            setActiveContext(null);
+            setSelected(null);
+            return;
+          }
+          publishSession(next);
+        })
         .catch(() => {
           if (cancelled) return;
           setPotentiallyAmbiguous(true);
@@ -265,7 +280,6 @@ export default function HostedProviderCheckout({
     }
     // Another product's saved session must not hide this flow's transmitted request.
 
-    const pending = loadProviderPaymentPending(expectedCheckoutId);
     if (!pending
         || (!expectedCheckoutId
           && (!pendingReturnPathPrefix
@@ -286,7 +300,7 @@ export default function HostedProviderCheckout({
     setPotentiallyAmbiguous(true);
     setError(publicError(english, true));
     return undefined;
-  }, [checkout?.checkoutId, english, pendingReturnPathPrefix, publishSession]);
+  }, [checkout?.checkoutId, english, pendingReturnPathPrefix, publishSession, recoveryRevision]);
 
   useEffect(() => {
     if (!session || !activeContext || !POLLABLE_STATES.has(session.state)) return;
@@ -411,6 +425,7 @@ export default function HostedProviderCheckout({
         lookupToken: context.lookupToken,
         returnPath: context.returnPath,
         createdAt: Date.now(),
+        ...(next.state === 'succeeded' ? { completedAt: Date.now() } : {}),
       });
       if (resumeSaved) {
         clearProviderPaymentPending(context.checkoutId);

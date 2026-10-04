@@ -6,6 +6,7 @@ import {
   loadExistingPaymentIdempotencyKey,
   loadProviderPaymentPending,
   loadProviderPaymentResume,
+  markProviderPaymentResumeCompleted,
   paymentAttemptCanBeReleased,
   safePaymentReturnPath,
   saveProviderPaymentPending,
@@ -104,6 +105,49 @@ describe('provider payment redirect recovery', () => {
     });
     clearProviderPaymentResume('cccccccc-cccc-4ccc-8ccc-cccccccccccc');
     expect(loadProviderPaymentResume(checkoutId)).not.toBeNull();
+  });
+
+  it('preserves both checkout capabilities and pending locks independently', () => {
+    const other = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    for (const id of [checkoutId, other]) {
+      const record = { version: 1 as const, checkoutId: id,
+        attemptId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', provider: 'placetopay' as const,
+        paymentMethod: 'card' as const, lookupToken: `private-lookup-${id}`,
+        returnPath: `/orders/${id}`, createdAt: Date.now() };
+      expect(saveProviderPaymentResume(record)).toBe(true);
+      expect(saveProviderPaymentPending(record)).toBe(true);
+    }
+    expect(loadProviderPaymentResume()).toBeNull();
+    expect(loadProviderPaymentPending()).toBeNull();
+    expect(loadProviderPaymentResume('')).toBeNull();
+    expect(loadProviderPaymentResume(checkoutId)?.lookupToken).toBe(`private-lookup-${checkoutId}`);
+    expect(loadProviderPaymentPending(checkoutId)?.checkoutId).toBe(checkoutId);
+    clearProviderPaymentResume(other);
+    clearProviderPaymentPending(other);
+    expect(loadProviderPaymentResume(checkoutId)).not.toBeNull();
+    expect(loadProviderPaymentPending(checkoutId)).not.toBeNull();
+  });
+
+  it('retains a legacy capability when another checkout is saved', () => {
+    const legacy = { version: 1, checkoutId,
+      attemptId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', provider: 'placetopay',
+      paymentMethod: 'card', lookupToken: 'legacy-private-lookup', returnPath: '/legacy', createdAt: Date.now() };
+    window.sessionStorage.setItem('tdf:provider-payment-session:active:v1', JSON.stringify(legacy));
+    saveProviderPaymentResume({ ...legacy, version: 1, provider: 'placetopay', paymentMethod: 'card',
+      checkoutId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc' });
+    expect(loadProviderPaymentResume(checkoutId)).toEqual(legacy);
+    expect(loadProviderPaymentResume()).toBeNull();
+  });
+
+  it('excludes completed orders only from new flow discovery and retains their recovery key', () => {
+    saveProviderPaymentResume({ version: 1, checkoutId,
+      attemptId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', provider: 'placetopay', paymentMethod: 'card',
+      lookupToken: 'private-payment-lookup', returnPath: '/mezcla-mastering/pedido/first', createdAt: Date.now() + 1000 });
+    const key = loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card');
+    markProviderPaymentResumeCompleted(checkoutId);
+    expect(loadProviderPaymentResume(undefined, '/mezcla-mastering/pedido/')).toBeNull();
+    expect(loadProviderPaymentResume(checkoutId)).not.toBeNull();
+    expect(loadExistingPaymentIdempotencyKey(checkoutId, 'placetopay', 'card')).toBe(key);
   });
 
   it('releases recovery only for authoritative no-charge outcomes', () => {

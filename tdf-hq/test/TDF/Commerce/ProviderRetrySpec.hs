@@ -60,7 +60,7 @@ import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
 import qualified TDF.Commerce.RefundSafetySpec as RefundSafety
 import qualified TDF.Commerce.RefundRecoverySpec as RefundRecovery
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
-import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer)
+import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer, providerReturnUrl)
 import qualified TDF.Server.PaymentAvailability as Availability
 import qualified TDF.Server.ServiceStorefront as Storefront
 
@@ -355,6 +355,13 @@ withProviderWire reader action = do
 
 spec :: Spec
 spec = do
+  describe "provider return checkout selection" $ do
+    it "binds the public checkout selector without private capabilities" $ do
+      providerReturnUrl "https://www.tdfrecords.net/pagos/retorno" "checkout-public-id"
+        `shouldBe` "https://www.tdfrecords.net/pagos/retorno?tdf_checkout=checkout-public-id"
+    it "keeps configured query and fragment after the server-owned selector" $ do
+      providerReturnUrl "https://www.tdfrecords.net/pagos/retorno?lang=es#result" "checkout-public-id"
+        `shouldBe` "https://www.tdfrecords.net/pagos/retorno?tdf_checkout=checkout-public-id&lang=es#result"
   describe "complete checkout capability policy" $
     it "requires the finishing operation and preserves extra restrictions idempotently" $ do
       forM_ [MethodCard, MethodBankRedirect, MethodDeunaQr, MethodPayPhoneWallet] $ \method -> do

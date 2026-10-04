@@ -1,6 +1,7 @@
 import { Alert, Box, Button, Card, CardContent, CircularProgress, Container, Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { Link as RouterLink } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 import { getProviderPaymentSession, safePlaceToPayRedirect } from '../api/providerPaymentSessions';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
@@ -8,6 +9,7 @@ import {
   clearPaymentIdempotencyKey,
   clearProviderPaymentResume,
   loadProviderPaymentResume,
+  markProviderPaymentResumeCompleted,
   paymentAttemptCanBeReleased,
 } from '../utils/providerPaymentResume';
 
@@ -22,7 +24,9 @@ const POLLABLE_STATES = new Set([
 export default function ProviderPaymentReturnPage() {
   const { locale } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
-  const resume = loadProviderPaymentResume();
+  const [searchParams] = useSearchParams();
+  const checkoutId = searchParams.get('tdf_checkout');
+  const resume = loadProviderPaymentResume(checkoutId ?? undefined);
   const status = useQuery({
     queryKey: ['provider-payment-session-return', resume?.checkoutId, resume?.attemptId],
     queryFn: () => getProviderPaymentSession(
@@ -38,6 +42,13 @@ export default function ProviderPaymentReturnPage() {
       return state && POLLABLE_STATES.has(state) ? 4_000 : false;
     },
   });
+
+  const resumedCheckoutId = resume?.checkoutId;
+  useEffect(() => {
+    if (resumedCheckoutId && status.data?.state === 'succeeded') {
+      markProviderPaymentResumeCompleted(resumedCheckoutId);
+    }
+  }, [resumedCheckoutId, status.data?.state]);
 
   if (!resume) {
     return (

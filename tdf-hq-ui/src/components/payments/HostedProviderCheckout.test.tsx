@@ -259,6 +259,35 @@ describe('HostedProviderCheckout', () => {
     expect(getMock).not.toHaveBeenCalled();
   });
 
+  it('allows a new mixing order after verifying the retained earlier order succeeded', async () => {
+    saveProviderPaymentResume({ version: 1, ...context, returnPath: '/mezcla-mastering/pedido/old',
+      attemptId, provider: 'placetopay', paymentMethod: 'card', createdAt: Date.now() });
+    const newId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+    const prepareCheckout = jest.fn().mockResolvedValue({ ...context, checkoutId: newId,
+      returnPath: '/mezcla-mastering/pedido/new' });
+    getMock.mockResolvedValue(succeeded);
+    createMock.mockResolvedValue({ ...succeeded, checkoutId: newId });
+    render(<HostedProviderCheckout offeredMethods={['placetopay_card']}
+      prepareCheckout={prepareCheckout} pendingReturnPathPrefix="/mezcla-mastering/pedido/" />);
+    const button = await screen.findByRole('button', { name: /Tarjeta · PlaceToPay/ });
+    await waitFor(() => expect(button.hasAttribute('disabled')).toBe(false));
+    fireEvent.click(button);
+    await waitFor(() => expect(prepareCheckout).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(createMock.mock.calls[0]?.[0]).toBe(newId));
+  });
+
+  it('keeps an unresolved mixing resume locked and does not prepare another order', async () => {
+    saveProviderPaymentResume({ version: 1, ...context, returnPath: '/mezcla-mastering/pedido/old',
+      attemptId, provider: 'placetopay', paymentMethod: 'card', createdAt: Date.now() });
+    const prepareCheckout = jest.fn();
+    getMock.mockResolvedValue({ ...succeeded, state: 'ambiguous', outcomeCertainty: 'ambiguous' });
+    render(<HostedProviderCheckout offeredMethods={['placetopay_card', 'payphone_wallet']}
+      prepareCheckout={prepareCheckout} pendingReturnPathPrefix="/mezcla-mastering/pedido/" />);
+    expect(await screen.findByText(/No reintentes ni uses otro proveedor/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
+    expect(prepareCheckout).not.toHaveBeenCalled();
+  });
+
   it('ignores a late status response after navigation to a different checkout', async () => {
     saveProviderPaymentResume({ version: 1, ...context, attemptId, provider: 'placetopay',
       paymentMethod: 'card', createdAt: Date.now() });

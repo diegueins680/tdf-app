@@ -7,6 +7,7 @@ export interface ProviderPaymentResume {
   version: 1;
   checkoutId: string;
   attemptId: string;
+  completedAt?: number;
   provider: HostedPaymentProvider;
   paymentMethod: HostedPaymentMethod;
   lookupToken: string;
@@ -103,89 +104,106 @@ const isPending = (value: unknown, now: number): value is ProviderPaymentPending
     && now - candidate.createdAt <= MAX_RESUME_AGE_MS;
 };
 
-export const saveProviderPaymentResume = (resume: ProviderPaymentResume): boolean => {
-  if (!isResume(resume, Date.now())) return false;
+// Each checkout owns its recovery record. The old singleton is read only as a
+// migration fallback; saving B must not destroy A's capability or safety lock.
+const records = <T extends ProviderPaymentPending>(
+  key: string, valid: (value: unknown, now: number) => value is T,
+): T[] => {
+  try {
+    const target = storage();
+    if (!target) return [];
+    const found = new Map<string, T>();
+    const keys = [key];
+    for (let index = 0; index < target.length; index += 1) {
+      const candidate = target.key(index);
+      if (candidate?.startsWith(`${key}:checkout:`)) keys.push(candidate);
+    }
+    for (const candidate of keys) {
+      const raw = target.getItem(candidate);
+      if (!raw) continue;
+      try {
+        const parsed: unknown = JSON.parse(raw);
+        if (valid(parsed, Date.now())) found.set(parsed.checkoutId, parsed);
+      } catch { /* Preserve unreadable records for support; never select them. */ }
+    }
+    return [...found.values()].sort((a, b) => b.createdAt - a.createdAt);
+  } catch { return []; }
+};
+
+const saveRecord = <T extends ProviderPaymentPending>(
+  key: string, value: T, valid: (value: unknown, now: number) => value is T,
+): boolean => {
+  if (!valid(value, Date.now())) return false;
   try {
     const target = storage();
     if (!target) return false;
-    target.setItem(ACTIVE_PAYMENT_KEY, JSON.stringify(resume));
-    return target.getItem(ACTIVE_PAYMENT_KEY) !== null;
-  } catch {
-    return false;
-  }
+    const scopedKey = `${key}:checkout:${value.checkoutId}`;
+    const serialized = JSON.stringify(value);
+    target.setItem(scopedKey, serialized);
+    return target.getItem(scopedKey) === serialized;
+  } catch { return false; }
 };
+
+const selectRecord = <T extends ProviderPaymentPending>(
+  values: T[], expectedCheckoutId?: string, returnPathPrefix?: string,
+): T | null => {
+  if (expectedCheckoutId !== undefined) return values.find((value) => value.checkoutId === expectedCheckoutId) ?? null;
+  if (returnPathPrefix) return values.find((value) => value.returnPath.startsWith(returnPathPrefix)) ?? null;
+  // An old unbound provider return must never silently choose another order.
+  return values.length === 1 ? (values[0] ?? null) : null;
+};
+
+const clearRecord = <T extends ProviderPaymentPending>(
+  key: string, valid: (value: unknown, now: number) => value is T, expectedCheckoutId?: string,
+): void => {
+  try {
+    const target = storage();
+    if (!target) return;
+    const selected = selectRecord(records(key, valid), expectedCheckoutId);
+    if (!selected) return;
+    target.removeItem(`${key}:checkout:${selected.checkoutId}`);
+    const legacy = target.getItem(key);
+    if (legacy) {
+      const parsed: unknown = JSON.parse(legacy);
+      if (valid(parsed, Date.now()) && parsed.checkoutId === selected.checkoutId) target.removeItem(key);
+    }
+  } catch { /* A failed cleanup never authorizes another payment. */ }
+};
+
+export const saveProviderPaymentResume = (resume: ProviderPaymentResume): boolean =>
+  saveRecord(ACTIVE_PAYMENT_KEY, resume, isResume);
 
 export const loadProviderPaymentResume = (
-  expectedCheckoutId?: string,
-): ProviderPaymentResume | null => {
-  try {
-    const raw = storage()?.getItem(ACTIVE_PAYMENT_KEY);
-    if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    if (!isResume(parsed, Date.now())) {
-      storage()?.removeItem(ACTIVE_PAYMENT_KEY);
-      return null;
-    }
-    if (expectedCheckoutId && parsed.checkoutId !== expectedCheckoutId) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
+  expectedCheckoutId?: string, returnPathPrefix?: string,
+): ProviderPaymentResume | null => selectRecord(
+  records(ACTIVE_PAYMENT_KEY, isResume).filter((value) =>
+    !returnPathPrefix || expectedCheckoutId !== undefined
+      || typeof value.completedAt !== 'number' || !Number.isFinite(value.completedAt)
+      || value.completedAt < value.createdAt || value.completedAt > Date.now() + 60_000),
+  expectedCheckoutId, returnPathPrefix,
+);
+
+// This is only a UI recovery hint from a verified server response. It does not
+// release the original checkout or its idempotency key, or prove payment itself.
+export const markProviderPaymentResumeCompleted = (checkoutId: string): boolean => {
+  const resume = loadProviderPaymentResume(checkoutId);
+  return resume ? saveProviderPaymentResume({ ...resume, completedAt: Math.max(Date.now(), resume.createdAt) }) : false;
 };
 
-export const clearProviderPaymentResume = (expectedCheckoutId?: string): void => {
-  try {
-    if (expectedCheckoutId) {
-      const current = loadProviderPaymentResume();
-      if (current?.checkoutId !== expectedCheckoutId) return;
-    }
-    storage()?.removeItem(ACTIVE_PAYMENT_KEY);
-  } catch {
-    // Storage is an optional recovery aid; the server remains authoritative.
-  }
-};
+export const clearProviderPaymentResume = (expectedCheckoutId?: string): void =>
+  clearRecord(ACTIVE_PAYMENT_KEY, isResume, expectedCheckoutId);
 
-export const saveProviderPaymentPending = (pending: ProviderPaymentPending): boolean => {
-  if (!isPending(pending, Date.now())) return false;
-  try {
-    const target = storage();
-    if (!target) return false;
-    target.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pending));
-    return target.getItem(PENDING_PAYMENT_KEY) !== null;
-  } catch {
-    return false;
-  }
-};
+export const saveProviderPaymentPending = (pending: ProviderPaymentPending): boolean =>
+  saveRecord(PENDING_PAYMENT_KEY, pending, isPending);
 
 export const loadProviderPaymentPending = (
-  expectedCheckoutId?: string,
-): ProviderPaymentPending | null => {
-  try {
-    const raw = storage()?.getItem(PENDING_PAYMENT_KEY);
-    if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    if (!isPending(parsed, Date.now())) {
-      storage()?.removeItem(PENDING_PAYMENT_KEY);
-      return null;
-    }
-    if (expectedCheckoutId && parsed.checkoutId !== expectedCheckoutId) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-};
+  expectedCheckoutId?: string, returnPathPrefix?: string,
+): ProviderPaymentPending | null => selectRecord(
+  records(PENDING_PAYMENT_KEY, isPending), expectedCheckoutId, returnPathPrefix,
+);
 
-export const clearProviderPaymentPending = (expectedCheckoutId?: string): void => {
-  try {
-    if (expectedCheckoutId) {
-      const current = loadProviderPaymentPending();
-      if (current?.checkoutId !== expectedCheckoutId) return;
-    }
-    storage()?.removeItem(PENDING_PAYMENT_KEY);
-  } catch {
-    // Storage is an optional recovery aid; the server remains authoritative.
-  }
-};
+export const clearProviderPaymentPending = (expectedCheckoutId?: string): void =>
+  clearRecord(PENDING_PAYMENT_KEY, isPending, expectedCheckoutId);
 
 export const paymentIdempotencyStorageKey = (
   checkoutId: string,

@@ -32,6 +32,17 @@ and reuses the original pending request and idempotency key; its component suite
 passes 12 tests. `HostedServicePayment.tla` and three negative configurations are
 integrated into the existing bounded runner; see the refund correspondence map.
 
+Browser recovery now stores pending and resumable attempts per checkout and
+retains the legacy singleton as a read fallback. Provider return URLs carry the
+public `tdf_checkout` selector; lookup tokens remain in session storage. An old
+return without a selector refuses to guess when multiple checkouts exist.
+Server-confirmed completion hints exclude old paid orders only from fresh
+on-demand discovery, retaining their recovery record and idempotency key.
+The 31 focused recovery tests and backend build/3,708 examples pass. The bounded
+`PaymentRecovery` model checks two checkouts and detects singleton overwrite,
+wrong-order return and completed-order flow capture through three negative
+controls. Full current-head web and hosted gates remain required before merge.
+
 Production observations are not activation authority: zero canonical intent and
 refund rows were observed in a bounded read-only inventory, but external merchant
 qualification and no-charge finality remain release prerequisites. Existing

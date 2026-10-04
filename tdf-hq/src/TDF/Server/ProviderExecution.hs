@@ -5,6 +5,7 @@
 module TDF.Server.ProviderExecution
   ( providerExecutionServer
   , providerReference
+  , providerReturnUrl
   , checkoutMoneyBreakdown
   ) where
 
@@ -126,7 +127,8 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
         , cpReference = providerReference provider checkoutId
         , cpDescription = checkoutDescription checkout
         , cpMoney = checkoutMoneyBreakdown checkout
-        , cpReturnUrl = rpaReturnUrl runtime
+        , cpReturnUrl = providerReturnUrl (rpaReturnUrl runtime)
+            (Checkout.checkoutReferenceId (Store.ceCheckout checkout))
         , cpNotificationUrl = rpaNotificationUrl runtime
         , cpBuyerPhone = T.strip <$> pscBuyerPhone request
         , cpBuyerCountryCode = T.strip <$> pscBuyerCountryCode request
@@ -470,3 +472,13 @@ unavailableText message = unavailable { errBody = textBody message }
 
 textBody :: Text -> BL.ByteString
 textBody = BL.fromStrict . TE.encodeUtf8
+
+-- Bind the return UI to a public checkout identifier, never its lookup token.
+-- Place the server-owned selector first; existing configuration query/fragment
+-- values are preserved and cannot override this selection in URLSearchParams.
+providerReturnUrl :: Text -> Text -> Text
+providerReturnUrl configured checkoutId =
+  let (withoutFragment, fragment) = T.breakOn "#" configured
+      (path, query) = T.breakOn "?" withoutFragment
+      preserved = if T.null query then "" else "&" <> T.drop 1 query
+  in path <> "?tdf_checkout=" <> checkoutId <> preserved <> fragment
