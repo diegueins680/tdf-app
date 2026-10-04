@@ -23,6 +23,7 @@ git -C "$ROOT" diff --exit-code -- \
   test/internships/studio-audit/studio-feature-inventory.json \
   test/internships/studio-audit/test-cases.json
 node --test "$ROOT/scripts/__tests__/studio-internship-audit.test.mjs"
+node --test "$ROOT/scripts/__tests__/local-api-fixture.test.mjs"
 run_npm run verify:formal --prefix "$ROOT"
 run_npm run test:auto-loop --prefix "$ROOT"
 run_npm run test:formal --prefix "$ROOT"

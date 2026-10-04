@@ -154,6 +154,8 @@ import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Services.RecordsIngestionSpec as RecordsIngestion
 import qualified TDF.Services.YouTubeSpec as YouTubeSpec
+import qualified TDF.EventOperations.TypesSpec as EventOperationsTypesSpec
+import qualified TDF.EventOperations.DatabaseBoundarySpec as EventOperationsDatabaseBoundarySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
@@ -8312,6 +8314,7 @@ main = hspec $ do
                         , auRoles = [Fan]
                         , auModules = modulesForRoles [Fan]
                         , auApiTokenId = Nothing
+                        , auSessionWitness = Nothing
                         }
                 payload =
                     InstagramOAuth.InstagramOAuthExchangeRequest
@@ -13671,6 +13674,7 @@ main = hspec $ do
                     , auRoles = roles
                     , auModules = modulesForRoles roles
                     , auApiTokenId = Nothing
+                    , auSessionWitness = Nothing
                     }
 
         it "allows operations users and rejects ordinary authenticated users before contract handlers run" $ do
@@ -17075,6 +17079,8 @@ main = hspec $ do
     EventDiscoverySpec.spec
     RecordsIngestion.spec
     YouTubeSpec.spec
+    EventOperationsTypesSpec.spec
+    EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
     ArtistSpec.spec
     ArtistActivationSpec.spec
@@ -17235,6 +17241,7 @@ socialSyncAdminUser =
         , auRoles = [Admin]
         , auModules = modulesForRoles [Admin]
         , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 socialSyncListHandlerFor
@@ -17268,6 +17275,7 @@ radioPresenceUser =
         , auRoles = [Fan]
         , auModules = modulesForRoles [Fan]
         , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 runRadioPresenceTest :: RadioPresenceTestM a -> IO (Either ServerError a)

@@ -20,6 +20,7 @@ module TDF.Auth
   , modulesForRoles
   , loadAuthedUser
   , isAuthenticatableApiTokenLabel
+  , withCurrentAuthSession
   , lookupUsernameFromToken
   , resolveUsernameFromLabel
   , extractToken
@@ -32,6 +33,8 @@ module TDF.Auth
 import           Control.Applicative        ((<|>))
 import           Control.Monad              (forM, guard)
 import           Control.Monad.IO.Class     (liftIO)
+import           Crypto.Hash               (Digest, SHA256, hash)
+import           Data.ByteArray            (constEq)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
@@ -112,7 +115,35 @@ data AuthedUser = AuthedUser
   , auModules :: Set ModuleAccess
   -- Internal reference only; never the bearer secret. Synthetic/system actors have none.
   , auApiTokenId :: Maybe ApiTokenId
+  , auSessionWitness :: Maybe AuthSessionWitness
   } deriving (Show, Eq)
+
+-- Request-local proof of the canonical token row read during authentication.
+-- The constructor is private; credentials/fingerprints must never be logged or serialized.
+data AuthSessionWitness = AuthSessionWitness ApiTokenId PartyId (Digest SHA256)
+  deriving (Eq)
+
+instance Show AuthSessionWitness where
+  show _ = "<authenticated-session>"
+
+-- PostgreSQL-only transaction guard. FOR SHARE conflicts with token UPDATE/DELETE,
+-- including non-key changes to active/purpose. Keep this lock through the event action.
+-- Lock by identity first, then validate the returned current row after any lock wait.
+withCurrentAuthSession :: AuthedUser -> SqlPersistT IO a -> SqlPersistT IO (Maybe a)
+withCurrentAuthSession user action = case auSessionWitness user of
+  Nothing -> pure Nothing
+  Just (AuthSessionWitness tokenId capturedParty fingerprint)
+    | auPartyId user /= capturedParty -> pure Nothing
+    | otherwise -> do
+        rows <- rawSql "SELECT ?? FROM api_token WHERE id=? FOR SHARE" [toPersistValue tokenId]
+        case rows of
+          [Entity _ tok]
+            | apiTokenActive tok
+            , apiTokenPartyId tok == capturedParty
+            , isAuthenticatableApiTokenLabel (apiTokenLabel tok)
+            , (hash (TE.encodeUtf8 (apiTokenToken tok)) :: Digest SHA256)
+                `constEq` fingerprint -> Just <$> action
+          _ -> pure Nothing
 
 -- | Create the Servant auth context using the database environment.
 authContext :: Env -> Context '[AuthHandler Request AuthedUser]
@@ -190,7 +221,7 @@ loadAuthedUser token = do
   mToken <- getBy (UniqueApiToken token)
   case mToken of
     Nothing -> pure Nothing
-    Just (Entity tokenKey tok)
+    Just (Entity tokenId tok)
       | not (apiTokenActive tok) -> pure Nothing
       | not (isAuthenticatableApiTokenLabel (apiTokenLabel tok)) -> pure Nothing
       | otherwise -> do
@@ -204,7 +235,9 @@ loadAuthedUser token = do
               { auPartyId = apiTokenPartyId tok
               , auRoles = roleList
               , auModules = modules
-              , auApiTokenId = Just tokenKey
+              , auApiTokenId = Just tokenId
+              , auSessionWitness = Just (AuthSessionWitness tokenId (apiTokenPartyId tok)
+                  (hash (TE.encodeUtf8 (apiTokenToken tok))))
               }
 
 isAuthenticatableApiTokenLabel :: Maybe Text -> Bool

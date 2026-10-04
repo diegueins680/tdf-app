@@ -60,7 +60,8 @@ Traceability: `docs/event-operations/traceability-matrix.md`.
 - `npm run quality:repo`: 41/42 loop tests passed; the remaining test could not load the declared but
   uninstalled `@testomatio/reporter/jest` dependency. Formal audit within the command passed with
   0 critical/errors. Re-run after a clean dependency install in CI.
-- Remote CI: not run; GitHub DNS/auth unavailable from this environment.
+- Remote CI was unavailable during the initial local implementation. GitHub access later
+  recovered; publication/check status is tracked separately in the delivery report.
 
 ## Rollback
 
@@ -71,6 +72,9 @@ the production manifest in this PR.
 
 ## Remaining limitations/manual steps
 
+- The original task completion/RACI guards are insufficient under relation replacement and
+  concurrent responsibility removal. The dependent PR 04 supplies the modeled and DB-tested
+  correction; do not activate the task sidecar from this foundation alone.
 - No typed foundation API or generated client yet; no new workspace UI/mobile surface.
 - No external invitation issue/accept/revoke worker, no resource binding/capacity path, and no
   event-engagement/contract/payment orchestration yet.

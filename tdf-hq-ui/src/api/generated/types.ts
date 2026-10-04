@@ -415,6 +415,146 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/event-operations/events/{eventId}/tasks/{activityId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete an opted-in preparation task with current RACI and completed dependencies
+         * @description Only draft/planning events and planned/confirmed tasks with both policy guards. Requires current owner or scoped task.manage authority; exact historical replay requires current read authority. Revalidates the bound session and SQL receipt inside the transaction before commit. Result aggregateRevision is exactly the original expectedRevision plus one, also on replay. No actor, time, hash or override can be supplied. No approver/evidence, live-event or notification flow is implied. No automatic rebase or retry with a new key after network ambiguity. Requires separately reviewed SQL/feature activation; disabled by default.
+         */
+        post: operations["completeEventOperationTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/tasks/{activityId}/raci/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read current scoped RACI editing options without granting authority
+         * @description Current task readers may read the context. Only current managers receive options, and only during supported lifecycle states with current required accountability. Uses the same session/auth/task revision fences and one post-wait clock/snapshot. Returns minimal Party IDs, not contacts or names. Each keyset page is independently authorized; pages are not a consistent roster snapshot. All options are advisory; the command still revalidates authority, source, recipient and expected revision.
+         */
+        get: operations["getEventRaciEditorContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/tasks/{activityId}/raci/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reassign one current unbounded RACI assignment atomically
+         * @description Planning-stage command on the canonical task. Requires current owner or applicable task.manage authority; read-only current access permits exact historical replay only. Revalidates the bound authenticated session and validates the SQL receipt before commit. Preserves the revoked assignment, immutable audit and task-scoped idempotency receipt. Result aggregateRevision equals expectedRevision plus two, including on exact replay. No recipient consent, availability, booking or notification is implied. Requires separately reviewed SQL/feature activation. Never automatically rebase or retry with a new key after an ambiguous network failure. No actor/time/hash may be supplied.
+         */
+        post: operations["reassignEventOperationTaskRaci"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/tasks/{activityId}/revisioned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the canonical task with its coherent aggregate storage revision
+         * @description Opt-in envelope; the existing task representation is unchanged. Requires the same current authenticated session and exact task.read/task.manage scope as the task route. Metadata is share-locked through the canonical projection and authorization is checked after waiting. The decimal-string revision is not an authorization or readiness certificate; RACI time windows can expire without a storage write. Query parameters cannot select an actor.
+         */
+        get: operations["getEventOperationTaskWithRevision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/tasks/{activityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the currently authorized task state and RACI projection
+         * @description Uses canonical logistics activity IDs. Requires current ownership or task.read/task.manage scoped to this event or exact task; event.read, finance, coproduction and assignment alone do not grant access. Session validity is rechecked in the same database transaction. The response excludes notes, titles, dates, contacts, dependencies, documents and history. Activity and policy versions are not an aggregate ETag or offline write token. Numeric identifiers and versions are restricted to exact JavaScript-safe integers. Query parameters cannot select the acting party or authorization time.
+         */
+        get: operations["getEventOperationTask"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the authorized canonical lifecycle projection for an event
+         * @description Returns only capabilities currently held by the authenticated party and transitions whose policy, authority, and implementation-effect gate all permit execution. A disabled feature, an unknown event, and an event the caller cannot read all produce 404 so object identifiers do not disclose event existence.
+         */
+        get: operations["getEventOperationSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply an idempotent, version-guarded canonical lifecycle transition
+         * @description Uses optimistic concurrency and database row locking; it never silently applies last-write-wins. Reusing a command UUID with the same canonical request returns the stored result, while reuse with different content is rejected. Only early planning and independent-approval transitions are implementation-enabled in this phase. Publishing and every transition with ticket, booking, contract, notification, or financial effects remain closed until those effects are transactional or outboxed and verified. Current read authority is required before any receipt or conflict is disclosed. Absent and unreadable events return the identical 404 not_found error, including retries and changed-content keys. A readable event can still return 403 when the caller lacks transition authority.
+         */
+        post: operations["applyEventOperationTransition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social/followers": {
         parameters: {
             query?: never;
@@ -7808,6 +7948,153 @@ export interface components {
             nIsRead: boolean;
             /** Format: date-time */
             nCreatedAt: string;
+        };
+        /** @enum {string} */
+        EventTaskStatus: "planned" | "confirmed" | "in_progress" | "completed" | "cancelled";
+        EventRaciAssignment: {
+            /** Format: int64 */
+            partyId: number;
+            /** @enum {string} */
+            role: "responsible" | "accountable" | "consulted" | "informed";
+        };
+        EventTaskPolicy: {
+            requiresAccountability: boolean;
+            dependenciesGateCompletion: boolean;
+            /** Format: int64 */
+            version: number;
+        };
+        /** @description Canonical ASCII decimal string in 1..9223372036854775807 (signed BIGINT maximum). Runtime decoders enforce the exact upper bound in addition to the pattern. Never convert to a JavaScript number. Not an authorization or readiness certificate. */
+        EventTaskAggregateRevision: string;
+        EventTaskCompletionCommand: {
+            expectedRevision: components["schemas"]["EventTaskAggregateRevision"];
+            /** @description Nonblank; preserved without normalization. */
+            reason: string;
+            /** @description Nonblank; bound to the idempotent request. */
+            correlationId: string;
+        };
+        EventTaskCompletionOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            status: "completed";
+            /** Format: int32 */
+            activityVersion: number;
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+            replayed: boolean;
+        };
+        EventRaciEditorContext: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+            /** @description Current scoped permission; never a command authorization token. */
+            canManage: boolean;
+            /** @description Current lifecycle/accountability gates; not event readiness or consent. */
+            operationReady: boolean;
+            /** @description Current unbounded source pairs; empty unless operationReady. */
+            replaceableAssignments: components["schemas"]["EventRaciAssignment"][];
+            /** @description Ascending current readers strictly after cursor; empty unless operationReady. */
+            eligiblePartyIds: number[];
+            /**
+             * Format: int64
+             * @description Omitted on final page; otherwise last of exactly 100 returned eligible IDs.
+             */
+            nextAfterPartyId?: number;
+        };
+        EventRaciReassignmentCommand: {
+            expectedRevision: components["schemas"]["EventTaskAggregateRevision"];
+            /** @enum {string} */
+            role: "responsible" | "accountable" | "consulted" | "informed";
+            /** Format: int64 */
+            fromPartyId: number;
+            /**
+             * Format: int64
+             * @description Must differ from fromPartyId and currently be eligible to read the exact task.
+             */
+            toPartyId: number;
+            /** @description Nonblank; preserved without normalization. */
+            reason: string;
+            /** @description Nonblank; bound to the idempotent request. */
+            correlationId: string;
+        };
+        EventRaciReassignmentOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            role: "responsible" | "accountable" | "consulted" | "informed";
+            /** Format: int64 */
+            fromPartyId: number;
+            /** Format: int64 */
+            toPartyId: number;
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+            replayed: boolean;
+        };
+        EventOperationTaskWithRevision: {
+            task: components["schemas"]["EventOperationTask"];
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+        };
+        EventOperationTask: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            status: components["schemas"]["EventTaskStatus"];
+            /**
+             * Format: int64
+             * @description Activity version only, not an aggregate task/RACI concurrency token.
+             */
+            version: number;
+            policy?: components["schemas"]["EventTaskPolicy"];
+            /** @description Current non-revoked assignments at one server-selected authorization instant. */
+            raci: components["schemas"]["EventRaciAssignment"][];
+            /** @description True exactly when an existing policy requires accountability and the current RACI lacks exactly one Accountable or any Responsible. False with no policy does not certify readiness, membership validity or satisfied dependencies. */
+            accountabilityNeedsAttention: boolean;
+        };
+        /** @enum {string} */
+        EventLifecycleState: "draft" | "planning" | "pending_approval" | "approved" | "published" | "staffing" | "ready" | "in_progress" | "completed" | "settlement_pending" | "settled" | "archived" | "reprogrammed" | "cancelled";
+        EventOperationSnapshot: {
+            /** Format: int64 */
+            eventId: number;
+            canonicalState: components["schemas"]["EventLifecycleState"];
+            /** Format: int64 */
+            version: number;
+            /** @description Existing social-event state retained as migration evidence. */
+            legacyStateCode?: string;
+            capabilities: string[];
+            availableTransitions: components["schemas"]["EventLifecycleState"][];
+        };
+        EventTransitionCommand: {
+            /** Format: int64 */
+            expectedVersion: number;
+            targetState: components["schemas"]["EventLifecycleState"];
+            /** @description Omit when unnecessary; explicit null is rejected. */
+            reason?: string;
+            correlationId: string;
+        };
+        EventTransitionOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            canonicalState: components["schemas"]["EventLifecycleState"];
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            authorityCode: "owner" | "event_approver" | "finance_approver" | "records_manager";
+            replayed: boolean;
+        };
+        EventOperationError: {
+            /** @enum {string} */
+            code: "feature_disabled" | "not_found" | "forbidden" | "invalid_request" | "reason_required" | "idempotency_conflict" | "version_conflict" | "transition_invalid" | "transition_effects_not_ready" | "operation_not_ready" | "assignment_not_replaceable" | "assignee_unavailable" | "assignment_conflict" | "accountability_not_ready" | "dependencies_not_ready" | "separation_of_duties" | "event_operations_unavailable" | "invalid_database_response";
         };
         MerchReputationSummary: {
             /** @enum {string} */
@@ -15844,6 +16131,445 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    completeEventOperationTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventTaskCompletionCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed or exactly replayed original completion receipt */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventTaskCompletionOutcome"];
+                };
+            };
+            /** @description Invalid capture, UUID, strict fields or constraints */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current reader lacks task mutation authority */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled or opaque absent/foreign/unreadable task */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version/key conflict, unsupported task/event/policy, current RACI or prerequisites not ready */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sanitized persistence, commit or receipt-validation failure; no success implied */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventRaciEditorContext: {
+        parameters: {
+            query?: {
+                afterPartyId?: number;
+            };
+            header?: never;
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized context; no identity/contact discovery or write authority implied */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRaciEditorContext"];
+                };
+            };
+            /** @description Invalid or unsafe target/cursor */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled feature or opaque absent/foreign/unreadable task */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sanitized persistence or strict projection validation failure */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reassignEventOperationTaskRaci: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventRaciReassignmentCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed or exactly replayed original outcome */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRaciReassignmentOutcome"];
+                };
+            };
+            /** @description Invalid capture, UUID, strict command fields or constraints */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current reader lacks task mutation authority */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled or opaque absent/foreign/unreadable task */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version/key conflict, unsupported lifecycle, timed source or ineligible/duplicate recipient */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sanitized persistence or receipt-validation failure; no success implied */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventOperationTaskWithRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized task and matching storage revision; not a readiness certificate */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationTaskWithRevision"];
+                };
+            };
+            /** @description Invalid or unsafe integer path capture */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled; otherwise absent, foreign-event and unreadable tasks share not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Persistence or strict envelope validation failed; no raw diagnostic is returned */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
+    getEventOperationTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized minimal task projection; not a readiness certificate */
+            200: {
+                headers: {
+                    /** @description Do not persist this authorization-sensitive response in HTTP caches. */
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationTask"];
+                };
+            };
+            /** @description Invalid or unsafe integer path capture */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled; otherwise absent, foreign-event and unreadable tasks share not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Persistence or strict projection validation failed; no raw diagnostic is returned */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
+    getEventOperationSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized event lifecycle projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationSnapshot"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled, event absent, or event not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Event operations persistence is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
+    applyEventOperationTransition: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Caller-generated UUID identifying this exact event transition command. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventTransitionCommand"];
+            };
+        };
+        responses: {
+            /** @description Accepted transition or exact replay of its stored result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventTransitionOutcome"];
+                };
+            };
+            /** @description Invalid command or a required rollback reason is absent */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is readable but current transition authority is insufficient, or an authorized historical rejection is replayed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Feature disabled, event absent, or event not visible; absent and unreadable targets share the not_found envelope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Version or command-key conflict, invalid lifecycle edge, missing implementation effects, or separation-of-duties violation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Event operations persistence is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
             };
         };
     };

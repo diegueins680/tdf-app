@@ -124,8 +124,8 @@ spec = describe "live-intake-identity-postgresql" $ do
           counts pool `shouldReturn` [3,0,0,0,0,0,0]
 
 admin, member :: AuthedUser
-admin = AuthedUser (toSqlKey 1) [Admin] (modulesForRoles [Admin]) Nothing
-member = AuthedUser (toSqlKey 2) [] Set.empty Nothing
+admin = AuthedUser (toSqlKey 1) [Admin] (modulesForRoles [Admin]) Nothing Nothing
+member = AuthedUser (toSqlKey 2) [] Set.empty Nothing Nothing
 
 musician :: LiveSessionMusicianPayload
 musician = LiveSessionMusicianPayload Nothing "Synthetic musician" (Just "shared@example.test") Nothing Nothing False

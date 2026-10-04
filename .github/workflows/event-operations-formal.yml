@@ -66,6 +66,9 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - name: Verify completion client model wiring
+        run: node --test scripts/__tests__/event-task-completion-client.test.mjs
+
       - name: Download pinned formal tools
         shell: bash
         run: |
@@ -92,6 +95,9 @@ jobs:
           path: ${{ runner.temp }}/formal-evidence
           if-no-files-found: error
 
+      - name: Verify editor guard and isolated browser configuration
+        run: node --test scripts/__tests__/event-raci-web-editor.test.mjs
+
   postgres-foundation:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -100,3 +106,106 @@ jobs:
 
       - name: Check event operations foundation migration
         run: npm run test:event-operations-foundation-migration
+
+  postgres-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check event operations API migration
+        run: npm run test:event-operations-api-migration
+
+  postgres-task-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check task commit constraints and concurrent writers
+        run: npm run test:event-task-commit-migration
+
+  postgres-task-read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check scoped task projection and concurrent authorization
+        run: npm run test:event-task-read-migration
+
+  postgres-task-revision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Check revision runner isolation and mandatory verification
+        run: node --test scripts/__tests__/event-task-revision-runner.test.mjs
+      - name: Check aggregate task revisions and concurrent commands
+        run: sh scripts/test-event-task-revision-migration.sh
+
+  postgres-task-revisioned-read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Check revisioned reader test isolation and prerequisite ordering
+        run: node --test scripts/__tests__/event-task-revisioned-read-runner.test.mjs
+      - name: Check task revision snapshots, expiry and concurrent writers
+        run: sh scripts/test-event-task-revisioned-read-migration.sh
+
+  postgres-raci-reassignment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Check RACI command runner isolation and formal gates
+        run: node --test scripts/__tests__/event-raci-reassignment-runner.test.mjs
+      - name: Check atomic reassignment, retries, rollback and concurrent authority
+        run: sh scripts/test-event-raci-reassignment-migration.sh
+
+  postgres-raci-editor-context:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Verify editor context isolation and formal gates
+        run: node --test scripts/__tests__/event-raci-editor-context-runner.test.mjs
+      - name: Verify editor context scope, pagination, rollback and concurrent readers
+        run: sh scripts/test-event-raci-editor-context-migration.sh
+
+  postgres-task-completion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Verify completion runner isolation and formal gates
+        run: node --test scripts/__tests__/event-task-completion-runner.test.mjs
+      - name: Verify completion guards, rollback and concurrent writers
+        run: sh scripts/test-event-task-completion-migration.sh
+
+  postgres-complete-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Check rehearsal isolation and authoritative default
+        run: npm run test:event-operations-schema-runner
+      - name: Rehearse event migration chain against the complete repository schema
+        run: npm run test:event-operations-schema-rehearsal
