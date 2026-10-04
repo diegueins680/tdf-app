@@ -1,3 +1,4 @@
+import MobilePromo from '../mobile/MobilePromo';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
@@ -19,6 +20,7 @@ import {
 const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.search', to: '/buscar' },
   { label: 'TDF', to: '/tdf' },
+  { label: 'app.title', to: '/app' },
   { label: 'authEntry.services', to: '/comercio' },
   { label: 'authEntry.community', to: '/fans' },
   { label: 'authEntry.shop', to: '/marketplace' },
@@ -255,6 +257,9 @@ export default function PublicBranding({
       >
         {showInstagramEntryLinks && <InstagramEntryLinks />}
         {children}
+        {!(location.state as { mobileInvitation?: boolean } | null)?.mobileInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : location.pathname === '/fans' ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
+        {/^\/(artista|a|perfil)\//.test(location.pathname) && <MobilePromo surface="profile" />}
+        {!['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && <MobilePromo surface="mobile_banner" banner />}
       </Container>
       <Box
         component="footer"
@@ -266,6 +271,7 @@ export default function PublicBranding({
         }}
       >
         <Container maxWidth="xl">
+          {location.pathname !== "/app" && <MobilePromo surface="footer" compact />}
           <Stack
             direction={{ xs: 'column', xl: 'row' }}
             spacing={3}

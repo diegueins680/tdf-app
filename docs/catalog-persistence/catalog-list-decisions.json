@@ -1339,16 +1339,6 @@
       "reviewed": true
     },
     {
-      "id": "f9819fa4b81bdd8f3f21",
-      "classification": "dynamic-business-catalog",
-      "disposition": "retain-in-code",
-      "specializedModel": "navigation_item",
-      "priority": "P3-retain",
-      "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
-      "reviewed": true
-    },
-    {
       "id": "915967d05f3593fea628",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -14482,6 +14472,66 @@
         "name": "ownedEventUpdates",
         "valueCount": 9
       }
+    },
+    {
+      "id": "d24fc428c18f60568996",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "f9819fa4b81bdd8f3f21",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "navigation_item",
+        "priority": "P3-retain",
+        "risk": "Changing UI constants could break rendering or user experience.",
+        "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "b04463685b6b720b3ca9",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "validated mobile distribution protocol",
+      "priority": "P3-retain",
+      "risk": "Unrecognized platform/channel must fail closed and must never imply public availability.",
+      "justification": "Client protocol vocabulary and supported renderer capability, not operator-managed business catalog values. Current per-platform availability, URL, capacity and evidence freshness are centralized in public/mobile-distribution.json and validated against this finite protocol. Platform selector only chooses supported client renderers; it does not define tester identities, membership or store eligibility. See docs/mobile-program/README.md and distribution tests.",
+      "reviewed": true
+    },
+    {
+      "id": "85ed84f478dc7592506b",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "validated mobile distribution protocol",
+      "priority": "P3-retain",
+      "risk": "Unrecognized platform/channel must fail closed and must never imply public availability.",
+      "justification": "Client protocol vocabulary and supported renderer capability, not operator-managed business catalog values. Current per-platform availability, URL, capacity and evidence freshness are centralized in public/mobile-distribution.json and validated against this finite protocol. Platform selector only chooses supported client renderers; it does not define tester identities, membership or store eligibility. See docs/mobile-program/README.md and distribution tests.",
+      "reviewed": true
+    },
+    {
+      "id": "a22ed33458d1ea913570",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "validated mobile distribution protocol",
+      "priority": "P3-retain",
+      "risk": "Unrecognized platform/channel must fail closed and must never imply public availability.",
+      "justification": "Client protocol vocabulary and supported renderer capability, not operator-managed business catalog values. Current per-platform availability, URL, capacity and evidence freshness are centralized in public/mobile-distribution.json and validated against this finite protocol. Platform selector only chooses supported client renderers; it does not define tester identities, membership or store eligibility. See docs/mobile-program/README.md and distribution tests.",
+      "reviewed": true
+    },
+    {
+      "id": "023248107107d84ec459",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "validated mobile distribution protocol",
+      "priority": "P3-retain",
+      "risk": "Unrecognized platform/channel must fail closed and must never imply public availability.",
+      "justification": "Client protocol vocabulary and supported renderer capability, not operator-managed business catalog values. Current per-platform availability, URL, capacity and evidence freshness are centralized in public/mobile-distribution.json and validated against this finite protocol. Platform selector only chooses supported client renderers; it does not define tester identities, membership or store eligibility. See docs/mobile-program/README.md and distribution tests.",
+      "reviewed": true
     }
   ]
 }

@@ -10,6 +10,7 @@ import OnboardingRecovery from './session/OnboardingRecovery';
 import { lazyWithReload } from './utils/lazyWithReload';
 import { shouldRenderRadioWidget } from './utils/radioRouteVisibility';
 
+const SignupMobileInvitation = lazyWithReload(() => import('./mobile/SignupMobileInvitation'));
 const RadioWidget = lazyWithReload(() => import('./components/RadioWidget'));
 
 function RoutedRadioWidget() {
@@ -33,6 +34,7 @@ export default function App() {
           {renderProtectedRoutes()}
         </Routes>
       </Suspense>
+      <Suspense fallback={null}><SignupMobileInvitation /></Suspense>
       <RoutedRadioWidget />
     </AppErrorBoundary>
   );

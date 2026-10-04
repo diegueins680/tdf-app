@@ -1,6 +1,8 @@
+import mobileApp from './mobileApp.en';
 import directorySearch from './directorySearch.en';
 import authEntry from './authEntry.en';
 const en = {
+  app: mobileApp,
   eventTask: {
     title: 'Task and responsibilities', back: 'Back to events', open: 'View RACI',
     loading: 'Loading task…', refresh: 'Refresh', retry: 'Retry',

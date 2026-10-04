@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-10-04T16:41:37.738Z",
+  "source": "App Store Connect API",
+  "responses": [
+    {
+      "path": "/v1/builds/da874897-8526-480d-96ae-044cf075d491/buildBetaDetail",
+      "status": 200,
+      "data": {
+        "type": "buildBetaDetails",
+        "id": "da874897-8526-480d-96ae-044cf075d491",
+        "attributes": {
+          "autoNotifyEnabled": true,
+          "internalBuildState": "IN_BETA_TESTING",
+          "externalBuildState": "BETA_APPROVED"
+        },
+        "relationships": {
+          "build": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/da874897-8526-480d-96ae-044cf075d491/relationships/build",
+              "related": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/da874897-8526-480d-96ae-044cf075d491/build"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/da874897-8526-480d-96ae-044cf075d491"
+        }
+      }
+    },
+    {
+      "path": "/v1/builds/da874897-8526-480d-96ae-044cf075d491/betaAppReviewSubmission",
+      "status": 200,
+      "data": {
+        "type": "betaAppReviewSubmissions",
+        "id": "da874897-8526-480d-96ae-044cf075d491",
+        "attributes": {
+          "betaReviewState": "APPROVED",
+          "submittedDate": "2026-09-17T21:46:26-07:00"
+        },
+        "relationships": {
+          "build": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions/da874897-8526-480d-96ae-044cf075d491/relationships/build",
+              "related": "https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions/da874897-8526-480d-96ae-044cf075d491/build"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions/da874897-8526-480d-96ae-044cf075d491"
+        }
+      }
+    }
+  ]
+}

@@ -1,6 +1,8 @@
+import mobileApp from './mobileApp.es';
 import directorySearch from './directorySearch.es';
 import authEntry from './authEntry.es';
 const es = {
+  app: mobileApp,
   records: { videoUnavailable: 'Video no disponible en la fuente', thumbnailUnavailable: 'Miniatura no disponible', loadingThumbnail: 'Cargando miniatura' },
   authEntry,
   directorySearch,
