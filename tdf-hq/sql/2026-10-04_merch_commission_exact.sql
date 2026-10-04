@@ -19,9 +19,9 @@ END
 $preflight$;
 ALTER TABLE merch_order DROP CONSTRAINT merch_order_check2;
 ALTER TABLE merch_order ADD CONSTRAINT merch_order_commission_exact CHECK (
-  tdf_commission_minor::numeric = trunc(
+  tdf_commission_minor::numeric = div(
     (product_subtotal_minor::numeric - discount_minor::numeric)
-    * tdf_commission_bps::numeric / 10000
+    * tdf_commission_bps::numeric, 10000
   )
 );
 -- Existing rows are validated by ADD CONSTRAINT. No amounts are rewritten.

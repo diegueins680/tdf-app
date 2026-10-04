@@ -81,8 +81,8 @@ exact products/sum, positive payable total and Int64 bounds before shipping rule
 and persistence. The same validated line values feed order and checkout rows.
 Commission uses exact Integer multiplication and floor division by 10000; seller
 net and total are checked before narrowing. A separate additive migration replaces
-the old BIGINT-intermediate commission CHECK with numeric/trunc, preserving its
+the old BIGINT-intermediate commission CHECK with numeric/div, preserving its
 rounding rule. A real maximal-commission insert and rejected-overflow HTTP checkout
-exercise storage correspondence without payments. Refund/settlement SQL arithmetic
+exercise storage correspondence without payments. Thirty real SQL inserts match a BigInt oracle across boundary amounts and commission rates. Three SQL controls remove the constraint, restore fixed-width multiplication, or substitute rounded numeric division. PostgreSQL numeric division can round before truncation at large values; `div(numeric,numeric)` is required for the exact integer quotient. Refund/settlement SQL arithmetic
 and client numeric precision remain separate obligations.
 The unused legacy Stripe writer remains disabled at its public handler.

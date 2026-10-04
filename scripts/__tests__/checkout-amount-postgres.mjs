@@ -34,6 +34,8 @@ pass(`BEGIN; ${drop} ${header(oldBad)} ${noPreflight} SET CONSTRAINTS ALL IMMEDI
 pass(`BEGIN; ${drop} ${body} COMMIT;`, 'additive migration on valid prior state');
 const schemaCheck = buildSchemaVerificationSql({ includePsqlHeader: false });
 pass(schemaCheck, 'full production schema gate accepts intended schema');
+reject(`BEGIN; ALTER TABLE merch_order DROP CONSTRAINT merch_order_commission_exact; ${schemaCheck} COMMIT;`,
+  /Exact merchandise commission constraint is missing or changed/, 'commission constraint drift fails closed');
 for (const [table, trigger] of [
   ['commerce_checkout_session', 'trg_commerce_checkout_total'],
   ['commerce_checkout_line_item', 'trg_commerce_checkout_line_total'],

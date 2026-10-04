@@ -723,6 +723,14 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.commerce_checkout_amount_boundary WHERE singleton) THEN
     RAISE EXCEPTION 'Checkout monetary migration snapshot fence is empty';
   END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid=to_regclass('public.merch_order')
+      AND conname='merch_order_commission_exact' AND contype='c' AND convalidated
+      AND pg_get_expr(conbin,conrelid)=
+        '((tdf_commission_minor)::numeric = div((((product_subtotal_minor)::numeric - (discount_minor)::numeric) * (tdf_commission_bps)::numeric), (10000)::numeric))'
+  ) THEN
+    RAISE EXCEPTION 'Exact merchandise commission constraint is missing or changed';
+  END IF;
   IF to_regclass('public.google_calendar_config') IS NULL
      OR to_regclass('public.google_calendar_event') IS NULL THEN
     RAISE EXCEPTION 'Calendar runtime relations are missing';

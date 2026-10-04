@@ -155,6 +155,15 @@
       "applicability": "Parent followed by multiple immutable checkout lines in one transaction",
       "decision": "adopted with scope",
       "rationale": "Allow transactional construction but reject incomplete commits. Concurrency relies separately on immutable amounts and nonnegative lines, not on deferral alone."
+    },
+    {
+      "id": "RES-CHECKOUT-003",
+      "source": "https://www.postgresql.org/docs/17/functions-math.html",
+      "title": "PostgreSQL17 mathematical functions: div",
+      "recommendation": "div(numeric,numeric) computes the integer quotient, truncating toward zero.",
+      "applicability": "Nonnegative merchandise commission floor calculation at Int64 boundaries",
+      "decision": "adopted",
+      "rationale": "Actual counterexample: trunc(maxInt64::numeric*5000/10000) rounds to4611686018427387904, whereas the exact floor is4611686018427387903. div preserves the required quotient without a rounded intermediate."
     }
   ]
 }

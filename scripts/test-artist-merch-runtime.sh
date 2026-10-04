@@ -75,6 +75,8 @@ apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-09-07_artist_merch_storefron
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/test/integration/artist_merch_runtime_fixture.sql"
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql"
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-10-04_merch_commission_exact.sql"
+TDF_MERCH_RUNTIME_DATABASE_URL="$TDF_MERCH_RUNTIME_URL" \
+  node "$TDF_MERCH_RUNTIME_ROOT/scripts/__tests__/merch-commission-postgres.mjs"
 
 cd "$TDF_MERCH_RUNTIME_ROOT/tdf-hq"
 TDF_MERCH_RUNTIME_DATABASE_URL="$TDF_MERCH_RUNTIME_URL" \
