@@ -274,3 +274,13 @@ with patch('pathlib.Path.read_text',return_value=json.dumps(run)), patch('subpro
   assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'failure').status, 0);
   assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'success', '.github/workflows/untrusted.yml').status, 0);
 });
+
+// The actual identity runner parses its contract, so backend CI needs the
+// declared root parser and supported Node runtime before invoking it.
+test('backend runtime checks install declared parser dependencies on Node 22', async () => {
+  const job = (await source('.github/workflows/ci.yml')).split('  backend-quality:')[1].split('\n  quality:')[0];
+  assert.match(job, /name: Setup backend verification Node[\s\S]*?node-version: 22/);
+  assert.match(job, /name: Install backend verification dependencies\n        run: npm ci --ignore-scripts/);
+  assert.ok(job.indexOf('Install backend verification dependencies') < job.indexOf('node scripts/__tests__/identity-http-runtime.mjs'));
+  assert.match(JSON.parse(await source('package.json')).devDependencies.yaml, /^\d+\.\d+\.\d+$/);
+});

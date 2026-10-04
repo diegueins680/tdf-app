@@ -76,6 +76,7 @@
       "scripts/__tests__/ci-change-scope.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
+      "scripts/__tests__/disposable-postgres-url.test.mjs",
       "scripts/__tests__/event-operations-http-runner.test.mjs",
       "scripts/__tests__/event-operations-pluscal.test.mjs",
       "scripts/__tests__/event-operations-schema-rehearsal.test.mjs",
@@ -180,6 +181,7 @@
       "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
       "scripts/lib/discovery.mjs",
+      "scripts/lib/disposable-postgres-url.mjs",
       "scripts/lib/flyctl-cli.mjs",
       "scripts/lib/formal-methods-audit.mjs",
       "scripts/lib/identity-inventory.sql",
@@ -2110,7 +2112,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "38d73e3df3a57efd43b9aa3181e2e24e8bf4e91104477e7399e175bec2f5e57c",
+      "sha256": "e5b44401bb51f5e7bd1bb24a66971279819c5fedc93513d86bbe083d81064719",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2344,13 +2346,13 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "5511ba403ab7cacded953c98f37a364d9147eb30aca3cfa430388af8c69dfea3",
+      "sha256": "1e6285569815729c77588f6f4a274491b2b599dc0a08efac08f542c02a2ef8c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "2e29b474bdcffc98b58a4163bec3e21ce9969c3185b07fcfb3690f70c661a0dc",
+      "sha256": "2866c4c75c54716d5c75a2b475add6b5a0654a705322ff9fb0e6084222adf599",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2404,13 +2406,19 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "891bc1ec960707fd01853e47f585e8fcfe609dde84964dd058cdf88200f76dcb",
+      "sha256": "c5a964f191433de3a9bc944e0495d340730e89268aa91a026bb8ea78e43bc8ce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
       "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-df96f3139c1e5e5b",
+      "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
+      "sha256": "09462417324ec7cafb053e47b741166020c39df99aa78263ef5c16642ee5a434",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2530,7 +2538,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "93bed1ebbb38d24d0e51fbb1565e4c6e0fcfd17502bcba83536271aeff869188",
+      "sha256": "ee2f977bac244d3ee39a2274b6679c15a625b402b21e19c980610dec4ae625a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3038,6 +3046,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7e5d877bbcc438aa",
+      "path": "scripts/lib/disposable-postgres-url.mjs",
+      "sha256": "26432e62427fcccc31f62ae5c1df10659cb561da36b3934ca545c82c9ccdfa7a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6f9017626e33d004",
       "path": "scripts/lib/flyctl-cli.mjs",
       "sha256": "feaf16e47652a7d1612585af11ef0e6f4d6425813bb0215e5bd6edab6bebc45b",
@@ -3232,7 +3246,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3ac9522552153ccea4156a939a85206d7f229e9c0ff887fdbf9484071c40487f",
+      "sha256": "cdbe4b07b0b5786ddebd92ffdaf8e84de969e55b8ce2e3af183561a55bc9803a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3730,7 +3744,7 @@
     {
       "id": "SURFACE-2b91f113b39e2bf6",
       "path": "scripts/test-auth-recovery-migration.sh",
-      "sha256": "795950845a26cb38a20ba6ebaa41d8d67c9e5d63aa9ec3889444a0f72f8eda56",
+      "sha256": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
       "semanticConformance": "not-established-by-discovery"
     },
     {

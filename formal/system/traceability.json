@@ -1609,7 +1609,7 @@
     }
   ],
   "sourceFingerprints": {
-    ".github/workflows/ci.yml": "38d73e3df3a57efd43b9aa3181e2e24e8bf4e91104477e7399e175bec2f5e57c",
+    ".github/workflows/ci.yml": "e5b44401bb51f5e7bd1bb24a66971279819c5fedc93513d86bbe083d81064719",
     ".github/workflows/event-operations-formal.yml": "210f59ede61c720ebd87399246c98dc9e58903e856dd01356c8336384d70feed",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
@@ -1620,10 +1620,10 @@
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
-    "scripts/__tests__/ci-pipeline.test.mjs": "891bc1ec960707fd01853e47f585e8fcfe609dde84964dd058cdf88200f76dcb",
+    "scripts/__tests__/ci-pipeline.test.mjs": "c5a964f191433de3a9bc944e0495d340730e89268aa91a026bb8ea78e43bc8ce",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/generated-api-conformance.test.mjs": "da6a8039a136268283e11a054c981c16990db543e4154a391a2c3ff90873018e",
-    "scripts/__tests__/identity-http-runtime.mjs": "93bed1ebbb38d24d0e51fbb1565e4c6e0fcfd17502bcba83536271aeff869188",
+    "scripts/__tests__/identity-http-runtime.mjs": "ee2f977bac244d3ee39a2274b6679c15a625b402b21e19c980610dec4ae625a8",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/verification-evidence.test.mjs": "62e23312cd0f60dd3ec08597ca45071071f116bd10d15303c8b9bab55668fb84",
@@ -1636,7 +1636,7 @@
     "scripts/production-release.mjs": "f79231d797d83c953f1bf15d64e93d962e9b3bc72efe192c4243af6ccfe051ad",
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
     "scripts/specification-inventory.py": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
-    "scripts/test-auth-recovery-migration.sh": "795950845a26cb38a20ba6ebaa41d8d67c9e5d63aa9ec3889444a0f72f8eda56",
+    "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-credential-lifecycle.sh": "6f2c2eac057aa22a4b4c856245bb46367de186f8522e49381b5172d8f808a03e",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
@@ -2297,7 +2297,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "38d73e3df3a57efd43b9aa3181e2e24e8bf4e91104477e7399e175bec2f5e57c",
+      "sha256": "e5b44401bb51f5e7bd1bb24a66971279819c5fedc93513d86bbe083d81064719",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -2606,14 +2606,14 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "5511ba403ab7cacded953c98f37a364d9147eb30aca3cfa430388af8c69dfea3",
+      "sha256": "1e6285569815729c77588f6f4a274491b2b599dc0a08efac08f542c02a2ef8c7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "2e29b474bdcffc98b58a4163bec3e21ce9969c3185b07fcfb3690f70c661a0dc",
+      "sha256": "2866c4c75c54716d5c75a2b475add6b5a0654a705322ff9fb0e6084222adf599",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -2690,7 +2690,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "891bc1ec960707fd01853e47f585e8fcfe609dde84964dd058cdf88200f76dcb",
+      "sha256": "c5a964f191433de3a9bc944e0495d340730e89268aa91a026bb8ea78e43bc8ce",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -2703,6 +2703,13 @@
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
       "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-df96f3139c1e5e5b",
+      "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
+      "sha256": "09462417324ec7cafb053e47b741166020c39df99aa78263ef5c16642ee5a434",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -2852,7 +2859,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "93bed1ebbb38d24d0e51fbb1565e4c6e0fcfd17502bcba83536271aeff869188",
+      "sha256": "ee2f977bac244d3ee39a2274b6679c15a625b402b21e19c980610dec4ae625a8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -3517,6 +3524,13 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-7e5d877bbcc438aa",
+      "path": "scripts/lib/disposable-postgres-url.mjs",
+      "sha256": "26432e62427fcccc31f62ae5c1df10659cb561da36b3934ca545c82c9ccdfa7a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-6f9017626e33d004",
       "path": "scripts/lib/flyctl-cli.mjs",
       "sha256": "feaf16e47652a7d1612585af11ef0e6f4d6425813bb0215e5bd6edab6bebc45b",
@@ -3766,7 +3780,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3ac9522552153ccea4156a939a85206d7f229e9c0ff887fdbf9484071c40487f",
+      "sha256": "cdbe4b07b0b5786ddebd92ffdaf8e84de969e55b8ce2e3af183561a55bc9803a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -4361,7 +4375,7 @@
     {
       "id": "SURFACE-2b91f113b39e2bf6",
       "path": "scripts/test-auth-recovery-migration.sh",
-      "sha256": "795950845a26cb38a20ba6ebaa41d8d67c9e5d63aa9ec3889444a0f72f8eda56",
+      "sha256": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17081,6 +17095,7 @@
     "SURFACE-d96822f506e6f794",
     "SURFACE-d41c5a6a64677381",
     "SURFACE-2a6db69bcc12b984",
+    "SURFACE-df96f3139c1e5e5b",
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
     "SURFACE-c1036edc5aa530c7",
@@ -17175,6 +17190,7 @@
     "SURFACE-4738d9e01ae03383",
     "SURFACE-596444d6be3be153",
     "SURFACE-5d55ff4fc614658c",
+    "SURFACE-7e5d877bbcc438aa",
     "SURFACE-6f9017626e33d004",
     "SURFACE-16c0274ca9b29448",
     "SURFACE-a38198fb9ee3c45e",

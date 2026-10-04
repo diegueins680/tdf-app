@@ -2,9 +2,10 @@
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 db="${TDF_IDENTITY_HTTP_DATABASE_URL:?Requires isolated fully migrated test database}"
-node - "$db" <<'JS'
-const u = new URL(process.argv[2]);
-if (!(['127.0.0.1', 'localhost'].includes(u.hostname) || (process.env.CI === 'true' && u.hostname === 'postgres')) || !u.pathname.endsWith('_test')) throw new Error('Only isolated local/CI test databases are allowed');
+node --input-type=module - "$db" "$root/scripts/lib/disposable-postgres-url.mjs" <<'JS'
+import { pathToFileURL } from 'node:url';
+const { disposablePostgresUrl } = await import(pathToFileURL(process.argv[3]));
+disposablePostgresUrl(process.argv[2], { ci: process.env.CI === 'true' });
 JS
 psql "$db" -X -q -v ON_ERROR_STOP=1 -f "$root/tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql"
 psql "$db" -X -q -v ON_ERROR_STOP=1 <<'SQL'

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import yaml from 'yaml';
+import { disposablePostgresUrl } from '../lib/disposable-postgres-url.mjs';
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, openSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -8,9 +9,7 @@ import { randomUUID } from 'node:crypto';
 const db = process.env.TDF_IDENTITY_HTTP_DATABASE_URL;
 const binary = process.env.TDF_IDENTITY_HTTP_SERVER_BIN;
 assert.ok(binary && db, 'isolated database and tested backend binary required');
-const url = new URL(db);
-assert.ok(['127.0.0.1', 'localhost'].includes(url.hostname) || (process.env.CI === 'true' && url.hostname === 'postgres'));
-assert.match(url.pathname, /_test$/);
+disposablePostgresUrl(db, { ci: process.env.CI === 'true' });
 const serverDb = new URL(db);
 serverDb.searchParams.set('application_name', 'tdf_identity_http_fixture');
 const port = Number(process.env.TDF_IDENTITY_HTTP_PORT ?? 18631);
