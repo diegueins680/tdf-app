@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-  "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+  "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
+  "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
   "successors": [
     {
       "historicalReplacementId": "91952765f2d528c2a6c6",
@@ -53,18 +53,45 @@
     },
     {
       "historicalReplacementId": "ffb84e8fd3972fd0730d",
-      "currentId": "5147eb2751a01d8b4c73",
+      "currentId": "e9fb532f768747ee20c0",
       "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
       "kind": "array",
       "name": "mobileFeatureRegistry",
-      "valueCount": 157,
+      "valueCount": 158,
       "previousResolution": {
-        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-        "currentId": "21babc54d68f0c44d55e",
-        "valueCount": 156
+        "historicalReplacementId": "ffb84e8fd3972fd0730d",
+        "currentId": "5147eb2751a01d8b4c73",
+        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "kind": "array",
+        "name": "mobileFeatureRegistry",
+        "valueCount": 157,
+        "previousResolution": {
+          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+          "currentId": "21babc54d68f0c44d55e",
+          "valueCount": 156
+        },
+        "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained.",
+        "originalDecision": {
+          "id": "5147eb2751a01d8b4c73",
+          "classification": "security-system-registry",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P0-security",
+          "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+          "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+          "reviewed": true,
+          "reviewMethod": "deterministic-policy-v3",
+          "reviewBatch": "universal-interactions-2026-09-28",
+          "evidence": {
+            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+            "line": 55
+          }
+        },
+        "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+        "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e"
       },
-      "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+      "change": "Reviewed shipped-lineage patch adds admin.video-sources with strict Admin module/role discovery and concealed Mobile presentation; all previous 157 entries remain unchanged."
     },
     {
       "historicalReplacementId": "34d5f2f94d1a165783ba",

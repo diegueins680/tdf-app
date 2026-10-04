@@ -32,7 +32,7 @@
 
 ## Security & Configuration
 - Do not commit secrets; use env vars (`config/default.env` as a template).
-- CORS is permissive for dev; restrict `corsOrigins` in `app/Main.hs` for production.
+- Production CORS is fail-closed in `src/TDF/Cors.hs`; set an explicit origin allowlist and keep `ALLOW_ALL_ORIGINS=false`. See `formal/system/cors-boundary.md` at repository root.
 - Seeding endpoint is for development only; remove/guard before release.
 
 ## Submodules & Backups

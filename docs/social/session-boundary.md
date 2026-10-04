@@ -7,8 +7,10 @@ before revocation could reach `/social/v2` afterward with a still-active Party a
 succeed. Running the new captured-session HTTP regression against the preceding
 handler reproduced **expected 401, actual 200** (73 examples, one failure; fail-fast).
 
-Authentication now retains only `Maybe ApiTokenId` in the internal `AuthedUser`.
-It does not retain or log the bearer secret. `withSocialSession` rechecks the exact
+Authentication retains `Maybe ApiTokenId` plus an opaque token-owner/fingerprint
+witness in the internal `AuthedUser`. It does not retain or log the bearer secret.
+The Social guard below currently uses the token ID; the Event guard also checks
+the captured fingerprint. Do not infer fingerprint checking at the Social boundary. `withSocialSession` rechecks the exact
 token's existence, owner, active flag and authenticatable purpose, then the actor's
 current social liveness. The same Unicode-aware token-label predicate is used at
 initial authentication and this boundary. Missing synthetic session identity returns

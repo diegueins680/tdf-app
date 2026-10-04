@@ -125,15 +125,25 @@
         "kind": "array",
         "name": "mobileFeatureRegistry"
       },
-      "replacementId": "5147eb2751a01d8b4c73",
+      "replacementId": "e9fb532f768747ee20c0",
       "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
       "previousReplacementId": "21babc54d68f0c44d55e",
       "currentResolution": {
-        "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-        "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-        "valueCount": 157,
-        "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-      }
+        "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
+        "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
+        "reason": "Reviewed admin.video-sources strict-admin concealed client mirror; prior 157 entries unchanged."
+      },
+      "previousResolutions": [
+        {
+          "replacementId": "5147eb2751a01d8b4c73",
+          "currentResolution": {
+            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+            "valueCount": 157,
+            "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+          }
+        }
+      ]
     },
     {
       "originalDecision": {

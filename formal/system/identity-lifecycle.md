@@ -80,7 +80,7 @@ is not an implementation proof of reviewer authentication.
 
 `CredentialLifecycle.tla` has one Party, one credential, one Google session, one
 login and two competing reset requests. Operations can fail; disabling is an
-environment action. It checks single-use recovery, no sessions after disable and
+environment action that also revokes the recovery challenge. It checks single-use recovery, no sessions after disable and
 atomic challenge consumption. Controls remove serialization, commit before session
 issuance, or omit Google revocation. No fairness/liveness property is asserted;
 finite terminal states are intentional. It excludes multiple credentials,
@@ -91,11 +91,16 @@ workers and already-authorized requests. Those need implementation tests.
 validator. `LoginPage.test.tsx` checks independent signup and preserved review
 navigation. `identity-http-runtime.mjs` exercises the real candidate backend on a
 dedicated local PostgreSQL database: contact-data attacks, denied side effects,
-independent signup, submitted claims, scoped revocation, re-enable, a controlled
-lock barrier for simultaneous reset, and injected session-insert failure. Existing
+independent signup, submitted claims, scoped revocation, re-enable, controlled
+lock barriers for simultaneous reset and both login/disable orders, and injected
+session-insert failure. Existing
 provider and Social/Event fence suites remain required. Model success and source
 fingerprints alone do not establish implementation refinement or deployment.
 
 The audit's two intended models and six named controls were locally exercised on
 2026-10-04. Exact final-head HTTP/PostgreSQL execution and deployment remain pending;
 no current conformance PASS is asserted here.
+
+Open P1: recovery challenges currently have no expiry field/check. Single-use
+consumption is not expiry. A compatible additive expiry policy, legacy-token
+handling and clock-boundary tests remain required before full identity conformance.

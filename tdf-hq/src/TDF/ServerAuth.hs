@@ -2160,7 +2160,7 @@ runChangePassword uname currentPwd newPwd = do
           hashed <- liftIO (hashPasswordText newPwd)
           update credId [UserCredentialPasswordHash =. hashed]
           revokeInteractiveSessions (userCredentialPartyId cred)
-          sessionToken <- createSessionToken (userCredentialPartyId cred) uname
+          sessionToken <- createSessionToken (userCredentialPartyId cred) (userCredentialUsername cred)
           mUser <- loadAuthedUser sessionToken
           case mUser of
             Nothing -> transactionUndo >> pure (Left PasswordProfileError)

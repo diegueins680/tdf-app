@@ -162,10 +162,13 @@ try {
   sql(`INSERT INTO user_credential(party_id,username,password_hash,active)
     SELECT party_id,'identity-http-alternate',password_hash,true FROM user_credential WHERE id=${credentialId}`);
   const families = addTokens('disable');
+  const disabledReset = randomUUID();
+  sql(`INSERT INTO api_token(token,party_id,label,active) VALUES ('${disabledReset}',${independent.partyId},'password-reset:claimant@example.test',true)`);
   assert.ok(await session(independent.token)); assert.ok(await session(families.google));
   assert.equal((await adminUpdate({ uauActive: false })).status, 200);
   assert.equal(await session(independent.token), null);
   assert.equal(await session(families.google), null);
+  assert.equal(sql(`SELECT active FROM api_token WHERE token='${disabledReset}'`), 'f', 'disable revokes recovery challenges');
   assert.ok(await session(families.service), 'service tokens retain their separate policy');
   assert.equal((await login(signupBody.password)).status, 401, 'disabled credentials cannot log in');
   const alternate = await login(signupBody.password, 'identity-http-alternate');
@@ -233,6 +236,51 @@ try {
   assert.equal(await session(changeFamilies.google), null);
   assert.ok(await session(changeFamilies.service));
   assert.ok(await session((await changeResponse.json()).token));
+
+  const waitBlocked = async count => {
+    for (let attempt = 0; attempt < 150; attempt++) {
+      const waiting = Number(sql("SELECT count(*) FROM pg_stat_activity WHERE application_name='tdf_identity_http_fixture' AND wait_event_type='Lock'"));
+      if (waiting >= count) return;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    assert.fail(`Expected ${count} blocked lifecycle requests`);
+  };
+  const lifecycleRace = async (table, condition, first, second) => {
+    const lockKey = `identity-http-${randomUUID()}`;
+    const holder = spawn('psql', [db, '-X', '-qAt', '-v', 'ON_ERROR_STOP=1'], { stdio: ['pipe', 'pipe', 'pipe'] });
+    let output = '';
+    try {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('issuance barrier timed out')), 10000);
+        holder.stdout.on('data', chunk => {
+          output += chunk.toString();
+          if (output.includes('issuance-barrier-ready')) { clearTimeout(timeout); resolve(); }
+        });
+        holder.once('error', error => { clearTimeout(timeout); reject(error); });
+        holder.stdin.write(`SELECT pg_advisory_lock(hashtextextended('${lockKey}',0)); SELECT 'issuance-barrier-ready';\n`);
+      });
+      sql(`CREATE FUNCTION identity_http_hold_lifecycle() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+        IF ${condition} THEN PERFORM pg_advisory_xact_lock(hashtextextended('${lockKey}',0)); END IF; RETURN NEW; END $$;
+        CREATE TRIGGER identity_http_hold_lifecycle BEFORE INSERT OR UPDATE ON ${table}
+        FOR EACH ROW EXECUTE FUNCTION identity_http_hold_lifecycle();`);
+      const firstPending = first(); await waitBlocked(1);
+      const secondPending = second(); await waitBlocked(2);
+      holder.stdin.end(`SELECT pg_advisory_unlock(hashtextextended('${lockKey}',0));\n`);
+      return await Promise.all([firstPending, secondPending]);
+    } finally {
+      holder.kill('SIGTERM');
+      sql(`DROP TRIGGER IF EXISTS identity_http_hold_lifecycle ON ${table}; DROP FUNCTION IF EXISTS identity_http_hold_lifecycle();`);
+    }
+  };
+  const disableFirst = await lifecycleRace('user_credential', `NEW.id=${credentialId} AND NOT NEW.active`,
+    () => adminUpdate({ uauActive: false }), () => login('synthetic-changed-password-42'));
+  assert.deepEqual(disableFirst.map(response => response.status), [200, 401], 'login must revalidate after disable wins');
+  assert.equal((await adminUpdate({ uauActive: true })).status, 200);
+  const loginFirst = await lifecycleRace('api_token', `NEW.party_id=${independent.partyId} AND NEW.label LIKE 'password-login:%' AND TG_OP='INSERT'`,
+    () => login('synthetic-changed-password-42'), () => adminUpdate({ uauActive: false }));
+  assert.deepEqual(loginFirst.map(response => response.status), [200, 200]);
+  assert.equal(await session((await loginFirst[0].json()).token), null, 'disable after committed issuance must revoke that session');
+  assert.equal((await adminUpdate({ uauActive: true })).status, 200);
 
   // Database failure after credential mutation must roll back challenge and hash.
   const failureToken = randomUUID();

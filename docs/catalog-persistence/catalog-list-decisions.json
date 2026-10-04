@@ -14405,16 +14405,16 @@
       "reviewBatch": "universal-interactions-2026-09-28"
     },
     {
-      "id": "5147eb2751a01d8b4c73",
+      "id": "e9fb532f768747ee20c0",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "justification": "Generated client discovery mirror adds only admin.video-sources with strict Admin role/module predicates and concealed Mobile presentation. Existing 157 entries are unchanged. Backend RecordsIngestion independently enforces strict Admin. Runtime selectable grants remain database-governed; this generated mirror cannot authorize a request.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "universal-interactions-2026-09-28",
+      "reviewMethod": "source-review-2026-10-04",
+      "reviewBatch": "specification-conformance-shipped-mobile",
       "evidence": {
         "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "line": 55
@@ -14481,6 +14481,21 @@
         "kind": "haskell-list",
         "name": "ownedEventUpdates",
         "valueCount": 9
+      }
+    },
+    {
+      "id": "63a1d7ad2f5cd665a512",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "feature-registry strict-admin negative fixture",
+      "priority": "P3-consumer",
+      "risk": "A role fixture must not become a runtime grant source.",
+      "justification": "Reviewed featureRegistry.test.ts cases use Admin, Producer and AandR to verify that the video-source feature remains strictly administrative; no runtime role catalog is created.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-04",
+      "reviewBatch": "specification-conformance-shipped-mobile",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/featureRegistry.test.ts"
       }
     }
   ]

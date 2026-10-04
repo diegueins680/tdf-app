@@ -898,7 +898,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoginResponse' }
-        '400': { description: Invalid payload or invalid, expired, revoked or consumed challenge }
+        '400': { description: 'Invalid payload or invalid, revoked or consumed challenge' }
         '403': { description: Credential is disabled }
         '500': { description: Transaction failed; no credential or session changes committed }
   /password/change:

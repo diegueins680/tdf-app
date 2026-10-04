@@ -17531,7 +17531,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoginResponse"];
                 };
             };
-            /** @description Invalid payload or invalid */
+            /** @description Invalid payload or invalid, revoked or consumed challenge */
             400: {
                 headers: {
                     [name: string]: unknown;

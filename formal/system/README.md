@@ -88,6 +88,10 @@ TDF includes Haskell/Servant/PostgreSQL, React web and the exact pinned Expo Mob
 repository. Cloudflare preview functions and operational jobs are source-inventoried.
 Optional `streaming` and `tidal-agent` deployment status still needs verification.
 
+The [identity lifecycle contract](identity-lifecycle.md) governs anonymous artist
+claim denial and atomic credential/session transitions, with two bounded models
+and six negative controls. Current runtime and deployment evidence remains required.
+
 Identity is a principal acting as a Party; Party, artist-profile and domain-resource
 IDs are distinct. The generated capability predicates are UI discovery policy,
 **not backend authorization**. Ownership, scoped grants, RACI, bilateral consent,
