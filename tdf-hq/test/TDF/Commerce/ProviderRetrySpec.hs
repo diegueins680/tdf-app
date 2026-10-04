@@ -2930,6 +2930,12 @@ completionCapabilityIntegrationSpec = describe "complete checkout capability int
           includes request `shouldReturn` False
         includes request `shouldReturn` True
         includes request { Capabilities.prEnvironment = Checkout.CheckoutProduction } `shouldReturn` False
+        let merchantCredential = if provider == Checkout.ProviderDatafast
+              then "DATAFAST_ENTITY_ID" else "PAYPAL_MERCHANT_ID"
+        setEnv merchantCredential "synthetic-wrong-merchant"
+        includes request `shouldReturn` False
+        setEnv merchantCredential "synthetic-provider-retry-merchant"
+        includes request `shouldReturn` True
         let credential = if provider == Checkout.ProviderDatafast
               then "DATAFAST_BEARER_TOKEN" else "PAYPAL_CLIENT_SECRET"
         setEnv credential ""
@@ -3014,10 +3020,10 @@ withCompletionEnvironment action = bracket
     action
   where
     values =
-      [("DATAFAST_ENV", "sandbox"), ("DATAFAST_ENTITY_ID", "synthetic-entity")
+      [("DATAFAST_ENV", "sandbox"), ("DATAFAST_ENTITY_ID", "synthetic-provider-retry-merchant")
       , ("DATAFAST_BEARER_TOKEN", "synthetic-token"), ("DATAFAST_BASE_URL", "https://test.oppwa.com")
       , ("DATAFAST_TEST_MODE", "EXTERNAL"), ("PAYPAL_ENV", "sandbox")
-      , ("PAYPAL_MERCHANT_ID", "synthetic-merchant"), ("PAYPAL_CLIENT_ID", "synthetic-client")
+      , ("PAYPAL_MERCHANT_ID", "synthetic-provider-retry-merchant"), ("PAYPAL_CLIENT_ID", "synthetic-client")
       , ("PAYPAL_CLIENT_SECRET", "synthetic-secret"), ("PAYPAL_WEBHOOK_ID", "synthetic-webhook")
       , ("COMMERCE_EVENT_ENCRYPTION_KEY", T.unpack recoveryEncryptionKey)]
 
