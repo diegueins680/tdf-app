@@ -14175,37 +14175,52 @@
       }
     },
     {
-      "id": "057297148d42a39ced43",
+      "id": "149ad89ec39ce2f22ae3",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered, checksum-pinned 161-entry production migration protocol. All 160 prior entries and applied SQL remain unchanged. The additive credential-bound recovery expiry table follows them, with no validity backfill and explicit retention/deletion constraints. Introduction commit57315f2d4 contains its exact SQL; this is immutable release authority, not editable business data.",
+      "justification": "Ordered, checksum-pinned 163-entry production migration protocol. All161 previous entries and previously applied SQL remain unchanged. Two additive migrations enforce exact immutable checkout payable correspondence with a pre-enforcement snapshot fence, and preserve merchandise floor commission with numeric intermediates. Introduction c57fdab05 contains the exact new SQL. This is reviewed release authority, not editable business data.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "recovery-expiry-2026-10-04",
+      "reviewBatch": "checkout-amount-conformance-2026-10-04",
       "previousDecision": {
-        "id": "dc6d60d733c6eb69ebbf",
+        "id": "057297148d42a39ced43",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
+        "justification": "Ordered, checksum-pinned 161-entry production migration protocol. All 160 prior entries and applied SQL remain unchanged. The additive credential-bound recovery expiry table follows them, with no validity backfill and explicit retention/deletion constraints. Introduction commit57315f2d4 contains its exact SQL; this is immutable release authority, not editable business data.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "event-editorial-ownership-2026-10-03",
+        "reviewBatch": "recovery-expiry-2026-10-04",
         "previousDecision": {
-          "id": "7bf93825f1431a6d52d6",
-          "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
-          "reviewBatch": "universal-interactions-2026-09-28"
+          "id": "dc6d60d733c6eb69ebbf",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
+          "reviewed": true,
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3
+          },
+          "reviewBatch": "event-editorial-ownership-2026-10-03",
+          "previousDecision": {
+            "id": "7bf93825f1431a6d52d6",
+            "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
+            "reviewBatch": "universal-interactions-2026-09-28"
+          }
         }
       }
     },
