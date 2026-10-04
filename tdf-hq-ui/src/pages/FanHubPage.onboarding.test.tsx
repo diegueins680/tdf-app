@@ -1,3 +1,5 @@
+import '../i18n';
+import type { OnboardingProgressDTO } from '../api/session';
 import { jest } from '@jest/globals';
 import { act } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -6,10 +8,7 @@ import { MemoryRouter } from 'react-router-dom';
 
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
-interface OnboardingProgressFixture {
-  eligible: boolean;
-  completed: boolean;
-}
+type OnboardingProgressFixture = OnboardingProgressDTO;
 
 const loadOnboardingProgressMock = jest.fn<() => Promise<OnboardingProgressFixture>>();
 const completeOnboardingProgressMock = jest.fn<() => Promise<unknown>>();
@@ -27,7 +26,8 @@ let sessionMock = {
 };
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: sessionMock }),
+  useSession: () => ({ session: sessionMock, loading: false }),
+  getActiveSession: () => sessionMock,
 }));
 
 jest.unstable_mockModule('../api/session', () => ({
@@ -124,8 +124,11 @@ jest.unstable_mockModule('../features/fanclubs/FanClubPreview', () => ({ FanClub
 
 const { default: FanHubPage } = await import('./FanHubPage');
 
-const eligibleProgress: OnboardingProgressFixture = { eligible: true, completed: false };
-const completedProgress: OnboardingProgressFixture = { eligible: false, completed: true };
+const eligibleProgress: OnboardingProgressFixture = {
+  eligible: true, signupCompletedAt: '2026-09-17T12:00:00Z', onboardingIntent: 'follow_artists',
+  completedAt: null, firstValue: null, firstValueCompletedAt: null, updatedAt: '2026-09-17T12:00:00Z',
+};
+const completedProgress: OnboardingProgressFixture = { ...eligibleProgress, eligible: false, completedAt: '2026-09-17T12:01:00Z' };
 
 function renderPage() {
   const queryClient = new QueryClient({
@@ -167,7 +170,7 @@ describe('FanHubPage authoritative onboarding continuity', () => {
       partyId: 42,
     };
     loadOnboardingProgressMock.mockReset().mockResolvedValue(eligibleProgress);
-    completeOnboardingProgressMock.mockReset().mockResolvedValue({ newlyCompleted: true });
+    completeOnboardingProgressMock.mockReset().mockResolvedValue({ newlyCompleted: true, progress: completedProgress });
     listArtistsMock.mockClear();
     listFollowsMock.mockClear();
     listMyClubsMock.mockClear();
@@ -203,7 +206,7 @@ describe('FanHubPage authoritative onboarding continuity', () => {
   it('restores the guidance and offers retry when completion persistence fails', async () => {
     completeOnboardingProgressMock
       .mockRejectedValueOnce(new Error('offline'))
-      .mockResolvedValueOnce({ newlyCompleted: true });
+      .mockResolvedValueOnce({ newlyCompleted: true, progress: completedProgress });
     const view = renderPage();
 
     expect(await screen.findByText('Primeros pasos')).toBeTruthy();
@@ -247,7 +250,7 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     view.queryClient.clear();
   });
 
-  it('restores a previous Party failure on return without leaking it into the active account', async () => {
+  it('reloads the returning account without replaying a previous session failure', async () => {
     let rejectCompletion: ((reason?: unknown) => void) | undefined;
     completeOnboardingProgressMock.mockImplementation(() => new Promise((_resolve, reject) => {
       rejectCompletion = reject;
@@ -279,11 +282,16 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     sessionMock = { ...sessionMock, username: 'fan-42', displayName: 'Fan 42', partyId: 42 };
     view.rerenderPage();
     expect(await screen.findByText('Primeros pasos')).toBeTruthy();
-    expect(screen.getByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
+    // A new authenticated lifetime must follow its fresh server read, not an
+    // error callback from credentials that have already been replaced.
+    expect(screen.queryByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeNull();
+    completeOnboardingProgressMock.mockResolvedValue({ newlyCompleted: true, progress: completedProgress });
+    closeOnboardingAlert();
+    await waitFor(() => expect(screen.queryByText('Primeros pasos')).toBeNull());
     view.queryClient.clear();
   });
 
-  it('retains each Party failure when two completion requests fail out of order', async () => {
+  it('keeps the current failure actionable when old requests fail out of order', async () => {
     const failures = new Map<number, (reason: Error) => void>();
     completeOnboardingProgressMock.mockImplementation(() => new Promise((_resolve, reject) => {
       failures.set(sessionMock.partyId, reject);
@@ -291,25 +299,32 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     const view = renderPage();
     expect(await screen.findByText('Primeros pasos')).toBeTruthy();
     closeOnboardingAlert();
+    await waitFor(() => expect(failures.has(42)).toBe(true));
 
     sessionMock = { ...sessionMock, username: 'fan-84', displayName: 'Fan 84', partyId: 84 };
     view.rerenderPage();
     expect(await screen.findByText('Primeros pasos')).toBeTruthy();
     closeOnboardingAlert();
+    await waitFor(() => expect(failures.has(84)).toBe(true));
     await act(async () => {
       failures.get(84)?.(new Error('current account offline'));
     });
-    expect(screen.getByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
+    expect(await screen.findByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
     await act(async () => {
       failures.get(42)?.(new Error('previous account offline'));
     });
     expect(screen.getByText('Primeros pasos')).toBeTruthy();
-    expect(screen.getByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
+    expect(await screen.findByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
 
     sessionMock = { ...sessionMock, username: 'fan-42', displayName: 'Fan 42', partyId: 42 };
     view.rerenderPage();
     expect(await screen.findByText('Primeros pasos')).toBeTruthy();
-    expect(screen.getByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeTruthy();
+    // A new authenticated lifetime must follow its fresh server read, not an
+    // error callback from credentials that have already been replaced.
+    expect(screen.queryByText('No pudimos guardar que terminaste estos primeros pasos.', { exact: false })).toBeNull();
+    completeOnboardingProgressMock.mockResolvedValue({ newlyCompleted: true, progress: completedProgress });
+    closeOnboardingAlert();
+    await waitFor(() => expect(screen.queryByText('Primeros pasos')).toBeNull());
     view.queryClient.clear();
   });
 });

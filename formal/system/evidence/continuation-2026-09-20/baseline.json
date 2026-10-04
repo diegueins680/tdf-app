@@ -1,0 +1,45 @@
+{
+  "observedDateLocal": "2026-09-20",
+  "sharedCheckoutRevision": "17a33eca11d585d84435af85340beece9b51d14e",
+  "sharedCheckoutDirty": true,
+  "initialRemoteMain": "968006b69562a65ba214a8018a22a26563d41337",
+  "concurrentRemoteMain": "3d0b43942e3db9597cd159ffa37bf10713069a0b",
+  "reviewedImplementation": "633f9f906e7cb9d9a0911887fc057ca7ff68906c",
+  "hostedSyntheticMerge": "da80b963da8b88f7db4ea123ad750e7ce837c649",
+  "identicalGitTree": "8eaf8a64f0dcaa771f6357103d363d2e72029b76",
+  "production": {
+    "revision": "592916f2a7fbcd740409acda42e69d1a6bfb128a",
+    "imageDigest": "sha256:20ebc6bceb0352e95acbd88af335928460f600e3eb0bfab065a2e45380d23020",
+    "machines": [
+      "0807ee9cd34668",
+      "3d8d2500c67168"
+    ],
+    "state": "started",
+    "health": {
+      "db": "ok",
+      "status": "ok"
+    },
+    "flags": {
+      "RUN_MIGRATIONS": "false",
+      "AUTO_APPLY_PRODUCTION_MIGRATIONS": "true",
+      "EVENT_DISCOVERY_ENABLED": "true",
+      "EVENT_DISCOVERY_AUTO_PUBLISH": "true",
+      "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED": "false"
+    }
+  },
+  "staging": {
+    "app": "tdf-hq-studio-audit-staging",
+    "revision": "261bfdfbbdab0520b35725a72b776f160b608dd3",
+    "health": {
+      "db": "ok",
+      "status": "ok"
+    }
+  },
+  "capabilities": {
+    "github": "read/push observed; protected review required",
+    "staging": "status/version/health readable; audit deployment not attempted",
+    "production": "status/version/health/machine identities readable; audit deployment not attempted",
+    "mobile": "exact GitHub tree and selected files readable; local gitlink object missing; no store release attempted"
+  },
+  "limitations": "Sanitized transcription of read-only observations, not a deployment receipt or proof of actual application conformance. Flags may change; validate effective process flags again in guarded release preflight."
+}

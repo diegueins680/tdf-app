@@ -1,0 +1,34 @@
+{
+  "observedAt": "2026-09-18T07:33:59.282Z",
+  "source": "Existing legitimate App Review demo login; read-only persisted progress; no credentials in output",
+  "requests": [
+    {
+      "path": "/session/onboarding",
+      "status": 200,
+      "progress": {
+        "completedAt": null,
+        "eligible": false,
+        "firstValue": null,
+        "firstValueCompletedAt": null,
+        "onboardingIntent": "events",
+        "signupCompletedAt": null,
+        "updatedAt": "2026-09-18T03:43:38.622759Z"
+      }
+    },
+    {
+      "path": "/session/experiments/single-feature-onboarding-v1/assignment",
+      "status": 200,
+      "progress": {
+        "assignedAt": null,
+        "eligibleUntil": null,
+        "experimentEligible": false,
+        "experimentEnabled": false,
+        "experimentId": "single-feature-onboarding-v1",
+        "experimentVersion": 1,
+        "exposedAt": null,
+        "newlyAssigned": false,
+        "variant": "control"
+      }
+    }
+  ]
+}

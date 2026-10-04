@@ -1,0 +1,61 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 82 and seed 7322064252053808022 with 1 worker on 16 cores with 4096MB heap and 64MB offheap memory [pid: 72045] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 17.0.12 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/GitHub/tdf-app-social-chat-20260915/formal/social/DmReads.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module DmReads
+Starting... (2026-09-15 21:46:58)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Computed 16 initial states...
+Finished computing initial states: 18 distinct states generated at 2026-09-15 21:46:58.
+Error: Invariant FieldsAuthorized is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ live = {a, b}
+/\ exists = FALSE
+/\ blocked = FALSE
+/\ done = FALSE
+/\ viewer = c
+/\ observed = [ fields |-> {},
+  participant |-> FALSE,
+  permitted |-> FALSE,
+  cursorOK |-> FALSE,
+  leakedCursor |-> FALSE ]
+/\ closed = {}
+/\ route = "threads"
+/\ consent = {}
+/\ cursor = "foreign"
+/\ enabled = FALSE
+/\ activated = FALSE
+
+State 2: <Read line 36, col 9 to line 43, col 97 of module DmReads>
+/\ live = {a, b}
+/\ exists = FALSE
+/\ blocked = FALSE
+/\ done = TRUE
+/\ viewer = c
+/\ observed = [ fields |-> {"identity", "preview"},
+  participant |-> FALSE,
+  permitted |-> TRUE,
+  cursorOK |-> TRUE,
+  leakedCursor |-> FALSE ]
+/\ closed = {}
+/\ route = "threads"
+/\ consent = {}
+/\ cursor = "foreign"
+/\ enabled = FALSE
+/\ activated = FALSE
+
+129 states generated, 129 distinct states found, 115 states left on queue.
+The depth of the complete state graph search is 2.
+The average outdegree of the complete state graph is 9 (minimum is 9, the maximum 9 and the 95th percentile is 9).
+Finished in 00s at (2026-09-15 21:46:58)

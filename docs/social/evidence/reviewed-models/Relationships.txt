@@ -1,0 +1,31 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Running breadth-first search Model-Checking with fp 85 and seed 7316722956104927584 with 1 worker on 16 cores with 3641MB heap and 64MB offheap memory [pid: 40841] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 17.0.12 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /private/tmp/tdf-social-authority-align/formal/social/Relationships.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Relationships
+Starting... (2026-09-15 09:41:39)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-09-15 09:41:40.
+Checking 2 branches of temporal properties for the current state space with 29356 total distinct states at (2026-09-15 09:41:43)
+Finished checking temporal properties in 00s at 2026-09-15 09:41:43
+Progress(7) at 2026-09-15 09:41:43: 28,711 states generated (28,711 s/min), 14,679 distinct states found (14,679 ds/min), 9,830 states left on queue.
+Progress(11) at 2026-09-15 09:42:05: 339,559 states generated, 101,245 distinct states found, 0 states left on queue.
+Checking 2 branches of temporal properties for the complete state space with 202490 total distinct states at (2026-09-15 09:42:05)
+Finished checking temporal properties in 27s at 2026-09-15 09:42:33
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.3E-9
+  based on the actual fingerprints:  val = 1.1E-9
+339559 states generated, 101245 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 11.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 13 and the 95th percentile is 5).
+Finished in 56s at (2026-09-15 09:42:33)

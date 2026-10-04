@@ -1,0 +1,503 @@
+{
+  "config": {
+    "configFile": "/tmp/tdf-ux-checkout-production-c005.config.mjs",
+    "rootDir": "/Users/diegosaa/GitHub/tdf-app-ux-operational/e2e/web",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/tdf-ux-checkout-production-c005-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/Users/diegosaa/GitHub/tdf-app-ux-operational/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "checkout-readiness.spec.mjs"
+        ],
+        "timeout": 45000
+      },
+      {
+        "outputDir": "/tmp/tdf-ux-checkout-production-c005-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/Users/diegosaa/GitHub/tdf-app-ux-operational/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "checkout-readiness.spec.mjs"
+        ],
+        "timeout": 45000
+      },
+      {
+        "outputDir": "/tmp/tdf-ux-checkout-production-c005-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-tablet",
+        "name": "chromium-tablet",
+        "testDir": "/Users/diegosaa/GitHub/tdf-app-ux-operational/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "checkout-readiness.spec.mjs"
+        ],
+        "timeout": 45000
+      },
+      {
+        "outputDir": "/tmp/tdf-ux-checkout-production-c005-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/Users/diegosaa/GitHub/tdf-app-ux-operational/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "checkout-readiness.spec.mjs"
+        ],
+        "timeout": 45000
+      },
+      {
+        "outputDir": "/tmp/tdf-ux-checkout-production-c005-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/Users/diegosaa/GitHub/tdf-app-ux-operational/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "checkout-readiness.spec.mjs"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/tmp/tdf-ux-checkout-production-c005-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "checkout-readiness.spec.mjs",
+      "file": "checkout-readiness.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4450,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:10:12.963Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-fcf7f6cb737389703748",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        },
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3552,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:10:17.759Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-00d4ab87864190da9b8f",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        },
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4288,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:10:23.279Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-65a7dca16a90730f6fc3",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        },
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5120,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:10:27.958Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-c4477c5a77eb251b6ce4",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        },
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4976,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:10:35.900Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-069a0d690cce65064564",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        },
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-tablet",
+              "projectName": "chromium-tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4695,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:10:41.231Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-2ef4b5bb06b9e68c8afb",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        },
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13358,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:10:48.889Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-8b770c1ce8ff038a60e0",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        },
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8081,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:11:07.390Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-363d434ac1231f0c65ed",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        },
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "webkit",
+              "projectName": "webkit",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12482,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:11:20.620Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-a59ecd44504dc1ded27c",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        },
+        {
+          "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+          "ok": true,
+          "tags": [
+            "critical"
+          ],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "webkit",
+              "projectName": "webkit",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12332,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-18T06:11:33.807Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "feceeecb25f7aba5f2cf-0e305ad0c3332ca29f00",
+          "file": "checkout-readiness.spec.mjs",
+          "line": 5,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-18T06:10:11.070Z",
+    "duration": 95513.61899999999,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

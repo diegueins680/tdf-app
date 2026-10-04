@@ -1,0 +1,77 @@
+
+> tdf-app@0.2.0 test:e2e:web
+> playwright test --grep PW-PER-STORAGE
+
+[1A[2K[2m[WebServer] [22m(node:92081) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m[plugin vite:reporter] 
+[2m[WebServer] [22m(!) /private/tmp/tdf-ux-ui-20260917/tdf-hq-ui/src/analytics/onboardingProgress.ts is dynamically imported by /private/tmp/tdf-ux-ui-20260917/tdf-hq-ui/src/session/OnboardingRecovery.tsx but also statically imported by /private/tmp/tdf-ux-ui-20260917/tdf-hq-ui/src/pages/AccessRequestsPage.tsx, /private/tmp/tdf-ux-ui-20260917/tdf-hq-ui/src/pages/ArtistPublicPage.tsx, /private/tmp/tdf-ux-ui-20260917/tdf-hq-ui/src/pages/DirectorySearchPage.tsx, /private/tmp/tdf-ux-ui-20260917/tdf-hq-ui/src/pages/FanHubPage.tsx, /private/tmp/tdf-ux-ui-20260917/tdf-hq-ui/src/session/SessionContext.tsx, dynamic import will not move module into another chunk.
+[2m[WebServer] [22m
+
+[1A[2K[2m[WebServer] [22m
+[2m[WebServer] [22m(!) Some chunks are larger than 500 kB after minification. Consider:
+[2m[WebServer] [22m- Using dynamic import() to code-split the application
+[2m[WebServer] [22m- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[2m[WebServer] [22m- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+[1A[2K[2m[WebServer] [22m(node:92199) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:92227) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 10 tests using 1 worker
+
+[1A[2K(node:92249) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:92249) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/10] [chromium-desktop] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+[1A[2K[2/10] [chromium-desktop] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+[1A[2K(node:92296) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:92296) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[3/10] [chromium-phone] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+[1A[2K[4/10] [chromium-phone] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+[1A[2K(node:92351) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:92351) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[5/10] [chromium-tablet] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+[1A[2K[6/10] [chromium-tablet] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+[1A[2K(node:92416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:92416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[7/10] [firefox-critical] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+[1A[2K[8/10] [firefox-critical] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+[1A[2K(node:92496) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:92496) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[9/10] [webkit-critical] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+[1A[2K[10/10] [webkit-critical] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+[1A[2K  10 passed (1.7m)

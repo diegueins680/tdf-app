@@ -1,0 +1,167 @@
+name: Social formal and persistence verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '43 5 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  models-and-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Fetch pinned TLC
+        run: |
+          curl --fail --location --retry 3 https://github.com/tlaplus/tlaplus/releases/download/v1.7.2/tla2tools.jar -o /tmp/tla2tools-1.7.2.jar
+          echo 'fa18543e44ed5974a85bd2c60c0dc16620ae117680ea8e693d2691999ed90b22  /tmp/tla2tools-1.7.2.jar' | sha256sum --check
+      - name: Safety, liveness and expected counterexample
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/social-model-results
+        run: bash scripts/social/check-models.sh
+      - name: Session authority safety, progress and specific negative controls
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/session-model-results
+        run: bash scripts/social/check-session-model.sh
+      - name: Regenerate observed session outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/session-trace-states -dump dot,actionlabels /tmp/session-traces.dot -config formal/social/SessionTraces.cfg formal/social/SessionBoundary.tla
+          python3 scripts/social/generate-session-cases.py /tmp/session-traces.dot /tmp/SessionModelCases.hs
+          diff -u scripts/social/SessionModelCases.hs /tmp/SessionModelCases.hs
+      - name: Legacy DM safety, pause memory and consent counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/dm-model-results
+        run: bash scripts/social/check-dm-model.sh
+      - name: Regenerate checked DM INSERT outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/dm-trace-states -dump dot,actionlabels /tmp/dm-traces.dot -config formal/social/LegacyDm.cfg formal/social/LegacyDm.tla
+          python3 scripts/social/generate-dm-cases.py /tmp/dm-traces.dot /tmp/dm-model-cases.sql
+          diff -u scripts/social/dm-model-cases.sql /tmp/dm-model-cases.sql
+      - name: DM read authorization, progress and cursor counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/dm-read-model-results
+        run: bash scripts/social/check-dm-reads-model.sh
+      - name: Regenerate checked DM read outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/dm-read-states -dump dot,actionlabels /tmp/dm-read-traces.dot -config formal/social/DmReadTraces.cfg formal/social/DmReads.tla
+          python3 scripts/social/generate-dm-read-cases.py /tmp/dm-read-traces.dot /tmp/dm-read-model-cases.sql
+          diff -u scripts/social/dm-read-model-cases.sql /tmp/dm-read-model-cases.sql
+      - name: Profile read safety, progress and specific counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/profile-read-model-results
+        run: bash scripts/social/check-profile-reads-model.sh
+      - name: Regenerate checked profile read outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/profile-read-states -dump dot,actionlabels /tmp/profile-read-traces.dot -config formal/social/ProfileReads.cfg formal/social/ProfileReads.tla
+          python3 scripts/social/generate-profile-read-cases.py /tmp/profile-read-traces.dot /tmp/profile-read-model-cases.sql
+          diff -u scripts/social/profile-read-model-cases.sql /tmp/profile-read-model-cases.sql
+      - name: Relationship reads and specific unsafe controls
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/relationship-read-model-results
+        run: bash scripts/social/check-relationship-reads-model.sh
+      - name: Regenerate observed relationship projections
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/relationship-read-states -dump dot,actionlabels /tmp/relationship-read-traces.dot -config formal/social/RelationshipReads.cfg formal/social/RelationshipReads.tla
+          python3 scripts/social/generate-relationship-read-cases.py /tmp/relationship-read-traces.dot /tmp/relationship-read-model-cases.sql
+          diff -u scripts/social/relationship-read-model-cases.sql /tmp/relationship-read-model-cases.sql
+      - name: Legacy write locks, retirement, progress and counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/legacy-write-model-results
+        run: bash scripts/social/check-legacy-writes-model.sh
+      - name: Regenerate observed legacy write effects
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/legacy-write-states -dump dot,actionlabels /tmp/legacy-write-traces.dot -config formal/social/LegacyWrites.cfg formal/social/LegacyWrites.tla
+          python3 scripts/social/generate-legacy-write-cases.py /tmp/legacy-write-traces.dot /tmp/LegacyWriteModelCases.hs
+          diff -u scripts/social/LegacyWriteModelCases.hs /tmp/LegacyWriteModelCases.hs
+      - name: Fan effect retirement, current authority, retries and counterexamples
+        env:
+          TLA_JAR: /tmp/tla2tools-1.7.2.jar
+          TDF_SOCIAL_RESULTS: /tmp/fan-effects-model-results
+        run: bash scripts/social/check-fan-effects-model.sh
+      - name: Regenerate observed fan effect outcomes
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/fan-effects-states -dump dot,actionlabels /tmp/fan-effects-traces.dot -config formal/social/FanEffects.cfg formal/social/FanEffects.tla
+          python3 scripts/social/generate-fan-effects-cases.py /tmp/fan-effects-traces.dot /tmp/FanEffectsModelCases.hs
+          diff -u scripts/social/FanEffectsModelCases.hs /tmp/FanEffectsModelCases.hs
+      - name: PostgreSQL refinement of DM read observations
+        env:
+          TDF_SOCIAL_CHAT_SQL_ONLY: '1'
+        run: bash scripts/social/test-http.sh
+      - name: Legacy DM migration and block/send races
+        run: bash scripts/social/test-dm-writes.sh
+      - name: Regenerate checked consent transitions
+        run: |
+          java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -metadir /tmp/social-consent-states -dump dot,actionlabels /tmp/social-consent.dot -config formal/social/ConsentTraces.cfg formal/social/ConsentTraces.tla
+          python3 scripts/social/generate-model-cases.py /tmp/social-consent.dot /tmp/social-model-cases.sql
+          diff -u scripts/social/model-cases.sql /tmp/social-model-cases.sql
+      - name: PostgreSQL migration, race and model refinement checks
+        run: bash scripts/social/test-postgres.sh
+      - name: Complete schema compatibility and preserved-write pause
+        run: bash scripts/social/test-schema-compatibility.sh
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: social-model-results
+          path: |
+            /tmp/social-model-results/*.txt
+            /tmp/session-model-results/*.txt
+            /tmp/dm-model-results/*.txt
+            /tmp/dm-read-model-results/*.txt
+            /tmp/profile-read-model-results/*.txt
+            /tmp/relationship-read-model-results/*.txt
+            /tmp/legacy-write-model-results/*.txt
+            /tmp/fan-effects-model-results/*.txt
+  social-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NPM_CONFIG_IGNORE_SCRIPTS: true
+      TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Install the lockfile's missing Linux resolver binding
+        # The existing lock includes unrs-resolver 1.11.1 but omits its GNU/x64
+        # optional binding. Do not depend on implicit runtime postinstall.
+        run: npm install --no-save --package-lock=false --ignore-scripts @unrs/resolver-binding-linux-x64-gnu@1.11.1
+      - name: Focused social contract and component tests
+        env:
+          NODE_OPTIONS: --experimental-vm-modules
+        run: node_modules/.bin/jest --config tdf-hq-ui/jest.config.cjs --runInBand tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx tdf-hq-ui/src/api/socialV2.test.ts tdf-hq-ui/src/api/social.test.ts tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx tdf-hq-ui/src/utils/chatReadState.test.ts tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts
+      - name: Verify generated additive contract
+        run: |
+          node_modules/.bin/openapi-typescript tdf-hq/docs/openapi/social-v2.yaml --output /tmp/social-v2.ts
+          diff -u tdf-hq-ui/src/api/generated/social-v2.ts /tmp/social-v2.ts
+      - run: node_modules/.bin/playwright install --with-deps chromium
+      - name: Local synthetic component browser journey
+        run: |
+          node scripts/social/preview.mjs > /tmp/social-preview.txt 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid"' EXIT
+          curl --fail --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:5199/social-preview > /dev/null
+          node scripts/social/verify-preview.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: social-client-browser
+          path: |
+            /tmp/social-browser-current/*
+            /tmp/social-preview.txt

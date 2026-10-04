@@ -1,0 +1,20 @@
+✔ CI splits component checks and preserves Stack build caches (19.883894ms)
+✔ safe-install CI permits missing scripts without masking script failures (7.731682ms)
+✔ configured Datadog checks fail when tests or results are missing (3.665318ms)
+✔ persona browser journeys are artifacted and gate aggregate quality (3.579841ms)
+✔ backend quality compiles, tests and exports the binary in one Stack pass (3.340661ms)
+✔ backend quality exercises public booking concurrency with its tested binary (4.266971ms)
+✔ change detection includes deleted paths (3.160456ms)
+✔ backend image packages the tested artifact instead of recompiling Haskell (7.732971ms)
+✔ automatic migration integration matches the persisted production locale (5.23574ms)
+✔ backend image receives deterministic, non-empty release metadata (4.790172ms)
+✔ source Dockerfile introduces changing release metadata after compilation (3.04891ms)
+✔ affected active workflow actions use Node 24 majors (10.750895ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 418.603823

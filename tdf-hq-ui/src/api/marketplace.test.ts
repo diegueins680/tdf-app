@@ -39,6 +39,22 @@ describe('marketplace checkout API security contract', () => {
     expect(window.localStorage.getItem('tdf-marketplace-checkout-idempotency:cart-1')).toBe(datafastKey);
   });
 
+  it.each(['getter', 'getItem', 'setItem'] as const)('does not dispatch checkout when required idempotency storage %s fails', async (failure) => {
+    const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+    const blocked = () => { throw new DOMException('Blocked checkout storage', 'SecurityError'); };
+    const spy = failure === 'getter' ? null : jest.spyOn(Storage.prototype, failure).mockImplementation(blocked);
+    if (failure === 'getter') Object.defineProperty(window, 'localStorage', { configurable: true, get: blocked });
+    try {
+      const checkout = async () => Marketplace.checkout('cart-denied', { mcrBuyerName: 'Ada', mcrBuyerEmail: 'ada@example.com' }, getMarketplaceCheckoutIdempotencyKey('cart-denied', 'bank_transfer'));
+      await expect(checkout()).rejects.toThrow('Blocked checkout storage');
+      await expect(checkout()).rejects.toThrow('Blocked checkout storage');
+      expect(postMock).not.toHaveBeenCalled();
+    } finally {
+      spy?.mockRestore();
+      if (descriptor) Object.defineProperty(window, 'localStorage', descriptor);
+    }
+  });
+
   it('sends the immutable checkout key on every order-creation request', async () => {
     postMock.mockResolvedValue({});
     const payload = { mcrBuyerName: 'Ada', mcrBuyerEmail: 'ada@example.com' };

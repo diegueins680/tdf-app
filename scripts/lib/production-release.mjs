@@ -275,6 +275,9 @@ export function validateFlyConfig(toml) {
   const reputationAggregationMode = String(
     env.get('REPUTATION_AGGREGATION_MODE') ?? '',
   ).trim().toLowerCase();
+  const singleFeatureOnboardingExperiment = String(
+    env.get('SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED') ?? '',
+  ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
   const eventDiscoveryAutoPublish = String(
     env.get('EVENT_DISCOVERY_AUTO_PUBLISH') ?? '',
@@ -341,6 +344,9 @@ export function validateFlyConfig(toml) {
   }
   if (reputationAggregationMode !== 'simulation') {
     throw new Error('fly.toml must set REPUTATION_AGGREGATION_MODE="simulation".');
+  }
+  if (singleFeatureOnboardingExperiment !== 'false') {
+    throw new Error('fly.toml must stage SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED="false" until explicit activation approval.');
   }
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
@@ -540,7 +546,7 @@ BEGIN
   IF to_regclass('public.notification') IS NULL OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'notification'
-  ) <> 9 OR to_regclass('public.idx_notification_recipient') IS NULL THEN
+  ) NOT IN (9,10) OR to_regclass('public.idx_notification_recipient') IS NULL THEN
     RAISE EXCEPTION 'The repaired notification schema is missing or incomplete';
   END IF;
   IF EXISTS (
@@ -692,8 +698,67 @@ DECLARE
   ticketing_table TEXT;
   enrichment_table TEXT;
 BEGIN
+  IF to_regclass('public.google_calendar_config') IS NULL
+     OR to_regclass('public.google_calendar_event') IS NULL THEN
+    RAISE EXCEPTION 'Calendar runtime relations are missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('google_calendar_config', 'id', 'bigint', 'NO'),
+      ('google_calendar_config', 'owner_id', 'bigint', 'YES'),
+      ('google_calendar_config', 'calendar_id', 'character varying', 'NO'),
+      ('google_calendar_config', 'access_token', 'character varying', 'YES'),
+      ('google_calendar_config', 'refresh_token', 'character varying', 'YES'),
+      ('google_calendar_config', 'token_type', 'character varying', 'YES'),
+      ('google_calendar_config', 'token_expires_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_config', 'sync_cursor', 'character varying', 'YES'),
+      ('google_calendar_config', 'synced_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_config', 'created_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_config', 'updated_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_event', 'id', 'bigint', 'NO'),
+      ('google_calendar_event', 'calendar_id', 'character varying', 'NO'),
+      ('google_calendar_event', 'google_id', 'character varying', 'NO'),
+      ('google_calendar_event', 'status', 'character varying', 'NO'),
+      ('google_calendar_event', 'summary', 'character varying', 'YES'),
+      ('google_calendar_event', 'description', 'character varying', 'YES'),
+      ('google_calendar_event', 'location', 'character varying', 'YES'),
+      ('google_calendar_event', 'start_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'end_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'updated_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'html_link', 'character varying', 'YES'),
+      ('google_calendar_event', 'attendees', 'character varying', 'YES'),
+      ('google_calendar_event', 'raw_payload', 'character varying', 'YES'),
+      ('google_calendar_event', 'created_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_event', 'updated_local', 'timestamp with time zone', 'NO')
+    ) expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns actual
+      ON actual.table_schema='public' AND actual.table_name=expected.table_name
+      AND actual.column_name=expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type<>expected.data_type
+      OR actual.is_nullable<>expected.is_nullable
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgrelid='public.google_calendar_config'::regclass
+      AND tgname='identity_archive_reference_guard' AND NOT tgisinternal
+      AND tgfoid='identity_reject_archived_reference()'::regprocedure AND tgenabled='O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_config'::regclass
+      AND contype='u' AND pg_get_constraintdef(oid)='UNIQUE (calendar_id)'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_event'::regclass
+      AND contype='u' AND pg_get_constraintdef(oid)='UNIQUE (calendar_id, google_id)'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_config'::regclass
+      AND contype='f' AND confrelid='public.party'::regclass AND convalidated
+      AND conkey=ARRAY[(SELECT attnum FROM pg_attribute
+        WHERE attrelid='public.google_calendar_config'::regclass AND attname='owner_id')]
+  ) THEN
+    RAISE EXCEPTION 'Calendar runtime columns or archived-owner guard are incompatible';
+  END IF;
   IF to_regclass('public.notification') IS NULL THEN
     RAISE EXCEPTION 'The notification relation is missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notification' AND column_name='target_key' AND data_type='text' AND is_nullable='YES') OR to_regclass('public.notification_navigation_backfill') IS NULL OR to_regclass('public.notification_navigation_constraint_history') IS NULL THEN
+    RAISE EXCEPTION 'Notification destination identity or reversible history journal is missing';
   END IF;
   -- A named allowlist must include the access-request events. The pre-ledger
   -- notification baseline had no allowlist at all, which is also valid: it
@@ -859,6 +924,17 @@ BEGIN
      OR pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
        NOT ILIKE '%suppressed%' THEN
     RAISE EXCEPTION 'directory_public_event does not enforce imported-event tombstones';
+  END IF;
+  IF pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
+       NOT ILIKE '%directory_social_event_metadata_is_public%' THEN
+    RAISE EXCEPTION 'directory_public_event does not enforce event metadata privacy';
+  END IF;
+  IF directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{}}') IS DISTINCT FROM TRUE
+     OR directory_social_event_metadata_is_public('{"isPublic":false,"_discoveryOwned":{}}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":null}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{},"unexpected":1}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{},"_discoveryOwned":{}}') IS DISTINCT FROM FALSE THEN
+    RAISE EXCEPTION 'Directory metadata ownership/privacy boundary is missing or invalid';
   END IF;
   IF pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)
        NOT ILIKE '%directory_public_event%'
@@ -1348,6 +1424,34 @@ BEGIN
     RAISE EXCEPTION 'unique_external_event_discovery_slot is missing or invalid';
   END IF;
 
+  IF to_regclass('public.records_ingestion_control') IS NULL
+    OR to_regclass('public.records_ingestion_quota') IS NULL
+    OR to_regclass('public.records_ingestion_change') IS NULL
+    OR to_regclass('public.records_ingestion_admin_audit') IS NULL
+    OR to_regprocedure('public.tdf_ingest_public_video(bigint,uuid,jsonb)') IS NULL
+    OR to_regprocedure('public.tdf_mark_video_unavailable(bigint,uuid,text,text,timestamptz)') IS NULL
+    OR to_regprocedure('public.tdf_expire_records_provider_data()') IS NULL THEN
+    RAISE EXCEPTION 'Records ingestion runtime schema is incomplete';
+  END IF;
+  IF (SELECT count(*) FROM records_ingestion_control WHERE singleton) <> 1
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='social_sync_account'::regclass
+      AND tgname='records_source_configuration_lock' AND tgenabled='O')
+    OR NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='record_external_resource' AND column_name='provider_metadata' AND data_type='jsonb')
+    OR NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='record_external_resource' AND column_name='source_account_id' AND data_type='bigint') THEN
+    RAISE EXCEPTION 'Records ingestion controls, metadata or source locking are incomplete';
+  END IF;
+
+  IF to_regclass('public.event_discovery_publication_approval') IS NULL
+    OR to_regprocedure('public.tdf_event_pilot_keys(bigint,bigint)') IS NULL
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='external_event_ref'::regclass
+      AND tgname='event_discovery_pilot_limit_trigger' AND tgenabled='O')
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='event_discovery_source'::regclass
+      AND tgname='event_source_publication_scope' AND tgenabled='O') THEN
+    RAISE EXCEPTION 'Shared event pilot or publication authority is incomplete';
+  END IF;
+
   FOREACH social_table IN ARRAY ARRAY[
     'social_sync_account',
     'social_sync_post',
@@ -1362,7 +1466,7 @@ BEGIN
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_account'
-  ) <> 12 OR (
+  ) <> 13 OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_post'
   ) <> 20 OR (
@@ -1379,6 +1483,7 @@ BEGIN
     SELECT 1
     FROM (
       VALUES
+        ('social_sync_account', 'records_ingestion', 'jsonb', 'YES'),
         ('social_sync_account', 'party_id', 'bigint', 'YES'),
         ('social_sync_account', 'artist_profile_id', 'bigint', 'YES'),
         ('social_sync_account', 'platform', 'character varying', 'NO'),
@@ -2255,9 +2360,12 @@ BEGIN
     ) AS expected(flag_key)
     LEFT JOIN revenue_feature_flag AS flag
       ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
-    WHERE flag.flag_key IS NULL OR flag.enabled
+    -- PayPal webhook intake is an approved production capability. Restarts
+    -- must preserve its configured state; refunds and Datafast stay staged.
+    WHERE flag.flag_key IS NULL
+       OR (flag.enabled AND expected.flag_key <> 'checkout.paypal.webhooks')
   ) THEN
-    RAISE EXCEPTION 'Production provider event/refund capability gates must exist disabled';
+    RAISE EXCEPTION 'Production provider capability gates must exist; refunds and Datafast must remain disabled';
   END IF;
 
   IF EXISTS (
@@ -2290,6 +2398,36 @@ BEGIN
   ) <> 8 THEN
     RAISE EXCEPTION 'Account-bound onboarding progress constraints are incomplete';
   END IF;
+
+  IF to_regclass('public.user_experiment_assignment') IS NULL OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_experiment_assignment'
+  ) <> 8 OR to_regclass('public.user_experiment_assignment_pending_exposure_idx') IS NULL THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment schema is missing or incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid = 'public.user_experiment_assignment'::regclass
+      AND convalidated
+      AND contype IN ('f', 'u', 'c')
+  ) <> 7 THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment constraints are incomplete';
+  END IF;
+  IF to_regclass('public.interaction_runtime') IS NULL
+     OR to_regclass('public.interaction_report_comment_open') IS NULL
+     OR to_regprocedure('interaction_command(bigint,uuid,uuid,jsonb)') IS NULL
+     OR to_regprocedure('interaction_dispatch_events(integer)') IS NULL
+     OR to_regprocedure('interaction_report_reasons(bigint,uuid)') IS NULL
+     OR EXISTS(SELECT 1 FROM interaction_entity_kind WHERE code='artist_update' AND enabled)
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+       AND table_name='interaction_event' AND column_name='mention_party_ids'
+       AND udt_name='_int8' AND is_nullable='NO')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+       AND table_name='interaction_notification' AND column_name='last_event_id'
+       AND data_type='bigint' AND is_nullable='NO') THEN
+    RAISE EXCEPTION 'Canonical interaction schema and review repairs are missing or incomplete';
+  END IF;
 END
 $verify$;`;
 }
@@ -2302,12 +2440,17 @@ export function buildMachineDeployArgs({
   excludeMachine,
   contextualReputationEnabled = false,
   publicReputationProjectionEnabled = false,
+  eventDiscoveryEnabled = false,
+  eventDiscoveryAutoPublish = false,
 }) {
   if (typeof contextualReputationEnabled !== 'boolean') {
     throw new Error('contextualReputationEnabled must be a boolean.');
   }
   if (typeof publicReputationProjectionEnabled !== 'boolean') {
     throw new Error('publicReputationProjectionEnabled must be a boolean.');
+  }
+  if (typeof eventDiscoveryEnabled !== 'boolean' || typeof eventDiscoveryAutoPublish !== 'boolean') {
+    throw new Error('Event discovery gates must be booleans.');
   }
   const args = [
     'flyctl', 'deploy', '.',
@@ -2323,8 +2466,9 @@ export function buildMachineDeployArgs({
     '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
     '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
-    '--env', 'EVENT_DISCOVERY_ENABLED=false',
-    '--env', 'EVENT_DISCOVERY_AUTO_PUBLISH=false',
+    '--env', `EVENT_DISCOVERY_ENABLED=${eventDiscoveryEnabled}`,
+    '--env', `EVENT_DISCOVERY_AUTO_PUBLISH=${eventDiscoveryAutoPublish}`,
+    '--env', 'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',
     '--wait-timeout', '10m',
@@ -2342,6 +2486,8 @@ export function buildReleaseSteps(options = {}) {
   const sha = normalizeFullSha(options.sha);
   const contextualReputationEnabled = false;
   const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
+  const eventDiscoveryEnabled = options.eventDiscoveryEnabled ?? false;
+  const eventDiscoveryAutoPublish = options.eventDiscoveryAutoPublish ?? false;
   const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
   const descriptiveOnly = options.dryRun === true && options.execute !== true;
   const selectedCanary = options.canaryMachineId ?? options.canaryMachine;
@@ -2392,6 +2538,8 @@ export function buildReleaseSteps(options = {}) {
       sha: previousSha,
       contextualReputationEnabled: previousContextualReputationEnabled,
       publicReputationProjectionEnabled,
+      eventDiscoveryEnabled,
+      eventDiscoveryAutoPublish,
       onlyMachine: canary,
     }),
   };
@@ -2401,7 +2549,7 @@ export function buildReleaseSteps(options = {}) {
       id: `deploy-remaining-${index + 1}`,
       machineId,
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: machineId }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, eventDiscoveryEnabled, eventDiscoveryAutoPublish, onlyMachine: machineId }),
     },
     { id: `smoke-remaining-${index + 1}`, machineId, mutating: false },
   ]);
@@ -2414,7 +2562,7 @@ export function buildReleaseSteps(options = {}) {
     {
       id: 'deploy-canary',
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: canary }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, eventDiscoveryEnabled, eventDiscoveryAutoPublish, onlyMachine: canary }),
     },
     { id: 'smoke-canary', mutating: false, onFailure: [rollbackCanary] },
     ...remainingSteps,

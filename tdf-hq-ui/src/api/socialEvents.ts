@@ -623,7 +623,7 @@ export const SocialEventsAPI = {
       {
         invitationToPartyId,
         invitationStatus: status,
-        invitationMessage: message ?? null,
+        ...(message === undefined ? {} : { invitationMessage: message }),
       },
     ) as SocialInvitationDTO;
   },

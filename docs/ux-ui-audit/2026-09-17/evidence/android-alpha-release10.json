@@ -1,0 +1,28 @@
+{
+  "package": "com.tdf.records",
+  "track": {
+    "track": "alpha",
+    "releases": [
+      {
+        "name": "1.0.1 (10) - TDF onboarding audit",
+        "versionCodes": [
+          "10"
+        ],
+        "releaseNotes": [
+          {
+            "language": "es-419",
+            "text": "Mejoras en el registro, la recuperación de acceso y los enlaces. Se conserva el destino elegido al iniciar sesión. Políticas disponibles en español e inglés."
+          },
+          {
+            "language": "en-US",
+            "text": "Improved signup, account recovery and links. Your intended destination is preserved when signing in. Policies are available in Spanish and English."
+          }
+        ],
+        "status": "completed"
+      }
+    ]
+  },
+  "at": "2026-09-18T04:44:37.906Z",
+  "submittedForReview": true,
+  "publicAvailabilityVerified": false
+}

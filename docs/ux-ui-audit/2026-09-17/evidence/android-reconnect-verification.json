@@ -1,0 +1,96 @@
+{
+  "observedAt": "2026-09-18T18:34:37.908405+00:00",
+  "device": "Samsung SM-S928B Android16 physical USB",
+  "package": "com.tdf.records.uxaudit",
+  "artifactSHA256": "064bdecb531c9e588c6db71cae53f719868a0258a5bf0b35be1890faf09ee2e6",
+  "artifactIdentityVerifiedOnDevice": true,
+  "sourceQualification": "Existing46b1 native QA shell with production Hermes109 tab-text prototype; not Android17 store artifact",
+  "maestroExit": 0,
+  "steps": [
+    "Existing canonical artist follow visible after reconnect",
+    "Stop and cold reopen audit app",
+    "Persisted session and artist follow visible after cold reopen"
+  ],
+  "apiReadback": [
+    {
+      "path": "/session",
+      "status": 200
+    },
+    {
+      "path": "/fans/me/follows",
+      "status": 200,
+      "followCount": 1
+    },
+    {
+      "path": "/session/onboarding",
+      "status": 200
+    }
+  ],
+  "fontVerification": {
+    "observedAt": "2026-09-18T18:32:10.416357+00:00",
+    "device": "Samsung SM-S928B Android16",
+    "package": "com.tdf.records.uxaudit",
+    "originalFontScale": "1.0",
+    "cases": [
+      {
+        "fontScale": "1.0",
+        "fullTabLabels": [
+          {
+            "label": "Directorio",
+            "bounds": "[14,2143][202,2183]"
+          },
+          {
+            "label": "Seguir",
+            "bounds": "[230,2143][418,2183]"
+          },
+          {
+            "label": "Explorar",
+            "bounds": "[446,2143][634,2183]"
+          },
+          {
+            "label": "Crear",
+            "bounds": "[662,2143][850,2183]"
+          },
+          {
+            "label": "Perfil",
+            "bounds": "[878,2143][1066,2183]"
+          }
+        ],
+        "withinScreen": true
+      },
+      {
+        "fontScale": "2.0",
+        "fullTabLabels": [
+          {
+            "label": "Directorio",
+            "bounds": "[14,2036][202,2184]"
+          },
+          {
+            "label": "Seguir",
+            "bounds": "[230,2036][418,2184]"
+          },
+          {
+            "label": "Explorar",
+            "bounds": "[446,2036][634,2184]"
+          },
+          {
+            "label": "Crear",
+            "bounds": "[662,2036][850,2110]"
+          },
+          {
+            "label": "Perfil",
+            "bounds": "[878,2036][1066,2110]"
+          }
+        ],
+        "withinScreen": true
+      }
+    ],
+    "restoredFontScale": "1.0"
+  },
+  "personalAppUnchanged": true,
+  "limits": [
+    "No production package replaced; no full Android17 store installation claim",
+    "Tab text/geometry checked, not every form at200% or human TalkBack",
+    "Physical iPhone Google OAuth remains pending"
+  ]
+}

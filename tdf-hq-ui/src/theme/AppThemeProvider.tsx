@@ -45,7 +45,12 @@ function isThemeModePreference(value: unknown): value is ThemeModePreference {
 
 export function readStoredMode(): StoredThemeSelection {
   if (typeof window === 'undefined') return { id: null, code: 'system' };
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+  let stored: string | null;
+  try {
+    stored = window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return { id: null, code: 'system' };
+  }
   if (isThemeModePreference(stored)) return { id: null, code: stored };
   if (stored) {
     try {
@@ -134,7 +139,11 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
+    } catch {
+      // Theme changes still work in memory when persistence is unavailable.
+    }
   }, [selection]);
 
   useEffect(() => {
@@ -176,6 +185,12 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
           secondary: mode === 'light'
             ? { main: '#be123c', light: '#e11d48', dark: '#9f1239', contrastText: '#ffffff' }
             : { main: '#fda4af', light: '#fecdd3', dark: '#fb7185', contrastText: '#1f1115' },
+          info: mode === 'light'
+            ? { main: '#01579b', light: '#03a9f4', dark: '#003c6d', contrastText: '#ffffff' }
+            : { main: '#4fc3f7', light: '#81d4fa', dark: '#29b6f6', contrastText: '#071923' },
+          warning: mode === 'light'
+            ? { main: '#9a4600', light: '#ed6c02', dark: '#783500', contrastText: '#ffffff' }
+            : { main: '#ffb74d', light: '#ffcc80', dark: '#ffa726', contrastText: '#211100' },
           background: {
             default: mode === 'light' ? '#f8f7f5' : '#0a0a0f',
             paper: mode === 'light' ? '#ffffff' : '#12121a',
@@ -207,6 +222,21 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
           button: { textTransform: 'none', fontWeight: 600, letterSpacing: '0.01em' },
         },
         components: {
+          MuiAlert: {
+            styleOverrides: {
+              root: { '@media (max-width: 599.95px)': { flexWrap: 'wrap' } },
+              message: {
+                minWidth: 0,
+                overflowWrap: 'anywhere',
+                '@media (max-width: 599.95px)': { flex: '1 1 calc(100% - 44px)' },
+              },
+              action: {
+                '@media (max-width: 599.95px)': {
+                  flexBasis: '100%', marginLeft: 0, marginRight: 0, paddingLeft: 34, paddingTop: 0,
+                },
+              },
+            },
+          },
           MuiPaper: {
             styleOverrides: {
               root: {

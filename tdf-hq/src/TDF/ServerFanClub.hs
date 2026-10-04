@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
@@ -39,10 +40,13 @@ module TDF.ServerFanClub
   , validateFanClubEventTimeRange
   ) where
 
-import           Control.Monad          (forM, forM_, when, unless, void)
+import           Control.Monad          (forM, forM_, when, unless, void, filterM)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ReaderT, ask)
+import           Data.Aeson (Value, object, (.=))
+import qualified TDF.Interactions.Legacy as Interactions
+import qualified TDF.Interactions.Server as Interactions
 import           Data.Char              (GeneralCategory (Format, LineSeparator, ParagraphSeparator)
                                          , generalCategory, isControl, isSpace)
 import           Data.Int               (Int64)
@@ -269,7 +273,9 @@ fanClubSecureArtistHandlers user artistId =
                     Just mp -> fanClubMemberProfileClubId mp == cid
                     Nothing -> False
                   ) memories
-            postItems <- forM posts $ \(Entity pid p) -> do
+            visiblePosts <- filterM (\(Entity pid _) -> Interactions.visible (auPartyId user) "club_post" (T.pack (show (fromSqlKey pid)))) posts
+            visibleMemories <- filterM (\(Entity mid _) -> Interactions.visible (auPartyId user) "club_memory" (T.pack (show (fromSqlKey mid)))) validMemories
+            postItems <- forM visiblePosts $ \(Entity pid p) -> do
               author <- getAuthorDTO (fanClubPostFanPartyId p)
               let isOfficer = fromSqlKey (fanClubPostFanPartyId p) `elem` officerIds
               reactions <- buildFanClubPostReactionSummary pid (auPartyId user)
@@ -288,7 +294,7 @@ fanClubSecureArtistHandlers user artistId =
                 , fcfReactions = reactions
                 , fcfCreatedAt = fanClubPostCreatedAt p
                 }
-            memoryItems <- forM validMemories $ \(Entity mid m) -> do
+            memoryItems <- forM visibleMemories $ \(Entity mid m) -> do
               let mprofile = Map.lookup (fanClubMemoryMemberProfileId m) memberProfileMap
               case mprofile of
                 Nothing -> pure Nothing
@@ -326,8 +332,10 @@ fanClubSecureArtistHandlers user artistId =
               [ M.FanClubPostClubId ==. cid
               , M.FanClubPostParentId ==. Nothing
               ] [Desc M.FanClubPostIsPinned, Desc M.FanClubPostCreatedAt]
-            forM posts $ \(Entity pid p) -> do
-              replies <- count [M.FanClubPostParentId ==. Just pid]
+            visiblePosts <- filterM (\(Entity pid _) -> Interactions.visible (auPartyId user) "club_post" (T.pack (show (fromSqlKey pid)))) posts
+            forM visiblePosts $ \(Entity pid p) -> do
+              canonicalCount <- Interactions.commentCount (auPartyId user) "club_post" (T.pack (show (fromSqlKey pid)))
+              replies <- maybe (count [M.FanClubPostParentId ==. Just pid]) pure canonicalCount
               author <- getAuthorDTO (fanClubPostFanPartyId p)
               reactions <- buildFanClubPostReactionSummary pid (auPartyId user)
               pure $ postToDTO pid p (fromIntegral replies) author reactions
@@ -348,41 +356,47 @@ fanClubSecureArtistHandlers user artistId =
           mediaUrlValues <-
             either throwError pure $
               validateFanClubMediaUrlsInput "mediaUrls" (fcpReqMediaUrls req)
-          parentKey <- resolveParentKey cid (fcpReqParentId req)
           let mediaUrls =
                 if null mediaUrlValues
                   then Nothing
                   else Just (T.intercalate "," mediaUrlValues)
-          runDB $ do
-            now <- liftIO getCurrentTime
-            pid <- insert FanClubPost
-              { fanClubPostClubId = cid
-              , fanClubPostFanPartyId = auPartyId user
-              , fanClubPostParentId = parentKey
-              , fanClubPostTitle = title
-              , fanClubPostContent = content
-              , fanClubPostMediaUrls = mediaUrls
-              , fanClubPostIsPinned = False
-              , fanClubPostIsHidden = False
-              , fanClubPostCreatedAt = now
-              , fanClubPostUpdatedAt = Nothing
-              }
-            author <- getAuthorDTO (auPartyId user)
-            let post =
-                  FanClubPost
-                    cid
-                    (auPartyId user)
-                    parentKey
-                    title
-                    content
-                    mediaUrls
-                    False
-                    False
-                    now
-                    Nothing
-            reactions <- buildFanClubPostReactionSummary pid (auPartyId user)
-            pure $ postToDTO pid post 0 author reactions
-
+          canonical <- runDB Interactions.activated
+          case (canonical,fcpReqParentId req) of
+            (True,Just parent) -> do
+              _ <- either throwError pure (validateFanClubPostPathId parent)
+              Interactions.legacyCommand user "club_post" (T.pack (show parent))
+                (object ["operation" .= ("legacy.comment" :: Text), "body" .= content, "title" .= title, "mediaUrls" .= mediaUrlValues, "artistId" .= aId])
+            _ -> do
+              parentKey <- resolveParentKey cid (fcpReqParentId req)
+              runDB $ do
+                now <- liftIO getCurrentTime
+                pid <- insert FanClubPost
+                  { fanClubPostClubId = cid
+                  , fanClubPostFanPartyId = auPartyId user
+                  , fanClubPostParentId = parentKey
+                  , fanClubPostTitle = title
+                  , fanClubPostContent = content
+                  , fanClubPostMediaUrls = mediaUrls
+                  , fanClubPostIsPinned = False
+                  , fanClubPostIsHidden = False
+                  , fanClubPostCreatedAt = now
+                  , fanClubPostUpdatedAt = Nothing
+                  }
+                author <- getAuthorDTO (auPartyId user)
+                let post =
+                      FanClubPost
+                        cid
+                        (auPartyId user)
+                        parentKey
+                        title
+                        content
+                        mediaUrls
+                        False
+                        False
+                        now
+                        Nothing
+                reactions <- buildFanClubPostReactionSummary pid (auPartyId user)
+                pure $ postToDTO pid post 0 author reactions
     resolveParentKey :: FanClubId -> Maybe Int64 -> AppM (Maybe FanClubPostId)
     resolveParentKey _ Nothing = pure Nothing
     resolveParentKey cid (Just rawParentId) = do
@@ -404,15 +418,22 @@ fanClubSecureArtistHandlers user artistId =
       runDB $ update postKey [M.FanClubPostIsPinned =. False]
       pure NoContent
 
-    hidePost aId postId = do
-      postKey <- requirePostOfficerTarget aId postId
-      runDB $ update postKey [M.FanClubPostIsHidden =. True]
-      pure NoContent
+    hidePost aId postId = moderatePost aId postId True
+    unhidePost aId postId = moderatePost aId postId False
 
-    unhidePost aId postId = do
-      postKey <- requirePostOfficerTarget aId postId
-      runDB $ update postKey [M.FanClubPostIsHidden =. False]
-      pure NoContent
+    moderatePost aId postId hidden = do
+      _ <- requireArtistKey aId
+      _ <- either throwError pure (validateFanClubPostPathId postId)
+      canonical <- runDB Interactions.activated
+      original <- runDB $ get (toSqlKey postId :: FanClubPostId)
+      if canonical && maybe True (isJust . fanClubPostParentId) original then do
+        (_ :: Value) <- Interactions.legacyCommand user "club_post" (T.pack (show postId))
+          (object ["operation" .= (if hidden then "legacy.hide" else "legacy.restore" :: Text), "artistId" .= aId])
+        pure NoContent
+      else do
+        postKey <- requirePostOfficerTarget aId postId
+        runDB $ update postKey [M.FanClubPostIsHidden =. hidden]
+        pure NoContent
 
     requirePostOfficerTarget aId rawPostId = do
       artistKey <- requireArtistKey aId
@@ -601,7 +622,8 @@ fanClubSecureArtistHandlers user artistId =
                     Just mp | fanClubMemberProfileClubId mp == cid -> Just (memory, mp)
                     _ -> Nothing
                   ) memories
-            forM validMemories $ \(Entity mid m, mp) -> do
+            visibleMemories <- filterM (\(Entity mid _, _) -> Interactions.visible (auPartyId user) "club_memory" (T.pack (show (fromSqlKey mid)))) validMemories
+            forM visibleMemories $ \(Entity mid m, mp) -> do
               author <- getAuthorDTO (fanClubMemberProfilePartyId mp)
               reactions <- buildFanClubMemoryReactionSummary mid (auPartyId user)
               pure FanClubMemoryDTO
@@ -1042,29 +1064,42 @@ fanClubSecureArtistHandlers user artistId =
 
     reactToPost aId postId ContentReactionReq{..} = do
       artistKey <- requireArtistKey aId
-      requireFanClubPostAccess user artistKey
       postKey <- either throwError pure (validateFanClubPostPathId postId)
-      target <- runDB $ lookupFanClubPostMutationTarget artistKey postKey
-      _ <- either throwError pure target
-      reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
-      now <- liftIO getCurrentTime
-      runDB $ do
-        toggleFanClubPostReaction postKey (auPartyId user) reactionTypeId now
-        buildFanClubPostReactionSummary postKey (auPartyId user)
+      canonical <- runDB Interactions.activated
+      if canonical then do
+        _ <- (Interactions.legacyCommand user "club_post" (T.pack (show (fromSqlKey postKey)))
+          (object ["operation" .= ("legacy.reaction" :: Text), "reactionTypeId" .= crrReactionTypeId,
+                   "artistId" .= fromSqlKey artistKey]) :: AppM Value)
+        runDB $ buildFanClubPostReactionSummary postKey (auPartyId user)
+      else do
+        requireFanClubPostAccess user artistKey
+        target <- runDB $ lookupFanClubPostMutationTarget artistKey postKey
+        _ <- either throwError pure target
+        reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
+        now <- liftIO getCurrentTime
+        runDB $ do
+          toggleFanClubPostReaction postKey (auPartyId user) reactionTypeId now
+          buildFanClubPostReactionSummary postKey (auPartyId user)
 
     reactToMemory aId memoryId ContentReactionReq{..} = do
       artistKey <- requireArtistKey aId
-      requireFanClubPostAccess user artistKey
       memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       clubKey <- maybe (throwError err404 { errBody = "Club no encontrado" }) (pure . entityKey) mClub
       target <- runDB $ lookupFanClubMemoryMutationTarget clubKey memoryKey
       _ <- either throwError pure target
-      reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
-      now <- liftIO getCurrentTime
-      runDB $ do
-        toggleFanClubMemoryReaction memoryKey (auPartyId user) reactionTypeId now
-        buildFanClubMemoryReactionSummary memoryKey (auPartyId user)
+      canonical <- runDB Interactions.activated
+      if canonical then do
+        _ <- (Interactions.legacyCommand user "club_memory" (T.pack (show (fromSqlKey memoryKey)))
+          (object ["operation" .= ("legacy.reaction" :: Text), "reactionTypeId" .= crrReactionTypeId]) :: AppM Value)
+        runDB $ buildFanClubMemoryReactionSummary memoryKey (auPartyId user)
+      else do
+        requireFanClubPostAccess user artistKey
+        reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
+        now <- liftIO getCurrentTime
+        runDB $ do
+          toggleFanClubMemoryReaction memoryKey (auPartyId user) reactionTypeId now
+          buildFanClubMemoryReactionSummary memoryKey (auPartyId user)
 
     getLeaderboard aId _mPeriod = do
       artistKey <- requireArtistKey aId
@@ -1074,16 +1109,17 @@ fanClubSecureArtistHandlers user artistId =
           Nothing -> pure []
           Just (Entity cid _) -> do
             posts <- selectList [M.FanClubPostClubId ==. cid, M.FanClubPostParentId ==. Nothing] []
-            let postIds = map entityKey posts
-            let postAuthorMap = Map.fromList $ map (\(Entity pid p) -> (pid, fanClubPostFanPartyId p)) posts
-            allReactions <- selectList
-              [M.FanClubPostReactionPostId <-. postIds] []
-            let reactionsByAuthor = foldl (\acc (Entity _ r) ->
-                  let mAuthor = Map.lookup (fanClubPostReactionPostId r) postAuthorMap
-                  in case mAuthor of
-                       Just authorId -> Map.insertWith (+) authorId (1 :: Int) acc
-                       Nothing -> acc
-                  ) Map.empty allReactions
+            visiblePosts <- filterM (\(Entity pid _) -> Interactions.visible (auPartyId user) "club_post" (T.pack (show (fromSqlKey pid)))) posts
+            let postIds = map entityKey visiblePosts
+                postAuthorMap = Map.fromList [(pid,fanClubPostFanPartyId p) | Entity pid p <- visiblePosts]
+            canonicalCounts <- Interactions.postReactionCounts (auPartyId user) (map fromSqlKey postIds)
+            countsByPost <- case canonicalCounts of
+              Just counts -> pure (Map.fromList [(toSqlKey pid,n) | (pid,n) <- Map.toList counts])
+              Nothing -> do
+                allReactions <- selectList [M.FanClubPostReactionPostId <-. postIds] []
+                pure $ Map.fromListWith (+) [(fanClubPostReactionPostId r,1 :: Int) | Entity _ r <- allReactions]
+            let reactionsByAuthor = Map.fromListWith (+)
+                  [(author,total) | (pid,total) <- Map.toList countsByPost, Just author <- [Map.lookup pid postAuthorMap]]
             let ranked = zip [1..] $ sortOn (Down . snd) (Map.toList reactionsByAuthor)
             forM (take 10 ranked) $ \(rank, (partyId, totalReactions)) -> do
               author <- getAuthorDTO partyId
@@ -1122,12 +1158,14 @@ fanClubSecureArtistHandlers user artistId =
               , M.FanClubPostParentId ==. Nothing
               , M.FanClubPostIsHidden ==. False
               ] [Desc M.FanClubPostCreatedAt]
-            let postIds = map entityKey posts
-            allReactions <- selectList
-              [M.FanClubPostReactionPostId <-. postIds] []
-            let reactionCounts = foldl (\acc (Entity _ r) ->
-                  Map.insertWith (+) (fanClubPostReactionPostId r) (1 :: Int) acc
-                  ) Map.empty allReactions
+            visiblePosts <- filterM (\(Entity pid _) -> Interactions.visible (auPartyId user) "club_post" (T.pack (show (fromSqlKey pid)))) posts
+            let postIds = map entityKey visiblePosts
+            canonicalCounts <- Interactions.postReactionCounts (auPartyId user) (map fromSqlKey postIds)
+            reactionCounts <- case canonicalCounts of
+              Just counts -> pure (Map.fromList [(toSqlKey pid,n) | (pid,n) <- Map.toList counts])
+              Nothing -> do
+                allReactions <- selectList [M.FanClubPostReactionPostId <-. postIds] []
+                pure $ Map.fromListWith (+) [(fanClubPostReactionPostId r,1 :: Int) | Entity _ r <- allReactions]
             let topPostId = fst <$> listToMaybe (sortOn (Down . snd) (Map.toList reactionCounts))
             case topPostId of
               Nothing -> pure Nothing
@@ -1254,6 +1292,11 @@ toggleFanClubMemoryReaction memoryId reactorId reactionTypeId now = do
 
 buildFanClubPostReactionSummary :: FanClubPostId -> PartyId -> SqlPersistT IO ReactionSummaryDTO
 buildFanClubPostReactionSummary postId viewerPartyId = do
+  canonical <- Interactions.reactionSummary viewerPartyId "club_post" (T.pack (show (fromSqlKey postId)))
+  maybe (buildFanClubPostReactionSummaryLegacy postId viewerPartyId) pure canonical
+
+buildFanClubPostReactionSummaryLegacy :: FanClubPostId -> PartyId -> SqlPersistT IO ReactionSummaryDTO
+buildFanClubPostReactionSummaryLegacy postId viewerPartyId = do
   reactions <- selectList
     [M.FanClubPostReactionPostId ==. postId] []
   buildContentReactionSummary
@@ -1262,6 +1305,11 @@ buildFanClubPostReactionSummary postId viewerPartyId = do
 
 buildFanClubMemoryReactionSummary :: FanClubMemoryId -> PartyId -> SqlPersistT IO ReactionSummaryDTO
 buildFanClubMemoryReactionSummary memoryId viewerPartyId = do
+  canonical <- Interactions.reactionSummary viewerPartyId "club_memory" (T.pack (show (fromSqlKey memoryId)))
+  maybe (buildFanClubMemoryReactionSummaryLegacy memoryId viewerPartyId) pure canonical
+
+buildFanClubMemoryReactionSummaryLegacy :: FanClubMemoryId -> PartyId -> SqlPersistT IO ReactionSummaryDTO
+buildFanClubMemoryReactionSummaryLegacy memoryId viewerPartyId = do
   reactions <- selectList
     [M.FanClubMemoryReactionMemoryId ==. memoryId] []
   buildContentReactionSummary
@@ -1729,6 +1777,8 @@ validateFanClubPostAccess
   -> Bool
   -> Maybe (Entity FanFollow)
   -> Either ServerError ()
+validateFanClubPostAccess artistKey user _ _
+  | auPartyId user == artistKey = Right ()
 validateFanClubPostAccess _ _ True _ =
   Right ()
 validateFanClubPostAccess artistKey user False (Just (Entity _ follow))

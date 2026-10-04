@@ -944,4 +944,5 @@ expired_state=$(psql_exec -Atc "SELECT status FROM directory_invitation WHERE id
 test "$expired_state" = "expired"
 stop_api
 
-echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, verified-review API and aggregation, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."
+psql_file "$TDF_DIRECTORY_ROOT/scripts/__tests__/fixtures/artist-management-claim.sql"
+echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, separate artist-management identities, verified-review API and aggregation, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."

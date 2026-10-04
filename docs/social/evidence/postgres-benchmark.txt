@@ -1,0 +1,206 @@
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+INSERT 0 0
+CREATE TABLE
+CREATE TABLE
+NOTICE:  relation "social_v2_preference" already exists, skipping
+NOTICE:  relation "social_v2_pair" already exists, skipping
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_command" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+CREATE INDEX
+CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+UPDATE 1
+DO
+DO
+BEGIN
+UPDATE 1
+COMMIT
+DO
+BEGIN
+NOTICE:  relation "social_v2_runtime" already exists, skipping
+CREATE TABLE
+INSERT 0 0
+CREATE TABLE
+NOTICE:  relation "social_v2_preference" already exists, skipping
+NOTICE:  relation "social_v2_pair" already exists, skipping
+CREATE TABLE
+CREATE INDEX
+NOTICE:  relation "social_v2_pair_reverse" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "social_v2_command" already exists, skipping
+NOTICE:  relation "social_v2_command_rate" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "social_v2_active_credential_party" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+DO
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+NOTICE:  column "publication_position" of relation "social_v2_runtime" already exists, skipping
+ALTER TABLE
+CREATE TABLE
+NOTICE:  relation "social_v2_publication" already exists, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+UPDATE 1
+ social_v2_publish_batch
+-------------------------
+                       4
+(1 row)
+
+DO
+UPDATE 1
+INSERT 0 1
+ social_v2_publish_batch
+-------------------------
+                       1
+(1 row)
+
+DO
+DELETE 1
+DO
+DELETE 1
+DO
+INSERT 0 1
+                    social_v2_preferences
+-------------------------------------------------------------
+ {"revision": 1, "discoverable": true, "personalized": true}
+(1 row)
+
+DO
+Timing is on.
+INSERT 0 110000
+Time: 4571.432 ms (00:04.571)
+INSERT 0 110000
+Time: 46909.675 ms (00:46.910)
+INSERT 0 10000
+Time: 2756.624 ms (00:02.757)
+INSERT 0 10000
+Time: 5541.675 ms (00:05.542)
+INSERT 0 90000
+Time: 58601.682 ms (00:58.602)
+ANALYZE
+Time: 3735.800 ms (00:03.736)
+SET
+Time: 1.013 ms
+      ?column?      |                                         version
+--------------------+------------------------------------------------------------------------------------------
+ PostgreSQL version | PostgreSQL 16.13 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+(1 row)
+
+Time: 3.380 ms
+     ?column?     |   d   | count
+------------------+-------+--------
+ synthetic degree |     1 | 100004
+ synthetic degree |     2 |      1
+ synthetic degree | 10000 |      1
+ synthetic degree | 90000 |      1
+(4 rows)
+
+Time: 933.362 ms
+      ?column?      | pg_total_relation_size
+--------------------+------------------------
+ pair storage bytes |               14827520
+(1 row)
+
+Time: 18.554 ms
+ERROR:  canceling statement due to statement timeout
+CONTEXT:  SQL function "social_v2_allowed" statement 1
+SQL expression "(WITH candidates AS (
+    SELECT a.id,a.display_name,
+      CASE WHEN use_personalization AND EXISTS (
+        SELECT 1 FROM fan_profile_genre_membership f JOIN artist_profile_genre_membership g
+          ON g.genre_id=f.genre_id WHERE f.fan_party_id=actor AND g.artist_party_id=a.id
+      ) THEN 1 ELSE 0 END AS shared_interest
+    FROM social_v2_preference s JOIN party a ON a.id=s.party_id
+    WHERE s.discoverable AND NOT s.closed AND a.id<>actor AND social_v2_allowed(actor,a.id)
+      AND NOT EXISTS (SELECT 1 FROM social_v2_pair r
+        WHERE r.party_a=least(actor,a.id) AND r.party_b=greatest(actor,a.id)
+          AND (r.consent_a AND r.consent_b OR CASE WHEN actor=r.party_a
+            THEN r.mute_a OR r.dismiss_a OR r.follow_a ELSE r.mute_b OR r.dismiss_b OR r.follow_b END))
+  ), ranked AS (
+    SELECT * FROM candidates ORDER BY shared_interest DESC,
+      md5(id::text || current_date::text || CASE WHEN use_personalization THEN actor::text ELSE '' END),id
+    LIMIT page_size
+  ) SELECT jsonb_build_object('personalized',use_personalization,'items',
+    coalesce(jsonb_agg(jsonb_build_object('partyId',id,'displayName',display_name,
+      'reason',CASE WHEN shared_interest=1 THEN 'shared_interests' ELSE 'public_profile' END)), '[]'::jsonb))
+    FROM ranked)"
+PL/pgSQL function social_v2_discover(bigint,integer) line 13 at RETURN
+Time: 5046.535 ms (00:05.047)

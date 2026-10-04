@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -498,6 +499,7 @@ function SubjectRoomsSummary(props: SubjectRoomsSummaryProps) {
 }
 
 export default function TeacherPortalPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { session } = useSession();
   const teacherId = session?.partyId ?? null;
@@ -591,9 +593,17 @@ export default function TeacherPortalPage() {
     enabled: Boolean(teacherId),
   });
 
+  const identityRequestKey = useRef<string | null>(null);
+  const identityRequestPending = useRef(false);
   const createStudentMutation = useMutation({
-    mutationFn: (payload: { fullName: string; email: string; phone?: string }) => Trials.createStudent(payload),
+    mutationFn: (payload: Parameters<typeof Trials.createStudent>[0]) => {
+      identityRequestPending.current = true;
+      identityRequestKey.current ??= crypto.randomUUID();
+      return Trials.createStudent(payload, identityRequestKey.current);
+    },
+    onSettled: () => { identityRequestPending.current = false; },
     onSuccess: () => {
+      identityRequestKey.current = null;
       void qc.invalidateQueries({ queryKey: ['teacher-students'] });
     },
   });
@@ -848,6 +858,14 @@ export default function TeacherPortalPage() {
     );
   }
 
+  const closeStudentDialog = () => {
+    if (identityRequestPending.current || createStudentMutation.isPending) return;
+    if (identityRequestKey.current && !window.confirm('Una solicitud anterior podría haberse guardado. Comprueba su estado antes de crear otra. ¿Descartar este formulario e iniciar otra solicitud?')) return;
+    identityRequestKey.current = null;
+    createStudentMutation.reset();
+    setStudentDialogOpen(false);
+  };
+
   const openCreateStudent = () => {
     setStudentDialogError(null);
     setStudentForm({ fullName: '', email: '', phone: '' });
@@ -934,6 +952,8 @@ export default function TeacherPortalPage() {
       setStudentDialogError('Completa nombre y correo.');
       return;
     }
+    if (identityRequestPending.current) return;
+    identityRequestPending.current = true;
     try {
       await createStudentMutation.mutateAsync({
         fullName,
@@ -1111,7 +1131,7 @@ export default function TeacherPortalPage() {
         </Stack>
       </Box>
 
-      {loading && <LinearProgress />}
+      {loading && <LinearProgress aria-label={t('auditAccessibility.loadingTeacherAgenda')} />}
 
       <Paper sx={{ borderRadius: 2.5 }} variant="outlined">
         <Tabs
@@ -1436,10 +1456,7 @@ export default function TeacherPortalPage() {
 
       <Dialog
         open={studentDialogOpen}
-        onClose={() => {
-          setStudentDialogOpen(false);
-          setStudentDialogError(null);
-        }}
+        onClose={closeStudentDialog}
         fullWidth
         maxWidth="sm"
       >
@@ -1468,7 +1485,7 @@ export default function TeacherPortalPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setStudentDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={closeStudentDialog} disabled={createStudentMutation.isPending}>Cancelar</Button>
           <Button
             variant="contained"
             onClick={() => void submitStudent()}

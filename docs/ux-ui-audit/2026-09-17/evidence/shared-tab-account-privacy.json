@@ -1,0 +1,39 @@
+{
+  "observedAt": "2026-09-18T19:02:28.616Z",
+  "transport": "Actual local production bundle18717 + isolated API/PostgreSQL18693, backend641876c76519a16b015231335bed46c8593f39fb",
+  "bundleIndexSHA256": "bbaa5502c1cefc567f4ae093d1a5e2ff5c5dc24f081ca22f8f356fbed96b46e4",
+  "rows": [
+    {
+      "engine": "chromium",
+      "actualIsolatedSignupCount": 2,
+      "distinctSessionAuthorities": true,
+      "logoutClearsBothPersonalDraftsAndLegacyLocalValues": true,
+      "nextAccountHasNoPriorDraft": true,
+      "secondLogoutClearsOwnDraft": true,
+      "authoritativeSessionNullAfterLogout": true,
+      "pageErrors": []
+    },
+    {
+      "engine": "firefox",
+      "actualIsolatedSignupCount": 2,
+      "distinctSessionAuthorities": true,
+      "logoutClearsBothPersonalDraftsAndLegacyLocalValues": true,
+      "nextAccountHasNoPriorDraft": true,
+      "secondLogoutClearsOwnDraft": true,
+      "authoritativeSessionNullAfterLogout": true,
+      "pageErrors": []
+    },
+    {
+      "engine": "webkit",
+      "actualIsolatedSignupCount": 2,
+      "distinctSessionAuthorities": true,
+      "logoutClearsBothPersonalDraftsAndLegacyLocalValues": true,
+      "nextAccountHasNoPriorDraft": true,
+      "secondLogoutClearsOwnDraft": true,
+      "authoritativeSessionNullAfterLogout": true,
+      "pageErrors": []
+    }
+  ],
+  "scope": "Two legitimate isolated accounts per engine; real UI signup/logout and authoritative cookie session. Draft/legacy storage values are injected synthetic fixtures; no production account or payment.",
+  "limits": "Logout-mediated shared-tab switch only. Does not qualify concurrent tabs, involuntary expiry, production analytics or every form."
+}

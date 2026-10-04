@@ -1,0 +1,61 @@
+{
+  "observedAt": "2026-09-18T07:45:25.042Z",
+  "package": "com.tdf.records",
+  "bundle": {
+    "versionCode": 12,
+    "sha1": "17b4f73240bcdd88e18846b73a2f83f097be7263",
+    "sha256": "1beade7326ad630b1e83038ff495dd50fc149c9e4696144d1087798887fdb541"
+  },
+  "tracks": [
+    {
+      "track": "alpha",
+      "releases": [
+        {
+          "name": "1.0.1 (10) - TDF onboarding audit",
+          "versionCodes": [
+            "10"
+          ],
+          "releaseNotes": [
+            {
+              "language": "es-419",
+              "text": "Mejoras en el registro, la recuperación de acceso y los enlaces. Se conserva el destino elegido al iniciar sesión. Políticas disponibles en español e inglés."
+            },
+            {
+              "language": "en-US",
+              "text": "Improved signup, account recovery and links. Your intended destination is preserved when signing in. Policies are available in Spanish and English."
+            }
+          ],
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "track": "internal",
+      "releases": [
+        {
+          "name": "1.0.1 (11) - Notification navigation",
+          "versionCodes": [
+            "12"
+          ],
+          "releaseNotes": [
+            {
+              "language": "en-US",
+              "text": "Notifications now open the follower profile, access request, or related resource they refer to. Links preserve your destination through sign-in and show current request status. Opening a notification does not approve requests or change permissions."
+            }
+          ],
+          "status": "draft"
+        },
+        {
+          "name": "1.0.1 (8) - Internal test",
+          "releaseNotes": [
+            {
+              "language": "en-US",
+              "text": "Internal testing build for TDF Records 1.0.1.\n\nIncludes Android release configuration updates, Expo SDK 54 compatibility fixes, and stability improvements across bookings, events, venues, inventory, pipelines, and social tools."
+            }
+          ],
+          "status": "completed"
+        }
+      ]
+    }
+  ]
+}

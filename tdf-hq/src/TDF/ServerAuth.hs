@@ -11,6 +11,8 @@ module TDF.ServerAuth
   ( sessionServer
   , login
   , googleLogin
+  , completeGoogleLogin
+  , resolveGoogleCredential
   , signup
   , changePassword
   , passwordReset
@@ -32,6 +34,7 @@ module TDF.ServerAuth
   , validatePasswordChangeUsernameInput
   , validateGoogleIdTokenInput
   , validateGoogleIdTokenInfo
+  , validateGoogleTokenExpiry
   , validateAuthPassword
   , validateCurrentPasswordInput
   , validatePasswordResetToken
@@ -78,12 +81,14 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
+import Text.Read (readMaybe)
 import Data.Time (NominalDiffTime, UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, toPersistValue, update, upsert, upsertBy, (=.), (==.), (<=.), (>=.), (<-.))
 import Database.PostgreSQL.Simple (SqlError (..))
-import Database.Persist.Sql (Single (..), fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
+import Database.Persist.Sql (Single (..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
 import Network.HTTP.Client (Manager, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import Network.HTTP.Types.Status (statusCode)
@@ -129,6 +134,7 @@ data GoogleIdTokenInfo = GoogleIdTokenInfo
   , gitPicture :: Maybe Text
   , gitSub :: Text
   , gitIss :: Maybe Text
+  , gitExp :: Integer
   } deriving (Show, Generic)
 
 instance FromJSON GoogleIdTokenInfo where
@@ -140,6 +146,10 @@ instance FromJSON GoogleIdTokenInfo where
     gitPicture <- o .:? "picture"
     gitIss <- o .:? "iss"
     gitEmailVerified <- parseEmailVerified o
+    expiryValue <- o .: "exp"
+    gitExp <- case expiryValue of
+      String value -> maybe (fail "exp must be an integer") pure (readMaybe (T.unpack value))
+      value -> parseJSON value
     pure GoogleIdTokenInfo{..}
     where
       parseEmailVerified obj = do
@@ -156,7 +166,9 @@ instance FromJSON GoogleIdTokenInfo where
           _ -> fail "email_verified must be a boolean or one of true, false, 1, 0"
 
 data GoogleProfile = GoogleProfile
-  { gpEmail :: Text
+  { gpIssuer :: Text
+  , gpSubject :: Text
+  , gpEmail :: Text
   , gpName :: Maybe Text
   , gpPicture :: Maybe Text
   } deriving (Show)
@@ -404,10 +416,10 @@ validateSignupTermsAcceptance _ _ =
 supportedAccountTermsVersion :: Text
 supportedAccountTermsVersion = "tdf-account-terms-v1"
 
-validateGoogleAccountCreationTerms :: Maybe Text -> Either Text ()
-validateGoogleAccountCreationTerms (Just version)
+validateGoogleAccountCreationTerms :: Maybe Bool -> Maybe Text -> Either Text ()
+validateGoogleAccountCreationTerms (Just True) (Just version)
   | version == supportedAccountTermsVersion = Right ()
-validateGoogleAccountCreationTerms _ =
+validateGoogleAccountCreationTerms _ _ =
   Left "Accept the terms and privacy policy through the signup flow before creating a Google account"
 
 normalizeAuthPhoneNumber :: Text -> Maybe Text
@@ -462,6 +474,8 @@ sessionServer =
   :<|> updateOnboardingIntent
   :<|> completeOnboarding
   :<|> reconcileOnboarding
+  :<|> currentExperimentAssignment
+  :<|> recordExperimentExposure
 
 onboardingIntentValues :: Set.Set Text
 onboardingIntentValues = Set.fromList
@@ -507,6 +521,18 @@ validateOnboardingValue fieldName allowed raw =
 newUserOnboardingWindow :: NominalDiffTime
 newUserOnboardingWindow = 24 * 60 * 60
 
+singleFeatureOnboardingExperimentId :: Text
+singleFeatureOnboardingExperimentId = "single-feature-onboarding-v1"
+
+singleFeatureOnboardingExperimentVersion :: Int
+singleFeatureOnboardingExperimentVersion = 1
+
+experimentVariantForParty :: PartyId -> Text
+experimentVariantForParty partyIdValue =
+  if fromSqlKey partyIdValue `mod` 2 == 0
+    then "treatment_singlefeature"
+    else "control"
+
 isOnboardingEligible :: UTCTime -> Maybe UTCTime -> Maybe UTCTime -> Bool
 isOnboardingEligible now mSignupAt mCompletedAt =
   isNothing mCompletedAt
@@ -539,6 +565,174 @@ onboardingProgressToDTO now mProgress =
       , firstValueCompletedAt = userOnboardingProgressFirstValueCompletedAt stored
       , updatedAt = Just (userOnboardingProgressUpdatedAt stored)
       }
+
+pausedExperimentAssignment :: Bool -> ExperimentAssignmentDTO
+pausedExperimentAssignment enabledValue =
+  ExperimentAssignmentDTO
+    { experimentId = singleFeatureOnboardingExperimentId
+    , experimentVersion = singleFeatureOnboardingExperimentVersion
+    , experimentEnabled = enabledValue
+    , experimentEligible = False
+    , variant = "control"
+    , assignedAt = Nothing
+    , eligibleUntil = Nothing
+    , exposedAt = Nothing
+    , newlyAssigned = False
+    }
+
+experimentAssignmentToDTO
+  :: Bool
+  -> Bool
+  -> Bool
+  -> UserExperimentAssignment
+  -> ExperimentAssignmentDTO
+experimentAssignmentToDTO enabledValue eligibleValue newlyAssignedValue stored =
+  ExperimentAssignmentDTO
+    { experimentId = userExperimentAssignmentExperimentId stored
+    , experimentVersion = userExperimentAssignmentExperimentVersion stored
+    , experimentEnabled = enabledValue
+    , experimentEligible = eligibleValue
+    , variant = userExperimentAssignmentVariant stored
+    , assignedAt = Just (userExperimentAssignmentAssignedAt stored)
+    , eligibleUntil = Just (userExperimentAssignmentEligibleUntil stored)
+    , exposedAt = userExperimentAssignmentExposedAt stored
+    , newlyAssigned = newlyAssignedValue
+    }
+
+resolveExperimentAssignment
+  :: Bool
+  -> PartyId
+  -> UTCTime
+  -> SqlPersistT IO ExperimentAssignmentDTO
+resolveExperimentAssignment enabledValue partyIdValue now
+  | not enabledValue = pure (pausedExperimentAssignment False)
+  | otherwise = do
+      mProgress <- getBy (UniqueUserOnboardingProgress partyIdValue)
+      let progressEligible = case entityVal <$> mProgress of
+            Just progress ->
+              isOnboardingEligible
+                now
+                (userOnboardingProgressSignupCompletedAt progress)
+                (userOnboardingProgressCompletedAt progress)
+            Nothing -> False
+          mSignupAt = mProgress >>= userOnboardingProgressSignupCompletedAt . entityVal
+      existing <- getBy
+        ( UniqueUserExperimentAssignment
+            partyIdValue
+            singleFeatureOnboardingExperimentId
+            singleFeatureOnboardingExperimentVersion
+        )
+      case (existing, mSignupAt, progressEligible) of
+        (Just (Entity _ stored), _, _) ->
+          pure $ experimentAssignmentToDTO
+            True
+            (progressEligible && now <= userExperimentAssignmentEligibleUntil stored)
+            False
+            stored
+        (Nothing, Just signupAt, True) -> do
+          let eligibleUntilValue = addUTCTime newUserOnboardingWindow signupAt
+              assignmentValue =
+                UserExperimentAssignment
+                  { userExperimentAssignmentPartyId = partyIdValue
+                  , userExperimentAssignmentExperimentId = singleFeatureOnboardingExperimentId
+                  , userExperimentAssignmentExperimentVersion = singleFeatureOnboardingExperimentVersion
+                  , userExperimentAssignmentVariant = experimentVariantForParty partyIdValue
+                  , userExperimentAssignmentAssignedAt = now
+                  , userExperimentAssignmentEligibleUntil = eligibleUntilValue
+                  , userExperimentAssignmentExposedAt = Nothing
+                  }
+          inserted <- insertUnique assignmentValue
+          stored <- getBy
+            ( UniqueUserExperimentAssignment
+                partyIdValue
+                singleFeatureOnboardingExperimentId
+                singleFeatureOnboardingExperimentVersion
+            )
+          pure $ case stored of
+            Just (Entity _ value) ->
+              experimentAssignmentToDTO True True (isJust inserted) value
+            Nothing -> pausedExperimentAssignment True
+        _ -> pure (pausedExperimentAssignment True)
+
+-- Serialize assignment/exposure with completion on the same persisted progress row.
+-- The no-op update is portable to PostgreSQL and SQLite and acquires the write lock
+-- without overwriting signup, completion, intent, or timestamps. Paused requests
+-- perform no writes. Read the clock after waiting for the lock so expired cohorts
+-- cannot be admitted using a timestamp captured before contention.
+withExperimentProgress
+  :: Bool
+  -> PartyId
+  -> (UTCTime -> SqlPersistT IO a)
+  -> SqlPersistT IO a
+withExperimentProgress enabledValue partyIdValue action = do
+  when enabledValue $
+    rawExecute
+      "UPDATE user_onboarding_progress SET party_id = party_id WHERE party_id = ?"
+      [toPersistValue partyIdValue]
+  now <- liftIO getCurrentTime
+  action now
+
+requireSupportedExperiment :: Text -> AppM ()
+requireSupportedExperiment rawExperimentId =
+  unless (T.strip rawExperimentId == singleFeatureOnboardingExperimentId) $
+    throwError err404 {errBody = "Experiment not found"}
+
+currentExperimentAssignment
+  :: Maybe Text
+  -> Maybe Text
+  -> Text
+  -> AppM ExperimentAssignmentDTO
+currentExperimentAssignment mAuthorizationHeader mCookieHeader rawExperimentId = do
+  requireSupportedExperiment rawExperimentId
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  let enabled = singleFeatureOnboardingExperimentEnabled cfg
+  liftIO $ flip runSqlPool pool $
+    withExperimentProgress enabled (auPartyId user) $
+      resolveExperimentAssignment enabled (auPartyId user)
+
+recordExperimentExposure
+  :: Maybe Text
+  -> Maybe Text
+  -> Text
+  -> AppM ExperimentExposureResult
+recordExperimentExposure mAuthorizationHeader mCookieHeader rawExperimentId = do
+  requireSupportedExperiment rawExperimentId
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  (assignmentValue, newlyExposedValue) <- liftIO $ flip runSqlPool pool $
+   withExperimentProgress (singleFeatureOnboardingExperimentEnabled cfg) (auPartyId user) $ \now -> do
+    resolved <- resolveExperimentAssignment
+      (singleFeatureOnboardingExperimentEnabled cfg)
+      (auPartyId user)
+      now
+    if not (experimentEnabled resolved && experimentEligible resolved)
+      then pure (resolved, False)
+      else do
+        changed <- updateWhereCount
+          [ UserExperimentAssignmentPartyId ==. auPartyId user
+          , UserExperimentAssignmentExperimentId ==. singleFeatureOnboardingExperimentId
+          , UserExperimentAssignmentExperimentVersion ==. singleFeatureOnboardingExperimentVersion
+          , UserExperimentAssignmentExposedAt ==. Nothing
+          , UserExperimentAssignmentEligibleUntil >=. now
+          ]
+          [UserExperimentAssignmentExposedAt =. Just now]
+        refreshed <- getBy
+          ( UniqueUserExperimentAssignment
+              (auPartyId user)
+              singleFeatureOnboardingExperimentId
+              singleFeatureOnboardingExperimentVersion
+          )
+        pure
+          ( maybe resolved
+              (\(Entity _ stored) -> experimentAssignmentToDTO True True False stored)
+              refreshed
+          , changed == 1
+          )
+  pure ExperimentExposureResult
+    { assignment = assignmentValue
+    , newlyExposed = newlyExposedValue
+    }
 
 initialOnboardingProgress
   :: PartyId
@@ -1127,6 +1321,7 @@ googleLogin GoogleLoginRequest{..} = do
   tokenClean <- either throwError pure (validateGoogleIdTokenInput idToken)
   acceptedTermsVersion <- either throwError pure (validateSignupTermsAcceptance termsAccepted termsVersion)
   onboardingIntentClean <- traverse (either throwError pure . validateOnboardingIntent) onboardingIntent
+  linkAccountClean <- traverse (either throwError pure . validateLoginRequest) linkAccount
   Env pool cfg <- ask
   let mClientId = googleClientId cfg
   when (isNothing mClientId) $
@@ -1136,7 +1331,7 @@ googleLogin GoogleLoginRequest{..} = do
   case verification of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right profile -> do
-      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin acceptedTermsVersion marketingOptIn onboardingIntentClean profile)
+      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin createNewAccount acceptedTermsVersion marketingOptIn onboardingIntentClean linkAccountClean profile)
       case result of
         Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
         Right resp -> do
@@ -1441,8 +1636,8 @@ isNilPasswordResetToken :: UUID -> Bool
 isNilPasswordResetToken parsedToken =
   toText parsedToken == "00000000-0000-0000-0000-000000000000"
 
-passwordReset :: PasswordResetRequest -> AppM NoContent
-passwordReset PasswordResetRequest{..} = do
+passwordReset :: Maybe Text -> Maybe Text -> PasswordResetRequest -> AppM NoContent
+passwordReset redirect locale PasswordResetRequest{..} = do
   let emailInput = T.strip email
   when (T.null emailInput) $ throwBadRequest "Email is required"
   emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
@@ -1453,7 +1648,7 @@ passwordReset PasswordResetRequest{..} = do
     resetResult <-
       liftIO $
         ((try $
-          EmailSvc.sendPasswordReset emailSvc displayName recipientEmail resetToken) :: IO (Either SomeException ()))
+          EmailSvc.sendPasswordReset emailSvc displayName recipientEmail resetToken redirect locale) :: IO (Either SomeException ()))
     case resetResult of
       Left _ -> do
         let msg = "[PasswordReset] Failed to send a reset email."
@@ -1616,7 +1811,14 @@ verifyGoogleIdToken manager rawToken mExpectedClientId = do
             then pure (Left "Tu sesión de Google es inválida o expiró.")
             else case eitherDecode (responseBody resp) of
               Left _ -> pure (Left "No pudimos validar tu sesión con Google.")
-              Right info -> pure (validateGoogleIdTokenInfo mExpectedClientId info)
+              Right info -> do
+                now <- getCurrentTime
+                pure (validateGoogleTokenExpiry now info >> validateGoogleIdTokenInfo mExpectedClientId info)
+
+validateGoogleTokenExpiry :: UTCTime -> GoogleIdTokenInfo -> Either Text ()
+validateGoogleTokenExpiry now info
+  | gitExp info <= floor (utcTimeToPOSIXSeconds now) = Left "Google session expired"
+  | otherwise = Right ()
 
 validateGoogleIdTokenInfo :: Maybe Text -> GoogleIdTokenInfo -> Either Text GoogleProfile
 validateGoogleIdTokenInfo mExpectedClientId info
@@ -1639,7 +1841,9 @@ validateGoogleIdTokenInfo mExpectedClientId info
         Just normalizedEmail ->
           let normalizedName = sanitizeGoogleProfileName (gitName info)
               profile = GoogleProfile
-                { gpEmail = normalizedEmail
+                { gpIssuer = "https://accounts.google.com"
+                , gpSubject = gitSub info
+                , gpEmail = normalizedEmail
                 , gpName = normalizedName <|> Just normalizedEmail
                 , gpPicture = gitPicture info
                 }
@@ -1672,9 +1876,11 @@ sanitizeGoogleProfileName rawName = do
     then Just name
     else Nothing
 
-completeGoogleLogin :: Maybe Text -> Maybe Bool -> Maybe Text -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingIntent GoogleProfile{..} = do
-  existingResult <- lookupByEmail gpEmail
+completeGoogleLogin :: Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeGoogleLogin creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof GoogleProfile{..} = do
+  -- Serialize one issuing-system subject across login, signup, linking and retries.
+  -- A verified email is profile data, never authorization to an existing account.
+  existingResult <- resolveGoogleCredential gpIssuer gpSubject linkProof
   case existingResult of
     Left err -> pure (Left err)
     Right mExisting ->
@@ -1689,13 +1895,13 @@ completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingInt
               sessionToken <-
                 createReusableSessionToken
                   (userCredentialPartyId cred)
-                  (Just ("google-login:" <> gpEmail))
+                  (Just ("google-login:" <> userCredentialUsername cred))
               mUser <- loadAuthedUser sessionToken
               case mUser of
                 Nothing -> pure (Left "No pudimos cargar tu perfil.")
                 Just user -> pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just False }))
         Nothing ->
-          case validateGoogleAccountCreationTerms acceptedTermsVersion of
+          case validateGoogleAccountCreationTerms creationIntent acceptedTermsVersion of
             Left consentError -> pure (Left consentError)
             Right () -> do
               now <- liftIO getCurrentTime
@@ -1733,14 +1939,16 @@ completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingInt
                   ensureFanProfileIfMissing pid displayName now
                   tempPassword <- liftIO generateTemporaryPassword
                   hashed <- liftIO (hashPasswordText tempPassword)
-                  _ <- insert UserCredential
+                  let providerUsername = "google:" <> gpSubject
+                  credentialId <- insert UserCredential
                     { userCredentialPartyId = pid
-                    , userCredentialUsername = gpEmail
+                    , userCredentialUsername = providerUsername
                     , userCredentialPasswordHash = hashed
                     , userCredentialActive = True
                     }
+                  bindGoogleCredential gpIssuer gpSubject credentialId "new-account"
                   sessionToken <-
-                    createReusableSessionToken pid (Just ("google-login:" <> gpEmail))
+                    createReusableSessionToken pid (Just ("google-login:" <> providerUsername))
                   mUser <- loadAuthedUser sessionToken
                   case mUser of
                     Nothing -> do
@@ -1796,16 +2004,41 @@ selectUniqueLoginEmailCredential :: [Entity UserCredential] -> Maybe (Entity Use
 selectUniqueLoginEmailCredential [credential] = Just credential
 selectUniqueLoginEmailCredential _ = Nothing
 
-lookupByEmail :: Text -> SqlPersistT IO (Either Text (Maybe (Entity UserCredential)))
-lookupByEmail emailAddress = do
-  let query =
-        "SELECT ?? FROM user_credential \
-        \ JOIN party ON user_credential.party_id = party.id \
-        \ WHERE lower(trim(COALESCE(party.primary_email, ''))) = lower(trim(?)) \
-        \ ORDER BY user_credential.id ASC \
-        \ LIMIT 2"
-  creds <- rawSql query [PersistText emailAddress]
-  pure (selectUniqueGoogleLoginCredential creds)
+-- Linking requires proof of both the verified provider subject and the active
+-- TDF credential. Bindings are immutable; no profile, role or ownership transfer.
+resolveGoogleCredential :: Text -> Text -> Maybe LoginRequest -> SqlPersistT IO (Either Text (Maybe (Entity UserCredential)))
+resolveGoogleCredential issuer subject proof = do
+  _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+    [PersistText (issuer <> ":" <> subject)] :: SqlPersistT IO [Single Int64]
+  bound <- rawSql "SELECT ?? FROM user_credential JOIN auth_provider_identity i ON i.credential_id=user_credential.id WHERE i.issuer=? AND i.subject=? FOR UPDATE OF user_credential"
+    [PersistText issuer, PersistText subject]
+  case proof of
+    Nothing -> pure $ case bound of
+      [] -> Right Nothing
+      [credential@(Entity _ value)] | userCredentialActive value -> Right (Just credential)
+      _ -> Left "Unable to connect this account"
+    Just LoginRequest{username=accountName,password=accountPassword} -> do
+      candidate <- lookupCredential accountName
+      case candidate of
+        Nothing -> pure (Left "Unable to connect this account")
+        Just (Entity credentialId _) | not (null bound) && map entityKey bound /= [credentialId] ->
+          pure (Left "Unable to connect this account")
+        Just (Entity credentialId _) -> do
+          locked <- rawSql "SELECT ?? FROM user_credential WHERE id=? FOR UPDATE" [toPersistValue credentialId]
+          case locked of
+            [credential@(Entity _ value)]
+              | userCredentialActive value
+              , validatePassword (TE.encodeUtf8 (userCredentialPasswordHash value)) (TE.encodeUtf8 accountPassword)
+              , null bound || map entityKey bound == [credentialId] -> do
+                  bindGoogleCredential issuer subject credentialId "password-confirmed"
+                  pure (Right (Just credential))
+            _ -> pure (Left "Unable to connect this account")
+
+bindGoogleCredential :: Text -> Text -> UserCredentialId -> Text -> SqlPersistT IO ()
+bindGoogleCredential issuer subject credentialId method = do
+  _ <- rawSql "INSERT INTO auth_provider_identity(issuer,subject,credential_id,verification_method) VALUES (?,?,?,?) ON CONFLICT(issuer,subject) DO NOTHING RETURNING credential_id"
+    [PersistText issuer,PersistText subject,toPersistValue credentialId,PersistText method] :: SqlPersistT IO [Single Int64]
+  pure ()
 
 selectUniqueGoogleLoginCredential
   :: [Entity UserCredential]

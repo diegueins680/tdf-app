@@ -26,6 +26,7 @@ const append = (params: URLSearchParams, key: string, value: string | number | b
 };
 
 export const Directory = {
+  notificationContext: (kind: string, id: string) => get<Record<string, unknown>>(`/directory/notification-context/${encodeURIComponent(kind)}/${encodeURIComponent(id)}`),
   search: (query: DirectorySearchQuery = {}) => {
     const params = new URLSearchParams();
     Object.entries(query).forEach(([key, value]) => append(params, key, value));
@@ -41,6 +42,10 @@ export const Directory = {
   taxonomies: (locale = 'es') =>
     get<DirectoryTaxonomies>(`/directory/taxonomies?locale=${encodeURIComponent(locale)}`),
   profile: (slug: string) => get<components['schemas']['PublicDirectoryProfile']>(`/directory/profiles/${encodeURIComponent(slug)}`),
+  profileByParty: (partyId: number) =>
+    get<components['schemas']['PublicDirectoryProfile']>(`/directory/party-profiles/${partyId}`),
+  prepareArtistClaim: (partyId: number) =>
+    put<{ id: string; name: string }>(`/directory/artist-claim-targets/${partyId}`, {}),
   profileReviews: (slug: string, cursor?: string, limit = 20) => {
     const params = new URLSearchParams({ limit: String(limit) });
     append(params, 'cursor', cursor);

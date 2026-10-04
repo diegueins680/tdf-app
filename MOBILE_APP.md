@@ -23,10 +23,12 @@ The mobile app is tracked as a Git submodule. Before you can work with it, you n
 
 ```bash
 # From repository root
-git submodule update --init --recursive
+git submodule update --init --checkout --recursive
 
 # Or if you haven't cloned yet, clone with submodules
-git clone --recursive <repository-url>
+git clone <repository-url>
+cd tdf-app
+git submodule update --init --checkout --recursive
 ```
 
 ### 2. Verify Submodule Status
@@ -306,7 +308,7 @@ Planned additions:
 **Solution:**
 ```bash
 # From repository root
-git submodule update --init --recursive
+git submodule update --init --checkout --recursive
 cd tdf-mobile
 git checkout main  # or appropriate branch
 git pull

@@ -1,0 +1,164 @@
+[
+  {
+    "locale": "es",
+    "route": "/escuela/profesores",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Cargando profesores"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "es",
+    "route": "/mi-profesor",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Cargando agenda del profesor"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "es",
+    "route": "/label/ddex",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Cargando documentos DDEX"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "es",
+    "route": "/estudio/servicios",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Cargando servicios"
+      },
+      {
+        "label": "Cargando revisiones de servicios"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "es",
+    "route": "/estudio/reportes",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Cargando reportes"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "es",
+    "route": "/chat",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Cargando conversaciones"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "en",
+    "route": "/escuela/profesores",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Loading teachers"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "en",
+    "route": "/mi-profesor",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Loading teacher agenda"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "en",
+    "route": "/label/ddex",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Loading DDEX documents"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "en",
+    "route": "/estudio/servicios",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Loading services"
+      },
+      {
+        "label": "Loading service revisions"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "en",
+    "route": "/estudio/reportes",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Loading reports"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "en",
+    "route": "/chat",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Loading conversations"
+      }
+    ],
+    "violations": []
+  }
+]

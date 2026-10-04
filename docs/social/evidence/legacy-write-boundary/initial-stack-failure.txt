@@ -1,0 +1,82 @@
+/Users/diegosaa/GitHub/tdf-app-social-legacy-writes-20260916/tdf-hq/tdf-hq.cabal was modified manually. Ignoring /Users/diegosaa/GitHub/tdf-app-social-legacy-writes-20260916/tdf-hq/package.yaml in favor of the Cabal file.
+If you want to use the package.yaml file instead of the Cabal file,
+then please delete the Cabal file.
+
+Warning: Ignoring tdf-hq's bounds on http2 (>=5.0 && <5.3) and using http2-5.3.10.
+         Reason: allow-newer enabled.
+
+Warning: Ignoring tdf-hq's bounds on http2 (>=5.0 && <5.3) and using http2-5.3.10.
+         Reason: allow-newer enabled.
+
+Warning: Ignoring tdf-hq's bounds on http2 (>=5.0 && <5.3) and using http2-5.3.10.
+         Reason: allow-newer enabled.
+
+Warning: Ignoring tdf-hq's bounds on http2 (>=5.0 && <5.3) and using http2-5.3.10.
+         Reason: allow-newer enabled.
+tdf-hq> configure (exe + test)
+Configuring tdf-hq-0.1.0.0...
+tdf-hq> build (exe + test) with ghc-9.10.3
+Preprocessing test suite 'tdf-hq-test' for tdf-hq-0.1.0.0...
+Building test suite 'tdf-hq-test' for tdf-hq-0.1.0.0...
+<no location info>: warning: [GHC-32850] [-Wmissing-home-modules]
+    These modules are needed for compilation but not listed in your .cabal file's other-modules for ‘tdf-hq-0.1.0.0-HxjIk3SLUdRAJU8I8zqCof-tdf-hq-test’ :
+        TDF.API.Catalog
+        TDF.API.DDEX
+        TDF.API.Reviews
+        TDF.API.ServiceStorefront
+        TDF.API.ServiceStorefrontTypes
+        TDF.DDEX.Detect
+        TDF.DDEX.ERN.V432.Convert
+        TDF.DDEX.Security
+        TDF.DDEX.Storage
+        TDF.FeatureRegistry
+        TDF.Operations.API
+        TDF.Operations.Model
+        TDF.Operations.ModelSpec
+        TDF.Operations.Server
+        TDF.Operations.Types
+        TDF.Operations.Worker
+        TDF.Server.Reviews
+
+[  1 of 213] Compiling Paths_tdf_hq [Source file changed]
+[ 92 of 213] Compiling TDF.API.SocialRelationships [Source file changed]
+[138 of 213] Compiling TDF.Social.RelationshipWrites
+/Users/diegosaa/GitHub/tdf-app-social-legacy-writes-20260916/tdf-hq/src/TDF/Social/RelationshipWrites.hs:41:9: error: [GHC-80003]
+    • Non type-variable argument
+        in the constraint: ToBackendKey
+                             Database.Persist.SqlBackend.Internal.SqlBackend record
+    • When checking the inferred type
+        name :: forall {record}.
+                ToBackendKey
+                  Database.Persist.SqlBackend.Internal.SqlBackend record =>
+                Key record -> Maybe Text
+      In a stmt of a 'do' block:
+        let name key
+              = lookup (fromSqlKey key) [(i, n) | (Single i, Single n) <- names]
+      In the second argument of ‘($)’, namely
+        ‘do let actor = auPartyId user
+                peer = toSqlKey target
+            names <- rawSql
+                       "SELECT id,display_name FROM party WHERE id IN (?,?)"
+                       [PersistInt64 (fromSqlKey actor), ....] ::
+                       SqlPersistT IO [(Single Int64, Single Text)]
+            let name key = lookup (fromSqlKey key) ...
+            case name peer of
+              Nothing -> pure (Left err404 {errBody = "Party not found"})
+              Just _ -> do ...’
+    Suggested fix: Perhaps you intended to use FlexibleContexts
+   |
+41 |     let name key = lookup (fromSqlKey key) [(i,n) | (Single i,Single n) <- names]
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[202 of 213] Compiling TDF.API [Source file changed]
+
+Error: [S-7282]
+       Stack failed to execute the build plan.
+
+       While executing the build plan, Stack encountered the error:
+
+       [S-7011]
+       While building package tdf-hq-0.1.0.0 (scroll up to its section to see the error) using:
+       /Users/diegosaa/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_w2MFVN35_3.12.1.0_ghc-9.10.3 --verbose=1 --builddir=.stack-work/dist/x86_64-osx/ghc-9.10.3 build exe:tdf-hq-exe test:tdf-hq-test --ghc-options ""
+       Process exited with code: ExitFailure 1

@@ -349,8 +349,8 @@ const artistImageFor = (artist: ArtistProfileDTO, index: number, recordsImages: 
   FALLBACK_ARTIST_IMAGE.url;
 
 const primaryRecordsImage = (resources: RecordsResourceDTO[]): string | null =>
-  resources.find((resource) => resource.primary && resource.thumbnailUrl)?.thumbnailUrl ??
-  resources.find((resource) => resource.thumbnailUrl)?.thumbnailUrl ??
+  resources.find((resource) => resource.primary && resource.availability !== 'unavailable' && resource.thumbnailUrl)?.thumbnailUrl ??
+  resources.find((resource) => resource.availability !== 'unavailable' && resource.thumbnailUrl)?.thumbnailUrl ??
   null;
 
 const artistSummaryFor = (artist: ArtistProfileDTO) => {
@@ -444,7 +444,7 @@ function ValueCard({
             component={RouterLink}
             to={to}
             variant="outlined"
-            sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
+            sx={{ alignSelf: 'flex-start', textTransform: 'none', color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK }}
           >
             {action}
           </Button>
@@ -508,10 +508,11 @@ function ArtistCarousel({
   profileAction: string;
   recordsImages: string[];
 }) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: COLOR_TEXT_SECONDARY_STRONG }}>
-        <CircularProgress size={LOADING_SPINNER_SIZE_PX} color="inherit" />
+        <CircularProgress size={LOADING_SPINNER_SIZE_PX} color="inherit" aria-label={t('auditAccessibility.loadingFeaturedArtists')} />
         <Typography>Cargando artistas destacados...</Typography>
       </Stack>
     );
@@ -1018,7 +1019,7 @@ export default function TdfPlatformPage() {
                     target="_blank"
                     rel="noreferrer"
                     variant="outlined"
-                    sx={{ textTransform: 'none' }}
+                    sx={{ textTransform: 'none', color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK }}
                   >
                     {copy.viewLocation}
                   </Button>
@@ -1082,7 +1083,7 @@ export default function TdfPlatformPage() {
                 to="/records"
                 variant="outlined"
                 size="large"
-                sx={{ textTransform: 'none' }}
+                sx={{ textTransform: 'none', color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK }}
               >
                 {copy.viewReleases}
               </Button>

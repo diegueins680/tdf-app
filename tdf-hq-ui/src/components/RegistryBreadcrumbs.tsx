@@ -69,7 +69,7 @@ export default function RegistryBreadcrumbs() {
           {featureLabel(feature, locale)}
         </Typography>
       ) : (
-        <Link key={feature.id} component={RouterLink} to={route} underline="hover" color="inherit">
+        <Link key={feature.id} component={RouterLink} to={route} underline="hover" color="inherit" sx={{ display: 'inline-flex', alignItems: 'center', minHeight: 24 }}>
           {featureLabel(feature, locale)}
         </Link>
       ))}

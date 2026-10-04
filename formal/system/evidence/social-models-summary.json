@@ -1,0 +1,184 @@
+{
+  "revision": "1cfd1ba8c4a7e501487e006877a17101c7adb341",
+  "command": "Sequential scripts/social/check*model*.sh with pinned TLC1.7.2 and Java21",
+  "exitCode": 0,
+  "logFiles": [
+    {
+      "path": "formal/system/evidence/social-models/check-dm-model/LegacyDm.txt",
+      "sha256": "4190a62cff7b6e212708dc876789a43ade506a4d10eba4d60d7668baa04b58da"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-dm-model/LegacyDmUnsafeConsent.txt",
+      "sha256": "d39795bca2873b4e645557df96a2edb9812ec05eb43b1a128e76c1529809c1d7"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-dm-model/LegacyDmUnsafePause.txt",
+      "sha256": "b870135d3b9f7b423a055ddb1d3ff2540778255291bffd98cec1258e48b14d29"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-dm-reads-model/DmReads.txt",
+      "sha256": "0ffa2f3c768176a5357bb75a4cc6ea4e9a1367df5c62d3e57be40b5ecc2b84c9"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-dm-reads-model/DmReadsCache.txt",
+      "sha256": "f6f1ab8463a54d1661950bfed8c180327030963e5cd1bda9de5cef04383c1f5d"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-dm-reads-model/DmReadsCursor.txt",
+      "sha256": "4311ae43cbbf24f129e52aebdc18ecc09c5054239bda20bcefd90d2fce75eddb"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-dm-reads-model/DmReadsOutsider.txt",
+      "sha256": "7f0717380bb96471c54b5d8dd50db4c98a8633ba14df06064709842fd213617e"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-fan-effects-model/FanEffects.txt",
+      "sha256": "cb60b6fa6f3a638d9ff45113f75a0cc6ebe11f4e1611c33dfad2630d91c271f2"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-fan-effects-model/FanEffectsGoverned.txt",
+      "sha256": "d7e42f2ccf1fd810521650f7b103e50f47f431f19edb76107a3c24fdd1e47e80"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-fan-effects-model/FanEffectsLocks.txt",
+      "sha256": "88567d72a418925e2ae4b6d68ed5c9a09f4234c0fca94dac61e8ea8e9c983a99"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-fan-effects-model/FanEffectsPause.txt",
+      "sha256": "2ab9493dc75c3dd66e1e840f317c74f1457593ec6fe68b331b256db41fb6676d"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-fan-effects-model/FanEffectsRetry.txt",
+      "sha256": "6e226128c64e88b0611b5136f040f2b55252f72ac96afd4fde884b0a10390426"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-legacy-writes-model/LegacyWrites.txt",
+      "sha256": "48dfd287764ff93f5b1121eae840620daf1314d539e748dd171a61b2648de79c"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-legacy-writes-model/LegacyWritesLocks.txt",
+      "sha256": "65e33540c689970fc250478f77a7f0d13791e68d639eb56230c771ea0f333301"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-legacy-writes-model/LegacyWritesPair.txt",
+      "sha256": "64c1bdffd9590d7b0856462089fd4668e6f4640f76999fe0ac1ce4d9431997f7"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-legacy-writes-model/LegacyWritesPause.txt",
+      "sha256": "3d433d492e956819798ca5258c87e0c8357f93e1079c5c0152df300a0b4699c3"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/DeletedActor.txt",
+      "sha256": "516c4c65032ab8ea476bd541011f6a6999007d5299090ff34e6b40e7805289f3"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/DeletedTarget.txt",
+      "sha256": "c22a9b36559c57b1de6bc790f2061d7dfa9d25289d764011f8c91337ce4cd941"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/Feed.txt",
+      "sha256": "76f2a0cc8c334a7f2ce2cae31f3edcdf3e0f59615000f11ee5efc30d3d933815"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/FeedSkipped.txt",
+      "sha256": "fa669cffb716437573d59a7fc0b31363516b378b9ee2005a86e1e1ed70c318c4"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/Reaction.txt",
+      "sha256": "8340c98fcbba4c4fae4023890d6bc78d7e0c3aeb0ab56483ecd0dfd3032465e3"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/Relationships.txt",
+      "sha256": "abd8670858e41412b3a638ed295f7e8383167848aa6b27bb7a91cae8acab8c44"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/RequestConflict.txt",
+      "sha256": "a6526076d126375c62ed59ceac76b5ed10146a60829aaf46acc61ed9d28f20a1"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/RequestIdentity.txt",
+      "sha256": "4cc90636cb0649cfd41b1ed0ffd402adc789985620970a2248e9fe083397c1f1"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/RequestOwnership.txt",
+      "sha256": "761c3eff6171f3ac429c8e7793e2087b7642e30ad70b119da81a6df6322aae3a"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/RequestReplay.txt",
+      "sha256": "1a2e4688f1e6131c7124bba4e1b03710dff705fe7e172d5d3d8e53501dd6a4ce"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/StaleCache.txt",
+      "sha256": "9cfd0d12cf2bf8c8eb5415463f7faaef692743870258d1eeb5d4fdda0f001666"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/StaleCommand.txt",
+      "sha256": "e3fe9ac084d99b52a4f9cd3f7dd838f37c4d22d90c991b1c9aac7b431e6e1d29"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/StaleDelivery.txt",
+      "sha256": "376967ea9a032f538eea1dbaf91623ad67a8df9d11e6a486f80374abbf4fe0c6"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/UnblockOwnership.txt",
+      "sha256": "c8c36fb14f2669641d69a355f924c659f3ca149d75b2ce9a0d33a0037d89fa16"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/UnblockResurrection.txt",
+      "sha256": "66facefe78a6873c29a63925d3414620cd26c81efbda14a6f4f793b35e1d0767"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-models/WithdrawalOwnership.txt",
+      "sha256": "10081117816d32d53b9eb897b067e94a3d6d37130cb3e1e7b7e9f2e4d1c981e9"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-profile-reads-model/ProfileReads.txt",
+      "sha256": "ead8b46b08a14d2aac55b62505a923fb51aecceb5a01da3489293542c4180cee"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-profile-reads-model/ProfileReadsCache.txt",
+      "sha256": "71bb111725e8f0cade6e03360e2db1c1547b643cf914ee451ea1ab22cd4ab5b9"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-profile-reads-model/ProfileReadsPause.txt",
+      "sha256": "1a05192c652471ee28be8934be92c03558cd29d23d116da098aed3c6033c5251"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-profile-reads-model/ProfileReadsPreferences.txt",
+      "sha256": "961569e6e6fa75a36324bc82c094f75412406f0e3164c6fc78d713df0e072ec6"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-relationship-reads-model/RelationshipReads.txt",
+      "sha256": "0862b7ef7eb9ffa7506b963d8e1696b89eb242fafe01a6130747c721898a72ec"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-relationship-reads-model/RelationshipReadsCounts.txt",
+      "sha256": "12b04e838268658bbcae197fe00d1153b80a83584dc4c18303123d80580e97f8"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-relationship-reads-model/RelationshipReadsDeleted.txt",
+      "sha256": "472d4fd6b91cf615e0390f063cbbacaa5497ce23230ea203494bd19fb97c64ac"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-relationship-reads-model/RelationshipReadsPolicy.txt",
+      "sha256": "6dfdf2f8c234fa09f0b2d63e095493f4bd9e54f779e9bd0f6978b17a16032b0f"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-session-model/SessionBoundary.txt",
+      "sha256": "debf5795937cb5a644650cc247d1f193323436ded108849b2db42bb406c22332"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-session-model/SessionCachedRead.txt",
+      "sha256": "b104ae6dc4884a63d823647cf5e8d8410679eb3f98880976cd4971effa7eb444"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-session-model/SessionIdentity.txt",
+      "sha256": "03249345b53b7043f3d7b8e33bdd29c940286468169596cccf6754df3267f129"
+    },
+    {
+      "path": "formal/system/evidence/social-models/check-session-model/SessionUnlockedWrite.txt",
+      "sha256": "6043f4fef77ce3fab3329f7d8c34f98a7671525080942a94b9b756f6bc3066b3"
+    }
+  ],
+  "limits": "Bounded model and required negative-control outcomes; no whole-system refinement proof"
+}

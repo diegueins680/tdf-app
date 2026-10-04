@@ -9,7 +9,7 @@ import {
   parseMetaResponse, requestMeta, retryDelay, saveBundle, sealBundle, validateBundle,
 } from '../lib/instagram-token-lifecycle.mjs';
 import { runLifecycle } from '../refresh-instagram-token.mjs';
-import { findLifecycleRun } from '../instagram-lifecycle-artifact.mjs';
+import { findLifecycleRun, readLifecycleMetadata } from '../instagram-lifecycle-artifact.mjs';
 import { spawnSync } from 'node:child_process';
 import {
   checkToken as checkMessagingToken,
@@ -538,6 +538,44 @@ const producer = (extra = {}) => ({
   head_repository: { full_name: 'example/repo' }, status: 'completed', conclusion: 'success', ...extra,
 });
 const lookupConfig = { repository: 'example/repo', sha: 'b'.repeat(40), currentRunId: '30' };
+test('checkpoint ancestry lookup projects large comparison responses before the subprocess buffer', () => {
+  const endpoint = `repos/example/repo/compare/${'a'.repeat(40)}...${'b'.repeat(40)}`;
+  const metadata = readLifecycleMetadata(endpoint, (command, args, options) => {
+    assert.equal(command, 'gh');
+    assert.equal(options.timeout, 30000);
+    assert.equal(options.maxBuffer, 1024 * 1024);
+    assert.deepEqual(options.stdio, ['ignore', 'pipe', 'pipe']);
+    // Model gh's output projection: an unrelated multi-megabyte diff must never
+    // reach execFileSync's bounded stdout capture just to establish ancestry.
+    if (args.at(-2) !== '--jq' || args.at(-1) !== '{status}') {
+      throw Object.assign(new Error('comparison output exceeded buffer'), { code: 'ENOBUFS' });
+    }
+    assert.deepEqual(args.slice(0, 2), ['api', endpoint]);
+    return JSON.stringify({ status: 'ahead' });
+  });
+  assert.deepEqual(metadata, { status: 'ahead' });
+});
+test('checkpoint run inventory projection retains every provenance field', () => {
+  const expected = { total_count: 1, workflow_runs: [producer()] };
+  assert.deepEqual(readLifecycleMetadata('repos/example/repo/actions/workflows/refresh-instagram-token.yml/runs?per_page=100', (_command, args) => {
+    assert.equal(args.at(-2), '--jq');
+    assert.equal(args.at(-1), '{total_count, workflow_runs: [.workflow_runs[] | {id, display_title, path, head_sha, head_repository: {full_name: .head_repository.full_name}, status, conclusion}]}');
+    return JSON.stringify(expected);
+  }), expected);
+});
+test('checkpoint artifact projection retains identity, expiry and inventory bounds', () => {
+  const expected = { total_count: 1, artifacts: [{ id: 1, name: 'instagram-lifecycle-v1', expired: false }] };
+  assert.deepEqual(readLifecycleMetadata('repos/example/repo/actions/runs/20/artifacts?per_page=100', (_command, args) => {
+    assert.equal(args.at(-1), '{total_count, artifacts: [.artifacts[] | {id, name, expired}]}');
+    return JSON.stringify(expected);
+  }), expected);
+});
+test('metadata execution and JSON errors fail closed without echoing response content', () => {
+  const endpoint = `repos/example/repo/compare/${'a'.repeat(40)}...${'b'.repeat(40)}`;
+  assert.throws(() => readLifecycleMetadata(endpoint, () => { throw new Error('sensitive upstream diagnostic'); }), { message: 'GitHub lifecycle metadata request failed' });
+  assert.throws(() => readLifecycleMetadata(endpoint, () => 'not-json sensitive upstream diagnostic'), { message: 'GitHub lifecycle metadata request failed' });
+  assert.throws(() => readLifecycleMetadata('repos/example/repo/unsupported', () => assert.fail('must not execute')), /Unsupported lifecycle metadata request/);
+});
 function artifactApi(runs, artifacts = [{ id: 1, name: 'instagram-lifecycle-v1', expired: false }], compare = 'ahead') {
   return async endpoint => {
     if (endpoint.includes('/workflows/')) return { workflow_runs: runs, total_count: runs.length };

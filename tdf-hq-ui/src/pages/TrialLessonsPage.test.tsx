@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { fireEvent, getByLabelText } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -23,7 +24,7 @@ const listClassSessionsMock = jest.fn<(params?: ClassSessionFilters) => Promise<
 const createClassSessionMock = jest.fn<(payload: unknown) => Promise<unknown>>();
 const updateClassSessionMock = jest.fn<(classId: number, payload: unknown) => Promise<ClassSessionDTO>>();
 const attendClassSessionMock = jest.fn<(classId: number, payload: unknown) => Promise<unknown>>();
-const createStudentMock = jest.fn<(payload: unknown) => Promise<StudentDTO>>();
+const createStudentMock = jest.fn<(payload: unknown, key: string) => Promise<StudentDTO>>();
 const updateBookingMock = jest.fn<(bookingId: number, payload: unknown) => Promise<unknown>>();
 
 jest.unstable_mockModule('../api/trials', () => ({
@@ -35,7 +36,7 @@ jest.unstable_mockModule('../api/trials', () => ({
     updateClassSession: (classId: number, payload: unknown) => updateClassSessionMock(classId, payload),
     attendClassSession: (classId: number, payload: unknown) => attendClassSessionMock(classId, payload),
     listStudents: () => listStudentsMock(),
-    createStudent: (payload: unknown) => createStudentMock(payload),
+    createStudent: (payload: unknown, key: string) => createStudentMock(payload, key),
   },
 }));
 
@@ -202,6 +203,64 @@ describe('TrialLessonsPage', () => {
     attendClassSessionMock.mockResolvedValue({ classSessionId: 301, consumedMinutes: 45 });
     createStudentMock.mockResolvedValue({ studentId: 12, displayName: 'Katherine Johnson' });
     updateBookingMock.mockResolvedValue({});
+  });
+
+  it('retains the student request after failure and edits, blocks pending dismissal, and resets after success', async () => {
+    let rejectPending!: (error: Error) => void;
+    createStudentMock.mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectPending = reject; }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await clickButton(container, 'Nuevo alumno');
+      await act(async () => {
+        fireEvent.change(getByLabelText(document.body, 'Nombre completo'), { target: { value: 'Synthetic student' } });
+        fireEvent.change(getByLabelText(document.body, 'Correo'), { target: { value: 'student@example.test' } });
+      });
+      await clickButton(document.body, 'Crear alumno');
+      const key = createStudentMock.mock.calls[0]?.[1];
+      expect(key).toMatch(/^[0-9a-f-]{36}$/);
+      const cancel = Array.from(document.body.querySelectorAll('button')).find((button) => buttonText(button) === 'Cancelar');
+      expect(cancel?.disabled).toBe(true);
+      await act(async () => { fireEvent.keyDown(document.body.querySelector('[role="dialog"]')!, { key: 'Escape', code: 'Escape' }); });
+      expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+      await act(async () => { rejectPending(new Error('Response lost')); await flushPromises(); });
+      await act(async () => { fireEvent.change(getByLabelText(document.body, 'Nombre completo'), { target: { value: 'Edited student' } }); });
+      await clickButton(document.body, 'Crear alumno');
+      expect(createStudentMock.mock.calls[1]?.[1]).toBe(key);
+      await clickButton(container, 'Nuevo alumno');
+      await clickButton(document.body, 'Crear alumno');
+      expect(createStudentMock.mock.calls[2]?.[1]).not.toBe(key);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it.each(['getter', 'getItem', 'setItem'] as const)('keeps lesson filters usable when optional storage denies %s', async (operation) => {
+    const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage')!;
+    const deny = () => { throw new DOMException('Denied', 'SecurityError'); };
+    const spy = operation === 'getter' ? undefined : jest.spyOn(Storage.prototype, operation).mockImplementation(deny);
+    if (operation === 'getter') Object.defineProperty(window, 'localStorage', { configurable: true, get: deny });
+    const container = document.createElement('div'); document.body.appendChild(container);
+    let cleanup = async () => { container.remove(); };
+    try {
+      ({ cleanup } = await renderPage(container));
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Trial lessons');
+        expect(container.textContent).toContain('Nueva clase');
+        expect(listClassSessionsMock).toHaveBeenCalledWith(expect.objectContaining({ from: expect.any(String), to: expect.any(String) }));
+      });
+      await waitForExpectation(() => expect(hasButton(container, 'Ajustar fechas')).toBe(true));
+      await clickButton(container, 'Ajustar fechas');
+      const from = container.querySelector<HTMLInputElement>('input[type="datetime-local"]')!;
+      expect(from).not.toBeNull();
+      const changed = '2020-01-02T10:30';
+      await act(async () => { fireEvent.change(from, { target: { value: changed } }); });
+      await waitForExpectation(() => expect(listClassSessionsMock).toHaveBeenLastCalledWith(expect.objectContaining({ from: new Date(changed).toISOString() })));
+      expect(from.value).toBe(changed);
+    } finally {
+      await cleanup(); Object.defineProperty(window, 'localStorage', descriptor); spy?.mockRestore();
+    }
   });
 
   it('replaces the empty export action with first-run guidance when there are no trial lessons', async () => {

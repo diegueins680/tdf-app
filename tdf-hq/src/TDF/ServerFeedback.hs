@@ -695,7 +695,7 @@ internalFeedbackServer user =
                   , ME.internalFeedbackHistoryMetadata = Nothing
                   , ME.internalFeedbackHistoryCreatedAt = now
                   }
-                insertReporterNotification report "internal_feedback_received" "Reporte recibido" "Tu reporte fue recibido y quedó disponible para revisión."
+                insertReporterNotification (Entity reportKey report) "internal_feedback_received" "Reporte recibido" "Tu reporte fue recibido y quedó disponible para revisión."
                 pure (Right ())
       case submissionResult of
         Left "finalized" -> throwError finalizedReportMutationConflict
@@ -771,7 +771,7 @@ internalFeedbackServer user =
         Left _ -> throwError err500
         Right entity -> pure entity
       if kind == "information_request"
-        then withPool $ insertReporterNotification report "internal_feedback_needs_information" "Se necesita más información" "Revisa tu reporte y responde la solicitud del equipo."
+        then withPool $ insertReporterNotification (Entity reportKey report) "internal_feedback_needs_information" "Se necesita más información" "Revisa tu reporte y responde la solicitud del equipo."
         else when (kind == "information_response") (enqueueTeamNotification reportEnt "internal_feedback_information_response" "immediate")
       recordAudit reportEnt kind Nothing
       toCommentDTO ent
@@ -1253,7 +1253,7 @@ internalFeedbackServer user =
         , ME.internalFeedbackHistoryCreatedAt = now
         }
 
-    insertReporterNotification report notificationType title body = do
+    insertReporterNotification (Entity reportKey report) notificationType title body = do
       now <- liftIO getCurrentTime
       insert_ M.Notification
         { M.notificationRecipientPartyId = ME.internalFeedbackReportReporterPartyId report
@@ -1262,18 +1262,19 @@ internalFeedbackServer user =
         , M.notificationBody = body
         , M.notificationTargetType = Just "internal_feedback_report"
         , M.notificationTargetId = Nothing
+        , M.notificationTargetKey = Just (toPathPiece reportKey)
         , M.notificationIsRead = False
         , M.notificationCreatedAt = now
         }
 
-    notifyReporterForState (Entity _ report) newState = do
+    notifyReporterForState reportEnt newState = do
       let message = case newState of
             "needs_information" -> Just ("internal_feedback_needs_information", "Se necesita más información", "El equipo solicitó más información sobre tu reporte.")
             "ready_for_retest" -> Just ("internal_feedback_ready_for_retest", "Reporte listo para retest", "Ya puedes repetir la prueba y registrar el resultado.")
             "closed" -> Just ("internal_feedback_closed", "Reporte cerrado", "Tu reporte fue cerrado. Revisa el motivo y el historial.")
             "received" -> Just ("internal_feedback_reopened", "Reporte reabierto", "Tu reporte fue reabierto para continuar el seguimiento.")
             _ -> Just ("internal_feedback_state_changed", "Estado del reporte actualizado", "El estado de tu reporte cambió a: " <> newState)
-      forM_ message $ \(kind, title, body) -> withPool (insertReporterNotification report kind title body)
+      forM_ message $ \(kind, title, body) -> withPool (insertReporterNotification reportEnt kind title body)
 
     enqueueTeamForReport reportEnt@(Entity _ report) = do
       severityCode <- case ME.internalFeedbackReportProposedSeverityId report of
@@ -1314,6 +1315,7 @@ internalFeedbackServer user =
           , M.notificationBody = notificationBody
           , M.notificationTargetType = Just "internal_feedback_report"
           , M.notificationTargetId = Nothing
+          , M.notificationTargetKey = Just (toPathPiece reportKey)
           , M.notificationIsRead = False
           , M.notificationCreatedAt = now
           }

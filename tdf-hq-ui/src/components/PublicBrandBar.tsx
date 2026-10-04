@@ -16,9 +16,11 @@ export function PublicBrandBar({ tagline, compact, href = '/records', target }: 
   const wordmarkHeight = compact ? 75 : 105;
 
   return (
-    <MuiLink href={href} target={target} underline="none" sx={{ display: 'inline-block' }}>
+    <MuiLink href={href} target={target} underline="none" sx={{ display: 'inline-block', maxWidth: '100%', minWidth: 0 }}>
       <Box
         sx={{
+          maxWidth: '100%',
+          boxSizing: 'border-box',
           border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 999,
           px: { xs: 1.2, md: 1.4 },
@@ -38,13 +40,15 @@ export function PublicBrandBar({ tagline, compact, href = '/records', target }: 
           },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.6, md: 0.8 }, flexWrap: 'wrap' }}>
+        <Box sx={{ maxWidth: '100%', minWidth: 0, display: 'flex', alignItems: 'center', gap: { xs: 0.6, md: 0.8 }, flexWrap: 'wrap' }}>
           <Box
             component="img"
             src={tdfWordmark}
             alt="TDF Records wordmark"
             sx={{
               height: wordmarkHeight,
+              maxWidth: '100%',
+              objectFit: 'contain',
               filter: 'brightness(0) invert(1) drop-shadow(0px 10px 26px rgba(0,0,0,0.65))',
               opacity: 0.95,
               display: 'block',
@@ -54,6 +58,9 @@ export function PublicBrandBar({ tagline, compact, href = '/records', target }: 
             size="small"
             label="Lanzamientos · Estudio · Sesiones"
             sx={{
+              maxWidth: '100%',
+              height: 'auto',
+              '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 },
               bgcolor: 'rgba(124,58,237,0.18)',
               color: '#e5e7eb',
               fontWeight: 700,

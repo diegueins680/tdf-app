@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 import {
   captureContextualReputationGate,
+  captureEventDiscoveryGates,
   runtimeEnvBlockers,
 } from '../production-release.mjs';
 import {
@@ -46,6 +47,7 @@ primary_region = "gru"
   REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
   REPUTATION_AGGREGATION_ENVIRONMENT = "production"
   REPUTATION_AGGREGATION_MODE = "simulation"
+  SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"
   EVENT_DISCOVERY_ENABLED = "false"
   EVENT_DISCOVERY_AUTO_PUBLISH = "false"
   HQ_ASSETS_DIR = "/data/assets"
@@ -155,8 +157,16 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   const migrationIndex = (id) => manifest.migrations.findIndex((migration) => migration.id === id);
   for (const [prerequisite, dependent] of [
     ['2026-09-01_contextual_reputation', '2026-09-04_contextual_reputation_integrity'],
+    ['2026-09-28_interaction_integrity', '2026-09-29_interaction_review_repairs'],
+    ['2026-09-29_interaction_review_repairs', '2026-09-29_interaction_publication_authority'],
+    ['2026-09-29_interaction_publication_authority', '2026-09-29_interaction_reaction_withdrawal'],
+    ['2026-09-29_interaction_reaction_withdrawal', '2026-09-29_interaction_moderation_block_boundary'],
+    ['2026-09-29_interaction_moderation_block_boundary', '2026-09-29_interaction_moderation_access'],
     ['2026-09-06_user_onboarding_progress', '2026-09-07_user_experiment_assignment'],
     ['2026-09-07_directory_event_visibility_and_favorite_evidence', '2026-09-08_event_rsvp_identity_privacy_feed'],
+    ['2026-09-07_directory_event_visibility_and_favorite_evidence', '2026-09-17_directory_event_privacy_composition'],
+    ['2026-09-09_music_directory_suppressed_event_privacy', '2026-09-17_directory_event_privacy_composition'],
+    ['2026-09-17_directory_event_privacy_composition', '2026-10-03_discovery_ownership_metadata_boundary'],
     ['2026-09-07_artist_merch_storefronts', '2026-09-08_merch_reputation'],
     ['2026-09-09_canonical_payment_lifecycle', '2026-09-10_payment_attempt_intent_binding'],
     ['2026-09-10_payment_attempt_intent_binding', '2026-09-11_payment_intent_runtime_sync'],
@@ -751,6 +761,18 @@ test('validateFlyConfig structurally identifies production reputation configurat
   );
 });
 
+test('validateFlyConfig keeps the onboarding experiment paused until activation is approved', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"',
+        'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "true"',
+      ),
+    ),
+    /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED|activation approval/i,
+  );
+});
+
 test('validateFlyConfig requires the persisted production default locale', () => {
   assert.throws(
     () => validateFlyConfig(safeFlyConfig.replace('DEFAULT_LOCALE = "es"', 'DEFAULT_LOCALE = "en"')),
@@ -808,6 +830,7 @@ test('runtime preflight preserves a coherent captured contextual reputation gate
     REPUTATION_AGGREGATION_MODE: 'simulation',
     EVENT_DISCOVERY_ENABLED: 'false',
     EVENT_DISCOVERY_AUTO_PUBLISH: 'false',
+    SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED: 'false',
     DEFAULT_LOCALE: 'es',
   };
   const rows = [
@@ -817,6 +840,7 @@ test('runtime preflight preserves a coherent captured contextual reputation gate
 
   assert.equal(captureContextualReputationGate(rows), false);
   assert.deepEqual(runtimeEnvBlockers(rows), []);
+  assert.match(runtimeEnvBlockers([{ machineId: 'machine-a', values: { ...values, SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED: 'true' } }])[0], /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED/);
   assert.deepEqual(runtimeEnvBlockers(rows, { contextualReputationEnabled: false }), []);
   assert.match(
     runtimeEnvBlockers(rows, { contextualReputationEnabled: true })[0],
@@ -930,6 +954,9 @@ test('buildMigrationBatchSql rejects unexpanded include directives', () => {
 
 test('buildSchemaVerificationSql fails closed over every registered runtime schema contract', () => {
   const sql = buildSchemaVerificationSql();
+  assert.match(sql, /interaction_report_reasons/);
+  assert.match(sql, /mention_party_ids/);
+  assert.match(sql, /last_event_id/);
 
   assert.match(sql, /\\set\s+ON_ERROR_STOP\s+(?:on|1)/i);
   for (const triggerMarker of [
@@ -984,6 +1011,9 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'campaign_automation',
     'campaign_delivery',
     'notification_notif_type_check',
+    'notification_navigation_backfill',
+    'notification_navigation_constraint_history',
+    "column_name='target_key'",
     'access_request_submitted',
     'access_request_review',
     'access_request_decided',
@@ -1086,6 +1116,8 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'ddex-operational-cutover-2026-08-12',
     'user_onboarding_progress',
     'user_onboarding_progress_eligible_idx',
+    'user_experiment_assignment',
+    'user_experiment_assignment_pending_exposure_idx',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
@@ -1164,6 +1196,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_WORKER_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_MODE=simulation/);
+  assert.match(canaryCommand, /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_ENABLED=false/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_AUTO_PUBLISH=false/);
   assert.doesNotMatch(canaryCommand, /--strategy canary(?:\s|$)/);
@@ -1254,4 +1287,65 @@ test('buildDeployPlan validates Fly safety settings before producing a release p
     ),
     /RUN_MIGRATIONS|migration/i,
   );
+});
+
+
+test('discovery gates are captured from a coherent fleet without enabling or disabling either flag', () => {
+  for (const enabled of [false, true]) {
+    for (const autoPublish of [false, true]) {
+      const values = {
+        EVENT_DISCOVERY_ENABLED: String(enabled),
+        EVENT_DISCOVERY_AUTO_PUBLISH: String(autoPublish),
+      };
+      const rows = [{ machineId: 'a', values }, { machineId: 'b', values: { ...values } }];
+      const gates = captureEventDiscoveryGates(rows);
+      assert.deepEqual(gates, { eventDiscoveryEnabled: enabled, eventDiscoveryAutoPublish: autoPublish });
+      const args = buildMachineDeployArgs({ app: 'tdf-hq', image: releaseImage, sha: normalizedReleaseSha, ...gates });
+      assert.ok(args.includes(`EVENT_DISCOVERY_ENABLED=${enabled}`));
+      assert.ok(args.includes(`EVENT_DISCOVERY_AUTO_PUBLISH=${autoPublish}`));
+      assert.equal(args.filter((arg) => arg.startsWith('EVENT_DISCOVERY_ENABLED=')).length, 1);
+      assert.equal(args.filter((arg) => arg.startsWith('EVENT_DISCOVERY_AUTO_PUBLISH=')).length, 1);
+    }
+  }
+});
+
+test('discovery preflight rejects inconsistent, unset or malformed fleet gates', () => {
+  const values = { EVENT_DISCOVERY_ENABLED: 'true', EVENT_DISCOVERY_AUTO_PUBLISH: 'true' };
+  assert.throws(() => captureEventDiscoveryGates([]), /same boolean EVENT_DISCOVERY_ENABLED/);
+  assert.throws(() => captureEventDiscoveryGates([{ values: {} }]), /same boolean EVENT_DISCOVERY_ENABLED/);
+  assert.throws(() => captureEventDiscoveryGates([{ values }, { values: { ...values, EVENT_DISCOVERY_ENABLED: 'false' } }]), /same boolean EVENT_DISCOVERY_ENABLED/);
+  assert.throws(() => captureEventDiscoveryGates([{ values }, { values: { ...values, EVENT_DISCOVERY_AUTO_PUBLISH: 'false' } }]), /same boolean EVENT_DISCOVERY_AUTO_PUBLISH/);
+  assert.throws(() => captureEventDiscoveryGates([{ values: { ...values, EVENT_DISCOVERY_AUTO_PUBLISH: 'yes' } }]), /same boolean EVENT_DISCOVERY_AUTO_PUBLISH/);
+});
+
+test('runtime checks accept captured discovery settings and reject subsequent drift', () => {
+  const values = {
+    RUN_MIGRATIONS: 'false', AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
+    CONTEXTUAL_REPUTATION_ENABLED: 'false', REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
+    REPUTATION_AGGREGATION_ENVIRONMENT: 'production', REPUTATION_AGGREGATION_MODE: 'simulation',
+    EVENT_DISCOVERY_ENABLED: 'true', EVENT_DISCOVERY_AUTO_PUBLISH: 'true', DEFAULT_LOCALE: 'es',
+    SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED: 'false',
+  };
+  const rows = [{ machineId: 'a', values }];
+  const gates = captureEventDiscoveryGates(rows);
+  assert.deepEqual(runtimeEnvBlockers(rows, gates), []);
+  assert.equal(runtimeEnvBlockers(rows).length, 2);
+  const changed = [{ machineId: 'a', values: { ...values, EVENT_DISCOVERY_AUTO_PUBLISH: 'false' } }];
+  assert.match(runtimeEnvBlockers(changed, gates)[0], /EVENT_DISCOVERY_AUTO_PUBLISH/);
+  assert.throws(() => runtimeEnvBlockers(rows, { eventDiscoveryEnabled: 'true' }), /must be a boolean/);
+  assert.throws(() => buildMachineDeployArgs({ app: 'tdf-hq', image: releaseImage, sha: normalizedReleaseSha, eventDiscoveryAutoPublish: 'false' }), /must be booleans/);
+});
+
+test('release planning preserves captured discovery gates for canary, remaining machines and rollback', () => {
+  const steps = buildReleaseSteps({
+    sha: normalizedReleaseSha, image: releaseImage, canaryMachineId: 'canary', remainingMachineIds: ['remaining'],
+    previousImage: 'registry.example/tdf@sha256:' + 'a'.repeat(64), previousSha: 'b'.repeat(40),
+    previousContextualReputationEnabled: false, eventDiscoveryEnabled: true, eventDiscoveryAutoPublish: true,
+  });
+  const commands = steps.flatMap((step) => [step.command, ...(step.onFailure ?? []).map((failure) => failure.command)]).filter(Boolean);
+  assert.equal(commands.length, 3);
+  for (const command of commands) {
+    assert.ok(command.includes('EVENT_DISCOVERY_ENABLED=true'));
+    assert.ok(command.includes('EVENT_DISCOVERY_AUTO_PUBLISH=true'));
+  }
 });

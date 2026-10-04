@@ -34,6 +34,7 @@ export interface PartySelectorProps {
   search?: {
     context?: PartySelectorContext;
     scopeId?: string;
+    initialQuery?: string;
     kind?: PartySelectorKind;
     accountOnly?: boolean;
     excludedPartyIds?: number[];
@@ -88,13 +89,13 @@ const mergeSelectedOptions = (
 const visuallyHidden = {
   border: 0,
   clip: 'rect(0 0 0 0)',
-  height: 1,
+  height: '1px',
   margin: -1,
   overflow: 'hidden',
   padding: 0,
   position: 'absolute' as const,
   whiteSpace: 'nowrap',
-  width: 1,
+  width: '1px',
 };
 
 const usePartySelectorOptions = ({
@@ -217,13 +218,13 @@ const SelectorPaper = ({ hasMore, loadingMore, onLoadMore, children, ...paperPro
 export function PartySelector(props: PartySelectorProps) {
   const { value, onChange, field, search = {} } = props;
   const { label, required = false, disabled = false, helperText } = field;
-  const { context = 'crm_assignment', scopeId, kind = 'person', accountOnly = false, excludedPartyIds = [] } = search;
+  const { context = 'crm_assignment', scopeId, initialQuery = '', kind = 'person', accountOnly = false, excludedPartyIds = [] } = search;
   const inputId = useId();
-  const [inputValue, setInputValue] = useState(value?.displayName ?? '');
+  const [inputValue, setInputValue] = useState(value?.displayName ?? initialQuery);
 
   useEffect(() => {
-    setInputValue(value?.displayName ?? '');
-  }, [value?.displayName, value?.partyId]);
+    setInputValue(value?.displayName ?? initialQuery);
+  }, [value?.displayName, value?.partyId, initialQuery]);
 
   const searchInput = value?.displayName === inputValue ? '' : inputValue;
   const { options, loading, loadingMore, error, hasMore, loadMore, retry, resultCount } = usePartySelectorOptions({

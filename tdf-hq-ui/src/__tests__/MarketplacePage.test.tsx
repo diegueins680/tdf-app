@@ -258,6 +258,38 @@ describe('MarketplacePage', () => {
     window.history.pushState({}, '', '/marketplace');
   });
 
+  it.each(['getter', 'getItem', 'setItem', 'removeItem'] as const)(
+    'keeps catalog browsing and URL filters usable when optional storage %s fails',
+    async (failure) => {
+      const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+      const blocked = () => { throw new DOMException('Blocked by browser', 'SecurityError'); };
+      const spy = failure === 'getter' ? null : jest.spyOn(Storage.prototype, failure).mockImplementation(blocked);
+      if (failure === 'getter') Object.defineProperty(window, 'localStorage', { configurable: true, get: blocked });
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      let cleanup: (() => Promise<void>) | undefined;
+      try {
+        ({ cleanup } = await renderPage(container));
+        await waitForExpectation(() => expect(container.textContent).toContain('Vintage Mic'));
+        const search = getInputByLabel(container, 'Buscar equipo');
+        await act(async () => {
+          Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(search, 'Vintage');
+          search.dispatchEvent(new Event('input', { bubbles: true }));
+          await flushPromises();
+        });
+        await waitForExpectation(() => expect(new URLSearchParams(window.location.search).get('q')).toBe('Vintage'));
+        expect(checkoutMock).not.toHaveBeenCalled();
+        expect(datafastCheckoutMock).not.toHaveBeenCalled();
+        expect(createPaypalOrderMock).not.toHaveBeenCalled();
+      } finally {
+        await cleanup?.();
+        spy?.mockRestore();
+        if (descriptor) Object.defineProperty(window, 'localStorage', descriptor);
+        container.remove();
+      }
+    },
+  );
+
   it('stops waiting after the configured number of failed attempts', async () => {
     const expectedError = new Error('still waiting');
     const assertion = jest.fn(() => {

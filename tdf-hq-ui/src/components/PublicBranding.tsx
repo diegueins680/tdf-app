@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
@@ -16,15 +17,15 @@ import {
 } from '../utils/instagramTraffic';
 
 const PUBLIC_NAV_ITEMS = [
-  { label: 'Buscar', to: '/buscar' },
+  { label: 'authEntry.search', to: '/buscar' },
   { label: 'TDF', to: '/tdf' },
-  { label: 'Servicios', to: '/comercio' },
-  { label: 'Comunidad', to: '/fans' },
-  { label: 'Tienda', to: '/marketplace' },
+  { label: 'authEntry.services', to: '/comercio' },
+  { label: 'authEntry.community', to: '/fans' },
+  { label: 'authEntry.shop', to: '/marketplace' },
   { label: 'Domo', to: '/domo-del-pululahua' },
-  { label: 'Reservar', to: '/reservar' },
+  { label: 'authEntry.book', to: '/reservar' },
   { label: 'DJ Booth', to: '/dj-booth' },
-  { label: 'Lanzamientos', to: '/records' },
+  { label: 'authEntry.releases', to: '/records' },
 ] as const;
 
 interface FooterAction {
@@ -42,6 +43,7 @@ export default function PublicBranding({
   showHeader?: boolean;
   showLoginButton?: boolean;
 }) {
+  const { t } = useTranslation();
   const { session } = useSession();
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const location = useLocation();
@@ -62,40 +64,40 @@ export default function PublicBranding({
       location.pathname.startsWith('/dj-booth') ||
       location.pathname.startsWith('/domo-del-pululahua')
     ) {
-      return { label: 'WhatsApp reservas', kind: 'external', value: STUDIO_WHATSAPP_URL };
+      return { label: t('authEntry.whatsappBookings'), kind: 'external', value: STUDIO_WHATSAPP_URL };
     }
     if (location.pathname.startsWith('/fans')) {
-      return { label: 'Ver lanzamientos', kind: 'route', value: '/records' };
+      return { label: t('authEntry.viewReleases'), kind: 'route', value: '/records' };
     }
     if (location.pathname.startsWith('/records')) {
-      return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
+      return { label: t('authEntry.bookStudio'), kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/marketplace')) {
-      return { label: 'Necesito ayuda', kind: 'route', value: '/feedback' };
+      return { label: t('authEntry.help'), kind: 'route', value: '/feedback' };
     }
-    return { label: 'Crear cuenta', kind: 'route', value: '/login?signup=1&redirect=/fans' };
-  }, [location.pathname]);
+    return { label: t('authEntry.createAccount'), kind: 'route', value: '/login?signup=1&redirect=/fans' };
+  }, [location.pathname, t]);
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
-      return { label: 'Ingresar y autocompletar', kind: 'route', value: contextualLoginPath };
+      return { label: t('authEntry.signInAutofill'), kind: 'route', value: contextualLoginPath };
     }
     if (location.pathname.startsWith('/dj-booth')) {
-      return { label: 'Reserva general', kind: 'route', value: '/reservar' };
+      return { label: t('authEntry.generalBooking'), kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/domo-del-pululahua')) {
-      return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
+      return { label: t('authEntry.bookStudio'), kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/fans')) {
-      return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
+      return { label: t('authEntry.bookStudio'), kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/records')) {
-      return { label: 'Abrir comunidad', kind: 'route', value: '/fans' };
+      return { label: t('authEntry.openCommunity'), kind: 'route', value: '/fans' };
     }
     if (location.pathname.startsWith('/marketplace')) {
-      return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
+      return { label: t('authEntry.bookStudio'), kind: 'route', value: '/reservar' };
     }
     return { label: 'WhatsApp', kind: 'external', value: STUDIO_WHATSAPP_URL };
-  }, [contextualLoginPath, location.pathname]);
+  }, [contextualLoginPath, location.pathname, t]);
 
   useEffect(() => {
     const referrer = typeof document === 'undefined' ? '' : document.referrer;
@@ -108,7 +110,16 @@ export default function PublicBranding({
   }, [location.search]);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{
+      minHeight: '100vh',
+      bgcolor: 'background.default',
+      // Long words and translated labels must remain readable when the user
+      // enlarges browser text; clipping the page would hide those controls.
+      overflowWrap: 'anywhere',
+      '& .MuiButton-root': { whiteSpace: 'normal' },
+      '& .MuiChip-root': { maxWidth: '100%', height: 'auto', minHeight: 32 },
+      '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 },
+    }}>
       <Box
         component="a"
         href="#main-content"
@@ -127,7 +138,7 @@ export default function PublicBranding({
           '&:focus': { transform: 'translateY(0)' },
         }}
       >
-        Saltar al contenido principal
+        {t('authEntry.skipContent')}
       </Box>
       {showHeader && (
         <Box
@@ -140,13 +151,13 @@ export default function PublicBranding({
           }}
         >
           <Container maxWidth="xl">
-            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
                 <Box
                   component={RouterLink}
                   to="/tdf"
                   sx={{ display: 'inline-flex', alignItems: 'center' }}
-                  aria-label="Ir a TDF"
+                  aria-label={t('authEntry.goTdf')}
                 >
                   <BrandLogo
                     variant="wordmark"
@@ -160,7 +171,7 @@ export default function PublicBranding({
                 </Box>
                 <Stack
                   component="nav"
-                  aria-label="Navegación principal"
+                  aria-label={t('authEntry.mainNavigation')}
                   direction="row"
                   spacing={0.5}
                   sx={{ display: { xs: 'none', md: 'flex' }, flexWrap: 'wrap' }}
@@ -184,12 +195,12 @@ export default function PublicBranding({
                         },
                       }}
                     >
-                      {item.label}
+                      {t(item.label)}
                     </Button>
                   ))}
                 </Stack>
               </Stack>
-              <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ maxWidth: '100%', minWidth: 0 }}>
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (
@@ -199,12 +210,12 @@ export default function PublicBranding({
                     to={contextualLoginPath}
                     sx={{ textTransform: 'none' }}
                   >
-                    Ingresar
+                    {t('authEntry.enter')}
                   </Button>
                 )}
-                <Tooltip title="Más opciones">
+                <Tooltip title={t('authEntry.more')}>
                   <IconButton
-                    aria-label="Más opciones"
+                    aria-label={t('authEntry.more')}
                     onClick={(e) => setMenuAnchor(e.currentTarget)}
                     sx={{ color: 'text.secondary' }}
                   >
@@ -220,14 +231,14 @@ export default function PublicBranding({
                 >
                   {PUBLIC_NAV_ITEMS.map((item) => (
                     <MenuItem key={item.to} component={RouterLink} to={item.to} onClick={() => setMenuAnchor(null)}>
-                      {item.label}
+                      {t(item.label)}
                     </MenuItem>
                   ))}
                   <MenuItem component={RouterLink} to="/donar" onClick={() => setMenuAnchor(null)}>
-                    Donar
+                    {t('authEntry.donate')}
                   </MenuItem>
                   <MenuItem component={RouterLink} to="/feedback" onClick={() => setMenuAnchor(null)}>
-                    Enviar sugerencia
+                    {t('authEntry.sendFeedback')}
                   </MenuItem>
                 </Menu>
               </Stack>
@@ -240,7 +251,7 @@ export default function PublicBranding({
         id="main-content"
         tabIndex={-1}
         maxWidth="xl"
-        sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, outline: 'none' }}
+        sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, minWidth: 0, outline: 'none' }}
       >
         {showInstagramEntryLinks && <InstagramEntryLinks />}
         {children}
@@ -262,11 +273,11 @@ export default function PublicBranding({
             justifyContent="space-between"
           >
             <Stack spacing={1} sx={{ maxWidth: 460 }}>
-              <Typography variant="subtitle2" sx={{ letterSpacing: 0.2 }}>
+              <Typography variant="subtitle2" color="text.primary" sx={{ letterSpacing: 0.2 }}>
                 TDF Records
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
+                {t('authEntry.footerHelp')}
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {footerPrimaryAction.kind === 'external' ? (
@@ -317,9 +328,9 @@ export default function PublicBranding({
                 )}
               </Stack>
             </Stack>
-            <Stack component="nav" aria-label="Explorar TDF" spacing={0.75}>
+            <Stack component="nav" aria-label={t('authEntry.exploreTdf')} spacing={0.75}>
               <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.35 }}>
-                Explorar
+                {t('authEntry.explore')}
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {PUBLIC_NAV_ITEMS.map((item) => (
@@ -340,7 +351,7 @@ export default function PublicBranding({
                       },
                     }}
                   >
-                    {item.label}
+                    {t(item.label)}
                   </Button>
                 ))}
                 <Button
@@ -349,7 +360,7 @@ export default function PublicBranding({
                   to="/feedback"
                   sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
                 >
-                  Sugerencias
+                  {t('authEntry.feedback')}
                 </Button>
                 <Button
                   size="small"
@@ -357,13 +368,13 @@ export default function PublicBranding({
                   to="/donar"
                   sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
                 >
-                  Donar
+                  {t('authEntry.donate')}
                 </Button>
               </Stack>
             </Stack>
             <Stack spacing={0.75}>
               <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.35 }}>
-                Gestión de mensajes
+                {t('authEntry.messageSettings')}
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button
@@ -372,7 +383,7 @@ export default function PublicBranding({
                   to="/whatsapp/consentimiento"
                   sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
                 >
-                  Consentimiento WhatsApp
+                  {t('authEntry.whatsappConsent')}
                 </Button>
                 <Button
                   size="small"
@@ -380,7 +391,7 @@ export default function PublicBranding({
                   to="/whatsapp/ok"
                   sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
                 >
-                  Confirmación WhatsApp
+                  {t('authEntry.whatsappConfirmation')}
                 </Button>
               </Stack>
             </Stack>
@@ -393,7 +404,7 @@ export default function PublicBranding({
                   variant="outlined"
                   sx={{ textTransform: 'none' }}
                 >
-                  Ir a login
+                  {t('authEntry.loginLink')}
                 </Button>
               </Stack>
             )}

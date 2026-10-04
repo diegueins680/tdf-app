@@ -1,0 +1,17 @@
+{
+  "source": "d70d945fc",
+  "at": "2026-09-18T10:56:11.143Z",
+  "localProductionHermes": true,
+  "a": {
+    "eligible": false,
+    "completedAt": "2026-09-18T08:00:39.732933Z"
+  },
+  "b": {
+    "eligible": false,
+    "completedAt": "2026-09-18T08:50:04.7075Z"
+  },
+  "d": {
+    "eligible": false,
+    "completedAt": "2026-09-18T10:54:58.406355Z"
+  }
+}

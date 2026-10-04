@@ -7,6 +7,28 @@ const ARTIFACT = 'instagram-lifecycle-v1';
 const WORKFLOW = '.github/workflows/refresh-instagram-token.yml';
 const id = value => Number.isSafeInteger(value) && value > 0;
 
+export function readLifecycleMetadata(endpoint, execute = execFileSync) {
+  // gh projects the response before stdout reaches Node's bounded subprocess
+  // buffer. Commit patches are irrelevant to ancestry and can exceed 1 MiB.
+  let projection;
+  if (/^repos\/[^/]+\/[^/]+\/compare\//.test(endpoint)) {
+    projection = '{status}';
+  } else if (/^repos\/[^/]+\/[^/]+\/actions\/workflows\//.test(endpoint)) {
+    projection = '{total_count, workflow_runs: [.workflow_runs[] | {id, display_title, path, head_sha, head_repository: {full_name: .head_repository.full_name}, status, conclusion}]}';
+  } else if (/^repos\/[^/]+\/[^/]+\/actions\/runs\/[0-9]+\/artifacts\?/.test(endpoint)) {
+    projection = '{total_count, artifacts: [.artifacts[] | {id, name, expired}]}';
+  } else {
+    throw new LifecycleError('Unsupported lifecycle metadata request');
+  }
+  try {
+    return JSON.parse(execute('gh', ['api', endpoint, '--jq', projection], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000,
+      maxBuffer: 1024 * 1024,
+    }));
+  }
+  catch { throw new LifecycleError('GitHub lifecycle metadata request failed'); }
+}
+
 export async function findLifecycleRun({ repository, sha, currentRunId }, api) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository || '') || !/^[a-f0-9]{40}$/.test(sha || '')) throw new LifecycleError('Invalid lifecycle repository or commit');
   // Inspect producing runs first, not just surviving artifacts: a failed write
@@ -34,10 +56,7 @@ export async function findLifecycleRun({ repository, sha, currentRunId }, api) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    const runId = await findLifecycleRun({ repository: process.env.GITHUB_REPOSITORY, sha: process.env.GITHUB_SHA, currentRunId: process.env.GITHUB_RUN_ID }, async endpoint => {
-      try { return JSON.parse(execFileSync('gh', ['api', endpoint], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 })); }
-      catch { throw new LifecycleError('GitHub lifecycle metadata request failed'); }
-    });
+    const runId = await findLifecycleRun({ repository: process.env.GITHUB_REPOSITORY, sha: process.env.GITHUB_SHA, currentRunId: process.env.GITHUB_RUN_ID }, readLifecycleMetadata);
     if (!process.env.GITHUB_OUTPUT) throw new LifecycleError('GITHUB_OUTPUT is required');
     await appendFile(process.env.GITHUB_OUTPUT, `run-id=${runId}\n`);
   } catch (error) {

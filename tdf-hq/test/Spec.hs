@@ -34,7 +34,9 @@ import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, to
 import Database.Persist.Sqlite (createSqlitePool)
 import qualified Network.HTTP.Client as HTTP
 import Network.Wai (defaultRequest)
-import Network.Wai.Internal (Request (..))
+import qualified Network.Wai as Wai
+import qualified Network.HTTP.Types as HTTPTypes
+import Network.Wai.Internal (Request (..), ResponseReceived (..))
 import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import Servant.Server.Internal.Handler (runHandler)
@@ -44,6 +46,9 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
+import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
+import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
@@ -91,6 +96,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionRequest,
       leadCompletionConsumedToken )
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
+import qualified TDF.StartupResponseSpec as StartupResponseSpec
 import TDF.Reputation (Confidence (..), confidenceFor, normalizeManualWeights, publicScore, rankOrderCentroid)
 import TDF.Reputation.Worker
     ( ReputationWorkerSettings (..), parseReputationWorkerSettings )
@@ -121,6 +127,7 @@ import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.CourseCheckout as CourseCheckout
 import qualified TDF.Commerce.DomoQuotes as DomoQuotes
 import qualified TDF.Commerce.EventTickets as EventTickets
+import qualified TDF.Server.SocialEventsHandlers as EventMetadataServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
@@ -147,10 +154,12 @@ import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
 import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
-import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage)
+import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink, passwordResetLinkWithLocale, passwordResetEmailContent)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
+import qualified TDF.Services.RecordsIngestionSpec as RecordsIngestion
+import qualified TDF.Services.YouTubeSpec as YouTubeSpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.PaymentAvailability as PaymentAvailabilityServer
@@ -194,6 +203,7 @@ import TDF.Models.SocialEventsModels
     ( EventBudgetLine (..),
       EventFinanceEntry (..),
       EventInvitationId,
+      EventLogisticsDependency (..),
       EventTicket (..),
       EventTicketOrder (..),
       EventTicketTier (..),
@@ -210,6 +220,7 @@ import TDF.FeatureRegistry
 import TDF.Models (ArtistProfile (..), Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
+import qualified TDF.Profiles.ArtistActivationSpec as ArtistActivationSpec
 import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.DDEX.Detect as DDEXDetect
@@ -432,6 +443,7 @@ import TDF.Server.SocialSync
       validateSocialSyncMediaUrls )
 import TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
+    replaceLogisticsActivityDependencies,
     normalizeBudgetLineType,
     normalizeFinanceDirection,
     normalizeFinanceEntryStatus,
@@ -525,6 +537,7 @@ import TDF.Config
       chatKitApiBase,
       chatKitWorkflowId,
       contextualReputationEnabled,
+      singleFeatureOnboardingExperimentEnabled,
       courseInstructorAvatarFallback,
       courseMapFallback,
       courseSlugFallback,
@@ -584,10 +597,16 @@ import TDF.Seed
     , syntheticPersonaSeedingAllowed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
+import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
+import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
+import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
+import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
+import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
+import qualified TDF.Server.EventRelationsSpec as EventRelationsSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 import qualified TDF.Trials.DTO as TrialsDTO
@@ -824,6 +843,10 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    StartupResponseSpec.spec
+    WorkerLoggingSpec.spec
+    PaymentArithmeticSpec.spec
+    EmailHeadersSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
             commercialStoreScore initialCommercialFormula 4
@@ -3057,6 +3080,30 @@ main = hspec $ do
             Commerce.transitionPayment created (Commerce.PaymentCaptureVerified 10001)
               `shouldSatisfy` isLeft
 
+        it "rejects capture and refund overflow before adding Int64 amounts" $ do
+            let maximumAmount = maxBound :: Int64
+                partialCapture = Commerce.PaymentLifecycle
+                  Commerce.PaymentPartiallyCaptured maximumAmount maximumAmount 1 0
+                partialRefund = Commerce.PaymentLifecycle
+                  Commerce.PaymentPartiallyRefunded maximumAmount maximumAmount maximumAmount 1
+            Commerce.transitionPayment partialCapture (Commerce.PaymentCaptureVerified maximumAmount)
+              `shouldSatisfy` isLeft
+            Commerce.transitionPayment partialRefund (Commerce.PaymentRefundVerified maximumAmount)
+              `shouldSatisfy` isLeft
+            fmap Commerce.paymentCapturedMinor
+              (Commerce.transitionPayment partialCapture (Commerce.PaymentCaptureVerified (maximumAmount - 1)))
+              `shouldBe` Right maximumAmount
+            fmap Commerce.paymentRefundedMinor
+              (Commerce.transitionPayment partialRefund (Commerce.PaymentRefundVerified (maximumAmount - 1)))
+              `shouldBe` Right maximumAmount
+
+        it "checks exact ledger sums instead of Int64 modular zero" $ do
+            let maximumAmount = maxBound :: Int64
+            Commerce.ledgerBalances [("USD", maximumAmount), ("USD", maximumAmount), ("USD", 2)]
+              `shouldBe` False
+            Commerce.ledgerBalances [("USD", maximumAmount), ("USD", maximumAmount),
+              ("USD", -maximumAmount), ("USD", -maximumAmount)] `shouldBe` True
+
         it "voids only the exact remaining authorization" $ do
             let partiallyCaptured =
                   Commerce.transitionPayment created
@@ -3218,6 +3265,29 @@ main = hspec $ do
             normalizeTimeZone "Europe/Berlin" `shouldBe` Just "Europe/Berlin"
             normalizeTimeZone "../etc/passwd" `shouldBe` Nothing
 
+    describe "event logistics dependency replacement" $ do
+        it "preserves unchanged edge identity and provenance while applying only the requested delta" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                let oldTime = UTCTime (fromGregorian 2026 9 14) 0
+                    now = addUTCTime 60 oldTime
+                dependencies <- runSqlPool (do
+                    rawExecute "CREATE TABLE event_logistics_dependency (id INTEGER PRIMARY KEY, activity_id INTEGER NOT NULL, depends_on_activity_id INTEGER NOT NULL, created_at TIMESTAMP NOT NULL, UNIQUE(activity_id,depends_on_activity_id))" []
+                    insertKey (toSqlKey 1) (EventLogisticsDependency (toSqlKey 100) (toSqlKey 101) oldTime)
+                    insertKey (toSqlKey 2) (EventLogisticsDependency (toSqlKey 100) (toSqlKey 102) oldTime)
+                    insertKey (toSqlKey 3) (EventLogisticsDependency (toSqlKey 200) (toSqlKey 201) oldTime)
+                    replaceLogisticsActivityDependencies (toSqlKey 100)
+                        [toSqlKey 101, toSqlKey 103, toSqlKey 103] now
+                    selectList [] []) pool
+                map (\(Entity _ dependency) ->
+                    ( fromSqlKey (eventLogisticsDependencyActivityId dependency)
+                    , fromSqlKey (eventLogisticsDependencyDependsOnActivityId dependency)
+                    , eventLogisticsDependencyCreatedAt dependency
+                    )) dependencies `shouldMatchList`
+                      [(100, 101, oldTime), (100, 103, now), (200, 201, oldTime)]
+                [fromSqlKey key | Entity key dependency <- dependencies,
+                    eventLogisticsDependencyDependsOnActivityId dependency == toSqlKey 101]
+                    `shouldBe` [1]
+
     describe "event logistics route parsing" $ do
         it "parses Google durations including fractional seconds" $ do
             parseGoogleDurationSeconds "901s" `shouldBe` Just 901
@@ -3311,6 +3381,47 @@ main = hspec $ do
         it "uses the provided refund timeline verbatim" $
             resolveRefundTimelineMessage (Just "Tu banco lo verá en 48 horas.")
                 `shouldBe` "Tu banco lo verá en 48 horas."
+
+    describe "passwordResetLink" $ do
+        it "preserves a local destination through the email query string" $
+            passwordResetLink (Just "https://tdf.example/") "synthetic-token" (Just "/fans?artist=42&tab=eventos#próximo")
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token&redirect=%2Ffans%3Fartist%3D42%26tab%3Deventos%23pr%C3%B3ximo"
+        it "retains the legacy link for clients without a destination" $
+            passwordResetLink (Just "https://tdf.example") "synthetic-token" Nothing
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token"
+        it "does not put external, control-character or oversized destinations in email" $
+            forM_ ["https://evil.example", "//evil.example", "/\\evil.example", "/fans\n", "/x\ty", "/" <> Data.Text.replicate 501 "x"] $ \destination ->
+                passwordResetLink (Just "https://tdf.example") "synthetic-token" (Just destination)
+                    `shouldBe` "https://tdf.example/reset?token=synthetic-token"
+        it "encodes query delimiters in tokens rather than adding parameters" $
+            passwordResetLink (Just "https://tdf.example") "a&redirect=//evil.example" Nothing
+                `shouldBe` "https://tdf.example/reset?token=a%26redirect%3D%2F%2Fevil.example"
+
+        it "preserves English recovery on a fresh device without changing legacy links" $ do
+            passwordResetLinkWithLocale (Just "https://tdf.example") "synthetic-token" (Just "/fans") (Just "en-US")
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token&redirect=%2Ffans&lang=en"
+            passwordResetLinkWithLocale (Just "https://tdf.example") "synthetic-token" Nothing Nothing
+                `shouldBe` passwordResetLink (Just "https://tdf.example") "synthetic-token" Nothing
+            passwordResetLinkWithLocale (Just "https://tdf.example") "synthetic-token" Nothing (Just "es-EC")
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token&lang=es"
+        it "uses the English auth fallback for other supplied languages" $ do
+            let (subject, preheader, greeting, bodyLines) = passwordResetEmailContent (Just "fr") "Ana" "synthetic-token" "https://tdf.example/reset"
+            subject `shouldBe` "Reset your TDF Records password"
+            preheader `shouldBe` "Use your token to reset your account password."
+            greeting `shouldBe` "Hello Ana,"
+            bodyLines `shouldContain` ["Security token: synthetic-token"]
+        it "keeps omitted-locale emails Spanish and never reflects arbitrary locale text" $ do
+            let (subject, _, greeting, _) = passwordResetEmailContent Nothing "Ana" "synthetic-token" "https://tdf.example/reset"
+            subject `shouldBe` "Restablecer tu contraseña de TDF Records"
+            greeting `shouldBe` "Hola Ana,"
+            passwordResetLinkWithLocale Nothing "synthetic-token" Nothing (Just "en&redirect=//evil.example")
+                `shouldSatisfy` Data.Text.isSuffixOf "&lang=en"
+
+        it "keeps arbitrary untrusted destinations on the configured origin" $
+            QC.property $ \raw ->
+                let link = passwordResetLink (Just "https://tdf.example") "synthetic-token" (Just (Data.Text.pack raw))
+                in "https://tdf.example/reset?token=synthetic-token" `Data.Text.isPrefixOf` link
+                    && not (Data.Text.any (\c -> c == '\n' || c == '\r' || c == '\t') link)
 
     describe "accountCreatedEmailContent" $ do
         it "never includes a credential or reset token" $ do
@@ -4263,6 +4374,20 @@ main = hspec $ do
             withEnvOverrides [("PUBLIC_REPUTATION_PROJECTION_ENABLED", Just "not-a-boolean")]
                 $ loadConfig `shouldThrow` \err ->
                     "PUBLIC_REPUTATION_PROJECTION_ENABLED must be a boolean flag"
+                        `isInfixOf` (show (err :: IOException))
+
+        it "keeps single-feature onboarding experiments paused by default and validates activation explicitly" $ do
+            withEnvOverrides [("SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED", Nothing)] $ do
+                cfg <- loadConfig
+                singleFeatureOnboardingExperimentEnabled cfg `shouldBe` False
+
+            withEnvOverrides [("SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED", Just "true")] $ do
+                cfg <- loadConfig
+                singleFeatureOnboardingExperimentEnabled cfg `shouldBe` True
+
+            withEnvOverrides [("SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED", Just "not-a-boolean")]
+                $ loadConfig `shouldThrow` \err ->
+                    "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED must be a boolean flag"
                         `isInfixOf` show (err :: IOException)
 
         it "loads and validates international defaults from the environment" $ do
@@ -8150,6 +8275,25 @@ main = hspec $ do
                 ]
                 "CORS_DISABLE_DEFAULTS must be a boolean CORS flag"
 
+    describe "CORS contact request idempotency" $ do
+        it "permits the actor-scoped request header from an allowed web origin" $ do
+            middleware <- corsPolicy
+            let preflight = defaultRequest
+                    { requestMethod = "OPTIONS"
+                    , requestHeaders =
+                        [ ("Origin", "https://tdfui.pages.dev")
+                        , ("Access-Control-Request-Method", "POST")
+                        , ("Access-Control-Request-Headers", "authorization,content-type,idempotency-key")
+                        ]
+                    }
+                application _ respond = respond (Wai.responseLBS HTTPTypes.status200 [] "")
+            _ <- middleware application preflight $ \response -> do
+                Wai.responseStatus response `shouldBe` HTTPTypes.status200
+                let allowed = fromMaybe "" (lookup "Access-Control-Allow-Headers" (Wai.responseHeaders response))
+                allowed `shouldSatisfy` BS.isInfixOf "idempotency-key"
+                pure ResponseReceived
+            pure ()
+
     describe "CORS trusted preview origins" $ do
         it "allows only the known TDF Pages projects and their preview subdomains" $ do
             isTrustedPreviewOrigin "https://tdfui.pages.dev" `shouldBe` True
@@ -8713,6 +8857,7 @@ main = hspec $ do
                         { auPartyId = toSqlKey 7
                         , auRoles = [Fan]
                         , auModules = modulesForRoles [Fan]
+                        , auApiTokenId = Nothing
                         }
                 payload =
                     InstagramOAuth.InstagramOAuthExchangeRequest
@@ -11300,6 +11445,10 @@ main = hspec $ do
                 Right parsed ->
                     expectationFailure ("Expected unexpected event update keys to be rejected, got " <> show parsed)
 
+        it "rejects attempts to supply the private ingestion ownership namespace in public updates" $
+            (eitherDecode "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"_discoveryOwned\":{\"isPublic\":true}}"
+                :: Either String EventUpdateDTO) `shouldSatisfy` isLeft
+
         it "captures venue contact nulls and invitation message nulls in update payloads" $ do
             let venuePayload = "{\"venueName\":\"Sala Uno\",\"venuePhone\":null}"
                 invitationPayload = "{\"invitationToPartyId\":\"12\",\"invitationMessage\":null}"
@@ -12357,6 +12506,35 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 409
                     BL.unpack (errBody err) `shouldContain` "server-verified checkout"
                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
+
+    describe "stored discovery ownership metadata boundary" $ do
+        it "accepts internal evidence without exposing it through the public projection" $ do
+            let raw = "{\"isPublic\":true,\"ticketUrl\":\"https://tickets.example/event\",\"_discoveryOwned\":{\"isPublic\":true}}"
+            case EventMetadataServer.decodeStoredEventMetadata (Just raw) of
+                Left err -> expectationFailure (show err)
+                Right metadata -> do
+                    EventMetadataServer.emIsPublic metadata `shouldBe` Just True
+                    EventMetadataServer.emTicketUrl metadata `shouldBe` Just "https://tickets.example/event"
+                    BL.unpack (A.encode metadata) `shouldSatisfy` (not . isInfixOf "_discoveryOwned")
+            validateTicketPurchaseEventEligibility (Just raw) True `shouldSatisfy` isRight
+
+        it "keeps ownership evidence out of public projections for arbitrary stored titles and visibility" $
+            QC.property $ \title public ->
+                let raw = TE.decodeUtf8 . BL.toStrict . A.encode $ A.object
+                        [ "isPublic" .= (public :: Bool)
+                        , "_discoveryOwned" .= A.object ["title" .= (title :: String), "isPublic" .= public]
+                        ]
+                 in case EventMetadataServer.decodeStoredEventMetadata (Just raw) of
+                        Left _ -> False
+                        Right metadata -> EventMetadataServer.emIsPublic metadata == Just public
+                            && not ("_discoveryOwned" `isInfixOf` BL.unpack (A.encode metadata))
+
+        it "retains strict validation for unknown fields, malformed evidence and duplicate namespaces" $ do
+            forM_
+                [ "{\"isPublic\":true,\"rogue\":1,\"_discoveryOwned\":{}}"
+                , "{\"isPublic\":true,\"_discoveryOwned\":true}"
+                , "{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}"
+                ] $ \raw -> (EventMetadataServer.emIsPublic <$> EventMetadataServer.decodeStoredEventMetadata (Just raw)) `shouldSatisfy` isLeft
 
     describe "ticket purchase event eligibility" $ do
         it "allows only public events in buyer-facing sale states" $ do
@@ -14038,6 +14216,7 @@ main = hspec $ do
                     { auPartyId = toSqlKey 1
                     , auRoles = roles
                     , auModules = modulesForRoles roles
+                    , auApiTokenId = Nothing
                     }
 
         it "allows operations users and rejects ordinary authenticated users before contract handlers run" $ do
@@ -16492,11 +16671,10 @@ main = hspec $ do
             assertRejected
                 "referenced musician partyIds must be distinct"
                 [mkMusician (Just 7) Nothing, mkMusician (Just 7) Nothing]
-            assertRejected
-                "musician emails must be distinct"
+            validateLiveSessionMusicianCount
                 [ mkMusician Nothing (Just " Player@Example.com ")
                 , mkMusician Nothing (Just "player@example.com")
-                ]
+                ] `shouldBe` Right ()
 
     describe "validateLiveSessionBandName" $ do
         it "trims live-session band names before intake persistence" $
@@ -16937,29 +17115,18 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected null/value musician aliases to be rejected, got: " <> show payload)
 
-        it "rejects null optional nested aliases instead of treating them as omitted" $ do
+        it "accepts nullable optional nested fields from supported clients" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
-                    , ( "musicians"
-                      , "[{\"name\":\"Keys\",\"email\":null,\"isExisting\":false}]"
-                      )
+                    , ("musicians", "[{\"name\":\"Keys\",\"partyId\":null,\"email\":null,\"instrumentId\":null,\"notes\":null,\"isExisting\":false}]")
+                    , ("setlist", "[{\"title\":\"Intro Jam\",\"bpm\":null,\"songKey\":null,\"lyrics\":null,\"sortOrder\":null}]")
                     ]) :: Either String LiveSessionIntakePayload of
-                Left err ->
-                    err `shouldContain` "email must be omitted instead of null"
-                Right payload ->
-                    expectationFailure ("Expected null musician email to be rejected, got: " <> show payload)
-
-            case fromMultipart (mkLiveSessionMultipart
-                    [ ("bandName", "The House Band")
-                    , ("musicians", "[]")
-                    , ( "setlist"
-                      , "[{\"title\":\"Intro Jam\",\"songKey\":null}]"
-                      )
-                    ]) :: Either String LiveSessionIntakePayload of
-                Left err ->
-                    err `shouldContain` "songKey must be omitted instead of null"
-                Right payload ->
-                    expectationFailure ("Expected null setlist songKey to be rejected, got: " <> show payload)
+                Left err -> expectationFailure err
+                Right payload -> do
+                    map lsmEmail (lsiMusicians payload) `shouldBe` [Nothing]
+                    map lsmPartyId (lsiMusicians payload) `shouldBe` [Nothing]
+                    map lssSongKey (lsiSetlist payload) `shouldBe` [Nothing]
+                    map lssBpm (lsiSetlist payload) `shouldBe` [Nothing]
 
         it "rejects unexpected nested musician or setlist fields instead of silently ignoring typos" $ do
             case fromMultipart (mkLiveSessionMultipart
@@ -17454,9 +17621,17 @@ main = hspec $ do
     DDEXBusinessRulesSpec.spec
     DirectoryPolicySpec.spec
     EventDiscoverySpec.spec
+    RecordsIngestion.spec
+    YouTubeSpec.spec
     EventResearchSpec.spec
     ArtistSpec.spec
+    ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    ProviderIdentitySpec.spec
+    LiveIntakeIdentitySpec.spec
+    TrialIdentitySpec.spec
+    CourseIdentitySpec.spec
+    MarketplaceIdentitySpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
     ServerProposalsSpec.spec
@@ -17464,6 +17639,7 @@ main = hspec $ do
     ServerFanClubSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
+    EventRelationsSpec.spec
     PublicLeadSpec.spec
     WhatsAppHistorySpec.spec
 
@@ -17606,6 +17782,7 @@ socialSyncAdminUser =
         { auPartyId = toSqlKey 1
         , auRoles = [Admin]
         , auModules = modulesForRoles [Admin]
+        , auApiTokenId = Nothing
         }
 
 socialSyncListHandlerFor
@@ -17638,6 +17815,7 @@ radioPresenceUser =
         { auPartyId = toSqlKey 1
         , auRoles = [Fan]
         , auModules = modulesForRoles [Fan]
+        , auApiTokenId = Nothing
         }
 
 runRadioPresenceTest :: RadioPresenceTestM a -> IO (Either ServerError a)

@@ -9,6 +9,54 @@ servers:
     description: Development server
 
 paths:
+  /interactions/reports:
+    $ref: './interactions.yaml#/paths/~1interactions~1reports'
+  /interactions/blocked-accounts:
+    $ref: './interactions.yaml#/paths/~1interactions~1blocked-accounts'
+  /interactions/targets/{kind}/{entityKey}:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{kind}~1{entityKey}'
+  /interactions/targets/{kind}/{entityKey}/comments:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{kind}~1{entityKey}~1comments'
+  /interactions/targets/{kind}/{entityKey}/comments/{commentId}:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{kind}~1{entityKey}~1comments~1{commentId}'
+  /interactions/targets/{kind}/{entityKey}/reactors:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{kind}~1{entityKey}~1reactors'
+  /interactions/resolve/{destinationKind}/{destinationId}:
+    $ref: './interactions.yaml#/paths/~1interactions~1resolve~1{destinationKind}~1{destinationId}'
+  /public/interactions/targets/{kind}/{entityKey}:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1targets~1{kind}~1{entityKey}'
+  /public/interactions/targets/{kind}/{entityKey}/comments:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1targets~1{kind}~1{entityKey}~1comments'
+  /public/interactions/targets/{kind}/{entityKey}/comments/{commentId}:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1targets~1{kind}~1{entityKey}~1comments~1{commentId}'
+  /public/interactions/targets/{kind}/{entityKey}/reactors:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1targets~1{kind}~1{entityKey}~1reactors'
+  /public/interactions/resolve/{destinationKind}/{destinationId}:
+    $ref: './interactions.yaml#/paths/~1public~1interactions~1resolve~1{destinationKind}~1{destinationId}'
+  /interactions/targets/{targetId}/commands:
+    $ref: './interactions.yaml#/paths/~1interactions~1targets~1{targetId}~1commands'
+  /interactions/blocks/{partyId}:
+    $ref: './interactions.yaml#/paths/~1interactions~1blocks~1{partyId}'
+  /interactions/preferences:
+    $ref: './interactions.yaml#/paths/~1interactions~1preferences'
+  /interactions/moderation/{targetId}:
+    $ref: './interactions.yaml#/paths/~1interactions~1moderation~1{targetId}'
+  /trials/v1/signup:
+    $ref: './trials-identity.yaml#/paths/~1trials~1v1~1signup'
+  /trials/v1/trial-requests:
+    $ref: './trials-identity.yaml#/paths/~1trials~1v1~1trial-requests'
+  /trials/v1/students:
+    $ref: './trials-identity.yaml#/paths/~1trials~1v1~1students'
+  /social/v2/me:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1me
+  /social/v2/relationships/{partyId}:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1relationships~1{partyId}
+  /social/v2/preferences:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1preferences
+  /social/v2/following:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1following
+  /social/v2/discover:
+    $ref: ./social-v2.yaml#/paths/~1social~1v2~1discover
   /social/followers:
     get:
       tags: [Social]
@@ -473,6 +521,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
+  /v1/password-reset:
+    post:
+      summary: Request an account recovery email
+      operationId: requestPasswordReset
+      security: []
+      parameters:
+        - in: query
+          name: locale
+          required: false
+          schema:
+            type: string
+          description: Requested recovery language. Spanish locales use Spanish; other supplied locales use English fallback. Omitted values retain legacy Spanish email behavior.
+        - name: redirect
+          in: query
+          required: false
+          description: Optional local destination, revalidated against the recovered account's permissions. Invalid destinations are ignored.
+          schema:
+            type: string
+            maxLength: 500
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '204':
+          description: Request processed without revealing whether the account exists or email delivery succeeded.
+        '400':
+          description: Invalid request email.
   /login:
     post:
       summary: Login with username or email
@@ -716,6 +800,60 @@ paths:
                 $ref: '#/components/schemas/OnboardingCompletionResult'
         '401':
           description: Authentication required
+  /session/experiments/{experimentId}/assignment:
+    parameters:
+      - name: experimentId
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [single-feature-onboarding-v1]
+    get:
+      tags: [Session]
+      summary: Read the current account experiment assignment
+      description: Uses authenticated Party authority and persisted signup/completion eligibility. Disabled by default; paused responses do not assign or record exposure. No roles or permissions are granted. Assignment is versioned and exposure is idempotent.
+      operationId: getExperimentAssignment
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Current experiment state, including a paused control response when disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentAssignment'
+        '401':
+          description: Authentication required
+        '404':
+          description: Unsupported experiment
+  /session/experiments/{experimentId}/exposure:
+    parameters:
+      - name: experimentId
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [single-feature-onboarding-v1]
+    post:
+      tags: [Session]
+      summary: Record the current account experiment exposure
+      description: Uses authenticated Party authority and persisted signup/completion eligibility. Disabled by default; paused responses do not assign or record exposure. No roles or permissions are granted. Assignment is versioned and exposure is idempotent.
+      operationId: recordExperimentExposure
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Current experiment state, including a paused control response when disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentExposureResult'
+        '401':
+          description: Authentication required
+        '404':
+          description: Unsupported experiment
   /public/courses/{slug}:
     parameters:
       - name: slug
@@ -1622,6 +1760,25 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ArtistProfile'
+  /artists/me/activate:
+    post:
+      tags: [FanHub]
+      summary: Activate my artist profile immediately
+      description: Creates the authenticated account's artist profile and grants only the Artist role through an audited automatic policy in one transaction. No manual approval or invitation is required. Repeated calls preserve existing profile content and create no duplicate grant. Revoked roles and inactive accounts cannot be reactivated this way. No target party or role is accepted.
+      operationId: activateMyArtistProfile
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Artist profile ready to edit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtistProfile'
+        '401':
+          description: Authentication required
+        '403':
+          description: Account or automatic artist policy does not allow activation
   /artists/search:
     get:
       tags: [FanHub]
@@ -1941,6 +2098,16 @@ paths:
       summary: Create party
       description: Creates a person or organization in the CRM.
       operationId: createParty
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Stable request key scoped to the authenticated actor. Reuse on retries with the same body; a changed body returns 409. Contact attributes never establish identity.
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 128
+            pattern: '^[A-Za-z0-9_-]+$'
       security:
         - bearerAuth: [ ]
       requestBody:
@@ -2012,7 +2179,7 @@ paths:
         - bearerAuth: [ ]
       parameters:
         - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 120 } }
-        - { name: context, in: query, description: Functional authorization context; public discovery contexts are forced to active person accounts and exclude the actor., schema: { type: string, enum: [crm_assignment, booking, booking_engineer, billing_contact, artist_link, campaign_enrollment, event_invitation, social_connection, operations, internal_feedback, live_session, event_logistics], default: crm_assignment } }
+        - { name: context, in: query, description: Functional authorization context; public discovery contexts are forced to active person accounts and exclude the actor., schema: { type: string, enum: [crm_assignment, booking, booking_engineer, billing_contact, artist_link, campaign_enrollment, event_invitation, social_connection, interaction_mention, operations, internal_feedback, live_session, event_logistics], default: crm_assignment } }
         - { name: scopeId, in: query, description: Required domain scope for contexts that authorize against a concrete resource. For event_logistics this is the event ID., schema: { type: string } }
         - { name: kind, in: query, schema: { type: string, enum: [any, person, organization], default: any } }
         - { name: accountOnly, in: query, schema: { type: boolean, default: false } }
@@ -3903,10 +4070,22 @@ paths:
       tags: [Live Sessions]
       summary: Submit a Live Session intake
       description: >-
-        Creates a Live Session intake using canonical persisted genre and instrument UUIDs.
+        Atomically creates an intake and its contacts, using canonical persisted genre and instrument UUIDs.
+        Email never selects an existing person. Explicit contact IDs require existing access.
+        Intake does not create login credentials or grant roles.
         Musicians and setlist are JSON-encoded strings inside the multipart form. Copied genre,
         instrument, role, label, code, and slug fields are rejected.
       operationId: createLiveSessionIntake
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 128
+            pattern: '^[A-Za-z0-9_-]+$'
+          description: Stable identity for one submission, scoped to the authenticated actor. Reuse unchanged requests after failures; changed accepted requests return 409.
       requestBody:
         required: true
         content:
@@ -3920,8 +4099,10 @@ paths:
           description: Invalid multipart data, canonical reference, or terms acceptance
         '401':
           description: Authentication required
+        '403':
+          description: The actor cannot select a supplied contact
         '409':
-          description: A supplied musician identity is ambiguous
+          description: The accepted submission changed or an archived contact requires review
   /feedback:
     post:
       tags: [Feedback]
@@ -6059,6 +6240,7 @@ paths:
   /directory/favorites: { $ref: './directory.yaml#/paths/~1directory~1favorites' }
   /directory/favorites/{targetKind}/{targetId}: { $ref: './directory.yaml#/paths/~1directory~1favorites~1{targetKind}~1{targetId}' }
   /directory/saved-searches: { $ref: './directory.yaml#/paths/~1directory~1saved-searches' }
+  /directory/artist-claim-targets/{partyId}: { $ref: './directory.yaml#/paths/~1directory~1artist-claim-targets~1{partyId}' }
   /directory/claims: { $ref: './directory.yaml#/paths/~1directory~1claims' }
   /directory/verifications: { $ref: './directory.yaml#/paths/~1directory~1verifications' }
   /directory/reports: { $ref: './directory.yaml#/paths/~1directory~1reports' }
@@ -6345,6 +6527,88 @@ paths:
         '404': { description: Quote not found or lookup token does not match }
         '409': { description: Provider binding mismatch or verified payment arrived after hold expiry }
         '502': { description: PayPal capture or immutable payment fields could not be verified }
+  /fans/me/notifications:
+    get:
+      tags: [Notifications]
+      operationId: listNotifications
+      summary: List up to 50 recent notifications owned by the current account
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: unreadOnly, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: Recipient-owned notification history
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Notification' } }
+        '401': { description: Authentication required }
+  /fans/me/notifications/{notificationId}:
+    get:
+      tags: [Notifications]
+      operationId: getNotification
+      summary: Read one recipient-owned notification without marking it as read
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: notificationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '200':
+          description: Notification with stable target identity when retained
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Notification' }
+        '401': { description: Authentication required }
+        '404': { description: Notification unavailable to this account }
+  /fans/me/notifications/{notificationId}/read:
+    post:
+      tags: [Notifications]
+      operationId: markNotificationRead
+      summary: Mark only an activated recipient-owned notification as read
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: notificationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '204': { description: Read state persisted }
+        '401': { description: Authentication required }
+  /access-requests/{requestId}:
+    get:
+      tags: [Access requests]
+      operationId: getFeatureAccessRequest
+      summary: Read the specific request in its current lifecycle state
+      description: Visible only to its requester or a currently authorized reviewer. Navigation does not approve, reject, cancel or provision access.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: requestId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '200':
+          description: Current details and actor-specific capabilities; actions still reauthorize on the server
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [request, canReview, canCancel]
+                properties:
+                  request: { $ref: '#/components/schemas/FeatureAccessRequest' }
+                  canReview: { type: boolean }
+                  canCancel: { type: boolean }
+        '401': { description: Authentication required }
+        '404': { description: Request unavailable to this account }
+  /directory/notification-context/{kind}/{targetId}:
+    get:
+      tags: [Directory]
+      operationId: getDirectoryNotificationContext
+      summary: Read a specific notification target with current resource authorization
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: kind, in: path, required: true, schema: { type: string, enum: [application, invitation, review, alert] } }
+        - { name: targetId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Scoped application, invitation, review or currently public saved-search result
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '401': { description: Authentication required }
+        '404': { description: Resource unavailable to this account }
   /access-requests:
     get:
       tags: [Access requests]
@@ -7274,6 +7538,97 @@ paths:
         '409': { description: 'Settlement is not approved, separation of duties failed, or evidence conflicts' }
         '503': { description: Durable private evidence storage is not configured in production }
 
+  /admin/records-ingestion:
+    get:
+      summary: Read approved video sources, health, checkpoints, and recent runs
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Strict-administrator ingestion overview
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '403': { description: Strict administrator required }
+  /admin/records-ingestion/sources:
+    put:
+      summary: Verify and approve a YouTube channel, or disable an existing source
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [channelId, enabled, collectionId]
+              properties:
+                channelId: { type: string, pattern: '^UC[A-Za-z0-9_-]{22}$' }
+                enabled: { type: boolean }
+                collectionId: { type: string, format: uuid }
+                approvalReference: { type: string, nullable: true, maxLength: 500 }
+                partyId: { type: integer, nullable: true }
+                artistProfileId: { type: integer, nullable: true }
+      responses:
+        '200':
+          description: Audited source configuration
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '400': { description: Invalid source configuration }
+        '403': { description: Strict administrator required }
+        '502': { description: Provider verification failed }
+        '503': { description: Provider credential unavailable }
+  /admin/records-ingestion/control:
+    put:
+      summary: Change the ingestion emergency stop and interval
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [running, intervalSeconds]
+              properties:
+                running: { type: boolean }
+                intervalSeconds: { type: integer, minimum: 300, maximum: 86400 }
+      responses:
+        '200':
+          description: Audited control state
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '403': { description: Strict administrator required }
+  /admin/records-ingestion/runs:
+    post:
+      summary: Run or resume bounded ingestion using a stable execution key
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [sourceAccountId, executionKey, reconciliation, dryRun]
+              properties:
+                sourceAccountId: { type: integer, minimum: 1 }
+                executionKey: { type: string, minLength: 1, maxLength: 150 }
+                reconciliation: { type: boolean }
+                dryRun: { type: boolean }
+      responses:
+        '200':
+          description: Durable run identity and explicit completed, partial, failed, busy, disabled or rate-limited status
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '403': { description: Strict administrator required }
+
 security:
   - bearerAuth: [ ]
 
@@ -7454,6 +7809,55 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    InteractionKind:
+      $ref: './interactions.yaml#/components/schemas/InteractionKind'
+    InteractionMention:
+      $ref: './interactions.yaml#/components/schemas/InteractionMention'
+    InteractionAuthor:
+      $ref: './interactions.yaml#/components/schemas/InteractionAuthor'
+    InteractionComment:
+      $ref: './interactions.yaml#/components/schemas/InteractionComment'
+    InteractionReaction:
+      $ref: './interactions.yaml#/components/schemas/InteractionReaction'
+    InteractionContext:
+      $ref: './interactions.yaml#/components/schemas/InteractionContext'
+    InteractionSummary:
+      $ref: './interactions.yaml#/components/schemas/InteractionSummary'
+    InteractionPage:
+      $ref: './interactions.yaml#/components/schemas/InteractionPage'
+    InteractionCommentContext:
+      $ref: './interactions.yaml#/components/schemas/InteractionCommentContext'
+    InteractionDestination:
+      $ref: './interactions.yaml#/components/schemas/InteractionDestination'
+    InteractionReactors:
+      $ref: './interactions.yaml#/components/schemas/InteractionReactors'
+    InteractionBlockedAccounts:
+      $ref: './interactions.yaml#/components/schemas/InteractionBlockedAccounts'
+    InteractionBlock:
+      $ref: './interactions.yaml#/components/schemas/InteractionBlock'
+    InteractionBlockRequest:
+      $ref: './interactions.yaml#/components/schemas/InteractionBlockRequest'
+    InteractionPreferences:
+      $ref: './interactions.yaml#/components/schemas/InteractionPreferences'
+    InteractionCommand:
+      $ref: './interactions.yaml#/components/schemas/InteractionCommand'
+    InteractionCommandRequest:
+      $ref: './interactions.yaml#/components/schemas/InteractionCommandRequest'
+    InteractionCommandResult:
+      $ref: './interactions.yaml#/components/schemas/InteractionCommandResult'
+    Notification:
+      type: object
+      required: [nId, nType, nTitle, nBody, nIsRead, nCreatedAt]
+      properties:
+        nId: { type: integer, format: int64 }
+        nType: { type: string }
+        nTitle: { type: string }
+        nBody: { type: string }
+        nTargetType: { type: string, nullable: true }
+        nTargetId: { type: integer, format: int64, nullable: true }
+        nTargetKey: { type: string, nullable: true, description: Stable UUID of the target or logistics activity; never a URL }
+        nIsRead: { type: boolean }
+        nCreatedAt: { type: string, format: date-time }
     MerchReputationSummary:
       type: object
       required: [subjectKind, state]
@@ -10499,6 +10903,13 @@ components:
         idToken:
           type: string
           description: Google ID token returned by Google Identity Services
+        createNewAccount:
+          type: boolean
+          description: Must be explicitly true, with current terms acceptance, to create a new account for an unbound Google subject. Omission never creates an account.
+        linkAccount:
+          allOf:
+            - $ref: '#/components/schemas/LoginRequest'
+          description: Explicitly connect the verified Google identity using the existing TDF account credentials. No account or permission is merged.
         marketingOptIn:
           type: boolean
           description: Optional consent to receive TDF product and marketing updates when creating an account.
@@ -10642,7 +11053,6 @@ components:
           type: boolean
           description: True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence.
     ExperimentAssignment:
-      description: Existing assignment DTO shared with the mobile client. This schema does not declare or enable an experiment endpoint.
       type: object
       required: [experimentId, experimentVersion, experimentEnabled, experimentEligible, variant, assignedAt, eligibleUntil, exposedAt, newlyAssigned]
       properties:
@@ -11835,6 +12245,20 @@ components:
         thumbnailUrl:
           type: string
           format: uri
+        availability:
+          type: string
+          enum: [available, unavailable]
+          description: Absent when provider availability has not been verified.
+        availabilityReason:
+          type: string
+          description: Verified provider reason, independent of image loading failures.
+        verifiedAt:
+          type: string
+          format: date-time
+        providerMetadata:
+          type: object
+          additionalProperties: true
+          description: Verified public provider metadata, including publication time, thumbnails, and embedding status.
         relationKind:
           type: string
         primary:

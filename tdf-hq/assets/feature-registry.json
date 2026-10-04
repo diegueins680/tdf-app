@@ -39,6 +39,60 @@
   },
   "features": [
     {
+      "id": "community.discussion",
+      "parentId": null,
+      "webRoute": "/conversacion/:destinationKind/:destinationId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": {
+        "es": "Conversación",
+        "en": "Discussion"
+      },
+      "synonyms": {
+        "es": [
+          "comentarios",
+          "respuestas"
+        ],
+        "en": [
+          "comments",
+          "replies"
+        ]
+      },
+      "keywords": [
+        "discussion",
+        "comments",
+        "reactions"
+      ],
+      "description": {
+        "es": "Reacciones y conversaciones sujetas a los permisos de la publicación.",
+        "en": "Reactions and discussions governed by publication permissions."
+      },
+      "navigationGroup": "people",
+      "icon": "chat",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "searchable": false,
+      "mobilePresentation": {
+        "kind": "native-contextual",
+        "destination": "/conversacion/[destinationKind]/[destinationId]",
+        "documentedException": null
+      },
+      "accessRequestEligible": false,
+      "apiScopes": [
+        {
+          "pathPrefix": "/interactions",
+          "methods": {
+            "GET": "view",
+            "POST": "view",
+            "PUT": "view"
+          }
+        }
+      ]
+    },
+    {
       "id": "public.platform",
       "parentId": null,
       "webRoute": "/tdf",
@@ -365,11 +419,11 @@
       "navigationGroup": "people",
       "icon": "person-add",
       "breadcrumb": ["community"],
-      "requiredAuth": "optional",
-      "permissions": { "discover": {}, "view": {}, "create": { "rolesAny": ["Admin", "Artist", "Artista"] } },
+      "requiredAuth": "authenticated",
+      "permissions": { "discover": {}, "view": {}, "create": {} },
       "routeAction": "create",
       "mobilePresentation": { "kind": "native", "destination": "/createArtistProfile", "documentedException": null },
-      "accessRequestEligible": true
+      "accessRequestEligible": false
     },
     {
       "id": "marketplace",
@@ -3185,6 +3239,48 @@
       "searchable": false,
       "safeLockedDisclosure": false,
       "apiScopes": [{ "pathPrefix": "/stubs", "methods": { "GET": "view" } }]
+    },
+    {
+      "id": "notifications.detail",
+      "parentId": null,
+      "webRoute": "/notificaciones/:notificationId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": {
+        "es": "Notificación",
+        "en": "Notification"
+      },
+      "synonyms": {
+        "es": [],
+        "en": []
+      },
+      "keywords": [
+        "notification"
+      ],
+      "navigationGroup": "help",
+      "icon": "lock",
+      "breadcrumb": [],
+      "permissions": {
+        "view": {}
+      },
+      "globalMenu": false,
+      "accessRequestEligible": false,
+      "mobilePresentation": {
+        "kind": "native-contextual",
+        "destination": "/notifications",
+        "documentedException": null
+      },
+      "apiScopes": [
+        {
+          "pathPrefix": "/fans/me/notifications",
+          "methods": {
+            "GET": "view"
+          }
+        }
+      ],
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none"
     }
   ]
 }

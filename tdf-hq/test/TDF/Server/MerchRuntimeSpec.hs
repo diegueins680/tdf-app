@@ -674,10 +674,10 @@ runChecks databaseUrl = do
       orderId = requiredUuid "98000000-0000-4000-8000-000000000004"
       shippingIssueId = requiredUuid "94000000-0000-4000-8000-000000000001"
       refundIssueId = requiredUuid "94000000-0000-4000-8000-000000000002"
-      owner = AuthedUser (toSqlKey 900002) [] empty
-      collaborator = AuthedUser (toSqlKey 900003) [] empty
-      otherSeller = AuthedUser (toSqlKey 900004) [] empty
-      strictAdmin = AuthedUser (toSqlKey 900005) [Admin] (modulesForRoles [Admin])
+      owner = AuthedUser (toSqlKey 900002) [] empty Nothing
+      collaborator = AuthedUser (toSqlKey 900003) [] empty Nothing
+      otherSeller = AuthedUser (toSqlKey 900004) [] empty Nothing
+      strictAdmin = AuthedUser (toSqlKey 900005) [Admin] (modulesForRoles [Admin]) Nothing
       _capabilities
         :<|> _storefronts
         :<|> _storefront

@@ -1,0 +1,14 @@
+npm test --workspace tdf-hq-ui -- --runTestsByPath src/pages/ChatPage.privacy.test.tsx src/utils/chatReadState.test.ts src/pages/PartyRelationshipMigration.test.ts
+exit 0, 28 tests passed (child worktree)
+
+From tdf-hq-ui: ../node_modules/.bin/eslint src/pages/ChatPage.tsx src/hooks/useChatUnreadCount.ts src/pages/ChatPage.privacy.test.tsx src/utils/chatReadState.ts src/utils/chatReadState.test.ts --max-warnings=0
+exit 0 (identical files in parent worktree)
+
+npm run audit:catalog-lists
+exit 0 (parent worktree containing identical UI source and initialized mobile gitlink)
+
+node_modules/.bin/tsc --noEmit -p tdf-hq-ui/tsconfig.json
+exit 2; extra test-inclusive check failed, not the application typecheck
+
+npm run typecheck --workspace tdf-hq-ui
+exit 0 (identical application source in parent worktree)

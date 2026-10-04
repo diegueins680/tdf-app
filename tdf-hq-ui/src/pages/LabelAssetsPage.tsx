@@ -1,3 +1,4 @@
+import { resolveApiBase } from '../config/apiBase';
 import { useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
   Alert,
@@ -66,9 +67,7 @@ function normalizeAssets(payload: AssetsPayload): AssetDTO[] {
   return payload.items ?? [];
 }
 
-const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
-  ? import.meta.env.VITE_API_BASE
-  : 'https://tdf-hq.fly.dev');
+const API_BASE = resolveApiBase();
 const ASSET_CATEGORY_KEY = 'asset-category';
 
 const normalizeGoogleDriveUrl = (url: string): string | null => {

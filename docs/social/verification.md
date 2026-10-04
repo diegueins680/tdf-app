@@ -1,4 +1,4 @@
-# Verification register (in progress)
+# Verification register — 2026-09-15 (partial delivery)
 
 ## Formal scope and limits
 
@@ -175,3 +175,121 @@ controls passed. Relationships: 337,265 generated / 101,855 distinct, depth 11;
 Feed: 4,717 / 1,674, depth 17; RequestReplay: 2,384 / 272, depth 6. Exact logs:
 `docs/social/model-evidence-independent-guarantees-2026-09-15/`. These are bounded
 model results; downstream SQL, HTTP and legacy-client refinement remains required.
+## Downstream SQL refinement after concurrent review
+
+The authority branch is rebased onto the reviewed audit commit `3151106f2` plus
+preview suppression `45aa887ff`; unrelated application branches were not merged.
+`ConsentTraces` now invokes actor-specific Withdraw and checks OwnConsentOnly.
+The generator derives the withdrawing actor from the removed consent, instead of
+always assuming actor A. TLC explored 32 trace states / 74 generated states and
+emitted 30 distinct SQL assertions.
+
+Running those assertions against the previous SQL failed at **model state 23**:
+with both intents true, actor A's disconnect erased B's intent. The repair clears
+only the caller's intent; block and social closure still clear both. The same
+native PostgreSQL fixture then passed all 30 transitions and the existing checks.
+Before/after logs are retained in `evidence/reviewed-sql-before.txt` and
+`evidence/reviewed-sql-after.txt`. This is an observed model-to-code counterexample,
+not merely a synthetic negative configuration of the model.
+
+The reviewed positive models were rerun here using Java 17.0.12 and the pinned TLC
+jar: Relationships 101,245 distinct states, Feed 1,674, RequestReplay 272. The runner
+also requires the six specifically named negative-control violations. These remain
+bounded specifications; external worker and full-platform refinement is unfinished.
+
+For the descending feed, the first response establishes an implicit traversal
+high-water mark. A later publication position is greater than that mark and also
+greater than the returned last-position cursor, so it cannot enter later pages.
+An empty response terminates the traversal; a new first-page request is a refresh.
+The implementation does not transport the exact initial mark. This mapping covers
+monotonic publication and eligibility removal only; newly eligible old content and
+an explicit resumable traversal token require further qualification.
+
+The subsequent audit head `6d5c25c20` adds independent delivery, tombstone, stale
+command and ownership properties. ConsentTraces passes the current revision to
+all four commands and supplies every negative-mode constant explicitly. Its 32
+states / 30 generated transition cases passed again against native PostgreSQL;
+see `evidence/consent-independent-review.txt` and `evidence/sql-independent-review.txt`.
+The SQL byte sequence of the generated assertions did not change. Delivery remains
+a model-level guarantee until the legacy worker integration is implemented.
+## Implementation refinement actually executed
+
+| Requirement | Model action / property | Code boundary | Automated evidence and scope |
+|---|---|---|---|
+| S-AUTH | Read / AuthoritativeDenial | `social_v2_feed`, `social_v2_relationship` and read functions marked STABLE; `Social.Server` derives actor from auth | `read-model-tests.sql`: membership removal, blocked GET and snapshot classification; `HttpSpec.hs`: real token/actor/organization denial |
+| S-CONSENT | Request, Withdraw / ConsentIntegrity | `social_v2_mutate`, ordered pair primary key and independent consent columns | 30 TLC graph-derived transitions in `model-cases.sql`, request/accept fixtures; HTTP explicit acceptance and injected-actor rejection |
+| S-BLOCK | Block, Unblock / ConsentIntegrity | ordered actor/credential/pair locks, block constraint, denial before replay | `test-postgres.sh`: both block and accept observed waiting at an explicit barrier; blocked reader cannot poll revision |
+| S-DELETE | Delete / ConsentIntegrity | `social_v2_close` tombstone and preserved revisions | social closure + stale replay tests; NOT full account erasure/refinement |
+| S-RETRY | Queue, Finish / TypeOK | unique actor/request key, payload equality, current authorization and version check | directed follow/unfollow retries, stale revision, payload conflict, database constraints and rate limit; external worker/delivery not refined |
+| S-FEED | Publish, Page, Hide / StablePagination | serialized publication batch commits before read, immutable unique position, membership before page limit | SQL ties, edit, late insert, deletion and revocation; 50k-post synthetic workload; HTTP page/cursor limits |
+| S-REACTION | SetActive / RetrySafe | `toggleMomentReactionDb` row lock and atomic evidence insert | Reaction TLC 15 states; historical candidate backend test passed in the 2,540-example run; refreshed upstream helper requires separate CI qualification |
+| S-PROGRESS | Finish / Progress | model fairness/availability assumptions | model passed; existing notification/reindexing worker progress has NOT been implemented or qualified by this work |
+
+Eight HTTP examples passed on native PostgreSQL 16.10 with actual Servant and bearer
+authentication, object-compiled through Stack GHC 9.10.3. The Docker-backed HTTP
+attempt stalled after its API became unavailable (observed API 500); it was stopped
+and is not a pass. The interpreter attempt hit GHC's bytecode breakpoint-index limit.
+The native fixture starts/stops a private cluster. See `evidence/http-refreshed-final.txt`.
+
+The pre-refresh Stack-built complete backend test binary ran **2,540 examples, zero failures**.
+The Stack command itself failed afterward trying to copy an unbuilt executable;
+these outcomes are distinct. CI #365 independently linked the application and passed
+its backend tests, then failed on the existing merch-migration prerequisite.
+
+The refreshed dependency includes upstream onboarding repairs. Full web type
+checking, Vite build and bundle budget now pass (`evidence/ui-build-refreshed.txt`);
+this supersedes the historical baseline failures without attributing upstream
+repairs to the social implementation. Fifteen focused social tests passed again
+(`evidence/ui-refreshed-final.txt`); scoped ESLint passed before this model-only refresh. The local browser uses
+synthetic API/session fixtures; it does not establish full-app authenticated E2E or
+mobile runtime behavior. Screenshot and axe evidence is committed.
+
+## Final independent model rerun (2026-09-15)
+
+After rebasing onto audit `6d5c25c20`, the pinned Java 17/TLC runner passed **all four
+positive configurations and all twelve specifically expected negative controls**.
+Relationships explored 337,265 generated / 101,855 distinct states, depth 11; Feed
+1,674 distinct; RequestReplay 272; Reaction 15. Logs are in
+`evidence/independent-final-models/` with the command summary in
+`evidence/independent-final-run.txt`. The “Error” lines in that summary are required
+counterexamples for deliberately unsafe configurations, not ignored test failures.
+The runner exited zero only after matching each exact invariant/action-property.
+The consent adapter also passed and regenerated byte-identical 30 SQL assertions.
+
+The workflow guard suite passed 12 tests (`evidence/workflow-refreshed-final.txt`).
+Final browser artifact uploads now use a fresh temporary directory, so an early CI
+failure cannot upload old committed local screenshots as if the job produced them.
+
+
+## Complete schema qualification
+
+The separate compatibility harness restored the schema-only repository baseline,
+applied its synthetic catalog fixture and all 102 registered migrations, then
+passed the social migration, publication/legacy-source-write and preserved-data
+pause assertions on native PostgreSQL 16.10. The final script passed again; see
+`evidence/schema-compatibility-final.txt` and [scope/commands](schema-compatibility.md).
+No assertions or baseline schema objects were removed to obtain this result.
+
+
+## Refreshed backend tests
+
+The newly Stack-linked test binary ran 2,542 examples with zero failures on the
+refreshed application source (exit 0). This is independent of the still-running
+application executable compilation. Command, hashes and final output are recorded
+in `evidence/backend-refreshed-result.txt`; the earlier 2,540-example result remains
+historical. Full-app runtime and mobile social flows still require qualification.
+
+## Session revocation refinement — 2026-09-15
+
+[Session boundary](session-boundary.md) records the additional executable model,
+three specific negative controls, generated observed-outcome tests, actual
+pre-fix HTTP counterexample, lock races and fixture overhead. These extend the
+account-only pilot; they do not qualify legacy endpoints or managed entities.
+
+## Legacy DM write refinement — 2026-09-15
+
+[DM write boundary](dm-write-boundary.md) adds an executable activation/pause/consent
+model and real generated INSERT tests, plus concrete lock races and complete-schema
+compatibility. The model assumes an atomic write boundary; database locks and
+READ COMMITTED enforcement realize that boundary for this path. It does not prove
+all multi-thread lock graphs or repair legacy reads/notification delivery.

@@ -1,0 +1,30 @@
+{
+  "counterexampleRevision": "af9309c2892ac84b377999143cd47a41dc2ed90d",
+  "repairRevision": "abf74af01",
+  "implementationSha256": "e55fd96f0b41942f64da647f25c1f61211f2c37a5f4b38e366dd821a319a66cf",
+  "before": {
+    "sha": "ab9bbacc9da845b6bfe70ac3fda2ace44f17c918",
+    "requiredCommit": "c53b33e7ef868fb7b64f876199ed66be0f617efc",
+    "compatible": true
+  },
+  "after": {
+    "prior": {
+      "sha": "ab9bbacc9da845b6bfe70ac3fda2ace44f17c918",
+      "requiredCommit": "d7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e",
+      "compatible": false
+    },
+    "fallback": {
+      "sha": "7635a5f325b9f08e129498317fecd606dfd36dc6",
+      "requiredCommit": "d7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e",
+      "compatible": true
+    }
+  },
+  "ancestryChain": "c53b33e7 -> 497286e82 -> 418c0da63 -> d7ebacbff (three actual git merge-base --is-ancestor commands exited 0)",
+  "regressions": {
+    "command": "node --test scripts/__tests__/provider-rollback.test.mjs scripts/__tests__/production-release.test.mjs scripts/__tests__/ci-pipeline.test.mjs scripts/__tests__/verification-evidence.test.mjs",
+    "passed": 85,
+    "failed": 0,
+    "node": "24.8.0"
+  },
+  "boundary": "Actual local guard and recovery tests; no cloud mutations and no unrestricted implementation proof"
+}

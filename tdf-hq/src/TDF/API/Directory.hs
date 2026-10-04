@@ -290,8 +290,10 @@ type DirectoryPublicAPI = "directory" :>
 
 type RequiredIdempotency = Header' '[Required, Strict] "Idempotency-Key" Text
 
-type DirectoryProtectedAPI = "directory" :>
-       ( "age-assurance" :> ReqBody '[JSON] AgeAssuranceRequest :> Put '[JSON] Value
+type DirectoryProtectedAPI =
+       "directory" :>
+       ( "notification-context" :> Capture "kind" Text :> Capture "targetId" UUID :> Get '[JSON] Value
+    :<|> "age-assurance" :> ReqBody '[JSON] AgeAssuranceRequest :> Put '[JSON] Value
     :<|> "profiles" :> Get '[JSON] [Value]
     :<|> "profiles" :> RequiredIdempotency :> ReqBody '[JSON] DirectoryProfileUpsert :> PostCreated '[JSON] Value
     :<|> "profiles" :> Capture "profileId" UUID :> ReqBody '[JSON] DirectoryProfileUpsert :> Put '[JSON] Value
@@ -313,6 +315,7 @@ type DirectoryProtectedAPI = "directory" :>
     :<|> "favorites" :> Capture "targetKind" Text :> Capture "targetId" Text :> Delete '[JSON] NoContent
     :<|> "saved-searches" :> Get '[JSON] [Value]
     :<|> "saved-searches" :> RequiredIdempotency :> ReqBody '[JSON] SavedSearchCreateRequest :> PostCreated '[JSON] Value
+    :<|> "artist-claim-targets" :> Capture "partyId" Int64 :> Put '[JSON] Value
     :<|> "claims" :> RequiredIdempotency :> ReqBody '[JSON] ClaimCreateRequest :> PostCreated '[JSON] Value
     :<|> "verifications" :> RequiredIdempotency :> ReqBody '[JSON] VerificationCreateRequest :> PostCreated '[JSON] Value
     :<|> "reports" :> RequiredIdempotency :> ReqBody '[JSON] ReportCreateRequest :> PostCreated '[JSON] Value

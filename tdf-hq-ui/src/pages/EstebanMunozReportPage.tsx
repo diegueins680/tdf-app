@@ -261,7 +261,7 @@ export default function EstebanMunozReportPage() {
                 ))}
               </Stack>
               <Divider />
-              <TableContainer>
+              <TableContainer tabIndex={0} role="region" aria-label="Arriendo mensual">
                 <Table size="small" sx={tableSx}>
                   <TableHead>
                     <TableRow>
@@ -290,7 +290,7 @@ export default function EstebanMunozReportPage() {
 
           <Grid item xs={12} lg={5}>
             <Section title="Comprobante base" subtitle={source.lastReceipt.source}>
-              <TableContainer>
+              <TableContainer tabIndex={0} role="region" aria-label="Comprobante base">
                 <Table size="small" sx={{ ...tableSx, minWidth: 420 }}>
                   <TableBody>
                     <TableRow>
@@ -324,7 +324,7 @@ export default function EstebanMunozReportPage() {
           title="Honorarios por clases de producción"
           subtitle={`Tarifa aplicada: ${money(source.coursePayment.hourlyRateCents)} por hora. Total: ${report.courseRows.length} cursos de 16 horas cada uno.`}
         >
-          <TableContainer>
+          <TableContainer tabIndex={0} role="region" aria-label="Honorarios por clases">
             <Table size="small" sx={tableSx}>
               <TableHead>
                 <TableRow>
@@ -365,7 +365,7 @@ export default function EstebanMunozReportPage() {
           title="Participación por realización de mastering"
           subtitle={`${source.promotionShare.sourceLabel}. A Esteban le corresponde el ${source.promotionShare.estebanSharePercent}% del pago recibido.`}
         >
-          <TableContainer>
+          <TableContainer tabIndex={0} role="region" aria-label="Participación de mastering">
             <Table size="small" sx={tableSx}>
               <TableHead>
                 <TableRow>
@@ -401,7 +401,7 @@ export default function EstebanMunozReportPage() {
           title="Cuentas mantenidas con TDF"
           subtitle="Vista consolidada de saldos a cobrar, saldos a pagar y movimientos base."
         >
-          <TableContainer>
+          <TableContainer tabIndex={0} role="region" aria-label="Cuentas con TDF">
             <Table size="small" sx={tableSx}>
               <TableHead>
                 <TableRow>

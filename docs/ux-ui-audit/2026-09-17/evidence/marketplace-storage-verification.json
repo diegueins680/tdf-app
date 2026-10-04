@@ -1,0 +1,500 @@
+{
+  "observedAt": "2026-09-18T16:33:11.052000+00:00",
+  "finding": "UX-260917-007",
+  "baseSHA": "e1a825bda26dbb16b1c732e551cc4880d5626943",
+  "before": {
+    "production": "e1 Marketplace error boundary with denied storage in three engines",
+    "componentNegativeControls": 4,
+    "log": "/tmp/tdf-ux-marketplace-storage-before.log"
+  },
+  "verification": {
+    "componentAndAPI": {
+      "passed": 23,
+      "suites": 2
+    },
+    "typescript": "passed",
+    "lint": "passed",
+    "build": {
+      "passed": true,
+      "gzipInitialBytes": 368229,
+      "preloads": 5
+    },
+    "formal": {
+      "completePinnedSuite": "passed",
+      "positive": {
+        "generated": 8,
+        "distinct": 8,
+        "depth": 4
+      },
+      "negativeProperties": [
+        "NoStorageExceptionEscapes",
+        "NoDispatchWithoutDurableKey"
+      ],
+      "initialAttempts": "Missing JAR path failed before execution; initial model Boolean precedence defect corrected, not claimed as product counterexample."
+    },
+    "browser": {
+      "actualIsolatedPostgreSQL": true,
+      "apiPort": 18693,
+      "database": "tdf_ux_calendar_test",
+      "fixture": "Audit storage microphone",
+      "productionBundle": true,
+      "qualifiedDistinctCases": 30,
+      "firstRun": [
+        {
+          "engine": "chromium",
+          "width": 320,
+          "failure": "none",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "chromium",
+          "width": 320,
+          "failure": "getter",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "chromium",
+          "width": 320,
+          "failure": "getItem",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "chromium",
+          "width": 320,
+          "failure": "setItem",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "chromium",
+          "width": 320,
+          "failure": "removeItem",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "chromium",
+          "width": 1280,
+          "failure": "none",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "chromium",
+          "width": 1280,
+          "failure": "getter",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "chromium",
+          "width": 1280,
+          "failure": "getItem",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "chromium",
+          "width": 1280,
+          "failure": "setItem",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "chromium",
+          "width": 1280,
+          "failure": "removeItem",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 320,
+          "failure": "none",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 320,
+          "failure": "getter",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 320,
+          "failure": "getItem",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 320,
+          "failure": "setItem",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 320,
+          "failure": "removeItem",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 1280,
+          "failure": "none",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 1280,
+          "failure": "getter",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 1280,
+          "failure": "getItem",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 1280,
+          "failure": "setItem",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "firefox",
+          "width": 1280,
+          "failure": "removeItem",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "webkit",
+          "width": 320,
+          "failure": "none",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "webkit",
+          "width": 320,
+          "failure": "getter",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "webkit",
+          "width": 320,
+          "failure": "getItem",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "webkit",
+          "width": 320,
+          "failure": "setItem",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "webkit",
+          "width": 320,
+          "failure": "removeItem",
+          "violations": [],
+          "geometry": {
+            "width": 320,
+            "scroll": 320,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "failure": "none",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "failure": "getter",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "error": "expect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 3\n\n- Array []\n+ Array [\n+   \"/6\",\n+ ]",
+          "passed": false,
+          "errors": [],
+          "requests": [
+            "/6"
+          ]
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "failure": "getItem",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "failure": "setItem",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "failure": "removeItem",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        }
+      ],
+      "recheck": [
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "failure": "getter",
+          "violations": [],
+          "geometry": {
+            "width": 1280,
+            "scroll": 1280,
+            "lang": "es"
+          },
+          "passed": true,
+          "errors": [],
+          "requests": []
+        }
+      ],
+      "recheckReason": "One case counted an unrelated analytics POST /6 as checkout; restrict assertion to actual local API origin. No product change required.",
+      "language": "Actual es; no EN acceptance claim",
+      "states": [
+        "catalog",
+        "search",
+        "no matches",
+        "URL filter",
+        "reload",
+        "storage getter/getItem/setItem/removeItem denial"
+      ],
+      "limits": [
+        "No real payment/provider dispatch",
+        "No screen-reader manual test or field performance measurement",
+        "Required checkout key failures are fail-closed API tests, not successful payment journeys"
+      ]
+    }
+  }
+}

@@ -24,6 +24,22 @@ test('ordinary backend changes avoid UI, mobile, contracts and migrations', () =
   });
 });
 
+for (const source of [
+  'tdf-hq-ui/src/components/notificationTarget.ts',
+  'scripts/generate-notification-navigation.mjs',
+]) {
+  test(`notification navigation drift is checked when only ${source} changes`, () => {
+    assert.deepEqual(classifyChangedFiles([source]), {
+      repo: true,
+      ui: source.startsWith('tdf-hq-ui/'),
+      mobile: true,
+      backend: false,
+      contracts: false,
+      migrations: false,
+    });
+  });
+}
+
 test('public booking HTTP concurrency harness selects backend validation', () => {
   assert.deepEqual(classifyChangedFiles(['scripts/test-public-booking-http-concurrency.sh']), {
     repo: true,

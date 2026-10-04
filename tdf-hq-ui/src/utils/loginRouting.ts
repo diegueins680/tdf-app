@@ -89,7 +89,7 @@ export function resolvePostAuthPath(
     case 'artist_profile':
       return hasArtistAccess
         ? '/mi-artista'
-        : accessRequestPath('artist.onboarding', 'create');
+        : '/artista/crear';
     case 'internships':
       return canAccessPath('/practicas', roles, modules)
         ? '/practicas'

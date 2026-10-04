@@ -1,0 +1,4 @@
+
+> tdf-app@0.2.0 audit:catalog-lists
+> node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /tmp/tdf-catalog-list-audit.json
+

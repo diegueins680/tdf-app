@@ -84,6 +84,31 @@ psql "${database_url}" -X -v ON_ERROR_STOP=1 \
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 
+# Both historical orders occurred: late registration can apply an older view
+# after a newer privacy repair is already recorded in the immutable ledger.
+privacy_repair="${repo_root}/tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql"
+ownership_repair="${repo_root}/tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql"
+for older_view in \
+  2026-09-07_directory_event_visibility_and_favorite_evidence \
+  2026-09-09_music_directory_suppressed_event_privacy; do
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 \
+    -f "${repo_root}/tdf-hq/sql/${older_view}.sql" >/dev/null
+  if node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+    | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null 2>&1; then
+    echo "Schema gate accepted a view missing one privacy boundary: ${older_view}" >&2
+    exit 1
+  fi
+  # A fresh migration entry repairs either ledger history; retries are safe.
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${privacy_repair}" >/dev/null
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${privacy_repair}" >/dev/null
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${ownership_repair}" >/dev/null
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${ownership_repair}" >/dev/null
+  node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+    | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 \
+    -f "${repo_root}/tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql" >/dev/null
+done
+
 legacy_rows="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM ddex_partner WHERE cardinality(allowed_versions) <> 0;')"
 test "${legacy_rows}" = "0"
 
@@ -105,7 +130,47 @@ FROM (
 SQL
 )"
 
+# A reviewed rollout may already have enabled PayPal webhook intake. A restart
+# must preserve that state while continuing to reject absent or unstaged gates.
+psql "${database_url}" -X -v ON_ERROR_STOP=1 -c \
+  "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';" >/dev/null
 start_and_verify
+test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT enabled FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';")" = "t"
+
+verification_sql="$(node "${repo_root}/scripts/render-production-schema-verification.mjs")"
+assert_gate_rejected() {
+  local mutation="$1"
+  local expected_error="${2:-Production provider capability gates must exist; refunds and Datafast must remain disabled}"
+  local output
+  if output="$(psql "${database_url}" -X -v ON_ERROR_STOP=1 2>&1 <<SQL
+BEGIN;
+${mutation}
+${verification_sql}
+ROLLBACK;
+SQL
+)"; then
+    echo "Schema verification unexpectedly accepted: ${mutation}" >&2
+    exit 1
+  fi
+  if [[ "${output}" != *"${expected_error}"* ]]; then
+    echo "${output}" >&2
+    echo "Schema verification failed for an unexpected reason" >&2
+    exit 1
+  fi
+}
+
+assert_gate_rejected "ALTER TABLE google_calendar_config DROP COLUMN access_token;" "Calendar runtime columns or archived-owner guard are incompatible"
+assert_gate_rejected "ALTER TABLE google_calendar_config DISABLE TRIGGER identity_archive_reference_guard;" "Calendar runtime columns or archived-owner guard are incompatible"
+assert_gate_rejected "ALTER TABLE google_calendar_event DROP CONSTRAINT unique_calendar_event;" "Calendar runtime columns or archived-owner guard are incompatible"
+
+for flag in checkout.paypal.webhooks checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do
+  assert_gate_rejected "DELETE FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = '${flag}';"
+done
+for flag in checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do
+  assert_gate_rejected "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = '${flag}';"
+done
+psql "${database_url}" -X -v ON_ERROR_STOP=1 -c \
+  "UPDATE revenue_feature_flag SET enabled = FALSE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';" >/dev/null
 
 schema_after="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 <<'SQL'
 SELECT md5(string_agg(definition, E'\n' ORDER BY definition))

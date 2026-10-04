@@ -1,0 +1,49 @@
+{
+  "observedAt": "2026-09-18T19:00:54.725Z",
+  "scope": "Anonymous live production reset page; synthetic token/password; no submit or account access",
+  "rows": [
+    {
+      "engine": "chromium",
+      "status": 200,
+      "tokenRemovedFromVisibleURL": true,
+      "apiWrites": 0,
+      "errors": [],
+      "analytics": []
+    },
+    {
+      "engine": "firefox",
+      "status": 200,
+      "tokenRemovedFromVisibleURL": true,
+      "apiWrites": 0,
+      "errors": [],
+      "analytics": []
+    },
+    {
+      "engine": "webkit",
+      "status": 200,
+      "tokenRemovedFromVisibleURL": true,
+      "apiWrites": 0,
+      "errors": [],
+      "analytics": []
+    }
+  ],
+  "excludedAttempt": "First probe used nonexistent /reset-password instead of implemented /reset and failed before qualifying any case; corrected route used for all reported results.",
+  "limits": "No authenticated identify or account-switch analytics evidence; does not certify every event, retention or third-party processing. Undecodable payloads are not claimed redacted.",
+  "resourceClassificationCheck": {
+    "observedAt": "2026-09-18T19:01:27.218Z",
+    "requests": [
+      {
+        "path": "/assets/posthog-CKU3iqw-.js",
+        "method": "GET",
+        "kind": "JavaScript asset"
+      },
+      {
+        "path": "/catalogs/batch",
+        "method": "GET",
+        "count": 2,
+        "kind": "application catalog API"
+      }
+    ],
+    "conclusion": "Initial broad matcher misclassified these three requests as analytics. No telemetry event payload observed; no payload-redaction claim."
+  }
+}

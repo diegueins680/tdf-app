@@ -1,0 +1,89 @@
+models-and-postgres	Complete schema compatibility and preserved-write pause	﻿2026-09-16T03:35:54.2005282Z ##[group]Run bash scripts/social/test-schema-compatibility.sh
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:54.2005620Z ^[[36;1mbash scripts/social/test-schema-compatibility.sh^[[0m
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:54.2040449Z shell: /usr/bin/bash -e {0}
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:54.2040614Z env:
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:54.2040813Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-1/x64
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:54.2041129Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-1/x64
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:54.2041372Z ##[endgroup]
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:54.2235688Z Unable to find image 'pgvector/pgvector:pg17' locally
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.1865825Z pg17: Pulling from pgvector/pgvector
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4205660Z 039e6f9f9752: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4206113Z 9524156efd7a: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4206365Z d7b627e06eac: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4206605Z f495088ca134: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4206832Z 1e12f8d900eb: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4206991Z 740ea3feff0f: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4207398Z 5ac7c444edb0: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4207609Z 11ec1b6ae2a0: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4207837Z ef21471f3a2b: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4208065Z 62ca04624b47: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4208273Z 44438d8012af: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4208462Z f67c9bdd808a: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4208614Z 3d4e001e01a2: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4208767Z 8cb2f3b54f01: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4208923Z 9ef6b0a1be9e: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4209167Z b70609756d71: Pulling fs layer
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4209375Z 44438d8012af: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4209612Z 5ac7c444edb0: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4209848Z f67c9bdd808a: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4210073Z 11ec1b6ae2a0: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4210209Z 3d4e001e01a2: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4210334Z ef21471f3a2b: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4210461Z 8cb2f3b54f01: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4210624Z 62ca04624b47: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4210833Z 9ef6b0a1be9e: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4210970Z b70609756d71: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4211095Z f495088ca134: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4211221Z 1e12f8d900eb: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.4211351Z 740ea3feff0f: Waiting
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.6148797Z 9524156efd7a: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.6360960Z d7b627e06eac: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.6361357Z d7b627e06eac: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.6859314Z 039e6f9f9752: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.6859734Z 039e6f9f9752: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.7970501Z f495088ca134: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.7970938Z f495088ca134: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.8477684Z 1e12f8d900eb: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.8478169Z 1e12f8d900eb: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.8619051Z 740ea3feff0f: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.8619505Z 740ea3feff0f: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.9654628Z 5ac7c444edb0: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:55.9655143Z 5ac7c444edb0: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.0302675Z 11ec1b6ae2a0: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.0303111Z 11ec1b6ae2a0: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.1328738Z 62ca04624b47: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.1329332Z 62ca04624b47: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.2014009Z 44438d8012af: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.2014742Z 44438d8012af: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.3184784Z f67c9bdd808a: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.3185499Z f67c9bdd808a: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.3454951Z ef21471f3a2b: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.3459718Z ef21471f3a2b: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.3897696Z 3d4e001e01a2: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.3898411Z 3d4e001e01a2: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.5002472Z 8cb2f3b54f01: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.5003110Z 8cb2f3b54f01: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.5181640Z 9ef6b0a1be9e: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.5182104Z 9ef6b0a1be9e: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.5815859Z b70609756d71: Verifying Checksum
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.5816497Z b70609756d71: Download complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:56.7285708Z 039e6f9f9752: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:57.9133119Z 9524156efd7a: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:58.0768832Z d7b627e06eac: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:58.1266410Z f495088ca134: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:58.4748783Z 1e12f8d900eb: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:58.5955120Z 740ea3feff0f: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:58.6067410Z 5ac7c444edb0: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:35:58.6151559Z 11ec1b6ae2a0: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:02.5196278Z ef21471f3a2b: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:02.6445024Z 62ca04624b47: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:02.6576348Z 44438d8012af: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:02.6672980Z f67c9bdd808a: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:02.9668075Z 3d4e001e01a2: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:02.9801594Z 8cb2f3b54f01: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:03.1766204Z 9ef6b0a1be9e: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:03.3179176Z b70609756d71: Pull complete
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:03.3219081Z Digest: sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:03.3229960Z Status: Downloaded newer image for pgvector/pgvector:pg17
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:05.0248564Z psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  terminating connection due to administrator command
+models-and-postgres	Complete schema compatibility and preserved-write pause	2026-09-16T03:36:05.3559576Z ##[error]Process completed with exit code 2.

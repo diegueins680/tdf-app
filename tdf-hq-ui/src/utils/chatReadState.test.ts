@@ -128,3 +128,17 @@ describe('chatReadState', () => {
     unsubscribe();
   });
 });
+
+it('keeps read markers separate for two participants sharing a thread and browser', () => {
+  window.localStorage.clear();
+  markThreadSeen(101, '2026-09-15T12:00:00Z', 1);
+  expect(loadChatReadMap(1)).toEqual({ '101': '2026-09-15T12:00:00Z' });
+  expect(loadChatReadMap(2)).toEqual({});
+  markThreadSeen(101, '2026-09-15T13:00:00Z', 2);
+  expect(loadChatReadMap(1)).toEqual({ '101': '2026-09-15T12:00:00Z' });
+});
+it('does not assign legacy read markers to an unproven account owner', () => {
+  window.localStorage.clear();
+  markThreadSeen(101, '2026-09-15T12:00:00Z');
+  expect(loadChatReadMap(1)).toEqual({});
+});

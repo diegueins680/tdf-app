@@ -1,0 +1,29 @@
+
+> tdf-hq-ui@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --runInBand --runInBand src/pages/ArtistOnboardingPage.test.tsx
+
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+(node:70443) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/pages/ArtistOnboardingPage.test.tsx
+  ✓ activates a customer profile immediately, refreshes server roles and opens the editor (262 ms)
+  ✓ keeps the user on the activation screen when activation fails (54 ms)
+  ✓ does not overwrite a different account after an in-flight activation (86 ms)
+  ✓ offers signup to guests without activating any profile (30 ms)
+  ✓ keeps the authenticated Customer account and offers reviewed management for the selected artist (117 ms)
+  ✓ keeps the authenticated Artist account and offers reviewed management for the selected artist (67 ms)
+  ✓ preserves a guest claim through both signup and login (33 ms)
+  ✓ opens the persisted artist profile when optional session storage is inaccessible (119 ms)
+  ✓ rejects a stale activation result after credential rotation in the same account (96 ms)
+  ✓ requires the persisted Artist role before opening the editor (64 ms)
+  ✓ coalesces duplicate activation commands in the same turn (61 ms)
+  ✓ ignores activation receipts after switching to a claim and back (77 ms)
+  ✓ ignores refresh receipts after switching to a claim and back (125 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       13 passed, 13 total
+Snapshots:   0 total
+Time:        5.374 s, estimated 6 s
+Ran all test suites matching src/pages/ArtistOnboardingPage.test.tsx.

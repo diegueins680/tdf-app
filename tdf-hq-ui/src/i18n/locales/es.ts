@@ -1,4 +1,52 @@
+import directorySearch from './directorySearch.es';
+import authEntry from './authEntry.es';
 const es = {
+  records: { videoUnavailable: 'Video no disponible en la fuente', thumbnailUnavailable: 'Miniatura no disponible', loadingThumbnail: 'Cargando miniatura' },
+  authEntry,
+  directorySearch,
+  auditAccessibility: {
+    loadingFeaturedArtists: 'Cargando artistas destacados',
+    loadingMarketplace: 'Cargando productos del marketplace',
+    loadingPublishedRecordings: 'Cargando grabaciones publicadas',
+    loadingPublishedReleases: 'Cargando lanzamientos publicados',
+    loadingPublishedSessions: 'Cargando sesiones publicadas',
+
+    loadingReports: 'Cargando reportes',
+    loadingConversations: 'Cargando conversaciones',
+    loadingMessages: 'Cargando mensajes',
+
+    loadingDdex: 'Cargando documentos DDEX',
+    loadingServices: 'Cargando servicios',
+    loadingServiceRevisions: 'Cargando revisiones de servicios',
+    loadingTeachers: 'Cargando profesores',
+    loadingTeacherAgenda: 'Cargando agenda del profesor',
+    loadingActivitySummary: 'Cargando resumen por usuario',
+    loadingRecentActivity: 'Cargando actividad reciente',
+
+    loadingProfiles: 'Cargando perfiles',
+    loadingClassifieds: 'Cargando clasificados',
+    loadingApplications: 'Cargando postulaciones',
+    loadingInvitations: 'Cargando invitaciones',
+
+    activitySummary: 'Resumen por usuario',
+    recentActivity: 'Actividad reciente',
+    generatingContactQr: 'Generando QR de contacto',
+    loadingSuggestions: 'Buscando sugerencias de contactos',
+    loadingNetwork: 'Cargando red social',
+    workflowBoard: 'Tablero de proyectos',
+  },
+  fanHubOnboarding: {
+    title: 'Primeros pasos',
+    managerTitle: 'Lo más útil ahora',
+    loading: 'Cargando primeros pasos',
+    artistLoading: 'Cargando perfil del artista',
+    catalogLoading: 'Cargando catálogo de artistas',
+    close: 'Cerrar primeros pasos',
+    retry: 'Reintentar',
+    saving: 'Guardando tu salida de primeros pasos…',
+    loadError: 'No pudimos cargar tus primeros pasos. No mostraremos información de otra cuenta; revisa tu conexión e inténtalo de nuevo.',
+    saveError: 'No pudimos guardar que terminaste estos primeros pasos. Puedes reintentarlo sin perder tu progreso.',
+  },
   Parties: 'Personas',
   Bookings: 'Agenda',
   Kanban: 'Pipelines',
@@ -175,6 +223,7 @@ const es = {
     codebase: 'Código base',
   },
   notifications: {
+    readError: 'No se pudo marcar la notificación como leída. Puedes abrirla de nuevo para reintentar.',
     title: 'Notificaciones',
     markAll: 'Leer todo',
     markAllLoading: 'Marcando…',
@@ -246,6 +295,7 @@ const es = {
       promoPending: 'El código promocional se aplicará al finalizar la compra',
     },
     actions: {
+      pay: 'Pagar {{amount}}',
       back: 'Atrás',
       cancel: 'Cancelar',
       continue: 'Continuar al pago',
@@ -257,6 +307,7 @@ const es = {
       paymentSubmit: 'Error al enviar el pago',
       paymentFailed: 'Error en el pago',
       paymentUnclear: 'No se pudo confirmar el estado del pago. Por favor contacta con soporte.',
+      unavailable: 'El pago no está disponible ahora. No se reservó ninguna entrada. Inténtalo de nuevo más tarde.',
       paymentIntent: 'Error al crear la intención de pago',
       unexpected: 'Ocurrió un error inesperado',
     },

@@ -1,0 +1,10 @@
+
+> tdf-mobile@1.0.1 test
+> jest --runInBand --runTestsByPath __tests__/onboardingIntent.test.ts --silent
+
+PASS __tests__/onboardingIntent.test.ts
+
+Test Suites: 1 passed, 1 total
+Tests:       19 passed, 19 total
+Snapshots:   0 total
+Time:        2.166 s

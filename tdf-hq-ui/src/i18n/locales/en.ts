@@ -1,4 +1,52 @@
+import directorySearch from './directorySearch.en';
+import authEntry from './authEntry.en';
 const en = {
+  records: { videoUnavailable: 'Video unavailable at source', thumbnailUnavailable: 'Thumbnail unavailable', loadingThumbnail: 'Loading thumbnail' },
+  authEntry,
+  directorySearch,
+  auditAccessibility: {
+    loadingFeaturedArtists: 'Loading featured artists',
+    loadingMarketplace: 'Loading marketplace products',
+    loadingPublishedRecordings: 'Loading published recordings',
+    loadingPublishedReleases: 'Loading published releases',
+    loadingPublishedSessions: 'Loading published sessions',
+
+    loadingReports: 'Loading reports',
+    loadingConversations: 'Loading conversations',
+    loadingMessages: 'Loading messages',
+
+    loadingDdex: 'Loading DDEX documents',
+    loadingServices: 'Loading services',
+    loadingServiceRevisions: 'Loading service revisions',
+    loadingTeachers: 'Loading teachers',
+    loadingTeacherAgenda: 'Loading teacher agenda',
+    loadingActivitySummary: 'Loading summary by user',
+    loadingRecentActivity: 'Loading recent activity',
+
+    loadingProfiles: 'Loading profiles',
+    loadingClassifieds: 'Loading classifieds',
+    loadingApplications: 'Loading applications',
+    loadingInvitations: 'Loading invitations',
+
+    activitySummary: 'Summary by user',
+    recentActivity: 'Recent activity',
+    generatingContactQr: 'Generating contact QR code',
+    loadingSuggestions: 'Loading suggested connections',
+    loadingNetwork: 'Loading social network',
+    workflowBoard: 'Project board',
+  },
+  fanHubOnboarding: {
+    title: 'First steps',
+    managerTitle: 'Useful now',
+    loading: 'Loading first steps',
+    artistLoading: 'Loading artist profile',
+    catalogLoading: 'Loading artist catalog',
+    close: 'Close first steps',
+    retry: 'Retry',
+    saving: 'Saving your exit from first steps…',
+    loadError: 'We could not load your first steps. We will not show information from another account; check your connection and try again.',
+    saveError: 'We could not save your exit from first steps. You can retry without losing your progress.',
+  },
   Parties: 'Parties',
   Bookings: 'Bookings',
   Kanban: 'Pipelines',
@@ -175,6 +223,7 @@ const en = {
     codebase: 'Codebase',
   },
   notifications: {
+    readError: 'The notification could not be marked as read. Open it again to retry.',
     title: 'Notifications',
     markAll: 'Mark all read',
     markAllLoading: 'Marking…',
@@ -246,6 +295,7 @@ const en = {
       promoPending: 'Promo code will be applied at checkout',
     },
     actions: {
+      pay: 'Pay {{amount}}',
       back: 'Back',
       cancel: 'Cancel',
       continue: 'Continue to Payment',
@@ -257,6 +307,7 @@ const en = {
       paymentSubmit: 'Payment submission failed',
       paymentFailed: 'Payment failed',
       paymentUnclear: 'Payment status unclear. Please contact support.',
+      unavailable: 'Payment is unavailable right now. No tickets were reserved. Please try again later.',
       paymentIntent: 'Failed to create payment intent',
       unexpected: 'An unexpected error occurred',
     },

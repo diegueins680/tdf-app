@@ -1,0 +1,3334 @@
+[
+  {
+    "role": "read-only",
+    "route": "/parties",
+    "width": 320,
+    "finalPath": "/crm/contactos",
+    "title": "CRM / Contactos · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Contactos"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/bookings",
+    "width": 320,
+    "finalPath": "/bookings",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/pipelines",
+    "width": 320,
+    "finalPath": "/pipelines",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/kanban",
+    "width": 320,
+    "finalPath": "/kanban",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/contactos",
+    "width": 320,
+    "finalPath": "/crm/contactos",
+    "title": "CRM / Contactos · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Contactos"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/system",
+    "width": 320,
+    "finalPath": "/system",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/roles",
+    "width": 320,
+    "finalPath": "/admin/roles",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion/control",
+    "width": 320,
+    "finalPath": "/operacion/control",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/dashboard/operations",
+    "width": 320,
+    "finalPath": "/dashboard/operations",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/mis-clasificados",
+    "width": 320,
+    "finalPath": "/mis-clasificados",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Mis perfiles y clasificados"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/directorio",
+    "width": 320,
+    "finalPath": "/admin/directorio",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/mi-profesor",
+    "width": 320,
+    "finalPath": "/mi-profesor",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/reputation/preferences",
+    "width": 320,
+    "finalPath": "/reputation/preferences",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/reputation/consents",
+    "width": 320,
+    "finalPath": "/reputation/consents",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/merch/reputacion/preferencias",
+    "width": 320,
+    "finalPath": "/merch/reputacion/preferencias",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/merch/reputacion",
+    "width": 320,
+    "finalPath": "/admin/merch/reputacion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social",
+    "width": 320,
+    "finalPath": "/social",
+    "title": "Social · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/instagram",
+    "width": 320,
+    "finalPath": "/social/instagram",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/inbox",
+    "width": 320,
+    "finalPath": "/social/inbox",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/eventos",
+    "width": 320,
+    "finalPath": "/social/eventos",
+    "title": "Social / Eventos · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/eventos/nuevo",
+    "width": 320,
+    "finalPath": "/social/eventos/nuevo",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Crear evento",
+      "Detalles opcionalesDescripción, capacidad, precio, tickets y visibilidad"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/eventos-descubiertos",
+    "width": 320,
+    "finalPath": "/social/eventos-descubiertos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/chat",
+    "width": 320,
+    "finalPath": "/chat",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/docs",
+    "width": 320,
+    "finalPath": "/docs",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Documentación"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/manual",
+    "width": 320,
+    "finalPath": "/manual",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/acerca",
+    "width": 320,
+    "finalPath": "/acerca",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/seguridad",
+    "width": 320,
+    "finalPath": "/seguridad",
+    "title": "Configuración / Seguridad · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/solicitudes-acceso",
+    "width": 320,
+    "finalPath": "/solicitudes-acceso",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Solicitudes de acceso"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/solicitudes-acceso/nueva",
+    "width": 320,
+    "finalPath": "/solicitudes-acceso/nueva",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Solicitar acceso"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/solicitudes-acceso/revision",
+    "width": 320,
+    "finalPath": "/solicitudes-acceso/revision",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/practicas",
+    "width": 320,
+    "finalPath": "/practicas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/feedback/interno",
+    "width": 320,
+    "finalPath": "/feedback/interno",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/diagnosticos",
+    "width": 320,
+    "finalPath": "/admin/diagnosticos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/commerce/provider-events",
+    "width": 320,
+    "finalPath": "/admin/commerce/provider-events",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/merch",
+    "width": 320,
+    "finalPath": "/admin/merch",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/artistas-enriquecimiento",
+    "width": 320,
+    "finalPath": "/admin/artistas-enriquecimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/artists/enrichment",
+    "width": 320,
+    "finalPath": "/admin/artists/enrichment",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/herramientas/chatkit",
+    "width": 320,
+    "finalPath": "/herramientas/chatkit",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/herramientas/tidal-agent",
+    "width": 320,
+    "finalPath": "/herramientas/tidal-agent",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/herramientas/token-admin",
+    "width": 320,
+    "finalPath": "/herramientas/token-admin",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/crm",
+    "width": 320,
+    "finalPath": "/crm/contactos",
+    "title": "CRM / Contactos · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Contactos"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/crm/contactos",
+    "width": 320,
+    "finalPath": "/crm/contactos",
+    "title": "CRM / Contactos · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Contactos"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/crm/empresas",
+    "width": 320,
+    "finalPath": "/crm/empresas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Empresas"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/crm/leads",
+    "width": 320,
+    "finalPath": "/crm/leads",
+    "title": "CRM / Leads · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "CRM / Leads"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio",
+    "width": 320,
+    "finalPath": "/estudio",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/calendario",
+    "width": 320,
+    "finalPath": "/estudio/calendario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/salas",
+    "width": 320,
+    "finalPath": "/estudio/salas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/ordenes",
+    "width": 320,
+    "finalPath": "/estudio/ordenes",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/servicios",
+    "width": 320,
+    "finalPath": "/estudio/servicios",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/pipelines",
+    "width": 320,
+    "finalPath": "/estudio/pipelines",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/live-sessions",
+    "width": 320,
+    "finalPath": "/estudio/live-sessions",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/campanas/tdf-sessions-domo",
+    "width": 320,
+    "finalPath": "/estudio/campanas/tdf-sessions-domo",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/reportes",
+    "width": 320,
+    "finalPath": "/estudio/reportes",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label",
+    "width": 320,
+    "finalPath": "/label",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/artistas",
+    "width": 320,
+    "finalPath": "/label/artistas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/proyectos",
+    "width": 320,
+    "finalPath": "/label/proyectos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/releases",
+    "width": 320,
+    "finalPath": "/label/releases",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/assets",
+    "width": 320,
+    "finalPath": "/label/assets",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/tracks",
+    "width": 320,
+    "finalPath": "/label/tracks",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/ddex",
+    "width": 320,
+    "finalPath": "/label/ddex",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/ddex/partners",
+    "width": 320,
+    "finalPath": "/label/ddex/partners",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela",
+    "width": 320,
+    "finalPath": "/escuela",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela/profesores",
+    "width": 320,
+    "finalPath": "/escuela/profesores",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela/clases",
+    "width": 320,
+    "finalPath": "/escuela/clases",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela/trial-lessons",
+    "width": 320,
+    "finalPath": "/escuela/trial-lessons",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela/trial-queue",
+    "width": 320,
+    "finalPath": "/escuela/trial-queue",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas",
+    "width": 320,
+    "finalPath": "/finanzas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas/pagos",
+    "width": 320,
+    "finalPath": "/finanzas/pagos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas/creador-reporte-cuenta",
+    "width": 320,
+    "finalPath": "/finanzas/creador-reporte-cuenta",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas/reporte-esteban-munoz",
+    "width": 320,
+    "finalPath": "/finanzas/reporte-esteban-munoz",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas/reporte-david-celaya",
+    "width": 320,
+    "finalPath": "/finanzas/reporte-david-celaya",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion",
+    "width": 320,
+    "finalPath": "/operacion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion/inventario",
+    "width": 320,
+    "finalPath": "/operacion/inventario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion/ordenes-marketplace",
+    "width": 320,
+    "finalPath": "/operacion/ordenes-marketplace",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion/reservas-equipo",
+    "width": 320,
+    "finalPath": "/operacion/reservas-equipo",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/mi-tienda",
+    "width": 320,
+    "finalPath": "/mi-tienda",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Piloto de merch para artistas"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion",
+    "width": 320,
+    "finalPath": "/configuracion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos",
+    "width": 320,
+    "finalPath": "/configuracion/catalogos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/radio-auto-stop",
+    "width": 320,
+    "finalPath": "/configuracion/catalogos/radio-auto-stop",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/apariencia",
+    "width": 320,
+    "finalPath": "/configuracion/catalogos/apariencia",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/feedback",
+    "width": 320,
+    "finalPath": "/configuracion/catalogos/feedback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/reacciones",
+    "width": 320,
+    "finalPath": "/configuracion/catalogos/reacciones",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/reacciones-contenido",
+    "width": 320,
+    "finalPath": "/configuracion/catalogos/reacciones-contenido",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/insignias-creadores",
+    "width": 320,
+    "finalPath": "/configuracion/catalogos/insignias-creadores",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/inscripciones-curso",
+    "width": 320,
+    "finalPath": "/configuracion/inscripciones-curso",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/cursos",
+    "width": 320,
+    "finalPath": "/configuracion/cursos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/usuarios-admin",
+    "width": 320,
+    "finalPath": "/configuracion/usuarios-admin",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/estado",
+    "width": 320,
+    "finalPath": "/configuracion/estado",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/actividad",
+    "width": 320,
+    "finalPath": "/configuracion/actividad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/logs",
+    "width": 320,
+    "finalPath": "/configuracion/logs",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/brain",
+    "width": 320,
+    "finalPath": "/configuracion/brain",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/roles-permisos",
+    "width": 320,
+    "finalPath": "/configuracion/roles-permisos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/integraciones/calendario",
+    "width": 320,
+    "finalPath": "/configuracion/integraciones/calendario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/cms",
+    "width": 320,
+    "finalPath": "/configuracion/cms",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/campanas-automaticas",
+    "width": 320,
+    "finalPath": "/configuracion/campanas-automaticas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/fuentes-eventos",
+    "width": 320,
+    "finalPath": "/configuracion/fuentes-eventos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/whatsapp-consentimiento",
+    "width": 320,
+    "finalPath": "/configuracion/whatsapp-consentimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/opciones-ux",
+    "width": 320,
+    "finalPath": "/configuracion/opciones-ux",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/preferencias",
+    "width": 320,
+    "finalPath": "/configuracion/preferencias",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/parties",
+    "width": 1280,
+    "finalPath": "/crm/contactos",
+    "title": "CRM / Contactos · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Contactos"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/bookings",
+    "width": 1280,
+    "finalPath": "/bookings",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/pipelines",
+    "width": 1280,
+    "finalPath": "/pipelines",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/kanban",
+    "width": 1280,
+    "finalPath": "/kanban",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/contactos",
+    "width": 1280,
+    "finalPath": "/crm/contactos",
+    "title": "CRM / Contactos · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Contactos"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/system",
+    "width": 1280,
+    "finalPath": "/system",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/roles",
+    "width": 1280,
+    "finalPath": "/admin/roles",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion/control",
+    "width": 1280,
+    "finalPath": "/operacion/control",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/dashboard/operations",
+    "width": 1280,
+    "finalPath": "/dashboard/operations",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/mis-clasificados",
+    "width": 1280,
+    "finalPath": "/mis-clasificados",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Mis perfiles y clasificados"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/directorio",
+    "width": 1280,
+    "finalPath": "/admin/directorio",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/mi-profesor",
+    "width": 1280,
+    "finalPath": "/mi-profesor",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/reputation/preferences",
+    "width": 1280,
+    "finalPath": "/reputation/preferences",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/reputation/consents",
+    "width": 1280,
+    "finalPath": "/reputation/consents",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/merch/reputacion/preferencias",
+    "width": 1280,
+    "finalPath": "/merch/reputacion/preferencias",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/merch/reputacion",
+    "width": 1280,
+    "finalPath": "/admin/merch/reputacion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social",
+    "width": 1280,
+    "finalPath": "/social",
+    "title": "Social · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/instagram",
+    "width": 1280,
+    "finalPath": "/social/instagram",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/inbox",
+    "width": 1280,
+    "finalPath": "/social/inbox",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/eventos",
+    "width": 1280,
+    "finalPath": "/social/eventos",
+    "title": "Social / Eventos · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/eventos/nuevo",
+    "width": 1280,
+    "finalPath": "/social/eventos/nuevo",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Crear evento",
+      "Detalles opcionalesDescripción, capacidad, precio, tickets y visibilidad"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/social/eventos-descubiertos",
+    "width": 1280,
+    "finalPath": "/social/eventos-descubiertos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/chat",
+    "width": 1280,
+    "finalPath": "/chat",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/docs",
+    "width": 1280,
+    "finalPath": "/docs",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Documentación"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/manual",
+    "width": 1280,
+    "finalPath": "/manual",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/acerca",
+    "width": 1280,
+    "finalPath": "/acerca",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/seguridad",
+    "width": 1280,
+    "finalPath": "/seguridad",
+    "title": "Configuración / Seguridad · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/solicitudes-acceso",
+    "width": 1280,
+    "finalPath": "/solicitudes-acceso",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Solicitudes de acceso"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/solicitudes-acceso/nueva",
+    "width": 1280,
+    "finalPath": "/solicitudes-acceso/nueva",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Solicitar acceso"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/solicitudes-acceso/revision",
+    "width": 1280,
+    "finalPath": "/solicitudes-acceso/revision",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/practicas",
+    "width": 1280,
+    "finalPath": "/practicas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/feedback/interno",
+    "width": 1280,
+    "finalPath": "/feedback/interno",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/diagnosticos",
+    "width": 1280,
+    "finalPath": "/admin/diagnosticos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/commerce/provider-events",
+    "width": 1280,
+    "finalPath": "/admin/commerce/provider-events",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/merch",
+    "width": 1280,
+    "finalPath": "/admin/merch",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/artistas-enriquecimiento",
+    "width": 1280,
+    "finalPath": "/admin/artistas-enriquecimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/admin/artists/enrichment",
+    "width": 1280,
+    "finalPath": "/admin/artists/enrichment",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/herramientas/chatkit",
+    "width": 1280,
+    "finalPath": "/herramientas/chatkit",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/herramientas/tidal-agent",
+    "width": 1280,
+    "finalPath": "/herramientas/tidal-agent",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/herramientas/token-admin",
+    "width": 1280,
+    "finalPath": "/herramientas/token-admin",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/crm",
+    "width": 1280,
+    "finalPath": "/crm/contactos",
+    "title": "CRM / Contactos · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Contactos"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/crm/contactos",
+    "width": 1280,
+    "finalPath": "/crm/contactos",
+    "title": "CRM / Contactos · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Contactos"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/crm/empresas",
+    "width": 1280,
+    "finalPath": "/crm/empresas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Empresas"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/crm/leads",
+    "width": 1280,
+    "finalPath": "/crm/leads",
+    "title": "CRM / Leads · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "CRM / Leads"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio",
+    "width": 1280,
+    "finalPath": "/estudio",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/calendario",
+    "width": 1280,
+    "finalPath": "/estudio/calendario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/salas",
+    "width": 1280,
+    "finalPath": "/estudio/salas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/ordenes",
+    "width": 1280,
+    "finalPath": "/estudio/ordenes",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/servicios",
+    "width": 1280,
+    "finalPath": "/estudio/servicios",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/pipelines",
+    "width": 1280,
+    "finalPath": "/estudio/pipelines",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/live-sessions",
+    "width": 1280,
+    "finalPath": "/estudio/live-sessions",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/campanas/tdf-sessions-domo",
+    "width": 1280,
+    "finalPath": "/estudio/campanas/tdf-sessions-domo",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/estudio/reportes",
+    "width": 1280,
+    "finalPath": "/estudio/reportes",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label",
+    "width": 1280,
+    "finalPath": "/label",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/artistas",
+    "width": 1280,
+    "finalPath": "/label/artistas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/proyectos",
+    "width": 1280,
+    "finalPath": "/label/proyectos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/releases",
+    "width": 1280,
+    "finalPath": "/label/releases",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/assets",
+    "width": 1280,
+    "finalPath": "/label/assets",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/tracks",
+    "width": 1280,
+    "finalPath": "/label/tracks",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/ddex",
+    "width": 1280,
+    "finalPath": "/label/ddex",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/label/ddex/partners",
+    "width": 1280,
+    "finalPath": "/label/ddex/partners",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela",
+    "width": 1280,
+    "finalPath": "/escuela",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela/profesores",
+    "width": 1280,
+    "finalPath": "/escuela/profesores",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela/clases",
+    "width": 1280,
+    "finalPath": "/escuela/clases",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela/trial-lessons",
+    "width": 1280,
+    "finalPath": "/escuela/trial-lessons",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/escuela/trial-queue",
+    "width": 1280,
+    "finalPath": "/escuela/trial-queue",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas",
+    "width": 1280,
+    "finalPath": "/finanzas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas/pagos",
+    "width": 1280,
+    "finalPath": "/finanzas/pagos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas/creador-reporte-cuenta",
+    "width": 1280,
+    "finalPath": "/finanzas/creador-reporte-cuenta",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas/reporte-esteban-munoz",
+    "width": 1280,
+    "finalPath": "/finanzas/reporte-esteban-munoz",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/finanzas/reporte-david-celaya",
+    "width": 1280,
+    "finalPath": "/finanzas/reporte-david-celaya",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion",
+    "width": 1280,
+    "finalPath": "/operacion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion/inventario",
+    "width": 1280,
+    "finalPath": "/operacion/inventario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion/ordenes-marketplace",
+    "width": 1280,
+    "finalPath": "/operacion/ordenes-marketplace",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/operacion/reservas-equipo",
+    "width": 1280,
+    "finalPath": "/operacion/reservas-equipo",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/mi-tienda",
+    "width": 1280,
+    "finalPath": "/mi-tienda",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "Piloto de merch para artistas"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion",
+    "width": 1280,
+    "finalPath": "/configuracion",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos",
+    "width": 1280,
+    "finalPath": "/configuracion/catalogos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/radio-auto-stop",
+    "width": 1280,
+    "finalPath": "/configuracion/catalogos/radio-auto-stop",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/apariencia",
+    "width": 1280,
+    "finalPath": "/configuracion/catalogos/apariencia",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/feedback",
+    "width": 1280,
+    "finalPath": "/configuracion/catalogos/feedback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/reacciones",
+    "width": 1280,
+    "finalPath": "/configuracion/catalogos/reacciones",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/reacciones-contenido",
+    "width": 1280,
+    "finalPath": "/configuracion/catalogos/reacciones-contenido",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/catalogos/insignias-creadores",
+    "width": 1280,
+    "finalPath": "/configuracion/catalogos/insignias-creadores",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/inscripciones-curso",
+    "width": 1280,
+    "finalPath": "/configuracion/inscripciones-curso",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/cursos",
+    "width": 1280,
+    "finalPath": "/configuracion/cursos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/usuarios-admin",
+    "width": 1280,
+    "finalPath": "/configuracion/usuarios-admin",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/estado",
+    "width": 1280,
+    "finalPath": "/configuracion/estado",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/actividad",
+    "width": 1280,
+    "finalPath": "/configuracion/actividad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/logs",
+    "width": 1280,
+    "finalPath": "/configuracion/logs",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/brain",
+    "width": 1280,
+    "finalPath": "/configuracion/brain",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/roles-permisos",
+    "width": 1280,
+    "finalPath": "/configuracion/roles-permisos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/integraciones/calendario",
+    "width": 1280,
+    "finalPath": "/configuracion/integraciones/calendario",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/cms",
+    "width": 1280,
+    "finalPath": "/configuracion/cms",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/campanas-automaticas",
+    "width": 1280,
+    "finalPath": "/configuracion/campanas-automaticas",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/fuentes-eventos",
+    "width": 1280,
+    "finalPath": "/configuracion/fuentes-eventos",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/whatsapp-consentimiento",
+    "width": 1280,
+    "finalPath": "/configuracion/whatsapp-consentimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/opciones-ux",
+    "width": 1280,
+    "finalPath": "/configuracion/opciones-ux",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  },
+  {
+    "role": "read-only",
+    "route": "/configuracion/preferencias",
+    "width": 1280,
+    "finalPath": "/configuracion/preferencias",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "headings": [
+      "No tienes permiso para abrir esta sección"
+    ],
+    "violations": []
+  }
+]

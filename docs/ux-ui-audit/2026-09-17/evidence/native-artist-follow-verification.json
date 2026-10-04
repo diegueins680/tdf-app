@@ -1,0 +1,55 @@
+{
+  "observedAt": "2026-09-18T10:22:38.846531+00:00",
+  "mobileSource": "a785c99848478f9c27263e84454d6bdb81df4d4f",
+  "finding": "UX-260917-037",
+  "positive": {
+    "generated": 592,
+    "distinct": 328,
+    "depth": 9,
+    "properties": [
+      "CurrentSession",
+      "PersistedCompletion",
+      "SuccessfulFollowQualifies",
+      "RequestsSettle"
+    ]
+  },
+  "negativeControls": [
+    {
+      "configuration": "NativeArtistFollowNamespace.cfg",
+      "violated": "SuccessfulFollowQualifies",
+      "generated": 31,
+      "distinct": 28
+    },
+    {
+      "configuration": "NativeArtistFollowSession.cfg",
+      "violated": "CurrentSession",
+      "generated": 171,
+      "distinct": 116
+    }
+  ],
+  "mobileTests": {
+    "suites": 85,
+    "tests": 507,
+    "typecheck": "passed",
+    "lint": "passed",
+    "oldImplementationRegression": "A-B-A test fails with2stale query writes; fixed implementation passes",
+    "immediateRevocation": "Actual client setAuthToken(null) before rerender: old mutation dispatch unexpectedly resolves; fixed predicate rejects and no cache/completion side effects."
+  },
+  "fullPinnedRunner": "passed",
+  "limits": "See native-artist-follow.md; finite model and actual isolated runtime are separate from final physical/store release.",
+  "compatibleMobileMain": "0c1ee7f3387875496afadf930cb71b29c9edde99",
+  "androidQA": {
+    "build": "1c92c4c3-578a-48af-b6e8-8b7fd2ca4bdd",
+    "source": "f9822f99ef1f293e64ccbd9c0dcd73813f78297c",
+    "status": "FINISHED",
+    "package": "com.tdf.records.uxaudit",
+    "version": "1.0.1 (8)",
+    "sha256": "85bf87e2ca30b9ac06e34a8076889efbaf1cac42d3d6b2bf7c08bc948cac5d89",
+    "zipAndManifest": "verified",
+    "physicalExecution": "pending: no ADB device at 10:18 UTC",
+    "publication": "not a store artifact",
+    "qualification": "Predates native landing042 fix; successor required."
+  },
+  "mobileMerge": "90cae070446df6c740e9e8f25a034f3deb12c5c7",
+  "finalRuntime": "Actual simulator final productionHermes coldreopen/profile/follow PASS; real webD follow and authoritative completion before/after reload PASS. New signed artifact and physical/store gates pending."
+}

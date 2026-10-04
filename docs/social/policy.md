@@ -9,8 +9,10 @@ authoritative for their resources. Do not collapse social artist IDs into PartyI
 Band membership, catalog grants and resource ownership remain separate authorities.
 A managed entity cannot be used to bypass a principal block; support for this
 requires retaining both principal and acting entity at the authorization boundary.
-The existing AuthedUser type loses credential identity: this is a cutover blocker,
-not permission to infer the missing authority from the graph.
+The account-only pilot now retains and revalidates API token identity at the
+[session boundary](session-boundary.md). Separate credential/session provenance,
+delegated entity authority and global-role revocation remain cutover work; never
+infer missing authority from graph proximity.
 
 | Edge | Direction/cardinality | Owner and lifecycle | Rights |
 |---|---|---|---|
@@ -39,6 +41,7 @@ legacy reciprocal PartyFollow edges can have been manufactured by a single actor
 | Disconnect/block | active owner, target relation valid | revocation serialized with acceptance/send; unblock needs new consent |
 | Protected club content | existing club officer/fan authority and live visibility | hidden/deleted excluded; social connection cannot substitute membership |
 | DM send | thread participant + bilateral explicit consent + no block | administrator has no ordinary social block bypass |
+| DM preview/history | current token + thread participant + current DM policy | filter names/previews/count contributions and authorize before scoped cursor errors; [read boundary](dm-read-boundary.md) retains denials across pause |
 | Recommendation/reason/count | eligible public candidate; consented signals | filter before scoring/aggregation/limit; no confidential transactions or mutual names |
 | Cached/projection read | current authority independently allows it | stale cache can deny availability, never grant access |
 | Queue delivery/retry | current authority at transaction boundary; matching revision and dedup key | revoked/deleted/stale work terminates without delivery |

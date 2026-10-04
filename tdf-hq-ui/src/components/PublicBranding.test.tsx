@@ -1,3 +1,4 @@
+import i18n from '../i18n';
 import { jest } from '@jest/globals';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -22,15 +23,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
   }),
 }));
 
-jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => ({
-      'sessionMenu.noRoles': 'Sin roles asignados',
-      'sessionMenu.logout': 'Cerrar sesión',
-      'sessionMenu.open': 'Abrir menú de sesión',
-    })[key] ?? key,
-  }),
-}));
+
 
 jest.unstable_mockModule('./BrandLogo', () => ({
   default: () => <span>TDF Records</span>,
@@ -80,7 +73,8 @@ describe('PublicBranding', () => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('es');
     activeSession = null;
     logoutMock.mockClear();
     window.sessionStorage.clear();

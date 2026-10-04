@@ -1,0 +1,1736 @@
+[
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/data-deletion.html",
+    "status": 200,
+    "finalPath": "/data-deletion.html",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "li:nth-child(1) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "span"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.92 (foreground color: #4c8bf5, background color: #eaf1fe, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "p:nth-child(9) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/deauthorize.html",
+    "status": 200,
+    "finalPath": "/deauthorize.html",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/data-deletion.html",
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion.html",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/index.html",
+    "status": 200,
+    "finalPath": "/mobile-app/index.html",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/privacy.html",
+    "status": 200,
+    "finalPath": "/mobile-app/privacy.html",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/support.html",
+    "status": 200,
+    "finalPath": "/mobile-app/support.html",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/mobile-app/terms.html",
+    "status": 200,
+    "finalPath": "/mobile-app/terms.html",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/privacy.html",
+    "status": 200,
+    "finalPath": "/privacy.html",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "route": "/terms.html",
+    "status": 200,
+    "finalPath": "/terms.html",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/data-deletion.html",
+    "status": 200,
+    "finalPath": "/data-deletion.html",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "li:nth-child(1) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "span"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.92 (foreground color: #4c8bf5, background color: #eaf1fe, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "p:nth-child(9) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/deauthorize.html",
+    "status": 200,
+    "finalPath": "/deauthorize.html",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/data-deletion.html",
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion.html",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/index.html",
+    "status": 200,
+    "finalPath": "/mobile-app/index.html",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/privacy.html",
+    "status": 200,
+    "finalPath": "/mobile-app/privacy.html",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/support.html",
+    "status": 200,
+    "finalPath": "/mobile-app/support.html",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/mobile-app/terms.html",
+    "status": 200,
+    "finalPath": "/mobile-app/terms.html",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/privacy.html",
+    "status": 200,
+    "finalPath": "/privacy.html",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "route": "/terms.html",
+    "status": 200,
+    "finalPath": "/terms.html",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/data-deletion.html",
+    "status": 200,
+    "finalPath": "/data-deletion.html",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "li:nth-child(1) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "span"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.92 (foreground color: #4c8bf5, background color: #eaf1fe, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "p:nth-child(9) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/deauthorize.html",
+    "status": 200,
+    "finalPath": "/deauthorize.html",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/data-deletion.html",
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion.html",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/index.html",
+    "status": 200,
+    "finalPath": "/mobile-app/index.html",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/privacy.html",
+    "status": 200,
+    "finalPath": "/mobile-app/privacy.html",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/support.html",
+    "status": 200,
+    "finalPath": "/mobile-app/support.html",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/mobile-app/terms.html",
+    "status": 200,
+    "finalPath": "/mobile-app/terms.html",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/privacy.html",
+    "status": 200,
+    "finalPath": "/privacy.html",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "route": "/terms.html",
+    "status": 200,
+    "finalPath": "/terms.html",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/data-deletion.html",
+    "status": 200,
+    "finalPath": "/data-deletion.html",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "li:nth-child(1) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "span"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.92 (foreground color: #4c8bf5, background color: #eaf1fe, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "p:nth-child(9) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/deauthorize.html",
+    "status": 200,
+    "finalPath": "/deauthorize.html",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/data-deletion.html",
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion.html",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/index.html",
+    "status": 200,
+    "finalPath": "/mobile-app/index.html",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/privacy.html",
+    "status": 200,
+    "finalPath": "/mobile-app/privacy.html",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/support.html",
+    "status": 200,
+    "finalPath": "/mobile-app/support.html",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/mobile-app/terms.html",
+    "status": 200,
+    "finalPath": "/mobile-app/terms.html",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/privacy.html",
+    "status": 200,
+    "finalPath": "/privacy.html",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "route": "/terms.html",
+    "status": 200,
+    "finalPath": "/terms.html",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/data-deletion.html",
+    "status": 200,
+    "finalPath": "/data-deletion.html",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "li:nth-child(1) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "span"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.92 (foreground color: #4c8bf5, background color: #eaf1fe, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "p:nth-child(9) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/deauthorize.html",
+    "status": 200,
+    "finalPath": "/deauthorize.html",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/data-deletion.html",
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion.html",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/index.html",
+    "status": 200,
+    "finalPath": "/mobile-app/index.html",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/privacy.html",
+    "status": 200,
+    "finalPath": "/mobile-app/privacy.html",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/support.html",
+    "status": 200,
+    "finalPath": "/mobile-app/support.html",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/mobile-app/terms.html",
+    "status": 200,
+    "finalPath": "/mobile-app/terms.html",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/privacy.html",
+    "status": 200,
+    "finalPath": "/privacy.html",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "route": "/terms.html",
+    "status": 200,
+    "finalPath": "/terms.html",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/data-deletion.html",
+    "status": 200,
+    "finalPath": "/data-deletion.html",
+    "title": "TDF InstG Bot Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "li:nth-child(1) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "span"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.92 (foreground color: #4c8bf5, background color: #eaf1fe, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "p:nth-child(9) > a"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/deauthorize.html",
+    "status": 200,
+    "finalPath": "/deauthorize.html",
+    "title": "TDF InstG Bot Deauthorization",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/data-deletion.html",
+    "status": 200,
+    "finalPath": "/mobile-app/data-deletion.html",
+    "title": "TDF Records Mobile App Data Deletion",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/index.html",
+    "status": 200,
+    "finalPath": "/mobile-app/index.html",
+    "title": "TDF Records Mobile App Legal and Support Pages",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/privacy.html",
+    "status": 200,
+    "finalPath": "/mobile-app/privacy.html",
+    "title": "TDF Records Mobile App Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/support.html",
+    "status": 200,
+    "finalPath": "/mobile-app/support.html",
+    "title": "TDF Records Mobile App Support",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/mobile-app/terms.html",
+    "status": 200,
+    "finalPath": "/mobile-app/terms.html",
+    "title": "TDF Records Mobile App Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/privacy.html",
+    "status": 200,
+    "finalPath": "/privacy.html",
+    "title": "TDF InstG Bot Privacy Policy",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"data-deletion.html\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "route": "/terms.html",
+    "status": 200,
+    "finalPath": "/terms.html",
+    "title": "TDF InstG Bot Terms of Service",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "language": "en"
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "a[href=\"mailto:info@tdfrecords.net\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.32 (foreground color: #4c8bf5, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "a[href$=\"privacy\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          },
+          {
+            "target": [
+              "a[href$=\"data-deletion\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.28:1 with the surrounding text. (Minimum contrast is 3:1, link text: #4c8bf5, surrounding text: #475569)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  }
+]

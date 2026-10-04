@@ -1,0 +1,13 @@
+{
+  "observedAt": "2026-09-18T18:09:45.306869+00:00",
+  "package": "com.tdf.records",
+  "track": "alpha",
+  "version": "1.0.1",
+  "build": 15,
+  "uiState": "Available to selected testers",
+  "availableToTesters": true,
+  "publicProduction": false,
+  "countries": 177,
+  "evidence": "Authenticated Play Console closed-testing release detail; account information excluded",
+  "limits": "Does not establish tester participation, twelve-person/fourteen-day production eligibility or Android17 availability."
+}

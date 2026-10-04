@@ -27,10 +27,15 @@ const parseDateMs = (value: string | null | undefined): number | null => {
   return Number.isNaN(ms) ? null : ms;
 };
 
-const readStorage = (): ChatReadMap => {
+// Unscoped storage remains readable only by explicit legacy callers. Do not copy
+// it into an account: its owner cannot be established on a shared device.
+const storageKey = (partyId?: number) => partyId === undefined
+  ? CHAT_READ_STATE_STORAGE_KEY : `${CHAT_READ_STATE_STORAGE_KEY}:party:${partyId}`;
+
+const readStorage = (partyId?: number): ChatReadMap => {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = window.localStorage.getItem(CHAT_READ_STATE_STORAGE_KEY);
+    const raw = window.localStorage.getItem(storageKey(partyId));
     if (!raw) return {};
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== 'object') return {};
@@ -48,16 +53,16 @@ const readStorage = (): ChatReadMap => {
   }
 };
 
-const writeStorage = (map: ChatReadMap) => {
+const writeStorage = (map: ChatReadMap, partyId?: number) => {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(CHAT_READ_STATE_STORAGE_KEY, JSON.stringify(map));
+    window.localStorage.setItem(storageKey(partyId), JSON.stringify(map));
   } catch {
     // ignore storage write issues
   }
 };
 
-export const loadChatReadMap = (): ChatReadMap => readStorage();
+export const loadChatReadMap = (partyId?: number): ChatReadMap => readStorage(partyId);
 
 export const getThreadLastSeenAt = (map: ChatReadMap, threadId: number): string | null => {
   const normalizedThreadId = parsePositiveSafeThreadId(threadId);
@@ -65,19 +70,19 @@ export const getThreadLastSeenAt = (map: ChatReadMap, threadId: number): string 
   return map[String(normalizedThreadId)] ?? null;
 };
 
-export const markThreadSeen = (threadId: number, lastSeenAt: string) => {
+export const markThreadSeen = (threadId: number, lastSeenAt: string, partyId?: number) => {
   if (typeof window === 'undefined') return;
   const normalizedThreadId = parsePositiveSafeThreadId(threadId);
   if (normalizedThreadId === null) return;
   if (parseDateMs(lastSeenAt) === null) return;
-  const map = readStorage();
+  const map = readStorage(partyId);
   const key = String(normalizedThreadId);
   const prevMs = parseDateMs(map[key]);
   const nextMs = parseDateMs(lastSeenAt);
   if (nextMs === null) return;
   if (prevMs !== null && nextMs <= prevMs) return;
   map[key] = lastSeenAt;
-  writeStorage(map);
+  writeStorage(map, partyId);
   window.dispatchEvent(new Event(CHAT_READ_STATE_EVENT));
 };
 
@@ -96,12 +101,12 @@ export const countUnreadThreads = (threads: ChatThreadDTO[], map: ChatReadMap): 
   return threads.reduce((acc, thread) => (isThreadUnread(thread, map) ? acc + 1 : acc), 0);
 };
 
-export const subscribeToChatReadState = (onChange: () => void): (() => void) => {
+export const subscribeToChatReadState = (onChange: () => void, partyId?: number): (() => void) => {
   if (typeof window === 'undefined') return () => undefined;
   const handle = () => onChange();
   const handleStorage = (event: StorageEvent) => {
     // `localStorage.clear()` dispatches a storage event with `key === null`.
-    if (event.key === null || event.key === CHAT_READ_STATE_STORAGE_KEY) onChange();
+    if (event.key === null || event.key === storageKey(partyId)) onChange();
   };
   window.addEventListener(CHAT_READ_STATE_EVENT, handle);
   window.addEventListener('storage', handleStorage);

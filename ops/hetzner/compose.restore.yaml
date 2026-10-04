@@ -1,0 +1,81 @@
+# Isolated restore rehearsal only. No public ports or external provider access.
+# Use immutable image digests in the root-only .env file on the host.
+name: tdf-restore
+services:
+  db:
+    image: ${POSTGRES_IMAGE:?Set a pinned pgvector PostgreSQL 17 image digest}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tdf_hq
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    secrets:
+      - postgres_password
+    command: [postgres, -c, shared_buffers=128MB, -c, max_connections=40, -c, work_mem=4MB]
+    shm_size: 160mb
+    mem_limit: 768m
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [quarantine]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d tdf_hq']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  api:
+    profiles: [smoke]
+    image: ${TDF_IMAGE:?Set the reviewed TDF image digest}
+    restart: 'no'
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: ./api.restore.env
+    environment:
+      APP_PORT: '8080'
+      RUN_MIGRATIONS: 'false'
+      AUTO_APPLY_PRODUCTION_MIGRATIONS: 'false'
+      RESET_DB: 'false'
+      SEED_DB: 'false'
+      EVENT_DISCOVERY_ENABLED: 'false'
+      EVENT_DISCOVERY_AUTO_PUBLISH: 'false'
+      EVENT_LOGISTICS_RECHECK_ENABLED: 'false'
+      ARTIST_ENRICHMENT_ENABLED: 'false'
+      REPUTATION_AGGREGATION_WORKER_ENABLED: 'false'
+      ALLOW_ALL_ORIGINS: 'false'
+      ALLOW_ORIGINS: https://www.tdfrecords.net,https://tdfrecords.net
+      HQ_ASSETS_DIR: /data/assets
+      TZ: America/Guayaquil
+    mem_limit: 384m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./assets:/data/assets
+    networks: [quarantine]
+    # Probe from the host using the container's internal address over SSH.
+    # Keep absent: published ports, external networks, production credentials.
+  edge:
+    profiles: [edge]
+    image: ${CADDY_IMAGE:?Set a pinned Caddy image digest}
+    restart: unless-stopped
+    ports: ['80:80', '443:443']
+    mem_limit: 128m
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [public, quarantine]
+secrets:
+  postgres_password:
+    file: ./postgres_password
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+networks:
+  public:
+  quarantine:
+    internal: true

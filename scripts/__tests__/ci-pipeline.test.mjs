@@ -103,6 +103,17 @@ test('backend quality requires the canonical payment PostgreSQL regressions', as
   assert.match(runner, /test -x "\$test_binary"/);
 });
 
+test('backend quality requires real invitation and dependency PostgreSQL regressions', async () => {
+  const quality = await source('scripts/quality-backend.sh');
+  for (const runner of ['test-invitation-update-concurrency.sh', 'test-event-relations-runtime.sh']) {
+    assert.ok(quality.includes(`scripts/${runner}`));
+    const script = await source(`scripts/${runner}`);
+    assert.match(script, /--fail-on=empty/);
+    assert.match(script, /test -x "\$test_binary"/);
+    assert.doesNotMatch(script, /stack test/);
+  }
+});
+
 test('backend quality exercises public booking concurrency with its tested binary', async () => {
   const workflow = await source('.github/workflows/ci.yml');
   const integration = await source('scripts/test-public-booking-http-concurrency.sh');
@@ -136,6 +147,21 @@ test('backend image packages the tested artifact instead of recompiling Haskell'
   assert.match(runtimeDockerfile, /ENV AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
   assert.match(runtimeDockerfile, /postgresql-client/);
   assert.doesNotMatch(runtimeDockerfile, /stack (?:--[^\n]+ )?build/);
+});
+
+test('image workflow grants the reusable native artifact job its required read permissions', async () => {
+  const caller = await source('.github/workflows/build.yml');
+  const callee = await source('.github/workflows/ci.yml');
+  const callerJob = caller.match(/^  required-tests:\n([\s\S]*?)(?=^  \S)/m)?.[1];
+  const nativeJob = callee.match(/^  native-android-e2e:\n([\s\S]*?)(?=^  \S)/m)?.[1];
+  assert.ok(callerJob && nativeJob);
+  for (const permission of ['contents', 'actions']) {
+    const requiredRead = new RegExp(`^      ${permission}: read$`, 'm');
+    assert.match(nativeJob, requiredRead);
+    // GitHub validates called-job permissions even when that job is skipped.
+    assert.match(callerJob, requiredRead);
+  }
+  assert.doesNotMatch(callerJob, /: write\b|write-all/);
 });
 
 test('automatic migration integration matches the persisted production locale', async () => {
@@ -197,4 +223,30 @@ test('affected active workflow actions use Node 24 majors', async () => {
       `${action} must use its Node 24 major`,
     );
   }
+});
+
+test('native artifact admission rejects application drift while allowing only Maestro fixture changes', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const match = workflow.match(/python3 - <<'PYVERIFY'\n([\s\S]*?)\n          PYVERIFY/);
+  assert.ok(match, 'Native artifact admission must run before download');
+  const admission = match[1].split('\n').map(line => line.slice(10)).join('\n');
+  const harness = `
+import json, os, sys
+from unittest.mock import patch
+expected='a'*40
+run={'head_sha':'b'*40,'conclusion':sys.argv[3],'path':sys.argv[4]}
+changed=json.loads(sys.argv[2])
+def output(command, **kwargs):
+    return expected if 'rev-parse' in command else '\\n'.join(changed)
+os.environ['RUNNER_TEMP']='/synthetic'
+with patch('pathlib.Path.read_text',return_value=json.dumps(run)), patch('subprocess.check_output',side_effect=output), patch('subprocess.run'):
+    exec(compile(sys.argv[1], '<actual-workflow-admission>', 'exec'))
+`;
+  const invoke = (paths, conclusion = 'success', workflowPath = '.github/workflows/interaction-android.yml') => spawnSync('python3', ['-c', harness, admission, JSON.stringify(paths), conclusion, workflowPath], { encoding: 'utf8' });
+  assert.equal(invoke(['e2e/interactions/create.yaml']).status, 0);
+  for (const paths of [['src/features/interactions/DiscussionScreen.tsx'], ['android/app/build.gradle'], ['package-lock.json'], ['.github/workflows/interaction-android.yml'], ['scripts/android-release.py'], ['e2e/interactions/entry.js'], ['e2e/interactions/create.yaml', 'app.config.ts']]) {
+    assert.notEqual(invoke(paths).status, 0, `Must rebuild after ${paths.join(', ')}`);
+  }
+  assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'failure').status, 0);
+  assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'success', '.github/workflows/untrusted.yml').status, 0);
 });

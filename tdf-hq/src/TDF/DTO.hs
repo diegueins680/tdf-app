@@ -5,6 +5,7 @@
 module TDF.DTO where
 
 import           GHC.Generics (Generic)
+import           Control.Applicative ((<|>))
 import           Data.Aeson
   ( Options
   , ToJSON(..)
@@ -71,6 +72,7 @@ data PartySelectorOptionDTO = PartySelectorOptionDTO
   } deriving (Show, Generic)
 
 instance ToJSON PartySelectorOptionDTO
+instance FromJSON PartySelectorOptionDTO
 
 data PartySelectorPageDTO = PartySelectorPageDTO
   { items      :: [PartySelectorOptionDTO]
@@ -78,6 +80,7 @@ data PartySelectorPageDTO = PartySelectorPageDTO
   } deriving (Show, Generic)
 
 instance ToJSON PartySelectorPageDTO
+instance FromJSON PartySelectorPageDTO
 
 data SocialPartyProfileDTO = SocialPartyProfileDTO
   { sppPartyId     :: Int64
@@ -292,6 +295,7 @@ data ChatThreadDTO = ChatThreadDTO
   , ctUpdatedAt        :: UTCTime
   } deriving (Show, Generic)
 instance ToJSON ChatThreadDTO
+instance FromJSON ChatThreadDTO
 
 data ChatMessageDTO = ChatMessageDTO
   { cmId            :: Int64
@@ -301,6 +305,7 @@ data ChatMessageDTO = ChatMessageDTO
   , cmCreatedAt     :: UTCTime
   } deriving (Show, Generic)
 instance ToJSON ChatMessageDTO
+instance FromJSON ChatMessageDTO
 
 data ChatSendMessageRequest = ChatSendMessageRequest
   { csmBody :: Text
@@ -1007,6 +1012,8 @@ instance FromJSON LoginRequest where
 
 data GoogleLoginRequest = GoogleLoginRequest
   { idToken :: Text
+  , createNewAccount :: Maybe Bool
+  , linkAccount :: Maybe LoginRequest
   , marketingOptIn :: Maybe Bool
   , termsAccepted :: Maybe Bool
   , termsVersion :: Maybe Text
@@ -1014,7 +1021,7 @@ data GoogleLoginRequest = GoogleLoginRequest
   } deriving (Show, Generic)
 instance FromJSON GoogleLoginRequest where
   parseJSON value = do
-    rejectNullOptionalFields "GoogleLoginRequest" ["onboardingIntent"] value
+    rejectNullOptionalFields "GoogleLoginRequest" ["onboardingIntent", "linkAccount", "createNewAccount"] value
     genericParseJSON strictDecodeOptions value
 
 data SignupRequest = SignupRequest
@@ -1210,7 +1217,12 @@ data NavigationPreferenceUpdate = NavigationPreferenceUpdate
   } deriving (Show, Generic)
 
 instance FromJSON NavigationPreferenceUpdate where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value =
+    genericParseJSON strictDecodeOptions { fieldLabelModifier = dtoCamelDrop 3 } value
+      -- Preserve previously accepted prefixed payloads while web and OpenAPI
+      -- use the canonical unprefixed contract. Both forms reject unknown or
+      -- mixed fields rather than silently ignoring a preference update.
+      <|> genericParseJSON strictDecodeOptions value
 
 data NavigationPreferenceDTO = NavigationPreferenceDTO
   { npFeatureId     :: Text
@@ -1310,6 +1322,7 @@ data FanClubPostDTO = FanClubPostDTO
   , fcpUpdatedAt   :: Maybe UTCTime
   } deriving (Show, Generic)
 instance ToJSON FanClubPostDTO
+instance FromJSON FanClubPostDTO
 
 data FanClubEventDTO = FanClubEventDTO
   { fceId            :: Int64
@@ -1515,6 +1528,7 @@ data ReactionSummaryDTO = ReactionSummaryDTO
   , rsMyReactionTypeId :: Maybe UUID
   } deriving (Show, Generic)
 instance ToJSON ReactionSummaryDTO
+instance FromJSON ReactionSummaryDTO
 
 data ReactionSummaryItemDTO = ReactionSummaryItemDTO
   { rsiReactionTypeId :: UUID
@@ -1525,6 +1539,7 @@ data ReactionSummaryItemDTO = ReactionSummaryItemDTO
   , rsiCount          :: Int
   } deriving (Show, Generic)
 instance ToJSON ReactionSummaryItemDTO
+instance FromJSON ReactionSummaryItemDTO
 
 data ContentReactionReq = ContentReactionReq
   { crrReactionTypeId :: UUID
@@ -1539,6 +1554,7 @@ data NotificationDTO = NotificationDTO
   , nBody        :: Text
   , nTargetType  :: Maybe Text
   , nTargetId    :: Maybe Int64
+  , nTargetKey   :: Maybe Text
   , nIsRead      :: Bool
   , nCreatedAt   :: UTCTime
   } deriving (Show, Generic)

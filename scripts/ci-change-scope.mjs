@@ -72,7 +72,9 @@ export function classifyChangedFiles(files, options = {}) {
       || changed.some((file) => isPathOrChild(file, 'tdf-hq-ui')),
     mobile: pipelineChanged
       || rootDependenciesChanged
-      || changed.some((file) => isPathOrChild(file, 'tdf-mobile')),
+      || changed.some((file) => isPathOrChild(file, 'tdf-mobile')
+        || file === 'tdf-hq-ui/src/components/notificationTarget.ts'
+        || file === 'scripts/generate-notification-navigation.mjs'),
     backend: options.forceBackend === true
       || pipelineChanged
       || changed.some((file) => isPathOrChild(file, 'tdf-hq')

@@ -41,7 +41,7 @@ export default function PublicProfilePage() {
   const isSelf = session?.partyId === parsedId;
 
   const partyQuery = useQuery({
-    queryKey: ['social-profile', parsedId],
+    queryKey: ['social-profile', session?.partyId, parsedId],
     queryFn: () => SocialAPI.getProfile(parsedId ?? 0),
     enabled,
   });
@@ -134,7 +134,8 @@ export default function PublicProfilePage() {
   if (partyQuery.error || !partyQuery.data) {
     return (
       <Box p={3}>
-        <Typography variant="h6">No pudimos cargar este perfil.</Typography>
+        <Typography variant="h6">Este perfil no está disponible para tu cuenta.</Typography>
+        <Button component={RouterLink} to="/inicio">Volver al inicio</Button>
       </Box>
     );
   }

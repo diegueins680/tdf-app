@@ -12,6 +12,7 @@ import {
   Card,
   CardContent,
   Checkbox,
+  FormControlLabel,
   Chip,
   Divider,
   Grid,
@@ -516,24 +517,16 @@ export default function SessionInvoiceGeneratorCard() {
           </Grid>
           <Grid item xs={12} md={4}>
             <Stack sx={{ height: '100%' }} justifyContent="center">
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Checkbox
-                  checked={generateReceipt}
-                  onChange={(event) => setGenerateReceipt(event.target.checked)}
-                />
-                <Typography>Generar receipt interno</Typography>
-              </Stack>
+              <FormControlLabel label="Generar comprobante interno" control={<Checkbox
+                checked={generateReceipt} onChange={(event) => setGenerateReceipt(event.target.checked)}
+              />} />
             </Stack>
           </Grid>
           <Grid item xs={12} md={4}>
             <Stack sx={{ height: '100%' }} justifyContent="center">
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Checkbox
-                  checked={issueSri}
-                  onChange={(event) => setIssueSri(event.target.checked)}
-                />
-                <Typography>Emitir en SRI</Typography>
-              </Stack>
+              <FormControlLabel label="Emitir en SRI" control={<Checkbox
+                checked={issueSri} onChange={(event) => setIssueSri(event.target.checked)}
+              />} />
             </Stack>
           </Grid>
         </Grid>

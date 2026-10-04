@@ -7,6 +7,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
+import { checkDisabledEscrowWrites } from './lib/legacy-escrow-contract.mjs';
 
 import {
   buildDatabaseSqlInvocation,
@@ -52,11 +53,12 @@ const stagedRuntimeEnv = Object.freeze({
   REPUTATION_AGGREGATION_MODE: 'simulation',
   EVENT_DISCOVERY_ENABLED: 'false',
   EVENT_DISCOVERY_AUTO_PUBLISH: 'false',
+  SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED: 'false',
   DEFAULT_LOCALE: 'es',
 });
 const readRuntimeEnvCommand = [
   "sh -lc '",
-  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nCONTEXTUAL_REPUTATION_ENABLED=%s\\nPUBLIC_REPUTATION_PROJECTION_ENABLED=%s\\nREPUTATION_AGGREGATION_WORKER_ENABLED=%s\\nREPUTATION_AGGREGATION_ENVIRONMENT=%s\\nREPUTATION_AGGREGATION_MODE=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nEVENT_DISCOVERY_AUTO_PUBLISH=%s\\nDEFAULT_LOCALE=%s\\n" ',
+  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nCONTEXTUAL_REPUTATION_ENABLED=%s\\nPUBLIC_REPUTATION_PROJECTION_ENABLED=%s\\nREPUTATION_AGGREGATION_WORKER_ENABLED=%s\\nREPUTATION_AGGREGATION_ENVIRONMENT=%s\\nREPUTATION_AGGREGATION_MODE=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nEVENT_DISCOVERY_AUTO_PUBLISH=%s\\nSINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
   '"${RUN_MIGRATIONS-__UNSET__}" ',
   '"${AUTO_APPLY_PRODUCTION_MIGRATIONS-__UNSET__}" ',
   '"${CONTEXTUAL_REPUTATION_ENABLED-__UNSET__}" ',
@@ -66,6 +68,7 @@ const readRuntimeEnvCommand = [
   '"${REPUTATION_AGGREGATION_MODE-__UNSET__}" ',
   '"${EVENT_DISCOVERY_ENABLED-__UNSET__}" ',
   '"${EVENT_DISCOVERY_AUTO_PUBLISH-__UNSET__}" ',
+  '"${SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED-false}" ',
   '"${DEFAULT_LOCALE-__UNSET__}"',
   "'",
 ].join('');
@@ -81,6 +84,7 @@ Options:
   --db-app <name>    Fly PostgreSQL app (default: tdf-hq-db)
   --database <name>  PostgreSQL database (default: tdf_hq)
   --image <ref>      Immutable image; defaults to diegueins680/tdf-hq:<sha>
+  --recovery-sha <sha> Reviewed ancestor preserving migrations, identity and disabled financial writes
 `;
 }
 
@@ -114,6 +118,7 @@ export function parseArgs(argv) {
       '--app': 'app',
       '--db-app': 'dbApp',
       '--database': 'database',
+      '--recovery-sha': 'recoverySha',
     }[flag];
     if (!key || args.length === 0) throw new Error(`Unknown or incomplete option: ${flag}`);
     options[key] = args.shift();
@@ -205,7 +210,7 @@ async function readGitBlob(sha, relativePath) {
   return stdout;
 }
 
-async function resolveReleaseContext(options) {
+export async function resolveReleaseContext(options) {
   const sha = normalizeFullSha(options.sha);
   const app = validateSafeName(options.app, 'Fly app');
   const dbApp = validateSafeName(options.dbApp, 'Fly database app');
@@ -266,6 +271,34 @@ async function resolveReleaseContext(options) {
     throw new Error('The target commit has no registered production migrations.');
   }
 
+  if (!await disabledEscrowWritesAt(sha)) {
+    throw new Error('Release source must preserve the disabled legacy escrow write contract.');
+  }
+
+  let recoverySha;
+  if (options.recoverySha) {
+    recoverySha = normalizeFullSha(options.recoverySha);
+    if (recoverySha === sha || !await gitIsAncestor(recoverySha, sha)) {
+      throw new Error('Recovery must be a distinct reviewed ancestor of the release.');
+    }
+    const recoveryManifest = JSON.parse(await readGitBlob(recoverySha, manifestRelativePath));
+    if (JSON.stringify(recoveryManifest) !== JSON.stringify(manifest)) {
+      throw new Error('Recovery and release must have identical migration manifests.');
+    }
+    for (const migration of migrations) {
+      const content = await expandMigrationIncludes(
+        { path: migration.path, content: await readGitBlob(recoverySha, migration.path) },
+        (includedPath) => readGitBlob(recoverySha, includedPath),
+      );
+      if (createHash('sha256').update(content).digest('hex') !== migration.checksum) {
+        throw new Error(`Recovery migration differs: ${migration.id}`);
+      }
+    }
+    if (!(await rollbackCompatibility({ sha, migrations }, recoverySha)).compatible) {
+      throw new Error('Recovery source does not preserve the required authentication and financial-write contracts.');
+    }
+  }
+
   const flyConfig = await readGitBlob(sha, path.relative(rootDir, flyConfigPath));
   const securityEmergencyPreflightSql = await readGitBlob(
     sha,
@@ -281,6 +314,7 @@ async function resolveReleaseContext(options) {
     image,
     flyConfig,
     migrations,
+    recoverySha,
     securityEmergencyPreflightSql,
   };
 }
@@ -321,8 +355,17 @@ export function runtimeEnvBlockers(rows, options = {}) {
       && typeof contextualReputationEnabled !== 'boolean') {
     throw new Error('contextualReputationEnabled must be a boolean.');
   }
+  const { eventDiscoveryEnabled, eventDiscoveryAutoPublish } = options;
+  if (eventDiscoveryEnabled !== undefined && typeof eventDiscoveryEnabled !== 'boolean') {
+    throw new Error('eventDiscoveryEnabled must be a boolean.');
+  }
+  if (eventDiscoveryAutoPublish !== undefined && typeof eventDiscoveryAutoPublish !== 'boolean') {
+    throw new Error('eventDiscoveryAutoPublish must be a boolean.');
+  }
   const expectedRuntimeEnv = {
     ...stagedRuntimeEnv,
+    ...(eventDiscoveryEnabled === undefined ? {} : { EVENT_DISCOVERY_ENABLED: String(eventDiscoveryEnabled) }),
+    ...(eventDiscoveryAutoPublish === undefined ? {} : { EVENT_DISCOVERY_AUTO_PUBLISH: String(eventDiscoveryAutoPublish) }),
     ...(contextualReputationEnabled === undefined
       ? {}
       : { CONTEXTUAL_REPUTATION_ENABLED: String(contextualReputationEnabled) }),
@@ -344,6 +387,29 @@ export function runtimeEnvBlockers(rows, options = {}) {
         : JSON.stringify(values[name]);
       return `Machine ${machineId} effective ${name} is ${actual}; expected ${expected}.`;
     }));
+}
+
+export function captureEventDiscoveryGates(rows) {
+  const capture = (name) => {
+    const values = new Set(rows.map(({ values: runtime }) => runtime[name]));
+    if (values.size !== 1 || !['true', 'false'].includes([...values][0])) {
+      throw new Error(`Every production Machine must report the same boolean ${name} value.`);
+    }
+    return [...values][0] === 'true';
+  };
+  return {
+    eventDiscoveryEnabled: capture('EVENT_DISCOVERY_ENABLED'),
+    eventDiscoveryAutoPublish: capture('EVENT_DISCOVERY_AUTO_PUBLISH'),
+  };
+}
+
+async function unchangedEventDiscoveryGates(context, machine) {
+  const current = captureEventDiscoveryGates(await readEffectiveRuntimeEnv(context.app, [machine]));
+  if (current.eventDiscoveryEnabled !== context.eventDiscoveryGates.eventDiscoveryEnabled
+      || current.eventDiscoveryAutoPublish !== context.eventDiscoveryGates.eventDiscoveryAutoPublish) {
+    throw new Error(`Machine ${machine.id} discovery gates changed after preflight; refusing to overwrite them.`);
+  }
+  return current;
 }
 
 export function captureContextualReputationGate(rows) {
@@ -402,7 +468,7 @@ async function readSecurityEmergencyReadiness(context) {
   return parseSecurityEmergencyReadinessOutput(stdout);
 }
 
-async function verifyImageExists(image, sha) {
+export async function verifyImageExists(image, sha) {
   if (!(await commandExists('docker'))) throw new Error('docker CLI is required to inspect the release image.');
   const { stdout } = await run([
     'docker', 'buildx', 'imagetools', 'inspect', image,
@@ -451,12 +517,24 @@ async function remotePreflight(context) {
   const machines = await readMachines(context.app);
   const runtimeEnv = await readEffectiveRuntimeEnv(context.app, machines);
   const contextualReputationEnabled = captureContextualReputationGate(runtimeEnv);
+  const eventDiscoveryGates = captureEventDiscoveryGates(runtimeEnv);
+  context.eventDiscoveryGates = eventDiscoveryGates;
   const publicReputationProjectionEnabled = capturePublicReputationProjectionGate(runtimeEnv);
   const secrets = await readSecretNames(context.app);
   const blockers = runtimeEnvBlockers(runtimeEnv, {
+    ...eventDiscoveryGates,
     allowUnavailableAutomaticRunner: true,
     allowUnavailableReputationWorker: true,
   });
+  if (context.recoverySha) {
+    const repository = context.image.slice(0, context.image.lastIndexOf(':'));
+    const artifact = await verifyImageExists(`${repository}:${context.recoverySha}`, context.recoverySha);
+    context.recoveryArtifact = {
+      sha: context.recoverySha,
+      image: artifact.resolvedImage,
+      acceptableImageDigests: artifact.acceptableDigests,
+    };
+  }
   for (const machine of machines) {
     const check = await smokeMachine(context, machine.id, null);
     machine.releaseSnapshot = {
@@ -470,6 +548,12 @@ async function remotePreflight(context) {
     if (!machine.releaseSnapshot.imageDigest) blockers.push(`Machine ${machine.id} has no rollback image digest.`);
     if (!machine.releaseSnapshot.instanceId) blockers.push(`Machine ${machine.id} has no instance snapshot.`);
     if (!previousSha(machine)) blockers.push(`Machine ${machine.id} does not report a full rollback source commit.`);
+    else {
+      machine.releaseSnapshot.rollbackPolicy = await rollbackCompatibility(context, previousSha(machine));
+      if (!machine.releaseSnapshot.rollbackPolicy.compatible && !context.recoveryArtifact) {
+        blockers.push(`Machine ${machine.id} has an unsafe prior binary. Supply --recovery-sha with a verified compatible ancestor image before release.`);
+      }
+    }
   }
   for (const required of ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']) {
     if (!secrets.has(required)) blockers.push(`Required Fly secret is missing: ${required}`);
@@ -498,12 +582,19 @@ async function remotePreflight(context) {
     runtimeEnv,
     contextualReputationEnabled,
     publicReputationProjectionEnabled,
+    eventDiscoveryGates,
     ticketmasterConfigured: secrets.has('TICKETMASTER_API_KEY'),
     databasePreflight: stdout.trim().split('\n').slice(-3),
     securityEmergencyReadiness,
     currentVersion: version.commit,
     resolvedImage: context.resolvedImage,
     acceptableImageDigests: [...context.acceptableImageDigests],
+    recovery: machines.map(({ id, releaseSnapshot }) => ({
+      machineId: id,
+      ...releaseSnapshot.rollbackPolicy,
+      mode: releaseSnapshot.rollbackPolicy.compatible ? 'compatible-rollback' : 'compatible-forward-recovery',
+      fallback: context.recoveryArtifact ?? null,
+    })),
   };
 }
 
@@ -614,30 +705,127 @@ function previousSha(machine) {
   }
 }
 
+// This reviewed commit binds Google authentication to issuer/subject and requires
+// deliberate new-account intent. Restoring an earlier binary would re-enable
+// email-only authority even if the additive table itself remains intact.
+const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';
+// Older binaries ignore these receipts and can repeat contact creation or grant
+// access through shared email. Recovery must retain the writer contract even
+// when the receipt tables happened to be empty during preflight.
+const intakeIdentityFloor = '02115f7d1b0786f3cdd4287a9466dd22682f603b';
+const sourceRequestIdentityFloor = '6eab8592744015124b0162ce9e9361f51a04f538';
+// SYS-ESCROW-003: inspect the exact candidate blob, not a commit marker that
+// can disappear after a squash/cherry-pick or survive a later reintroduction.
+export async function disabledEscrowWritesAt(sha, readBlob = readGitBlob) {
+  const candidate = normalizeFullSha(sha);
+  const source = await readBlob(candidate, 'tdf-hq/src/TDF/Server.hs');
+  const apiSource = await readBlob(candidate, 'tdf-hq/src/TDF/API.hs');
+  try {
+    checkDisabledEscrowWrites(source, apiSource);
+    return true;
+  } catch {
+    return false; // Source disagrees. Git/tool failures above must still propagate.
+  }
+}
+
+export function requiredIdentityCommit(context) {
+  const ids = new Set(context.migrations.map(({ id }) => id));
+  if (ids.has('2026-09-18_course_identity_requests')
+      || ids.has('2026-09-18_trial_identity_requests')
+      || ids.has('2026-09-18_ads_identity_requests')) return sourceRequestIdentityFloor;
+  if (ids.has('2026-09-18_live_intake_idempotency')) return intakeIdentityFloor;
+  return ids.has('2026-09-18_provider_subject_identity') ? providerIdentityFloor : null;
+}
+
+async function gitIsAncestor(ancestor, descendant) {
+  try {
+    await run(['git', 'merge-base', '--is-ancestor', ancestor, descendant], { log: false });
+    return true;
+  } catch (error) {
+    if (error.cause?.code === 1) return false;
+    throw error; // Missing history/tooling is not evidence of compatibility.
+  }
+}
+
+export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor, readBlob = readGitBlob) {
+  const candidate = normalizeFullSha(sha);
+  const requiredCommit = requiredIdentityCommit(context);
+  const escrowWritesDisabled = context.sha ? await disabledEscrowWritesAt(candidate, readBlob) : null;
+  return {
+    sha: candidate,
+    requiredCommit,
+    escrowWritesDisabled,
+    compatible: (requiredCommit === null || await isAncestor(requiredCommit, candidate))
+      && escrowWritesDisabled !== false,
+  };
+}
+
+export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor, readBlob = readGitBlob) {
+  const policy = await rollbackCompatibility(context, sha, isAncestor, readBlob);
+  if (policy.escrowWritesDisabled === false) {
+    throw new Error(`Unsafe financial-write rollback blocked: ${policy.sha} does not preserve the disabled escrow handler bodies. Recover forward with a compatible reviewed image.`);
+  }
+  if (!policy.compatible) {
+    throw new Error(`Unsafe authentication rollback blocked: ${policy.sha} predates ${policy.requiredCommit}. Keep provider bindings and source request receipts; recover forward with a compatible reviewed image.`);
+  }
+  return deploy();
+}
+
+export function selectRecoveryTarget(snapshot, fallback) {
+  if (snapshot.rollbackPolicy?.compatible) {
+    return { sha: snapshot.sha, image: snapshot.image, acceptableImageDigests: [snapshot.imageDigest] };
+  }
+  if (!fallback?.sha || !fallback.image || !fallback.acceptableImageDigests?.length) {
+    throw new Error('No verified compatible recovery artifact; refusing legacy rollback.');
+  }
+  return fallback;
+}
+
+export async function recoverReleaseMachines(originalMachines, touchedMachines, recover) {
+  const rollbacks = [];
+  const errors = [];
+  // Before any deploy attempt there can be no new provider authority from this
+  // release. Once a canary could serve traffic, every legacy replica must move
+  // forward too, even if rollout never reached it. Keep attempting the rest
+  // when one recovery fails; report failures instead of claiming fleet safety.
+  if (touchedMachines.size === 0) return { rollbacks, errors };
+  const required = [...originalMachines].reverse().filter(machine =>
+    touchedMachines.has(machine.id) || machine.releaseSnapshot.rollbackPolicy?.compatible === false);
+  for (const machine of required) {
+    try {
+      rollbacks.push(await recover(machine));
+    } catch (error) {
+      errors.push({ machineId: machine.id, error: error.message });
+    }
+  }
+  return { rollbacks, errors };
+}
+
 async function rollbackMachine(context, machine) {
-  const image = machine.releaseSnapshot?.image ?? previousImage(machine);
-  const sha = previousSha(machine);
+  const { image, sha, acceptableImageDigests } = selectRecoveryTarget(machine.releaseSnapshot, context.recoveryArtifact);
   if (!image || !sha) throw new Error(`Cannot construct rollback for Machine ${machine.id}.`);
   const contextualReputationEnabled = capturedContextualReputationGate(machine);
+  const eventDiscoveryGates = captureEventDiscoveryGates([{ values: machine.releaseSnapshot?.runtimeEnv ?? {} }]);
   const projectionGate = await currentPublicReputationProjectionGate(context, machine);
   // Keep rollback on the same deploy lane as rollout. `flyctl machine update`
   // duplicates Docker Hub digest references as repo@digest@digest before the API call.
-  await run(buildMachineDeployArgs({
+  await withCompatibleRollback(context, sha, () => run(buildMachineDeployArgs({
     app: context.app,
     image,
     sha,
     contextualReputationEnabled,
+    ...eventDiscoveryGates,
     publicReputationProjectionEnabled: projectionGate,
     onlyMachine: machine.id,
-  }));
+  })));
   const restored = (await readMachines(context.app)).find(({ id }) => id === machine.id);
   if (!restored) throw new Error(`Rolled-back Machine ${machine.id} disappeared.`);
-  if (restored.image_ref?.digest !== machine.releaseSnapshot?.imageDigest) {
+  if (!acceptableImageDigests.includes(restored.image_ref?.digest)) {
     throw new Error(`Machine ${machine.id} rollback digest does not match its snapshot.`);
   }
   const envBlockers = runtimeEnvBlockers(
     await readEffectiveRuntimeEnv(context.app, [restored]),
-    { contextualReputationEnabled },
+    { contextualReputationEnabled, ...eventDiscoveryGates },
   );
   if (envBlockers.length > 0) {
     throw new Error(`Machine ${machine.id} rollback environment is unsafe: ${envBlockers.join(' ')}`);
@@ -676,7 +864,7 @@ async function verifyTargetMachine(context, machineId) {
   if (!context.acceptableImageDigests.has(machine.image_ref?.digest)) {
     throw new Error(`Machine ${machineId} is running unexpected image digest ${machine.image_ref?.digest}.`);
   }
-  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, [machine]));
+  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, [machine]), context.eventDiscoveryGates);
   if (envBlockers.length > 0) {
     throw new Error(`Machine ${machineId} runtime environment is unsafe: ${envBlockers.join(' ')}`);
   }
@@ -686,7 +874,7 @@ async function verifyTargetMachine(context, machineId) {
 async function verifyFleet(context, originalMachines) {
   const current = await readMachines(context.app);
   assertExactMachineSet(current, originalMachines);
-  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, current));
+  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, current), context.eventDiscoveryGates);
   if (envBlockers.length > 0) {
     throw new Error(`Fleet runtime environment is unsafe:\n- ${envBlockers.join('\n- ')}`);
   }
@@ -844,6 +1032,12 @@ async function executeRelease(context) {
     remainingMachines: remaining.map((machine) => machine.id),
     rollbacks: [],
     rollout: [],
+    recovery: originalMachines.map(({ id, releaseSnapshot }) => ({
+      machineId: id,
+      ...releaseSnapshot.rollbackPolicy,
+      mode: releaseSnapshot.rollbackPolicy.compatible ? 'compatible-rollback' : 'compatible-forward-recovery',
+      fallback: context.recoveryArtifact ?? null,
+    })),
   };
   const touchedMachines = new Set();
   const leaseToken = randomUUID();
@@ -871,35 +1065,38 @@ async function executeRelease(context) {
     await heartbeatReleaseLease(context, leaseToken);
 
     await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
-    touchedMachines.add(canary.id);
     const canaryProjectionGate = await currentPublicReputationProjectionGate(context, canary);
+    const canaryDiscoveryGates = await unchangedEventDiscoveryGates(context, canary);
+    touchedMachines.add(canary.id);
     await run(buildMachineDeployArgs({
       app: context.app,
       image: context.resolvedImage,
       sha: context.sha,
       contextualReputationEnabled: false,
       publicReputationProjectionEnabled: canaryProjectionGate,
+      ...canaryDiscoveryGates,
       onlyMachine: canary.id,
     }));
     try {
       report.canary = await verifyTargetMachine(context, canary.id);
     } catch (error) {
-      report.rollbacks.push(await rollbackMachine(context, canary));
-      touchedMachines.delete(canary.id);
-      throw new Error(`Canary verification failed and was rolled back: ${error.message}`, { cause: error });
+      report.canaryVerificationError = error.message;
+      throw new Error(`Canary verification failed; compatible fleet recovery required: ${error.message}`, { cause: error });
     }
 
     for (const machine of remaining) {
       await heartbeatReleaseLease(context, leaseToken);
       await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
-      touchedMachines.add(machine.id);
       const projectionGate = await currentPublicReputationProjectionGate(context, machine);
+      const discoveryGates = await unchangedEventDiscoveryGates(context, machine);
+      touchedMachines.add(machine.id);
       await run(buildMachineDeployArgs({
         app: context.app,
         image: context.resolvedImage,
         sha: context.sha,
         contextualReputationEnabled: false,
         publicReputationProjectionEnabled: projectionGate,
+        ...discoveryGates,
         onlyMachine: machine.id,
       }));
       report.rollout.push(await verifyTargetMachine(context, machine.id));
@@ -926,15 +1123,10 @@ async function executeRelease(context) {
       report.reportPath = await writeReport(context, report);
       return report;
     }
-    const rollbackErrors = [];
-    for (const machine of [...originalMachines].reverse().filter(({ id }) => touchedMachines.has(id))) {
-      try {
-        report.rollbacks.push(await rollbackMachine(context, machine));
-      } catch (rollbackError) {
-        rollbackErrors.push({ machineId: machine.id, error: rollbackError.message });
-      }
-    }
-    report.rollbackErrors = rollbackErrors;
+    const recovery = await recoverReleaseMachines(originalMachines, touchedMachines,
+      machine => rollbackMachine(context, machine));
+    report.rollbacks.push(...recovery.rollbacks);
+    report.rollbackErrors = recovery.errors;
     if (leaseHeld) {
       try {
         await releaseReleaseLease(context, leaseToken);
@@ -966,7 +1158,16 @@ async function main() {
       flyConfig: context.flyConfig,
       dryRun: true,
     });
-    console.log(JSON.stringify(plan, null, 2));
+    console.log(JSON.stringify({
+      ...plan,
+      recoveryPolicy: {
+        minimumAuthenticationCommit: context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity') ? providerIdentityFloor : null,
+        minimumIdentityWriterCommit: requiredIdentityCommit(context),
+        disabledEscrowWrites: 'required source contract on release and recovery revisions',
+        fallbackSource: context.recoverySha ?? null,
+        immutableArtifactVerification: 'required in preflight',
+      },
+    }, null, 2));
     return;
   }
 
@@ -983,6 +1184,7 @@ async function main() {
       securityEmergencyReadiness: preflight.securityEmergencyReadiness,
       currentVersion: preflight.currentVersion,
       resolvedImage: preflight.resolvedImage,
+      recovery: preflight.recovery,
     }, null, 2));
     return;
   }

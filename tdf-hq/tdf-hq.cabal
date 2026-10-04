@@ -12,6 +12,7 @@ executable tdf-hq-exe
   hs-source-dirs:   app, src
   other-modules:
     TDF.App.Boot
+    TDF.App.StartupResponse
     TDF.API.Admin
     TDF.API
     TDF.API.Bands
@@ -29,6 +30,22 @@ executable tdf-hq-exe
     TDF.API.Inventory
     TDF.API.Pipelines
     TDF.API.Proposals
+    TDF.Interactions.API
+    TDF.Interactions.Server
+    TDF.Interactions.Legacy
+    TDF.Interactions.Notifications
+    TDF.Social.API
+    TDF.Social.Server
+    TDF.API.Chat
+    TDF.API.SocialProfiles
+    TDF.Social.Profiles
+    TDF.API.SocialRelationships
+    TDF.Social.FanEffects
+    TDF.API.FanFollowing
+    TDF.Social.RelationshipWrites
+    TDF.Social.RelationshipReads
+    TDF.Social.Chat
+    TDF.Social.Session
     TDF.API.Calendar
     TDF.API.Marketplace
     TDF.API.Merch
@@ -100,6 +117,7 @@ executable tdf-hq-exe
     TDF.DTO.SocialSyncDTO
     TDF.Distribution.StateMachine
     TDF.Email
+    TDF.Email.Headers
     TDF.Handlers.InputList
     TDF.Invoice.SRI
     TDF.Internationalization
@@ -123,6 +141,10 @@ executable tdf-hq-exe
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.Services.YouTube
+    TDF.Services.RecordsIngestion
+    TDF.Server.RecordsIngestion
+    TDF.API.RecordsIngestion
     TDF.SocialEventLifecycle
     TDF.Services.EventLogisticsRoutes
     TDF.Services.Stripe
@@ -269,10 +291,19 @@ test-suite tdf-hq-test
   hs-source-dirs:    test, src
   main-is:           Spec.hs
   other-modules:
+    TDF.LiveIntakeIdentitySpec
+    TDF.ProviderIdentitySpec
+    TDF.CourseIdentitySpec
+    TDF.TrialIdentitySpec
+    TDF.MarketplaceIdentitySpec
+    TDF.Commerce.WorkerLoggingSpec
+    TDF.Commerce.PaymentArithmeticSpec
+    TDF.EmailHeadersSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
     TDF.App.Boot
+    TDF.App.StartupResponse
     TDF.API.Bands
     TDF.API.Facebook
     TDF.API.Future
@@ -287,6 +318,22 @@ test-suite tdf-hq-test
     TDF.API.InternAudit
     TDF.API.SocialDiscoveryAPI
     TDF.API.SocialSyncAPI
+    TDF.Interactions.API
+    TDF.Interactions.Server
+    TDF.Interactions.Legacy
+    TDF.Interactions.Notifications
+    TDF.Social.API
+    TDF.Social.Server
+    TDF.API.Chat
+    TDF.API.SocialProfiles
+    TDF.Social.Profiles
+    TDF.API.SocialRelationships
+    TDF.Social.FanEffects
+    TDF.API.FanFollowing
+    TDF.Social.RelationshipWrites
+    TDF.Social.RelationshipReads
+    TDF.Social.Chat
+    TDF.Social.Session
     TDF.API.Calendar
     TDF.API.CommerceOperations
     TDF.API.Label
@@ -358,6 +405,7 @@ test-suite tdf-hq-test
     TDF.DTO.SocialSyncDTO
     TDF.Distribution.StateMachine
     TDF.Email
+    TDF.Email.Headers
     TDF.Email.Service
     TDF.Handlers.InputList
     TDF.Invoice.SRI
@@ -382,6 +430,7 @@ test-suite tdf-hq-test
     TDF.Directory.PolicySpec
     TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec
+    TDF.Profiles.ArtistActivationSpec
     TDF.RagStore
     TDF.Reputation
     TDF.Reputation.Worker
@@ -431,16 +480,24 @@ test-suite tdf-hq-test
     TDF.ServerFanClub
     TDF.ServerFanClubSpec
     TDF.ServerSpec
+    TDF.StartupResponseSpec
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec
+    TDF.Server.EventRelationsSpec
     TDF.Social.FollowSpec
     TDF.Services
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.Services.YouTube
+    TDF.Services.RecordsIngestion
+    TDF.Server.RecordsIngestion
+    TDF.API.RecordsIngestion
     TDF.Services.EventLogisticsRoutes
     TDF.Services.EventDiscoverySpec
+    TDF.Services.YouTubeSpec
+    TDF.Services.RecordsIngestionSpec
     TDF.Server.EventResearchSpec
     TDF.Services.InstagramSync
     TDF.Services.Stripe
@@ -468,9 +525,10 @@ test-suite tdf-hq-test
     TDF.WhatsApp.HistorySpec
     TDF.WhatsApp.Service
     TDF.WhatsApp.Transport
-  ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts
+  ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N2
   default-language:  Haskell2010
   build-depends:
+    async,
       base                 >=4.14 && <5
     , aeson                >=2.0
     , bytestring

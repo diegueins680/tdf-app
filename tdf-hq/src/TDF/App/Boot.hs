@@ -31,7 +31,7 @@ import Database.Persist.Sql (
     toSqlKey,
   )
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
-import Network.HTTP.Types (status200, status500, status503)
+import Network.HTTP.Types (status200, status500)
 import Network.Wai (
     Application,
     Middleware,
@@ -78,6 +78,8 @@ import TDF.Cron (
     startInstagramSyncJob,
     startSocialAutoReplyJob,
   )
+import TDF.Services.RecordsIngestion (startRecordsIngestionJob)
+import TDF.Interactions.Notifications (startInteractionNotifications)
 import TDF.DB (ConnectionPool, Env (..), makePool)
 import TDF.Models (
     PartyId,
@@ -91,6 +93,7 @@ import TDF.Operations.Worker (startOperationsWorker)
 import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
+import TDF.App.StartupResponse (startupApp)
 import TDF.Trials.Models (migrateTrials)
 
 runBootServer :: IO ()
@@ -133,20 +136,7 @@ runBootServer = do
         else next req send
     wrapApp :: Application -> Application
     wrapApp = appCors . addCorsFallback . rootOk
-    bootStartingHeaders =
-      [ ("Content-Type", "application/json")
-      , ("Retry-After", "5")
-      ]
-    bootApp :: Application
-    bootApp req send =
-      case pathInfo req of
-        ["health"] ->
-          send
-            (responseLBS status200 bootStartingHeaders "{\"status\":\"starting\",\"db\":\"starting\",\"message\":\"El servicio está arrancando. Intenta de nuevo en unos segundos.\"}")
-        _ ->
-          send (responseLBS status503 bootStartingHeaders "{\"error\":\"starting\",\"message\":\"El servicio está arrancando. Intenta de nuevo en unos segundos.\"}")
-
-  appRef <- newIORef (wrapApp bootApp)
+  appRef <- newIORef (wrapApp startupApp)
 
   let setupApp = do
         pool <- makePoolWithRetry 5 (BS.pack (dbConnString cfg))
@@ -172,6 +162,8 @@ runBootServer = do
         let env = Env{envPool = pool, envConfig = cfg}
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
+        startRecordsIngestionJob (envPool env)
+        startInteractionNotifications (envPool env)
         startEventDiscoveryJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env

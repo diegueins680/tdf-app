@@ -1,0 +1,223 @@
+{
+  "observedAt": "2026-09-18T11:38:10.606980+00:00",
+  "beforeSource": "9497be8f4da96159a492c7f290f6b6229095cff2",
+  "before": [
+    {
+      "engine": "chromium",
+      "width": 320,
+      "fixed": false,
+      "falseConnection": true,
+      "exchanges": 26,
+      "codeRemoved": false,
+      "errors": [],
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "violations": [],
+      "screenshot": "calendar-chromium-320-before.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "chromium",
+      "width": 768,
+      "fixed": false,
+      "falseConnection": true,
+      "exchanges": 30,
+      "codeRemoved": false,
+      "errors": [],
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "violations": [],
+      "screenshot": "calendar-chromium-768-before.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "chromium",
+      "width": 1280,
+      "fixed": false,
+      "falseConnection": true,
+      "exchanges": 30,
+      "codeRemoved": false,
+      "errors": [],
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "violations": [],
+      "screenshot": "calendar-chromium-1280-before.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    }
+  ],
+  "after": [
+    {
+      "engine": "chromium",
+      "width": 320,
+      "fixed": true,
+      "falseConnection": false,
+      "exchanges": 2,
+      "codeRemoved": true,
+      "errors": [],
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "violations": [],
+      "screenshot": "calendar-chromium-320-after.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "chromium",
+      "width": 768,
+      "fixed": true,
+      "falseConnection": false,
+      "exchanges": 2,
+      "codeRemoved": true,
+      "errors": [],
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "violations": [],
+      "screenshot": "calendar-chromium-768-after.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "chromium",
+      "width": 1280,
+      "fixed": true,
+      "falseConnection": false,
+      "exchanges": 2,
+      "codeRemoved": true,
+      "errors": [],
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "violations": [],
+      "screenshot": "calendar-chromium-1280-after.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "firefox",
+      "width": 320,
+      "fixed": true,
+      "falseConnection": false,
+      "exchanges": 2,
+      "codeRemoved": true,
+      "errors": [],
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "violations": [],
+      "screenshot": "calendar-firefox-320-after.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "firefox",
+      "width": 768,
+      "fixed": true,
+      "falseConnection": false,
+      "exchanges": 2,
+      "codeRemoved": true,
+      "errors": [],
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "violations": [],
+      "screenshot": "calendar-firefox-768-after.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "firefox",
+      "width": 1280,
+      "fixed": true,
+      "falseConnection": false,
+      "exchanges": 2,
+      "codeRemoved": true,
+      "errors": [],
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "violations": [],
+      "screenshot": "calendar-firefox-1280-after.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "webkit",
+      "width": 320,
+      "fixed": true,
+      "falseConnection": false,
+      "exchanges": 2,
+      "codeRemoved": true,
+      "errors": [],
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "violations": [],
+      "screenshot": "calendar-webkit-320-after.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "webkit",
+      "width": 768,
+      "fixed": true,
+      "falseConnection": false,
+      "exchanges": 2,
+      "codeRemoved": true,
+      "errors": [],
+      "geometry": {
+        "width": 768,
+        "scroll": 768
+      },
+      "violations": [],
+      "screenshot": "calendar-webkit-768-after.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    },
+    {
+      "engine": "webkit",
+      "width": 1280,
+      "fixed": true,
+      "falseConnection": false,
+      "exchanges": 2,
+      "codeRemoved": true,
+      "errors": [],
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "violations": [],
+      "screenshot": "calendar-webkit-1280-after.png",
+      "transport": "actual isolated signup/session/config/events; only synthetic failed token exchange intercepted; no external OAuth"
+    }
+  ],
+  "exchangeInterpretation": "After: exactly one automatic request and one explicit retry. Before: 26–30 automatic requests; intercepted response is synthetic.",
+  "componentTests": 14,
+  "formal": {
+    "generated": 27,
+    "distinct": 21,
+    "depth": 5,
+    "negativeDistinct": {
+      "replay": 9,
+      "storage": 3,
+      "staleSession": 11
+    },
+    "fullPinnedRunner": "PASS"
+  },
+  "build": {
+    "defaultGzipBytes": 365624,
+    "isolatedApiGzipBytes": 365633,
+    "preloads": 5
+  },
+  "limits": [
+    "No external Google consent or token exchange",
+    "No production mutation",
+    "Browser first successor attempt used same-origin empty API base against /api-only proxy; signup received HTML, not counted. Corrected explicit local VITE_API_BASE=/api run is recorded here."
+  ]
+}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -66,6 +67,7 @@ const parseTeacherFilter = (raw: string): number | 'all' => {
 };
 
 export default function ReportsPage() {
+  const { t } = useTranslation();
   useDocumentTitle('Finanzas / Reportes');
   const bookingsQuery = useQuery({
     queryKey: ['reports-bookings'],
@@ -361,7 +363,7 @@ export default function ReportsPage() {
         </Grid>
       </Grid>
 
-      {summaryLoading && <LinearProgress />}
+      {summaryLoading && <LinearProgress aria-label={t('auditAccessibility.loadingReports')} />}
       {summaryError && (
         <Alert severity="error">
           {summaryError instanceof Error ? summaryError.message : 'No se pudieron cargar los datos.'}

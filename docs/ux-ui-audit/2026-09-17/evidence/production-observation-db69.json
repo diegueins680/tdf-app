@@ -1,0 +1,53 @@
+{
+  "at": "2026-09-18T02:05:10.740Z",
+  "observations": [
+    {
+      "machine": "0807ee9cd34668",
+      "path": "/health",
+      "status": 200,
+      "body": "{\"db\":\"ok\",\"status\":\"ok\"}"
+    },
+    {
+      "machine": "0807ee9cd34668",
+      "path": "/version",
+      "status": 200,
+      "body": "{\"buildTime\":\"2026-09-18T01:34:51Z\",\"commit\":\"db69e0534e87ffcb9b3ccf3a856a7fc85e839f16\",\"name\":\"tdf-hq\",\"version\":\"0.1.0.0\"}"
+    },
+    {
+      "machine": "0807ee9cd34668",
+      "path": "/session",
+      "status": 200,
+      "body": "null"
+    },
+    {
+      "machine": "0807ee9cd34668",
+      "path": "/catalogs/languages",
+      "status": 404,
+      "body": "catalog omitted"
+    },
+    {
+      "machine": "3d8d2500c67168",
+      "path": "/health",
+      "status": 200,
+      "body": "{\"db\":\"ok\",\"status\":\"ok\"}"
+    },
+    {
+      "machine": "3d8d2500c67168",
+      "path": "/version",
+      "status": 200,
+      "body": "{\"buildTime\":\"2026-09-18T01:34:51Z\",\"commit\":\"db69e0534e87ffcb9b3ccf3a856a7fc85e839f16\",\"name\":\"tdf-hq\",\"version\":\"0.1.0.0\"}"
+    },
+    {
+      "machine": "3d8d2500c67168",
+      "path": "/session",
+      "status": 200,
+      "body": "null"
+    },
+    {
+      "machine": "3d8d2500c67168",
+      "path": "/catalogs/languages",
+      "status": 404,
+      "body": "catalog omitted"
+    }
+  ]
+}

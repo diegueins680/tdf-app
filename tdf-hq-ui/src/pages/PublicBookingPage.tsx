@@ -1939,6 +1939,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                           <Grid item xs={12}>
                             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                               <Checkbox
+                                inputProps={{ 'aria-label': 'Recordar mis datos mientras esta pestaña siga abierta' }}
                                 checked={rememberProfile}
                                 onChange={(e) => setRememberProfile(e.target.checked)}
                                 size="small"
@@ -2192,6 +2193,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                               <Stack spacing={1}>
                                 <Stack direction="row" spacing={1} alignItems="center">
                                   <Checkbox
+                                    inputProps={{ 'aria-label': 'Asignar ingeniero después' }}
                                     checked={assignEngineerLater}
                                     onChange={(e) => {
                                       const checked = e.target.checked;

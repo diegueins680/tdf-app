@@ -1,0 +1,36 @@
+✔ PostgreSQL runner uses the CI service and deletes only its newly created test database (138.330841ms)
+✔ CI splits component checks and preserves Stack build caches (22.986555ms)
+✔ safe-install CI permits missing scripts without masking script failures (2.858765ms)
+✔ configured Datadog checks fail when tests or results are missing (3.249834ms)
+✔ persona browser journeys are artifacted and gate aggregate quality (5.23014ms)
+✔ backend quality compiles, tests and exports the binary in one Stack pass (3.49441ms)
+✔ backend quality requires real invitation and dependency PostgreSQL regressions (6.270628ms)
+✔ backend quality exercises public booking concurrency with its tested binary (9.630479ms)
+✔ change detection includes deleted paths (5.267459ms)
+✔ backend image packages the tested artifact instead of recompiling Haskell (5.622879ms)
+✔ automatic migration integration matches the persisted production locale (2.455462ms)
+✔ backend image receives deterministic, non-empty release metadata (3.514504ms)
+✔ source Dockerfile introduces changing release metadata after compilation (2.256482ms)
+✔ affected active workflow actions use Node 24 majors (15.035466ms)
+✔ intake recovery cannot restore a provider-only writer that ignores submission receipts (10.87651ms)
+✔ each source request migration requires the reviewed combined writer before recovery can mutate (2.303683ms)
+✔ first provider rollout refuses the actual prior binary before any deploy callback (3.536191ms)
+✔ combined source-request requirements cannot weaken the identity recovery floor (1.089906ms)
+✔ compatible rollback preserves the deploy result and surfaces its failure (1.337648ms)
+✔ missing Git history and invalid source identifiers fail closed (0.985387ms)
+✔ earlier releases retain their existing rollback behavior (0.859923ms)
+✔ a compatible immutable fallback replaces only an unsafe prior image (6.648388ms)
+✔ bounded conformance: mixed machine histories, failure order and retries never deploy an unsafe prior (6.630721ms)
+✔ canary failure recovers untouched legacy replicas and all touched replicas (3.115229ms)
+✔ recovery attempts every required replica despite a failure and records incomplete recovery (1.196664ms)
+✔ pre-deployment failure does not mutate the untouched fleet (0.505348ms)
+✔ success requires completed execution, exact source stability and completion evidence (4.246633ms)
+✔ both formal workflows revalidate on PRs, main integration and schedule without path omissions (19.225326ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 808.43164

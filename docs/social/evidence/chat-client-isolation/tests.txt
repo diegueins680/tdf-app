@@ -1,0 +1,18 @@
+
+> tdf-hq-ui@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --runInBand --runTestsByPath src/pages/ChatPage.privacy.test.tsx src/utils/chatReadState.test.ts src/pages/PartyRelationshipMigration.test.ts
+
+(node:32460) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+PASS src/pages/ChatPage.privacy.test.tsx (14.349 s)
+PASS src/pages/PartyRelationshipMigration.test.ts
+PASS src/utils/chatReadState.test.ts
+
+Test Suites: 3 passed, 3 total
+Tests:       28 passed, 28 total
+Snapshots:   0 total
+Time:        21.596 s
+Ran all test suites within paths "src/pages/ChatPage.privacy.test.tsx", "src/utils/chatReadState.test.ts", "src/pages/PartyRelationshipMigration.test.ts".

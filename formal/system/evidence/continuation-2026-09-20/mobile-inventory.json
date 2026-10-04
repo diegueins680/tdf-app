@@ -1,0 +1,1687 @@
+{
+  "repository": "diegueins680/tdf-mobile",
+  "revision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+  "treeTruncated": false,
+  "totalEntries": 851,
+  "sourceInventory": [
+    {
+      "path": ".github/workflows/android-release-build.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2462441793a220eb6d418c6585647d74d09adbf7",
+      "size": 3725,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/2462441793a220eb6d418c6585647d74d09adbf7"
+    },
+    {
+      "path": ".github/workflows/datadog-synthetics.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "900e630ccba0a8ea76b23fe5c70fcf06f1117124",
+      "size": 1813,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/900e630ccba0a8ea76b23fe5c70fcf06f1117124"
+    },
+    {
+      "path": ".github/workflows/ios-release-build.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cfb23310ed61cb353e0b7b75d6b408f16b0c6e05",
+      "size": 4689,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/cfb23310ed61cb353e0b7b75d6b408f16b0c6e05"
+    },
+    {
+      "path": ".github/workflows/mobile-release-readiness.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d9ba2dfa67791fb1da36c4784c8e53308dc27c26",
+      "size": 2058,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/d9ba2dfa67791fb1da36c4784c8e53308dc27c26"
+    },
+    {
+      "path": ".github/workflows/mobile-validate.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1f588bd6e5634590e1784e36b94d8c16d79b7ceb",
+      "size": 880,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/1f588bd6e5634590e1784e36b94d8c16d79b7ceb"
+    },
+    {
+      "path": "AGENTS.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "531e5cebd419e7fe40b940149e761fcc12bcb4d1",
+      "size": 2553,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/531e5cebd419e7fe40b940149e761fcc12bcb4d1"
+    },
+    {
+      "path": "app.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20a7e6b65d4685a41aa220b92b2fbc1c7876a656",
+      "size": 1745,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/20a7e6b65d4685a41aa220b92b2fbc1c7876a656"
+    },
+    {
+      "path": "app/(tabs)/_layout.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e665135d72b046d438044f5242fcfc4d1443fa31",
+      "size": 5841,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/e665135d72b046d438044f5242fcfc4d1443fa31"
+    },
+    {
+      "path": "app/(tabs)/about.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "77a40c9fcba8e821624e7f435c8500cbd513da07",
+      "size": 2064,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/77a40c9fcba8e821624e7f435c8500cbd513da07"
+    },
+    {
+      "path": "app/(tabs)/bookings.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2749bf7a87dd68ae53f5315f5e4cafc5d443d8e7",
+      "size": 4363,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/2749bf7a87dd68ae53f5315f5e4cafc5d443d8e7"
+    },
+    {
+      "path": "app/(tabs)/create.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e5aa6dd0af30e269c29067ffdbf4ab01ca6df557",
+      "size": 6094,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/e5aa6dd0af30e269c29067ffdbf4ab01ca6df557"
+    },
+    {
+      "path": "app/(tabs)/directory.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84c33f50aabe7382d801fc71596527fef00914e0",
+      "size": 21014,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/84c33f50aabe7382d801fc71596527fef00914e0"
+    },
+    {
+      "path": "app/(tabs)/events.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dfce839dcd4655b190c64765d11468a808bc3c3c",
+      "size": 32348,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/dfce839dcd4655b190c64765d11468a808bc3c3c"
+    },
+    {
+      "path": "app/(tabs)/inventory.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7305ad841dab639d3789a562879ecf3cee55a4d4",
+      "size": 46985,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/7305ad841dab639d3789a562879ecf3cee55a4d4"
+    },
+    {
+      "path": "app/(tabs)/more.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "22f2d66e094c2f070d9e78df5492297952f9fe4e",
+      "size": 13740,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/22f2d66e094c2f070d9e78df5492297952f9fe4e"
+    },
+    {
+      "path": "app/(tabs)/parties.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b03ff974bbdb5037312ddd5fd63d00648744390f",
+      "size": 7152,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/b03ff974bbdb5037312ddd5fd63d00648744390f"
+    },
+    {
+      "path": "app/(tabs)/pipelines.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2f9578f319bb0778a70bf9851316c488305c8057",
+      "size": 4944,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/2f9578f319bb0778a70bf9851316c488305c8057"
+    },
+    {
+      "path": "app/(tabs)/profile.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a4cf451d5f955c171d8321e29f40279647cbe6dc",
+      "size": 42,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/a4cf451d5f955c171d8321e29f40279647cbe6dc"
+    },
+    {
+      "path": "app/(tabs)/social.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9890d35e56d3c93c60a8b1ddf2255a9375628608",
+      "size": 20643,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/9890d35e56d3c93c60a8b1ddf2255a9375628608"
+    },
+    {
+      "path": "app/(tabs)/vcard.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6500a2096ffbace51c5a825a3e8680ff571daaa2",
+      "size": 8030,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/6500a2096ffbace51c5a825a3e8680ff571daaa2"
+    },
+    {
+      "path": "app/+html.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4478d51061cae9ccfb89c5524e15e6bb7593675a",
+      "size": 542,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/4478d51061cae9ccfb89c5524e15e6bb7593675a"
+    },
+    {
+      "path": "app/+native-intent.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "796ddb7b081fa21605a972a84fa72f8e27b8f972",
+      "size": 1042,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/796ddb7b081fa21605a972a84fa72f8e27b8f972"
+    },
+    {
+      "path": "app/_layout.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "69272e8778a632530222fdde895fc00b29415f20",
+      "size": 7885,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/69272e8778a632530222fdde895fc00b29415f20"
+    },
+    {
+      "path": "app/about.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a7aefc116c5ab4b0dfa88a0e54abd2d9286ca6c7",
+      "size": 1789,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/a7aefc116c5ab4b0dfa88a0e54abd2d9286ca6c7"
+    },
+    {
+      "path": "app/access-requests/index.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c9f15c5de60395655d28a33ba7ffdd42e0ec30f9",
+      "size": 7692,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/c9f15c5de60395655d28a33ba7ffdd42e0ec30f9"
+    },
+    {
+      "path": "app/access-requests/new.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "337206088279ea0d339a1744a502194ef9ae3664",
+      "size": 9680,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/337206088279ea0d339a1744a502194ef9ae3664"
+    },
+    {
+      "path": "app/access-requests/review.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "06df1e28dfe94578fb80f55590bb735fd9210be7",
+      "size": 7503,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/06df1e28dfe94578fb80f55590bb735fd9210be7"
+    },
+    {
+      "path": "app/artistDetail.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5b1794b18b985dff93eaad49e8cfdb0d461799a8",
+      "size": 11806,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/5b1794b18b985dff93eaad49e8cfdb0d461799a8"
+    },
+    {
+      "path": "app/auth.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "70cf9785484ec276eb7caaabe772f7724585d676",
+      "size": 44375,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/70cf9785484ec276eb7caaabe772f7724585d676"
+    },
+    {
+      "path": "app/catalogEditor.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dd08a394b505038a20090f46d274df541da4563c",
+      "size": 21610,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/dd08a394b505038a20090f46d274df541da4563c"
+    },
+    {
+      "path": "app/catalogs.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f6f2d32ff3325ce19de0c36fb14956a288f246ee",
+      "size": 8331,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/f6f2d32ff3325ce19de0c36fb14956a288f246ee"
+    },
+    {
+      "path": "app/contracts/ContractViewScreen.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f509d16e5752886c64e045a25e2eddccdab4f95d",
+      "size": 600,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/f509d16e5752886c64e045a25e2eddccdab4f95d"
+    },
+    {
+      "path": "app/contracts/NewContractScreen.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a752759f42f1ad0547a3839d7577c38810414985",
+      "size": 655,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/a752759f42f1ad0547a3839d7577c38810414985"
+    },
+    {
+      "path": "app/createArtistProfile.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0623167fadf1634e974da8e3cef4a085a2881945",
+      "size": 9627,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/0623167fadf1634e974da8e3cef4a085a2881945"
+    },
+    {
+      "path": "app/createEvent.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4e2b27cc049e58cc5d525e00d1a562accd58dafd",
+      "size": 28862,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/4e2b27cc049e58cc5d525e00d1a562accd58dafd"
+    },
+    {
+      "path": "app/createVenue.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57fbf1308dad6b3494366253a800d691ee9aada9",
+      "size": 15570,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/57fbf1308dad6b3494366253a800d691ee9aada9"
+    },
+    {
+      "path": "app/ddex/document/[id].tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "404b39c26e0b01f6ac3864f7954321445d5993f0",
+      "size": 7681,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/404b39c26e0b01f6ac3864f7954321445d5993f0"
+    },
+    {
+      "path": "app/ddex/index.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f9c518a81496e6e1b433916cab1fdd08559e0581",
+      "size": 11348,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/f9c518a81496e6e1b433916cab1fdd08559e0581"
+    },
+    {
+      "path": "app/ddex/partners.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e74070148844b56daeb3c956f337f8dad5003308",
+      "size": 8595,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/e74070148844b56daeb3c956f337f8dad5003308"
+    },
+    {
+      "path": "app/directory/classified/[slug].tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "32627f6d5cf23926f932e03a886a10f9e11f6a8a",
+      "size": 361,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/32627f6d5cf23926f932e03a886a10f9e11f6a8a"
+    },
+    {
+      "path": "app/directory/event/[id].tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "92c14bb1143568e3fe73e2f14e034095e12212b6",
+      "size": 345,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/92c14bb1143568e3fe73e2f14e034095e12212b6"
+    },
+    {
+      "path": "app/directory/manage.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "76308a0dc3fbde33e4ee98fa0a064b3258b701c7",
+      "size": 47538,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/76308a0dc3fbde33e4ee98fa0a064b3258b701c7"
+    },
+    {
+      "path": "app/directory/profile/[slug].tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4c847c3d2bc26b433a4570d3786661c47d1fa754",
+      "size": 355,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/4c847c3d2bc26b433a4570d3786661c47d1fa754"
+    },
+    {
+      "path": "app/directory/venue/[id].tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1b8a02d95d14d4523ed074731c3c6ff88870cf6a",
+      "size": 345,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/1b8a02d95d14d4523ed074731c3c6ff88870cf6a"
+    },
+    {
+      "path": "app/editArtistProfile.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "beec19c8e4c49ebcd424b7c727d0c5c16fa23889",
+      "size": 14651,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/beec19c8e4c49ebcd424b7c727d0c5c16fa23889"
+    },
+    {
+      "path": "app/eventDetail.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ca4f0cab520105c6b87a1a8dbd7e66ea97fff32d",
+      "size": 104357,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/ca4f0cab520105c6b87a1a8dbd7e66ea97fff32d"
+    },
+    {
+      "path": "app/eventos/[eventId].tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57a505e8a52c6f3207c5d000ec7e8dfabb3697bc",
+      "size": 199,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/57a505e8a52c6f3207c5d000ec7e8dfabb3697bc"
+    },
+    {
+      "path": "app/index.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7cbc5582dc99d1abd8929fddf68504adbe5e12c7",
+      "size": 1233,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/7cbc5582dc99d1abd8929fddf68504adbe5e12c7"
+    },
+    {
+      "path": "app/input-list/[id].tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "38d5f1504edd5cebb6d1cb08107ca081b9a34382",
+      "size": 1974,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/38d5f1504edd5cebb6d1cb08107ca081b9a34382"
+    },
+    {
+      "path": "app/merch.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c0929d1e81f9be37792b653f1812a80daca550fb",
+      "size": 40595,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/c0929d1e81f9be37792b653f1812a80daca550fb"
+    },
+    {
+      "path": "app/merch/preferences.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "41080869acbf49bb4f281163fd0323024ceebc99",
+      "size": 13911,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/41080869acbf49bb4f281163fd0323024ceebc99"
+    },
+    {
+      "path": "app/merch/review.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e1ec65bac32d5592a5e9827f0b06cabf2fcebe3c",
+      "size": 14380,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/e1ec65bac32d5592a5e9827f0b06cabf2fcebe3c"
+    },
+    {
+      "path": "app/merchSeller.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "636c18507575006652585c14da089fe23dab40a0",
+      "size": 56,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/636c18507575006652585c14da089fe23dab40a0"
+    },
+    {
+      "path": "app/notifications.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c96b62366fafeb30db18e064c187e1d48324161",
+      "size": 5013,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/0c96b62366fafeb30db18e064c187e1d48324161"
+    },
+    {
+      "path": "app/onboarding.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ce90687a23a6612ef71e7015be104b2d43e3a5d4",
+      "size": 6786,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/ce90687a23a6612ef71e7015be104b2d43e3a5d4"
+    },
+    {
+      "path": "app/operations.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "39509f7af106c8fd168fc602146484b627af40eb",
+      "size": 19480,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/39509f7af106c8fd168fc602146484b627af40eb"
+    },
+    {
+      "path": "app/reputation/consents.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c69efe9de02c33369f6a960137dfe8c99ac5bd17",
+      "size": 2881,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/c69efe9de02c33369f6a960137dfe8c99ac5bd17"
+    },
+    {
+      "path": "app/reputation/preferences.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74f24cdd7042da719695a5ab59c1e34f5c7efa06",
+      "size": 1672,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/74f24cdd7042da719695a5ab59c1e34f5c7efa06"
+    },
+    {
+      "path": "app/ticketCheckout.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a7a77781ad68d37d9d7f7963b1161cf49c171d7d",
+      "size": 51328,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/a7a77781ad68d37d9d7f7963b1161cf49c171d7d"
+    },
+    {
+      "path": "app/tickets.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5661ed869b3853da2bb1283481ce140a4a3dea85",
+      "size": 8938,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/5661ed869b3853da2bb1283481ce140a4a3dea85"
+    },
+    {
+      "path": "app/userProfile.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f5f27b485d347b66cbf1fa25e6b3f0b2965d2ba6",
+      "size": 39637,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/f5f27b485d347b66cbf1fa25e6b3f0b2965d2ba6"
+    },
+    {
+      "path": "app/venueDetail.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a899be1f968380949a0ae4afa8763666ee660f61",
+      "size": 8733,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/a899be1f968380949a0ae4afa8763666ee660f61"
+    },
+    {
+      "path": "app/venueExplorer.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c193fca3851c5e410245d8b2281fb69a95120a47",
+      "size": 18450,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/c193fca3851c5e410245d8b2281fb69a95120a47"
+    },
+    {
+      "path": "eas.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2e43b2a26337ed9ead159bacd38369dddba2bf6e",
+      "size": 2011,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/2e43b2a26337ed9ead159bacd38369dddba2bf6e"
+    },
+    {
+      "path": "package-lock.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0e98210ebe1f4d4b224ca302db31324e929a271",
+      "size": 708237,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/b0e98210ebe1f4d4b224ca302db31324e929a271"
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "95a4d8290ef1ca245843ab0fe919e2bc00f73904",
+      "size": 5475,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/95a4d8290ef1ca245843ab0fe919e2bc00f73904"
+    },
+    {
+      "path": "src/analytics/AnalyticsProvider.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b95e52544004fc7a891d1fdf49194cc437df5d96",
+      "size": 1321,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/b95e52544004fc7a891d1fdf49194cc437df5d96"
+    },
+    {
+      "path": "src/analytics/partySelectorTelemetry.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fed4856e69632eaa4f1e304fa7a70ae9ca7913b8",
+      "size": 3153,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/fed4856e69632eaa4f1e304fa7a70ae9ca7913b8"
+    },
+    {
+      "path": "src/analytics/posthog.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2ed40b85654a4d6c657a723ea3953e0ce44c349",
+      "size": 3273,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/f2ed40b85654a4d6c657a723ea3953e0ce44c349"
+    },
+    {
+      "path": "src/api/accessRequests.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d8f21cf8e25f12d689555bb8b458a944e54a85ec",
+      "size": 1850,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/d8f21cf8e25f12d689555bb8b458a944e54a85ec"
+    },
+    {
+      "path": "src/api/artists.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b92d64e6ce1297c2b63733c94eee0d41ca8eb6c8",
+      "size": 11091,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/b92d64e6ce1297c2b63733c94eee0d41ca8eb6c8"
+    },
+    {
+      "path": "src/api/auth.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b07bb44950502c6bb4345cb02189e3bf296b8bd4",
+      "size": 2751,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/b07bb44950502c6bb4345cb02189e3bf296b8bd4"
+    },
+    {
+      "path": "src/api/bookings.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "379e7d4ca6613c14143278e08491d19406381fac",
+      "size": 2175,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/379e7d4ca6613c14143278e08491d19406381fac"
+    },
+    {
+      "path": "src/api/catalogs.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "667f749dd56153c185e41f516e19555d7d5804d5",
+      "size": 905,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/667f749dd56153c185e41f516e19555d7d5804d5"
+    },
+    {
+      "path": "src/api/catalogs.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "207e9d50f95f4039aa4bf34a5257e9fc160dd552",
+      "size": 6013,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/207e9d50f95f4039aa4bf34a5257e9fc160dd552"
+    },
+    {
+      "path": "src/api/client.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "baaf8b558c4dbb715444e2028967cb69b2c02cb5",
+      "size": 4751,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/baaf8b558c4dbb715444e2028967cb69b2c02cb5"
+    },
+    {
+      "path": "src/api/contracts.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a1e3342bbbc04c92381ddf885c5e9b7ded31168d",
+      "size": 1384,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/a1e3342bbbc04c92381ddf885c5e9b7ded31168d"
+    },
+    {
+      "path": "src/api/ddex.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "633302f37dda34ff4e922b55fbeb9f74344570c6",
+      "size": 1762,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/633302f37dda34ff4e922b55fbeb9f74344570c6"
+    },
+    {
+      "path": "src/api/directory.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3bcdbc1787c3d0b661c00e9c3abca72ac90d85e4",
+      "size": 6172,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/3bcdbc1787c3d0b661c00e9c3abca72ac90d85e4"
+    },
+    {
+      "path": "src/api/directoryFavorites.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "27400581381b898d73f23f97689399639bb648ae",
+      "size": 729,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/27400581381b898d73f23f97689399639bb648ae"
+    },
+    {
+      "path": "src/api/events.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4a62758356456f9e180517a409f76b9beaf182aa",
+      "size": 49922,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/4a62758356456f9e180517a409f76b9beaf182aa"
+    },
+    {
+      "path": "src/api/experiments.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3d2eae33963685b0053c1efae0ffb981a96e869f",
+      "size": 692,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/3d2eae33963685b0053c1efae0ffb981a96e869f"
+    },
+    {
+      "path": "src/api/fanArtists.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "752ad3fb1ebc8a587b1bb241e1e488060b5d18c6",
+      "size": 698,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/752ad3fb1ebc8a587b1bb241e1e488060b5d18c6"
+    },
+    {
+      "path": "src/api/generated/types.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "97c568998ac48de2b840ce50f793675d43d74391",
+      "size": 900600,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/97c568998ac48de2b840ce50f793675d43d74391"
+    },
+    {
+      "path": "src/api/inventory.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20005dc6729bc6992818a2a3062f9b0a5141feab",
+      "size": 947,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/20005dc6729bc6992818a2a3062f9b0a5141feab"
+    },
+    {
+      "path": "src/api/liveBroadcasts.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fb0a89e27edc95f0fa4c85b0f2a311c371b7503d",
+      "size": 6274,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/fb0a89e27edc95f0fa4c85b0f2a311c371b7503d"
+    },
+    {
+      "path": "src/api/merch.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8695b8ccc5a91815b3699fd8d66709ffc17cc64f",
+      "size": 5435,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/8695b8ccc5a91815b3699fd8d66709ffc17cc64f"
+    },
+    {
+      "path": "src/api/merchReputation.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "59e02f0d7a1e6d4ea214b9e03aadc095788c4921",
+      "size": 4092,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/59e02f0d7a1e6d4ea214b9e03aadc095788c4921"
+    },
+    {
+      "path": "src/api/navigationPreferences.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2d1e3d57488ec4c8f3698f9b507413c1ff86d613",
+      "size": 770,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/2d1e3d57488ec4c8f3698f9b507413c1ff86d613"
+    },
+    {
+      "path": "src/api/notifications.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0cb1a3c5450d00e34b26e5837ef0b3af9decd94d",
+      "size": 486,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/0cb1a3c5450d00e34b26e5837ef0b3af9decd94d"
+    },
+    {
+      "path": "src/api/onboarding.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7ca2556d66c3292d656d072b0975e32064248f84",
+      "size": 1031,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/7ca2556d66c3292d656d072b0975e32064248f84"
+    },
+    {
+      "path": "src/api/operations.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84a9f55c05ffb2cd993a5c6fc3f02c8b02ba8061",
+      "size": 3619,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/84a9f55c05ffb2cd993a5c6fc3f02c8b02ba8061"
+    },
+    {
+      "path": "src/api/parties.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "905a487519042dab4c020f6c37c9690f37c82d8c",
+      "size": 2430,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/905a487519042dab4c020f6c37c9690f37c82d8c"
+    },
+    {
+      "path": "src/api/partySelector.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb0c993ab688a2146142d8e11c3c4fef92cccabb",
+      "size": 1459,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/bb0c993ab688a2146142d8e11c3c4fef92cccabb"
+    },
+    {
+      "path": "src/api/pipelines.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eaa4b26725dc412723addfaab3ec8a421e7df652",
+      "size": 6753,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/eaa4b26725dc412723addfaab3ec8a421e7df652"
+    },
+    {
+      "path": "src/api/preferences.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "76cdcec2b4faa6cd86954facfecfb43f9fa3d023",
+      "size": 478,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/76cdcec2b4faa6cd86954facfecfb43f9fa3d023"
+    },
+    {
+      "path": "src/api/records.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa7e4d6bba52488f2cdb77ea9e2cbcc5eee74bad",
+      "size": 1086,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/aa7e4d6bba52488f2cdb77ea9e2cbcc5eee74bad"
+    },
+    {
+      "path": "src/api/reputation.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20f9c2f569753804f4b4fe52964bed72b1610755",
+      "size": 1878,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/20f9c2f569753804f4b4fe52964bed72b1610755"
+    },
+    {
+      "path": "src/api/reviews.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f37dedd05d21e6c67e387b859608ff877eb9e7ce",
+      "size": 3236,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/f37dedd05d21e6c67e387b859608ff877eb9e7ce"
+    },
+    {
+      "path": "src/api/services.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e82fce5ada9e772a79c843499bebedc59d3035f6",
+      "size": 541,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/e82fce5ada9e772a79c843499bebedc59d3035f6"
+    },
+    {
+      "path": "src/api/social.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d3a36cca4f37410c56eef6cf3ffc33e7357398cc",
+      "size": 3977,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/d3a36cca4f37410c56eef6cf3ffc33e7357398cc"
+    },
+    {
+      "path": "src/api/types.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ed15a92d70f2245e7590a85b70aa3ff054e5bcd",
+      "size": 2387,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/5ed15a92d70f2245e7590a85b70aa3ff054e5bcd"
+    },
+    {
+      "path": "src/api/upload.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cc67d4f03b95aa9eac18c54fc63c23a76a5c6a00",
+      "size": 1690,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/cc67d4f03b95aa9eac18c54fc63c23a76a5c6a00"
+    },
+    {
+      "path": "src/api/venues.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "04fb1b2ca132216d9fc3875a19020890842857ab",
+      "size": 9153,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/04fb1b2ca132216d9fc3875a19020890842857ab"
+    },
+    {
+      "path": "src/components/ArtistCard.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82b926cbf3db430d6ddcfe785562bbada6d6aa68",
+      "size": 3152,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/82b926cbf3db430d6ddcfe785562bbada6d6aa68"
+    },
+    {
+      "path": "src/components/DirectoryPublicDetailScreen.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7081888408941acfe2444f573f4d434f87191a8e",
+      "size": 21962,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/7081888408941acfe2444f573f4d434f87191a8e"
+    },
+    {
+      "path": "src/components/ErrorBoundary.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "11661b569378b037bd51ad56709cb7fed169bc07",
+      "size": 3086,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/11661b569378b037bd51ad56709cb7fed169bc07"
+    },
+    {
+      "path": "src/components/EventCard.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "001a1522a815dbc3686c6dea5c1c4a92bf7b5f60",
+      "size": 8144,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/001a1522a815dbc3686c6dea5c1c4a92bf7b5f60"
+    },
+    {
+      "path": "src/components/EventLiveBroadcastCard.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5b62d63bcb37307db39e3b18eb9a6efe3c467632",
+      "size": 7045,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/5b62d63bcb37307db39e3b18eb9a6efe3c467632"
+    },
+    {
+      "path": "src/components/EventMomentCard.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "191253001eb351d266a07d14ce17c877b5f831fa",
+      "size": 12960,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/191253001eb351d266a07d14ce17c877b5f831fa"
+    },
+    {
+      "path": "src/components/FeatureAccessNotice.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4e231bb88e7000adcb0c4d5176ea7432803256c9",
+      "size": 2857,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/4e231bb88e7000adcb0c4d5176ea7432803256c9"
+    },
+    {
+      "path": "src/components/FormField.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "66c2f278328d76d110e3134cdfbca6a03352c771",
+      "size": 3360,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/66c2f278328d76d110e3134cdfbca6a03352c771"
+    },
+    {
+      "path": "src/components/PartySelector.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cafb6b62ed23a25c201b0ef24a2f26f4e8b2f956",
+      "size": 11429,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/cafb6b62ed23a25c201b0ef24a2f26f4e8b2f956"
+    },
+    {
+      "path": "src/components/PublicLinksSection.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1b1360b55ec32ca76549d603094ddac37d7cb4e2",
+      "size": 1945,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/1b1360b55ec32ca76549d603094ddac37d7cb4e2"
+    },
+    {
+      "path": "src/components/ScreenErrorBoundary.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "49a98774e925acaec2615f0f071d1ee4f0e1a20e",
+      "size": 1840,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/49a98774e925acaec2615f0f071d1ee4f0e1a20e"
+    },
+    {
+      "path": "src/components/StagePill.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "efa084c668d507415f0b13feab077deb7e262676",
+      "size": 537,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/efa084c668d507415f0b13feab077deb7e262676"
+    },
+    {
+      "path": "src/components/Toast.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "03d60858437738846a423df763ccabc7467fe4d0",
+      "size": 774,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/03d60858437738846a423df763ccabc7467fe4d0"
+    },
+    {
+      "path": "src/components/contracts/SchemaForm.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f68d51b3d944c33c8fae3c60ab764351421f1b84",
+      "size": 947,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/f68d51b3d944c33c8fae3c60ab764351421f1b84"
+    },
+    {
+      "path": "src/components/merch/MerchStoreReputation.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84ea38e45f6f5caed324cdb931046b5b0bcdfa44",
+      "size": 4741,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/84ea38e45f6f5caed324cdb931046b5b0bcdfa44"
+    },
+    {
+      "path": "src/components/reputation/CategoryPriorityList.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ede58df701bae45a233cf2b2bef392d96fb553b8",
+      "size": 9801,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/ede58df701bae45a233cf2b2bef392d96fb553b8"
+    },
+    {
+      "path": "src/components/reviews/DirectoryProfileReviews.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a1b593f3f3f4be3cbebef6f2a842c71c57868a7d",
+      "size": 8367,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/a1b593f3f3f4be3cbebef6f2a842c71c57868a7d"
+    },
+    {
+      "path": "src/components/reviews/ExperienceReviews.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "46111911cfe9183b884f1bb8d5beec72bbd892e0",
+      "size": 9691,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/46111911cfe9183b884f1bb8d5beec72bbd892e0"
+    },
+    {
+      "path": "src/components/skeletons/ArtistCardSkeleton.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "90b30c2a52c487b26f0fe81efb59fbc9e81e62b4",
+      "size": 2918,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/90b30c2a52c487b26f0fe81efb59fbc9e81e62b4"
+    },
+    {
+      "path": "src/components/skeletons/EventCardSkeleton.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8dab61941e5b4dce86209540a6ea02b98eac36f7",
+      "size": 1543,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/8dab61941e5b4dce86209540a6ea02b98eac36f7"
+    },
+    {
+      "path": "src/components/skeletons/EventListSkeleton.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d7645ee9a4c6d4809fa5d7d30aac9ab59f11fe01",
+      "size": 308,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/d7645ee9a4c6d4809fa5d7d30aac9ab59f11fe01"
+    },
+    {
+      "path": "src/components/skeletons/ListSkeleton.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4fa99f0479c68254a076016f8da84273fe4d3dbc",
+      "size": 1225,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/4fa99f0479c68254a076016f8da84273fe4d3dbc"
+    },
+    {
+      "path": "src/components/tickets/TicketOrderCard.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df1e1956467b2558022b768c9c9a4307bb2529fe",
+      "size": 4718,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/df1e1956467b2558022b768c9c9a4307bb2529fe"
+    },
+    {
+      "path": "src/components/tickets/TicketPurchaseCard.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "52c22d00cec637ad1e9a2659ec4750921666a96f",
+      "size": 7573,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/52c22d00cec637ad1e9a2659ec4750921666a96f"
+    },
+    {
+      "path": "src/experiments/ExperimentProvider.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bd234303305cad4ed8c605190c281c50d83472bf",
+      "size": 6250,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/bd234303305cad4ed8c605190c281c50d83472bf"
+    },
+    {
+      "path": "src/experiments/NewUserOnboardingGate.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a765e5a5c7c18f880da3dd5fff60b7d5f1d2031",
+      "size": 28194,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/8a765e5a5c7c18f880da3dd5fff60b7d5f1d2031"
+    },
+    {
+      "path": "src/experiments/useExperimentEvent.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "582836f95de3fcfd00d18ad1bd476cdcef599aed",
+      "size": 1345,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/582836f95de3fcfd00d18ad1bd476cdcef599aed"
+    },
+    {
+      "path": "src/features/directory/classifiedForm.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "813c14e1bac32d7a60f0c44e0528020e2c07990e",
+      "size": 1610,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/813c14e1bac32d7a60f0c44e0528020e2c07990e"
+    },
+    {
+      "path": "src/features/directory/classifiedForm.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83219d9579cac79f1a351daab86b927b208176f1",
+      "size": 3398,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/83219d9579cac79f1a351daab86b927b208176f1"
+    },
+    {
+      "path": "src/features/directory/profileForm.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a8e657aa78ef204115a0a55e8ff47f3b1935b39",
+      "size": 1835,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/8a8e657aa78ef204115a0a55e8ff47f3b1935b39"
+    },
+    {
+      "path": "src/features/directory/profileForm.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ba7f93dbab6435c085258bda1dc371e2f66b9156",
+      "size": 2358,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/ba7f93dbab6435c085258bda1dc371e2f66b9156"
+    },
+    {
+      "path": "src/features/featureRegistry.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0acb6908a649248481275124c186dd7fe3852678",
+      "size": 8877,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/0acb6908a649248481275124c186dd7fe3852678"
+    },
+    {
+      "path": "src/features/generatedFeatureRegistry.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "46e2de868d70ca50a6628c62d96eda5e75186785",
+      "size": 282644,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/46e2de868d70ca50a6628c62d96eda5e75186785"
+    },
+    {
+      "path": "src/hooks/useDebouncedValue.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2379807822d69ec4d10bb532ca8b30d5a3535cc9",
+      "size": 329,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/2379807822d69ec4d10bb532ca8b30d5a3535cc9"
+    },
+    {
+      "path": "src/hooks/usePartyOwnership.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8bfcde1536a618b2f5e9aa22a6674abd1fbec980",
+      "size": 446,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/8bfcde1536a618b2f5e9aa22a6674abd1fbec980"
+    },
+    {
+      "path": "src/hooks/useReduceMotion.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73e4329e8d024f215ff0d497e18dc8ac4ccfc186",
+      "size": 467,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/73e4329e8d024f215ff0d497e18dc8ac4ccfc186"
+    },
+    {
+      "path": "src/hooks/useSessionOwnership.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "34fa98e927f56a1baecaa2801074a62162cd6420",
+      "size": 888,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/34fa98e927f56a1baecaa2801074a62162cd6420"
+    },
+    {
+      "path": "src/hooks/useToast.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "55316f1491ef3748127385a91675980d8ceb45a1",
+      "size": 983,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/55316f1491ef3748127385a91675980d8ceb45a1"
+    },
+    {
+      "path": "src/i18n/index.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a7d85b237faebe17a7e132d7d073b9bd65eea36",
+      "size": 4237,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/2a7d85b237faebe17a7e132d7d073b9bd65eea36"
+    },
+    {
+      "path": "src/lib/api.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57e683cec67dad6abcc1276f79e56c4a38a3b395",
+      "size": 1763,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/57e683cec67dad6abcc1276f79e56c4a38a3b395"
+    },
+    {
+      "path": "src/lib/assertNever.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83631c7d815350193d12d5965d6b9a0294368ced",
+      "size": 136,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/83631c7d815350193d12d5965d6b9a0294368ced"
+    },
+    {
+      "path": "src/lib/authConfig.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5589448cd6329fa8ff11b5b437e0d86c5e6554f4",
+      "size": 1379,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/5589448cd6329fa8ff11b5b437e0d86c5e6554f4"
+    },
+    {
+      "path": "src/lib/catalogAdmin.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ae736275c89f5ad8e0cf34e8f770788ab2d3ece0",
+      "size": 4368,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/ae736275c89f5ad8e0cf34e8f770788ab2d3ece0"
+    },
+    {
+      "path": "src/lib/catalogSnapshot.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "29361c915ee0d3c01a0befccc91da7640a774d58",
+      "size": 6725,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/29361c915ee0d3c01a0befccc91da7640a774d58"
+    },
+    {
+      "path": "src/lib/catalogSnapshot.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "44c14797f8d2f02f9f2d206e6c3db6ff0b7da0ba",
+      "size": 18394,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/44c14797f8d2f02f9f2d206e6c3db6ff0b7da0ba"
+    },
+    {
+      "path": "src/lib/eventMoments.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "91aa5b104f10d4d63876c037127ec83b59d89cb9",
+      "size": 12850,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/91aa5b104f10d4d63876c037127ec83b59d89cb9"
+    },
+    {
+      "path": "src/lib/eventMomentsRepository.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2e1e3f8f0473db6eec71a6a25fa8d4cb8f8664a0",
+      "size": 4956,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/2e1e3f8f0473db6eec71a6a25fa8d4cb8f8664a0"
+    },
+    {
+      "path": "src/lib/eventRsvpIntent.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "db7d9deca3a1507e40856aa584890ec6149af5c6",
+      "size": 1540,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/db7d9deca3a1507e40856aa584890ec6149af5c6"
+    },
+    {
+      "path": "src/lib/eventRsvpIntent.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "352d56d2870dc3a6e21b4a930b794b8fa25b5674",
+      "size": 2531,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/352d56d2870dc3a6e21b4a930b794b8fa25b5674"
+    },
+    {
+      "path": "src/lib/eventSharing.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "27fbc26cec526ccb17bc339e5edc373bb1c64c41",
+      "size": 1023,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/27fbc26cec526ccb17bc339e5edc373bb1c64c41"
+    },
+    {
+      "path": "src/lib/eventSharing.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "64b03a50d282635cefbd1c854a7cef8875643bdb",
+      "size": 2540,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/64b03a50d282635cefbd1c854a7cef8875643bdb"
+    },
+    {
+      "path": "src/lib/firstRunFlags.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b6649e0afe73aaea359479d29eb8ab6393cad118",
+      "size": 3983,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/b6649e0afe73aaea359479d29eb8ab6393cad118"
+    },
+    {
+      "path": "src/lib/firstValueCompletion.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "72d24b1a57a264bcae2420c7a0f2ef843e6da74c",
+      "size": 1087,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/72d24b1a57a264bcae2420c7a0f2ef843e6da74c"
+    },
+    {
+      "path": "src/lib/formatters.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4bd2b71b5aeeeafe94ba1bf71b6e48f49c253b1e",
+      "size": 1882,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/4bd2b71b5aeeeafe94ba1bf71b6e48f49c253b1e"
+    },
+    {
+      "path": "src/lib/identity.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c2d7f8093a53532f0cc3012e5c51dcd7530796a",
+      "size": 774,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/8c2d7f8093a53532f0cc3012e5c51dcd7530796a"
+    },
+    {
+      "path": "src/lib/identity.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d0f00575f0921459cff0b906d7c543ed581ddfe3",
+      "size": 705,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/d0f00575f0921459cff0b906d7c543ed581ddfe3"
+    },
+    {
+      "path": "src/lib/isoDate.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b755ad57e3be2668efd2ad0a685b2d7001a99fd0",
+      "size": 680,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/b755ad57e3be2668efd2ad0a685b2d7001a99fd0"
+    },
+    {
+      "path": "src/lib/isoDate.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5093deb24542310d9bc61f6ebf5657c3e7897523",
+      "size": 1297,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/5093deb24542310d9bc61f6ebf5657c3e7897523"
+    },
+    {
+      "path": "src/lib/liveBroadcastPublishing.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83c7cfa9c9839c45633255e0c962b0c99f54954d",
+      "size": 6383,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/83c7cfa9c9839c45633255e0c962b0c99f54954d"
+    },
+    {
+      "path": "src/lib/liveBroadcasts.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a32d35ff1fbf3927187e5c15ad4c36ed1b313547",
+      "size": 11043,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/a32d35ff1fbf3927187e5c15ad4c36ed1b313547"
+    },
+    {
+      "path": "src/lib/liveBroadcastsRepository.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "510764fdf50e135463ccd04e668b2eee524457c4",
+      "size": 4806,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/510764fdf50e135463ccd04e668b2eee524457c4"
+    },
+    {
+      "path": "src/lib/momentMedia.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bafb8fedd719a556d4b102b35842da1eaedeec39",
+      "size": 1722,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/bafb8fedd719a556d4b102b35842da1eaedeec39"
+    },
+    {
+      "path": "src/lib/momentReactionFirstValue.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5493eec03f5b70dec3c544f4146053ab38bbbcb8",
+      "size": 699,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/5493eec03f5b70dec3c544f4146053ab38bbbcb8"
+    },
+    {
+      "path": "src/lib/nativeGoogleSignin.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3ce64647f96cbc2c59ff1d552c9e9ed704bb6a46",
+      "size": 1077,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/3ce64647f96cbc2c59ff1d552c9e9ed704bb6a46"
+    },
+    {
+      "path": "src/lib/nativeStripe.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "af0933f27e2372b441a9a161420f0e5c3744afa0",
+      "size": 3690,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/af0933f27e2372b441a9a161420f0e5c3744afa0"
+    },
+    {
+      "path": "src/lib/nativeStripe.web.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0cb6a5f2cba22bea307a5a178d66e2145abe8ea6",
+      "size": 1744,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/0cb6a5f2cba22bea307a5a178d66e2145abe8ea6"
+    },
+    {
+      "path": "src/lib/onboarding.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e106768207fd50289739a380cf0ae221fd4b488",
+      "size": 603,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/1e106768207fd50289739a380cf0ae221fd4b488"
+    },
+    {
+      "path": "src/lib/onboardingIntent.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "167793dc93b2736587450ae9357702c25823cdc2",
+      "size": 13623,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/167793dc93b2736587450ae9357702c25823cdc2"
+    },
+    {
+      "path": "src/lib/passwordPolicy.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "037a5840bbf8f6da82f27a23b959642fb07fd23f",
+      "size": 721,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/037a5840bbf8f6da82f27a23b959642fb07fd23f"
+    },
+    {
+      "path": "src/lib/queryClient.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cdd035ee1ccb674e74c847cc1f87f086e18af874",
+      "size": 516,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/cdd035ee1ccb674e74c847cc1f87f086e18af874"
+    },
+    {
+      "path": "src/lib/recordsSnapshot.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3514e8093a36d41c80717035e3d268c1350f19e",
+      "size": 4053,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/b3514e8093a36d41c80717035e3d268c1350f19e"
+    },
+    {
+      "path": "src/lib/routeParams.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f7180d91a9facea9e76c72148d79217bf5cfce21",
+      "size": 635,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/f7180d91a9facea9e76c72148d79217bf5cfce21"
+    },
+    {
+      "path": "src/lib/routeParams.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d4f324241ed59836fbb9aba400634835c365a877",
+      "size": 414,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/d4f324241ed59836fbb9aba400634835c365a877"
+    },
+    {
+      "path": "src/lib/rsvp.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ca973d6c3ef96e0288141f1476d585886fcf066",
+      "size": 741,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/2ca973d6c3ef96e0288141f1476d585886fcf066"
+    },
+    {
+      "path": "src/lib/rsvp.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6fdb4ca6656cfa018e37b1da49f4a75c157fe81c",
+      "size": 781,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/6fdb4ca6656cfa018e37b1da49f4a75c157fe81c"
+    },
+    {
+      "path": "src/lib/savedEvents.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "203d7a376890e6238c340f8fca131c7466cea3d5",
+      "size": 14842,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/203d7a376890e6238c340f8fca131c7466cea3d5"
+    },
+    {
+      "path": "src/lib/serviceCatalogSnapshot.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7eb960edb69fddf917fa1ed7848a77997a5546ea",
+      "size": 2447,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/7eb960edb69fddf917fa1ed7848a77997a5546ea"
+    },
+    {
+      "path": "src/lib/serviceCatalogSnapshot.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9de86a29fa78f363ee1559f4eef7b39d4c4427f4",
+      "size": 4200,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/9de86a29fa78f363ee1559f4eef7b39d4c4427f4"
+    },
+    {
+      "path": "src/lib/ticketCheckoutIdempotency.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6047ce1a8db066e6e9c5ab5df586c7b5a84b9f1d",
+      "size": 2471,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/6047ce1a8db066e6e9c5ab5df586c7b5a84b9f1d"
+    },
+    {
+      "path": "src/lib/tickets.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7941b2e10bbc19a11a641e1296d49c57deab1e5",
+      "size": 4289,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/e7941b2e10bbc19a11a641e1296d49c57deab1e5"
+    },
+    {
+      "path": "src/lib/time.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e56e0be19af331530c3c3df4fbefaa5abff1b291",
+      "size": 338,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/e56e0be19af331530c3c3df4fbefaa5abff1b291"
+    },
+    {
+      "path": "src/localization/onboardingCopy.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3ded97e844cd79fff5b033b3f82889f208dd036d",
+      "size": 9238,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/3ded97e844cd79fff5b033b3f82889f208dd036d"
+    },
+    {
+      "path": "src/navigation/deepLinks.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c97ccd41d062dc3ad617e048b91ffa8bfb4b48b6",
+      "size": 6857,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/c97ccd41d062dc3ad617e048b91ffa8bfb4b48b6"
+    },
+    {
+      "path": "src/navigation/mobileSurface.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "70a79d487ad8bb60919dfd14ee00b70b2b553ab9",
+      "size": 1904,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/70a79d487ad8bb60919dfd14ee00b70b2b553ab9"
+    },
+    {
+      "path": "src/navigation/nativeNotifications.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be7b5f411968ecbd17d75e0565f17bbdc32b0420",
+      "size": 153,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/be7b5f411968ecbd17d75e0565f17bbdc32b0420"
+    },
+    {
+      "path": "src/navigation/notificationResponses.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a8b1558302eba4e0850a71b2d39ad828505e3d58",
+      "size": 1915,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/a8b1558302eba4e0850a71b2d39ad828505e3d58"
+    },
+    {
+      "path": "src/navigation/notificationResponses.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df3208d820cd5bfbcfdc4d9c85328d0db99cb762",
+      "size": 505,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/df3208d820cd5bfbcfdc4d9c85328d0db99cb762"
+    },
+    {
+      "path": "src/navigation/notificationTarget.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fde250a3cd897fec22d800ba5e77c3dc63b4fd08",
+      "size": 2562,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/fde250a3cd897fec22d800ba5e77c3dc63b4fd08"
+    },
+    {
+      "path": "src/navigation/useNotificationResponses.test.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e0d0c314d432c163f7baedafc0399e959c2bc8c5",
+      "size": 2490,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/e0d0c314d432c163f7baedafc0399e959c2bc8c5"
+    },
+    {
+      "path": "src/navigation/useNotificationResponses.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e5a3a74df1341c8752bda250d51ede99913d0568",
+      "size": 1642,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/e5a3a74df1341c8752bda250d51ede99913d0568"
+    },
+    {
+      "path": "src/notifications/AccessRequestDetail.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "685cfa8c1358ec203e42ce2e96aad827b75df163",
+      "size": 3083,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/685cfa8c1358ec203e42ce2e96aad827b75df163"
+    },
+    {
+      "path": "src/notifications/NotificationScreen.test.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9532e8a832c5fe3dcca73d854184a8e434011a4f",
+      "size": 5386,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/9532e8a832c5fe3dcca73d854184a8e434011a4f"
+    },
+    {
+      "path": "src/operations/pushRegistration.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c985ffd4c0b3ff339931fbd763cc142fc5b628f",
+      "size": 1690,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/0c985ffd4c0b3ff339931fbd763cc142fc5b628f"
+    },
+    {
+      "path": "src/providers/AppProviders.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1ca359bf9cfdbf9d629ffd53989cdcbdd46de371",
+      "size": 2237,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/1ca359bf9cfdbf9d629ffd53989cdcbdd46de371"
+    },
+    {
+      "path": "src/providers/AuthProvider.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8f76b0898a56ed1636824564a9e225e8bd4c136b",
+      "size": 11806,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/8f76b0898a56ed1636824564a9e225e8bd4c136b"
+    },
+    {
+      "path": "src/providers/FirstRunProvider.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5609e4f09e821bb4f103c273a973c138c0244af7",
+      "size": 10172,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/5609e4f09e821bb4f103c273a973c138c0244af7"
+    },
+    {
+      "path": "src/providers/NetworkProvider.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "735005686d1a702e79e417acac034b64d7c5e5d8",
+      "size": 3676,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/735005686d1a702e79e417acac034b64d7c5e5d8"
+    },
+    {
+      "path": "src/providers/UserSettingsProvider.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3304fb4527b5e6ad1931a1d58d0851cb0c65b3ae",
+      "size": 17695,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/3304fb4527b5e6ad1931a1d58d0851cb0c65b3ae"
+    },
+    {
+      "path": "src/screens/CalendarScreen.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c1f43882fd2347561841a2b508870b170fee35e2",
+      "size": 5114,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/c1f43882fd2347561841a2b508870b170fee35e2"
+    },
+    {
+      "path": "src/theme/ThemeProvider.tsx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3edb3d7ba63fbfaeeee9994f07ff81bd9f895271",
+      "size": 6748,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/3edb3d7ba63fbfaeeee9994f07ff81bd9f895271"
+    },
+    {
+      "path": "src/theme/designTokens.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "adc7920dff0eedd546af248b3e6cf168d57e44d6",
+      "size": 2084,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/adc7920dff0eedd546af248b3e6cf168d57e44d6"
+    },
+    {
+      "path": "src/types/index.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "65062630b513edd4282f024cc5ae68d4b242fe62",
+      "size": 12199,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/65062630b513edd4282f024cc5ae68d4b242fe62"
+    },
+    {
+      "path": "src/utils/haptics.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "050958d3a2950f9fd102908f44b4c3329cf078a6",
+      "size": 1509,
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/blobs/050958d3a2950f9fd102908f44b4c3329cf078a6"
+    }
+  ],
+  "readFiles": [
+    "AGENTS.md",
+    "package.json",
+    "eas.json",
+    "src/lib/time.ts"
+  ],
+  "observations": {
+    "entry": "expo-router/entry",
+    "expo": "~54.0.37",
+    "reactNative": "0.81.5",
+    "test": "jest --runInBand",
+    "productionApi": "https://tdf-hq.fly.dev",
+    "productionTimezone": "UTC",
+    "androidSubmissionTrack": "internal",
+    "androidSubmissionStatus": "draft",
+    "publication": "not-observed"
+  },
+  "limitations": [
+    "GitHub source inventory is not semantic extraction or a native/store conformance proof.",
+    "The exact gitlink is not available in the shared local mobile object database; source reads succeeded through GitHub.",
+    "The AGENTS.md assertion that no tests exist conflicts with the observed package test script and hosted mobile quality gate.",
+    "No mobile change or release performed by this audit."
+  ]
+}

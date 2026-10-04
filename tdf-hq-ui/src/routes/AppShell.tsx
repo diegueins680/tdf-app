@@ -253,7 +253,7 @@ export function Shell() {
         <Box
           component="main"
           id="main-content"
-          tabIndex={-1}
+          tabIndex={0}
           sx={{
             flexGrow: 1,
             position: 'relative',

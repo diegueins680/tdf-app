@@ -1161,6 +1161,7 @@ Notification
     body              Text
     targetType        Text Maybe
     targetId          Int Maybe
+    targetKey         Text Maybe
     isRead            Bool default=False
     createdAt         UTCTime default=now()
     deriving Show Generic

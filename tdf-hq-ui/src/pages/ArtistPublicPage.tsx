@@ -1,3 +1,5 @@
+import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -34,7 +36,8 @@ import { formatDateForUser } from '../utils/formatters';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
-import { parsePositiveSafeInt } from '../utils/ids';
+import { buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
+export { buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
 import { useTranslation } from 'react-i18next';
 
 interface ReleaseCardProps {
@@ -50,29 +53,6 @@ type ArtistPublicPageDisplayContract = Readonly<{
 const ARTIST_PUBLIC_PAGE_DISPLAY_CONTRACTS = {
   releaseDescriptionPreviewChars: 100 + 4 * 10,
 } as const satisfies ArtistPublicPageDisplayContract;
-
-export const isArtistFollowResume = (search: string, artistId: number | null): boolean => {
-  if (!artistId) return false;
-  const params = new URLSearchParams(search);
-  return params.get('resume') === 'follow'
-    && parsePositiveSafeInt(params.get('artistId')) === artistId;
-};
-
-export const buildArtistFollowAuthPath = (
-  profileLink: string | null,
-  artistId: number | null,
-): string => {
-  if (!profileLink || !artistId) return '/login?signup=1&intent=follow_artists&redirect=%2Ffans';
-  const resumePath = `${profileLink}?${new URLSearchParams({
-    resume: 'follow',
-    artistId: String(artistId),
-  }).toString()}`;
-  return `/login?${new URLSearchParams({
-    signup: '1',
-    intent: 'follow_artists',
-    redirect: resumePath,
-  }).toString()}`;
-};
 
 const parseJsonObject = (raw?: string | null): Record<string, unknown> => {
   if (!raw) return {};
@@ -241,6 +221,7 @@ export default function ArtistPublicPage() {
 
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
+  const releaseSelection = usePublicationSelection('release', releases.map((release) => release.arReleaseId), releasesQuery.isLoading);
 
   useEffect(() => {
     if (!resumeFollow || !profileLink || followsQuery.isLoading || !isFollowing) return;
@@ -632,6 +613,7 @@ export default function ArtistPublicPage() {
                 )}
               </Stack>
 
+              {releaseSelection.notice}
               {releasesQuery.isLoading && (
                 <Box display="flex" alignItems="center" gap={1.5} py={2}>
                   <CircularProgress size={18} aria-label="Cargando lanzamientos del artista" />
@@ -651,12 +633,13 @@ export default function ArtistPublicPage() {
                 <LazyPaginatedList
                   items={releases}
                   loading={releasesQuery.isFetching}
-                  pagination={{ itemLabel: 'releases', initialRowsPerPage: 6 }}
+                  pagination={{ itemLabel: 'releases', initialRowsPerPage: 6, selectedIndex: releaseSelection.index, resetKey: releaseSelection.requested }}
                   renderItems={(visibleReleases) => (
                     <Grid container spacing={2} sx={{ mt: 0.5 }}>
                       {visibleReleases.map((release) => (
-                        <Grid key={release.arReleaseId} item xs={12} sm={6} md={4}>
+                        <Grid key={release.arReleaseId} item xs={12} sm={6} md={4} component={PublicationAnchor} selected={releaseSelection.requested === String(release.arReleaseId)}>
                           <ReleaseCard release={release} />
+                          <InteractionPanel kind="artist_release" entityKey={String(release.arReleaseId)} />
                         </Grid>
                       ))}
                     </Grid>

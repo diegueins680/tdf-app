@@ -1,0 +1,102 @@
+name: Event operations verification
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 5 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: event-operations-formal-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  specification-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Initialize arithmetic execution receipt
+        run: |
+          mkdir "${{ runner.temp }}/payment-proof"
+          printf '%s\n' '{"status":"not-executed","reason":"Prerequisite checks or installation have not completed"}' > "${{ runner.temp }}/payment-proof/result.json"
+      - name: Check specification inventory and evidence admission
+        run: |
+          python scripts/specification-inventory.py --check
+          python scripts/test-specification-inventory.py
+          node --test scripts/__tests__/verification-evidence.test.mjs scripts/__tests__/legacy-escrow-contract.test.mjs
+      - name: Install pinned arithmetic verifier
+        run: python -m pip install -r formal/system/requirements-verification.txt
+      - name: Verify actual payment arithmetic and negative controls
+        run: |
+          python scripts/verify-payment-arithmetic.py > "${{ runner.temp }}/payment-proof/solver-output.json"
+          mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
+          python scripts/test-payment-arithmetic-verifier.py
+      - name: Preserve solver result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: payment-proof-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/payment-proof
+          if-no-files-found: error
+
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download pinned formal tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/tdf-formal-tools"
+          curl --fail --location --retry 3 \
+            https://github.com/tlaplus/tlaplus/releases/download/v1.7.2/tla2tools.jar \
+            --output "${RUNNER_TEMP}/tdf-formal-tools/tla2tools-1.7.2.jar"
+          curl --fail --location --retry 3 \
+            https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar \
+            --output "${RUNNER_TEMP}/tdf-formal-tools/alloy-6.2.0.jar"
+
+      - name: Check event operations models
+        env:
+          TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
+          ALLOY_JAR: ${{ runner.temp }}/tdf-formal-tools/alloy-6.2.0.jar
+        run: node scripts/verify-system-evidence.mjs --output "${{ runner.temp }}/formal-evidence"
+
+      - name: Preserve verification evidence, including failed executions
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: formal-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/formal-evidence
+          if-no-files-found: error
+
+  postgres-foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check event operations foundation migration
+        run: npm run test:event-operations-foundation-migration

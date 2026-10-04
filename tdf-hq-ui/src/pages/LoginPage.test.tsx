@@ -1,3 +1,4 @@
+import i18n from '../i18n';
 import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
@@ -53,11 +54,7 @@ jest.unstable_mockModule('../utils/logger', () => ({
   logger: { log: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
-jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => (key === 'login.signupDialog.title' ? 'Crear cuenta' : key),
-  }),
-}));
+
 
 const { default: LoginPage, isGoogleSignupConsentRequiredError } = await import('./LoginPage');
 
@@ -67,7 +64,7 @@ const findButton = (name: string): HTMLButtonElement | null =>
   Array.from(document.querySelectorAll<HTMLButtonElement>('button'))
     .find((button) => button.textContent?.trim() === name) ?? null;
 
-const renderLoginPage = async () => {
+const renderLoginPage = async (initialEntry = '/login') => {
   const container = document.createElement('div');
   document.body.appendChild(container);
   let root: Root | null = createRoot(container);
@@ -80,7 +77,7 @@ const renderLoginPage = async () => {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/login']}>
+        <MemoryRouter initialEntries={[initialEntry]}>
           <LoginPage />
         </MemoryRouter>
       </QueryClientProvider>,
@@ -108,7 +105,8 @@ describe('LoginPage Google signup consent flow', () => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('es');
     googleCallback = null;
     googleLoginRequestMock.mockReset();
     loginMock.mockReset();
@@ -146,10 +144,48 @@ describe('LoginPage Google signup consent flow', () => {
     window.history.replaceState({}, '', '/');
   });
 
+  it.each(['es', 'en', 'fr', 'de', 'pt'])('opens policies in the supported authentication language for %s', async (locale) => {
+    await i18n.changeLanguage(locale);
+    const cleanup = await renderLoginPage('/login?signup=1');
+    try {
+      await waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+      const suffix = locale === 'es' ? '-es' : '';
+      expect(document.querySelector(`a[href="/account/terms${suffix}.html"]`)).not.toBeNull();
+      expect(document.querySelector(`a[href="/account/privacy${suffix}.html"]`)).not.toBeNull();
+    } finally { await cleanup(); }
+  });
+
   it('recognizes only the server consent precondition', () => {
     expect(isGoogleSignupConsentRequiredError(new Error(` ${GOOGLE_CONSENT_ERROR} `))).toBe(true);
     expect(isGoogleSignupConsentRequiredError(new Error('Invalid Google token'))).toBe(false);
     expect(isGoogleSignupConsentRequiredError(GOOGLE_CONSENT_ERROR)).toBe(false);
+  });
+
+  it('retains an artist claim and rejects Google callbacks that cannot carry it', async () => {
+    const cleanup = await renderLoginPage('/login?signup=1&intent=artist_profile&claimArtistId=42');
+    try {
+      await waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+      const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      await act(async () => {
+        dialog?.querySelector<HTMLInputElement>('input[aria-label="Acepto los términos y la política de privacidad"]')?.click();
+        await flushPromises();
+      });
+      expect(dialog?.textContent).toContain('completa este formulario con el correo asociado al artista');
+      expect(findButton('Google signup test button')).toBeNull();
+      expect(googleCallback).not.toBeNull();
+      await act(async () => {
+        googleCallback?.({ credential: GOOGLE_CREDENTIAL });
+        await flushPromises();
+      });
+      expect(googleLoginRequestMock).not.toHaveBeenCalled();
+      expect(loginMock).not.toHaveBeenCalled();
+      expect(document.querySelector('[role="dialog"]')).toBe(dialog);
+      // The unavailable selection warning proves the claim ID was retained;
+      // clearing it would silently turn this into a new-profile signup.
+      expect(dialog?.textContent).toContain('El perfil elegido ya no está disponible para reclamar.');
+    } finally {
+      await cleanup();
+    }
   });
 
   it('opens the consent-first signup flow directly for new Google users', async () => {
@@ -195,7 +231,7 @@ describe('LoginPage Google signup consent flow', () => {
     }
   }, 15_000);
 
-  it('hands a new Google user into signup and retries with accepted versioned terms', async () => {
+  it('offers existing-account connection before explicit new signup and retries with versioned terms', async () => {
     googleLoginRequestMock
       .mockRejectedValueOnce(new Error(GOOGLE_CONSENT_ERROR))
       .mockResolvedValueOnce({
@@ -220,9 +256,15 @@ describe('LoginPage Google signup consent flow', () => {
         await flushPromises();
       });
 
-      const signupDialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      const connectionDialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      expect(connectionDialog?.textContent).toContain('Conecta tu cuenta TDF');
+      await act(async () => {
+        findButton('Crear una cuenta')?.click();
+        await flushPromises();
+      });
+      await waitFor(() => expect(document.querySelector('[aria-labelledby="login-signup-dialog-title"] input[type="checkbox"]')).not.toBeNull());
+      const signupDialog = document.querySelector<HTMLElement>('[aria-labelledby="login-signup-dialog-title"]');
       expect(signupDialog).not.toBeNull();
-      expect(signupDialog?.textContent).toContain('Esta cuenta de Google todavía no está registrada en TDF.');
       expect(document.body.textContent).not.toContain(GOOGLE_CONSENT_ERROR);
       expect(googleLoginRequestMock).toHaveBeenNthCalledWith(1, { idToken: GOOGLE_CREDENTIAL });
 
@@ -248,6 +290,7 @@ describe('LoginPage Google signup consent flow', () => {
         marketingOptIn: false,
         termsAccepted: true,
         termsVersion: 'tdf-account-terms-v1',
+        createNewAccount: true,
       });
       expect(loginMock).toHaveBeenCalledWith(
         expect.objectContaining({ partyId: 404, apiToken: 'fictional-session-token' }),
@@ -257,4 +300,49 @@ describe('LoginPage Google signup consent flow', () => {
       await cleanup();
     }
   }, 15_000);
+  it('unmounts a dismissed recovery dialog without waiting for an exit animation', async () => {
+    const cleanup = await renderLoginPage('/login?recover=1&redirect=%2Ffans&lang=es');
+    const dialog = () => document.querySelector('[role="dialog"][aria-labelledby="login-reset-dialog-title"]');
+    try {
+      await waitFor(() => expect(dialog()).not.toBeNull());
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        expect(findButton('Cerrar')).not.toBeNull();
+        await act(async () => { findButton('Cerrar')?.click(); await flushPromises(); });
+        expect(dialog()).toBeNull();
+        if (attempt === 0) {
+          await act(async () => { findButton('Recuperar acceso')?.click(); await flushPromises(); });
+          expect(dialog()).not.toBeNull();
+        }
+      }
+    } finally { await cleanup(); }
+  });
+
+  it('connects an existing account only after explicit credential submission', async () => {
+    googleLoginRequestMock.mockRejectedValueOnce(new Error(GOOGLE_CONSENT_ERROR))
+      .mockResolvedValueOnce({ token: 'fictional-session', partyId: 42, roles: [], modules: [], accountCreated: false });
+    const cleanup = await renderLoginPage();
+    try {
+      await waitFor(() => expect(findButton('Google login test button')).not.toBeNull());
+      await act(async () => { findButton('Google login test button')?.click(); await flushPromises(); });
+      await waitFor(() => expect(findButton('Conectar Google')).not.toBeNull());
+      const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      const setInput = (selector: string, value: string) => {
+        const input = dialog?.querySelector<HTMLInputElement>(selector);
+        expect(input).not.toBeNull();
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, value);
+        input?.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      await act(async () => {
+        setInput('input[autocomplete="username"]', 'existing-user');
+        setInput('input[autocomplete="current-password"]', 'fictional-password');
+        await flushPromises();
+      });
+      await act(async () => { findButton('Conectar Google')?.click(); await flushPromises(); });
+      await waitFor(() => expect(googleLoginRequestMock).toHaveBeenLastCalledWith({
+        idToken: GOOGLE_CREDENTIAL, linkAccount: { username: 'existing-user', password: 'fictional-password' },
+      }));
+      expect(loginMock).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: true });
+    } finally { await cleanup(); }
+  });
+
 });

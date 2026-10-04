@@ -1,0 +1,28 @@
+[
+  {
+    "locale": "es",
+    "route": "/chat",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Cargando mensajes"
+      }
+    ],
+    "violations": []
+  },
+  {
+    "locale": "en",
+    "route": "/chat",
+    "bars": [
+      {
+        "label": "Cargando datos"
+      },
+      {
+        "label": "Loading messages"
+      }
+    ],
+    "violations": []
+  }
+]

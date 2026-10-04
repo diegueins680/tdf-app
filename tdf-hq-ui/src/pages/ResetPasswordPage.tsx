@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   Alert,
@@ -19,13 +20,15 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { confirmPasswordReset, type LoginResponseDTO } from '../api/auth';
 import { loadSessionSnapshot } from '../api/session';
 import { useSession, type SessionUser } from '../session/SessionContext';
-import { readSafeRedirectPath, resolvePostAuthPath } from '../utils/loginRouting';
-import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
+import { buildLoginRedirectPath, readSafeRedirectPath, resolvePostAuthPath } from '../utils/loginRouting';
+import { authErrorMessage } from '../utils/authErrorMessage';
+import { isValidAuthPassword } from '../utils/passwordPolicy';
 
 const normalizeRoles = (roles: readonly string[] | undefined): string[] =>
   Array.from(new Set((roles ?? []).map((role) => role.toLowerCase())));
 
 export default function ResetPasswordPage() {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { login } = useSession();
@@ -34,6 +37,8 @@ export default function ResetPasswordPage() {
     return (params.get('token') ?? '').trim();
   });
   const redirectPath = useMemo(() => readSafeRedirectPath(location.search), [location.search]);
+  const loginPath = redirectPath ? buildLoginRedirectPath(redirectPath) : '/login';
+  const recoveryPath = `${loginPath}${loginPath.includes('?') ? '&' : '?'}recover=1&lang=${i18n.resolvedLanguage?.startsWith('es') ? 'es' : 'en'}`;
 
   useEffect(() => {
     if (!token) return;
@@ -73,7 +78,7 @@ export default function ResetPasswordPage() {
           boxShadow: '0 0 0 1px rgba(37,99,235,0.3)',
         },
       },
-      '& .MuiFormHelperText-root': { color: 'rgba(15,23,42,0.62)' },
+      '& .MuiFormHelperText-root': { color: 'text.secondary' },
     }),
     [],
   );
@@ -81,7 +86,7 @@ export default function ResetPasswordPage() {
   const completeLogin = async (response: LoginResponseDTO) => {
     const fallbackSession: SessionUser = {
       username: 'usuario',
-      displayName: 'Cuenta TDF',
+      displayName: t('authEntry.tdfAccount'),
       roles: normalizeRoles(response.roles),
       ...(response.token ? { apiToken: response.token } : {}),
       ...(response.modules ? { modules: response.modules } : {}),
@@ -123,7 +128,7 @@ export default function ResetPasswordPage() {
     event.preventDefault();
 
     if (!token) {
-      setFeedback({ type: 'error', message: 'Este enlace no incluye un token válido.' });
+      setFeedback({ type: 'error', message: t('authEntry.invalidReset') });
       return;
     }
 
@@ -131,13 +136,13 @@ export default function ResetPasswordPage() {
     if (!isValidAuthPassword(trimmedPassword)) {
       setFeedback({
         type: 'error',
-        message: AUTH_PASSWORD_REQUIREMENTS_ES,
+        message: t('authEntry.passwordHint'),
       });
       return;
     }
 
     if (trimmedPassword !== confirmPassword.trim()) {
-      setFeedback({ type: 'error', message: 'Las contraseñas no coinciden.' });
+      setFeedback({ type: 'error', message: t('authEntry.passwordMismatch') });
       return;
     }
 
@@ -148,10 +153,7 @@ export default function ResetPasswordPage() {
     } catch (error) {
       setFeedback({
         type: 'error',
-        message:
-          error instanceof Error && error.message.trim() !== ''
-            ? error.message
-            : 'No pudimos restablecer la contraseña.',
+        message: authErrorMessage(error, t, 'authEntry.resetError'),
       });
     }
   };
@@ -163,20 +165,20 @@ export default function ResetPasswordPage() {
           <CardContent>
             <Stack spacing={2.5}>
               <Typography variant="overline" color="text.secondary">
-                Acceso
+                {t('authEntry.access')}
               </Typography>
               <Typography variant="h4" fontWeight={800}>
-                Enlace incompleto
+                {t('authEntry.incompleteLink')}
               </Typography>
               <Alert severity="error">
-                El enlace de recuperación no trae token. Pide un nuevo correo desde la pantalla de login.
+                {t('authEntry.missingResetToken')}
               </Alert>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                <Button component={RouterLink} to="/login" variant="contained">
-                  Ir a login
+                <Button component={RouterLink} to={loginPath} variant="contained">
+                  {t('authEntry.loginLink')}
                 </Button>
-                <Button component={RouterLink} to="/login" variant="outlined">
-                  Solicitar nuevo enlace
+                <Button component={RouterLink} to={recoveryPath} variant="outlined">
+                  {t('authEntry.requestNewLink')}
                 </Button>
               </Stack>
             </Stack>
@@ -193,24 +195,24 @@ export default function ResetPasswordPage() {
           <Stack component="form" spacing={2.5} onSubmit={(event) => { void handleSubmit(event); }}>
             <Stack spacing={1}>
               <Typography variant="overline" color="text.secondary">
-                Recuperar acceso
+                {t('authEntry.recover')}
               </Typography>
               <Typography variant="h4" fontWeight={800}>
-                Elige tu nueva contraseña
+                {t('authEntry.choosePassword')}
               </Typography>
               <Typography color="text.secondary">
-                Cuando la guardes, te dejaremos con la sesión abierta para que entres directo a tu panel.
+                {t('authEntry.resetLoginHint')}
               </Typography>
             </Stack>
 
             <TextField
-              label="Nueva contraseña"
+              label={t('authEntry.newPassword')}
               type={showNewPassword ? 'text' : 'password'}
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
               autoComplete="new-password"
               fullWidth
-              helperText="Usa al menos 8 caracteres."
+              helperText={t('authEntry.passwordHint')}
               sx={fieldSx}
               InputProps={{
                 endAdornment: (
@@ -219,7 +221,7 @@ export default function ResetPasswordPage() {
                       edge="end"
                       onClick={() => setShowNewPassword((prev) => !prev)}
                       onMouseDown={(event) => event.preventDefault()}
-                      aria-label={showNewPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      aria-label={showNewPassword ? t('authEntry.hidePassword') : t('authEntry.showPassword')}
                     >
                       {showNewPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                     </IconButton>
@@ -229,7 +231,7 @@ export default function ResetPasswordPage() {
             />
 
             <TextField
-              label="Confirmar contraseña"
+              label={t('authEntry.confirmPassword')}
               type={showConfirmPassword ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
@@ -243,7 +245,7 @@ export default function ResetPasswordPage() {
                       edge="end"
                       onClick={() => setShowConfirmPassword((prev) => !prev)}
                       onMouseDown={(event) => event.preventDefault()}
-                      aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      aria-label={showConfirmPassword ? t('authEntry.hidePassword') : t('authEntry.showPassword')}
                     >
                       {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                     </IconButton>
@@ -252,14 +254,19 @@ export default function ResetPasswordPage() {
               }}
             />
 
-            {feedback && <Alert severity="error">{feedback.message}</Alert>}
+            {feedback && (
+              <Stack spacing={1}>
+                <Alert severity="error">{feedback.message}</Alert>
+                <Button component={RouterLink} to={recoveryPath}>{t('authEntry.requestNewLink')}</Button>
+              </Stack>
+            )}
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <Button type="submit" variant="contained" disabled={resetMutation.isPending}>
-                {resetMutation.isPending ? 'Guardando…' : 'Guardar contraseña'}
+                {resetMutation.isPending ? t('authEntry.saving') : t('authEntry.savePassword')}
               </Button>
-              <Button component={RouterLink} to="/login" variant="outlined" disabled={resetMutation.isPending}>
-                Volver a login
+              <Button component={RouterLink} to={loginPath} variant="outlined" disabled={resetMutation.isPending}>
+                {t('authEntry.backLogin')}
               </Button>
             </Stack>
           </Stack>

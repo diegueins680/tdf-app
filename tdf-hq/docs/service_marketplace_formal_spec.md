@@ -1,6 +1,16 @@
 # Service Marketplace Formal Specification (Escrow + Booking)
 
-This module models the service marketplace as a finite-state system with explicit invariants.
+**Historical design; financial transitions superseded.** This document originally described
+nominal bookkeeping, not provider-verified escrow. A Payment row alone does not establish
+funds held or paid out (accepted [ADR 0101](../../docs/adr/0101-verified-payment-events.md)).
+The user's explicit delivery decision on 2026-09-20 disables T3 and T5 below.
+Their current contract is [SYS-ESCROW-001/002](../../formal/system/legacy-escrow.md):
+POST booking and POST escrow release return HTTP 503 after ordinary authentication and
+request decoding, before database access. No admin exception or runtime flag enables them.
+Existing data is retained; completion, ad and slot operations are outside this disablement.
+
+The remaining text records the old design for provenance. It is prose, not a mechanized
+formal specification, and does not authorize nominal financial writes.
 
 ## State Variables
 
@@ -46,7 +56,7 @@ Preconditions:
 Postconditions:
 - New `ServiceAdSlot(status=open)` is created.
 
-### T3: BookAndHoldEscrow
+### T3: BookAndHoldEscrow — DISABLED (historical behavior below)
 Preconditions:
 - `ServiceAd.active = true`
 - `ServiceAdSlot.status = open`
@@ -69,7 +79,7 @@ Postconditions:
 - `Booking.status := Completed`
 - `ServiceOrder.status := performed`
 
-### T5: ReleaseEscrow
+### T5: ReleaseEscrow — DISABLED (historical behavior below)
 Preconditions:
 - Caller is patron (or admin)
 - `Booking.status = Completed`
@@ -82,7 +92,8 @@ Postconditions:
 
 ## Mechanized Guard
 
-`escrowTransitionAllowed` implements the authorized transition relation:
+`escrowTransitionAllowed` is a legacy helper, no longer used by the disabled release handler.
+Its historical relation (not current authorization) is:
 
 - `held -> released`
 - `held -> refunded`

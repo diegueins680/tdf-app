@@ -1,0 +1,16 @@
+Executed 2026-09-15 on the refreshed application source inherited by b689f88e2.
+Command (cwd tdf-hq): ./.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test
+Built by stack test --fast, GHC 9.10.3, lts-24.42. Direct binary exit code: 0.
+The separate application executable was still compiling; this result is the tests.
+Full raw log retained locally as docs/social/evidence/backend-refreshed-runtime.txt.
+Raw stdout/stderr SHA256: d87cc4d307fdc347c94e03ff5385a02d4592e21fb0d77b089480bb8188f5f6fa
+Test binary SHA256: 51662711304ef4077b74eb78a0d7c0945841da9fbe4905dc0dfeec952e859029
+Ordered Haskell source-path/content SHA256 (excluding .stack-work): d7a6e1c9ff836d5ab91cd959aba04d60ecbdde17654511ba475e25bb16a05fbc
+recordOutgoingWhatsAppMessage
+  records blank provider message ids as failed while allocating a safe fallback id [✔]
+  does not echo malformed recipient text into generated fallback external ids [✔]
+  allocates distinct fallback external ids for repeated blank-id sends at the same timestamp [✔]
+  applies reply outcomes only to incoming reply targets when linked by message id [✔]
+
+Finished in 19.4694 seconds
+2542 examples, 0 failures

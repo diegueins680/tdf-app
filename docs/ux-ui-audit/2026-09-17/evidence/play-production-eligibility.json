@@ -1,0 +1,11 @@
+{
+  "observedAt": "2026-09-18T18:10:54.525261+00:00",
+  "package": "com.tdf.records",
+  "closedTestingPublished": true,
+  "testersCurrentlyOptedIn": 2,
+  "requiredTesters": 12,
+  "requiredDaysAtThreshold": 14,
+  "productionAccess": "not yet eligible",
+  "source": "Authenticated Play Console application dashboard",
+  "limits": "No new invitations sent; previous invitation ledger retained. Opt-ins must be real people."
+}

@@ -226,7 +226,7 @@ export default function CourseProductionLandingPage() {
   const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
   const paypalButtonRef = useRef<HTMLDivElement | null>(null);
   const paypalClientId = import.meta.env?.VITE_PAYPAL_CLIENT_ID?.trim() ?? '';
-  const checkoutIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
+  const checkoutIdempotency = useRef<string | null>(null);
   const productionSlugs = useMemo(() => {
     const cleaned = normalizeCourseSlugs(COURSE_COHORTS);
     return cleaned.length ? cleaned : [COURSE_DEFAULTS.slug];
@@ -305,13 +305,11 @@ export default function CourseProductionLandingPage() {
 
   const registrationMutation = useMutation({
     mutationFn: (payload: CourseRegistrationRequest) => {
-      const fingerprint = JSON.stringify({ selectedSlug, payload });
-      if (checkoutIdempotency.current?.fingerprint !== fingerprint) {
-        checkoutIdempotency.current = { fingerprint, key: createCourseIdempotencyKey() };
-      }
-      return Courses.register(selectedSlug, payload, checkoutIdempotency.current.key);
+      checkoutIdempotency.current ??= createCourseIdempotencyKey();
+      return Courses.register(selectedSlug, payload, checkoutIdempotency.current);
     },
     onSuccess: (response) => {
+      checkoutIdempotency.current = null;
       setCheckout(response);
       const token = response.lookupToken?.trim();
       if (token) saveCourseLookupToken(selectedSlug, response.registrationId, token);
@@ -1051,9 +1049,9 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
               {sessions.map((session) => (
                 <Stack
                   key={`${session.date}-${session.label}`}
-                  direction="row"
+                  direction={{ xs: 'column', sm: 'row' }}
                   spacing={1}
-                  alignItems="center"
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
                   sx={{ bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 2, px: 1.5, py: 1 }}
                 >
                   <Chip
@@ -1173,6 +1171,11 @@ function FormCard({
           {seatsText && (
             <Alert
               severity={isFull ? 'warning' : 'info'}
+              sx={{
+                flexWrap: 'wrap',
+                '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' },
+                '& .MuiAlert-action': { ml: { xs: 0, sm: 'auto' }, pl: { xs: 0, sm: 2 }, pb: 0.5 },
+              }}
               action={
                 <Button
                   size="small"
