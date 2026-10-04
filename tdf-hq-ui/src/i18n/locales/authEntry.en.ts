@@ -1,5 +1,6 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  claimReviewAfterSignup: 'Create your own account. You can then submit an access claim for the selected profile for review; signing up does not grant ownership.',
   "googleLinkTitle": "Connect your TDF account",
   "googleLinkExplanation": "Use your existing TDF credentials to connect Google. If you previously used only Google, reset your TDF password first. Create an account only if you do not already have one.",
   "googleLinkUsername": "TDF username or email",

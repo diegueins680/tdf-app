@@ -1074,6 +1074,243 @@
       "contract": "tdf-hq/assets/feature-registry.json",
       "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
       "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
+    },
+    {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "source-confirmed defect and repair; runtime conformance pending",
+      "ambiguity": [
+        "Generic in-flight HTTP handlers do not yet have universal transaction-fenced revocation."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
+      },
+      "source": "User audit sections 12-15; formal/system/identity-lifecycle.md; verified implementation review",
+      "verification": "Actual validator properties, rendered UI, real backend HTTP with PostgreSQL lock barrier and failure injection, bounded TLA+ with named negative controls",
+      "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
+      "domain": "ID",
+      "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
+      "observability": "Record exact source revision/fingerprints, command, result and named control; admin activity records changed field names without password values.",
+      "formalModels": [
+        "formal/event-operations/SignupIdentity.tla"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "id": "ID-ARTIST-CLAIM-001",
+      "title": "Public signup cannot assume an existing artist identity",
+      "statement": "Public password signup shall create an independent Party and reject caller-selected existing artist ownership; later reviewed management shall preserve the claimant principal.",
+      "property": "IndependentPrincipal /\\ ReviewedManagement",
+      "actors": [
+        "anonymous registrant",
+        "authenticated claimant",
+        "strict administrator reviewer"
+      ],
+      "preconditions": [
+        "Existing artist may have no credential, no email, or a matching email; none establishes caller ownership."
+      ],
+      "inputs": [
+        "SignupRequest including deprecated claimArtistId",
+        "Authenticated directory claim request"
+      ],
+      "state": {
+        "signup": "new Party",
+        "claim": [
+          "none",
+          "submitted",
+          "approved",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Anonymous -> independent account",
+        "Independent account -> submitted claim",
+        "Authorized reviewer -> approved manager on claimant Party"
+      ],
+      "forbiddenTransitions": [
+        "Anonymous -> existing artist Party",
+        "Submitted claim -> unreviewed management",
+        "Approved management -> artist credential takeover"
+      ],
+      "effects": [
+        "Independent credential and customer policy on successful signup",
+        "No identity, credential, token or grant changes on rejected claim"
+      ],
+      "authorization": "Contact values are not identity proof; directory submission requires authentication and approval retains its strict-admin boundary.",
+      "concurrency": "Signup validation rejects claims before database access; directory claim concurrency retains its separate contract.",
+      "idempotency": "A rejected claim never issues a session. Directory claim creation uses its actor-scoped idempotency receipt.",
+      "failure": "403 for positive legacy claim IDs; 400 for malformed IDs; other signup errors follow API contract.",
+      "recovery": "Create an independent account and submit a reviewed directory claim; no automatic identity transfer.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/utils/roles.ts",
+        "tdf-hq/docs/openapi/api.yaml"
+      ]
+    },
+    {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "source-confirmed defect and repair; runtime conformance pending",
+      "ambiguity": [
+        "Generic in-flight HTTP handlers do not yet have universal transaction-fenced revocation."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
+      },
+      "source": "User audit sections 12-15; formal/system/identity-lifecycle.md; verified implementation review",
+      "verification": "Actual validator properties, rendered UI, real backend HTTP with PostgreSQL lock barrier and failure injection, bounded TLA+ with named negative controls",
+      "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
+      "domain": "ID",
+      "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
+      "observability": "Record exact source revision/fingerprints, command, result and named control; admin activity records changed field names without password values.",
+      "formalModels": [
+        "formal/event-operations/CredentialLifecycle.tla"
+      ],
+      "tests": [
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "tdf-hq/test/TDF/ProviderIdentitySpec.hs"
+      ],
+      "id": "ID-SESSION-001",
+      "title": "Credential mutation invalidates existing interactive sessions atomically",
+      "statement": "Disabling a credential, replacing its password or changing its username shall atomically invalidate its Party's existing password, Google and recovery tokens while preserving separately managed service tokens.",
+      "property": "NoSessionsAfterDisable",
+      "actors": [
+        "credential holder",
+        "strict administrator",
+        "verified Google subject"
+      ],
+      "preconditions": [
+        "Existing credential and Party",
+        "Valid password or verified bound provider proof for login",
+        "Strict administrator for admin credential updates"
+      ],
+      "inputs": [
+        "Credential ID and update fields",
+        "Password login credentials",
+        "Verified issuer/subject"
+      ],
+      "state": {
+        "credential": [
+          "active",
+          "disabled"
+        ],
+        "interactive token": [
+          "active",
+          "revoked"
+        ],
+        "service token": "separate lifecycle"
+      },
+      "allowedTransitions": [
+        "Active credential -> disabled plus existing interactive tokens revoked",
+        "Disabled credential -> active without reviving tokens",
+        "Active distinct credential -> fresh session"
+      ],
+      "forbiddenTransitions": [
+        "Disable -> existing interactive token remains active",
+        "Re-enable -> previously revoked token becomes active",
+        "Stale pre-disable credential read -> post-disable session issuance"
+      ],
+      "effects": [
+        "Credential mutation and token revocation in one transaction",
+        "New session issuance remains inside its authorization transaction"
+      ],
+      "authorization": "Admin mutation requires strict Admin module/role; login revalidates active credential and proof after lifecycle lock.",
+      "concurrency": "PostgreSQL provider-subject -> Party NO KEY UPDATE -> credential UPDATE -> token order, held to outer commit; SQLite writer reservation is a unit adapter only.",
+      "idempotency": "Repeated disable does not reactivate tokens; login retry may issue a fresh session only after current proof validation.",
+      "failure": "Failed transaction rolls back credential/session mutations; read-only issuance fails without returning an old token.",
+      "recovery": "Re-enable or authenticate with an independently active credential; manage service tokens through their own policy.",
+      "implementation": [
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ]
+    },
+    {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "source-confirmed defect and repair; runtime conformance pending",
+      "ambiguity": [
+        "Generic in-flight HTTP handlers do not yet have universal transaction-fenced revocation."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
+      },
+      "source": "User audit sections 12-15; formal/system/identity-lifecycle.md; verified implementation review",
+      "verification": "Actual validator properties, rendered UI, real backend HTTP with PostgreSQL lock barrier and failure injection, bounded TLA+ with named negative controls",
+      "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
+      "domain": "ID",
+      "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
+      "observability": "Record exact source revision/fingerprints, command, result and named control; admin activity records changed field names without password values.",
+      "formalModels": [
+        "formal/event-operations/CredentialLifecycle.tla"
+      ],
+      "tests": [
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "id": "ID-SESSION-002",
+      "title": "Recovery challenge is single-use and password replacement is atomic",
+      "statement": "Concurrent confirmations of one recovery challenge shall commit at most one password replacement and replacement session; failure after mutation shall restore the prior credential, challenge and sessions.",
+      "property": "SingleUseReset /\\ AtomicChallengeConsumption",
+      "actors": [
+        "holder of recovery challenge",
+        "concurrent retry",
+        "database failure environment"
+      ],
+      "preconditions": [
+        "Challenge identifies one active credential on its bound Party"
+      ],
+      "inputs": [
+        "Recovery UUID",
+        "New valid password"
+      ],
+      "state": {
+        "challenge": [
+          "active",
+          "consumed"
+        ],
+        "transaction": [
+          "validate",
+          "mutate",
+          "issue",
+          "commit",
+          "rollback"
+        ]
+      },
+      "allowedTransitions": [
+        "Active challenge -> one committed replacement",
+        "Any failed mutating transaction -> prior state"
+      ],
+      "forbiddenTransitions": [
+        "One challenge -> two successful confirmations",
+        "Issuance failure -> password changed or challenge consumed",
+        "Consumed challenge -> replay issues session"
+      ],
+      "effects": [
+        "Password hash replacement, conditional challenge consumption, old interactive session revocation, one replacement token"
+      ],
+      "authorization": "Current active recovery challenge bound to the credential Party and purpose, revalidated after lifecycle lock.",
+      "concurrency": "Serialize by Party before credential; conditional token consumption must affect exactly one row. The real HTTP concurrency test waits for both requests to block on a controlled PostgreSQL barrier.",
+      "idempotency": "Recovery is single-use rather than successful-response replay; consumed challenges return 400.",
+      "failure": "Invalid/revoked/consumed challenge 400; disabled credential 403 where reached; transactional issuance failure 500 with rollback.",
+      "recovery": "Request a new recovery challenge after an ambiguous/lost response; do not replay a consumed challenge.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Auth.hs"
+      ]
     }
   ]
 }

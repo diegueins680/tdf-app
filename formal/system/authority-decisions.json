@@ -83,6 +83,17 @@
       "conflict": "Mobile main d2fd9399126e3b456c310497fb7d9edba09f981d contains newer payment flows and contract additions not shipped by root baseline b07f67c3ebe2022d5f70e94578944b6401616696.",
       "authority": "formal/system/README.md",
       "resolution": "Explicit user decision 2026-10-04: keep shipped Mobile lineage. Audit and compatibility patch descend from ede1f2a0ccf75f3794c7892f291e1751b279d19e; do not integrate unrelated newer Mobile payment flows."
+    },
+    {
+      "id": "AUTHORITY-009",
+      "sources": [
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/pages/LoginPage.tsx"
+      ],
+      "conflict": "Legacy signup treated supplied matching or absent artist email as verified ownership; session helper committed outer credential mutations before issuing tokens.",
+      "authority": "formal/system/identity-lifecycle.md",
+      "resolution": "Reject anonymous artist adoption; route independent accounts to reviewed management. Serialize credential transitions and remove the read-only token-reuse/early-commit behavior. This is a security repair, not specification approval of existing bugs."
     }
   ]
 }

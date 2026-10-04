@@ -909,6 +909,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/password-reset/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Consume a single-use recovery challenge
+         * @description Atomically replaces the password, consumes the challenge, revokes existing interactive sessions for the Party, and issues one replacement session. Failure rolls back these changes.
+         */
+        post: operations["confirmPasswordReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change a password using the current password
+         * @description Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+         */
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change a password using the current password
+         * @description Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+         */
+        post: operations["changePasswordV1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/login": {
         parameters: {
             query?: never;
@@ -963,6 +1023,26 @@ export interface paths {
          * @description Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
          */
         post: operations["signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an account
+         * @description Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
+         */
+        post: operations["signupV1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3107,7 +3187,7 @@ export interface paths {
         head?: never;
         /**
          * Update user account
-         * @description Update username, active flag, roles, or force a password reset for a specific user.
+         * @description Strict administrator updates one credential's username, active flag or password. Disable, username change or password replacement atomically revokes the Party's existing password, Google and recovery tokens; custom service tokens remain separately managed. Another active credential may authenticate anew.
          */
         patch: operations["adminUpdateUser"];
         trace?: never;
@@ -10672,10 +10752,25 @@ export interface components {
             fanArtistIds?: number[];
             /**
              * Format: int64
-             * @description Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
+             * @deprecated
+             * @description Unsupported legacy ownership claim. A supplied positive identifier is rejected with 403 before database effects. Create an independent account, then use the authenticated reviewed directory-claim workflow.
              */
             claimArtistId?: number;
             onboardingIntent?: components["schemas"]["OnboardingIntent"];
+        };
+        PasswordResetConfirmRequest: {
+            /** Format: uuid */
+            token: string;
+            /** Format: password */
+            newPassword: string;
+        };
+        ChangePasswordRequest: {
+            /** @description Optional when an active bearer token supplies the identifier */
+            username?: string;
+            /** Format: password */
+            currentPassword: string;
+            /** Format: password */
+            newPassword: string;
         };
         LoginResponse: {
             /** @description Bearer token for authenticated requests when a client is not using cookies. */
@@ -11689,10 +11784,10 @@ export interface components {
             uacActive?: boolean | null;
         };
         UpdateUserAccountRequest: {
-            uauUsername?: string | null;
+            uauUsername?: string;
             /** Format: password */
-            uauPassword?: string | null;
-            uauActive?: boolean | null;
+            uauPassword?: string;
+            uauActive?: boolean;
         };
         ArtistProfile: {
             /** Format: int64 */
@@ -17412,6 +17507,167 @@ export interface operations {
             };
         };
     };
+    confirmPasswordReset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Password replaced and session issued */
+            200: {
+                headers: {
+                    /** @description Replacement browser session */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid payload or invalid */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credential is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; no credential or session changes committed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer token used to resolve the username when omitted from the body; current password proof is still required. */
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Password replaced and session issued */
+            200: {
+                headers: {
+                    /** @description Replacement browser session */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid request fields */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current credentials or identifier session are invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credential is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; no credential or session changes committed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    changePasswordV1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer token used to resolve the username when omitted from the body; current password proof is still required. */
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Password replaced and session issued */
+            200: {
+                headers: {
+                    /** @description Replacement browser session */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid request fields */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current credentials or identifier session are invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credential is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; no credential or session changes committed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -17501,6 +17757,67 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LoginResponse"];
                 };
+            };
+            /** @description Invalid signup fields or missing terms acceptance */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public signup cannot claim an existing artist identity */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Email already registered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    signupV1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupRequest"];
+            };
+        };
+        responses: {
+            /** @description Account created */
+            200: {
+                headers: {
+                    /** @description Session cookie for browser-based clients. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid signup fields or missing terms acceptance */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public signup cannot claim an existing artist identity */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Email already registered */
             409: {

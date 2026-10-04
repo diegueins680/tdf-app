@@ -86,6 +86,14 @@ run_negative_tlc() {
     exit 1
   fi
 }
+run_tlc SignupIdentity.tla SignupIdentity.cfg signup-identity
+run_negative_tlc SignupIdentityPublicClaim.cfg signup-public-claim 'Invariant IndependentPrincipal is violated' SignupIdentity.tla
+run_negative_tlc SignupIdentityUnreviewed.cfg signup-unreviewed 'Invariant ReviewedManagement is violated' SignupIdentity.tla
+run_negative_tlc SignupIdentityRebind.cfg signup-rebind 'Invariant IndependentPrincipal is violated' SignupIdentity.tla
+run_tlc CredentialLifecycle.tla CredentialLifecycle.cfg credential-lifecycle
+run_negative_tlc CredentialLifecycleConcurrentReset.cfg credential-reset-race 'Invariant SingleUseReset is violated' CredentialLifecycle.tla
+run_negative_tlc CredentialLifecycleEarlyCommit.cfg credential-early-commit 'Invariant AtomicChallengeConsumption is violated' CredentialLifecycle.tla
+run_negative_tlc CredentialLifecycleGoogleSession.cfg credential-google-session 'Invariant NoSessionsAfterDisable is violated' CredentialLifecycle.tla
 run_tlc MarketplaceStorage.tla MarketplaceStorage.cfg marketplace-storage
 run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
 run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla

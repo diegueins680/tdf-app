@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { fireEvent, waitFor } from '@testing-library/dom';
 
 const GOOGLE_CREDENTIAL =
@@ -67,6 +67,11 @@ const findButton = (name: string): HTMLButtonElement | null =>
   Array.from(document.querySelectorAll<HTMLButtonElement>('button'))
     .find((button) => button.textContent?.trim() === name) ?? null;
 
+const LocationProbe = () => {
+  const location = useLocation();
+  return <output data-testid="location">{location.pathname}{location.search}</output>;
+};
+
 const renderLoginPage = async (initialEntry = '/login') => {
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -82,6 +87,7 @@ const renderLoginPage = async (initialEntry = '/login') => {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[initialEntry]}>
           <LoginPage />
+          <LocationProbe />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -175,7 +181,7 @@ describe('LoginPage Google signup consent flow', () => {
         dialog?.querySelector<HTMLInputElement>('input[aria-label="Acepto los términos y la política de privacidad"]')?.click();
         await flushPromises();
       });
-      expect(dialog?.textContent).toContain('completa este formulario con el correo asociado al artista');
+      expect(dialog?.textContent).toContain('registrarte no te concede su propiedad');
       expect(findButton('Google signup test button')).toBeNull();
       expect(googleCallback).not.toBeNull();
       await act(async () => {
@@ -291,14 +297,17 @@ describe('LoginPage Google signup consent flow', () => {
     }
   }, 15_000);
 
-  it('signs up with a password only after consent without claiming first-value completion', async () => {
+  it.each([
+    ['/login', null],
+    ['/login?signup=1&intent=artist_profile&claimArtistId=42', '/artista/crear?claimArtistId=42'],
+  ])('signs up independently after consent from %s', async (entry, claimTarget) => {
     signupRequestMock.mockResolvedValueOnce({
       token: 'fictional-password-session', partyId: 405, roles: ['Customer'], modules: [],
     });
-    const cleanup = await renderLoginPage();
+    const cleanup = await renderLoginPage(entry!);
     try {
       await act(async () => {
-        findButton('¿Primera vez? Crear cuenta con Google')?.click();
+        if (!claimTarget) findButton('¿Primera vez? Crear cuenta con Google')?.click();
         await flushPromises();
       });
       const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
@@ -324,6 +333,10 @@ describe('LoginPage Google signup consent flow', () => {
         expect.objectContaining({ partyId: 405, apiToken: 'fictional-password-session' }),
         { remember: true },
       );
+      expect(signupRequestMock.mock.calls[0]?.[0]).not.toHaveProperty('claimArtistId');
+      if (claimTarget) {
+        expect(document.querySelector('[data-testid="location"]')?.textContent).toBe(claimTarget);
+      }
       expect(analyticsCaptureMock).toHaveBeenCalledWith('signup_completed', expect.objectContaining({ method: 'password' }));
       expect(analyticsCaptureMock).not.toHaveBeenCalledWith('first_value_completed', expect.anything());
       expect(analyticsCaptureMock).not.toHaveBeenCalledWith('onboarding_completed', expect.anything());

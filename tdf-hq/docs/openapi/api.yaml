@@ -879,6 +879,86 @@ paths:
           description: Request processed without revealing whether the account exists or email delivery succeeded.
         '400':
           description: Invalid request email.
+  /v1/password-reset/confirm:
+    post:
+      summary: Consume a single-use recovery challenge
+      description: Atomically replaces the password, consumes the challenge, revokes existing interactive sessions for the Party, and issues one replacement session. Failure rolls back these changes.
+      operationId: confirmPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PasswordResetConfirmRequest' }
+      responses:
+        '200':
+          description: Password replaced and session issued
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Replacement browser session }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { description: Invalid payload or invalid, expired, revoked or consumed challenge }
+        '403': { description: Credential is disabled }
+        '500': { description: Transaction failed; no credential or session changes committed }
+  /password/change:
+    post:
+      summary: Change a password using the current password
+      description: Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+      operationId: changePassword
+      security: []
+      parameters:
+        - in: header
+          name: Authorization
+          required: false
+          schema: { type: string }
+          description: Bearer token used to resolve the username when omitted from the body; current password proof is still required.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangePasswordRequest' }
+      responses:
+        '200':
+          description: Password replaced and session issued
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Replacement browser session }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { description: Invalid request fields }
+        '401': { description: Current credentials or identifier session are invalid }
+        '403': { description: Credential is disabled }
+        '500': { description: Transaction failed; no credential or session changes committed }
+  /v1/password/change:
+    post:
+      summary: Change a password using the current password
+      description: Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+      operationId: changePasswordV1
+      security: []
+      parameters:
+        - in: header
+          name: Authorization
+          required: false
+          schema: { type: string }
+          description: Bearer token used to resolve the username when omitted from the body; current password proof is still required.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangePasswordRequest' }
+      responses:
+        '200':
+          description: Password replaced and session issued
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Replacement browser session }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { description: Invalid request fields }
+        '401': { description: Current credentials or identifier session are invalid }
+        '403': { description: Credential is disabled }
+        '500': { description: Transaction failed; no credential or session changes committed }
   /login:
     post:
       summary: Login with username or email
@@ -955,6 +1035,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid signup fields or missing terms acceptance
+        '403':
+          description: Public signup cannot claim an existing artist identity
+        '409':
+          description: Email already registered
+  /v1/signup:
+    post:
+      summary: Create an account
+      description: Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
+      operationId: signupV1
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '200':
+          description: Account created
+          headers:
+            Set-Cookie:
+              description: Session cookie for browser-based clients.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid signup fields or missing terms acceptance
+        '403':
+          description: Public signup cannot claim an existing artist identity
         '409':
           description: Email already registered
   /session:
@@ -3988,7 +4102,7 @@ paths:
     patch:
       tags: [Admin]
       summary: Update user account
-      description: Update username, active flag, roles, or force a password reset for a specific user.
+      description: Strict administrator updates one credential's username, active flag or password. Disable, username change or password replacement atomically revokes the Party's existing password, Google and recovery tokens; custom service tokens remain separately managed. Another active credential may authenticate anew.
       operationId: adminUpdateUser
       security:
         - bearerAuth: [ ]
@@ -10919,9 +11033,25 @@ components:
         claimArtistId:
           type: integer
           format: int64
-          description: Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
+          deprecated: true
+          description: Unsupported legacy ownership claim. A supplied positive identifier is rejected with 403 before database effects. Create an independent account, then use the authenticated reviewed directory-claim workflow.
         onboardingIntent:
           $ref: '#/components/schemas/OnboardingIntent'
+    PasswordResetConfirmRequest:
+      type: object
+      additionalProperties: false
+      required: [token, newPassword]
+      properties:
+        token: { type: string, format: uuid }
+        newPassword: { type: string, format: password }
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [currentPassword, newPassword]
+      properties:
+        username: { type: string, description: Optional when an active bearer token supplies the identifier }
+        currentPassword: { type: string, format: password }
+        newPassword: { type: string, format: password }
     LoginResponse:
       type: object
       required: [token, partyId, roles, modules]
@@ -12989,17 +13119,16 @@ components:
           nullable: true
     UpdateUserAccountRequest:
       type: object
+      additionalProperties: false
+      minProperties: 1
       properties:
         uauUsername:
           type: string
-          nullable: true
         uauPassword:
           type: string
           format: password
-          nullable: true
         uauActive:
           type: boolean
-          nullable: true
     ArtistProfile:
       type: object
       required: [apArtistId, apDisplayName, apGenreIds, apFollowerCount, apHasUserAccount]

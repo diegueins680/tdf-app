@@ -83,6 +83,24 @@
       "applicability": "Existing TLA+/TLC models and implementation correspondence",
       "decision": "adopted",
       "rationale": "Record state bounds, environment/fairness and exclusions; use negative controls and separate concrete runtime evidence. Bounded model checks do not prove the whole implementation."
+    },
+    {
+      "id": "RES-IDENTITY-001",
+      "source": "https://pages.nist.gov/800-63-4/sp800-63b/events/",
+      "title": "NIST SP 800-63B-4 Authenticator Event Management",
+      "recommendation": "Recovery requires authenticating recovery evidence, not merely supplying known contact attributes.",
+      "applicability": "Public artist claim and account recovery",
+      "decision": "adopted principle",
+      "rationale": "A caller-typed public email is not possession proof. Use independent signup and reviewed delegated management; no NIST assurance-level certification is claimed."
+    },
+    {
+      "id": "RES-CONCURRENCY-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "title": "PostgreSQL 17 explicit locking",
+      "recommendation": "Row locks persist to transaction end; blocked locking reads return the current row. Lock mode compatibility and ordering determine concurrency behavior.",
+      "applicability": "Credential lifecycle versus Social/Event locks",
+      "decision": "adopted",
+      "rationale": "Party NO KEY UPDATE precedes credential and token mutation. Avoid an inner commit and revalidate after waits. Real database races remain required."
     }
   ]
 }

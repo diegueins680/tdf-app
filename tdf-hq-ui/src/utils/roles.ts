@@ -60,9 +60,7 @@ const normalizePositiveSafeIntList = (values: readonly number[]): number[] => {
 export function buildSignupPayload(
   form: SignupFormState,
   favoriteArtistIds: number[],
-  claimArtistId?: number | null,
 ): Omit<SignupPayload, 'termsAccepted' | 'termsVersion'> {
-  const normalizedClaimId = parsePositiveSafeInt(claimArtistId);
   const normalizedFavoriteArtistIds = normalizePositiveSafeIntList(favoriteArtistIds);
 
   return {
@@ -72,7 +70,6 @@ export function buildSignupPayload(
     phone: form.phone.trim() || undefined,
     password: form.password,
     fanArtistIds: normalizedFavoriteArtistIds.length ? normalizedFavoriteArtistIds : undefined,
-    claimArtistId: normalizedClaimId,
   };
 }
 
