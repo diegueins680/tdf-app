@@ -110,6 +110,15 @@
       "applicability": "ID-SESSION-003 recovery expiry and immutable credential binding",
       "decision": "adopted with scope",
       "rationale": "900 seconds is an explicit TDF policy, not a mandated OWASP duration. Rate limiting, hashed storage, delivery guarantees and separate post-reset login remain independent conformance gaps."
+    },
+    {
+      "id": "RES-RECOVERY-002",
+      "source": "https://www.postgresql.org/docs/17/functions-datetime.html#FUNCTIONS-DATETIME-CURRENT",
+      "title": "PostgreSQL 17 current date/time functions",
+      "recommendation": "clock_timestamp reads actual current time; now and CURRENT_TIMESTAMP use transaction start time.",
+      "applicability": "Recovery expiry after lock waits",
+      "decision": "adopted",
+      "rationale": "Sample actual database time after lifecycle locks and floor UTC seconds consistently with the test adapter. Transaction-start time could accept a token expired while blocked."
     }
   ]
 }

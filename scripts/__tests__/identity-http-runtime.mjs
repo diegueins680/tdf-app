@@ -360,6 +360,31 @@ try {
     assert.equal((await pending).status, 400, 'expiry must use the post-wait clock');
     assert.equal(identitySnapshot(), before);
   } finally { expiryHolder.kill('SIGTERM'); }
+  const reboundToken = randomUUID();
+  sql(`INSERT INTO api_token(token,party_id,label,active) VALUES
+    ('${reboundToken}',${independent.partyId},'password-reset:claimant@example.test',true)`);
+  bindRecovery(reboundToken);
+  const bindingHolder = spawn('psql', [db, '-X', '-qAt', '-v', 'ON_ERROR_STOP=1'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  try {
+    await new Promise((resolve, reject) => {
+      let output = '';
+      const timeout = setTimeout(() => reject(new Error('binding barrier timed out')), 10000);
+      bindingHolder.stdout.on('data', chunk => {
+        output += chunk.toString();
+        if (output.includes('binding-barrier-ready')) { clearTimeout(timeout); resolve(); }
+      });
+      bindingHolder.once('error', error => { clearTimeout(timeout); reject(error); });
+      bindingHolder.stdin.write(`BEGIN; SELECT id FROM api_token WHERE token='${reboundToken}' FOR UPDATE; SELECT 'binding-barrier-ready';\n`);
+    });
+    const pending = confirm(reboundToken, 'synthetic-rebound-must-fail-42');
+    await waitBlocked(1);
+    sql(`UPDATE auth_recovery_challenge SET credential_id=(SELECT id FROM user_credential WHERE username='identity-http-alternate')
+      WHERE api_token_id=(SELECT id FROM api_token WHERE token='${reboundToken}')`);
+    const afterFixtureRebind = identitySnapshot();
+    bindingHolder.stdin.end('COMMIT;\n');
+    assert.equal((await pending).status, 400, 'same-Party rebind during lock wait must not switch to an unlocked credential');
+    assert.equal(identitySnapshot(), afterFixtureRebind);
+  } finally { bindingHolder.kill('SIGTERM'); }
   sql("UPDATE user_credential SET active=false WHERE username='identity-http-alternate'");
   const requestReset = () => fetch(`${base}/v1/password-reset`, { method: 'POST',
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: signupBody.email }),
@@ -376,6 +401,7 @@ try {
   } finally {
     sql('DROP TRIGGER identity_http_reject_challenge ON auth_recovery_challenge; DROP FUNCTION identity_http_reject_challenge();');
   }
+  sql(`UPDATE user_credential SET username='identity-bound-recovery-handle' WHERE id=${credentialId}`);
   assert.equal((await requestReset()).status, 200);
   const issued = JSON.parse(sql(`SELECT jsonb_build_object('token',t.token,'credential',c.credential_id,'duration',c.expires_at_epoch-c.issued_at_epoch)
     FROM api_token t JOIN auth_recovery_challenge c ON c.api_token_id=t.id
@@ -384,6 +410,20 @@ try {
   // A later change in public contact data cannot redirect a bound challenge.
   sql(`UPDATE party SET primary_email='changed-contact@example.test' WHERE id=${independent.partyId}`);
   assert.equal((await confirm(issued.token, 'synthetic-bound-recovery-42')).status, 200);
+  const challengedCase = randomUUID();
+  const bindingSnapshot = sql(`SELECT to_jsonb(c) FROM auth_recovery_challenge c JOIN api_token t ON t.id=c.api_token_id WHERE t.token='${issued.token}'`);
+  sql(`INSERT INTO identity_reconciliation_case(id,member_ids,status,evidence,before_parties,reason,reviewed_by,reviewed_at)
+    SELECT '${challengedCase}',ARRAY[${actor},${independent.partyId}],'confirmed',
+      jsonb_build_object('basis','verified-source-subject','issuer','synthetic-recovery','scope','synthetic-only','subject','synthetic-challenged-account','evidence_reference','synthetic-recovery-fixture-only','external_reference_review','no-unresolved-references','member_ids',ARRAY[${actor},${independent.partyId}]),
+      jsonb_agg(to_jsonb(p) ORDER BY p.id),'Synthetic challenged-account retirement guard',${actor},now()
+    FROM party p WHERE id IN (${actor},${independent.partyId})`);
+  const challengedPlan = JSON.parse(sql(`SELECT identity_merge_plan('${challengedCase}')`));
+  assert.equal(challengedPlan.survivor, actor);
+  assert.equal(challengedPlan.can_execute, false);
+  assert.ok(challengedPlan.blockers.some(blocker => blocker.party_id === independent.partyId
+    && JSON.stringify(blocker.dependencies).includes('user_credential')
+    && JSON.stringify(blocker.dependencies).includes('api_token')), 'challenged account retirement must remain blocked by its credential/token references');
+  assert.equal(sql(`SELECT to_jsonb(c) FROM auth_recovery_challenge c JOIN api_token t ON t.id=c.api_token_id WHERE t.token='${issued.token}'`), bindingSnapshot);
   console.log('Recovery expiry HTTP: missing metadata, elapsed deadline, future issuance, owner binding and expiry during a token lock wait passed.');
   // ID-CLAIM-REVIEW-001: database-serialized decisions and separated authority.
   sql(`INSERT INTO party(display_name,is_org,created_at) VALUES ('Identity HTTP module-only reviewer',false,now());

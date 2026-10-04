@@ -728,8 +728,11 @@ export async function disabledEscrowWritesAt(sha, readBlob = readGitBlob) {
   }
 }
 
+// ID-SESSION-003: earlier binaries ignore bound recovery expiry metadata.
+const recoveryExpiryFloor = '57315f2d4b3aafac8ec7242c5913028f157dff8d';
 export function requiredIdentityCommit(context) {
   const ids = new Set(context.migrations.map(({ id }) => id));
+  if (ids.has('2026-10-04_auth_recovery_expiry')) return recoveryExpiryFloor;
   if (ids.has('2026-09-18_course_identity_requests')
       || ids.has('2026-09-18_trial_identity_requests')
       || ids.has('2026-09-18_ads_identity_requests')) return sourceRequestIdentityFloor;

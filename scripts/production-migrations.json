@@ -820,6 +820,11 @@
       "id": "2026-10-03_discovery_ownership_metadata_boundary",
       "path": "tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql",
       "introducedBy": "6e7b87d8ad3a4c56b033484fe7174dceacec5961"
+    },
+    {
+      "id": "2026-10-04_auth_recovery_expiry",
+      "path": "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
+      "introducedBy": "57315f2d4b3aafac8ec7242c5913028f157dff8d"
     }
   ]
 }

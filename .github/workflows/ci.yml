@@ -336,7 +336,9 @@ jobs:
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_IDENTITY_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
-        run: node scripts/__tests__/identity-http-runtime.mjs
+        run: |
+          bash scripts/test-auth-recovery-migration.sh
+          node scripts/__tests__/identity-http-runtime.mjs
 
       - name: Verify artist claim preparation concurrency and privacy
         env:

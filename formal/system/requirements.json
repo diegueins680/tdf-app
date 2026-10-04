@@ -1420,7 +1420,9 @@
       "tests": [
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "scripts/__tests__/identity-http-runtime.mjs"
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/test-auth-recovery-migration.sh"
       ],
       "id": "ID-SESSION-003",
       "title": "Recovery challenges expire and bind the exact credential",
@@ -1463,7 +1465,9 @@
       "recovery": "Request a new challenge. Drain old recovery handlers; never recover using a pre-enforcement binary; retain additive metadata.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAuth.hs",
-        "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql"
+        "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
+        "scripts/production-release.mjs",
+        "scripts/production-migrations.json"
       ]
     }
   ]

@@ -3018,14 +3018,29 @@
       "reviewed": true
     },
     {
-      "id": "82181bc7a177bc6f96f4",
+      "id": "253cfbcfb46ab22bcf98",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P3-retain",
-      "risk": "Changing navigation or UI constants could break rendering or user experience.",
-      "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
-      "reviewed": true
+      "specializedModel": "directory_claim lifecycle protocol",
+      "priority": "P1-integrity",
+      "risk": "Undeclared claim actions can imply authority or invite conflicting state changes.",
+      "justification": "Client projection of the canonical claim transition graph; rendered tests compare outgoing actions to formal-model.yaml and real HTTP tests exhaust the backend relation. The server remains authoritative and rejects unauthorized or stale decisions.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "82181bc7a177bc6f96f4",
+        "classification": "security-system-registry",
+        "disposition": "retain-in-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-retain",
+        "risk": "Changing navigation or UI constants could break rendering or user experience.",
+        "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
+        "reviewed": true
+      },
+      "reviewBatch": "directory-claim-conformance-2026-10-04",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
+        "line": 145
+      }
     },
     {
       "id": "82140535cd9f5b0e5005",
@@ -14160,23 +14175,38 @@
       }
     },
     {
-      "id": "dc6d60d733c6eb69ebbf",
+      "id": "057297148d42a39ced43",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
+      "justification": "Ordered, checksum-pinned 161-entry production migration protocol. All 160 prior entries and applied SQL remain unchanged. The additive credential-bound recovery expiry table follows them, with no validity backfill and explicit retention/deletion constraints. Introduction commit57315f2d4 contains its exact SQL; this is immutable release authority, not editable business data.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "event-editorial-ownership-2026-10-03",
+      "reviewBatch": "recovery-expiry-2026-10-04",
       "previousDecision": {
-        "id": "7bf93825f1431a6d52d6",
-        "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
-        "reviewBatch": "universal-interactions-2026-09-28"
+        "id": "dc6d60d733c6eb69ebbf",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
+        "reviewed": true,
+        "evidence": {
+          "file": "scripts/production-migrations.json",
+          "line": 3
+        },
+        "reviewBatch": "event-editorial-ownership-2026-10-03",
+        "previousDecision": {
+          "id": "7bf93825f1431a6d52d6",
+          "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
+          "reviewBatch": "universal-interactions-2026-09-28"
+        }
       }
     },
     {

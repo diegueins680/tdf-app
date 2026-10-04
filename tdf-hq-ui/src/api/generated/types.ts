@@ -919,8 +919,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Consume a single-use recovery challenge
-         * @description Atomically replaces the password, consumes the challenge, revokes existing interactive sessions for the Party, and issues one replacement session. Failure rolls back these changes.
+         * Consume an unexpired single-use recovery challenge
+         * @description Requires credential-bound metadata and a current database time within the 15-minute challenge lifetime, checked after lock waits. Legacy metadata-free challenges require a fresh request. Atomically replaces the password, consumes the challenge, revokes existing interactive sessions for the Party, and issues one replacement session. Failure rolls back these changes.
          */
         post: operations["confirmPasswordReset"];
         delete?: never;
@@ -17493,7 +17493,7 @@ export interface operations {
         };
         responses: {
             /** @description Request processed without revealing whether the account exists or email delivery succeeded. */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -17532,7 +17532,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoginResponse"];
                 };
             };
-            /** @description Invalid payload or invalid, revoked or consumed challenge */
+            /** @description Invalid payload or invalid, expired, revoked, consumed or unbound challenge */
             400: {
                 headers: {
                     [name: string]: unknown;

@@ -820,11 +820,12 @@ recoveryWindowSpec = describe "ID-SESSION-003 recovery expiry" $ do
     recoveryWindowValid 1000 1900 1899 `shouldBe` True
     recoveryWindowValid 1000 1900 1900 `shouldBe` False
     recoveryWindowValid 1000 1900 999 `shouldBe` False
-  it "matches the bounded interval without Int64 overflow" $
-    property $ \issued expires current ->
-      recoveryWindowValid issued expires current ==
-        (issued >= 0 && toInteger expires - toInteger issued == 900
-          && issued <= current && current < expires)
+  it "accepts every second inside a translated window, never its deadline" $
+    property $ \(Positive epochSeed) ->
+      let issued = fromInteger ((epochSeed :: Integer) `mod` (toInteger (maxBound :: Int64) - 901))
+          expires = issued + 900
+      in all (recoveryWindowValid issued expires) [issued .. expires - 1]
+          && not (recoveryWindowValid issued expires expires)
   it "does not accept malformed or overflow-shaped windows" $ do
     recoveryWindowValid (-1) 899 1 `shouldBe` False
     recoveryWindowValid 0 901 1 `shouldBe` False
