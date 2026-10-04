@@ -29,6 +29,8 @@ fi
   STACK_ROOT="$STACK_ROOT_DIR" stack "${build_args[@]}"
 )
 
+STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-cors-boundary.py"
+
 STACK_ROOT="$STACK_ROOT_DIR" bash "$ROOT/scripts/test-invitation-update-concurrency.sh"
 STACK_ROOT="$STACK_ROOT_DIR" sh "$ROOT/scripts/test-event-relations-runtime.sh"
 

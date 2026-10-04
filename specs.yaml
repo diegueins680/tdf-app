@@ -1,3 +1,7 @@
+# Status: historical v1 requirements candidate; not the current system authority.
+# Canonical specification index: formal/system/README.md.
+# Preserve these values as historical intent for reconciliation, not current
+# production pricing, platform, deployment or permission policy.
 organization:
   name: "TDF"
   timezone: "America/Guayaquil"

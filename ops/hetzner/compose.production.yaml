@@ -42,7 +42,7 @@ services:
       ARTIST_ENRICHMENT_ENABLED: 'false'
       REPUTATION_AGGREGATION_WORKER_ENABLED: 'false'
       ALLOW_ALL_ORIGINS: 'false'
-      ALLOW_ORIGINS: https://www.tdfrecords.net,https://tdfrecords.net
+      ALLOWED_ORIGINS: https://www.tdfrecords.net,https://tdfrecords.net
       HQ_ASSETS_BASE_URL: https://api.tdfrecords.net/assets/serve
       RADIO_PUBLIC_BASE: https://api.tdfrecords.net/live
       HQ_ASSETS_DIR: /data/assets
@@ -69,6 +69,9 @@ services:
       APP_PORT: '8080'
       APP_ENV: production
       PORT: '8080'
+      ALLOW_ALL_ORIGINS: 'false'
+      CORS_DISABLE_DEFAULTS: 'true'
+      ALLOWED_ORIGINS: https://www.tdfrecords.net,https://tdfrecords.net
       RUN_MIGRATIONS: 'false'
       AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true'
       RESET_DB: 'false'

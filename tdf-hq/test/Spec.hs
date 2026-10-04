@@ -109,6 +109,7 @@ import TDF.Merch.Reputation
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
+import qualified TDF.CorsSpec as CorsSpec
 import TDF.Cors
     ( corsPolicy,
       deriveCorsOriginFromAppBase,
@@ -7730,6 +7731,8 @@ main = hspec $ do
                 , ("DISABLE_DEFAULT_CORS", Nothing)
                 ]
                 "CORS_DISABLE_DEFAULTS must be a boolean CORS flag"
+
+    CorsSpec.spec
 
     describe "CORS contact request idempotency" $ do
         it "permits the actor-scoped request header from an allowed web origin" $ do

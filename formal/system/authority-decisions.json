@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "decisions": [
+    {
+      "id": "AUTHORITY-001",
+      "sources": [
+        "specs.yaml",
+        "formal/system/README.md"
+      ],
+      "conflict": "Legacy v1 platform/provider/runtime declarations compete with shipped web, Mobile and Hetzner.",
+      "authority": "formal/system/README.md",
+      "resolution": "Mark specs.yaml historical; retain original content as provenance. Domain source applicability still needs reconciliation."
+    },
+    {
+      "id": "AUTHORITY-002",
+      "sources": [
+        "README.md",
+        "tdf-mobile/src/lib/queryClient.ts",
+        "tdf-mobile/src/api/bookings.ts"
+      ],
+      "conflict": "README promises durable offline booking synchronization not established by pinned Mobile implementation.",
+      "authority": "formal/system/README.md",
+      "resolution": "Remove unsupported promise; current in-memory query caching is not booking acceptance. No offline queue was silently added."
+    },
+    {
+      "id": "AUTHORITY-003",
+      "sources": [
+        "formal/system/README.md",
+        "formal/system/history-2026-09-20.md"
+      ],
+      "conflict": "Historical verification receipts could be mistaken for current-main evidence.",
+      "authority": "formal/system/README.md",
+      "resolution": "Archive the previous audit and preserve its scope; current results require exact candidate execution."
+    },
+    {
+      "id": "AUTHORITY-004",
+      "sources": [
+        "tdf-mobile/AGENTS.md",
+        "tdf-mobile/package.json"
+      ],
+      "conflict": "Mobile guidance says no automated tests despite configured Jest suite.",
+      "authority": "tdf-mobile/package.json",
+      "resolution": "Correct guidance; require actual Mobile quality gate and exact gitlink."
+    },
+    {
+      "id": "AUTHORITY-005",
+      "sources": [
+        "tdf-hq/AGENTS.md",
+        "tdf-hq/stack.yaml",
+        "ops/hetzner/compose.production.yaml"
+      ],
+      "conflict": "Old backend guidance describes obsolete runtime/deployment and test assumptions.",
+      "authority": "tdf-hq/stack.yaml",
+      "resolution": "Retain Stack-pinned compiler as build authority; observed deployment identity overrides obsolete provider prose. Canonical routine-release completion remains open."
+    },
+    {
+      "id": "AUTHORITY-006",
+      "sources": [
+        "tdf-hq/src/TDF/Cors.hs",
+        "ops/hetzner/compose.production.yaml",
+        "formal/system/cors-boundary.md"
+      ],
+      "conflict": "Observed production reflects arbitrary origins with credentials, contrary to the intended authentication/privacy boundary.",
+      "authority": "formal/system/cors-boundary.md",
+      "resolution": "Fix middleware and production configuration; do not redefine arbitrary credentialed sharing as intended behavior."
+    },
+    {
+      "id": "AUTHORITY-007",
+      "sources": [
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq/assets/feature-registry.json"
+      ],
+      "conflict": "Video-source settings route lacks an entry in the canonical feature registry.",
+      "authority": "tdf-hq/assets/feature-registry.json",
+      "resolution": "Add admin.video-sources using inspected backend strict-admin/module guard and explicit Mobile concealment."
+    },
+    {
+      "id": "AUTHORITY-008",
+      "sources": [
+        "formal/system/README.md",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "conflict": "Mobile main d2fd9399126e3b456c310497fb7d9edba09f981d contains newer payment flows and contract additions not shipped by root baseline b07f67c3ebe2022d5f70e94578944b6401616696.",
+      "authority": "formal/system/README.md",
+      "resolution": "Explicit user decision 2026-10-04: keep shipped Mobile lineage. Audit and compatibility patch descend from ede1f2a0ccf75f3794c7892f291e1751b279d19e; do not integrate unrelated newer Mobile payment flows."
+    }
+  ]
+}

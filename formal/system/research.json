@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "researchedAt": "2026-10-04",
+  "scope": "Primary and official guidance reviewed for the current audit; applicability is recorded separately from implementation verification.",
+  "decisions": [
+    {
+      "id": "RES-HTTP-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
+      "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
+      "applicability": "Checkout, event commands and Mobile mutation retries",
+      "decision": "adopted",
+      "rationale": "Bind retries to immutable actor/resource/request receipts; retain ambiguous outcomes. Do not enable blanket POST retries."
+    },
+    {
+      "id": "RES-AUTH-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc9700.html",
+      "title": "RFC 9700 OAuth 2.0 Security Best Current Practice",
+      "recommendation": "Constrain OAuth tokens and protect public-client refresh tokens with sender constraint or rotation.",
+      "applicability": "External OAuth adapters and future refresh-token flows",
+      "decision": "conditional",
+      "rationale": "Audit each actual OAuth flow. TDF opaque API tokens are not automatically an OAuth authorization server; this source does not certify current sessions."
+    },
+    {
+      "id": "RES-AUTH-002",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+      "title": "OWASP Authorization Cheat Sheet",
+      "recommendation": "Deny by default and check authorization on every request.",
+      "applicability": "Role composition, object ownership and receipt replay",
+      "decision": "adopted",
+      "rationale": "UI hiding is discovery only; backend denial and authorization on replay require executable cases."
+    },
+    {
+      "id": "RES-CORS-001",
+      "source": "https://fetch.spec.whatwg.org/#cors-protocol-and-credentials",
+      "title": "WHATWG Fetch: CORS protocol and credentials",
+      "recommendation": "Credentialed sharing requires an origin-specific response and explicit credentials permission.",
+      "applicability": "Observed reflected origin plus credentials in production",
+      "decision": "adopted",
+      "rationale": "An origin-specific response is insufficient if arbitrary origins are reflected. AUTH-CORS-001 restricts the trusted origin set. CORS does not replace CSRF or resource authorization."
+    },
+    {
+      "id": "RES-DATA-001",
+      "source": "https://www.postgresql.org/docs/17/rangetypes.html#RANGETYPES-CONSTRAINT",
+      "title": "PostgreSQL 17 range constraints",
+      "recommendation": "Exclusion constraints can enforce non-overlapping ranges.",
+      "applicability": "Exclusive resource reservations on production PG17",
+      "decision": "adopted where applicable",
+      "rationale": "Prefer transactionally enforced exclusion constraints for resource/time conflicts; application prechecks alone do not prevent races. Inspect each actual booking path before claiming coverage."
+    },
+    {
+      "id": "RES-DATA-002",
+      "source": "https://www.postgresql.org/docs/17/transaction-iso.html",
+      "title": "PostgreSQL 17 transaction isolation",
+      "recommendation": "Isolation levels provide distinct visibility/conflict behavior; serializable failures require whole-transaction retry.",
+      "applicability": "Revision fencing, concurrent grants, reservations, worker claims",
+      "decision": "adopted",
+      "rationale": "Run actual PostgreSQL race tests and distinguish isolation assumptions. Do not retry external effects merely because the database transaction retries."
+    },
+    {
+      "id": "RES-PAY-001",
+      "source": "https://docs.stripe.com/api/idempotent_requests",
+      "title": "Stripe idempotent requests",
+      "recommendation": "Provider idempotency binds repeated calls to a key with provider-specific retention and parameter rules.",
+      "applicability": "Stripe adapter and local checkout receipts",
+      "decision": "adopted with scope",
+      "rationale": "Retain local immutable request/effect evidence beyond provider key retention. Provider keys do not establish universal exactly-once processing."
+    },
+    {
+      "id": "RES-PAY-002",
+      "source": "https://developer.paypal.com/api/rest/requests/",
+      "title": "PayPal REST requests",
+      "recommendation": "PayPal-Request-Id supports idempotency only for supported APIs and their documented retention behavior.",
+      "applicability": "Enabled PayPal checkout and reconciliation",
+      "decision": "adopted with scope",
+      "rationale": "Verify endpoint support and exact request binding, preserve ambiguous outcomes and reconcile using authenticated provider evidence."
+    },
+    {
+      "id": "RES-FORMAL-001",
+      "source": "https://lamport.azurewebsites.net/tla/high-level-view.html",
+      "title": "Lamport: A high-level view of TLA+",
+      "recommendation": "Specify system behavior mathematically and check properties at an explicit abstraction level.",
+      "applicability": "Existing TLA+/TLC models and implementation correspondence",
+      "decision": "adopted",
+      "rationale": "Record state bounds, environment/fairness and exclusions; use negative controls and separate concrete runtime evidence. Bounded model checks do not prove the whole implementation."
+    }
+  ]
+}

@@ -22,10 +22,8 @@
 - Pattern for new endpoints: update `TDF.API` type, implement handlers in `TDF.Server`, DTOs in `TDF.DTO`, DB logic in `TDF.DB`/`TDF.Models`.
 
 ## Testing Guidelines
-- No test suite yet. If adding tests:
-  - Create `test/` and use Hspec; name files `*.Spec.hs`.
-  - Add a `test-suite` to `tdf-hq.cabal`; run with `stack test`.
-  - Prefer unit tests for handlers and DB queries; use factories/fixtures over ad‑hoc data.
+- The existing `test/` Hspec/QuickCheck suite runs with `stack test`. PostgreSQL, HTTP and concurrency runners under root `scripts/` cover additional boundaries; see `.github/workflows/ci.yml` for the complete backend lane.
+- Prefer observable handler/database tests with isolated fixtures. Follow `FORMAL_VERIFICATION.md` for critical invariants and negative controls.
 
 ## Commit & Pull Requests
 - Commits: short, imperative subjects (e.g., "Enable CORS"). Optional prefixes like `feat:`, `fix:`, `chore:` are welcome.
@@ -42,9 +40,9 @@
 - UI snapshots such as `tdf-hq-ui.backup.*` are intentionally ignored in `.gitignore`. Treat them as personal sandboxes—never reference them from build scripts or CI.
 
 ## Deployment Runbooks
-- **Cloudflare Pages** – build from repo root with `npm run build:ui`, output `tdf-hq-ui/dist`. Set `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, and `VITE_TZ=America/Guayaquil`. Never place bearer credentials in `VITE_*` variables because they are public bundle configuration.
+- **Cloudflare Pages** – build from repo root with `npm run build:ui`, output `tdf-hq-ui/dist`. Use the current Node 22+ package/CI requirement. Production's observed API is `https://api.tdfrecords.net`; verify browser `VITE_API_BASE` and preview-function `PUBLIC_API_BASE`. Never place bearer credentials in public `VITE_*` variables.
 - **Vercel** – set the root directory to `tdf-hq-ui`, install via `npm install`, build with `npm run build`, output `dist`.
-- **Koyeb (API)** – configure all `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`). Without the CORS envs Cloudflare/Vercel frontends cannot talk to the API.
+- **Backend** – start at `formal/system/README.md` and verify live identity. The October 4 baseline is Hetzner; Koyeb/Fly instructions are historical targets, not permission to redirect production. Preserve reviewed migrations and recovery guards.
 - Whenever you need to test end-to-end, ensure the frontend env vars point at the deployed API and that the API allows the frontend’s origin.
 
 ## Branding

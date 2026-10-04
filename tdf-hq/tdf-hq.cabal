@@ -293,6 +293,7 @@ test-suite tdf-hq-test
     TDF.Commerce.WorkerLoggingSpec
     TDF.Commerce.PaymentArithmeticSpec
     TDF.EmailHeadersSpec
+    TDF.CorsSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin

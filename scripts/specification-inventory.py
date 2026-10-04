@@ -25,26 +25,69 @@ def is_specification_candidate(relative):
     if any(part in {"evidence", "campaigns", "reports", "rollout-evidence", "event-research-runs"}
            for part in path.parts):
         return False
-    if relative.startswith(("docs/", "tdf-hq/docs/")):
+    if relative.startswith(("docs/", "tdf-hq/docs/", "tdf-mobile/docs/", "ops/")):
         return path.suffix in (".md", ".yaml")
+    if path.parts[0] == "tdf-mobile" and len(path.parts) == 2:
+        return path.suffix == ".md" and path.name not in private_roots
     if relative.startswith("formal/"):
-        return path.suffix in (".md", ".tla", ".cfg", ".als") or relative == "formal/system/requirements.json"
+        return path.suffix in (".md", ".tla", ".cfg", ".als") or relative in {
+            "formal/system/requirements.json", "formal/system/authority-decisions.json",
+            "formal/system/research.json"}
     return path.name == "README.md" and path.parts[0] in {
         "tdf-hq", "tdf-hq-ui", "scripts", "functions", "streaming", "tidal-agent"}
+
+
+def mobile_paths(root):
+    """Require pinned source; an empty submodule cannot establish coverage."""
+    mobile = root / "tdf-mobile"
+    if mobile.is_symlink() or not mobile.resolve().is_relative_to(root.resolve()):
+        raise ValueError("Mobile source must be contained in the audit checkout")
+    entry = subprocess.check_output(
+        ["git", "ls-tree", "HEAD", "--", "tdf-mobile"], cwd=root, text=True).strip()
+    match = re.fullmatch(r"160000 commit ([0-9a-f]{40})\ttdf-mobile", entry)
+    if not match:
+        raise ValueError("Missing committed Mobile gitlink")
+    top = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=mobile, text=True).strip()
+    if Path(top).resolve() != mobile.resolve():
+        raise ValueError("Initialize exact pinned Mobile before specification discovery")
+    revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=mobile, text=True).strip()
+    if revision != match[1]:
+        raise ValueError("Mobile checkout differs from the committed gitlink")
+    paths = subprocess.check_output(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+                                    cwd=mobile).decode().split("\0")
+    return revision, ["tdf-mobile/" + p for p in paths if p]
+
+
+def material_source(relative):
+    path = Path(relative)
+    roots = {"tdf-hq", "tdf-hq-ui", "tdf-mobile", "scripts", "functions", "streaming",
+             "tidal-agent", "ops", "e2e", "test", ".github"}
+    suffixes = {".hs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py", ".sh",
+                ".sql", ".json", ".yaml", ".yml", ".toml", ".cabal"}
+    return (path.parts[0] in roots and (path.suffix in suffixes or path.name.startswith("Dockerfile"))) \
+        or relative in {"package.json", "package-lock.json", "fly.toml", ".gitmodules"}
 
 
 def generate():
     paths = sorted(set(subprocess.check_output(
         ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"], cwd=ROOT
     ).decode().strip("\0").split("\0")))
-    artifacts, models, requirements, components = [], [], [], {}
+    mobile_revision, mobile_files = mobile_paths(ROOT)
+    paths = sorted(set(paths + mobile_files))
+    artifacts, models, requirements, components, surfaces = [], [], [], {}, []
     for relative in paths:
         path = ROOT / relative
-        if not path.is_file() or path.is_symlink() or any(p in path.parts for p in ("node_modules", "__pycache__")):
+        relative_path = Path(relative)
+        if (not path.is_file() or not path.resolve().is_relative_to(ROOT.resolve())
+                or any((ROOT/p).is_symlink() for p in (relative_path, *relative_path.parents))
+                or any(p in path.parts for p in ("node_modules", "__pycache__"))):
             continue
-        if relative.startswith(("tdf-hq/", "tdf-hq-ui/", "scripts/", "functions/", "streaming/", "tidal-agent/", ".github/")):
+        if material_source(relative):
             component = relative.split('/')[0]
             components.setdefault(component, []).append(relative)
+            surfaces.append({"id": "SURFACE-" + digest(relative.encode())[:16], "path": relative,
+                             "sha256": digest(path.read_bytes()),
+                             "semanticConformance": "not-established-by-discovery"})
         # Source specifications, excluding historical evidence, private working notes and campaign material.
         if not is_specification_candidate(relative):
             continue
@@ -52,6 +95,8 @@ def generate():
         source = data.decode()
         declaration = re.search(r"(?im)^(?:Status|Estado):\s*(.+)$", source)
         status = "inferred"
+        if relative == "specs.yaml" or (declaration and declaration[1].lower().startswith("historical")):
+            status = "historical"
         if relative.startswith("docs/adr/") and declaration:
             value = declaration[1].lower()
             if value.startswith(("accepted", "aceptado", "aceptada")):
@@ -90,7 +135,7 @@ def generate():
                 ancestry.append((indentation, line.strip()))
                 requirements.append({"id": "LEGACY-" + digest(key.encode())[:12],
                                      "statement": line.strip(), "source": f"specs.yaml:{number}",
-                                     "status": "inferred", "deliveryScope": "Legacy v1 candidate; approval/supersession unresolved",
+                                     "status": "historical", "deliveryScope": "Legacy v1 candidate; superseded as current system authority by formal/system/README.md; per-clause applicability requires reconciliation",
                                      "verification": "open", "gap": "YAML line is discovery evidence; contextual interpretation and approval remain required"})
         if relative == "docs/payments/ecuador-payment-platform-audit-2026-09-09.md":
             # Approval is local to this embedded ADR, not the surrounding research report.
@@ -113,9 +158,10 @@ def generate():
                     requirements.append({"id": cells[1], "statement": cells[2], "source": relative,
                                          "status": "proposed", "deliveryScope": "Historical event roadmap; do not classify absence as current defect without applicability",
                                          "verification": "open", "gap": "See existing domain traceability matrix and current code; historical classification is not current execution evidence"})
-    return {"schemaVersion": 1, "purpose": "Comprehensive discovery of indexed artifact classes; not a claim of complete semantic requirements extraction",
-            "components": components, "artifacts": artifacts, "requirements": requirements, "modelConfigurations": models,
-            "exclusions": ["Mobile source is a separate Git repository; exact gitlink is recorded in baseline and execution manifests",
+    return {"schemaVersion": 2, "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
+            "mobileRevision": mobile_revision,
+            "components": components, "surfaces": surfaces, "artifacts": artifacts, "requirements": requirements, "modelConfigurations": models,
+            "exclusions": ["Binary/media files and native generated build outputs are not semantically verified",
                            "Binary/media files, personal notes, historical evidence and campaigns are not treated as requirements",
                            "Implicit rules in every handler/schema are not exhaustively extracted; open system-level obligation SYS-GAP-01"]}
 

@@ -565,7 +565,7 @@ jobs:
         run: npm run generate:api
 
       - name: Verify generated clients are committed
-        run: git diff --exit-code -- tdf-hq-ui/src/api/generated/types.ts tdf-mobile/src/api/generated/types.ts
+        run: node scripts/check-generated-api.mjs
 
   api-contracts:
     if: always()

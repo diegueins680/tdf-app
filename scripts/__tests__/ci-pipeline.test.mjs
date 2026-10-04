@@ -35,6 +35,15 @@ async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');
 }
 
+test('API drift gate inspects the pinned Mobile repository rather than a root pathspec', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const job = workflow.split('  api-contract-tests:')[1].split('\n  api-contracts:')[0];
+  assert.match(job, /run: npm run generate:api/);
+  assert.match(job, /run: node scripts\/check-generated-api\.mjs/);
+  assert.doesNotMatch(job, /git diff[^\n]*tdf-mobile\//);
+  assert.match(await source('scripts/quality-repo.sh'), /generated-api-conformance\.test\.mjs/);
+});
+
 test('UI quality keeps the lazy-validation regression and production artifact gate', async () => {
   const quality = await source('scripts/quality-ui.sh');
   assert.match(quality, /node --test "\$ROOT\/scripts\/__tests__\/ui-validation-bundle\.test\.mjs"/);
