@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "0437a8a4579ea21623e7680c02f4e2506cdb9466",
+  "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -2518,7 +2518,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "d4fa90191e4a33fb05d7945485bc1004fd3472d6a1ad884801f2bfe57007a264",
+      "sha256": "b6443eb62969dccefcc27f0335dc714240146980b950f1ba8a6b131c3dc274ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4144,7 +4144,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "b66eaff9860906281869d7e0438d453ccf2449a383651b63266ba86a419b1d6a",
+      "sha256": "8acc313424d081d76aa5cc23914e583e92fe01b1f50a51aca8b29ae373b9ae9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4684,7 +4684,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "cf0e24599ac6b48e1a090d32b23d4e3a2cf029afba9072e08b532334e5423666",
+      "sha256": "090bffc4a07286995ca92023eb7fcfa0e7b865a014f2d7db73b6e03722d1f368",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6070,13 +6070,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "0c13143e378f1d1da2f7e365f37bf2ef28d5a68946a5f121eec450c11832ce81",
+      "sha256": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "15d85fcbe51fa3291124921d20c057da9e1bd4995f74f366704949afff0a78a9",
+      "sha256": "0e4db3d2d183691f42c81fc1bcd0ab6589c8847e04cd0e0e10db3ecc21861ed9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6820,13 +6820,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "a741fe027d45ca8e8ea0adcf1cc55f53acec9bd230dd7e44fc9b81613aa2fd4b",
+      "sha256": "f4eb3904be5ad58fc3aa8b5fda5fc464f3d1a17ec05024a718dc69fa708413ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "5a8a5caeaa3f04d603b664ff619cf1c41fb0693a561138a4e0c9900502d61ec0",
+      "sha256": "366cdb1ebadb0ff0494260e7c98edfd6da1d622f70df415b5627bf60dbdd95ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7636,7 +7636,7 @@
     {
       "id": "SURFACE-073539d499cf3a1e",
       "path": "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
-      "sha256": "e783c8655e06e7355e589cd57648d5d32dfd7c325e18ba14b04ce525007b2915",
+      "sha256": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8014,7 +8014,7 @@
     {
       "id": "SURFACE-1f7e1fe78af591d6",
       "path": "tdf-hq-ui/src/utils/roles.ts",
-      "sha256": "9dfdedeb21ee616cb2ac3e82e8129ba7cb5b9e758da6cae4b3d5b5e5baef8602",
+      "sha256": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8260,7 +8260,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "c183a1933901c37d2c3282ff7ffbe1962956d16f867f2bc7968e662b07d46156",
+      "sha256": "0393bc36a0788dbcf63c93e222a4ab493d13c62026d07d49d27f5a0f6bfb8a54",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10552,7 +10552,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "a63c5a5a34078d561a2ae5d277e503c51141651f783b7a97b2c5b246525f17aa",
+      "sha256": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11260,13 +11260,13 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "0b17d0a498d02031d17179201c70174246f6b0b127fe625147fd55cbd166e271",
+      "sha256": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "36028146d5f11a65f1cdaf5320446738ca057873b480fdc0b9a92e70f1218476",
+      "sha256": "e6b468d13049965cb1c2890dcdce62a59d408842e1ba9bb678e2b3703370b1c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11740,7 +11740,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "04e9bd0058e67660dd7158634b7c56b6c736c5d93633fcf5ec4980140376d24a",
+      "sha256": "c8bb937d220c853b825debd235c09462da09160c70dfa36aef30d0cd7543c220",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13408,7 +13408,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "cf0e24599ac6b48e1a090d32b23d4e3a2cf029afba9072e08b532334e5423666",
+      "sha256": "090bffc4a07286995ca92023eb7fcfa0e7b865a014f2d7db73b6e03722d1f368",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16468,7 +16468,7 @@
     },
     {
       "path": "docs/social/database.md",
-      "sha256": "95817b206a31c054eb1fc50516736b7aacfefe8c2277311e1292fdce9a6d8fb7",
+      "sha256": "e2a123ae8dfecc3ae6535935c586604fc07b788482178735a59afdefc84ecf87",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -16580,7 +16580,7 @@
     },
     {
       "path": "docs/social/session-boundary.md",
-      "sha256": "a6fef7ca2a451754fa050031a2ee6a9f03b56c55e5340b2a758d41a43b7ee370",
+      "sha256": "ac8d1e1ad9c121cf64d49bed1dfb446efbb6a3e87bdadc8f4aaf59ab28e18c86",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17235,6 +17235,41 @@
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/CredentialLifecycle.cfg",
+      "sha256": "720b3d476cc1e240f915f72c424ea2cf9497b548588371dacda71725ee3a75e7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CredentialLifecycle.tla",
+      "sha256": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/CredentialLifecycleConcurrentReset.cfg",
+      "sha256": "f9c4ee917db54f485284fe042419f4dd86b4421f607e4543f6d6e28ed1a9bd3f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CredentialLifecycleEarlyCommit.cfg",
+      "sha256": "c882788d8911843b722c95763787549e604ada24b207650faa9b0436e6b59228",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CredentialLifecycleGoogleSession.cfg",
+      "sha256": "4afc2f5782bd00b4d770172547780b8fecbc917ef2e6aa11c37d424fe57262cb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/DirectoryFavoriteAuthority.cfg",
@@ -17932,6 +17967,41 @@
     {
       "path": "formal/event-operations/SessionFenceWitness.cfg",
       "sha256": "0b43491e621cd1498c2a2e99fdd1aaf7fb5562eff13638d3865a0ccab054e81e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SignupIdentity.cfg",
+      "sha256": "434eee41dbd5dbdb00b52dd0587032edde518331c23731fd4794ed64eb8796eb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SignupIdentity.tla",
+      "sha256": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/SignupIdentityPublicClaim.cfg",
+      "sha256": "bee183d5c61e8e697398eb1e174d361cb2c09e2eea398ad97f4aac389032ad51",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SignupIdentityRebind.cfg",
+      "sha256": "58f4660f8f87a8f5ff80cf98ecf91d4a0bcaacd5af2829de2dc52f955c190100",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SignupIdentityUnreviewed.cfg",
+      "sha256": "853345968145c3debe1311a314c8cf51d38dc890fc364195a4dcc2e66130e445",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -18715,14 +18785,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "85caa6f7845798a101ee02e20b7f9de43757b1205baf90e3654d1fc10fe858f8",
+      "sha256": "bd9a18b7be930228282f2719754206c5f46c8c41846cf353873d7b8305db3f52",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ef6a15890ce93fd0246343fed6067c0de4e426d3b49c3507915206fa48d5522f",
+      "sha256": "4c93edce7d479682fcdb2a8a548d562e0a7b4b571f748fe6648bdc22e74d96f2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18749,6 +18819,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/identity-lifecycle.md",
+      "sha256": "ade626f8ff0bfce88a1757d501cdd5a347ae8348172748d9a9c29315acd188b3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/identity-recovery.md",
       "sha256": "d15f78faad09acc1900660112ffca7af42659104109e8e5fea84eafc7f1b8156",
       "authority": "inferred",
@@ -18771,14 +18848,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "012bab517947d4cd1f6311881919a7212d4efc67b0dbfc1f607bab7e27b586f8",
+      "sha256": "2665cf854ce714741c37c60ac365395149b82e4f6c40e275dbc13c1b7f35cd4d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "21154e7e2821d192cc109740f9084df3bed2306bd659eccde53e1651a35b5da5",
+      "sha256": "d73dc84d8ad384ea17f395f54acde2eecdb36ab6ddae55508009fe4777a3337f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18918,7 +18995,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "c183a1933901c37d2c3282ff7ffbe1962956d16f867f2bc7968e662b07d46156",
+      "sha256": "0393bc36a0788dbcf63c93e222a4ab493d13c62026d07d49d27f5a0f6bfb8a54",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -21786,6 +21863,71 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/CredentialLifecycle.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Serialize = TRUE",
+        "  AtomicIssue = TRUE",
+        "  RevokeGoogle = TRUE",
+        "INVARIANTS",
+        "  SingleUseReset",
+        "  NoSessionsAfterDisable",
+        "  AtomicChallengeConsumption"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CredentialLifecycleConcurrentReset.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Serialize = FALSE",
+        "  AtomicIssue = TRUE",
+        "  RevokeGoogle = TRUE",
+        "INVARIANT SingleUseReset"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CredentialLifecycleEarlyCommit.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Serialize = TRUE",
+        "  AtomicIssue = FALSE",
+        "  RevokeGoogle = TRUE",
+        "INVARIANTS",
+        "  SingleUseReset",
+        "  NoSessionsAfterDisable",
+        "  AtomicChallengeConsumption"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CredentialLifecycleGoogleSession.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Serialize = TRUE",
+        "  AtomicIssue = TRUE",
+        "  RevokeGoogle = FALSE",
+        "INVARIANTS",
+        "  SingleUseReset",
+        "  NoSessionsAfterDisable",
+        "  AtomicChallengeConsumption"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/DirectoryFavoriteAuthority.cfg",
       "declarations": [
         "SPECIFICATION Spec",
@@ -22831,6 +22973,70 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK CurrentBoundSession",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SignupIdentity.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  RejectPublicClaim = TRUE",
+        "  ReviewBeforeGrant = TRUE",
+        "  PreservePrincipal = TRUE",
+        "INVARIANTS",
+        "  IndependentPrincipal",
+        "  ReviewedManagement"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SignupIdentityPublicClaim.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  RejectPublicClaim = FALSE",
+        "  ReviewBeforeGrant = TRUE",
+        "  PreservePrincipal = TRUE",
+        "INVARIANTS",
+        "  IndependentPrincipal",
+        "  ReviewedManagement"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SignupIdentityRebind.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  RejectPublicClaim = TRUE",
+        "  ReviewBeforeGrant = TRUE",
+        "  PreservePrincipal = FALSE",
+        "INVARIANTS",
+        "  IndependentPrincipal",
+        "  ReviewedManagement"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SignupIdentityUnreviewed.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  RejectPublicClaim = TRUE",
+        "  ReviewBeforeGrant = FALSE",
+        "  PreservePrincipal = TRUE",
+        "INVARIANTS",
+        "  IndependentPrincipal",
+        "  ReviewedManagement"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
