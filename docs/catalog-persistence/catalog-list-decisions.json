@@ -14181,7 +14181,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered, checksum-pinned 163-entry production migration protocol. All161 previous entries and previously applied SQL remain unchanged. Two additive migrations enforce exact immutable checkout payable correspondence with a pre-enforcement snapshot fence, and preserve merchandise floor commission with numeric intermediates. Introduction c57fdab05 contains the exact new SQL. This is reviewed release authority, not editable business data.",
+      "justification": "Ordered, checksum-pinned 163-entry production migration protocol. All161 previous entries and previously applied SQL remain unchanged. Two additive migrations enforce exact immutable checkout payable correspondence with a pre-enforcement snapshot fence, and preserve merchandise floor commission with numeric intermediates. Introductions c57fdab05 and f8494a20a contain the exact new SQL; div(numeric,numeric) preserves exact commission floor. This is reviewed release authority, not editable business data.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",

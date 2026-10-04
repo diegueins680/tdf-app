@@ -105,6 +105,7 @@
       "scripts/__tests__/legacy-escrow-contract.test.mjs",
       "scripts/__tests__/local-api-fixture.test.mjs",
       "scripts/__tests__/logical-correctness-audit.test.mjs",
+      "scripts/__tests__/merch-commission-postgres.mjs",
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
       "scripts/__tests__/onboarding-real-browser.mjs",
@@ -2407,7 +2408,7 @@
     {
       "id": "SURFACE-790b053ca0c0e13b",
       "path": "scripts/__tests__/checkout-amount-postgres.mjs",
-      "sha256": "6cbb59a9c68edd58e3042418a92c007c4d48ec462c1dfba4a1192aaddf561c94",
+      "sha256": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2594,6 +2595,12 @@
       "id": "SURFACE-ed51dd1c0fc53a51",
       "path": "scripts/__tests__/logical-correctness-audit.test.mjs",
       "sha256": "fe4222a40fbb6dba289a74bfbb0ccac6ffad07f60d40876e88097f195c65a757",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-da9bcfd369f3b33f",
+      "path": "scripts/__tests__/merch-commission-postgres.mjs",
+      "sha256": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3127,7 +3134,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "13898b888f030dd78fc5d3c9c1028b6fe58ffc7ff7690a28d4653f7d936558bd",
+      "sha256": "cb6720651672b221bd0111ad476e9fc00fce6f42a94fecab1f93cfb25def8ead",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3235,7 +3242,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a0af3f81d080c77de229387d561938174cbe8d3071bce2ac2c7aaff2d49f6051",
+      "sha256": "d193c71b0551cb1bed103f9a30543e87a9e7c21c79bfcd47ae64d940c4323a87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3745,7 +3752,7 @@
     {
       "id": "SURFACE-58805fa683558aef",
       "path": "scripts/test-artist-merch-runtime.sh",
-      "sha256": "2477617c7df190df82f0d2dc898ca336037c4c786432a9821cd4ac5b1598fa00",
+      "sha256": "20870887900d701d2f835942dfb59f18c61d6ab09433fc3f938d50cefd657f81",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10321,7 +10328,7 @@
     {
       "id": "SURFACE-adebc2476ae4415c",
       "path": "tdf-hq/sql/2026-10-04_merch_commission_exact.sql",
-      "sha256": "9270921eb9390f8e5f0891890fbcf03a718e691a1d4163191d14b6c008455db5",
+      "sha256": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19002,7 +19009,7 @@
     },
     {
       "path": "formal/system/checkout-arithmetic.md",
-      "sha256": "37aedb79d360da92fefdf198aaf5c93d4a48efbd590933f7e4187a47d6d6695c",
+      "sha256": "e076c317f3ab6740d9b4118d5dad938fd6acb5a4e527c48e2acba01fd70014e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19058,14 +19065,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5981aa9bf220f1e0bd616a2befe93bdb80be6889dfdb14173dc21276aa9aae7f",
+      "sha256": "96a5a013d0980959144846f6a39256261b7ea855396f6887df34c57cfa560605",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "ee4f15cc8541e4c27b937bb8ee6caa66d15f150e19f51c503a02de14a515db07",
+      "sha256": "1fd24911374bc1c40d04c00880ab89e05f443fdf129a8a45f0aefc2d70078131",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -1798,17 +1798,19 @@
       "implementation": [
         "tdf-hq/src/TDF/Commerce/Merch.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/sql/2026-10-04_merch_commission_exact.sql"
+        "tdf-hq/sql/2026-10-04_merch_commission_exact.sql",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
         "scripts/verify-checkout-money.py",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-        "scripts/test-artist-merch-runtime.sh"
+        "scripts/test-artist-merch-runtime.sh",
+        "scripts/__tests__/merch-commission-postgres.mjs"
       ],
       "formalModels": [],
-      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required.",
-      "evidence": "merch-money-controls.json",
+      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints.",
+      "evidence": "merch-money-controls.json; merch-commission-postgres.log",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high for pure arithmetic; new migration and full runtime execution pending",
@@ -1817,7 +1819,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "All61 pure examples and nine mutation controls pass; final full build/runtime and deployment remain pending."
+        "reason": "Pure61 examples/nine controls and SQL30 boundary inserts/three controls pass; final full runtime, PG17 and deployment remain pending."
       }
     }
   ],
@@ -1832,7 +1834,7 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/checkout-amount-postgres.mjs": "6cbb59a9c68edd58e3042418a92c007c4d48ec462c1dfba4a1192aaddf561c94",
+    "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "031ec23f9f0e3dd08fcb934b59a5e63215def0b07eb2be9219e738e14daa1574",
@@ -1840,19 +1842,20 @@
     "scripts/__tests__/generated-api-conformance.test.mjs": "da6a8039a136268283e11a054c981c16990db543e4154a391a2c3ff90873018e",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
+    "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/verification-evidence.test.mjs": "62e23312cd0f60dd3ec08597ca45071071f116bd10d15303c8b9bab55668fb84",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-generated-api.mjs": "216256d09571f6fe741460f64541c62f0e341ccbd975db8353964d9b41d8d09c",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
-    "scripts/lib/production-release.mjs": "13898b888f030dd78fc5d3c9c1028b6fe58ffc7ff7690a28d4653f7d936558bd",
+    "scripts/lib/production-release.mjs": "cb6720651672b221bd0111ad476e9fc00fce6f42a94fecab1f93cfb25def8ead",
     "scripts/lib/verification-evidence.mjs": "57a76761fbe10452d1c664c3a0ff6b0fe291a1267dd7e9007b1f09fa1657f525",
-    "scripts/production-migrations.json": "a0af3f81d080c77de229387d561938174cbe8d3071bce2ac2c7aaff2d49f6051",
+    "scripts/production-migrations.json": "d193c71b0551cb1bed103f9a30543e87a9e7c21c79bfcd47ae64d940c4323a87",
     "scripts/production-release.mjs": "f79231d797d83c953f1bf15d64e93d962e9b3bc72efe192c4243af6ccfe051ad",
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
     "scripts/specification-inventory.py": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
-    "scripts/test-artist-merch-runtime.sh": "2477617c7df190df82f0d2dc898ca336037c4c786432a9821cd4ac5b1598fa00",
+    "scripts/test-artist-merch-runtime.sh": "20870887900d701d2f835942dfb59f18c61d6ab09433fc3f938d50cefd657f81",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
@@ -1877,7 +1880,7 @@
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
-    "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "9270921eb9390f8e5f0891890fbcf03a718e691a1d4163191d14b6c008455db5",
+    "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
     "tdf-hq/src/TDF/API.hs": "52899306d6b3d74f542a87ca135c1f8395e0fe5b42a4a1ee6396edc7a38d987c",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "204bd27888a0e4645a2c107e4d4cba9c0a4db41adfc8f7ed9c76182a8d6b1245",
@@ -2539,6 +2542,10 @@
       {
         "requirement": "PAY-CHECKOUT-002",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-CHECKOUT-003",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/checkout-amount-postgres.mjs": [
@@ -2572,6 +2579,12 @@
       }
     ],
     "scripts/test-artist-merch-runtime.sh": [
+      {
+        "requirement": "PAY-CHECKOUT-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/merch-commission-postgres.mjs": [
       {
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
@@ -2998,7 +3011,7 @@
     {
       "id": "SURFACE-790b053ca0c0e13b",
       "path": "scripts/__tests__/checkout-amount-postgres.mjs",
-      "sha256": "6cbb59a9c68edd58e3042418a92c007c4d48ec462c1dfba4a1192aaddf561c94",
+      "sha256": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -3286,6 +3299,18 @@
       "sha256": "fe4222a40fbb6dba289a74bfbb0ccac6ffad07f60d40876e88097f195c65a757",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-da9bcfd369f3b33f",
+      "path": "scripts/__tests__/merch-commission-postgres.mjs",
+      "sha256": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-003",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0961f93c2cc23e1a",
@@ -3944,11 +3969,15 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "13898b888f030dd78fc5d3c9c1028b6fe58ffc7ff7690a28d4653f7d936558bd",
+      "sha256": "cb6720651672b221bd0111ad476e9fc00fce6f42a94fecab1f93cfb25def8ead",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-CHECKOUT-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-CHECKOUT-003",
           "relationship": "implementation"
         }
       ]
@@ -4080,7 +4109,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a0af3f81d080c77de229387d561938174cbe8d3071bce2ac2c7aaff2d49f6051",
+      "sha256": "d193c71b0551cb1bed103f9a30543e87a9e7c21c79bfcd47ae64d940c4323a87",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -4707,7 +4736,7 @@
     {
       "id": "SURFACE-58805fa683558aef",
       "path": "scripts/test-artist-merch-runtime.sh",
-      "sha256": "2477617c7df190df82f0d2dc898ca336037c4c786432a9821cd4ac5b1598fa00",
+      "sha256": "20870887900d701d2f835942dfb59f18c61d6ab09433fc3f938d50cefd657f81",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12532,7 +12561,7 @@
     {
       "id": "SURFACE-adebc2476ae4415c",
       "path": "tdf-hq/sql/2026-10-04_merch_commission_exact.sql",
-      "sha256": "9270921eb9390f8e5f0891890fbcf03a718e691a1d4163191d14b6c008455db5",
+      "sha256": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
