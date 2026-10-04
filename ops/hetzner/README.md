@@ -103,13 +103,17 @@ Pricing references: [Hetzner billing](https://docs.hetzner.com/cloud/billing/faq
     and version, then restore and verify the target image. Preserve the
     reports outside the secret bundle.
 
-## Cutover gates
+## Original cutover gates and outstanding validation
 
 The operator explicitly chose a web-first cutover on 2026-09-28 and accepted
 downtime for older installed mobile clients until updated. Preserve this
-decision: no temporary Fly forwarding service is required. Keep production
-traffic on Fly until the following implementation and verification steps are
-ready and the repository's required review/checks pass.
+decision: no temporary Fly forwarding service is required. The following is the
+original cutover checklist, retained for recovery and evidence. Production now
+accepts writes on Hetzner; these historical instructions do not authorize moving
+traffic back to Fly. Google login and authenticated upload validation remain
+outstanding, as stated above. Subsequent releases must preserve the current
+database and use reviewed immutable images, canonical migration checks, backups,
+the release lease and a compatible recovery image.
 
 - Preserve the existing release lease and security-emergency readiness
   checks. Capture old machine configurations, runtime gates, immutable
@@ -176,8 +180,10 @@ backup precedes the host's 10:00–14:00 UTC snapshot window. Run and restore
 the first logical backup before declaring cutover complete. Backup retention
 is deliberate; monitor free space and preserve an off-host verified copy.
 
-The event ingestion changes in PRs #460, #463, and #464 remain separate from
-this hosting configuration and require their own review and rollout.
+Event ingestion changes originally tracked in PRs #460, #463 and #464 have
+entered main through their reviewed successors, including #475 and #465.
+Repository integration does not establish their production rollout or authorize
+enabling ingestion or event operations flags.
 
 ## Remaining operational follow-up
 
