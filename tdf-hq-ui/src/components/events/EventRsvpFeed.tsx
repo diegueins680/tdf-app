@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { SocialEventsAPI, type SocialRsvpFeedItemDTO } from '../../api/socialEvents';
+import { ApiError } from '../../api/client';
 import { captureGrowthEvent } from '../../analytics/growthAttribution';
 import { useAnalytics } from '../../analytics/useAnalytics';
 import { buildEventShareMessage, canonicalEventPath, canonicalEventUrl, safePublicImageUrl } from '../../utils/eventSharing';
@@ -38,6 +39,9 @@ export default function EventRsvpFeed({ partyId, directorySlug, isSelf, locale }
   const english = locale?.toLowerCase().startsWith('en') ?? false;
 
   if (feed.isLoading) return <CircularProgress size={24} aria-label={english ? 'Loading activity' : 'Cargando actividad'} />;
+  if (feed.isError && feed.error instanceof ApiError && feed.error.status === 404) {
+    return <Alert severity="info">{english ? 'RSVP activity is not available for this profile.' : 'La actividad de RSVP no está disponible para este perfil.'}</Alert>;
+  }
   if (feed.isError) return <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => { void feed.refetch(); }}>{english ? 'Retry' : 'Reintentar'}</Button>}>{english ? 'We could not load RSVP activity.' : 'No pudimos cargar la actividad de RSVP.'}</Alert>;
   if (items.length === 0) return <Alert severity="info">{english ? 'There is no public RSVP activity yet.' : 'Todavía no hay actividad de RSVP visible.'}</Alert>;
 
