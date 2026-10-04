@@ -18,8 +18,13 @@ const { default: EventRsvpFeed } = await import('./EventRsvpFeed');
 const clients: QueryClient[] = [];
 const emptyFeed: SocialRsvpFeedPageDTO = { feedItems: [], feedNextCursor: null };
 
-function renderFeed(directorySlug?: string) {
-  const client = new QueryClient({ defaultOptions: { queries: { retryDelay: 0 } } });
+function renderFeed(directorySlug?: string, disableRetries = false) {
+  const client = new QueryClient({ defaultOptions: { queries: {
+    retryDelay: 0,
+    // Match the application's policy; the feed must inherit it.
+    retry: disableRetries ? false : (failureCount, error) =>
+      !(error instanceof ApiError && error.status >= 400 && error.status < 500) && failureCount < 3,
+  } } });
   clients.push(client);
   render(
     <QueryClientProvider client={client}>
@@ -62,7 +67,6 @@ it('handles unavailable directory activity in English through the slug endpoint'
 it.each([
   new ApiError('Internal server error', 500),
   new Error('Network unavailable'),
-  new ApiError('Unauthorized', 401),
 ])('preserves failure feedback and recovery for $message', async (error) => {
   listFeed.mockRejectedValue(error);
   renderFeed();
@@ -72,6 +76,24 @@ it.each([
   fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
   await screen.findByText('Todavía no hay actividad de RSVP visible.');
   expect(listFeed).toHaveBeenCalledTimes(5);
+});
+
+it.each([400, 401, 403, 429])('does not automatically retry HTTP %i', async (status) => {
+  listFeed.mockRejectedValue(new ApiError('Request rejected', status));
+  renderFeed();
+  await screen.findByText('No pudimos cargar la actividad de RSVP.');
+  expect(listFeed).toHaveBeenCalledTimes(1);
+  listFeed.mockResolvedValue(emptyFeed);
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
+  await screen.findByText('Todavía no hay actividad de RSVP visible.');
+  expect(listFeed).toHaveBeenCalledTimes(2);
+});
+
+it('honors a query client configured without automatic retries', async () => {
+  listFeed.mockRejectedValue(new ApiError('Internal server error', 500));
+  renderFeed(undefined, true);
+  await screen.findByText('No pudimos cargar la actividad de RSVP.');
+  expect(listFeed).toHaveBeenCalledTimes(1);
 });
 
 it('keeps a successful empty feed distinct from an unavailable feed', async () => {
