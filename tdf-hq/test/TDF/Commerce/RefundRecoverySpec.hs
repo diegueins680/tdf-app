@@ -353,7 +353,7 @@ requireRight = either (fail . show) pure
 -- Invoke the actual Servant handlers; no HTTP server, token, pool or provider.
 handler :: [RoleEnum] -> Bool -> Text -> IO (Either ServerError ServiceRefundRecoveryResponse)
 handler roles remote ref = do
-  let user = AuthedUser (toSqlKey 1) roles mempty
+  let user = AuthedUser (toSqlKey 1) roles mempty Nothing Nothing
       _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> inspect :<|> query :<|> _ =
         Storefront.serviceStorefrontAdminServer user
   runHandler (runReaderT ((if remote then query else inspect) ref)

@@ -1335,7 +1335,7 @@ reconciliationReport
   :: [RoleEnum] -> ConnectionPool -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
   -> IO (Either ServerError CommerceReconciliationReportDTO)
 reconciliationReport roles pool environment status checkout limit offset = do
-  let user = AuthedUser (toSqlKey 1) roles mempty
+  let user = AuthedUser (toSqlKey 1) roles mempty Nothing Nothing
       _ :<|> _ :<|> _ :<|> _ :<|> listReviews = Operations.commerceOperationsServer user
   result <- runHandler (runReaderT (listReviews environment status checkout limit offset) (queryEnv pool))
   case result of
@@ -1477,7 +1477,7 @@ queryReport
   :: [RoleEnum] -> ConnectionPool -> Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
   -> IO (Either ServerError CommerceProviderQueriesDTO)
 queryReport roles pool environment status limit offset = do
-  let user = AuthedUser (toSqlKey 1) roles mempty
+  let user = AuthedUser (toSqlKey 1) roles mempty Nothing Nothing
       _ :<|> _ :<|> _ :<|> listQueries :<|> _ = Operations.commerceOperationsServer user
   result <- runHandler (runReaderT (listQueries environment status limit offset) (queryEnv pool))
   case result of
