@@ -3095,7 +3095,7 @@
     },
     {
       "path": "docs/notifications/navigation-2026-09-17.md",
-      "sha256": "be5ed91c12aa5116e7c86ccde57eb28a3c6b1e62e08e0036e8b80cffde696229",
+      "sha256": "89028c8592f0399128b7921161326af22d466758a25405a2cfaedda64617fe75",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
