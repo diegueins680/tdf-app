@@ -65,6 +65,8 @@ Use exact internal checkout UUIDs, treat missing schema/links/amounts explicitly
 and retain holds until separately approved remediation. It has no release,
 refund, payout or provider-query controls. The mobile contract is generated;
 there is no new native admin screen.
+For the existing Fly staging URLs, verified access failures, dedicated credential names and
+qualification procedure, see [staging access evidence](staging-access-2026-09-14.md).
 
 ## 1. Configuration and activation
 
