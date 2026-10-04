@@ -79,7 +79,8 @@ Authoritative contracts and boundaries:
 
 ### Prerequisites
 - **Backend:** Stack with `tdf-hq/stack.yaml` (GHC 9.10.3); production PostgreSQL 17 with the extensions specified in `ops/hetzner/README.md`
-- **Frontend/Mobile:** Node.js 22+ (`package.json`; CI uses Node 22), npm 10+
+- **Root/frontend:** Node.js 22+ (`package.json`; CI uses Node 22), npm 10+
+- **Mobile:** use the pinned submodule’s `.nvmrc` and lockfile. Its standalone CI currently selects Node 20.19.4; root CI also verifies the coupled client on Node 22. Do not infer the Mobile pin’s toolchain from the root package.
 - **Optional:** Docker + Docker Compose
 
 ### Development Setup

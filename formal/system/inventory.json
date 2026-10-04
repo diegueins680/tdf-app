@@ -1145,7 +1145,6 @@
       "tdf-hq/docs/openapi/user-roles.yaml",
       "tdf-hq/docs/service_marketplace_formal_spec.md",
       "tdf-hq/migrations/0001_create_social_events.sql",
-      "tdf-hq/package.yaml",
       "tdf-hq/production-entrypoint.sh",
       "tdf-hq/schemas/_tdf_common.schema.json",
       "tdf-hq/schemas/anexo_cronograma.schema.json",
@@ -1902,7 +1901,7 @@
     },
     {
       "path": "HASKELL_BEST_PRACTICES.md",
-      "sha256": "948166b2aaa01b7feed562157d62ae227e4418474620815f30fadf32f428b9ca",
+      "sha256": "04184a5e75336eefa3f82465785489c1a052dead5ea7640518e49a5638b7c1d9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -1923,7 +1922,7 @@
     },
     {
       "path": "INDEX.md",
-      "sha256": "248d1ac3b04f4338e8d225d00c40dfd04c33aa818b8445b042a4c210ab1493b8",
+      "sha256": "ac54b006be68d4c629e6231d4010cadc46481effd0fa782beac465298d5cb41b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -1965,7 +1964,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "45db2bfe22b93abb4f349a6412a759f1cde697df068115f9fdfc519bdecbed4a",
+      "sha256": "b55dd35776b160c09b956c310d198f0174eb4da0373c4d4439e8a6a6cf14c648",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
