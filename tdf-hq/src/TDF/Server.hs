@@ -19480,7 +19480,7 @@ loadCartLines cartId = do
     asset   <- getJustEntity (ME.marketplaceListingAssetId (entityVal listing))
     let checkedSubtotal = CommerceMoney.checkedCartSubtotal
           (ME.marketplaceCartItemQuantity ci) (ME.marketplaceListingPriceUsdCents (entityVal listing))
-        subtotal = either (const 0) id checkedSubtotal
+        subtotal = either (const 0) (\amount -> amount) checkedSubtotal
         qty = ME.marketplaceCartItemQuantity ci
         purpose = T.toLower (T.strip (ME.marketplaceListingPurpose (entityVal listing)))
         saleLine = MarketplaceCartLine
