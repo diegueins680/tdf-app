@@ -5747,6 +5747,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/RefundRecovery.cfg",
+      "sha256": "ba10aef6f3933c799a44bff583ad40eae5e62931f5cf3acd98caf6d147c30457",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecovery.tla",
+      "sha256": "1d8000590ad630f250a1b9e1fcaf5f3e1e8d91613e62daef33fbe8423442ae9e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/RefundRecoveryAccounting.cfg",
+      "sha256": "75e88634e2988c7bb6988d41278280bd1e8c4c25c5f487b087f53584183d0668",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecoveryAuthority.cfg",
+      "sha256": "4afa03d6529045f942c54f80eb7e15e579e8728b694cd304256a6ced4a7afdec",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecoveryExecution.cfg",
+      "sha256": "6882026c6f5cfb3f3e251df3ccc8d9eb6ccc95204440603e6e645668dcc29349",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/ReservationOverride.cfg",
       "sha256": "d42367fad32145f991def9b5b8bdc47e0de76ad536ca659068bece1d24c45dcf",
       "authority": "inferred",
@@ -6179,6 +6214,13 @@
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/refund-recovery-correspondence.md",
+      "sha256": "19a2aaf96c743bb8d787cb6d420275c2ad84f592cf27e7e54f72fa28af0db4eb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
     },
     {
       "path": "formal/interactions/README.md",
@@ -10830,6 +10872,98 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK NoUnauthorizedDisclosure ReceiptBindingPreserved",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecovery.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = FALSE",
+        "  UnsafeAccountingReplay = FALSE",
+        "  UnsafeAuthority = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecoveryAccounting.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = FALSE",
+        "  UnsafeAccountingReplay = TRUE",
+        "  UnsafeAuthority = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecoveryAuthority.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = FALSE",
+        "  UnsafeAccountingReplay = FALSE",
+        "  UnsafeAuthority = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecoveryExecution.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = TRUE",
+        "  UnsafeAccountingReplay = FALSE",
+        "  UnsafeAuthority = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

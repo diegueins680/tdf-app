@@ -128,6 +128,10 @@ expect_counterexample() {
   fi
   echo "Expected mutation counterexample: ${config}: ${invariant}"
 }
+run_tlc RefundRecovery.tla RefundRecovery.cfg refund-recovery
+expect_counterexample RefundRecoveryExecution.cfg NoDuplicateExecution refund-recovery-execution RefundRecovery.tla
+expect_counterexample RefundRecoveryAccounting.cfg NoDuplicateAccounting refund-recovery-accounting RefundRecovery.tla
+expect_counterexample RefundRecoveryAuthority.cfg CurrentAuthorityAtApply refund-recovery-authority RefundRecovery.tla
 expect_counterexample TaskCommitEarlyValidation.cfg NoBlockedCompletion early-validation
 expect_counterexample TaskCommitWriteSkew.cfg NoOrphanResponsibilities write-skew
 run_tlc TaskCompletion.tla TaskCompletion.cfg task-completion
