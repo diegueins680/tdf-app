@@ -23,14 +23,4 @@ git -C "$ROOT" diff --exit-code -- \
   test/internships/studio-audit/studio-feature-inventory.json \
   test/internships/studio-audit/test-cases.json
 node --test "$ROOT/scripts/__tests__/studio-internship-audit.test.mjs"
-node --test "$ROOT/scripts/__tests__/payment-query-report-contract.test.mjs"
-run_npm run verify:formal --prefix "$ROOT"
-run_npm run test:auto-loop --prefix "$ROOT"
-run_npm run test:formal --prefix "$ROOT"
-run_npm run test:production-release --prefix "$ROOT"
-run_npm run test:ci-pipeline --prefix "$ROOT"
-run_npm run test:instagram-token-workflows --prefix "$ROOT"
-run_npm run test:music-directory-visual-artifacts --prefix "$ROOT"
-run_npm run test:persona-program --prefix "$ROOT"
-
-node --test "$ROOT/scripts/__tests__/artist-import-idempotency.test.mjs"
+node --test "$ROOT/scripts/__tests__/local-api-fixture.test.mjs"

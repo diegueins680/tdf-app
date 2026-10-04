@@ -139,7 +139,6 @@ import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.ProviderCapabilities as ProviderCapabilities
 import qualified TDF.Commerce.ProviderExecutionStore as ProviderExecutionStore
 import qualified TDF.Commerce.ProviderRetrySpec as ProviderRetrySpec
-import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntimeStore
 import qualified TDF.Commerce.ProviderAdapter as ProviderAdapter
 import qualified TDF.Commerce.ProviderAdapter.Http as ProviderAdapterHttp
@@ -160,6 +159,8 @@ import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Services.RecordsIngestionSpec as RecordsIngestion
 import qualified TDF.Services.YouTubeSpec as YouTubeSpec
+import qualified TDF.EventOperations.TypesSpec as EventOperationsTypesSpec
+import qualified TDF.EventOperations.DatabaseBoundarySpec as EventOperationsDatabaseBoundarySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.PaymentAvailability as PaymentAvailabilityServer
@@ -8858,6 +8859,7 @@ main = hspec $ do
                         , auRoles = [Fan]
                         , auModules = modulesForRoles [Fan]
                         , auApiTokenId = Nothing
+                        , auSessionWitness = Nothing
                         }
                 payload =
                     InstagramOAuth.InstagramOAuthExchangeRequest
@@ -14217,6 +14219,7 @@ main = hspec $ do
                     , auRoles = roles
                     , auModules = modulesForRoles roles
                     , auApiTokenId = Nothing
+                    , auSessionWitness = Nothing
                     }
 
         it "allows operations users and rejects ordinary authenticated users before contract handlers run" $ do
@@ -17611,7 +17614,6 @@ main = hspec $ do
 
     APITypesSpec.spec
     ProviderRetrySpec.spec
-    WorkerLoggingSpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
     CatalogRecordsSpec.spec
@@ -17623,6 +17625,8 @@ main = hspec $ do
     EventDiscoverySpec.spec
     RecordsIngestion.spec
     YouTubeSpec.spec
+    EventOperationsTypesSpec.spec
+    EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
     ArtistSpec.spec
     ArtistActivationSpec.spec
@@ -17783,6 +17787,7 @@ socialSyncAdminUser =
         , auRoles = [Admin]
         , auModules = modulesForRoles [Admin]
         , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 socialSyncListHandlerFor
@@ -17816,6 +17821,7 @@ radioPresenceUser =
         , auRoles = [Fan]
         , auModules = modulesForRoles [Fan]
         , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 runRadioPresenceTest :: RadioPresenceTestM a -> IO (Either ServerError a)

@@ -13574,6 +13574,178 @@
           "reviewBatch": "universal-interactions-2026-09-28"
         }
       }
+    },
+    {
+      "id": "6ab46a9a823aa52bd8e8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Treating callable transport methods as editable values could redirect authenticated commands or invalidate receipt binding.",
+      "justification": "EventOperations is an object of seven typed API functions, not a selectable business list. Its keys dispatch existing canonical endpoints; each function validates its own request and receipt.",
+      "reviewed": true
+    },
+    {
+      "id": "ed9e380a46b4f315e551",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Editable local phases could bypass deliberate confirmation, single-flight guards or exact uncertain replay.",
+      "justification": "EventRaciEditor Phase discriminates transient React control flow, not event lifecycle or business workflow records. RaciWebEditor models its confirmation, context and retry semantics; labels remain localized separately.",
+      "reviewed": true
+    },
+    {
+      "id": "97afdce2d664e5ba3586",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Expanding exception details can expose database internals or mishandle cancellation and retryable conflicts.",
+      "justification": "DatabaseFailure is a sanitized Haskell runtime exception boundary, not a selectable business catalog. Serialization/deadlock remains TransactionConflict, other synchronous faults remain DatabaseUnavailable, and asynchronous cancellation is rethrown. InvalidTransitionResponse preserves the existing lifecycle invalid_database_response HTTP envelope after a private typed decode exception aborts the transaction. No raw database or receipt diagnostic is retained or returned.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "9f7714307b6856ea63cf",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "risk": "Expanding exception details can expose database internals or mishandle cancellation and retryable conflicts.",
+        "justification": "DatabaseFailure is the Haskell exception-classification boundary: SQL serialization/deadlock errors map to TransactionConflict, other synchronous failures to DatabaseUnavailable, and asynchronous cancellation is rethrown. These are sanitized runtime variants, not business catalog entries.",
+        "reviewed": true
+      },
+      "reviewBatch": "event-lifecycle-transaction-review-2026-10-03"
+    },
+    {
+      "id": "747165e201d9c11c2215",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "event_logistics_activity.status and EventTaskStatus wire contract",
+      "risk": "A DTO-only status expansion could accept task states unsupported by persisted transitions or completion guards.",
+      "justification": "The five Haskell task constructors encode the existing canonical activity status strings and reject unknown wire values. This typed consumer is not a new status authority; future changes must align canonical task constraints, API schemas, generated consumers and formal transitions.",
+      "reviewed": true
+    },
+    {
+      "id": "b7bf17e6cd7bfdd01325",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "event_operation_raci_assignment.raci_role and EventRaciRole wire contract",
+      "risk": "A client/server role mismatch could misidentify accountability or authorize an unsupported reassignment.",
+      "justification": "The Haskell RACI constructors are an exhaustive typed consumer of the canonical four-role assignment constraint, with explicit JSON conversion and rejection of unknown roles. Assignment identity and scope remain persisted and checked, not owned by this enum.",
+      "reviewed": true
+    },
+    {
+      "id": "dd65a3141ce82ff42537",
+      "classification": "governed-reference-data",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_logistics_activity.status",
+      "priority": "P3-retain",
+      "risk": "Client/schema drift could misrepresent state or authority; enforce persisted guards and regenerate both client projections.",
+      "justification": "Wire projection of the persisted task states and matching Haskell EventTaskStatus. Database commit constraints govern completion and graph approvals; listing a state confers no authority.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-and-contract-review",
+      "reviewBatch": "event-stack-integration-20260928",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "kind": "openapi-enum",
+        "name": "EventTaskStatus",
+        "values": [
+          "planned",
+          "confirmed",
+          "in_progress",
+          "completed",
+          "cancelled"
+        ]
+      }
+    },
+    {
+      "id": "b97fcef81b98c6db8180",
+      "classification": "governed-reference-data",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_lifecycle_state",
+      "priority": "P3-retain",
+      "risk": "Client/schema drift could misrepresent state or authority; enforce persisted guards and regenerate both client projections.",
+      "justification": "Wire projection of the foundation lifecycle reference data. Allowed transitions, evidence and role checks remain database policy, not a choice granted by the client enum.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-and-contract-review",
+      "reviewBatch": "event-stack-integration-20260928",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "kind": "openapi-enum",
+        "name": "EventLifecycleState",
+        "values": [
+          "draft",
+          "planning",
+          "pending_approval",
+          "approved",
+          "published",
+          "staffing",
+          "ready",
+          "in_progress",
+          "completed",
+          "settlement_pending",
+          "settled",
+          "archived",
+          "reprogrammed",
+          "cancelled"
+        ]
+      }
+    },
+    {
+      "id": "4bfb42bc49c0a7b4bd07",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "event_operation_lifecycle_transition_policy.required_authority",
+      "priority": "P3-retain",
+      "risk": "Client/schema drift could misrepresent state or authority; enforce persisted guards and regenerate both client projections.",
+      "justification": "Projection of the persisted transition-policy authority codes. The server validates the authenticated session and current scoped roles; these response labels cannot grant permissions.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-and-contract-review",
+      "reviewBatch": "event-stack-integration-20260928",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "kind": "openapi-enum",
+        "name": "authorityCode",
+        "values": [
+          "owner",
+          "event_approver",
+          "finance_approver",
+          "records_manager"
+        ]
+      }
+    },
+    {
+      "id": "6b64a4633b50c0a4115d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Client/schema drift could misrepresent state or authority; enforce persisted guards and regenerate both client projections.",
+      "justification": "Finite sanitized error protocol used by the event API and generated clients. The codes communicate typed failures without exposing SQL exceptions, hidden event identifiers or credentials; they are not business choices.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-and-contract-review",
+      "reviewBatch": "event-stack-integration-20260928",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "kind": "openapi-enum",
+        "name": "code",
+        "values": [
+          "feature_disabled",
+          "not_found",
+          "forbidden",
+          "invalid_request",
+          "reason_required",
+          "idempotency_conflict",
+          "version_conflict",
+          "transition_invalid",
+          "transition_effects_not_ready",
+          "operation_not_ready",
+          "assignment_not_replaceable",
+          "assignee_unavailable",
+          "assignment_conflict",
+          "accountability_not_ready",
+          "dependencies_not_ready",
+          "separation_of_duties",
+          "event_operations_unavailable",
+          "invalid_database_response"
+        ]
+      }
     }
   ]
 }

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+  "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+  "successors": [
+    {
+      "historicalReplacementId": "91952765f2d528c2a6c6",
+      "currentId": "91952765f2d528c2a6c6",
+      "file": "tdf-hq-ui/src/api/socialEvents.ts",
+      "kind": "literal-union",
+      "name": "SocialRsvpStatus",
+      "valueCount": 3
+    },
+    {
+      "historicalReplacementId": "74f76e178df15df54768",
+      "currentId": "74f76e178df15df54768",
+      "file": "tdf-hq-ui/src/api/socialEvents.ts",
+      "kind": "object-registry",
+      "name": "SocialEventsAPI",
+      "valueCount": 66
+    },
+    {
+      "historicalReplacementId": "c7c31a11cdb3859ae4bb",
+      "currentId": "c7c31a11cdb3859ae4bb",
+      "file": "tdf-hq/docs/openapi/api.yaml",
+      "kind": "openapi-enum",
+      "name": "Role",
+      "valueCount": 31
+    },
+    {
+      "historicalReplacementId": "0eb0488703525594608c",
+      "currentId": "0eb0488703525594608c",
+      "file": "tdf-hq/src/TDF/SocialEventLifecycle.hs",
+      "kind": "haskell-list",
+      "name": "recognizedSocialEventCapabilityCodes",
+      "valueCount": 3
+    },
+    {
+      "historicalReplacementId": "068d6f3f0c164631ab35",
+      "currentId": "068d6f3f0c164631ab35",
+      "file": "tdf-mobile/src/api/events.ts",
+      "kind": "object-registry",
+      "name": "Events",
+      "valueCount": 29
+    },
+    {
+      "historicalReplacementId": "2a1f5ad58ef7b8fc4bf3",
+      "currentId": "2a1f5ad58ef7b8fc4bf3",
+      "file": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+      "kind": "haskell-list",
+      "name": "eventUpdateAllowedKeys",
+      "valueCount": 26
+    },
+    {
+      "historicalReplacementId": "ffb84e8fd3972fd0730d",
+      "currentId": "5147eb2751a01d8b4c73",
+      "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+      "kind": "array",
+      "name": "mobileFeatureRegistry",
+      "valueCount": 157,
+      "previousResolution": {
+        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+        "currentId": "21babc54d68f0c44d55e",
+        "valueCount": 156
+      },
+      "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+    },
+    {
+      "historicalReplacementId": "34d5f2f94d1a165783ba",
+      "currentId": "3b37706d3daff89e8890",
+      "file": "tdf-mobile/src/lib/onboardingIntent.ts",
+      "kind": "switch-cases",
+      "name": "intent",
+      "valueCount": 6
+    },
+    {
+      "historicalReplacementId": "7578a30aa3cc5aa23870",
+      "currentId": "dc6d60d733c6eb69ebbf",
+      "file": "scripts/production-migrations.json",
+      "kind": "json-array",
+      "name": "migrations",
+      "valueCount": 160,
+      "previousResolution": {
+        "historicalReplacementId": "7578a30aa3cc5aa23870",
+        "currentId": "7bf93825f1431a6d52d6",
+        "file": "scripts/production-migrations.json",
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 159,
+        "previousResolution": {
+          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+          "currentId": "07da55e81a186d26df37",
+          "valueCount": 115
+        },
+        "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+      },
+      "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+    }
+  ]
+}

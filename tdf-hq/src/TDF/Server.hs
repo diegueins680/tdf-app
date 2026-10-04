@@ -135,6 +135,7 @@ import           TDF.Config ( AppConfig(..)
 import           TDF.DB
 import qualified TDF.CampaignAutomation as CampaignAutomation
 import qualified TDF.Operations.Server as OperationsServer
+import qualified TDF.EventOperations.Server as EventOperationsServer
 import qualified TDF.Invoice.SRI as Sri
 import           TDF.Models
 import qualified TDF.Models as M
@@ -3820,6 +3821,7 @@ protectedServer user =
   :<|> DirectoryServer.directoryProtectedServer user
   :<|> MerchServer.merchProtectedServer user
   :<|> OperationsServer.operationsServer user
+  :<|> EventOperationsServer.eventOperationsServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
   :<|> ReviewsServer.reviewsProtectedServer user
   :<|> InteractionsServer.interactionsServer user
@@ -4348,7 +4350,7 @@ notifyEligibleFeatureReviewers requester feature actionName requestId now = do
   forM_ reviewerPartyIds $ \reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do
     rolesResult <- loadCanonicalPartyRoles reviewerPartyId
     roles <- either (liftIO . ioError . userError . T.unpack) pure rolesResult
-    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles) Nothing
+    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles) Nothing Nothing
     when (registryReviewerCanDecide reviewer feature actionName) $
       insert_ Notification
         { notificationRecipientPartyId = reviewerPartyId

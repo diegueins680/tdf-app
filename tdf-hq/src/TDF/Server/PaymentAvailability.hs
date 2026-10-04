@@ -77,7 +77,7 @@ loadRuntimeReadyRoutes request = do
   activations <- liftIO $ flip runSqlPool envPool $
     loadProviderActivations (prEnvironment request)
   readyActivations <- filterM
-    (runtimeReady (prEnvironment request) (prFlow request)) activations
+    (runtimeReady (prEnvironment request) (prFlow request) (prMethod request)) activations
   pure (routePayments readyActivations (requireCheckoutCompletion request))
 
 requiredCapabilities :: ProductFlow -> [PaymentCapability]
@@ -91,8 +91,8 @@ requiredCapabilities flow =
         ]
       else []
 
-runtimeReady :: Checkout.CheckoutEnvironment -> ProductFlow -> ProviderActivation -> AppM Bool
-runtimeReady environment flow activation = case paProvider activation of
+runtimeReady :: Checkout.CheckoutEnvironment -> ProductFlow -> PaymentMethod -> ProviderActivation -> AppM Bool
+runtimeReady environment flow method activation = case paProvider activation of
   Checkout.ProviderDatafast ->
     ((\configured -> ServiceStorefront.sdfEnvironment configured == environment
         && merchantMatches (ServiceStorefront.sdfEntityId configured))
@@ -110,7 +110,7 @@ runtimeReady environment flow activation = case paProvider activation of
     liftIO (manualTransferInstructionsConfigured flow)
   Checkout.ProviderPlaceToPay ->
     liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
-      (routeMethod route))
+      method)
   Checkout.ProviderPayPhone ->
     liftIO (runtimeProviderConfigured environment Checkout.ProviderPayPhone)
   Checkout.ProviderStripe -> pure False

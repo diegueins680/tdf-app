@@ -2301,6 +2301,7 @@ socialEventUser partyId =
         , auRoles = [Fan]
         , auModules = modulesForRoles [Fan]
         , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 strictAdminSocialEventUser :: Int64 -> AuthedUser
@@ -2310,6 +2311,7 @@ strictAdminSocialEventUser partyId =
         , auRoles = [Admin]
         , auModules = modulesForRoles [Admin]
         , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 socialEventStartFixture :: UTCTime
