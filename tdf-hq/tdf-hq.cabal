@@ -76,6 +76,7 @@ executable tdf-hq-exe
     TDF.Artists.Enrichment
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
     TDF.Commerce.DomoQuotes
@@ -292,6 +293,7 @@ test-suite tdf-hq-test
     TDF.TrialIdentitySpec
     TDF.MarketplaceIdentitySpec
     TDF.Commerce.WorkerLoggingSpec
+    TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec
     TDF.EmailHeadersSpec
     TDF.CorsSpec
@@ -359,6 +361,7 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
     TDF.Commerce.DomoQuotes

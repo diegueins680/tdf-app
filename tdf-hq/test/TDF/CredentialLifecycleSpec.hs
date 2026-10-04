@@ -31,9 +31,13 @@ import TDF.ServerAuth (GoogleProfile(..), completeGoogleLogin)
 spec :: Spec
 spec = describe "credential-lifecycle-postgresql" $ do
   configured <- runIO (lookupEnv "TDF_CREDENTIAL_LIFECYCLE_DATABASE_URL")
+  routingOverrides <- runIO (traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"])
   case configured of
     Nothing -> it "requires the isolated fully migrated integration runner" $
       pendingWith "Run scripts/test-credential-lifecycle.sh"
+    Just _ | any (maybe False (not . null)) routingOverrides ->
+      it "refuses inherited libpq routing overrides" $
+        expectationFailure "Unset PGHOSTADDR, PGSERVICE and PGSERVICEFILE for the isolated runner"
     Just connection | not (safeConnection connection) ->
       it "refuses a non-disposable database" $ expectationFailure "Use the isolated integration runner"
     Just connection -> beforeAll (runNoLoggingT (createPostgresqlPool (BS.pack connection) 4)) $

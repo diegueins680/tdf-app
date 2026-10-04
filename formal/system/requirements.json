@@ -1605,6 +1605,79 @@
         "classification": "PARTIAL",
         "reason": "Local source-policy checks and negative controls pass; exact final candidate compilation/image construction and deployed correspondence remain pending."
       }
+    },
+    {
+      "id": "PAY-CHECKOUT-001",
+      "title": "Exact checkout line and marketplace cart arithmetic",
+      "statement": "Compute line products and aggregate totals exactly before narrowing; canonical checkout rows must contain validated subtotals matching their positive parent amount, and overflowing cart receipts must be rejected atomically.",
+      "domain": "PAY",
+      "authority": "inferred",
+      "source": "docs/revenue-platform/formal-model.yaml; formal/system/checkout-arithmetic.md",
+      "property": "Accepted canonical line products are positive representable Int64 values, quantities fit PG INTEGER, and their exact sum equals the parent; legacy cart products/sums do not wrap.",
+      "contract": "formal/system/checkout-arithmetic.md",
+      "actors": [
+        "Checkout creation adapter",
+        "Marketplace cart customer",
+        "Operator maintaining listing prices"
+      ],
+      "preconditions": [
+        "Prices and quantities are server-loaded; the caller owns the database transaction."
+      ],
+      "inputs": [
+        "Int64 canonical parent/unit amounts and Int line quantities",
+        "Legacy cart Int prices and quantities"
+      ],
+      "state": {
+        "initial": "unvalidated numeric snapshot",
+        "terminal": [
+          "rejected without committed mutation",
+          "validated exact snapshot"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate positivity, quantity range, exact products and exact aggregate before canonical insertion.",
+        "Return a valid nonnegative cart preview; require a positive total separately for payment."
+      ],
+      "forbiddenTransitions": [
+        "Admit a wrapped product or aggregate as a successful price.",
+        "Commit a cart update after its resulting receipt is rejected for overflow."
+      ],
+      "effects": [
+        "Persist the checked subtotals without recalculating unchecked fixed-width arithmetic.",
+        "Return 409 for invalid/overflowing cart receipts."
+      ],
+      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
+      "privacy": "Synthetic tests use no real customer data or provider credentials.",
+      "concurrency": "Pure validation precedes SQL effects; database transaction rollback protects failed cart response construction. This does not establish snapshot serialization against concurrent listing edits.",
+      "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
+      "failure": "Reject malformed or out-of-range values; no canonical checkout insert occurs, and failed cart mutations roll back.",
+      "recovery": "Correct source pricing or quantities through authorized workflows; never rewrite immutable financial evidence to hide a mismatch.",
+      "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/Money.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+        "scripts/verify-checkout-money.py",
+        "scripts/__tests__/checkout-money-http.mjs",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "53 Hspec examples including two 1000-case generated properties and five source mutations; actual HTTP refinement required.",
+      "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for pure arithmetic; final adapter/HTTP execution and database aggregate enforcement remain pending",
+      "ambiguity": [
+        "Database has no cross-line aggregate constraint; additive migration still required.",
+        "Other monetary writers, rounding and provider finality are not established by this requirement."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure properties and all five negative controls passed locally; current full candidate integration/HTTP execution and database aggregate enforcement are not complete."
+      }
     }
   ]
 }

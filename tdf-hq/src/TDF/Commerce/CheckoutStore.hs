@@ -49,6 +49,7 @@ import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql (Single(..), SqlPersistT, rawExecute, rawSql)
+import           TDF.Commerce.Money (checkedCheckoutSubtotals)
 
 data CheckoutEnvironment
   = CheckoutSandbox
@@ -253,12 +254,9 @@ createCheckoutWithInitialStatus
 createCheckoutWithInitialStatus initialStatus CheckoutCreation{..} checkoutLines = do
   when (initialStatus `notElem` ["holding", "awaiting_payment"]) $
     fail "Canonical checkout initial status is invalid"
-  when (null checkoutLines) $
-    fail "Canonical checkout requires at least one immutable line item"
-  when (any invalidLine checkoutLines) $
-    fail "Canonical checkout line quantity and unit amount must be positive"
-  when (lineTotal /= ccAmountMinor) $
-    fail "Canonical checkout line totals do not match the checkout total"
+  subtotals <- either (fail . T.unpack) pure $
+    checkedCheckoutSubtotals ccAmountMinor
+      [(clQuantity line, clUnitAmountMinor line) | line <- checkoutLines]
   checkoutId <- liftIO (toText <$> nextRandom)
   rawExecute
     "INSERT INTO commerce_checkout_session (\
@@ -279,7 +277,7 @@ createCheckoutWithInitialStatus initialStatus CheckoutCreation{..} checkoutLines
     , PersistText ccIdempotencyKey
     , PersistUTCTime ccExpiresAt
     ]
-  mapM_ (insertCheckoutLine checkoutId) (zip [1 :: Int64 ..] checkoutLines)
+  mapM_ (insertCheckoutLine checkoutId) (zip3 [1 :: Int64 ..] checkoutLines subtotals)
   insertAudit
     checkoutId
     "checkout_created"
@@ -289,20 +287,12 @@ createCheckoutWithInitialStatus initialStatus CheckoutCreation{..} checkoutLines
     ccCorrelationId
     ccSnapshot
   pure (CheckoutReference checkoutId)
-  where
-    invalidLine CheckoutLineCreation{..} =
-      clQuantity <= 0 || clUnitAmountMinor <= 0
-    lineTotal = sum
-      [ fromIntegral clQuantity * clUnitAmountMinor
-      | CheckoutLineCreation{..} <- checkoutLines
-      ]
 
 insertCheckoutLine
   :: Text
-  -> (Int64, CheckoutLineCreation)
+  -> (Int64, CheckoutLineCreation, Int64)
   -> SqlPersistT IO ()
-insertCheckoutLine checkoutId (lineNumber, CheckoutLineCreation{..}) = do
-  let subtotal = fromIntegral clQuantity * clUnitAmountMinor
+insertCheckoutLine checkoutId (lineNumber, CheckoutLineCreation{..}, subtotal) = do
   rawExecute
     "INSERT INTO commerce_checkout_line_item (\
     \ checkout_id, line_number, product_type, product_id, product_version,\

@@ -130,6 +130,18 @@
       "conflict": "Image recipes disabled Debian package authentication and metadata freshness to tolerate network failures, allowing untrusted build/runtime inputs.",
       "authority": "formal/system/build-trust.md",
       "resolution": "Remove the bypasses and require fail-closed APT verification in both image recipes. Diagnose proxy/mirror trust failures instead of weakening package trust."
+    },
+    {
+      "id": "AUTHORITY-013",
+      "sources": [
+        "docs/revenue-platform/formal-model.yaml",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "formal/system/checkout-arithmetic.md"
+      ],
+      "conflict": "Fixed-width products and sums can wrap to a positive value accepted as a parent total despite the declared exact line-total invariant. Per-line PostgreSQL checks do not enforce the cross-line aggregate.",
+      "authority": "formal/system/checkout-arithmetic.md",
+      "resolution": "Repair application calculations with exact arithmetic and explicit narrowing checks; retain cross-line database enforcement as an open additive-migration obligation. Do not redefine wrapped amounts as valid."
     }
   ]
 }

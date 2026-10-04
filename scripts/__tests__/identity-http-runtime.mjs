@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { verifyCheckoutMoneyHttp } from './checkout-money-http.mjs';
 import yaml from 'yaml';
 import { disposablePostgresUrl } from '../lib/disposable-postgres-url.mjs';
 import { spawn, spawnSync } from 'node:child_process';
@@ -522,6 +523,7 @@ try {
   console.log(`Directory claim graph: ${checkedClaimPairs} real HTTP pairs conform to the declared relation.`);
   console.log('Directory review HTTP: Admin-role enforcement, multi-role composition, separated reviewer, serialized decisions and read-only replay passed.');
   console.log('Credential lifecycle HTTP: disable, re-enable, password replacement, scoped revocation, deterministic reset race and issuance rollback passed.');
+  await verifyCheckoutMoneyHttp({ sql, base });
   console.log('Identity HTTP: authorization, concurrent replay, actor scope, shared details, archival, canonical access and rollback passed.');
 } finally {
   server.kill('SIGTERM');

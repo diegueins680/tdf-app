@@ -25,3 +25,16 @@ for (const value of [
 test('CI service name is not a local default', () => {
   assert.throws(() => disposablePostgresUrl('postgresql://postgres/local_test'));
 });
+
+for (const name of ['PGHOSTADDR', 'PGSERVICE', 'PGSERVICEFILE']) {
+  test(`rejects inherited libpq routing override ${name}`, () => {
+    assert.throws(() => disposablePostgresUrl('postgresql://127.0.0.1/local_test', {
+      env: { [name]: 'synthetic-override' },
+    }));
+  });
+}
+test('allows password and timeout without changing the connection destination', () => {
+  assert.ok(disposablePostgresUrl('postgresql://127.0.0.1/local_test', {
+    env: { PGPASSWORD: 'synthetic', PGCONNECT_TIMEOUT: '2' },
+  }));
+});

@@ -193,6 +193,7 @@ import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.Money as CommerceMoney
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Server.DomoQuoteCheckout as DomoQuoteCheckoutServer
@@ -15893,14 +15894,14 @@ createCart = do
   Env{..} <- ask
   cartId <- liftIO $ flip runSqlPool envPool $ insert $ ME.MarketplaceCart now now
   cartDto <- liftIO $ flip runSqlPool envPool $ loadCartDTO (defaultCurrency envConfig) cartId
-  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace cart" cartDto)
+  either throwError pure (cartDto >>= requireLoadedMarketplaceWriteResult "Marketplace cart")
 
 getCart :: Text -> AppM MarketplaceCartDTO
 getCart rawId = do
   cartKey <- parseCartId rawId
   Env{..} <- ask
   mCart <- liftIO $ flip runSqlPool envPool $ loadCartDTO (defaultCurrency envConfig) cartKey
-  maybe (throwError marketplaceCartNotFound) pure mCart
+  either throwError (maybe (throwError marketplaceCartNotFound) pure) mCart
 
 upsertCartItem :: Text -> MarketplaceCartItemUpdate -> AppM MarketplaceCartDTO
 upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
@@ -15998,8 +15999,10 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
                         [PersistText (toPathPiece itemId)]
                       _ -> pure ()
                     update cartKey [ME.MarketplaceCartUpdatedAt =. now]
-                    maybe (Left marketplaceCartNotFound) Right
-                      <$> loadCartDTO (defaultCurrency envConfig) cartKey
+                    loaded <- loadCartDTO (defaultCurrency envConfig) cartKey
+                    case loaded >>= maybe (Left marketplaceCartNotFound) Right of
+                      Left serverErr -> transactionUndo >> pure (Left serverErr)
+                      Right dto -> pure (Right dto)
   either throwError pure result
 
 validateMarketplaceCartSelection
@@ -19296,19 +19299,22 @@ data MarketplaceCartTotalsState a
   | MarketplaceCartEmpty
   | MarketplaceCartInvalidQuantity Int
   | MarketplaceCartInvalidRental Text
+  | MarketplaceCartInvalidAmount Text
   | MarketplaceCartInvalidCurrency Text
   | MarketplaceCartMixedCurrencies [Text]
   | MarketplaceCartTotalsReady a
   deriving (Eq, Show)
 
-loadCartDTO :: Text -> Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
+loadCartDTO :: Text -> Key ME.MarketplaceCart -> SqlPersistT IO (Either ServerError (Maybe MarketplaceCartDTO))
 loadCartDTO configuredDefault cartId = do
   mCart <- get cartId
   case mCart of
-    Nothing -> pure Nothing
+    Nothing -> pure (Right Nothing)
     Just _ -> do
       items <- loadCartLines cartId
-      pure (Just (cartToDTO configuredDefault cartId items))
+      pure $ case cartToDTO configuredDefault cartId items of
+        Left message -> Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+        Right dto -> Right (Just dto)
 
 data MarketplaceCartLine = MarketplaceCartLine
   { mclCartItem :: Entity ME.MarketplaceCartItem
@@ -19345,14 +19351,14 @@ loadCartTotals cartId = do
             Nothing | pricingError : _ <- pricingErrors ->
               pure (MarketplaceCartInvalidRental pricingError)
             Nothing -> do
-              let totalCents =
-                    sum (map mclSubtotalCents items)
-                  rawCurrencies =
+              let rawCurrencies =
                     map (ME.marketplaceListingCurrency . entityVal . mclListing) items
-              case resolveMarketplaceCartCurrency rawCurrencies of
-                Left invalidCurrencyState -> pure invalidCurrencyState
-                Right currency ->
-                  pure (MarketplaceCartTotalsReady (items, totalCents, currency))
+              case CommerceMoney.checkedCartTotal (map mclSubtotalCents items) of
+                Left message -> pure (MarketplaceCartInvalidAmount message)
+                Right totalCents -> case resolveMarketplaceCartCurrency rawCurrencies of
+                  Left invalidCurrencyState -> pure invalidCurrencyState
+                  Right currency ->
+                    pure (MarketplaceCartTotalsReady (items, totalCents, currency))
 
 requireMarketplaceCartTotals :: MarketplaceCartTotalsState a -> Either ServerError a
 requireMarketplaceCartTotals MarketplaceCartMissing =
@@ -19361,6 +19367,8 @@ requireMarketplaceCartTotals MarketplaceCartEmpty =
   Left err400 { errBody = "El carrito esta vacio." }
 requireMarketplaceCartTotals (MarketplaceCartInvalidQuantity rawQuantity) =
   Left (marketplaceCartInvalidQuantityError rawQuantity)
+requireMarketplaceCartTotals (MarketplaceCartInvalidAmount message) =
+  Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 requireMarketplaceCartTotals (MarketplaceCartInvalidRental message) =
   Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 requireMarketplaceCartTotals (MarketplaceCartInvalidCurrency _) =
@@ -19470,7 +19478,10 @@ loadCartLines cartId = do
   forM cartItems $ \ent@(Entity _ ci) -> do
     listing <- getJustEntity (ME.marketplaceCartItemListingId ci)
     asset   <- getJustEntity (ME.marketplaceListingAssetId (entityVal listing))
-    let qty = ME.marketplaceCartItemQuantity ci
+    let checkedSubtotal = CommerceMoney.checkedCartSubtotal
+          (ME.marketplaceCartItemQuantity ci) (ME.marketplaceListingPriceUsdCents (entityVal listing))
+        subtotal = either (const 0) id checkedSubtotal
+        qty = ME.marketplaceCartItemQuantity ci
         purpose = T.toLower (T.strip (ME.marketplaceListingPurpose (entityVal listing)))
         saleLine = MarketplaceCartLine
           { mclCartItem = ent
@@ -19479,12 +19490,14 @@ loadCartLines cartId = do
           , mclQuantity = qty
           , mclPurpose = purpose
           , mclUnitPriceCents = ME.marketplaceListingPriceUsdCents (entityVal listing)
-          , mclSubtotalCents = ME.marketplaceListingPriceUsdCents (entityVal listing) * qty
+          , mclSubtotalCents = subtotal
           , mclRentalStartDate = Nothing
           , mclRentalEndDate = Nothing
           , mclRentalBreakdown = Nothing
           , mclRentalTerms = Nothing
-          , mclPricingError = if purpose == "sale" then Nothing else Just "Unsupported marketplace cart line"
+          , mclPricingError = case checkedSubtotal of
+              Left message -> Just message
+              Right _ -> if purpose == "sale" then Nothing else Just "Unsupported marketplace cart line"
           }
     if purpose /= "rent"
       then pure saleLine
@@ -19538,11 +19551,14 @@ cartToDTO
   :: Text
   -> Key ME.MarketplaceCart
   -> [MarketplaceCartLine]
-  -> MarketplaceCartDTO
-cartToDTO configuredDefault cartId items =
+  -> Either Text MarketplaceCartDTO
+cartToDTO configuredDefault cartId items = do
+  -- A failed line calculation uses a placeholder only inside the loader; never
+  -- expose it as a successful zero-price cart or use it for payment admission.
+  mapM_ (\line -> CommerceMoney.checkedCartSubtotal (mclQuantity line) (mclUnitPriceCents line)) items
+  subtotal <- CommerceMoney.checkedCartTotal (map mclSubtotalCents items)
   let currency = maybe configuredDefault
         (ME.marketplaceListingCurrency . entityVal . mclListing) (listToMaybe items)
-      subtotal = sum (map mclSubtotalCents items)
       itemDtos = flip map items $ \line ->
         let listingEnt = mclListing line
             assetEnt = mclAsset line
@@ -19575,7 +19591,7 @@ cartToDTO configuredDefault cartId items =
                 (\breakdown -> formatUsd (MarketplaceRentals.rpbSecurityDepositMinor breakdown) currency)
                   <$> mBreakdown
             }
-  in MarketplaceCartDTO
+  pure MarketplaceCartDTO
       { mcCartId          = toPathPiece cartId
       , mcItems           = itemDtos
       , mcCurrency        = currency
