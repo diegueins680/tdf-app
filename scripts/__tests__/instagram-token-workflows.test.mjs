@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -147,25 +147,20 @@ test('read-only CLI fails missing credentials without entering maintenance', asy
   assert.match(script, /runMessagingTokenCli\(process\.argv\.slice\(2\)\)\.then\(code => \{\s*process\.exitCode = code;/);
 });
 
-test('messaging workflow separates read-only credentials from unchanged maintenance', async () => {
+test('scheduled and manual messaging checks cannot update retired Fly credentials', async () => {
   const workflow = await readFile(
     new URL('../../.github/workflows/check-messaging-token.yml', import.meta.url), 'utf8'
   );
   const step = name => workflow.split(`      - name: ${name}\n`)[1]?.split('\n      - name:')[0];
   const readOnly = step('Check Messaging Token (read-only)');
-  const maintenance = step('Check/Refresh Messaging Token');
   assert.match(workflow, /permissions:\n  contents: read/);
   assert.match(workflow, /cron: '0 \* \* \* \*'/);
-  assert.match(readOnly, /if: github.event_name == 'workflow_dispatch' && inputs.action == 'check'/);
   assert.match(readOnly, /run: node scripts\/check-messaging-token\.mjs --check/);
-  assert.doesNotMatch(readOnly, /FLY_|flyctl/);
-  assert.match(maintenance, /if: github.event_name == 'schedule' \|\| inputs.action == 'refresh'/);
-  assert.match(maintenance, /FLY_API_TOKEN: \$\{\{ secrets.FLY_API_TOKEN \}\}/);
-  assert.match(maintenance, /run: node scripts\/check-messaging-token\.mjs\s*$/);
-  assert.match(step('Install Fly CLI'), /if: github.event_name == 'schedule' \|\| inputs.action == 'refresh'/);
+  assert.doesNotMatch(readOnly, /\bif:/);
+  assert.doesNotMatch(workflow, /FLY_|flyctl|Check\/Refresh|superfly\//);
+  assert.equal(workflow.match(/run: node scripts\/check-messaging-token\.mjs/g)?.length, 1);
   assert.match(step('Validate requested action'), /Unsupported messaging-token action'; exit 1/);
-  // The Fly credential must occur only on the guarded maintenance step.
-  assert.equal(workflow.match(/FLY_API_TOKEN:/g)?.length, 1);
+  assert.match(step('Notify on Failure'), /if: failure\(\)/);
   assert.doesNotMatch(workflow.split('    steps:')[0], /\benv:/);
 });
 
@@ -179,7 +174,7 @@ test('messaging workflow rejects unsupported actions before any credential step'
   for (const [event, action, status] of [
     ['schedule', '', 0],
     ['workflow_dispatch', 'check', 0],
-    ['workflow_dispatch', 'refresh', 0],
+    ['workflow_dispatch', 'refresh', 1],
     ['workflow_dispatch', '', 1],
     ['workflow_dispatch', 'unknown', 1],
     ['pull_request', 'refresh', 1],
@@ -632,4 +627,131 @@ test('token maintenance never invokes a shell, exposes prefixes, or deploys as p
   const library = await readFile(new URL('../lib/instagram-token-lifecycle.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(source + library, /execSync\s*\(|flyctl|token (?:prefix|substring)/i);
   assert.doesNotMatch(library, /graph\.facebook\.com|debug_token/);
+});
+
+test('social repair diagnostics use current callbacks without printing supplied credentials', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'tdf-social-diagnostic-'));
+  try {
+    const mock = join(directory, 'fetch.mjs');
+    await writeFile(mock, "globalThis.fetch = async () => ({ json: async () => ({ data: [] }) });\n");
+    const result = spawnSync(process.execPath, [
+      '--import', mock, new URL('../diagnose-social.mjs', import.meta.url).pathname,
+    ], {
+      encoding: 'utf8', timeout: 10000,
+      env: {
+        FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'do-not-log-app-secret',
+        INSTAGRAM_MESSAGING_TOKEN: 'do-not-log-ig-token',
+        INSTAGRAM_VERIFY_TOKEN: 'do-not-log-verify-token',
+        FACEBOOK_MESSAGING_TOKEN: 'do-not-log-fb-token',
+      },
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /callback_url=https:\/\/api\.tdfrecords\.net\/instagram\/webhook/);
+    assert.match(result.stdout, /callback_url=https:\/\/api\.tdfrecords\.net\/facebook\/webhook/);
+    assert.doesNotMatch(result.stdout, /do-not-log-|tdf-hq\.fly\.dev|flyctl/);
+    assert.match(result.stdout, /current Hetzner secret store/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('social diagnostics reject stale or inactive callbacks and accept current active callbacks', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'tdf-social-subscriptions-'));
+  try {
+    const mock = join(directory, 'fetch.mjs');
+    await writeFile(mock, `globalThis.fetch = async url => ({ json: async () =>
+      url.includes('/subscriptions?') ? { data: JSON.parse(process.env.TEST_SUBSCRIPTIONS) }
+      : { data: { is_valid: true, scopes: [] } }
+    });`);
+    for (const [base, active, repair] of [
+      ['https://tdf-hq.fly.dev', true, true],
+      ['https://api.tdfrecords.net', false, true],
+      ['https://api.tdfrecords.net', true, false],
+    ]) {
+      const result = spawnSync(process.execPath, [
+        '--import', mock, new URL('../diagnose-social.mjs', import.meta.url).pathname,
+      ], {
+        encoding: 'utf8', timeout: 10000,
+        env: {
+          FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'do-not-log-app-secret',
+          INSTAGRAM_MESSAGING_TOKEN: 'do-not-log-ig-token',
+          FACEBOOK_MESSAGING_TOKEN: 'do-not-log-fb-token', FACEBOOK_MESSAGING_PAGE_ID: 'audit-page',
+          TEST_SUBSCRIPTIONS: JSON.stringify([
+            { object: 'instagram', callback_url: base + '/instagram/webhook', active },
+            { object: 'page', callback_url: base + '/facebook/webhook', active },
+          ]),
+        },
+      });
+      assert.equal(result.error, undefined);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stdout.includes('To fix Instagram subscription'), repair);
+      assert.equal(result.stdout.includes('To fix Facebook subscription'), repair);
+      assert.equal(result.stdout.includes('Re-subscribe Instagram webhook'), repair);
+      assert.equal(result.stdout.includes('Re-subscribe Facebook webhook'), repair);
+      assert.equal(result.stdout.includes('All checks passed'), !repair);
+      assert.doesNotMatch(result.stdout, /do-not-log-/);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('Facebook repair command expands a backend-supported token without a literal placeholder', async () => {
+  const source = await readFile(new URL('../diagnose-social.mjs', import.meta.url), 'utf8');
+  const line = source.split('\n').find(line => line.includes('console.log(') && line.includes('object=page'));
+  // Evaluate the printed command with a local curl stub: no network/provider writes.
+  const command = line.trim().slice("console.log('".length, -3);
+  for (const [env, expected] of [
+    [{ FACEBOOK_MESSAGING_TOKEN: 'test-primary', FACEBOOK_PAGE_ACCESS_TOKEN: 'test-alias', INSTAGRAM_VERIFY_TOKEN: 'test-fallback' }, 'test-primary'],
+    [{ FACEBOOK_PAGE_ACCESS_TOKEN: 'test-alias', INSTAGRAM_VERIFY_TOKEN: 'test-fallback' }, 'test-alias'],
+    [{ INSTAGRAM_VERIFY_TOKEN: 'test-fallback' }, 'test-fallback'],
+  ]) {
+    const result = spawnSync('/bin/bash', ['-c', 'curl() { printf "%s\\n" "$@"; }; ' + command], {
+      encoding: 'utf8', timeout: 10000, env: { ...env, FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'test-app' },
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.stdout.split('\n').includes('verify_token=' + expected));
+    assert.doesNotMatch(result.stdout, /YOUR_FACEBOOK/);
+  }
+});
+
+test('Instagram repair commands honor backend credential aliases without printing values', async () => {
+  const source = await readFile(new URL('../diagnose-social.mjs', import.meta.url), 'utf8');
+  const line = source.split('\n').find(line => line.includes('console.log(') && line.includes('object=instagram'));
+  const command = line.trim().slice("console.log('".length, -3);
+  for (const env of [
+    { FACEBOOK_APP_ID: 'test-app', FACEBOOK_APP_SECRET: 'test-secret', INSTAGRAM_VERIFY_TOKEN: 'test-verify' },
+    { META_APP_ID: 'test-app', META_APP_SECRET: 'test-secret', IG_VERIFY_TOKEN: 'test-verify' },
+  ]) {
+    const result = spawnSync('/bin/bash', ['-c', 'curl() { printf "%s\\n" "$@"; }; ' + command], {
+      encoding: 'utf8', timeout: 10000, env,
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    const args = result.stdout.split('\n');
+    assert.ok(args.includes('https://graph.facebook.com/v18.0/test-app/subscriptions'));
+    assert.ok(args.includes('verify_token=test-verify'));
+    assert.ok(args.includes('access_token=test-app|test-secret'));
+    assert.doesNotMatch(command, /test-app|test-secret|test-verify/);
+  }
+});
+
+test('printed webhook repairs reject missing or empty verify credentials before curl', async () => {
+  const source = await readFile(new URL('../diagnose-social.mjs', import.meta.url), 'utf8');
+  for (const object of ['instagram', 'page']) {
+    const line = source.split('\n').find(line => line.includes('console.log(') && line.includes('object=' + object));
+    const command = line.trim().slice("console.log('".length, -3);
+    for (const empty of [{}, { INSTAGRAM_VERIFY_TOKEN: '', IG_VERIFY_TOKEN: '', FACEBOOK_MESSAGING_TOKEN: '', FACEBOOK_PAGE_ACCESS_TOKEN: '' }]) {
+      const result = spawnSync('/bin/bash', ['-c', 'curl() { echo UNEXPECTED_PROVIDER_CALL; }; ' + command], {
+        encoding: 'utf8', timeout: 10000,
+        env: { ...empty, FACEBOOK_APP_ID: 'test-app', FACEBOOK_APP_SECRET: 'UNLOGGED_SECRET' },
+      });
+      assert.notEqual(result.status, 0);
+      assert.equal(result.stdout, '');
+      assert.match(result.stderr, /Set INSTAGRAM_VERIFY_TOKEN or IG_VERIFY_TOKEN/);
+      assert.doesNotMatch(result.stderr, /UNLOGGED_SECRET/);
+    }
+  }
 });

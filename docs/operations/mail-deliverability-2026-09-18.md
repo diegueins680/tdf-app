@@ -139,7 +139,10 @@ declara truncamiento y fallos de acceso. No proporciona quejas ni reputación Po
 
 Se instaló `net.tdfrecords.mail-deliverability` como LaunchAgent local diario a las
 09:30 (America/Guayaquil), con copia estable del monitor y resultados privados en
-`tmp/mail-deliverability/`. Requiere que el Mac/sesión y el acceso Fly estén disponibles;
+`tmp/mail-deliverability/`. Tras el corte del 28/9, la copia incluye
+`production_access.py` y obtiene las dos credenciales SMTP de `api.env` protegido,
+verificando que coinciden con el API actual; no registra sus valores. Véase
+[el acceso operativo actual](../../ops/hetzner/README.md#read-only-operational-tools-after-cutover). Requiere que el Mac/sesión y la conexión SSH dedicada de Hetzner estén disponibles;
 no es vigilancia alojada 24/7 ni envía alertas externas. Verificar `reports/latest.json`,
 `monitor.log` y `monitor-error.log`. Desactivar de forma reversible con
 `launchctl bootout gui/$(id -u)/net.tdfrecords.mail-deliverability`; conservar evidencias.

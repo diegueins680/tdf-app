@@ -8,7 +8,7 @@ const payloadPath = resolve(process.argv[2] ?? DEFAULT_PAYLOAD);
 const apiBase = (
   process.env.TDF_COURSE_API_BASE ??
   process.env.VITE_API_BASE ??
-  'https://tdf-hq.fly.dev'
+  'https://api.tdfrecords.net'
 ).replace(/\/+$/, '');
 const token = process.env.TDF_ADMIN_TOKEN ?? process.env.ADMIN_TOKEN ?? '';
 

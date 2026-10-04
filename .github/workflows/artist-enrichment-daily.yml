@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
-      TDF_API_BASE: https://tdf-hq.fly.dev
+      TDF_API_BASE: https://api.tdfrecords.net
       # Full-platform discovery runs in one protected transaction before the
       # external-provider phase and may exceed a short HTTP client timeout.
       TDF_API_TIMEOUT_MS: '300000'
