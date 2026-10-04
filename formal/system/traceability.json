@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "1246147ecb5686fc30bbefd543713cd43e87d0c8",
+  "mobileRevision": "982ade380e0826dcdad582f8da92023b863b9dfa",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -1606,6 +1606,79 @@
         "classification": "PARTIAL",
         "reason": "Local source-policy checks and negative controls pass; exact final candidate compilation/image construction and deployed correspondence remain pending."
       }
+    },
+    {
+      "id": "PAY-CHECKOUT-001",
+      "title": "Exact checkout line and marketplace cart arithmetic",
+      "statement": "Compute line products and aggregate totals exactly before narrowing; canonical checkout rows must contain validated subtotals matching their positive parent amount, and overflowing cart receipts must be rejected atomically.",
+      "domain": "PAY",
+      "authority": "inferred",
+      "source": "docs/revenue-platform/formal-model.yaml; formal/system/checkout-arithmetic.md",
+      "property": "Accepted canonical line products are positive representable Int64 values, quantities fit PG INTEGER, and their exact sum equals the parent; legacy cart products/sums do not wrap.",
+      "contract": "formal/system/checkout-arithmetic.md",
+      "actors": [
+        "Checkout creation adapter",
+        "Marketplace cart customer",
+        "Operator maintaining listing prices"
+      ],
+      "preconditions": [
+        "Prices and quantities are server-loaded; the caller owns the database transaction."
+      ],
+      "inputs": [
+        "Int64 canonical parent/unit amounts and Int line quantities",
+        "Legacy cart Int prices and quantities"
+      ],
+      "state": {
+        "initial": "unvalidated numeric snapshot",
+        "terminal": [
+          "rejected without committed mutation",
+          "validated exact snapshot"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate positivity, quantity range, exact products and exact aggregate before canonical insertion.",
+        "Return a valid nonnegative cart preview; require a positive total separately for payment."
+      ],
+      "forbiddenTransitions": [
+        "Admit a wrapped product or aggregate as a successful price.",
+        "Commit a cart update after its resulting receipt is rejected for overflow."
+      ],
+      "effects": [
+        "Persist the checked subtotals without recalculating unchecked fixed-width arithmetic.",
+        "Return 409 for invalid/overflowing cart receipts."
+      ],
+      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
+      "privacy": "Synthetic tests use no real customer data or provider credentials.",
+      "concurrency": "Pure validation precedes SQL effects; database transaction rollback protects failed cart response construction. This does not establish snapshot serialization against concurrent listing edits.",
+      "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
+      "failure": "Reject malformed or out-of-range values; no canonical checkout insert occurs, and failed cart mutations roll back.",
+      "recovery": "Correct source pricing or quantities through authorized workflows; never rewrite immutable financial evidence to hide a mismatch.",
+      "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/Money.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+        "scripts/verify-checkout-money.py",
+        "scripts/__tests__/checkout-money-http.mjs",
+        "scripts/__tests__/identity-http-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "53 Hspec examples including two 1000-case generated properties and five source mutations; actual HTTP refinement required.",
+      "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for pure arithmetic; final adapter/HTTP execution and database aggregate enforcement remain pending",
+      "ambiguity": [
+        "Database has no cross-line aggregate constraint; additive migration still required.",
+        "Other monetary writers, rounding and provider finality are not established by this requirement."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure properties and all five negative controls passed locally; current full candidate integration/HTTP execution and database aggregate enforcement are not complete."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -1619,11 +1692,12 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
+    "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
-    "scripts/__tests__/ci-pipeline.test.mjs": "c5a964f191433de3a9bc944e0495d340730e89268aa91a026bb8ea78e43bc8ce",
+    "scripts/__tests__/ci-pipeline.test.mjs": "031ec23f9f0e3dd08fcb934b59a5e63215def0b07eb2be9219e738e14daa1574",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/generated-api-conformance.test.mjs": "da6a8039a136268283e11a054c981c16990db543e4154a391a2c3ff90873018e",
-    "scripts/__tests__/identity-http-runtime.mjs": "ee2f977bac244d3ee39a2274b6679c15a625b402b21e19c980610dec4ae625a8",
+    "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/verification-evidence.test.mjs": "62e23312cd0f60dd3ec08597ca45071071f116bd10d15303c8b9bab55668fb84",
@@ -1637,10 +1711,11 @@
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
     "scripts/specification-inventory.py": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-credential-lifecycle.sh": "6f2c2eac057aa22a4b4c856245bb46367de186f8522e49381b5172d8f808a03e",
+    "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
+    "scripts/verify-checkout-money.py": "540aaadd10fdad8d3648871a9c1888b19b07d9478e6cd112625acd79aec79dc4",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
     "scripts/verify-event-operations-formal.sh": "63893939763aec0eea4a7c9ffe74c34b0f08b57c2789464136801f2675d29ebc",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
@@ -1655,26 +1730,29 @@
     "tdf-hq/Dockerfile": "d5afe1363da6c68cba251ab928fe10ad4c47aafea2924c27402e50c9d323fb1a",
     "tdf-hq/Dockerfile.runtime": "cc561dc926a491699de7b34ad3d01e1dd0e13d53cdc5dc87484aeb7e303129b8",
     "tdf-hq/assets/feature-registry.json": "5f4665b6b15488748eb7fa69a585dd88fd7e94c8d5f7437cf99bb161783b28b0",
-    "tdf-hq/docs/openapi/api.yaml": "e95d737fada4a5a1f45e3fdc4c1bf1c88361d77aac6dd6617316d3203950d2ba",
+    "tdf-hq/docs/openapi/api.yaml": "e05910417e0962c3595ab0bea9828b905c5ef077210cdf12678be76484d1e2af",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/src/TDF/API.hs": "52899306d6b3d74f542a87ca135c1f8395e0fe5b42a4a1ee6396edc7a38d987c",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
+    "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "204bd27888a0e4645a2c107e4d4cba9c0a4db41adfc8f7ed9c76182a8d6b1245",
+    "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
     "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "955ca2a1d362eae9e9a14c7e7a6169df8b4825221f46ba2b4800db03380de481",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "f3b3183fc1a089b71c135b5fc6e7ca4ef370e6e42b376230815a82a9ae5b7b03",
     "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
-    "tdf-hq/src/TDF/Server.hs": "5d3e606250b9fc225ed3d040b5e044703ac16f8691c2261e166ada53b72f8c86",
+    "tdf-hq/src/TDF/Server.hs": "67e6685d025b04a4ff1929d082c8465ae598fb772299058e28891612b39f90f8",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "0b10427dbe46318850e913dd4e669342cec2fb94102533f1734a7c43b4907af1",
+    "tdf-hq/tdf-hq.cabal": "b5a17355e77ca659d9ccf06e1f16a0719adc9d3419f256a4e1d32c1f4c565aa7",
+    "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "fa341f2810cb690910edc157f868957d4a8dadc59176e82f99d003ef310944ae",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
-    "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e6c97c5f203f9f6803bfa945492ed38069efad59619c119dca8e2db0addbd1ed",
+    "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
@@ -1846,6 +1924,10 @@
       },
       {
         "requirement": "SYS-ESCROW-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-CHECKOUT-001",
         "relationship": "implementation"
       }
     ],
@@ -2107,6 +2189,10 @@
       {
         "requirement": "ID-SESSION-003",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/SignupIdentity.tla": [
@@ -2255,6 +2341,36 @@
       {
         "requirement": "DEPLOY-BUILD-001",
         "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/Money.hs": [
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": [
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": [
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-checkout-money.py": [
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/checkout-money-http.mjs": [
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "tests"
       }
     ]
   },
@@ -2676,6 +2792,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-cdfb72b28b013120",
+      "path": "scripts/__tests__/checkout-money-http.mjs",
+      "sha256": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
       "sha256": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
@@ -2690,7 +2818,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "c5a964f191433de3a9bc944e0495d340730e89268aa91a026bb8ea78e43bc8ce",
+      "sha256": "031ec23f9f0e3dd08fcb934b59a5e63215def0b07eb2be9219e738e14daa1574",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -2709,7 +2837,7 @@
     {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
-      "sha256": "09462417324ec7cafb053e47b741166020c39df99aa78263ef5c16642ee5a434",
+      "sha256": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -2859,7 +2987,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "ee2f977bac244d3ee39a2274b6679c15a625b402b21e19c980610dec4ae625a8",
+      "sha256": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -2880,6 +3008,10 @@
         },
         {
           "requirement": "ID-SESSION-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-CHECKOUT-001",
           "relationship": "tests"
         }
       ]
@@ -3526,7 +3658,7 @@
     {
       "id": "SURFACE-7e5d877bbcc438aa",
       "path": "scripts/lib/disposable-postgres-url.mjs",
-      "sha256": "26432e62427fcccc31f62ae5c1df10659cb561da36b3934ca545c82c9ccdfa7a",
+      "sha256": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -3589,7 +3721,7 @@
     {
       "id": "SURFACE-963aae603c04dcfb",
       "path": "scripts/lib/postgres-test-database.sh",
-      "sha256": "0bb57f5fffa971ae3714211e7e500a572298464725929b1654793d74108e9c39",
+      "sha256": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -3759,7 +3891,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "825f8d03a80c2a3695a4d9c76cf1f3e55781038ba4be5daafc9d8730d8dea501",
+      "sha256": "6c23e13ede4d94188bea46f326cfd8bdb59b9f4f4f16836b23cbdfe04884741d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -4436,7 +4568,7 @@
     {
       "id": "SURFACE-a05d9dbe9017a8ac",
       "path": "scripts/test-credential-lifecycle.sh",
-      "sha256": "6f2c2eac057aa22a4b4c856245bb46367de186f8522e49381b5172d8f808a03e",
+      "sha256": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -4915,6 +5047,18 @@
       "sha256": "2e0188a0da35648c977a692ebc35a58e01aac2c454ba3f7ee65b4ad7c166f528",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-8b6766b7ee7590fd",
+      "path": "scripts/verify-checkout-money.py",
+      "sha256": "540aaadd10fdad8d3648871a9c1888b19b07d9478e6cd112625acd79aec79dc4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-da360911414286b5",
@@ -5585,7 +5729,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "3902818d9c4858118f7d0cdafda0a5f32533b683bb8fa1dd59ad244c0aed89d4",
+      "sha256": "21803ca9542afe64ea67baf50c6ff34008ceca85f787bf82d04edb1940c77927",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -9821,7 +9965,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e95d737fada4a5a1f45e3fdc4c1bf1c88361d77aac6dd6617316d3203950d2ba",
+      "sha256": "e05910417e0962c3595ab0bea9828b905c5ef077210cdf12678be76484d1e2af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12605,9 +12749,14 @@
     {
       "id": "SURFACE-94890265a329cb44",
       "path": "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "sha256": "fe8607c78369e8e6bc06e06b4a20e81a95a56b4c87e85fdea80381d142993111",
+      "sha256": "204bd27888a0e4645a2c107e4d4cba9c0a4db41adfc8f7ed9c76182a8d6b1245",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-ee01356d907d3fc2",
@@ -12664,6 +12813,18 @@
       "sha256": "3d932f13448339fc1d6991a838f969bf54a2c79d3bf0a854948d6d86529753d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-93a356293f350c86",
+      "path": "tdf-hq/src/TDF/Commerce/Money.hs",
+      "sha256": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8379bf1fb8e3276e",
@@ -13265,7 +13426,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "5d3e606250b9fc225ed3d040b5e044703ac16f8691c2261e166ada53b72f8c86",
+      "sha256": "67e6685d025b04a4ff1929d082c8465ae598fb772299058e28891612b39f90f8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13274,6 +13435,10 @@
         },
         {
           "requirement": "SYS-ESCROW-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-CHECKOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -13749,7 +13914,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "0b10427dbe46318850e913dd4e669342cec2fb94102533f1734a7c43b4907af1",
+      "sha256": "b5a17355e77ca659d9ccf06e1f16a0719adc9d3419f256a4e1d32c1f4c565aa7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13803,7 +13968,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "a784abd416316f1664cae7570cd90e0fae7adf98418723516d7b9ce396f1ab38",
+      "sha256": "89db969444be48ba102e866f2526904d5a5257b0a6217544829f6c55211153cf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -13848,6 +14013,18 @@
       "sha256": "cd5c0939c8e1b91c3599099146e12416975e2e8a86f8a6e970579eab9c0d8074",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-841860cc12b9ab42",
+      "path": "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+      "sha256": "fa341f2810cb690910edc157f868957d4a8dadc59176e82f99d003ef310944ae",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-03e3b669f5ad284d",
@@ -13898,7 +14075,7 @@
     {
       "id": "SURFACE-f0dabee697205b0c",
       "path": "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
-      "sha256": "e6c97c5f203f9f6803bfa945492ed38069efad59619c119dca8e2db0addbd1ed",
+      "sha256": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16013,7 +16190,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "3902818d9c4858118f7d0cdafda0a5f32533b683bb8fa1dd59ad244c0aed89d4",
+      "sha256": "21803ca9542afe64ea67baf50c6ff34008ceca85f787bf82d04edb1940c77927",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -18431,7 +18608,6 @@
     "SURFACE-2a2b52cfa8ed4ee9",
     "SURFACE-15f795f0e4383094",
     "SURFACE-68f141730b470989",
-    "SURFACE-94890265a329cb44",
     "SURFACE-ee01356d907d3fc2",
     "SURFACE-764d135c920e69a2",
     "SURFACE-d40b0e57ab95c791",
@@ -19042,7 +19218,8 @@
     "SYS-TRACE-001",
     "AUTH-CORS-001",
     "AUTH-REGISTRY-001",
-    "DEPLOY-BUILD-001"
+    "DEPLOY-BUILD-001",
+    "PAY-CHECKOUT-001"
   ],
   "stateMachines": [
     {
@@ -24110,7 +24287,8 @@
       "security": [],
       "responses": [
         "200",
-        "404"
+        "404",
+        "409"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -40701,7 +40879,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 24,
+    "PARTIAL": 25,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

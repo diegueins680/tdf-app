@@ -23,6 +23,7 @@
 
 ## Testing Guidelines
 - The existing `test/` Hspec/QuickCheck suite runs with `stack test`. PostgreSQL, HTTP and concurrency runners under root `scripts/` cover additional boundaries; see `.github/workflows/ci.yml` for the complete backend lane.
+- Local invitation/event-relation runners can use an existing loopback PostgreSQL server with `TDF_TEST_NATIVE_POSTGRES=1` (optional `TDF_TEST_NATIVE_POSTGRES_USER` / `TDF_TEST_NATIVE_POSTGRES_PORT`). They create and remove only their own new `_test` databases; pre-existing names fail closed. Default local behavior still uses Docker, and CI uses its isolated service. Never inherit libpq routing overrides.
 - Prefer observable handler/database tests with isolated fixtures. Follow `FORMAL_VERIFICATION.md` for critical invariants and negative controls.
 
 ## Commit & Pull Requests

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "1246147ecb5686fc30bbefd543713cd43e87d0c8",
+  "mobileRevision": "982ade380e0826dcdad582f8da92023b863b9dfa",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -73,6 +73,7 @@
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
+      "scripts/__tests__/checkout-money-http.mjs",
       "scripts/__tests__/ci-change-scope.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
@@ -370,6 +371,7 @@
       "scripts/ui-static-audit.mjs",
       "scripts/upsert-course.mjs",
       "scripts/ux-audit-inventory.mjs",
+      "scripts/verify-checkout-money.py",
       "scripts/verify-cors-boundary.py",
       "scripts/verify-event-operations-formal.sh",
       "scripts/verify-event-operations-pluscal.mjs",
@@ -1466,6 +1468,7 @@
       "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
       "tdf-hq/src/TDF/Commerce/Merch.hs",
       "tdf-hq/src/TDF/Commerce/MerchReservationWorker.hs",
+      "tdf-hq/src/TDF/Commerce/Money.hs",
       "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs",
@@ -1622,6 +1625,7 @@
       "tdf-hq/test/TDF/Catalog/PipelineSpec.hs",
       "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+      "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
       "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
       "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
       "tdf-hq/test/TDF/CorsSpec.hs",
@@ -2398,6 +2402,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cdfb72b28b013120",
+      "path": "scripts/__tests__/checkout-money-http.mjs",
+      "sha256": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
       "sha256": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
@@ -2406,7 +2416,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "c5a964f191433de3a9bc944e0495d340730e89268aa91a026bb8ea78e43bc8ce",
+      "sha256": "031ec23f9f0e3dd08fcb934b59a5e63215def0b07eb2be9219e738e14daa1574",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2418,7 +2428,7 @@
     {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
-      "sha256": "09462417324ec7cafb053e47b741166020c39df99aa78263ef5c16642ee5a434",
+      "sha256": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2538,7 +2548,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "ee2f977bac244d3ee39a2274b6679c15a625b402b21e19c980610dec4ae625a8",
+      "sha256": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3048,7 +3058,7 @@
     {
       "id": "SURFACE-7e5d877bbcc438aa",
       "path": "scripts/lib/disposable-postgres-url.mjs",
-      "sha256": "26432e62427fcccc31f62ae5c1df10659cb561da36b3934ca545c82c9ccdfa7a",
+      "sha256": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3102,7 +3112,7 @@
     {
       "id": "SURFACE-963aae603c04dcfb",
       "path": "scripts/lib/postgres-test-database.sh",
-      "sha256": "0bb57f5fffa971ae3714211e7e500a572298464725929b1654793d74108e9c39",
+      "sha256": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3228,7 +3238,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "825f8d03a80c2a3695a4d9c76cf1f3e55781038ba4be5daafc9d8730d8dea501",
+      "sha256": "6c23e13ede4d94188bea46f326cfd8bdb59b9f4f4f16836b23cbdfe04884741d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3792,7 +3802,7 @@
     {
       "id": "SURFACE-a05d9dbe9017a8ac",
       "path": "scripts/test-credential-lifecycle.sh",
-      "sha256": "6f2c2eac057aa22a4b4c856245bb46367de186f8522e49381b5172d8f808a03e",
+      "sha256": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4177,6 +4187,12 @@
       "id": "SURFACE-7873643aff696047",
       "path": "scripts/ux-audit-inventory.mjs",
       "sha256": "2e0188a0da35648c977a692ebc35a58e01aac2c454ba3f7ee65b4ad7c166f528",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8b6766b7ee7590fd",
+      "path": "scripts/verify-checkout-money.py",
+      "sha256": "540aaadd10fdad8d3648871a9c1888b19b07d9478e6cd112625acd79aec79dc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4728,7 +4744,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "3902818d9c4858118f7d0cdafda0a5f32533b683bb8fa1dd59ad244c0aed89d4",
+      "sha256": "21803ca9542afe64ea67baf50c6ff34008ceca85f787bf82d04edb1940c77927",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8310,7 +8326,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e95d737fada4a5a1f45e3fdc4c1bf1c88361d77aac6dd6617316d3203950d2ba",
+      "sha256": "e05910417e0962c3595ab0bea9828b905c5ef077210cdf12678be76484d1e2af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10668,7 +10684,7 @@
     {
       "id": "SURFACE-94890265a329cb44",
       "path": "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "sha256": "fe8607c78369e8e6bc06e06b4a20e81a95a56b4c87e85fdea80381d142993111",
+      "sha256": "204bd27888a0e4645a2c107e4d4cba9c0a4db41adfc8f7ed9c76182a8d6b1245",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10717,6 +10733,12 @@
       "id": "SURFACE-64cb8366887e5054",
       "path": "tdf-hq/src/TDF/Commerce/MerchReservationWorker.hs",
       "sha256": "3d932f13448339fc1d6991a838f969bf54a2c79d3bf0a854948d6d86529753d2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-93a356293f350c86",
+      "path": "tdf-hq/src/TDF/Commerce/Money.hs",
+      "sha256": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11202,7 +11224,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "5d3e606250b9fc225ed3d040b5e044703ac16f8691c2261e166ada53b72f8c86",
+      "sha256": "67e6685d025b04a4ff1929d082c8465ae598fb772299058e28891612b39f90f8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11574,7 +11596,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "0b10427dbe46318850e913dd4e669342cec2fb94102533f1734a7c43b4907af1",
+      "sha256": "b5a17355e77ca659d9ccf06e1f16a0719adc9d3419f256a4e1d32c1f4c565aa7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11616,7 +11638,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "a784abd416316f1664cae7570cd90e0fae7adf98418723516d7b9ce396f1ab38",
+      "sha256": "89db969444be48ba102e866f2526904d5a5257b0a6217544829f6c55211153cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11656,6 +11678,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-841860cc12b9ab42",
+      "path": "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+      "sha256": "fa341f2810cb690910edc157f868957d4a8dadc59176e82f99d003ef310944ae",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-03e3b669f5ad284d",
       "path": "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
       "sha256": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -11682,7 +11710,7 @@
     {
       "id": "SURFACE-f0dabee697205b0c",
       "path": "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
-      "sha256": "e6c97c5f203f9f6803bfa945492ed38069efad59619c119dca8e2db0addbd1ed",
+      "sha256": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13464,7 +13492,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "3902818d9c4858118f7d0cdafda0a5f32533b683bb8fa1dd59ad244c0aed89d4",
+      "sha256": "21803ca9542afe64ea67baf50c6ff34008ceca85f787bf82d04edb1940c77927",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18939,7 +18967,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "2cdde405702c13208c8f75e09125cde83d1f5afeb341470e801e7fd3c933572e",
+      "sha256": "78895a4bea8822d20db168a247f138e5a9b64202bcd24284e7d31cc38f851c99",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18947,6 +18975,13 @@
     {
       "path": "formal/system/build-trust.md",
       "sha256": "a151c33756459b9de9133382fa93d32dec616abf063c5ac6401f6954c89aef4f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/checkout-arithmetic.md",
+      "sha256": "9f5f7802df85750e54c4b0b6d4fb1a83aba4c864fdc883067e6cbdea1957ce6c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19002,7 +19037,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2bb40affbee19f74485935beb1051e758691fedfd2b640a9bd26915f431f1500",
+      "sha256": "6058060d9339c8bffb7e9daf5690e6eb83bc1af6f36f49ad46d218afb9b8659a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -19149,7 +19184,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e95d737fada4a5a1f45e3fdc4c1bf1c88361d77aac6dd6617316d3203950d2ba",
+      "sha256": "e05910417e0962c3595ab0bea9828b905c5ef077210cdf12678be76484d1e2af",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

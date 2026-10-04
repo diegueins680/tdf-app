@@ -284,3 +284,33 @@ test('backend runtime checks install declared parser dependencies on Node 22', a
   assert.ok(job.indexOf('Install backend verification dependencies') < job.indexOf('node scripts/__tests__/identity-http-runtime.mjs'));
   assert.match(JSON.parse(await source('package.json')).devDependencies.yaml, /^\d+\.\d+\.\d+$/);
 });
+
+test('native PostgreSQL opt-in owns only successfully created loopback databases', () => {
+  const script = `
+    . "$1"
+    createdb() { echo "createdb $*"; return "$CREATE_RESULT"; }
+    psql() { echo "psql $*"; }
+    dropdb() { echo "dropdb $*"; }
+    docker() { echo unexpected-docker; exit 97; }
+    tdf_test_db_init tdf_owned_test
+    tdf_test_db_cleanup
+  `;
+  const invoke = (createResult, extra = {}) => spawnSync('sh', ['-eu', '-c', script, 'runner', path.join(root, 'scripts/lib/postgres-test-database.sh')], {
+    encoding: 'utf8', env: { PATH: process.env.PATH, TDF_TEST_NATIVE_POSTGRES: '1',
+      TDF_TEST_NATIVE_POSTGRES_USER: 'synthetic', CREATE_RESULT: createResult, ...extra },
+  });
+  const owned = invoke('0');
+  assert.equal(owned.status, 0, owned.stderr);
+  assert.match(owned.stdout, /createdb -h 127\.0\.0\.1 -p 5432 -U synthetic tdf_owned_test/);
+  assert.equal((owned.stdout.match(/dropdb/g) ?? []).length, 1);
+  assert.doesNotMatch(owned.stdout, /unexpected-docker/);
+  const existing = invoke('17');
+  assert.equal(existing.status, 17);
+  assert.doesNotMatch(existing.stdout, /dropdb|unexpected-docker/);
+  for (const extra of [{ PGHOSTADDR: '192.0.2.1' }, { PGSERVICE: 'remote' },
+    { TDF_TEST_NATIVE_POSTGRES_PORT: 'bad' }, { TDF_TEST_NATIVE_POSTGRES_USER: 'bad role' }]) {
+    const rejected = invoke('0', extra);
+    assert.notEqual(rejected.status, 0);
+    assert.doesNotMatch(rejected.stdout, /createdb|dropdb|unexpected-docker/);
+  }
+});
