@@ -4061,7 +4061,7 @@
     },
     {
       "path": "docs/payments/stack-integration-2026-09-16.md",
-      "sha256": "1bf6c71e207aceb1bc518246e63bdbc96709b74801bcb3a5a483a95f5860efe0",
+      "sha256": "15ea2f3fecdd4c7c581a832981f9dc6c632126ef53747f2f82993b52856ffbd5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -1,5 +1,37 @@
 # Payment stack integration — 2026-09-16
 
+## Current consolidation — 2026-10-04
+
+The sections below preserve the September 16 evidence and decisions; their
+branch bases, manifests, test counts and runtime observations are historical.
+The current integration remains root PR #414, now based on `main`, and companion
+Mobile PR #88, also based on `main`. Root main
+`b07f67c3ebe2022d5f70e94578944b6401616696` and all 21 upstream payment PR heads
+are ancestors of the consolidated root candidate. Its mobile gitlink is
+`b3ae7a522866f55e6ebc8d315cae5f5eb767bb14`.
+
+The current manifest preserves main's 160 entries and appends six payment
+migrations, for 166 entries. The refund backfill qualification and financial
+rollback requirements below still apply before deployment. Passing synthetic
+tests does not establish historical provider provenance or authorize activation.
+
+The current backend implements the experiment endpoints. The generated clients
+derive from current OpenAPI, and the current canonical feature registry permits
+self-service artist creation by Fan. September's absent-endpoint and restricted
+role observations below describe the earlier pinned source, not current policy.
+Mobile checkout now hands off to `https://www.tdfrecords.net`.
+
+Current local verification: backend build and 3,705 examples (zero failures,
+six pending); web lint/types, 250 suites / 2,749 tests, production build and
+315,674-byte gzip initial bundle budget; mobile lint/types and 88 suites / 555
+tests; isolated PostgreSQL provider/recovery suite, 249 examples, zero failures;
+canonical payment migration apply/replay/rollback harness; catalog provenance
+regressions, five tests. Pinned Z3 arithmetic checks and the repository's bounded
+TLA+/PlusCal/Alloy runner passed, including held-refund recovery and three
+counterexample controls. These are bounded/source-fragment checks, not universal
+proof. Current-head hosted checks and independent reviews remain merge gates.
+No production migration, payment, provider activation or deployment is claimed.
+
 ## Scope and pinned inputs
 
 Integration only; no provider activation, real provider HTTP, deployment, live
