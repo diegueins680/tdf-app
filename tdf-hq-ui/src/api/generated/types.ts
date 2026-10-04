@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/commerce/payment-capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List payment routes actually available for a transaction
+         * @description Returns only routes with verified environment, merchant, credential, contract, method and completion gates. An empty route list is authoritative. No secrets or merchant configuration are returned. Fallback requires authoritative confirmation that no charge was or will be created; ambiguous outcomes remain held for reconciliation.
+         */
+        get: operations["listPaymentCapabilities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interactions/reports": {
         parameters: {
             query?: never;
@@ -7896,6 +7916,30 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {string} */
+        PaymentCapabilityName: "one_time" | "recurring" | "tokenization" | "three_ds" | "installments" | "authorize" | "capture" | "void" | "full_refund" | "partial_refund" | "disputes" | "chargebacks" | "payment_link" | "signed_webhook" | "server_verification" | "connected_accounts" | "split_settlement" | "seller_payouts";
+        PaymentRoute: {
+            /** @enum {string} */
+            provider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer";
+            /** @enum {string} */
+            paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+            capabilities: components["schemas"]["PaymentCapabilityName"][];
+            priority: number;
+        };
+        PaymentCapabilityResponse: {
+            /** @enum {string} */
+            environment: "sandbox" | "production";
+            buyerCountry: string;
+            currency: string;
+            /** Format: int64 */
+            amountMinor: number;
+            /** @enum {string} */
+            paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+            /** @enum {string} */
+            productFlow: "merchandise" | "booking" | "professional_service" | "course" | "event_ticket" | "digital_product" | "subscription" | "marketplace";
+            routes: components["schemas"]["PaymentRoute"][];
+            fallbackPolicy: string;
+        };
+        /** @enum {string} */
         InteractionKind: "club_post" | "club_memory" | "event" | "event_moment" | "recording" | "recording_session" | "record_release" | "artist_release" | "classified" | "directory_profile" | "artist_update";
         InteractionMention: {
             partyId: number;
@@ -14804,6 +14848,48 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listPaymentCapabilities: {
+        parameters: {
+            query: {
+                buyerCountry: string;
+                /** @description Currency is normalized to uppercase; only USD can yield available routes. */
+                currency: string;
+                amountMinor: number;
+                paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+                productFlow: "merchandise" | "booking" | "professional_service" | "course" | "event_ticket" | "digital_product" | "subscription" | "marketplace";
+                requires?: components["schemas"]["PaymentCapabilityName"][];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ordered transaction-specific routes; empty when no route is fully available. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentCapabilityResponse"];
+                };
+            };
+            /** @description Missing or invalid query parameter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout environment configuration is invalid. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listInteractionReports: {
         parameters: {
             query?: {

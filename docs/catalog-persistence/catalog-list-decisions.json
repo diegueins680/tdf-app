@@ -14803,6 +14803,30 @@
           "line": 55
         }
       }
+    },
+    {
+      "id": "204695f88339a363dbac",
+      "classification": "security-system-registry",
+      "disposition": "retain-contract-vocabulary-with-runtime-database-authority",
+      "specializedModel": "TDF.Commerce.ProviderCapabilities; commerce_provider_account and commerce_provider_capability",
+      "priority": "P1-payment-contract",
+      "risk": "A generated enum must not activate a provider or imply merchant or method verification.",
+      "justification": "The OpenAPI enum preserves the implemented Haskell capability vocabulary and Mobile PR76 contract. Contract tests compare every rendered backend capability. Availability remains governed by verified per-environment merchant/method rows, runtime configuration and fail-closed completion requirements.",
+      "reviewed": true,
+      "reviewMethod": "implementation-contract-comparison",
+      "reviewBatch": "current-state-2026-10-04",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 8177,
+        "kind": "openapi-enum",
+        "name": "PaymentCapabilityName",
+        "valueCount": 18,
+        "consumerCount": 23,
+        "exactDuplicateIds": [
+          "65992320958643fcd97a"
+        ],
+        "similarCandidateIds": []
+      }
     }
   ]
 }

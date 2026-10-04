@@ -29,7 +29,7 @@ import qualified Data.UUID as UUID
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Word (Word8)
-import Database.Persist (Entity (..), Key, insert, insert_, insertKey, selectList)
+import Database.Persist (Entity (..), Key, PersistValue (..), insert, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import qualified Network.HTTP.Client as HTTP
@@ -2534,6 +2534,32 @@ main = hspec $ do
               , ProviderCapabilities.CapabilitySellerPayouts
               ] $ \capability ->
                 ProviderCapabilities.routePayments [missing capability] request `shouldBe` []
+
+        it "advertises manual bank transfer only for the settlement merchant used by checkout" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                flip runSqlPool pool $ do
+                    rawExecute "CREATE TABLE commerce_provider_account (id TEXT, provider TEXT, environment TEXT, enabled BOOLEAN, credential_status TEXT, contract_status TEXT, feature_flag_key TEXT, merchant_account_ref TEXT)" []
+                    rawExecute "CREATE TABLE commerce_provider_capability (provider_account_id TEXT, payment_method TEXT, capability TEXT, verification_status TEXT)" []
+                    rawExecute "CREATE TABLE revenue_feature_flag (flag_key TEXT, environment TEXT, enabled BOOLEAN)" []
+                    rawExecute "INSERT INTO commerce_provider_account VALUES ('b','bank_transfer','sandbox',1,'validated','approved','bank_transfer','wrong-merchant')" []
+                    rawExecute "INSERT INTO commerce_provider_capability VALUES ('b','manual_bank_transfer','one_time','sandbox_verified')" []
+                let routes = fmap (fmap (map ProviderCapabilities.routeProvider)) $
+                      runHandler $ runReaderT
+                        (PaymentAvailability.loadRuntimeReadyRoutes cardRequest
+                          { ProviderCapabilities.prMethod = ProviderCapabilities.MethodManualBankTransfer
+                          , ProviderCapabilities.prFlow = ProviderCapabilities.FlowBooking })
+                        (Env pool (error "Availability must not read unrelated application configuration"))
+                    setMerchant value = flip runSqlPool pool $
+                      rawExecute "UPDATE commerce_provider_account SET merchant_account_ref=?" [value]
+                withEnvOverrides [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic bank instructions")] $ do
+                    routes `shouldReturn` Right []
+                    setMerchant (PersistText "tdf-manual-settlement")
+                    routes `shouldReturn` Right [CheckoutStore.ProviderBankTransfer]
+                    setMerchant PersistNull
+                    routes `shouldReturn` Right []
+                    setMerchant (PersistText "tdf-manual-settlement")
+                    withEnvOverrides [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Nothing), ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Nothing)] $
+                      routes `shouldReturn` Right []
 
         it "advertises PayPal and Datafast only for the configured approved merchant" $
             bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do

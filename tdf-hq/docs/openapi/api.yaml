@@ -9,6 +9,47 @@ servers:
     description: Development server
 
 paths:
+  /commerce/payment-capabilities:
+    get:
+      operationId: listPaymentCapabilities
+      summary: List payment routes actually available for a transaction
+      description: >-
+        Returns only routes with verified environment, merchant, credential,
+        contract, method and completion gates. An empty route list is authoritative.
+        No secrets or merchant configuration are returned. Fallback requires
+        authoritative confirmation that no charge was or will be created;
+        ambiguous outcomes remain held for reconciliation.
+      parameters:
+        - { name: buyerCountry, in: query, required: true, schema: { type: string } }
+        - name: currency
+          in: query
+          required: true
+          description: Currency is normalized to uppercase; only USD can yield available routes.
+          schema: { type: string }
+        - { name: amountMinor, in: query, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+        - name: paymentMethod
+          in: query
+          required: true
+          schema: { type: string, enum: [card, paypal_wallet, bank_redirect, deuna_qr, payphone_wallet, payment_link, manual_bank_transfer] }
+        - name: productFlow
+          in: query
+          required: true
+          schema: { type: string, enum: [merchandise, booking, professional_service, course, event_ticket, digital_product, subscription, marketplace] }
+        - name: requires
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: { $ref: '#/components/schemas/PaymentCapabilityName' }
+      responses:
+        '200':
+          description: Ordered transaction-specific routes; empty when no route is fully available.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentCapabilityResponse' }
+        '400': { description: Missing or invalid query parameter, nonpositive amount, or unsupported method, flow or required capability. }
+        '503': { description: Checkout environment configuration is invalid. }
   /interactions/reports:
     $ref: './interactions.yaml#/paths/~1interactions~1reports'
   /interactions/blocked-accounts:
@@ -8131,6 +8172,33 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    PaymentCapabilityName:
+      type: string
+      enum: [one_time, recurring, tokenization, three_ds, installments, authorize, capture, void, full_refund, partial_refund, disputes, chargebacks, payment_link, signed_webhook, server_verification, connected_accounts, split_settlement, seller_payouts]
+    PaymentRoute:
+      type: object
+      required: [provider, paymentMethod, capabilities, priority]
+      properties:
+        provider: { type: string, enum: [datafast, paypal, placetopay, payphone, bank_transfer] }
+        paymentMethod: { type: string, enum: [card, paypal_wallet, bank_redirect, deuna_qr, payphone_wallet, payment_link, manual_bank_transfer] }
+        capabilities:
+          type: array
+          items: { $ref: '#/components/schemas/PaymentCapabilityName' }
+        priority: { type: integer }
+    PaymentCapabilityResponse:
+      type: object
+      required: [environment, buyerCountry, currency, amountMinor, paymentMethod, productFlow, routes, fallbackPolicy]
+      properties:
+        environment: { type: string, enum: [sandbox, production] }
+        buyerCountry: { type: string }
+        currency: { type: string }
+        amountMinor: { type: integer, format: int64 }
+        paymentMethod: { type: string, enum: [card, paypal_wallet, bank_redirect, deuna_qr, payphone_wallet, payment_link, manual_bank_transfer] }
+        productFlow: { type: string, enum: [merchandise, booking, professional_service, course, event_ticket, digital_product, subscription, marketplace] }
+        routes:
+          type: array
+          items: { $ref: '#/components/schemas/PaymentRoute' }
+        fallbackPolicy: { type: string }
     InteractionKind:
       $ref: './interactions.yaml#/components/schemas/InteractionKind'
     InteractionMention:

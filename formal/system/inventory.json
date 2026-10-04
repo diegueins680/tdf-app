@@ -4061,7 +4061,7 @@
     },
     {
       "path": "docs/payments/stack-integration-2026-09-16.md",
-      "sha256": "15ea2f3fecdd4c7c581a832981f9dc6c632126ef53747f2f82993b52856ffbd5",
+      "sha256": "a40a8ff63e87483d70922c335ed3d70c2441da8acf9a5de29a76eabacbb165b3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -6784,7 +6784,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "5bd9b3849d224d84b458accabf7c19359397b5010437fdadb26e79d794367d60",
+      "sha256": "ad0decc620171b08d3b567694107f5dc1d7b1ecacd0fd23a2d4e2cb9436f15d8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

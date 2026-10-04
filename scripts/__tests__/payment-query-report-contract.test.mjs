@@ -8,6 +8,26 @@ const api = YAML.parse(read('tdf-hq/docs/openapi/api.yaml'));
 const route = api.paths['/admin/commerce/provider-queries'];
 const schemas = api.components.schemas;
 
+test('public payment capability discovery matches the implemented route and response projection', () => {
+  const contract = api.paths['/commerce/payment-capabilities']?.get;
+  assert.ok(contract, 'Implemented payment availability must be present in canonical OpenAPI');
+  const source = read('tdf-hq/src/TDF/API/PaymentCapabilities.hs');
+  const queries = [...source.matchAll(/QueryParam[^\n"]*"([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(contract.parameters.map((p) => p.name).sort(), queries.sort());
+  const fields = [...source.matchAll(/\bpcr([A-Z]\w*)\s*::/g)].map((m) => m[1][0].toLowerCase() + m[1].slice(1));
+  assert.deepEqual(schemas.PaymentCapabilityResponse.required.slice().sort(), fields.sort());
+  assert.equal(contract.parameters.find((p) => p.name === 'requires').explode, true);
+  assert.match(contract.description, /ambiguous outcomes remain held/);
+});
+
+test('generated payment capability names preserve the backend parser vocabulary', () => {
+  const source = read('tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs');
+  const renderer = source.split('paymentCapabilityText capability = case capability of')[1].split('\n\n')[0];
+  const values = [...renderer.matchAll(/-> "([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(values.length > 0);
+  assert.deepEqual(schemas.PaymentCapabilityName.enum.slice().sort(), values.sort());
+});
+
 test('held-refund readiness and explicit query commands require auth and forbid cached evidence', () => {
   const refund = api.paths['/admin/services/storefront/refunds/{refundId}/reconcile'];
   assert.equal(refund.parameters[0].schema.format, 'uuid');

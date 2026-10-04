@@ -5,10 +5,11 @@
 The sections below preserve the September 16 evidence and decisions; their
 branch bases, manifests, test counts and runtime observations are historical.
 The current integration remains root PR #414, now based on `main`, and companion
-Mobile PR #88, also based on `main`. Root main
+Mobile PR #88, now merged, plus the generated-contract completion in Mobile #76.
+Root main
 `b07f67c3ebe2022d5f70e94578944b6401616696` and all 21 upstream payment PR heads
 are ancestors of the consolidated root candidate. Its mobile gitlink is
-`b3ae7a522866f55e6ebc8d315cae5f5eb767bb14`.
+`cd3f664663f328a47341914524a2af130ae0d3ec`.
 
 The current manifest preserves main's 160 entries and appends six payment
 migrations, for 166 entries. The refund backfill qualification and financial
@@ -21,7 +22,14 @@ self-service artist creation by Fan. September's absent-endpoint and restricted
 role observations below describe the earlier pinned source, not current policy.
 Mobile checkout now hands off to `https://www.tdfrecords.net`.
 
-Current local verification: backend build and 3,705 examples (zero failures,
+The final review repair binds bank-transfer availability to the same
+`tdf-manual-settlement` merchant used by checkout. Mobile #76's otherwise missing
+payment-capabilities contract is now defined in canonical OpenAPI and generated
+for both clients. Its currency field follows the actual handler: uppercase input
+is echoed, with no available routes for unsupported currencies. Contract tests
+compare the route, response projection and capability names with Haskell.
+
+Current local verification: backend build and 3,706 examples (zero failures,
 six pending); web lint/types, 250 suites / 2,749 tests, production build and
 315,674-byte gzip initial bundle budget; mobile lint/types and 88 suites / 555
 tests; isolated PostgreSQL provider/recovery suite, 249 examples, zero failures;
@@ -31,6 +39,14 @@ TLA+/PlusCal/Alloy runner passed, including held-refund recovery and three
 counterexample controls. These are bounded/source-fragment checks, not universal
 proof. Current-head hosted checks and independent reviews remain merge gates.
 No production migration, payment, provider activation or deployment is claimed.
+
+The unresolved provider-specific no-charge finality finding from
+[source #331](https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022349405)
+remains a release/activation blocker. An untyped failure or decline must not
+retire an active intent or unlock another provider. Merchant-qualified evidence
+must exclude pending and late authorizations/captures and bind the immutable
+resource, account and environment before this restriction can change. Independent
+code review and synthetic tests do not supply that external evidence.
 
 ## Scope and pinned inputs
 

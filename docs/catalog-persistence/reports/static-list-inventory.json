@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-04T05:44:03.823Z",
+  "generatedAt": "2026-10-04T07:11:35.748Z",
   "repositoryRoot": ".",
   "filesScanned": 1879,
-  "candidateCount": 1198,
+  "candidateCount": 1199,
   "byClassification": {
     "dynamic-business-catalog": 771,
     "genuine-technical-constant": 63,
     "governed-reference-data": 124,
-    "security-system-registry": 240
+    "security-system-registry": 241
   },
-  "exactDuplicateGroupCount": 165,
+  "exactDuplicateGroupCount": 166,
   "normalizedVariantGroupCount": 139,
   "normalizedVariants": [
     {
@@ -7867,7 +7867,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 102,
+      "consumerCount": 103,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -7966,6 +7966,7 @@
         "tdf-mobile/src/lib/ticketCheckoutIdempotency.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -21399,7 +21400,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 223,
+      "consumerCount": 224,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -21556,6 +21557,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
@@ -24367,7 +24369,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 223,
+      "consumerCount": 224,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -24524,6 +24526,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
@@ -26908,7 +26911,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 131,
+      "consumerCount": 132,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -27038,6 +27041,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-migration.sh",
         "scripts/ux-audit-inventory.mjs",
@@ -31178,7 +31182,7 @@
       "lines": [
         39
       ],
-      "consumerCount": 147,
+      "consumerCount": 148,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -31313,6 +31317,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-migration.sh",
         "scripts/ux-audit-inventory.mjs",
@@ -32235,7 +32240,7 @@
         3774,
         4051
       ],
-      "consumerCount": 198,
+      "consumerCount": 199,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -32398,6 +32403,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-specification-inventory.py",
         "scripts/test-studio-internship-audit-api-e2e.sh",
@@ -32663,7 +32669,7 @@
       "lines": [
         3945
       ],
-      "consumerCount": 185,
+      "consumerCount": 186,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -32819,6 +32825,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-api-e2e.sh",
         "scripts/test-studio-internship-audit-migration.sh",
@@ -33076,7 +33083,7 @@
       "lines": [
         3982
       ],
-      "consumerCount": 134,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -33205,6 +33212,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-migration.sh",
         "scripts/ux-audit-inventory.mjs",
@@ -33438,7 +33446,7 @@
       "lines": [
         4018
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -33568,6 +33576,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-migration.sh",
         "scripts/ux-audit-inventory.mjs",
@@ -33807,7 +33816,7 @@
       "lines": [
         4326
       ],
-      "consumerCount": 185,
+      "consumerCount": 186,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -33963,6 +33972,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-api-e2e.sh",
         "scripts/test-studio-internship-audit-migration.sh",
@@ -34215,7 +34225,7 @@
       "lines": [
         4335
       ],
-      "consumerCount": 185,
+      "consumerCount": 186,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -34371,6 +34381,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-api-e2e.sh",
         "scripts/test-studio-internship-audit-migration.sh",
@@ -34432,7 +34443,7 @@
       "lines": [
         4451
       ],
-      "consumerCount": 204,
+      "consumerCount": 205,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -34596,6 +34607,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-specification-inventory.py",
@@ -34869,7 +34881,7 @@
       "lines": [
         4460
       ],
-      "consumerCount": 204,
+      "consumerCount": 205,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -35033,6 +35045,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-specification-inventory.py",
@@ -37881,7 +37894,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 242,
+      "consumerCount": 244,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -37944,6 +37957,7 @@
         "tdf-hq-ui/src/api/commerceOperations.ts",
         "tdf-hq-ui/src/api/courses.ts",
         "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
@@ -37983,12 +37997,12 @@
         "tdf-hq-ui/src/components/reputation/ContextualRankingPrototype.tsx",
         "tdf-hq-ui/src/components/reputation/PublicReputationSummary.tsx",
         "tdf-hq-ui/src/features/interactions/AccountControls.tsx",
-        "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx"
+        "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
         "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "tdf-mobile/src/lib/eventRsvpIntent.ts",
@@ -38034,6 +38048,7 @@
         "tdf-hq-ui/src/api/commerceOperations.ts",
         "tdf-hq-ui/src/api/courses.ts",
         "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
@@ -38062,6 +38077,7 @@
         "tdf-hq/src/TDF/WhatsApp/History.hs",
         "tdf-hq/src/TDF/WhatsApp/Types.hs",
         "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
@@ -39406,7 +39422,7 @@
       "lines": [
         4441
       ],
-      "consumerCount": 242,
+      "consumerCount": 244,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -39469,6 +39485,7 @@
         "tdf-hq-ui/src/api/commerceOperations.ts",
         "tdf-hq-ui/src/api/courses.ts",
         "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
@@ -39508,12 +39525,12 @@
         "tdf-hq-ui/src/components/reputation/ContextualRankingPrototype.tsx",
         "tdf-hq-ui/src/components/reputation/PublicReputationSummary.tsx",
         "tdf-hq-ui/src/features/interactions/AccountControls.tsx",
-        "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx"
+        "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
         "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "tdf-mobile/src/lib/eventRsvpIntent.ts",
@@ -39559,6 +39576,7 @@
         "tdf-hq-ui/src/api/commerceOperations.ts",
         "tdf-hq-ui/src/api/courses.ts",
         "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
@@ -39587,6 +39605,7 @@
         "tdf-hq/src/TDF/WhatsApp/History.hs",
         "tdf-hq/src/TDF/WhatsApp/Types.hs",
         "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
@@ -56956,7 +56975,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 185,
+      "consumerCount": 186,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -57112,6 +57131,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-api-e2e.sh",
         "scripts/test-studio-internship-audit-migration.sh",
@@ -57572,7 +57592,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 146,
+      "consumerCount": 147,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -57713,6 +57733,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-migration.sh",
         "scripts/ux-audit-inventory.mjs",
@@ -58054,7 +58075,7 @@
       "lines": [
         66
       ],
-      "consumerCount": 146,
+      "consumerCount": 147,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -58195,6 +58216,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-migration.sh",
         "scripts/ux-audit-inventory.mjs",
@@ -59008,7 +59030,7 @@
       "lines": [
         81
       ],
-      "consumerCount": 131,
+      "consumerCount": 132,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -59139,6 +59161,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-migration.sh",
         "scripts/ux-audit-inventory.mjs",
@@ -59184,7 +59207,7 @@
       "lines": [
         90
       ],
-      "consumerCount": 135,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -59316,6 +59339,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/social/preview.mjs",
         "scripts/specification-inventory.py",
         "scripts/test-studio-internship-audit-migration.sh",
         "scripts/ux-audit-inventory.mjs",
@@ -62711,7 +62735,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "schema",
-      "line": 1428,
+      "line": 1469,
       "values": [
         "incoming",
         "outgoing",
@@ -62720,9 +62744,9 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1428,
-        1542,
-        1644
+        1469,
+        1583,
+        1685
       ],
       "consumerCount": 244,
       "backendConsumers": [
@@ -62972,7 +62996,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "platform",
-      "line": 1576,
+      "line": 1617,
       "values": [
         "all",
         "instagram",
@@ -62981,7 +63005,7 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1576
+        1617
       ],
       "consumerCount": 172,
       "backendConsumers": [
@@ -63187,7 +63211,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "schema",
-      "line": 6228,
+      "line": 6269,
       "values": [
         "pending",
         "processing",
@@ -63199,7 +63223,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6228
+        6269
       ],
       "consumerCount": 304,
       "backendConsumers": [
@@ -63452,6 +63476,89 @@
       ]
     },
     {
+      "id": "204695f88339a363dbac",
+      "file": "tdf-hq/docs/openapi/api.yaml",
+      "sourceKind": "openapi",
+      "surface": "backend",
+      "domain": "security-authorization",
+      "kind": "openapi-enum",
+      "name": "PaymentCapabilityName",
+      "line": 8177,
+      "values": [
+        "one_time",
+        "recurring",
+        "tokenization",
+        "three_ds",
+        "installments",
+        "authorize",
+        "capture",
+        "void",
+        "full_refund",
+        "partial_refund",
+        "disputes",
+        "chargebacks",
+        "payment_link",
+        "signed_webhook",
+        "server_verification",
+        "connected_accounts",
+        "split_settlement",
+        "seller_payouts"
+      ],
+      "valueCount": 18,
+      "recommendedClassification": "security-system-registry",
+      "lines": [
+        8177
+      ],
+      "consumerCount": 23,
+      "backendConsumers": [
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+        "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+        "tdf-hq/sql/2026-09-11_manual_bank_provider_activation_rollback.sql",
+        "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
+        "tdf-hq/test/integration/artist_merch_runtime_fixture.sql"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "automationConsumers": [
+        "scripts/__tests__/payment-query-report-contract.test.mjs",
+        "scripts/test-canonical-payment-lifecycle-migration.sh"
+      ],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "decision": "security-system-registry",
+      "disposition": "retain-contract-vocabulary-with-runtime-database-authority",
+      "specializedModel": "TDF.Commerce.ProviderCapabilities; commerce_provider_account and commerce_provider_capability",
+      "priority": "P1-payment-contract",
+      "risk": "A generated enum must not activate a provider or imply merchant or method verification.",
+      "justification": "The OpenAPI enum preserves the implemented Haskell capability vocabulary and Mobile PR76 contract. Contract tests compare every rendered backend capability. Availability remains governed by verified per-environment merchant/method rows, runtime configuration and fail-closed completion requirements.",
+      "exactDuplicateIds": [
+        "65992320958643fcd97a"
+      ],
+      "similarCandidateIds": []
+    },
+    {
       "id": "dd65a3141ce82ff42537",
       "file": "tdf-hq/docs/openapi/api.yaml",
       "sourceKind": "openapi",
@@ -63459,7 +63566,7 @@
       "domain": "events-ticketing",
       "kind": "openapi-enum",
       "name": "EventTaskStatus",
-      "line": 8185,
+      "line": 8253,
       "values": [
         "planned",
         "confirmed",
@@ -63470,7 +63577,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8185
+        8253
       ],
       "consumerCount": 92,
       "backendConsumers": [
@@ -63605,7 +63712,7 @@
       "domain": "events-ticketing",
       "kind": "openapi-enum",
       "name": "EventLifecycleState",
-      "line": 8321,
+      "line": 8389,
       "values": [
         "draft",
         "planning",
@@ -63625,7 +63732,7 @@
       "valueCount": 14,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8321
+        8389
       ],
       "consumerCount": 207,
       "backendConsumers": [
@@ -63818,7 +63925,7 @@
       "domain": "security-authorization",
       "kind": "openapi-enum",
       "name": "authorityCode",
-      "line": 8387,
+      "line": 8455,
       "values": [
         "owner",
         "event_approver",
@@ -63828,7 +63935,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8387
+        8455
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -63878,7 +63985,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "code",
-      "line": 8396,
+      "line": 8464,
       "values": [
         "feature_disabled",
         "not_found",
@@ -63902,7 +64009,7 @@
       "valueCount": 18,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8396
+        8464
       ],
       "consumerCount": 715,
       "backendConsumers": [
@@ -64182,7 +64289,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "reportReason",
-      "line": 8556,
+      "line": 8624,
       "values": [
         "offensive",
         "personal_information",
@@ -64197,7 +64304,7 @@
       "valueCount": 9,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        8556
+        8624
       ],
       "consumerCount": 23,
       "backendConsumers": [
@@ -64264,7 +64371,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "moderationReasonCode",
-      "line": 8567,
+      "line": 8635,
       "values": [
         "legitimate_negative_opinion",
         "offensive",
@@ -64280,7 +64387,7 @@
       "valueCount": 10,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8567
+        8635
       ],
       "consumerCount": 7,
       "backendConsumers": [
@@ -64325,7 +64432,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "MerchProductCategory",
-      "line": 8693,
+      "line": 8761,
       "values": [
         "apparel",
         "vinyl",
@@ -64340,7 +64447,7 @@
       "valueCount": 9,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8693
+        8761
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -64393,7 +64500,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "MerchProductStatus",
-      "line": 8696,
+      "line": 8764,
       "values": [
         "draft",
         "pending_review",
@@ -64406,7 +64513,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8696
+        8764
       ],
       "consumerCount": 123,
       "backendConsumers": [
@@ -64561,7 +64668,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "MerchFulfillmentStatus",
-      "line": 8699,
+      "line": 8767,
       "values": [
         "pending",
         "preparing",
@@ -64576,7 +64683,7 @@
       "valueCount": 9,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8699
+        8767
       ],
       "consumerCount": 41,
       "backendConsumers": [
@@ -64655,7 +64762,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "MerchIssueStatus",
-      "line": 9039,
+      "line": 9107,
       "values": [
         "open",
         "seller_review",
@@ -64668,7 +64775,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9039
+        9107
       ],
       "consumerCount": 106,
       "backendConsumers": [
@@ -64818,7 +64925,7 @@
       "domain": "payments-finance",
       "kind": "openapi-enum",
       "name": "MerchRefundStatus",
-      "line": 9094,
+      "line": 9162,
       "values": [
         "requested",
         "approved",
@@ -64830,7 +64937,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9094
+        9162
       ],
       "consumerCount": 183,
       "backendConsumers": [
@@ -65017,7 +65124,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "MerchSettlementStatus",
-      "line": 9181,
+      "line": 9249,
       "values": [
         "draft",
         "under_review",
@@ -65029,7 +65136,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9181
+        9249
       ],
       "consumerCount": 145,
       "backendConsumers": [
@@ -65195,7 +65302,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "quoteStatus",
-      "line": 9298,
+      "line": 9366,
       "values": [
         "draft",
         "sent",
@@ -65212,7 +65319,7 @@
       "valueCount": 11,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9298
+        9366
       ],
       "consumerCount": 85,
       "backendConsumers": [
@@ -65338,7 +65445,7 @@
       "domain": "payments-finance",
       "kind": "openapi-enum",
       "name": "paymentStatus",
-      "line": 9301,
+      "line": 9369,
       "values": [
         "holding",
         "awaiting_payment",
@@ -65355,8 +65462,8 @@
       "valueCount": 11,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        9301,
-        9438
+        9369,
+        9506
       ],
       "consumerCount": 147,
       "backendConsumers": [
@@ -65519,7 +65626,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "fulfillmentStatus",
-      "line": 9304,
+      "line": 9372,
       "values": [
         "date_held",
         "date_reserved",
@@ -65532,7 +65639,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9304
+        9372
       ],
       "consumerCount": 109,
       "backendConsumers": [
@@ -65678,7 +65785,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "fulfillmentStatus",
-      "line": 9441,
+      "line": 9509,
       "values": [
         "seat_held",
         "issued",
@@ -65692,7 +65799,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9441
+        9509
       ],
       "consumerCount": 78,
       "backendConsumers": [
@@ -65808,7 +65915,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "moFulfillmentStatus",
-      "line": 9767,
+      "line": 9835,
       "values": [
         "on_hold",
         "ready_to_fulfill",
@@ -65828,7 +65935,7 @@
       "valueCount": 14,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9767
+        9835
       ],
       "consumerCount": 56,
       "backendConsumers": [
@@ -65927,7 +66034,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "moDepositStatus",
-      "line": 9782,
+      "line": 9850,
       "values": [
         "awaiting_payment",
         "collected",
@@ -65943,7 +66050,7 @@
       "valueCount": 10,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        9782
+        9850
       ],
       "consumerCount": 57,
       "backendConsumers": [
@@ -66036,7 +66143,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "mcrsRequestType",
-      "line": 9814,
+      "line": 9882,
       "values": [
         "sale_cancellation",
         "sale_return",
@@ -66047,7 +66154,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9814
+        9882
       ],
       "consumerCount": 12,
       "backendConsumers": [
@@ -66101,7 +66208,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "mcrRequestType",
-      "line": 9834,
+      "line": 9902,
       "values": [
         "sale_cancellation",
         "sale_return",
@@ -66112,7 +66219,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9834
+        9902
       ],
       "consumerCount": 12,
       "backendConsumers": [
@@ -66166,7 +66273,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "mfuStatus",
-      "line": 9925,
+      "line": 9993,
       "values": [
         "on_hold",
         "ready_to_fulfill",
@@ -66186,7 +66293,7 @@
       "valueCount": 14,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9925
+        9993
       ],
       "consumerCount": 56,
       "backendConsumers": [
@@ -66285,7 +66392,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "mruStatus",
-      "line": 9937,
+      "line": 10005,
       "values": [
         "on_hold",
         "confirmed",
@@ -66306,7 +66413,7 @@
       "valueCount": 15,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9937
+        10005
       ],
       "consumerCount": 67,
       "backendConsumers": [
@@ -66416,7 +66523,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "creProvider",
-      "line": 10340,
+      "line": 10408,
       "values": [
         "datafast",
         "paypal",
@@ -66429,7 +66536,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        10340
+        10408
       ],
       "consumerCount": 112,
       "backendConsumers": [
@@ -66588,7 +66695,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "creReason",
-      "line": 10345,
+      "line": 10413,
       "values": [
         "closed_checkout_approval",
         "scheduled_query_review",
@@ -66599,7 +66706,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        10345
+        10413
       ],
       "consumerCount": 8,
       "backendConsumers": [
@@ -66640,7 +66747,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "cpqLastOutcome",
-      "line": 10401,
+      "line": 10469,
       "values": [
         "retry_exhausted",
         "process_switch_disabled",
@@ -66660,7 +66767,7 @@
       "valueCount": 14,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        10401
+        10469
       ],
       "consumerCount": 10,
       "backendConsumers": [
@@ -66703,7 +66810,7 @@
       "domain": "events-ticketing",
       "kind": "openapi-enum",
       "name": "EventRsvpStatus",
-      "line": 11244,
+      "line": 11312,
       "values": [
         "accepted",
         "maybe",
@@ -66712,7 +66819,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11244
+        11312
       ],
       "consumerCount": 53,
       "backendConsumers": [
@@ -66807,7 +66914,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 11436,
+      "line": 11504,
       "values": [
         "ok",
         "degraded"
@@ -66815,7 +66922,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11436
+        11504
       ],
       "consumerCount": 833,
       "backendConsumers": [
@@ -67099,7 +67206,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OnboardingIntent",
-      "line": 11549,
+      "line": 11617,
       "values": [
         "events",
         "follow_artists",
@@ -67111,7 +67218,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11549
+        11617
       ],
       "consumerCount": 91,
       "backendConsumers": [
@@ -67253,7 +67360,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "firstValue",
-      "line": 11564,
+      "line": 11632,
       "values": [
         "artist_followed",
         "access_requested",
@@ -67263,8 +67370,8 @@
       "valueCount": 4,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        11564,
-        11588
+        11632,
+        11656
       ],
       "consumerCount": 47,
       "backendConsumers": [
@@ -67352,7 +67459,7 @@
       "domain": "security-authorization",
       "kind": "openapi-enum",
       "name": "Role",
-      "line": 11762,
+      "line": 11830,
       "values": [
         "Admin",
         "Manager",
@@ -67389,7 +67496,7 @@
       "valueCount": 31,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        11762
+        11830
       ],
       "consumerCount": 296,
       "backendConsumers": [
@@ -67630,7 +67737,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 11819,
+      "line": 11887,
       "values": [
         "Active",
         "Inactive"
@@ -67638,7 +67745,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11819
+        11887
       ],
       "consumerCount": 834,
       "backendConsumers": [
@@ -67924,7 +68031,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "sdrSelectionMode",
-      "line": 12554,
+      "line": 12622,
       "values": [
         "all",
         "first-available"
@@ -67932,7 +68039,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        12554
+        12622
       ],
       "consumerCount": 16,
       "backendConsumers": [
@@ -67981,7 +68088,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 12773,
+      "line": 12841,
       "values": [
         "artist",
         "group",
@@ -67991,7 +68098,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        12773
+        12841
       ],
       "consumerCount": 424,
       "backendConsumers": [
@@ -68247,7 +68354,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 12788,
+      "line": 12856,
       "values": [
         "audio-track",
         "video",
@@ -68257,7 +68364,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        12788
+        12856
       ],
       "consumerCount": 398,
       "backendConsumers": [
@@ -68507,7 +68614,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "availability",
-      "line": 12804,
+      "line": 12872,
       "values": [
         "available",
         "unavailable"
@@ -68515,7 +68622,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        12804
+        12872
       ],
       "consumerCount": 169,
       "backendConsumers": [
@@ -68681,7 +68788,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 12834,
+      "line": 12902,
       "values": [
         "release",
         "recording",
@@ -68690,7 +68797,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        12834
+        12902
       ],
       "consumerCount": 410,
       "backendConsumers": [
@@ -68939,7 +69046,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "approvalMode",
-      "line": 13048,
+      "line": 13116,
       "values": [
         "normal",
         "emergency",
@@ -68949,7 +69056,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        13048
+        13116
       ],
       "consumerCount": 64,
       "backendConsumers": [
@@ -69047,7 +69154,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "changeKind",
-      "line": 13143,
+      "line": 13211,
       "values": [
         "party-role",
         "role-permission"
@@ -69055,7 +69162,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        13143
+        13211
       ],
       "consumerCount": 11,
       "backendConsumers": [
@@ -69097,7 +69204,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "apReviewStatus",
-      "line": 13713,
+      "line": 13781,
       "values": [
         "unverified",
         "pending",
@@ -69108,7 +69215,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        13713
+        13781
       ],
       "consumerCount": 147,
       "backendConsumers": [
@@ -69270,7 +69377,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "aerrMode",
-      "line": 13727,
+      "line": 13795,
       "values": [
         "dry_run",
         "production"
@@ -69278,7 +69385,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        13727
+        13795
       ],
       "consumerCount": 111,
       "backendConsumers": [
@@ -69415,7 +69522,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "aeruStatus",
-      "line": 13737,
+      "line": 13805,
       "values": [
         "running",
         "completed",
@@ -69426,7 +69533,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        13737
+        13805
       ],
       "consumerCount": 83,
       "backendConsumers": [
@@ -69556,7 +69663,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 14262,
+      "line": 14330,
       "values": [
         "pending_payment",
         "paid",
@@ -69565,8 +69672,8 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        14262,
-        14314
+        14330,
+        14382
       ],
       "consumerCount": 833,
       "backendConsumers": [
@@ -69846,7 +69953,7 @@
       "domain": "payments-finance",
       "kind": "openapi-enum",
       "name": "paymentStatus",
-      "line": 14286,
+      "line": 14354,
       "values": [
         "not_started",
         "awaiting_payment",
@@ -69863,7 +69970,7 @@
       "valueCount": 11,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        14286
+        14354
       ],
       "consumerCount": 147,
       "backendConsumers": [
@@ -70026,7 +70133,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "fulfillmentStatus",
-      "line": 14289,
+      "line": 14357,
       "values": [
         "lead_received",
         "seat_held",
@@ -70041,7 +70148,7 @@
       "valueCount": 9,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        14289
+        14357
       ],
       "consumerCount": 45,
       "backendConsumers": [
@@ -70121,7 +70228,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "InternalReportState",
-      "line": 14352,
+      "line": 14420,
       "values": [
         "draft",
         "submitted",
@@ -70139,7 +70246,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        14352
+        14420
       ],
       "consumerCount": 116,
       "backendConsumers": [
@@ -70306,7 +70413,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "InternalReportType",
-      "line": 14355,
+      "line": 14423,
       "values": [
         "error",
         "suggestion",
@@ -70320,7 +70427,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        14355
+        14423
       ],
       "consumerCount": 20,
       "backendConsumers": [
@@ -70389,7 +70496,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "iapuStatus",
-      "line": 14581,
+      "line": 14649,
       "values": [
         "draft",
         "completed",
@@ -70398,7 +70505,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        14581
+        14649
       ],
       "consumerCount": 8,
       "backendConsumers": [
@@ -70444,7 +70551,7 @@
       "domain": "product-navigation",
       "kind": "openapi-enum",
       "name": "FeatureAccessRequestStatus",
-      "line": 15176,
+      "line": 15244,
       "values": [
         "pending",
         "approved",
@@ -70455,7 +70562,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        15176
+        15244
       ],
       "consumerCount": 173,
       "backendConsumers": [
@@ -70631,7 +70738,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "decision",
-      "line": 15296,
+      "line": 15364,
       "values": [
         "approved",
         "rejected"
@@ -70639,7 +70746,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        15296
+        15364
       ],
       "consumerCount": 237,
       "backendConsumers": [
@@ -70860,7 +70967,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OperationsStatus",
-      "line": 15348,
+      "line": 15416,
       "values": [
         "new",
         "seen",
@@ -70873,7 +70980,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        15348
+        15416
       ],
       "consumerCount": 87,
       "backendConsumers": [
@@ -71012,7 +71119,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OperationsPriority",
-      "line": 15351,
+      "line": 15419,
       "values": [
         "urgent",
         "high",
@@ -71022,7 +71129,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        15351
+        15419
       ],
       "consumerCount": 46,
       "backendConsumers": [
@@ -71114,7 +71221,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OperationsSlaState",
-      "line": 15354,
+      "line": 15422,
       "values": [
         "on_track",
         "at_risk",
@@ -71125,7 +71232,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        15354
+        15422
       ],
       "consumerCount": 31,
       "backendConsumers": [
@@ -71892,7 +71999,7 @@
       "lines": [
         85
       ],
-      "consumerCount": 67,
+      "consumerCount": 68,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -71924,6 +72031,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/ServerExtraSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -78014,7 +78122,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 27,
+      "consumerCount": 29,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
         "tdf-hq/sql/2026-08-13_distribution_product_seeds.sql",
@@ -78034,6 +78142,7 @@
       "webConsumers": [
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
@@ -78043,6 +78152,7 @@
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
         "tdf-mobile/src/analytics/partySelectorTelemetry.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/components/PartySelector.tsx",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
@@ -78051,7 +78161,9 @@
         "scripts/test-distribution-accounting-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "decision": "dynamic-business-catalog",
@@ -81629,7 +81741,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 75,
+      "consumerCount": 77,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -81674,6 +81786,7 @@
       "webConsumers": [
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
@@ -81686,6 +81799,7 @@
         "tdf-mobile/app/access-requests/new.tsx",
         "tdf-mobile/app/createArtistProfile.tsx",
         "tdf-mobile/app/ddex/partners.tsx",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/featureRegistry.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "tdf-mobile/src/lib/firstValueCompletion.ts",
@@ -81714,10 +81828,12 @@
         "scripts/verify-payment-arithmetic.py"
       ],
       "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq/src/TDF/API/Marketplace.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-mobile/app/ddex/partners.tsx",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "decision": "dynamic-business-catalog",
@@ -93157,7 +93273,7 @@
       "lines": [
         305
       ],
-      "consumerCount": 51,
+      "consumerCount": 52,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -93181,6 +93297,7 @@
         "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/ServerExtraSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -108278,7 +108395,7 @@
       "lines": [
         64
       ],
-      "consumerCount": 20,
+      "consumerCount": 22,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
@@ -108297,18 +108414,23 @@
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx"
       ],
-      "mobileConsumers": [],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
       "automationConsumers": [
         "scripts/catalog-list-audit.mjs",
         "scripts/test-canonical-payment-lifecycle-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
-        "tdf-hq-ui/src/api/paymentCapabilities.ts"
+        "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
@@ -108316,7 +108438,9 @@
       "priority": "P2-schema-history",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "exactDuplicateIds": [],
+      "exactDuplicateIds": [
+        "204695f88339a363dbac"
+      ],
       "similarCandidateIds": []
     },
     {
@@ -110343,20 +110467,26 @@
       "lines": [
         347
       ],
-      "consumerCount": 5,
+      "consumerCount": 7,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx"
       ],
-      "mobileConsumers": [],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
       "automationConsumers": [
         "scripts/catalog-list-audit.mjs"
       ],
-      "apiAndIntegrationConsumers": [],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
       "decision": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
@@ -122971,7 +123101,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 396,
+      "consumerCount": 397,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",

@@ -107,7 +107,9 @@ runtimeReady environment flow method activation = case paProvider activation of
     inboxKey <- liftIO (minimumEnvLength 32 "COMMERCE_EVENT_ENCRYPTION_KEY")
     pure (configured && webhookId && inboxKey)
   Checkout.ProviderBankTransfer ->
-    liftIO (manualTransferInstructionsConfigured flow)
+    if merchantMatches "tdf-manual-settlement"
+      then liftIO (manualTransferInstructionsConfigured flow)
+      else pure False
   Checkout.ProviderPlaceToPay ->
     liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
       method)
