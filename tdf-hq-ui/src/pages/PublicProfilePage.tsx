@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Avatar,
@@ -45,6 +45,9 @@ export default function PublicProfilePage() {
   const { locale } = useLocalePreferences();
   const isSelf = session?.partyId === parsedId;
   const [previewPartyId, setPreviewPartyId] = useState<number | null>(null);
+  useEffect(() => {
+    setPreviewPartyId(null);
+  }, [parsedId]);
 
   const partyQuery = useQuery({
     queryKey: ['social-profile', session?.partyId, parsedId],
