@@ -1855,7 +1855,7 @@
     "scripts/production-release.mjs": "f79231d797d83c953f1bf15d64e93d962e9b3bc72efe192c4243af6ccfe051ad",
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
     "scripts/specification-inventory.py": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
-    "scripts/test-artist-merch-runtime.sh": "20870887900d701d2f835942dfb59f18c61d6ab09433fc3f938d50cefd657f81",
+    "scripts/test-artist-merch-runtime.sh": "bb890b3e3e1b4f6e94b039f397b4b3aae33cb456613477491ce565521003050a",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
@@ -1904,7 +1904,7 @@
     "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
-    "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "69212b50953a130357556a908b92cdc5d2af5aa9aca7a1c4aca013d6157cb850",
+    "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "b250d29d8515d9d978f1ce65e63e7a5ab0acf71695c8cdf12b0314e5455f2d57"
@@ -3313,6 +3313,13 @@
       ]
     },
     {
+      "id": "SURFACE-df80d476d03d210a",
+      "path": "scripts/__tests__/merch-runtime-safety.test.mjs",
+      "sha256": "3d253d9beed2b434e06d4d217ec83b303097cd2101bd300b04640e8e2826b394",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-0961f93c2cc23e1a",
       "path": "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "sha256": "877479519f6ac9f8d1ccaf9b76f5fd739a8fff9f4a3a3ea51b5da41ca2aba680",
@@ -4162,7 +4169,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "cdbe4b07b0b5786ddebd92ffdaf8e84de969e55b8ce2e3af183561a55bc9803a",
+      "sha256": "b57eed49a82155f9df7a49c155b5e2f8e555e67426d0d5602ab8f48a8d0dd13f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -4736,7 +4743,7 @@
     {
       "id": "SURFACE-58805fa683558aef",
       "path": "scripts/test-artist-merch-runtime.sh",
-      "sha256": "20870887900d701d2f835942dfb59f18c61d6ab09433fc3f938d50cefd657f81",
+      "sha256": "bb890b3e3e1b4f6e94b039f397b4b3aae33cb456613477491ce565521003050a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14501,7 +14508,7 @@
     {
       "id": "SURFACE-b05fdafc0bcc42d9",
       "path": "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-      "sha256": "69212b50953a130357556a908b92cdc5d2af5aa9aca7a1c4aca013d6157cb850",
+      "sha256": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17597,6 +17604,7 @@
     "SURFACE-aaf6250f3ecffcca",
     "SURFACE-e12f540d456f8d56",
     "SURFACE-ed51dd1c0fc53a51",
+    "SURFACE-df80d476d03d210a",
     "SURFACE-0961f93c2cc23e1a",
     "SURFACE-3875378b2b3df521",
     "SURFACE-2661bcd3e8c66ae8",

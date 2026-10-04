@@ -356,7 +356,9 @@ runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
     let moneySnapshot = runSqlPool (rawSql
           "SELECT jsonb_build_object('orders',(SELECT count(*) FROM merch_order),\
           \ 'checkouts',(SELECT count(*) FROM commerce_checkout_session),\
-          \ 'reservations',(SELECT count(*) FROM merch_inventory_reservation),\
+          \ 'reservations',(SELECT jsonb_agg(to_jsonb(r) ORDER BY r.id) FROM merch_inventory_reservation r),\
+          \ 'stock',(SELECT jsonb_agg(jsonb_build_object('id',v.id,'onHand',v.stock_on_hand,\
+          \ 'reserved',v.stock_reserved,'sold',v.stock_sold) ORDER BY v.id) FROM merch_product_variant v),\
           \ 'cart',(SELECT to_jsonb(c) FROM merch_cart c WHERE id=?::uuid))::text"
           [PersistText cartId] :: SqlPersistT IO [Single Text]) pool
     beforeInvalidMoney <- moneySnapshot

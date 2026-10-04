@@ -6,6 +6,17 @@ TDF_MERCH_RUNTIME_CONTAINER=""
 TDF_MERCH_RUNTIME_DATABASE="tdf_merch_runtime_test"
 TDF_MERCH_RUNTIME_URL=${TDF_MERCH_RUNTIME_DATABASE_URL:-}
 
+validate_runtime_url() {
+  node --input-type=module - "$TDF_MERCH_RUNTIME_URL" "$TDF_MERCH_RUNTIME_ROOT/scripts/lib/disposable-postgres-url.mjs" <<'JS'
+import { pathToFileURL } from 'node:url';
+const { disposablePostgresUrl } = await import(pathToFileURL(process.argv[3]));
+disposablePostgresUrl(process.argv[2], { ci: process.env.CI === 'true' });
+JS
+}
+test -z "${PGHOSTADDR:-}${PGSERVICE:-}${PGSERVICEFILE:-}" || {
+  echo 'Unset libpq routing overrides before merchandise fixture setup' >&2; exit 1;
+}
+
 cleanup() {
   if [ -n "$TDF_MERCH_RUNTIME_CONTAINER" ]; then
     docker rm -f "$TDF_MERCH_RUNTIME_CONTAINER" >/dev/null 2>&1 || true
@@ -14,6 +25,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 if [ -n "$TDF_MERCH_RUNTIME_URL" ]; then
+  validate_runtime_url
   runtime_database_name=$(psql "$TDF_MERCH_RUNTIME_URL" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT current_database()")
   case "$runtime_database_name" in
     *merch_runtime*) ;;
@@ -65,6 +77,8 @@ else
   fi
   TDF_MERCH_RUNTIME_URL="postgresql://postgres@127.0.0.1:$published_port/$TDF_MERCH_RUNTIME_DATABASE"
 fi
+
+validate_runtime_url
 
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/init_schema.sql"
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql"

@@ -106,6 +106,7 @@
       "scripts/__tests__/local-api-fixture.test.mjs",
       "scripts/__tests__/logical-correctness-audit.test.mjs",
       "scripts/__tests__/merch-commission-postgres.mjs",
+      "scripts/__tests__/merch-runtime-safety.test.mjs",
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
       "scripts/__tests__/onboarding-real-browser.mjs",
@@ -2604,6 +2605,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-df80d476d03d210a",
+      "path": "scripts/__tests__/merch-runtime-safety.test.mjs",
+      "sha256": "3d253d9beed2b434e06d4d217ec83b303097cd2101bd300b04640e8e2826b394",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0961f93c2cc23e1a",
       "path": "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "sha256": "877479519f6ac9f8d1ccaf9b76f5fd739a8fff9f4a3a3ea51b5da41ca2aba680",
@@ -3272,7 +3279,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "cdbe4b07b0b5786ddebd92ffdaf8e84de969e55b8ce2e3af183561a55bc9803a",
+      "sha256": "b57eed49a82155f9df7a49c155b5e2f8e555e67426d0d5602ab8f48a8d0dd13f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3752,7 +3759,7 @@
     {
       "id": "SURFACE-58805fa683558aef",
       "path": "scripts/test-artist-merch-runtime.sh",
-      "sha256": "20870887900d701d2f835942dfb59f18c61d6ab09433fc3f938d50cefd657f81",
+      "sha256": "bb890b3e3e1b4f6e94b039f397b4b3aae33cb456613477491ce565521003050a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11840,7 +11847,7 @@
     {
       "id": "SURFACE-b05fdafc0bcc42d9",
       "path": "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-      "sha256": "69212b50953a130357556a908b92cdc5d2af5aa9aca7a1c4aca013d6157cb850",
+      "sha256": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
