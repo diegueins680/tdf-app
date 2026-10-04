@@ -7,7 +7,7 @@ branch bases, manifests, test counts and runtime observations are historical.
 The current integration remains root PR #414, now based on `main`, and companion
 Mobile PR #88, now merged, plus the generated-contract completion in Mobile #76.
 Root main
-`b07f67c3ebe2022d5f70e94578944b6401616696` and all 21 upstream payment PR heads
+`fa30e358de631e4773d142ec83ca6d75d42047f0` and all 21 upstream payment PR heads
 are ancestors of the consolidated root candidate. Its mobile gitlink is
 `cd3f664663f328a47341914524a2af130ae0d3ec`.
 
@@ -22,6 +22,26 @@ self-service artist creation by Fan. September's absent-endpoint and restricted
 role observations below describe the earlier pinned source, not current policy.
 Mobile checkout now hands off to `https://www.tdfrecords.net`.
 
+The subsequent hosted-service review repair synchronizes the exact bound
+mixing/mastering order and one paid audit inside the payment transaction,
+rejects inconsistent order bindings/amounts, and preserves fulfillment progress
+on replay. Ten real PostgreSQL cases cover two providers, concurrent callbacks,
+caller rollback and inconsistent domain state. The full provider/recovery suite
+passes 259 examples. Browser recovery ignores another product's saved session
+and reuses the original pending request and idempotency key; its component suite
+passes 12 tests. `HostedServicePayment.tla` and three negative configurations are
+integrated into the existing bounded runner; see the refund correspondence map.
+
+Production observations are not activation authority: zero canonical intent and
+refund rows were observed in a bounded read-only inventory, but external merchant
+qualification and no-charge finality remain release prerequisites. Existing
+marketplace/event-ticket/manual/PayPal intake flags include enabled values;
+new hosted provider rails, refunds and mixing/mastering were observed disabled.
+Preserve the existing approved flag state. Mobile Datadog's older green jobs
+suppressed HTTP 403 errors; companion #125 corrects that behavior and requires
+valid repository credentials. Root Datadog actually executed two passing tests,
+including a web test still targeting the historical Pages host.
+
 The final review repair binds bank-transfer availability to the same
 `tdf-manual-settlement` merchant used by checkout. Mobile #76's otherwise missing
 payment-capabilities contract is now defined in canonical OpenAPI and generated
@@ -29,7 +49,7 @@ for both clients. Its currency field follows the actual handler: uppercase input
 is echoed, with no available routes for unsupported currencies. Contract tests
 compare the route, response projection and capability names with Haskell.
 
-Current local verification: backend build and 3,706 examples (zero failures,
+Verification before the final hosted-service review repair: backend build and 3,706 examples (zero failures,
 six pending); web lint/types, 250 suites / 2,749 tests, production build and
 315,674-byte gzip initial bundle budget; mobile lint/types and 88 suites / 555
 tests; isolated PostgreSQL provider/recovery suite, 249 examples, zero failures;

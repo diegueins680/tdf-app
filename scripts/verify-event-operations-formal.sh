@@ -128,6 +128,10 @@ expect_counterexample() {
   fi
   echo "Expected mutation counterexample: ${config}: ${invariant}"
 }
+run_tlc HostedServicePayment.tla HostedServicePayment.cfg hosted-service-payment
+expect_counterexample HostedServicePaymentAtomic.cfg NoMissingFulfillment hosted-service-atomic HostedServicePayment.tla
+expect_counterexample HostedServicePaymentReplay.cfg ExactlyOnePaidAudit hosted-service-replay HostedServicePayment.tla
+expect_counterexample HostedServicePaymentProgress.cfg NoFulfillmentRegression hosted-service-progress HostedServicePayment.tla
 run_tlc RefundRecovery.tla RefundRecovery.cfg refund-recovery
 expect_counterexample RefundRecoveryExecution.cfg NoDuplicateExecution refund-recovery-execution RefundRecovery.tla
 expect_counterexample RefundRecoveryAccounting.cfg NoDuplicateAccounting refund-recovery-accounting RefundRecovery.tla

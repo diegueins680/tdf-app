@@ -12,6 +12,8 @@ END $$;
 BEGIN;
 -- Only the ORM-owned party identity required by the real manual-evidence
 -- migration. These are synthetic reviewer identities, not authenticated users.
+CREATE FUNCTION trigger_set_timestamp() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END $$;
 CREATE TABLE party (id BIGINT PRIMARY KEY);
 INSERT INTO party(id) VALUES (1),(2);
 CREATE TABLE asset (

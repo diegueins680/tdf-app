@@ -4063,7 +4063,7 @@
     },
     {
       "path": "docs/payments/stack-integration-2026-09-16.md",
-      "sha256": "a40a8ff63e87483d70922c335ed3d70c2441da8acf9a5de29a76eabacbb165b3",
+      "sha256": "f68397653935c2f2ffba1ec142bfbf84a947ba12c1435cd4856ee4510f7746d3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -5301,6 +5301,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/HostedServicePayment.cfg",
+      "sha256": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePayment.tla",
+      "sha256": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePaymentAtomic.cfg",
+      "sha256": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePaymentProgress.cfg",
+      "sha256": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePaymentReplay.cfg",
+      "sha256": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/InvitationSafety.cfg",
       "sha256": "61505b22d7a3915f744f75b8b376137c26c4bb28da08ed56cd91e1485adaa831",
       "authority": "inferred",
@@ -6219,7 +6254,7 @@
     },
     {
       "path": "formal/event-operations/refund-recovery-correspondence.md",
-      "sha256": "19a2aaf96c743bb8d787cb6d420275c2ad84f592cf27e7e54f72fa28af0db4eb",
+      "sha256": "8606dd024b4eaf0e712b2b8ac92684ca3d392b80d01e534636ce7f06b66f31ff",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -10274,6 +10309,74 @@
         "SPECIFICATION Spec",
         "PROPERTIES RequestsResolve",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePayment.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = FALSE",
+        "  UnsafeReplay = FALSE",
+        "  UnsafeProgress = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  NoMissingFulfillment",
+        "  ExactlyOnePaidAudit",
+        "  NoFulfillmentRegression",
+        "  BindingRequired"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePaymentAtomic.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = TRUE",
+        "  UnsafeReplay = FALSE",
+        "  UnsafeProgress = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoMissingFulfillment"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePaymentProgress.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = FALSE",
+        "  UnsafeReplay = FALSE",
+        "  UnsafeProgress = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoFulfillmentRegression"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePaymentReplay.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = FALSE",
+        "  UnsafeReplay = TRUE",
+        "  UnsafeProgress = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  ExactlyOnePaidAudit"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

@@ -238,16 +238,16 @@ export default function HostedProviderCheckout({
     setBusy(false);
     const expectedCheckoutId = checkout?.checkoutId;
     const resume = loadProviderPaymentResume(expectedCheckoutId);
-    if (resume) {
+    const resumedMethod = resume && HOSTED_PAYMENT_METHODS.find((candidate) =>
+      candidate.provider === resume.provider && candidate.paymentMethod === resume.paymentMethod);
+    const resumeInScope = resume && (expectedCheckoutId !== undefined
+      || (pendingReturnPathPrefix && resume.returnPath.startsWith(pendingReturnPathPrefix)));
+    if (resume && resumedMethod && resumeInScope) {
       const context = {
         checkoutId: resume.checkoutId,
         lookupToken: resume.lookupToken,
         returnPath: resume.returnPath,
       };
-      const resumedMethod = HOSTED_PAYMENT_METHODS.find((candidate) =>
-        candidate.provider === resume.provider && candidate.paymentMethod === resume.paymentMethod);
-      if (!resumedMethod || (!expectedCheckoutId
-        && (!pendingReturnPathPrefix || !resume.returnPath.startsWith(pendingReturnPathPrefix)))) return undefined;
       clearProviderPaymentPending(resume.checkoutId);
       setPendingCreation(null);
       setActiveContext(context);
@@ -263,6 +263,7 @@ export default function HostedProviderCheckout({
         .finally(() => { if (!cancelled) setBusy(false); });
       return () => { cancelled = true; };
     }
+    // Another product's saved session must not hide this flow's transmitted request.
 
     const pending = loadProviderPaymentPending(expectedCheckoutId);
     if (!pending

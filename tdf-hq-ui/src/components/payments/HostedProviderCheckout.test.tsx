@@ -237,6 +237,28 @@ describe('HostedProviderCheckout', () => {
     expect(screen.queryByRole('button', { name: 'Recuperar pago original' })).toBeNull();
   });
 
+  it('recovers the transmitted mixing payment despite an unrelated saved resume', async () => {
+    const prepareCheckout = jest.fn();
+    const mixingId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+    saveProviderPaymentResume({ version: 1, ...context, attemptId, provider: 'placetopay',
+      paymentMethod: 'card', createdAt: Date.now() });
+    const key = loadOrCreatePaymentIdempotencyKey(mixingId, 'placetopay', 'card');
+    saveProviderPaymentPending({ version: 1, checkoutId: mixingId,
+      lookupToken: 'mixing-lookup-token-secure', returnPath: '/mezcla-mastering/pedido/existing',
+      provider: 'placetopay', paymentMethod: 'card', createdAt: Date.now() });
+    createMock.mockResolvedValue({ ...succeeded, checkoutId: mixingId });
+    render(<HostedProviderCheckout offeredMethods={['placetopay_card', 'payphone_wallet']}
+      prepareCheckout={prepareCheckout} pendingReturnPathPrefix="/mezcla-mastering/pedido/" />);
+    expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
+    fireEvent.click(await screen.findByRole('button', { name: 'Recuperar pago original' }));
+    expect(await screen.findByText('El servidor verificó el pago del proveedor.')).toBeTruthy();
+    expect(createMock).toHaveBeenCalledTimes(1);
+    expect(createMock).toHaveBeenCalledWith(mixingId, 'mixing-lookup-token-secure', key,
+      { provider: 'placetopay', paymentMethod: 'card' });
+    expect(prepareCheckout).not.toHaveBeenCalled();
+    expect(getMock).not.toHaveBeenCalled();
+  });
+
   it('ignores a late status response after navigation to a different checkout', async () => {
     saveProviderPaymentResume({ version: 1, ...context, attemptId, provider: 'placetopay',
       paymentMethod: 'card', createdAt: Date.now() });

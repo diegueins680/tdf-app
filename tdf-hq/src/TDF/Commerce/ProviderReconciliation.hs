@@ -23,8 +23,9 @@ import qualified Data.Aeson as A
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime, getCurrentTime)
+import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql
-  ( SqlPersistT, rawExecute, runSqlPool )
+  ( Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool )
 import           System.Entropy (getEntropy)
 import           System.Environment (lookupEnv)
 import           System.IO (hPutStrLn, stderr)
@@ -347,7 +348,7 @@ applyUnheldQueryResult payment result eventId now = do
           }
         case verified of
           Left problem -> pure (Left problem)
-          Right _ -> pure (Right ReconciliationProcessed)
+          Right _ -> synchronizeServiceOrder payment now
       AdapterDeclined -> confirmNoCharge payment PaymentFailureConfirmed
         "provider_declined" eventId now
       AdapterCancelled -> confirmNoCharge payment PaymentCancellationRequested
@@ -371,6 +372,48 @@ applyUnheldQueryResult payment result eventId now = do
         pure (Left "Unsupported authorization state requires operator review")
       AdapterReversed ->
         pure (Left "Unexpected reversal state requires operator review")
+
+-- Runs inside the reconciliation savepoint. A missing or inconsistent domain
+-- order rejects the entire capture, including its ledger, receipt and intent.
+-- The checkout/attempt locks serialize replays; the order lock also preserves
+-- fulfillment progress made by operators after the original payment.
+synchronizeServiceOrder
+  :: Execution.BoundProviderPayment -> UTCTime
+  -> SqlPersistT IO (Either Text ReconciliationDisposition)
+synchronizeServiceOrder payment now = do
+  domains <- rawSql "SELECT domain_type FROM commerce_checkout_session WHERE id=?::uuid"
+    [checkoutParam] :: SqlPersistT IO [Single Text]
+  case domains of
+    [Single "mixing_mastering"] -> do
+      orders <- rawSql
+        "SELECT status,paid_at FROM service_storefront_order\
+        \ WHERE id=?::uuid AND checkout_id=?::uuid AND price_usd_cents=? AND currency=? FOR UPDATE"
+        [orderParam, checkoutParam, PersistInt64 (Execution.bppAmountMinor payment),
+          PersistText (Execution.bppCurrency payment)]
+        :: SqlPersistT IO [(Single Text, Single (Maybe UTCTime))]
+      case orders of
+        [(_, Single (Just _))] -> pure (Right ReconciliationProcessed)
+        [(Single status, Single Nothing)]
+          | status `elem` ["pending_payment", "awaiting_payment", "payment_failed",
+              "awaiting_manual_confirmation", "datafast_pending", "paypal_pending"] -> do
+              rawExecute
+                "UPDATE service_storefront_order SET status='paid',payment_provider=?,paid_at=?,updated_at=?\
+                \ WHERE id=?::uuid AND checkout_id=?::uuid"
+                [PersistText (Checkout.paymentProviderText (Execution.bppProvider payment)),
+                  PersistUTCTime now, PersistUTCTime now, orderParam, checkoutParam]
+              rawExecute
+                "INSERT INTO service_storefront_order_status_change\
+                \ (order_id,status,notes,changed_by,created_at)\
+                \ VALUES (?::uuid,'paid','Hosted payment confirmed by an authenticated provider query',\
+                \ 'provider_authoritative_query',?)"
+                [orderParam, PersistUTCTime now]
+              pure (Right ReconciliationProcessed)
+        _ -> pure (Left "Service order does not match the verified checkout payment")
+    [_] -> pure (Right ReconciliationProcessed)
+    _ -> pure (Left "Verified checkout is unavailable")
+  where
+    checkoutParam = PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout payment))
+    orderParam = PersistText (Execution.bppDomainOrderId payment)
 
 confirmNoCharge
   :: Execution.BoundProviderPayment

@@ -389,6 +389,7 @@ spec = do
         notificationInboxSpec
         notificationIdentityInboxSpec
         reconciliationTransactionSpec
+        hostedServiceOrderSpec
         closedCheckoutEvidenceSpec
         captureReplaySpec
         manualCaptureReplaySpec
@@ -1297,8 +1298,8 @@ reconciliationReportSpec = describe "read-only reconciliation evidence" $ do
     forM_ [("sandbox","open"),("sandbox","open"),("sandbox","assigned"),("production","open")] $
       \(environment,status) -> runSqlPool (rawExecute
         "INSERT INTO commerce_reconciliation_exception(provider,environment,merchant_account_ref,\
-        \ exception_type,internal_reference,expected_amount_minor,actual_amount_minor,currency,status)\
-        \ VALUES ('paypal',?,'synthetic-account','provider_status_unknown',?,0,NULL,'USD',?)"
+        \ exception_type,internal_reference,provider_reference,expected_amount_minor,actual_amount_minor,currency,status)\
+        \ VALUES ('paypal',?,'synthetic-account','provider_status_unknown',?,gen_random_uuid()::text,0,NULL,'USD',?)"
         [PersistText environment,PersistText checkoutId,PersistText status]) pool
     let page environment status offset = reconciliationReport [Admin] pool (Just environment)
           (Just status) (Just checkoutId) (Just 1) (Just offset) >>= requireRight
@@ -2248,7 +2249,7 @@ captureReplaySpec = describe "verified capture replay integrity" $
 
       it "does not rebuild missing receipts or accept duplicate historical receipts" $ \pool ->
         forM_ ["DELETE FROM commerce_receipt WHERE checkout_id=?::uuid"
-          , "INSERT INTO commerce_receipt(checkout_id,receipt_number,kind,adapter,external_reference,amount_minor,currency,issued_at) SELECT checkout_id,receipt_number||'-duplicate',kind,adapter,external_reference,amount_minor,currency,issued_at FROM commerce_receipt WHERE checkout_id=?::uuid"] $ \corrupt -> do
+          , "INSERT INTO commerce_receipt(checkout_id,receipt_number,kind,adapter,external_reference,amount_minor,currency,issued_at,voided_at) SELECT checkout_id,receipt_number||'-duplicate',kind,adapter,external_reference,amount_minor,currency,issued_at,NOW() FROM commerce_receipt WHERE checkout_id=?::uuid"] $ \corrupt -> do
           payment <- captureFixture pool provider
           runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
           runSqlPool (rawExecute corrupt [captureCheckoutParameter payment]) pool
@@ -2431,6 +2432,77 @@ captureSnapshot payment = rawSql
   \ JOIN commerce_payment_intent intent ON intent.id=attempt.payment_intent_id\
   \ WHERE attempt.id=?::uuid"
   [PersistText (Checkout.paymentAttemptReferenceId (Checkout.vpAttempt payment))]
+
+hostedServiceOrderSpec :: SpecWith ConnectionPool
+hostedServiceOrderSpec = describe "hosted service order reconciliation" $
+  forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
+    describe (T.unpack (Checkout.paymentProviderText provider)) $ do
+      it "posts the order and one audit atomically under concurrent success/replay" $ \pool -> do
+        payment <- serviceOrderFixture pool provider
+        result <- parsedQuery payment Adapter.AdapterSucceeded
+        let apply = runSqlPool (Reconciliation.applyQueryResult payment result "service-paid" notificationTime) pool
+        concurrently (replicate 4 apply) `shouldReturn`
+          replicate 4 (Right Reconciliation.ReconciliationProcessed)
+        assertPaymentPosted pool payment
+        rows <- runSqlPool (rawSql
+          "SELECT status,payment_provider,paid_at,(SELECT count(*)\
+          \ FROM service_storefront_order_status_change WHERE order_id=?::uuid AND status='paid')\
+          \ FROM service_storefront_order WHERE id=?::uuid"
+          (replicate 2 (PersistText (Execution.bppDomainOrderId payment)))) pool
+          :: IO [(Single Text,Single Text,Single UTCTime,Single Int64)]
+        rows `shouldBe` [(Single "paid",Single (Checkout.paymentProviderText provider),Single notificationTime,Single 1)]
+        -- Delayed callbacks must preserve fulfillment progress and paid time.
+        runSqlPool (rawExecute "UPDATE service_storefront_order SET status='in_progress' WHERE id=?::uuid"
+          [PersistText (Execution.bppDomainOrderId payment)]) pool
+        before <- serviceOrderSnapshot pool payment
+        apply `shouldReturn` Right Reconciliation.ReconciliationProcessed
+        serviceOrderSnapshot pool payment `shouldReturn` before
+
+      it "rolls back the order, audit and payment together when the caller aborts" $ \pool -> do
+        payment <- serviceOrderFixture pool provider
+        result <- parsedQuery payment Adapter.AdapterSucceeded
+        financial <- runSqlPool (paymentSnapshot payment) pool
+        order <- serviceOrderSnapshot pool payment
+        runSqlPool (do
+          rawExecute "SAVEPOINT caller_service" []
+          applied <- Reconciliation.applyQueryResult payment result "service-rollback" notificationTime
+          liftIO (applied `shouldBe` Right Reconciliation.ReconciliationProcessed)
+          rawExecute "ROLLBACK TO SAVEPOINT caller_service" []
+          rawExecute "RELEASE SAVEPOINT caller_service" []) pool
+        runSqlPool (paymentSnapshot payment) pool `shouldReturn` financial
+        serviceOrderSnapshot pool payment `shouldReturn` order
+
+      forM_ ["checkout_id=NULL", "price_usd_cents=12514", "status='cancelled'"] $ \damage ->
+        it ("rejects inconsistent domain state without posting money: " <> T.unpack damage) $ \pool -> do
+          payment <- serviceOrderFixture pool provider
+          result <- parsedQuery payment Adapter.AdapterSucceeded
+          runSqlPool (rawExecute ("UPDATE service_storefront_order SET " <> damage <> " WHERE id=?::uuid")
+            [PersistText (Execution.bppDomainOrderId payment)]) pool
+          financial <- runSqlPool (paymentSnapshot payment) pool
+          order <- serviceOrderSnapshot pool payment
+          runSqlPool (Reconciliation.applyQueryResult payment result "service-mismatch" notificationTime) pool
+            >>= (`shouldSatisfy` isLeft)
+          runSqlPool (paymentSnapshot payment) pool `shouldReturn` financial
+          serviceOrderSnapshot pool payment `shouldReturn` order
+
+serviceOrderFixture :: ConnectionPool -> Checkout.PaymentProvider -> IO Execution.BoundProviderPayment
+serviceOrderFixture pool provider = do
+  (creation, operation, _) <- replayFixtureForDomain "mixing_mastering" pool provider
+  let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+  runSqlPool (rawExecute
+    "INSERT INTO service_storefront_order\
+    \ (id,order_number,buyer_name,buyer_email,package_id,service_kind,tier,price_usd_cents,checkout_id)\
+    \ SELECT ?::uuid,?,'Synthetic buyer','synthetic@example.test',id,'Mixing','Basic',12515,?::uuid\
+    \ FROM service_storefront_package ORDER BY id LIMIT 1"
+    (replicate 3 (PersistText checkoutId))) pool
+  bindReconciliationFixture pool creation operation (providerReference provider checkoutId)
+
+serviceOrderSnapshot :: ConnectionPool -> Execution.BoundProviderPayment -> IO [Single Text]
+serviceOrderSnapshot pool payment = runSqlPool (rawSql
+  "SELECT jsonb_build_array(to_jsonb(o),(SELECT jsonb_agg(to_jsonb(h) ORDER BY h.id)\
+  \ FROM service_storefront_order_status_change h WHERE h.order_id=o.id))::text\
+  \ FROM service_storefront_order o WHERE o.id=?::uuid"
+  [PersistText (Execution.bppDomainOrderId payment)]) pool
 
 reconciliationTransactionSpec :: SpecWith ConnectionPool
 reconciliationTransactionSpec = describe "authoritative query transaction ownership" $ do
