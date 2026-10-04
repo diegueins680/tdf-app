@@ -5756,6 +5756,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** @description Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. */
         patch: operations["decideDirectoryClaim"];
         trace?: never;
     };
@@ -27087,8 +27088,43 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Reviewed claim; only approval can create a manager grant */
+            /** @description Reviewed claim; only a new approval transition creates a manager grant */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing Admin role or module or attempted self-review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Claim not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current claim state forbids this transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; decision and grant rolled back */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };

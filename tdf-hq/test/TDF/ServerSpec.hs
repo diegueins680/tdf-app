@@ -8815,9 +8815,11 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldSatisfy` isLeft
 
     describe "validateOptionalSignupClaimArtistId" $ do
-        it "preserves omission and accepts positive artist ids for explicit profile claims" $ do
+        it "preserves independent signup but forbids anonymous artist adoption" $ do
             validateOptionalSignupClaimArtistId Nothing `shouldBe` Right Nothing
-            validateOptionalSignupClaimArtistId (Just 42) `shouldBe` Right (Just 42)
+            case validateOptionalSignupClaimArtistId (Just 42) of
+                Left serverErr -> errHTTPCode serverErr `shouldBe` 403
+                Right _ -> expectationFailure "Anonymous signup must not adopt an artist"
 
         it "rejects zero or negative artist ids instead of silently dropping the requested claim" $ do
             let assertInvalid result = case result of

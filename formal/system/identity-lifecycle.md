@@ -15,8 +15,10 @@ signup grants its canonical customer policy, never the verified-artist policy.
 
 A selected artist survives web signup as navigation context. The new authenticated
 account prepares the existing artist directory target and submits a claim. A
-submission is `submitted`, not approved. Only the existing strict-admin review
-boundary may approve management. Approval grants directory capability to the
+submission is `submitted`, not approved. Only a distinct reviewer holding the Admin role and Admin module may approve
+management. This matches the directory feature contract and permits multi-role
+Admin composition; it does not introduce the stricter whitelist used by credential
+administration. Approval grants directory capability to the
 claimant's own Party; it never transfers the artist's Party or credential. This
 contract does not assert that the existing reviewer/evidence workflow has received
 complete authorization, privacy or concurrency verification.
@@ -104,3 +106,58 @@ no current conformance PASS is asserted here.
 Open P1: recovery challenges currently have no expiry field/check. Single-use
 consumption is not expiry. A compatible additive expiry policy, legacy-token
 handling and clock-boundary tests remain required before full identity conformance.
+
+## Directory review refinement — ID-CLAIM-REVIEW-001
+
+Directory administration requires both the Admin role and Admin module, matching
+`directory.admin` in the generated feature registry. An additional Artist role
+must not remove that capability. The stricter credential-administration whitelist
+is a different policy. A reviewer must be a different Party from the claimant,
+including when the claimant is an administrator.
+
+Claim decisions lock the current claim row `FOR UPDATE`, then validate the current
+state, write any actual transition, create the approval's manager grant, append a
+`directory_audit_event`, and construct the response in one transaction. A losing
+terminal decision returns 409; it cannot leave a rejected claim with a grant from
+that approval. Failure writing the grant, audit or response rolls back the whole
+operation. An identical-state retry returns the current receipt without rewriting
+reviewer/timestamp/version, adding an audit event or restoring revoked management.
+Rejecting a claim does not revoke unrelated independently authorized managers.
+
+`DirectoryClaimReview.tla` bounds four reviewer categories, one claim initially
+under review, two terminal decisions and one external manager revocation. Roles
+are stable during the modeled operation; no fairness/liveness claim is made. It
+checks grant/status consistency, Admin-role enforcement, separation of reviewer
+and claimant, and no grant resurrection on replay. Four controls remove each
+protection. This abstraction excludes the evidence-review judgment, claim
+resubmission, other claims for the same profile, external SQL and dynamic role
+revocation. Session/role acceptance still uses the normal request boundary; this
+is not a universal in-flight revocation proof.
+
+The actual HTTP runner covers module-only denial, Admin+Artist composition,
+self-review denial, a deterministic approve/reject barrier, unchanged replay
+receipts/audit count, separately revoked grants and injected grant-write failure.
+Execution against the final candidate and independent immutable-SHA review remain
+required before declaring implementation conformance.
+
+The complete claim transition graph remains canonical in
+`docs/music-directory/formal-model.yaml`. Review now implements its missing
+`more_evidence_requested` and draft edges; same-state observations are allowed
+only for known states. Direct claim creation atomically submits a request, without
+persisting a draft. The review endpoint is restricted to independent Admin
+reviewers for **every** edge, including resubmission/withdrawal; this does not
+introduce a claimant self-service endpoint. The UI offers only the current state's
+outgoing actions. The PostgreSQL HTTP runner independently reads the YAML and
+checks all 49 state pairs plus seven unknown-target cases, including unchanged
+rows/audit evidence on rejected or observational requests.
+
+The design label `claims.approve` in the directory formal model and permissions
+catalog maps to `isDirectoryAdmin` (Admin role AND Admin module) at the current
+HTTP boundary, plus distinct-claimant and legal-state guards. It is not a separate
+runtime permission lookup. This mapping also applies to all administrative claim
+status changes; public professions confer none of this authority.
+
+The review card displays the submitted evidence as escaped text and the claimant
+Party identifier. Human review remains an environment assumption: neither a
+filled note nor a model-checker result proves that the underlying evidence is
+true or that an operator evaluated it correctly.

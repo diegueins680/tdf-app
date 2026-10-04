@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import yaml from 'yaml';
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, openSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -129,7 +130,8 @@ try {
     body: JSON.stringify({ profileId: target.id, claimType: 'profile', evidence: [{ note: 'Synthetic review request' }] }),
   });
   assert.equal(claimResponse.status, 201, await claimResponse.clone().text());
-  assert.equal((await claimResponse.json()).status, 'submitted');
+  const submittedClaim = await claimResponse.json();
+  assert.equal(submittedClaim.status, 'submitted');
   assert.equal(sql(`SELECT count(*) FROM directory_profile_manager WHERE account_party_id=${independent.partyId}`), '0',
     'submission is not approval and must not grant management');
   assert.equal(sql(`SELECT count(*) FROM user_credential WHERE party_id IN (${artistIds.join(',')})`), '0',
@@ -298,6 +300,103 @@ try {
   } finally {
     sql('DROP TRIGGER identity_http_reject_session ON api_token; DROP FUNCTION identity_http_reject_session();');
   }
+  // ID-CLAIM-REVIEW-001: database-serialized decisions and separated authority.
+  sql(`INSERT INTO party(display_name,is_org,created_at) VALUES ('Identity HTTP module-only reviewer',false,now());
+    INSERT INTO party_security_role(party_id,role_id,approval_mode,active)
+      SELECT p.id,r.id,'bootstrap',true FROM party p CROSS JOIN security_role r
+      WHERE p.display_name='Identity HTTP module-only reviewer' AND r.code='studio-manager' AND r.active;
+    INSERT INTO api_token(token,party_id,label,active)
+      SELECT 'synthetic-identity-module-only',id,'Synthetic module-only fixture',true FROM party
+      WHERE display_name='Identity HTTP module-only reviewer';
+    INSERT INTO party_security_role(party_id,role_id,approval_mode,active)
+      SELECT p.id,r.id,'bootstrap',true FROM party p CROSS JOIN security_role r
+      WHERE p.display_name='Identity HTTP operator B' AND r.code='artist' AND r.active;`);
+  assert.ok((await session('synthetic-identity-module-only')).modules.includes('Admin'), 'negative control really has Admin module');
+  assert.equal((await fetch(`${base}/directory/admin/claims`, { headers: headers('module-only') })).status, 403);
+  assert.equal((await fetch(`${base}/directory/admin/claims`, { headers: headers('b') })).status, 200,
+    'Admin plus Artist must retain the declared directory capability');
+  const decide = (id, status, who = 'a') => fetch(`${base}/directory/admin/claims/${id}/status`, {
+    method: 'PATCH', headers: { ...headers(who), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, reason: 'Synthetic independent review' }), signal: AbortSignal.timeout(30000),
+  });
+  const createReviewClaim = async (who, key) => {
+    const response = await fetch(`${base}/directory/claims`, { method: 'POST',
+      headers: { ...headers(who), 'Content-Type': 'application/json', 'Idempotency-Key': key },
+      body: JSON.stringify({ profileId: target.id, claimType: 'profile', evidence: [{ note: 'Synthetic claim evidence' }] }),
+    });
+    assert.equal(response.status, 201, await response.clone().text()); return response.json();
+  };
+  const selfClaim = await createReviewClaim('a', 'identity-http-self-review');
+  assert.equal((await decide(selfClaim.id, 'under_review', 'a')).status, 403, 'claimant cannot review their own request');
+  assert.equal((await decide(selfClaim.id, 'under_review', 'b')).status, 200, 'independent multi-role Admin can review');
+  assert.equal((await decide(submittedClaim.id, 'under_review')).status, 200);
+  const decisions = await lifecycleRace('directory_claim', `NEW.id='${submittedClaim.id}' AND NEW.status='approved'`,
+    () => decide(submittedClaim.id, 'approved', 'a'), () => decide(submittedClaim.id, 'rejected', 'b'));
+  assert.deepEqual(decisions.map(response => response.status), [200, 409], 'conflicting terminal decisions need one winner');
+  const approvedReceipt = await decisions[0].json();
+  assert.equal(sql(`SELECT c.status||':'||m.active FROM directory_claim c JOIN directory_profile_manager m ON m.source_claim_id=c.id WHERE c.id='${submittedClaim.id}'`), 'approved:true');
+  const reviewSnapshot = () => sql(`SELECT to_jsonb(c) FROM directory_claim c WHERE id='${submittedClaim.id}'`);
+  const originalReview = reviewSnapshot();
+  const reviewAuditCount = sql(`SELECT count(*) FROM directory_audit_event WHERE entity_kind='claim' AND entity_id='${submittedClaim.id}' AND action='claim.reviewed'`);
+  assert.equal(reviewAuditCount, '2', 'each actual transition records its review in the transaction');
+  sql(`UPDATE directory_profile_manager SET active=false,revoked_at=now(),version=version+1 WHERE source_claim_id='${submittedClaim.id}'`);
+  const approvedReplay = await decide(submittedClaim.id, 'approved', 'b');
+  assert.equal(approvedReplay.status, 200); assert.deepEqual(await approvedReplay.json(), approvedReceipt);
+  assert.equal(reviewSnapshot(), originalReview, 'replay must not replace review evidence');
+  assert.equal(sql(`SELECT count(*) FROM directory_audit_event WHERE entity_kind='claim' AND entity_id='${submittedClaim.id}' AND action='claim.reviewed'`), reviewAuditCount, 'replay must not append a fake review');
+  assert.equal(sql(`SELECT active FROM directory_profile_manager WHERE source_claim_id='${submittedClaim.id}'`), 'f',
+    'approval replay must never reactivate a separately revoked manager');
+  const failingClaim = await createReviewClaim('b', 'identity-http-grant-failure');
+  assert.equal((await decide(failingClaim.id, 'under_review', 'a')).status, 200);
+  const claimBeforeFailure = sql(`SELECT to_jsonb(c) FROM directory_claim c WHERE id='${failingClaim.id}'`);
+  sql(`CREATE FUNCTION identity_http_reject_manager() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+    IF NEW.source_claim_id='${failingClaim.id}' THEN RAISE EXCEPTION 'synthetic manager grant failure'; END IF; RETURN NEW; END $$;
+    CREATE TRIGGER identity_http_reject_manager BEFORE INSERT OR UPDATE ON directory_profile_manager
+      FOR EACH ROW EXECUTE FUNCTION identity_http_reject_manager();`);
+  try {
+    assert.equal((await decide(failingClaim.id, 'approved', 'a')).status, 500);
+    assert.equal(sql(`SELECT to_jsonb(c) FROM directory_claim c WHERE id='${failingClaim.id}'`), claimBeforeFailure,
+      'failed grant must roll back the decision');
+    assert.equal(sql(`SELECT count(*) FROM directory_audit_event WHERE entity_kind='claim' AND entity_id='${failingClaim.id}' AND new_state='approved'`), '0');
+    assert.equal(sql(`SELECT count(*) FROM directory_profile_manager WHERE source_claim_id='${failingClaim.id}'`), '0');
+  } finally {
+    sql('DROP TRIGGER identity_http_reject_manager ON directory_profile_manager; DROP FUNCTION identity_http_reject_manager();');
+  }
+  // Read the authoritative graph independently of the runtime helper. Each
+  // pair starts from a fresh synthetic row, so negative cases cannot be hidden
+  // by an earlier successful transition. SQL fixture setup is not an API grant.
+  const claimGraph = yaml.parse(readFileSync(new URL('../../docs/music-directory/formal-model.yaml', import.meta.url), 'utf8')).state_machines.claim.transitions;
+  const claimStates = Object.keys(claimGraph);
+  assert.equal(claimStates.length, 7, 'review deliberate changes to the claim state domain');
+  let checkedClaimPairs = 0;
+  for (const from of claimStates) {
+    for (const to of [...claimStates, 'unknown_state']) {
+      const id = randomUUID();
+      // States come from a checked-in contract, nevertheless bind fixture
+      // interpolation to the protocol's identifier alphabet.
+      assert.match(from, /^[a-z_]+$/); assert.match(to, /^[a-z_]+$/);
+      sql(`INSERT INTO directory_claim(id,profile_id,claimant_party_id,claim_type,status,reviewer_party_id,reviewed_at)
+        VALUES ('${id}','${target.id}',${independent.partyId},'profile','${from}',${actor},now());`);
+      const before = sql(`SELECT to_jsonb(c) FROM directory_claim c WHERE id='${id}'`);
+      const managerBefore = sql(`SELECT coalesce(jsonb_agg(to_jsonb(m) ORDER BY profile_id,account_party_id),'[]'::jsonb) FROM directory_profile_manager m WHERE profile_id='${target.id}'`);
+      const response = await decide(id, to);
+      const allowed = from === to || claimGraph[from].includes(to);
+      assert.equal(response.status, allowed ? 200 : 409, `claim graph ${from} -> ${to}: ${await response.clone().text()}`);
+      if (!allowed || from === to) {
+        assert.equal(sql(`SELECT to_jsonb(c) FROM directory_claim c WHERE id='${id}'`), before,
+          'denied or observational transition preserves every persisted field');
+        assert.equal(sql(`SELECT coalesce(jsonb_agg(to_jsonb(m) ORDER BY profile_id,account_party_id),'[]'::jsonb) FROM directory_profile_manager m WHERE profile_id='${target.id}'`), managerBefore,
+          'denied or observational transition cannot change any manager grant');
+        assert.equal(sql(`SELECT count(*) FROM directory_audit_event WHERE entity_kind='claim' AND entity_id='${id}'`), '0');
+      } else {
+        assert.equal((await response.json()).status, to);
+        assert.equal(sql(`SELECT count(*) FROM directory_audit_event WHERE entity_kind='claim' AND entity_id='${id}' AND previous_state='${from}' AND new_state='${to}'`), '1');
+      }
+      checkedClaimPairs++;
+    }
+  }
+  console.log(`Directory claim graph: ${checkedClaimPairs} real HTTP pairs conform to the declared relation.`);
+  console.log('Directory review HTTP: Admin-role enforcement, multi-role composition, separated reviewer, serialized decisions and read-only replay passed.');
   console.log('Credential lifecycle HTTP: disable, re-enable, password replacement, scoped revocation, deterministic reset race and issuance rollback passed.');
   console.log('Identity HTTP: authorization, concurrent replay, actor scope, shared details, archival, canonical access and rollback passed.');
 } finally {

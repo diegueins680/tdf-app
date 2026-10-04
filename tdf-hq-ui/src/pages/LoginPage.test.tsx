@@ -304,7 +304,7 @@ describe('LoginPage Google signup consent flow', () => {
     signupRequestMock.mockResolvedValueOnce({
       token: 'fictional-password-session', partyId: 405, roles: ['Customer'], modules: [],
     });
-    const cleanup = await renderLoginPage(entry!);
+    const cleanup = await renderLoginPage(entry);
     try {
       await act(async () => {
         if (!claimTarget) findButton('¿Primera vez? Crear cuenta con Google')?.click();

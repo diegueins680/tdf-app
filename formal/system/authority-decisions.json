@@ -94,6 +94,19 @@
       "conflict": "Legacy signup treated supplied matching or absent artist email as verified ownership; session helper committed outer credential mutations before issuing tokens.",
       "authority": "formal/system/identity-lifecycle.md",
       "resolution": "Reject anonymous artist adoption; route independent accounts to reviewed management. Serialize credential transitions and remove the read-only token-reuse/early-commit behavior. This is a security repair, not specification approval of existing bugs."
+    },
+    {
+      "id": "AUTHORITY-010",
+      "sources": [
+        "docs/music-directory/permissions.md",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "docs/music-directory/formal-model.yaml",
+        "tdf-hq/src/TDF/Directory/Policy.hs"
+      ],
+      "conflict": "Backend directory administration accepted module-only actors; claims allowed self-review, separate transaction status checks and approval replay that restored revoked grants.",
+      "authority": "formal/system/identity-lifecycle.md",
+      "resolution": "Enforce the declared Admin role plus module and reviewer separation. Preserve multi-role Admin composition. Serialize review, grant, audit and response; identical-state retries are read-only. Do not redefine concurrent rejected/approved mismatches as valid product behavior. Implement the existing full claim transition graph, including evidence requests; keep every review edge Admin-only and same-state retries observational. Exhaust the declared graph through HTTP."
     }
   ]
 }

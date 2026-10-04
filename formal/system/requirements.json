@@ -1109,7 +1109,7 @@
       "actors": [
         "anonymous registrant",
         "authenticated claimant",
-        "strict administrator reviewer"
+        "distinct Admin-role and Admin-module reviewer"
       ],
       "preconditions": [
         "Existing artist may have no credential, no email, or a matching email; none establishes caller ownership."
@@ -1141,7 +1141,7 @@
         "Independent credential and customer policy on successful signup",
         "No identity, credential, token or grant changes on rejected claim"
       ],
-      "authorization": "Contact values are not identity proof; directory submission requires authentication and approval retains its strict-admin boundary.",
+      "authorization": "Contact values are not identity proof; directory submission requires authentication; approval requires a distinct reviewer with the Admin role and Admin module.",
       "concurrency": "Signup validation rejects claims before database access; directory claim concurrency retains its separate contract.",
       "idempotency": "A rejected claim never issues a session. Directory claim creation uses its actor-scoped idempotency receipt.",
       "failure": "403 for positive legacy claim IDs; 400 for malformed IDs; other signup errors follow API contract.",
@@ -1310,6 +1310,96 @@
       "implementation": [
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth.hs"
+      ]
+    },
+    {
+      "authority": "audit security correction",
+      "critical": true,
+      "status": "specified and implemented",
+      "contract": "formal/system/identity-lifecycle.md",
+      "confidence": "source-confirmed defect and repair; runtime conformance pending",
+      "ambiguity": [
+        "Full directory moderation, verification and profile-merge lifecycle reconciliation remains open.",
+        "In-flight global-role revocation is not established by the request snapshot."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
+      },
+      "source": "User audit sections 12-15; formal/system/identity-lifecycle.md; verified implementation review; docs/music-directory/formal-model.yaml",
+      "verification": "Actual validator properties, rendered UI, real backend HTTP with PostgreSQL lock barrier and failure injection, bounded TLA+ with named negative controls; exhaust all known state pairs and unknown targets through real HTTP from the canonical YAML graph; rendered UI actions match outgoing edges",
+      "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
+      "domain": "AUTH",
+      "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
+      "observability": "Append directory_audit_event for actual transitions with reviewer, old/new state, version and reason; no fake events on identical-state retry.",
+      "formalModels": [
+        "formal/event-operations/DirectoryClaimReview.tla"
+      ],
+      "tests": [
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx"
+      ],
+      "id": "ID-CLAIM-REVIEW-001",
+      "title": "Claim review requires separated authority and atomic decisions",
+      "statement": "Directory claim review shall require Admin role and Admin module, forbid self-review, serialize state decisions with grants and audit evidence, and make identical-state replay observational.",
+      "property": "GrantMatchesClaim /\\ AdminRoleRequired /\\ SeparatedReview /\\ NoReplayRegrant",
+      "actors": [
+        "Admin-role and Admin-module reviewer",
+        "claimant including Admin claimant",
+        "module-only actor",
+        "concurrent reviewer"
+      ],
+      "preconditions": [
+        "Existing claim",
+        "Reviewer is authenticated and distinct from claimant"
+      ],
+      "inputs": [
+        "Claim UUID",
+        "Declared target status",
+        "Optional reviewer reason"
+      ],
+      "state": {
+        "claim": [
+          "submitted",
+          "under_review",
+          "approved",
+          "rejected",
+          "withdrawn"
+        ],
+        "manager grant": [
+          "active",
+          "revoked"
+        ],
+        "review evidence": "current receipt plus transactional audit events"
+      },
+      "allowedTransitions": [
+        "submitted -> under_review or withdrawn",
+        "under_review -> approved, rejected or withdrawn",
+        "rejected -> submitted",
+        "same state -> same receipt without effects"
+      ],
+      "forbiddenTransitions": [
+        "Claimant -> own review",
+        "Module without Admin role -> review",
+        "Conflicting stale decision -> overwrites terminal state",
+        "Approved replay -> reactivates revoked manager"
+      ],
+      "effects": [
+        "Actual transition updates reviewer, status, version and timestamps",
+        "Approval creates manager grant and appends review audit in the same transaction",
+        "Identical-state retry changes nothing"
+      ],
+      "authorization": "Admin role AND Admin module; extra Artist role does not deny access. Reviewer Party differs from claimant. Request-bound role/session checks do not prove universal in-flight revocation.",
+      "concurrency": "One PostgreSQL transaction locks the claim row FOR UPDATE before transition validation; decision, grant, audit and response remain inside it.",
+      "idempotency": "Same-status retry preserves evidence and does not re-grant authority. Conflicting terminal transitions return 409.",
+      "failure": "401 unauthenticated; 403 missing role/module or self-review; 404 absent claim; 409 illegal current-state transition; DB failure rolls back all effects.",
+      "recovery": "Reload current receipt after conflict or lost response. Regranting a revoked manager requires a separate authorized management operation.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx"
       ]
     }
   ]
