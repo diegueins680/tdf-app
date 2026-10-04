@@ -23646,6 +23646,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Stored cart quantity or price is invalid */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     upsertMarketplaceCartItem: {

@@ -5139,6 +5139,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/MarketplaceCart' }
         '404': { description: Cart not found }
+        '409': { description: Stored cart quantity or price is invalid, or its exact total exceeds supported storage }
   /marketplace/cart/{cartId}/items:
     parameters:
       - $ref: '#/components/parameters/MarketplaceCartId'
@@ -5161,7 +5162,7 @@ paths:
               schema: { $ref: '#/components/schemas/MarketplaceCart' }
         '400': { description: Invalid listing, quantity, date range, or rental request }
         '404': { description: Cart or listing not found }
-        '409': { description: Asset is no longer available }
+        '409': { description: Asset is no longer available, or the resulting cart amount cannot be represented; rejected updates are rolled back }
   /marketplace/cart/{cartId}/checkout:
     parameters:
       - $ref: '#/components/parameters/MarketplaceCartId'
