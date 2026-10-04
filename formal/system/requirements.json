@@ -1669,14 +1669,81 @@
       "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "high for pure arithmetic; final adapter/HTTP execution and database aggregate enforcement remain pending",
+      "confidence": "high for pure arithmetic; final adapter/HTTP execution remains pending",
       "ambiguity": [
-        "Database has no cross-line aggregate constraint; additive migration still required.",
+        "Additive database aggregate enforcement is separately specified by PAY-CHECKOUT-002.",
         "Other monetary writers, rounding and provider finality are not established by this requirement."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Pure properties and all five negative controls passed locally; current full candidate integration/HTTP execution and database aggregate enforcement are not complete."
+        "reason": "Pure properties and five negative controls passed; final current-candidate HTTP execution remains pending."
+      }
+    },
+    {
+      "id": "PAY-CHECKOUT-002",
+      "title": "Immutable checkout payable snapshot correspondence",
+      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation.",
+      "domain": "PAY",
+      "authority": "inferred",
+      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable.",
+      "contract": "formal/system/checkout-arithmetic.md",
+      "actors": [
+        "CheckoutStore adapter",
+        "Merch checkout adapter",
+        "Migration operator"
+      ],
+      "preconditions": [
+        "Normal enabled PostgreSQL constraints and triggers; migration preflight succeeds."
+      ],
+      "inputs": [
+        "Parent and line integer minor units",
+        "Currency"
+      ],
+      "state": {
+        "initial": "uncommitted parent and line snapshot",
+        "terminal": [
+          "committed consistent immutable snapshot",
+          "transaction rolled back"
+        ]
+      },
+      "allowedTransitions": [
+        "Create header and all lines in one transaction.",
+        "Advance lifecycle/payment/refund counters while preserving monetary terms."
+      ],
+      "forbiddenTransitions": [
+        "Commit missing lines or mismatched/overflowing aggregate.",
+        "Rewrite parent currency or monetary terms."
+      ],
+      "effects": [
+        "Deferred commit-time validation; reject without committed financial mutation."
+      ],
+      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
+      "privacy": "Synthetic tests use no real customer data or provider credentials.",
+      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable.",
+      "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
+      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch.",
+      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence.",
+      "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql"
+      ],
+      "tests": [
+        "scripts/__tests__/checkout-amount-postgres.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; four invalid-schema negative controls.",
+      "evidence": "checkout-amount-postgres-barriers.log",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high within immutable/nonnegative schema assumptions; final hosted and deployed execution pending",
+      "ambiguity": [
+        "Privileged DDL, TRUNCATE and disabled triggers excluded.",
+        "Component subtotals intentionally differ for merchandise shipping."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local PG16 boundary and negative controls pass; manifest integration, final PG17 CI and deployment remain pending."
       }
     }
   ]

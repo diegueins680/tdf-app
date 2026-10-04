@@ -73,6 +73,7 @@
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
+      "scripts/__tests__/checkout-amount-postgres.mjs",
       "scripts/__tests__/checkout-money-http.mjs",
       "scripts/__tests__/ci-change-scope.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
@@ -1396,6 +1397,7 @@
       "tdf-hq/sql/2026-09-30_interaction_report_content_version.sql",
       "tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql",
       "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
+      "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2399,6 +2401,12 @@
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
       "sha256": "2df476811867e2c7b19e3d0dee1b5e015cf82cddf971f8c11270925166dfbf44",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-790b053ca0c0e13b",
+      "path": "scripts/__tests__/checkout-amount-postgres.mjs",
+      "sha256": "25a62321efe4b4b2fe2bcffd87eb02f16180b322575263842efd5cdd7f3b6420",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3964,7 +3972,7 @@
     {
       "id": "SURFACE-bd3f8d48d0c79fce",
       "path": "scripts/test-marketplace-contact-identity.sh",
-      "sha256": "cca934edc831cd82d277213d93c0b40699dbb6b94e1d817c9610b499d66a1d55",
+      "sha256": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10301,6 +10309,12 @@
       "id": "SURFACE-7100ef2b57c51e1c",
       "path": "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
       "sha256": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f740e459c0c98db7",
+      "path": "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+      "sha256": "bf8ecac7d2312df298968913519577ad291d97e94d7fc16e563759de00b90217",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18981,7 +18995,7 @@
     },
     {
       "path": "formal/system/checkout-arithmetic.md",
-      "sha256": "9f5f7802df85750e54c4b0b6d4fb1a83aba4c864fdc883067e6cbdea1957ce6c",
+      "sha256": "8bc32e5f393cf526387b754f688feb3555364a2ff15eecd6f36f9486f7c4361b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19037,14 +19051,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6058060d9339c8bffb7e9daf5690e6eb83bc1af6f36f49ad46d218afb9b8659a",
+      "sha256": "2fa2fee193fb4c20fe60d222786fa5528543a428fbfbbd840a92a32aa6cc201f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "e5116e74584b5b589ee6e1fdcb94bfb815af7dc7a744fb2f2a88582dafa286b4",
+      "sha256": "ee4f15cc8541e4c27b937bb8ee6caa66d15f150e19f51c503a02de14a515db07",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

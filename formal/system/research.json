@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -137,6 +137,24 @@
       "applicability": "Fail-closed image builds when a mirror or proxy fails",
       "decision": "adopted",
       "rationale": "Authenticated cached indexes alone do not establish a successful refresh; stop the build and diagnose infrastructure."
+    },
+    {
+      "id": "RES-CHECKOUT-001",
+      "source": "https://www.postgresql.org/docs/17/functions-aggregate.html",
+      "title": "PostgreSQL 17 aggregate functions",
+      "recommendation": "sum(bigint) returns numeric, preserving exact aggregate arithmetic.",
+      "applicability": "Checkout line-to-parent payable correspondence",
+      "decision": "adopted",
+      "rationale": "Compare an exact numeric aggregate before any fixed-width conversion; do not wrap financial totals."
+    },
+    {
+      "id": "RES-CHECKOUT-002",
+      "source": "https://www.postgresql.org/docs/16/sql-createtrigger.html",
+      "title": "PostgreSQL constraint trigger semantics",
+      "recommendation": "Deferrable constraint triggers can validate at transaction end or SET CONSTRAINTS.",
+      "applicability": "Parent followed by multiple immutable checkout lines in one transaction",
+      "decision": "adopted with scope",
+      "rationale": "Allow transactional construction but reject incomplete commits. Concurrency relies separately on immutable amounts and nonnegative lines, not on deferral alone."
     }
   ]
 }

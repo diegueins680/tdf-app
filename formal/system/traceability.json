@@ -1670,14 +1670,81 @@
       "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "high for pure arithmetic; final adapter/HTTP execution and database aggregate enforcement remain pending",
+      "confidence": "high for pure arithmetic; final adapter/HTTP execution remains pending",
       "ambiguity": [
-        "Database has no cross-line aggregate constraint; additive migration still required.",
+        "Additive database aggregate enforcement is separately specified by PAY-CHECKOUT-002.",
         "Other monetary writers, rounding and provider finality are not established by this requirement."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Pure properties and all five negative controls passed locally; current full candidate integration/HTTP execution and database aggregate enforcement are not complete."
+        "reason": "Pure properties and five negative controls passed; final current-candidate HTTP execution remains pending."
+      }
+    },
+    {
+      "id": "PAY-CHECKOUT-002",
+      "title": "Immutable checkout payable snapshot correspondence",
+      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation.",
+      "domain": "PAY",
+      "authority": "inferred",
+      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable.",
+      "contract": "formal/system/checkout-arithmetic.md",
+      "actors": [
+        "CheckoutStore adapter",
+        "Merch checkout adapter",
+        "Migration operator"
+      ],
+      "preconditions": [
+        "Normal enabled PostgreSQL constraints and triggers; migration preflight succeeds."
+      ],
+      "inputs": [
+        "Parent and line integer minor units",
+        "Currency"
+      ],
+      "state": {
+        "initial": "uncommitted parent and line snapshot",
+        "terminal": [
+          "committed consistent immutable snapshot",
+          "transaction rolled back"
+        ]
+      },
+      "allowedTransitions": [
+        "Create header and all lines in one transaction.",
+        "Advance lifecycle/payment/refund counters while preserving monetary terms."
+      ],
+      "forbiddenTransitions": [
+        "Commit missing lines or mismatched/overflowing aggregate.",
+        "Rewrite parent currency or monetary terms."
+      ],
+      "effects": [
+        "Deferred commit-time validation; reject without committed financial mutation."
+      ],
+      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
+      "privacy": "Synthetic tests use no real customer data or provider credentials.",
+      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable.",
+      "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
+      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch.",
+      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence.",
+      "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql"
+      ],
+      "tests": [
+        "scripts/__tests__/checkout-amount-postgres.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; four invalid-schema negative controls.",
+      "evidence": "checkout-amount-postgres-barriers.log",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high within immutable/nonnegative schema assumptions; final hosted and deployed execution pending",
+      "ambiguity": [
+        "Privileged DDL, TRUNCATE and disabled triggers excluded.",
+        "Component subtotals intentionally differ for merchandise shipping."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local PG16 boundary and negative controls pass; manifest integration, final PG17 CI and deployment remain pending."
       }
     }
   ],
@@ -1692,6 +1759,7 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
+    "scripts/__tests__/checkout-amount-postgres.mjs": "25a62321efe4b4b2fe2bcffd87eb02f16180b322575263842efd5cdd7f3b6420",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "031ec23f9f0e3dd08fcb934b59a5e63215def0b07eb2be9219e738e14daa1574",
@@ -1733,6 +1801,7 @@
     "tdf-hq/docs/openapi/api.yaml": "e05910417e0962c3595ab0bea9828b905c5ef077210cdf12678be76484d1e2af",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
+    "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "bf8ecac7d2312df298968913519577ad291d97e94d7fc16e563759de00b90217",
     "tdf-hq/src/TDF/API.hs": "52899306d6b3d74f542a87ca135c1f8395e0fe5b42a4a1ee6396edc7a38d987c",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "204bd27888a0e4645a2c107e4d4cba9c0a4db41adfc8f7ed9c76182a8d6b1245",
@@ -2372,6 +2441,18 @@
         "requirement": "PAY-CHECKOUT-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/checkout-amount-postgres.mjs": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -2790,6 +2871,18 @@
       "sha256": "2df476811867e2c7b19e3d0dee1b5e015cf82cddf971f8c11270925166dfbf44",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-790b053ca0c0e13b",
+      "path": "scripts/__tests__/checkout-amount-postgres.mjs",
+      "sha256": "25a62321efe4b4b2fe2bcffd87eb02f16180b322575263842efd5cdd7f3b6420",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-cdfb72b28b013120",
@@ -4762,7 +4855,7 @@
     {
       "id": "SURFACE-bd3f8d48d0c79fce",
       "path": "scripts/test-marketplace-contact-identity.sh",
-      "sha256": "cca934edc831cd82d277213d93c0b40699dbb6b94e1d817c9610b499d66a1d55",
+      "sha256": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -12288,6 +12381,18 @@
       ]
     },
     {
+      "id": "SURFACE-f740e459c0c98db7",
+      "path": "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+      "sha256": "bf8ecac7d2312df298968913519577ad291d97e94d7fc16e563759de00b90217",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -19219,7 +19324,8 @@
     "AUTH-CORS-001",
     "AUTH-REGISTRY-001",
     "DEPLOY-BUILD-001",
-    "PAY-CHECKOUT-001"
+    "PAY-CHECKOUT-001",
+    "PAY-CHECKOUT-002"
   ],
   "stateMachines": [
     {
@@ -40879,7 +40985,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 25,
+    "PARTIAL": 26,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

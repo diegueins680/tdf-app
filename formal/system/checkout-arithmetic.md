@@ -41,10 +41,40 @@ PostgreSQL transaction adapter and finite fixture environment are trusted. Memor
 exhaustion and arbitrary external SQL are excluded. No liveness/fairness claim is
 made for these terminating local arithmetic operations.
 
-Open database obligation: the schema checks each line but does not enforce the
-aggregate across lines and parent. Application repair is not that database
-constraint. An additive constraint migration and migration-era/fixture review
-remain required; applied historical migrations must not be edited. General tax,
-discount, rounding, JavaScript numeric precision, all other monetary writers and
-provider finality remain separate obligations. The unused legacy Stripe writer
-is still disabled at its public handler; this repair must not reactivate it.
+`PAY-CHECKOUT-002` adds a database boundary in
+`2026-10-04_checkout_amount_correspondence.sql`: every committed checkout has
+nonempty lines whose exact payable total equals its parent payable total.
+Currency and subtotal/discount/tax/fee/total are immutable after insertion;
+payment/refund counters and lifecycle state can still advance. Both current
+writers construct the parent and lines in one transaction. Merchandise keeps
+shipping in the header fee and a separate line, so component-by-component
+subtotal equality would incorrectly reject its supported representation.
+
+Deferred constraint triggers check at commit (or explicit SET CONSTRAINTS).
+The migration locks both tables and rejects pre-existing discrepancies without
+rewriting financial evidence. Historical migrations remain unchanged. Recovery
+retains the additive constraints; there is no down migration. A failed preflight
+rolls back all migration effects and requires separately reviewed reconciliation.
+
+The concurrency argument is deliberately narrow: preflight-valid parent amounts
+are immutable, existing lines cannot be updated/deleted, and appended line totals
+are nonnegative. A positive append cannot individually pass even with an older
+repeatable-read snapshot; zero-total appends preserve equality. Uncommitted new
+parents are fenced by the existing foreign key. This is not a general proof for
+mutable aggregates. Privileged DDL, TRUNCATE, disabled triggers, corruption and
+resource exhaustion are excluded. There is no liveness claim.
+
+`checkout-amount-postgres.mjs` applies the actual SQL to a fully migrated isolated
+database, rejects invalid historical state, checks real commit failures/rollback,
+accepts shipping and Int64 maximum, and verifies immutable terms/lines. Its four
+transactionally rolled-back negative controls remove preflight, parent checking,
+append checking, or currency immutability. Six concurrent append transactions
+reach an observed advisory-lock barrier before commit across Read Committed,
+Repeatable Read and Serializable; all must reject and leave the original total.
+Local PostgreSQL 16 execution is not evidence of production deployment or PG17
+execution; the hosted backend job repeats the test on its service.
+
+General tax, discount, rounding, JavaScript numeric precision, all other monetary
+writers and provider finality remain separate obligations. The separate Merch
+writer's fixed-width subtotal and commission arithmetic still needs repair.
+The unused legacy Stripe writer remains disabled at its public handler.
