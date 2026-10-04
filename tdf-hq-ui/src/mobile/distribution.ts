@@ -29,7 +29,7 @@ export function validateDistribution(value: unknown): MobileDistribution {
       if (u.protocol !== 'https:' || u.username || u.password || u.port || u.hash) throw new Error('Unsafe distribution URL');
       const valid = platform === 'ios'
         ? c.status === 'testflight_external' ? u.hostname === 'testflight.apple.com' && /^\/join\/[a-zA-Z0-9]+$/.test(u.pathname) && !u.search
-          : u.hostname === 'apps.apple.com' && /\/id6779786470$/.test(u.pathname)
+          : u.hostname === 'apps.apple.com' && u.pathname.endsWith('/id6779786470')
         : u.hostname === 'play.google.com' && (c.status === 'public' || c.status === 'store_preorder'
           ? u.pathname === '/store/apps/details' && u.searchParams.get('id') === 'com.tdf.records'
           : u.pathname === '/apps/testing/com.tdf.records');
@@ -48,7 +48,7 @@ export function availableChannel(channel: DistributionChannel, now = Date.now())
 }
 export function detectPlatform(userAgent = '', touchPoints = 0): MobilePlatform | 'desktop' {
   if (/android/i.test(userAgent)) return 'android';
-  if (/iPad|iPhone|iPod/i.test(userAgent) || (/Macintosh/.test(userAgent) && touchPoints > 1)) return 'ios';
+  if (/iPad|iPhone|iPod/i.test(userAgent) || (userAgent.includes('Macintosh') && touchPoints > 1)) return 'ios';
   return 'desktop';
 }
 export function channelLabel(channel: DistributionChannel, platform: MobilePlatform): string {

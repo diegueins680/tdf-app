@@ -82,3 +82,12 @@ La invitación contextual, el consentimiento independiente, las opciones de desc
 - Browser: 19/20 pasaron en Chromium desktop/phone/tablet, Firefox y WebKit; la primera ejecución coincidió con reconstrucción de assets y un arranque tablet no encontró la ruta. Se retuvo el fallo; la repetición del caso tablet sobre build estable pasó (1/1), sin aflojar aserciones.
 - Mobile: release:check pasó; 89 suites/558 tests de base con cambios; pruebas finales específicas de feedback/participación/perfil pasaron. Expo Doctor 17/17 con red; 12 pruebas Python de guards de firma/artefactos pasaron.
 - No hay certificación de instalación/VoiceOver/TalkBack física, ni recepción productiva PostHog, ni despliegue afirmado.
+
+## Integración revisada y comprobaciones adicionales
+
+- Mobile PR [127](https://github.com/diegueins680/TDF-mobile/pull/127) integrado con aprobación independiente en `abf4d1dd5735a4acf96272f73f3dfb20a364fd87`. No implica distribución de un binario nuevo.
+- Mobile PR [128](https://github.com/diegueins680/TDF-mobile/pull/128) sincroniza el registro `/app` y los tipos con la API canónica del parent. `main` mobile contenía declaraciones generadas de pagos no presentes en `tdf-app/main`; regenerar desde el OpenAPI vigente conserva el checkout nativo y pasa TypeScript y 18 tests de checkout/feedback, además de 10 del registro. No se incorporó backend de ramas ajenas.
+- El primer CI web ejecutó 2.691 tests: 2.690 pasaron y el registro detectó correctamente que faltaba `/app`. Corregido en el catálogo compartido; 37 pruebas focalizadas posteriores pasan. Se corrigieron cuatro expresiones señaladas por el lint de CI, sin desactivar reglas.
+- La ejecución local completa tuvo además dos suites con timeouts bajo carga. Su repetición aislada pasó (9 tests); no se cambiaron aserciones ni timeouts.
+- Preview Cloudflare del primer commit: https://24ea74f9.tdf-app.pages.dev/app; manifiesto de distribución descargado y comprobado. Es preview, no producción.
+- La auditoría adicional `audit:features` detecta una omisión previa, `/configuracion/fuentes-videos`, ajena a la landing. No se oculta ese diagnóstico ni se afirma que esta auditoría adicional esté verde.

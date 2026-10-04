@@ -43,10 +43,10 @@ it('submits feedback only on successful response and keeps failed input', async 
   mount(<Page />); fireEvent.click(screen.getByRole('button', { name: /Ya estoy probando/ }));
   fireEvent.change(screen.getByLabelText(/Cuéntanos qué ocurrió/), { target: { value: 'The play button is difficult to find' } });
   fireEvent.click(screen.getByRole('checkbox'));
-  await waitFor(() => expect((screen.getByRole('button', { name: 'Enviar' }) as HTMLButtonElement).disabled).toBe(false));
+  await waitFor(() => expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Enviar' }).disabled).toBe(false));
   fireEvent.click(screen.getByRole('button', { name: 'Enviar' }));
   expect(await screen.findByText(/No se pudo enviar/)).toBeTruthy();
-  expect((screen.getByLabelText(/Cuéntanos qué ocurrió/) as HTMLInputElement).value).toContain('play button');
+  expect(screen.getByLabelText<HTMLInputElement>(/Cuéntanos qué ocurrió/).value).toContain('play button');
   expect(capture.mock.calls.some(([event]) => event === 'mobile_feedback_submitted')).toBe(false);
   fireEvent.click(screen.getByRole('button', { name: 'Enviar' })); expect(await screen.findByText(/Tu comentario fue recibido/)).toBeTruthy();
 });

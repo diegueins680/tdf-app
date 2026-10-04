@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "retirements": [
+    {
+      "originalDecision": {
+        "id": "2ba2e67d7a36352dcf50",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "domain-specific catalog table selected during consumer refactor",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true,
+        "reviewMethod": "manual-source-review",
+        "reviewBatch": "artist-self-service-2026-09-16",
+        "evidence": {
+          "file": "tdf-mobile/app/merch/preferences.tsx",
+          "line": 13,
+          "kind": "literal-union",
+          "name": "SubjectKind",
+          "valueCount": 2
+        }
+      },
+      "source": "tdf-mobile/app/merch/preferences.tsx",
+      "reason": "Mobile main replaced the duplicated literal SubjectKind union with the generated MerchReputationPriorities subjectKind API type. The canonical API now owns these values; no local literal remains."
+    }
+  ]
+}

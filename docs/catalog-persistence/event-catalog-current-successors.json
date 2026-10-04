@@ -53,18 +53,18 @@
     },
     {
       "historicalReplacementId": "ffb84e8fd3972fd0730d",
-      "currentId": "5147eb2751a01d8b4c73",
+      "currentId": "ae09485f5e94b5c1d8e5",
       "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
       "kind": "array",
       "name": "mobileFeatureRegistry",
-      "valueCount": 157,
+      "valueCount": 158,
       "previousResolution": {
         "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
         "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
         "currentId": "21babc54d68f0c44d55e",
         "valueCount": 156
       },
-      "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+      "change": "The canonical registry adds public.mobile (/app) to the existing 157 source definitions. The prior reviewed registry decision remains in catalog-list-decisions.json as previousDecision."
     },
     {
       "historicalReplacementId": "34d5f2f94d1a165783ba",
