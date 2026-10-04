@@ -95,6 +95,8 @@ function ReviewCard({ kind, record }: { kind: QueueKind; record: ReviewRecord })
   const id = stringValue(record['id']);
   const title = stringValue(record['profileName']) || `${stringValue(record['targetKind'], kind)} · ${stringValue(record['targetId'], id)}`;
   const status = stringValue(record['status'], 'pendiente');
+  const claimant = record['claimantPartyId'];
+  const claimantLabel = typeof claimant === 'number' || typeof claimant === 'string' ? String(claimant) : 'No disponible';
   const decide = useMutation({
     mutationFn: async (action: string) => {
       if (kind === 'claims') return Directory.setClaimStatus(id, action, notes);
@@ -122,7 +124,7 @@ function ReviewCard({ kind, record }: { kind: QueueKind; record: ReviewRecord })
             {kind === 'claims' ? `Tipo: ${stringValue(record['claimType'], 'reclamo')}` : kind === 'verifications' ? `Tipo: ${stringValue(record['verificationType'], 'verificación')}` : `Prioridad: ${stringValue(record['priority'], 'normal')}`}
           </Typography>
           {kind === 'claims' && <Box>
-            <Typography>Solicitante (Party): {String(record['claimantPartyId'] ?? 'No disponible')}</Typography>
+            <Typography>Solicitante (Party): {claimantLabel}</Typography>
             <Typography component="h3" variant="subtitle2">Evidencia presentada</Typography>
             <Box component="pre" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 320, overflow: 'auto' }}>
               {JSON.stringify(record['evidence'] ?? [], null, 2)}

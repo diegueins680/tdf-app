@@ -1509,7 +1509,7 @@
     "scripts/verify-system-evidence.mjs": "6518277395cc99a25df3ffa5469d5150a5a7cd5c3d10f4409ecb695fb49ca03e",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
-    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "30c4473e456be67a629f4527a9ddc785cbbfc81eaa3379b2d2718aa4fbc84ca9",
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "d7e2e4ba531266075903e7aedc88927a6af29745110530347cdb72a3ea9319b8",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "366cdb1ebadb0ff0494260e7c98edfd6da1d622f70df415b5627bf60dbdd95ad",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
@@ -7395,7 +7395,7 @@
     {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "30c4473e456be67a629f4527a9ddc785cbbfc81eaa3379b2d2718aa4fbc84ca9",
+      "sha256": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
