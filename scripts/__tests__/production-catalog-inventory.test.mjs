@@ -2,18 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-import { fetchJson, validateOriginAddress, validateProvenance } from '../production-catalog-inventory.mjs';
+import { captureInventory, fetchJson, validateOriginAddress, validateProvenance } from '../production-catalog-inventory.mjs';
 const health = { status: 'ok', db: 'ok' };
 const version = { commit: 'a'.repeat(40) };
 const deployment = { provider: 'hetzner', project: 'tdf-production', database: 'tdf_hq', health, version,
-  databaseVolume: 'tdf_production_postgres_data', sshServerAddress: '178.105.93.101', apiContainer: 'api', databaseContainer: 'db', apiImage: 'digest', configuredImage: 'digest', databaseImage: 'pg17' };
+  databaseVolume: 'tdf_production_postgres_data', sshServerAddress: '178.105.93.101', apiContainer: 'api', databaseContainer: 'db', apiImage: 'digest', configuredImage: 'digest', databaseImage: 'pg17', configuredDatabaseImage: 'postgres@sha256:manifest' };
 const metadata = { database: 'tdf_hq', transactionReadOnly: 'on' };
 test('accepts a stable current API/database deployment', () => {
   assert.doesNotThrow(() => validateProvenance(health, version, deployment, deployment, metadata));
 });
 test('refuses mismatched public origin, unhealthy database, stale target and deployment races', () => {
   for (const change of [{ version: { commit: 'b'.repeat(40) } }, { health: { status: 'ok', db: 'down' } },
-    { database: 'trader' }, { databaseVolume: 'restore_data' }, { provider: 'fly' }, { apiContainer: 'replaced' }, { databaseImage: 'replaced' }]) {
+    { database: 'trader' }, { databaseVolume: 'restore_data' }, { provider: 'fly' }, { apiContainer: 'replaced' }, { databaseImage: 'replaced' }, { configuredDatabaseImage: 'changed' }]) {
     assert.throws(() => validateProvenance(health, version, deployment, { ...deployment, ...change }, metadata));
   }
   assert.throws(() => validateProvenance(health, version, deployment, deployment, { ...metadata, transactionReadOnly: 'off' }));
@@ -71,5 +71,39 @@ test('rejects mixed public DNS answers before accepting a matching peer', async 
     };
     await assert.rejects(fetchJson('https://api.tdfrecords.net/version', expected, { get, lookup }),
       addresses.length === 1 ? /accepted matching DNS/ : /SSH-authenticated|no origin/);
+  }
+});
+
+
+test('rechecks bound public health and version after inventory and rejects a mid-query change', async () => {
+  for (const fault of [null, 'origin', 'health', 'version']) {
+    let queried = false;
+    let postRequests = 0;
+    const runCommand = (command, args) => {
+      if (args[1] === 'inventory') {
+        queried = true;
+        return JSON.stringify({ kind: 'metadata', ...metadata });
+      }
+      return JSON.stringify(deployment);
+    };
+    const requestJson = async (url, expectedAddress) => {
+      assert.equal(expectedAddress, deployment.sshServerAddress);
+      if (queried) {
+        postRequests += 1;
+        if (fault === 'origin') validateOriginAddress('203.0.113.10', expectedAddress);
+        if (fault === 'health' && url.endsWith('/health')) return { status: 'ok', db: 'down' };
+        if (fault === 'version' && url.endsWith('/version')) return { commit: 'b'.repeat(40) };
+      }
+      return url.endsWith('/health') ? health : version;
+    };
+    const result = captureInventory({ runCommand, requestJson });
+    if (fault) await assert.rejects(result, /SSH-authenticated|not healthy|provenance/);
+    else {
+      const report = await result;
+      assert.deepEqual(report.health, health);
+      assert.deepEqual(report.version, version);
+      assert.equal(report.records.length, 1);
+    }
+    assert.equal(postRequests, 2, 'both public endpoints must be requested after SQL');
   }
 });

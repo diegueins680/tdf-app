@@ -210,10 +210,13 @@ and the dedicated identity are required. Never disable host verification.
 
 Both tools require the running `tdf-production` API and database under
 `/opt/tdf/production`, their expected database/network binding, and the configured
-immutable API image. They fail closed instead of falling back to Fly or the
+immutable API and PostgreSQL images (`TDF_IMAGE` and `POSTGRES_IMAGE`). Both
+references must match the running container or its registry digest. They fail
+closed instead of falling back to Fly or the
 quarantined restore database. Catalog inventory also compares the public API
 commit/health with the inspected deployment before and after its existing bounded,
-anonymized read-only SQL. PostgreSQL defaults to read-only before the transaction;
+anonymized read-only SQL, making fresh DNS/TLS/peer-bound public requests on both
+sides of the query. PostgreSQL defaults to read-only before the transaction;
 statement/lock timeouts and sensitive-column exclusions remain in force.
 
 The mail monitor reads only `SMTP_USERNAME` and `SMTP_PASSWORD` from the protected

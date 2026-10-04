@@ -56,11 +56,17 @@ def main(mode):
         or not apinet.get('NetworkID') or apinet.get('NetworkID') != dbnet.get('NetworkID')
         or 'db' not in (dbnet.get('Aliases') or [])):
         raise RuntimeError('API is not bound to the expected production database')
-    configured = raw_env(pathlib.Path('/opt/tdf/production/.env')).get('TDF_IMAGE', '')
+    deployment_config = raw_env(pathlib.Path('/opt/tdf/production/.env'))
+    configured = deployment_config.get('TDF_IMAGE', '')
     image = json.loads(capture(['docker', 'image', 'inspect', api['Image']]))[0]
     if '@sha256:' not in configured or (api['Config'].get('Image') != configured
             and configured not in (image.get('RepoDigests') or [])):
         raise RuntimeError('Running API does not match configured immutable image')
+    configured_database = deployment_config.get('POSTGRES_IMAGE', '')
+    database_image = json.loads(capture(['docker', 'image', 'inspect', db['Image']]))[0]
+    if '@sha256:' not in configured_database or (db['Config'].get('Image') != configured_database
+            and configured_database not in (database_image.get('RepoDigests') or [])):
+        raise RuntimeError('Running database does not match configured immutable image')
     if mode == 'credentials':
         path = pathlib.Path('/opt/tdf/production/api.env')
         if stat.S_IMODE(path.stat().st_mode) & 0o077:
@@ -78,7 +84,8 @@ def main(mode):
         print(json.dumps({'provider': 'hetzner', 'project': 'tdf-production',
                           'apiContainer': api['Id'], 'databaseContainer': db['Id'],
                           'apiImage': api['Image'], 'configuredImage': configured,
-                          'databaseImage': db['Image'], 'database': 'tdf_hq',
+                          'databaseImage': db['Image'], 'configuredDatabaseImage': configured_database,
+                          'database': 'tdf_hq',
                           'databaseVolume': mounts[0]['Name'],
                           'sshServerAddress': os.environ['SSH_CONNECTION'].split()[2],
                           'health': get('health'), 'version': get('version')}))

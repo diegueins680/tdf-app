@@ -179,7 +179,7 @@ export function validateProvenance(health, version, before, after, metadata) {
         x.provider !== 'hetzner' || x.project !== 'tdf-production' || x.database !== PRODUCTION_DATABASE)) {
     throw new Error('Public API and SSH production provenance do not agree.');
   }
-  for (const field of ['databaseVolume', 'sshServerAddress', 'apiContainer', 'databaseContainer', 'apiImage', 'configuredImage', 'databaseImage']) {
+  for (const field of ['databaseVolume', 'sshServerAddress', 'apiContainer', 'databaseContainer', 'apiImage', 'configuredImage', 'databaseImage', 'configuredDatabaseImage']) {
     if (!before[field] || before[field] !== after[field]) throw new Error('Deployment changed during inventory.');
   }
   if (metadata?.database !== PRODUCTION_DATABASE || metadata?.transactionReadOnly !== 'on') {
@@ -240,22 +240,16 @@ export function fetchJson(url, expectedAddress, { lookup = dnsLookup, get = http
   });
 }
 
-async function main() {
-  const options = parseArgs(process.argv.slice(2));
-  if (options.dryRun) {
-    process.stdout.write(`${inventorySql}\n`);
-    return;
-  }
-
-  const before = JSON.parse(run('python3', [ACCESS, 'metadata']));
+export async function captureInventory({ runCommand = run, requestJson = fetchJson } = {}) {
+  const before = JSON.parse(runCommand('python3', [ACCESS, 'metadata']));
   const [health, version] = await Promise.all([
-    fetchJson('https://api.tdfrecords.net/health', before.sshServerAddress),
-    fetchJson('https://api.tdfrecords.net/version', before.sshServerAddress),
+    requestJson('https://api.tdfrecords.net/health', before.sshServerAddress),
+    requestJson('https://api.tdfrecords.net/version', before.sshServerAddress),
   ]);
   // Fail closed before querying if the public origin is not the inspected API.
   validateProvenance(health, version, before, before, { database: PRODUCTION_DATABASE, transactionReadOnly: 'on' });
-  const stdout = run('python3', [ACCESS, 'inventory'], inventorySql);
-  const after = JSON.parse(run('python3', [ACCESS, 'metadata']));
+  const stdout = runCommand('python3', [ACCESS, 'inventory'], inventorySql);
+  const after = JSON.parse(runCommand('python3', [ACCESS, 'metadata']));
   const records = stdout
     .split('\n')
     .map((line) => line.trim())
@@ -266,8 +260,15 @@ async function main() {
   }
   const metadata = records.find(({ kind }) => kind === 'metadata');
   validateProvenance(health, version, before, after, metadata);
+  // DNS and routing may change while the bounded SQL query is running. Require
+  // fresh TLS/DNS/peer binding and matching health/version before emitting data.
+  const [afterHealth, afterVersion] = await Promise.all([
+    requestJson('https://api.tdfrecords.net/health', after.sshServerAddress),
+    requestJson('https://api.tdfrecords.net/version', after.sshServerAddress),
+  ]);
+  validateProvenance(afterHealth, afterVersion, before, after, metadata);
 
-  const report = {
+  return {
     schemaVersion: 1,
     capturedAt: new Date().toISOString(),
     source: {
@@ -278,11 +279,20 @@ async function main() {
       querySha256: createHash('sha256').update(inventorySql).digest('hex'),
       readOnly: true,
     },
-    health,
-    version,
+    health: afterHealth,
+    version: afterVersion,
     deployment: after,
     records,
   };
+}
+
+async function main() {
+  const options = parseArgs(process.argv.slice(2));
+  if (options.dryRun) {
+    process.stdout.write(`${inventorySql}\n`);
+    return;
+  }
+  const report = await captureInventory();
   const rendered = `${JSON.stringify(report, null, 2)}\n`;
   if (options.output) writeFileSync(resolve(options.output), rendered, { mode: 0o600 });
   else process.stdout.write(rendered);
