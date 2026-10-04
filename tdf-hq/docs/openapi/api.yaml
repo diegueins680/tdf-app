@@ -9,6 +9,47 @@ servers:
     description: Development server
 
 paths:
+  /commerce/payment-capabilities:
+    get:
+      operationId: listPaymentCapabilities
+      summary: List payment routes actually available for a transaction
+      description: >-
+        Returns only routes with verified environment, merchant, credential,
+        contract, method and completion gates. An empty route list is authoritative.
+        No secrets or merchant configuration are returned. Fallback requires
+        authoritative confirmation that no charge was or will be created;
+        ambiguous outcomes remain held for reconciliation.
+      parameters:
+        - { name: buyerCountry, in: query, required: true, schema: { type: string } }
+        - name: currency
+          in: query
+          required: true
+          description: Currency is normalized to uppercase; only USD can yield available routes.
+          schema: { type: string }
+        - { name: amountMinor, in: query, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+        - name: paymentMethod
+          in: query
+          required: true
+          schema: { type: string, enum: [card, paypal_wallet, bank_redirect, deuna_qr, payphone_wallet, payment_link, manual_bank_transfer] }
+        - name: productFlow
+          in: query
+          required: true
+          schema: { type: string, enum: [merchandise, booking, professional_service, course, event_ticket, digital_product, subscription, marketplace] }
+        - name: requires
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: { $ref: '#/components/schemas/PaymentCapabilityName' }
+      responses:
+        '200':
+          description: Ordered transaction-specific routes; empty when no route is fully available.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentCapabilityResponse' }
+        '400': { description: Missing or invalid query parameter, nonpositive amount, or unsupported method, flow or required capability. }
+        '503': { description: Checkout environment configuration is invalid. }
   /interactions/reports:
     $ref: './interactions.yaml#/paths/~1interactions~1reports'
   /interactions/blocked-accounts:
@@ -5912,6 +5953,57 @@ paths:
         '409': { description: Invalid state or provider evidence mismatch }
         '501': { description: Refund capability is disabled for this environment }
         '502': { description: PayPal request failed; refund remains processing or failed }
+  /admin/services/storefront/refunds/{refundId}/reconcile:
+    parameters:
+      - name: refundId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Admin, Service storefront]
+      summary: Read local held-refund status and query readiness
+      description: Strict Admin only. Does not contact the provider. Supports known PayPal refund IDs for the mixing/mastering storefront only. Missing configuration or qualification never enables the action.
+      operationId: adminGetServiceRefundRecovery
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Local refund evidence and exact-environment readiness
+          headers:
+            Cache-Control: { schema: { type: string, enum: [no-store] } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRefundRecovery' }
+        '400': { description: Invalid refund UUID }
+        '401': { description: Authentication required }
+        '403': { description: Strict Admin required }
+        '404': { description: Refund not found }
+        '409': { description: Known refund or original capture binding unavailable; manual review required }
+        '503': { description: Readiness could not be verified }
+    post:
+      tags: [Admin, Service storefront]
+      summary: Query a held refund without issuing another refund
+      description: Requires the exact environment flag, process switch, qualified merchant account, and verified capabilities. Uses only GET for the known refund resource (OAuth token acquisition is separate). Validates original capture, refund ID, amount and currency. Exact completion may atomically update local financial records. All other outcomes remain held. Concurrent operators share a query quota. A timeout or HTTP error is never proof of no refund. Do not retry by submitting a new refund.
+      operationId: adminReconcileServiceRefund
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Completed, already completed by a concurrent observation, or still held
+          headers:
+            Cache-Control: { schema: { type: string, enum: [no-store] } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRefundRecovery' }
+        '400': { description: Invalid refund UUID }
+        '401': { description: Authentication required }
+        '403': { description: Strict Admin required }
+        '404': { description: Refund not found }
+        '409': { description: Binding, state, or accounting conflict; funds remain held for review }
+        '429':
+          description: Shared provider query limit reached
+          headers:
+            Retry-After: { schema: { type: string }, description: Seconds before another query may be attempted }
+        '502': { description: Provider evidence could not be verified; funds remain reserved }
+        '503': { description: Reconciliation unavailable or authority changed; no financial completion applied }
   /admin/services/storefront/orders/{orderId}/reconcile:
     parameters:
       - $ref: '#/components/parameters/ServiceStorefrontOrderId'
@@ -5929,6 +6021,239 @@ paths:
         '404': { description: Order or provider binding not found }
         '501': { description: Provider reconciliation capability is unavailable }
         '502': { description: Provider status could not be read }
+  /commerce/checkouts/{checkoutId}/payment-sessions:
+    parameters:
+      - name: checkoutId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [Payments]
+      summary: Create or recover a hosted provider payment session
+      description: >-
+        New provider contacts require an exact enabled provider/method/capability combination
+        and a payable, unexpired checkout. An exact request replay with the original lookup
+        token and idempotency key recovers a previously contacted operation even after checkout
+        expiry or payment, account suspension, or provider credential unavailability. Recovery
+        validates immutable request fields and still requires the operation encryption key.
+        A merely prepared operation remains subject to all new-contact gates. An ambiguous
+        outcome stays locked for reconciliation and cannot be retried through another provider.
+      operationId: createProviderPaymentSession
+      security: []
+      parameters:
+        - name: X-Checkout-Lookup-Token
+          in: header
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 512 }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentSessionCreate' }
+      responses:
+        '202':
+          description: Durable provider operation; may require customer action or reconciliation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentSession' }
+        '400': { description: Invalid provider, payment method, headers, or provider-specific input }
+        '404':
+          description: >-
+            Checkout or lookup token is invalid, or no contacted replay exists and checkout
+            cannot accept payment. This is not no-charge evidence for an earlier transmitted request.
+        '409': { description: Idempotency conflict or another active canonical payment intent exists }
+        '503': { description: Provider/configuration is unavailable or an ambiguous result requires reconciliation }
+  /commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}:
+    parameters:
+      - name: checkoutId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: attemptId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: X-Checkout-Lookup-Token
+        in: header
+        required: true
+        schema: { type: string, minLength: 16, maxLength: 512 }
+    get:
+      tags: [Payments]
+      summary: Read a durable hosted payment-session state
+      operationId: getProviderPaymentSession
+      security: []
+      responses:
+        '200':
+          description: Lookup-token-scoped state without provider payloads or credentials
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentSession' }
+        '404': { description: Session absent or lookup token invalid }
+        '503': { description: Encrypted operation storage is unavailable }
+  /commerce/provider-notifications/placetopay:
+    post:
+      tags: [Payments, Webhooks]
+      summary: Receive a signed PlaceToPay session notification
+      description: Verifies the embedded SHA-256 signature, persists the exact encrypted body, and queues an authenticated session query. The notification alone never marks an order paid.
+      operationId: receivePlaceToPayNotification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { description: Verified notification durably accepted }
+        '400': { description: Invalid notification body }
+        '401': { description: Signature verification failed }
+        '503': { description: Provider account, feature flag, or secure storage is unavailable }
+  /commerce/provider-notifications/payphone:
+    post:
+      tags: [Payments, Webhooks]
+      summary: Receive an unsigned PayPhone external notification
+      description: Persists the exact body as an untrusted query trigger. Payment and fulfillment advance only after the authenticated PayPhone status API matches transaction ID, client reference, amount, and USD currency.
+      operationId: receivePayPhoneNotification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Notification durably accepted in PayPhone's required acknowledgment format
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayPhoneNotificationAck' }
+        '400': { description: Invalid notification or mismatched store identifier }
+        '409': { description: Provider event identifier conflicts with different immutable evidence }
+        '503': { description: Provider account, feature flag, or secure storage is unavailable }
+  /NotificacionPago:
+    post:
+      tags: [Payments, Webhooks]
+      summary: Receive a PayPhone external notification on its required method name
+      description: Compatibility alias required by PayPhone's notification contract. It uses the same untrusted-callback persistence and authenticated-query reconciliation as the canonical endpoint.
+      operationId: receivePayPhoneNotificationCompatibility
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Notification durably accepted in PayPhone's required acknowledgment format
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayPhoneNotificationAck' }
+        '400': { description: Invalid notification or mismatched store identifier }
+        '409': { description: Provider event identifier conflicts with different immutable evidence }
+        '503': { description: Provider account, feature flag, or secure storage is unavailable }
+  /admin/commerce/reconciliation-exceptions:
+    get:
+      tags: [Commerce operations]
+      summary: Inspect redacted individual payment reconciliation exceptions
+      description: >-
+        Additive read-only contract (2026-09-15). Requires strict Admin access.
+        Defaults to sandbox and echoes the applied filters. Amounts are exact
+        decimal strings of signed 64-bit minor units, never floating-point JSON
+        numbers. Exception labels, including resolved or ignored, do not authorize
+        payment, refund, payout, hold release or fulfillment. No provider contact,
+        free-text notes, merchant aliases or external references are returned.
+        Internal links are present only for a uniquely matched stored binding;
+        an absent link is not proof that no payment occurred. Missing schema is
+        explicit, and reads have a three-second per-statement database timeout.
+        Live offset pages may shift and are not an immutable accounting export.
+      operationId: adminListCommerceReconciliationExceptions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: environment
+          schema: { type: string, enum: [sandbox, production], default: sandbox }
+        - in: query
+          name: status
+          schema: { type: string, enum: [open, assigned, resolved, ignored] }
+        - in: query
+          name: checkoutId
+          schema: { type: string, format: uuid }
+          description: Exact internal checkout reference; optional, never a customer token
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, maximum: 10000, default: 0 }
+      responses:
+        '200':
+          description: Redacted review records, including explicit schema readiness and applied filters
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: [no-store] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommerceReconciliationReport' }
+        '400': { description: Invalid filter or pagination }
+        '401': { description: Authentication required }
+        '403': { description: Strict Admin access required }
+        '503': { description: Report temporarily unavailable; no database diagnostics exposed }
+  /admin/commerce/provider-queries:
+    get:
+      tags: [Commerce operations]
+      summary: Inspect redacted provider status-query recovery jobs
+      description: >-
+        Additive read-only contract (2026-09-15). Requires strict Admin access.
+        Defaults to sandbox and returns only one environment. This does not claim
+        jobs, reserve query budgets, contact providers or authorize payment retries.
+        Completed jobs are not proof of paid orders. A disabled database flag is
+        reported explicitly; an enabled flag is not evidence of a running worker,
+        qualified account or valid credentials. Missing recovery schema is reported
+        as cpqsSchemaReady=false, never as a verified empty queue. Reads have a
+        three-second per-statement database timeout. Offset pagination is a live
+        operational view, not an immutable export; refresh after concurrent changes.
+      operationId: adminListCommerceProviderQueries
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: environment
+          schema: { type: string, enum: [sandbox, production], default: sandbox }
+        - in: query
+          name: status
+          schema: { type: string, enum: [pending, processing, retry, completed, dead_letter] }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, maximum: 10000, default: 0 }
+      responses:
+        '200':
+          description: Redacted operational snapshot, with explicit schema availability
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: [no-store] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommerceProviderQueries' }
+        '400': { description: Invalid filter or pagination }
+        '401': { description: Authentication required }
+        '403': { description: Strict Admin access required }
+        '503': { description: Report temporarily unavailable; no database diagnostics exposed }
+  /admin/commerce/overview:
+    get:
+      tags: [Admin, Commerce operations]
+      summary: Read the redacted canonical payment operations overview
+      description: Strict-admin view of provider activation gates and aggregate financial states. Merchant account references, credentials, secrets, and raw provider payloads are never returned.
+      operationId: adminGetCommercePaymentOverview
+      responses:
+        '200':
+          description: Redacted provider readiness and canonical financial aggregates
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommercePaymentOverview' }
+        '403': { description: Strict Admin role required }
   /admin/commerce/provider-events:
     get:
       tags: [Admin, Commerce operations]
@@ -5969,7 +6294,7 @@ paths:
     post:
       tags: [Admin, Commerce operations]
       summary: Requeue one dead-letter provider event with immutable operator evidence
-      description: Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+      description: Requeueing does not mark an order paid. The bounded worker reprocesses only the original encrypted payload; untrusted callbacks still require an authenticated provider query.
       operationId: adminReplayCommerceProviderEvent
       requestBody:
         required: true
@@ -7847,6 +8172,33 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    PaymentCapabilityName:
+      type: string
+      enum: [one_time, recurring, tokenization, three_ds, installments, authorize, capture, void, full_refund, partial_refund, disputes, chargebacks, payment_link, signed_webhook, server_verification, connected_accounts, split_settlement, seller_payouts]
+    PaymentRoute:
+      type: object
+      required: [provider, paymentMethod, capabilities, priority]
+      properties:
+        provider: { type: string, enum: [datafast, paypal, placetopay, payphone, bank_transfer] }
+        paymentMethod: { type: string, enum: [card, paypal_wallet, bank_redirect, deuna_qr, payphone_wallet, payment_link, manual_bank_transfer] }
+        capabilities:
+          type: array
+          items: { $ref: '#/components/schemas/PaymentCapabilityName' }
+        priority: { type: integer }
+    PaymentCapabilityResponse:
+      type: object
+      required: [environment, buyerCountry, currency, amountMinor, paymentMethod, productFlow, routes, fallbackPolicy]
+      properties:
+        environment: { type: string, enum: [sandbox, production] }
+        buyerCountry: { type: string }
+        currency: { type: string }
+        amountMinor: { type: integer, format: int64 }
+        paymentMethod: { type: string, enum: [card, paypal_wallet, bank_redirect, deuna_qr, payphone_wallet, payment_link, manual_bank_transfer] }
+        productFlow: { type: string, enum: [merchandise, booking, professional_service, course, event_ticket, digital_product, subscription, marketplace] }
+        routes:
+          type: array
+          items: { $ref: '#/components/schemas/PaymentRoute' }
+        fallbackPolicy: { type: string }
     InteractionKind:
       $ref: './interactions.yaml#/components/schemas/InteractionKind'
     InteractionMention:
@@ -9041,7 +9393,7 @@ components:
         depositPaidAt: { type: string, format: date-time, nullable: true }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
     PublicDomoPaypalCaptureRequest:
       type: object
       additionalProperties: false
@@ -9159,7 +9511,7 @@ components:
         quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
         tickets:
           type: array
           description: Empty until fulfillment issues tickets after verified payment.
@@ -9267,7 +9619,7 @@ components:
           type: array
           description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
           uniqueItems: true
-          items: { type: string, enum: [datafast, paypal, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
         manualPayment:
           allOf: [{ $ref: '#/components/schemas/PublicBookingManualPayment' }]
           nullable: true
@@ -9760,7 +10112,7 @@ components:
         ssocDeadline: { type: string, format: date, nullable: true }
     ServiceStorefrontOrder:
       type: object
-      required: [ssoId, ssoOrderNumber, ssoBuyerName, ssoBuyerEmail, ssoBuyerPhone, ssoArtistName, ssoPackageId, ssoServiceKind, ssoTier, ssoPriceUsdCents, ssoCurrency, ssoStatus, ssoPaymentProvider, ssoLookupToken, ssoPaidAt, ssoGenre, ssoSongCount, ssoNotes, ssoReferenceTrackUrl, ssoDeadline, ssoDeliverablesUrl, ssoCreatedAt, ssoUpdatedAt]
+      required: [ssoId, ssoOrderNumber, ssoBuyerName, ssoBuyerEmail, ssoBuyerPhone, ssoArtistName, ssoPackageId, ssoServiceKind, ssoTier, ssoPriceUsdCents, ssoCurrency, ssoStatus, ssoPaymentProvider, ssoCheckoutId, ssoLookupToken, ssoPaidAt, ssoGenre, ssoSongCount, ssoNotes, ssoReferenceTrackUrl, ssoDeadline, ssoDeliverablesUrl, ssoCreatedAt, ssoUpdatedAt]
       properties:
         ssoId: { type: string, format: uuid }
         ssoOrderNumber: { type: string }
@@ -9775,6 +10127,7 @@ components:
         ssoCurrency: { type: string, minLength: 3, maxLength: 3 }
         ssoStatus: { type: string }
         ssoPaymentProvider: { type: string, nullable: true }
+        ssoCheckoutId: { type: string, format: uuid, nullable: true, description: Canonical checkout identifier used by the provider-neutral payment session API. }
         ssoLookupToken: { type: string, nullable: true, writeOnly: true }
         ssoPaidAt: { type: string, format: date-time, nullable: true }
         ssoGenre: { type: string, nullable: true }
@@ -9845,6 +10198,19 @@ components:
         ssrfApprovedBy: { type: integer, format: int64, nullable: true }
         ssrfCreatedAt: { type: string, format: date-time }
         ssrfCompletedAt: { type: string, format: date-time, nullable: true }
+    ServiceStorefrontRefundRecovery:
+      type: object
+      additionalProperties: false
+      required: [ssrrRefundId, ssrrEnvironment, ssrrStatus, ssrrAmountMinor, ssrrCurrency, ssrrCanQuery, ssrrOutcome, ssrrCheckedAt]
+      properties:
+        ssrrRefundId: { type: string, format: uuid }
+        ssrrEnvironment: { type: string, enum: [sandbox, production] }
+        ssrrStatus: { type: string, enum: [requested, approved, processing, succeeded, failed, cancelled] }
+        ssrrAmountMinor: { type: string, pattern: '^[1-9][0-9]{0,18}$', description: Positive exact Int64 minor units; never parse through floating point }
+        ssrrCurrency: { type: string, enum: [USD] }
+        ssrrCanQuery: { type: boolean, description: Query readiness, not refund execution permission or proof of money movement }
+        ssrrOutcome: { type: string, enum: [not_queried, held, completed, already_completed] }
+        ssrrCheckedAt: { type: string, format: date-time, nullable: true }
     ServiceStorefrontReconciliation:
       type: object
       required: [ssrecOrderId, ssrecProvider, ssrecProviderReference, ssrecExpectedAmount, ssrecActualAmount, ssrecCurrency, ssrecMatched, ssrecCheckedAt]
@@ -9857,16 +10223,288 @@ components:
         ssrecCurrency: { type: string, minLength: 3, maxLength: 3 }
         ssrecMatched: { type: boolean }
         ssrecCheckedAt: { type: string, format: date-time }
+    CommerceProviderCapability:
+      type: object
+      additionalProperties: false
+      required: [cpcPaymentMethod, cpcCapability, cpcVerificationStatus, cpcVerifiedAt]
+      properties:
+        cpcPaymentMethod: { type: string }
+        cpcCapability: { type: string }
+        cpcVerificationStatus: { type: string, enum: [documented, contract_required, sandbox_verified, production_verified, disabled] }
+        cpcVerifiedAt: { type: string, format: date-time, nullable: true }
+    CommerceProviderAccount:
+      type: object
+      additionalProperties: false
+      required: [cpaProvider, cpaEnvironment, cpaStatus, cpaContractStatus, cpaCredentialStatus, cpaSettlementCurrency, cpaEnabled, cpaFeatureEnabled, cpaVerifiedAt, cpaDisabledReason, cpaCapabilities]
+      properties:
+        cpaProvider: { type: string, enum: [datafast, paypal, placetopay, payphone, bank_transfer] }
+        cpaEnvironment: { type: string, enum: [sandbox, production] }
+        cpaStatus: { type: string, enum: [disabled, testing, ready, suspended, blocked] }
+        cpaContractStatus: { type: string, enum: [unverified, pending, approved, blocked] }
+        cpaCredentialStatus: { type: string, enum: [absent, configured, validated, invalid] }
+        cpaSettlementCurrency: { type: string, minLength: 3, maxLength: 3 }
+        cpaEnabled: { type: boolean }
+        cpaFeatureEnabled: { type: boolean }
+        cpaVerifiedAt: { type: string, format: date-time, nullable: true }
+        cpaDisabledReason: { type: string, nullable: true }
+        cpaCapabilities:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceProviderCapability' }
+    CommercePaymentIntentSummary:
+      type: object
+      additionalProperties: false
+      required: [cpiEnvironment, cpiStatus, cpiCurrency, cpiCount, cpiAmountMinor, cpiAuthorizedMinor, cpiCapturedMinor, cpiRefundedMinor]
+      properties:
+        cpiEnvironment: { type: string, enum: [sandbox, production] }
+        cpiStatus: { type: string }
+        cpiCurrency: { type: string, minLength: 3, maxLength: 3 }
+        cpiCount: { type: integer, format: int64, minimum: 0 }
+        cpiAmountMinor: { type: integer, format: int64, minimum: 0 }
+        cpiAuthorizedMinor: { type: integer, format: int64, minimum: 0 }
+        cpiCapturedMinor: { type: integer, format: int64, minimum: 0 }
+        cpiRefundedMinor: { type: integer, format: int64, minimum: 0 }
+    CommerceAmountComponentSummary:
+      type: object
+      additionalProperties: false
+      required: [cacEnvironment, cacComponentType, cacSource, cacCurrency, cacCount, cacAmountMinor]
+      properties:
+        cacEnvironment: { type: string, enum: [sandbox, production] }
+        cacComponentType: { type: string, enum: [subtotal, discount, tax, customer_fee, provider_fee, platform_commission, seller_payable, withholding, refund, chargeback, fx_adjustment] }
+        cacSource: { type: string, enum: [quote, provider_estimate, provider_actual, tax_document, manual_adjustment] }
+        cacCurrency: { type: string, minLength: 3, maxLength: 3 }
+        cacCount: { type: integer, format: int64, minimum: 0 }
+        cacAmountMinor: { type: integer, format: int64 }
+    CommerceCommissionSummary:
+      type: object
+      additionalProperties: false
+      required: [ccmProvider, ccmEnvironment, ccmCurrency, ccmCount, ccmBasisAmountMinor, ccmCommissionMinor, ccmProviderFeeMinor, ccmTaxMinor, ccmSellerNetMinor]
+      properties:
+        ccmProvider: { type: string }
+        ccmEnvironment: { type: string, enum: [sandbox, production] }
+        ccmCurrency: { type: string, minLength: 3, maxLength: 3 }
+        ccmCount: { type: integer, format: int64, minimum: 0 }
+        ccmBasisAmountMinor: { type: integer, format: int64, minimum: 0 }
+        ccmCommissionMinor: { type: integer, format: int64, minimum: 0 }
+        ccmProviderFeeMinor: { type: integer, format: int64, minimum: 0 }
+        ccmTaxMinor: { type: integer, format: int64, minimum: 0 }
+        ccmSellerNetMinor: { type: integer, format: int64, minimum: 0 }
+    CommerceRefundSummary:
+      type: object
+      additionalProperties: false
+      required: [crfProvider, crfEnvironment, crfStatus, crfCurrency, crfCount, crfAmountMinor]
+      properties:
+        crfProvider: { type: string }
+        crfEnvironment: { type: string, enum: [sandbox, production] }
+        crfStatus: { type: string, enum: [requested, approved, processing, succeeded, failed, cancelled] }
+        crfCurrency: { type: string, minLength: 3, maxLength: 3 }
+        crfCount: { type: integer, format: int64, minimum: 0 }
+        crfAmountMinor: { type: integer, format: int64, minimum: 0 }
+    CommerceDisputeSummary:
+      type: object
+      additionalProperties: false
+      required: [cdsProvider, cdsEnvironment, cdsKind, cdsStatus, cdsCurrency, cdsCount, cdsAmountMinor]
+      properties:
+        cdsProvider: { type: string }
+        cdsEnvironment: { type: string, enum: [sandbox, production] }
+        cdsKind: { type: string, enum: [inquiry, dispute, chargeback] }
+        cdsStatus: { type: string }
+        cdsCurrency: { type: string, minLength: 3, maxLength: 3 }
+        cdsCount: { type: integer, format: int64, minimum: 0 }
+        cdsAmountMinor: { type: integer, format: int64, minimum: 0 }
+    CommerceReconciliationSummary:
+      type: object
+      additionalProperties: false
+      required: [crsProvider, crsEnvironment, crsStatus, crsCurrency, crsCount, crsExpectedMinor, crsActualMinor]
+      properties:
+        crsProvider: { type: string }
+        crsEnvironment: { type: string }
+        crsStatus: { type: string, enum: [open, assigned, resolved, ignored] }
+        crsCurrency: { type: string, nullable: true }
+        crsCount: { type: integer, format: int64, minimum: 0 }
+        crsExpectedMinor: { type: integer, format: int64 }
+        crsActualMinor: { type: integer, format: int64 }
+    CommerceSettlementSummary:
+      type: object
+      additionalProperties: false
+      required: [cssProvider, cssEnvironment, cssStatus, cssCurrency, cssCount, cssGrossMinor, cssFeeMinor, cssWithholdingMinor, cssRefundMinor, cssChargebackMinor, cssNetMinor]
+      properties:
+        cssProvider: { type: string }
+        cssEnvironment: { type: string }
+        cssStatus: { type: string }
+        cssCurrency: { type: string }
+        cssCount: { type: integer, format: int64, minimum: 0 }
+        cssGrossMinor: { type: integer, format: int64, minimum: 0 }
+        cssFeeMinor: { type: integer, format: int64, minimum: 0 }
+        cssWithholdingMinor: { type: integer, format: int64, minimum: 0 }
+        cssRefundMinor: { type: integer, format: int64, minimum: 0 }
+        cssChargebackMinor: { type: integer, format: int64, minimum: 0 }
+        cssNetMinor: { type: integer, format: int64 }
+    CommerceSellerBalanceSummary:
+      type: object
+      additionalProperties: false
+      required: [csbProvider, csbEnvironment, csbAvailability, csbCurrency, csbEntryCount, csbNetAmountMinor]
+      properties:
+        csbProvider: { type: string }
+        csbEnvironment: { type: string }
+        csbAvailability: { type: string, enum: [available, pending] }
+        csbCurrency: { type: string }
+        csbEntryCount: { type: integer, format: int64, minimum: 0 }
+        csbNetAmountMinor: { type: integer, format: int64 }
+    CommercePayoutSummary:
+      type: object
+      additionalProperties: false
+      required: [cpsProvider, cpsEnvironment, cpsStatus, cpsCurrency, cpsCount, cpsAmountMinor]
+      properties:
+        cpsProvider: { type: string }
+        cpsEnvironment: { type: string }
+        cpsStatus: { type: string }
+        cpsCurrency: { type: string }
+        cpsCount: { type: integer, format: int64, minimum: 0 }
+        cpsAmountMinor: { type: integer, format: int64, minimum: 0 }
+    CommercePaymentOverview:
+      type: object
+      additionalProperties: false
+      required: [cpoGeneratedAt, cpoProviderAccounts, cpoPaymentIntents, cpoAmountComponents, cpoCommissions, cpoRefunds, cpoDisputes, cpoReconciliationExceptions, cpoSettlements, cpoSellerBalances, cpoPayouts]
+      properties:
+        cpoGeneratedAt: { type: string, format: date-time }
+        cpoProviderAccounts:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceProviderAccount' }
+        cpoPaymentIntents:
+          type: array
+          items: { $ref: '#/components/schemas/CommercePaymentIntentSummary' }
+        cpoAmountComponents:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceAmountComponentSummary' }
+        cpoCommissions:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceCommissionSummary' }
+        cpoRefunds:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceRefundSummary' }
+        cpoDisputes:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceDisputeSummary' }
+        cpoReconciliationExceptions:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceReconciliationSummary' }
+        cpoSettlements:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceSettlementSummary' }
+        cpoSellerBalances:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceSellerBalanceSummary' }
+        cpoPayouts:
+          type: array
+          items: { $ref: '#/components/schemas/CommercePayoutSummary' }
+    CommerceReconciliationEntry:
+      type: object
+      additionalProperties: false
+      required: [creId, creProvider, creStatus, creReason, creCheckoutId, crePaymentAttemptId, creExpectedMinor, creActualMinor, creCurrency, creDetectedAt, creResolvedAt]
+      properties:
+        creId: { type: string, format: uuid }
+        creProvider:
+          type: string
+          enum: [datafast, paypal, placetopay, payphone, bank_transfer, stripe, unrecognized]
+          description: A recognized stored provider, not current merchant eligibility or availability
+        creStatus: { type: string, enum: [open, assigned, resolved, ignored, unrecognized] }
+        creReason:
+          type: string
+          enum: [closed_checkout_approval, scheduled_query_review, binding_mismatch, unknown_provider_state, unrecognized]
+          description: Fixed safe classification, not raw stored exception text
+        creCheckoutId: { type: string, format: uuid, nullable: true }
+        crePaymentAttemptId: { type: string, format: uuid, nullable: true }
+        creExpectedMinor:
+          type: string
+          nullable: true
+          pattern: '^-?(0|[1-9][0-9]{0,18})$'
+          description: Exact signed 64-bit integer minor units; null means unknown, not zero
+        creActualMinor:
+          type: string
+          nullable: true
+          pattern: '^-?(0|[1-9][0-9]{0,18})$'
+          description: Exact observed signed 64-bit minor units; not a booked capture or settlement
+        creCurrency: { type: string, nullable: true, pattern: '^[A-Z]{3}$' }
+        creDetectedAt: { type: string, format: date-time }
+        creResolvedAt: { type: string, format: date-time, nullable: true }
+    CommerceReconciliationReport:
+      type: object
+      additionalProperties: false
+      required: [crrGeneratedAt, crrEnvironment, crrStatus, crrCheckoutId, crrSchemaReady, crrEntries, crrLimit, crrOffset, crrHasMore]
+      properties:
+        crrGeneratedAt: { type: string, format: date-time }
+        crrEnvironment: { type: string, enum: [sandbox, production] }
+        crrStatus: { type: string, nullable: true, enum: [open, assigned, resolved, ignored] }
+        crrCheckoutId: { type: string, format: uuid, nullable: true }
+        crrSchemaReady: { type: boolean }
+        crrEntries:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/CommerceReconciliationEntry' }
+        crrLimit: { type: integer, minimum: 1, maximum: 100 }
+        crrOffset: { type: integer, minimum: 0, maximum: 10000 }
+        crrHasMore: { type: boolean }
+    CommerceProviderQuery:
+      type: object
+      additionalProperties: false
+      required: [cpqOperationId, cpqCheckoutId, cpqPaymentAttemptId, cpqProvider, cpqStatus, cpqAttemptCount, cpqOperationStatus, cpqOutcomeCertainty, cpqCreatedAt, cpqLastAttemptAt, cpqNextAttemptAt, cpqLeaseExpiresAt, cpqCompletedAt, cpqLastOutcome]
+      properties:
+        cpqOperationId: { type: string, format: uuid }
+        cpqCheckoutId: { type: string, format: uuid }
+        cpqPaymentAttemptId: { type: string, format: uuid }
+        cpqProvider: { type: string }
+        cpqStatus: { type: string, enum: [pending, processing, retry, completed, dead_letter] }
+        cpqAttemptCount: { type: integer, minimum: 0, maximum: 24 }
+        cpqOperationStatus: { type: string, description: Original operation state; not a job state }
+        cpqOutcomeCertainty: { type: string, enum: [not_sent, confirmed_no_charge, ambiguous, succeeded] }
+        cpqCreatedAt: { type: string, format: date-time }
+        cpqLastAttemptAt: { type: string, format: date-time, nullable: true }
+        cpqNextAttemptAt: { type: string, format: date-time }
+        cpqLeaseExpiresAt: { type: string, format: date-time, nullable: true }
+        cpqCompletedAt: { type: string, format: date-time, nullable: true }
+        cpqLastOutcome:
+          type: string
+          nullable: true
+          description: Known server-authored diagnostic only; all other stored text becomes unrecognized
+          enum: [retry_exhausted, process_switch_disabled, binding_changed, query_unavailable, query_unsupported, query_binding_mismatch, query_application_rejected, query_applied, provider_nonterminal, provider_requires_review, configuration_revoked, operation_already_terminal, immutable_binding_unavailable, unrecognized]
+    CommerceProviderQueryBudget:
+      type: object
+      additionalProperties: false
+      required: [cpqbProvider, cpqbNextQueryAt]
+      properties:
+        cpqbProvider: { type: string }
+        cpqbNextQueryAt: { type: string, format: date-time, description: Earliest shared query slot, not a promised execution time }
+    CommerceProviderQueries:
+      type: object
+      additionalProperties: false
+      required: [cpqsGeneratedAt, cpqsEnvironment, cpqsSchemaReady, cpqsRecoveryFlagEnabled, cpqsJobs, cpqsBudgets, cpqsLimit, cpqsOffset, cpqsHasMore]
+      properties:
+        cpqsGeneratedAt: { type: string, format: date-time }
+        cpqsEnvironment: { type: string, enum: [sandbox, production] }
+        cpqsSchemaReady: { type: boolean }
+        cpqsRecoveryFlagEnabled: { type: boolean, description: Database flag only; never worker liveness or complete activation authority }
+        cpqsJobs:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/CommerceProviderQuery' }
+        cpqsBudgets:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/CommerceProviderQueryBudget' }
+        cpqsLimit: { type: integer, minimum: 1, maximum: 100 }
+        cpqsOffset: { type: integer, minimum: 0, maximum: 10000 }
+        cpqsHasMore: { type: boolean }
     CommerceProviderEvent:
       type: object
       additionalProperties: false
-      required: [cpeId, cpeProvider, cpeEnvironment, cpeProviderEventId, cpeEventType, cpeProviderResourceId, cpeStatus, cpeAttemptCount, cpeCheckoutId, cpePaymentAttemptId, cpeRefundId, cpeReceivedAt, cpeProviderCreatedAt, cpeProcessingStartedAt, cpeLastAttemptAt, cpeNextAttemptAt, cpeProcessedAt, cpeErrorSummary]
+      required: [cpeId, cpeProvider, cpeEnvironment, cpeProviderEventId, cpeEventType, cpeEvidenceType, cpeProviderResourceId, cpeStatus, cpeAttemptCount, cpeCheckoutId, cpePaymentAttemptId, cpeRefundId, cpeReceivedAt, cpeProviderCreatedAt, cpeProcessingStartedAt, cpeLastAttemptAt, cpeNextAttemptAt, cpeProcessedAt, cpeErrorSummary]
       properties:
         cpeId: { type: string, format: uuid }
-        cpeProvider: { type: string, enum: [paypal, datafast, stripe, bank_transfer, cash, pos, cardano] }
+        cpeProvider: { type: string, enum: [paypal, datafast, placetopay, payphone, stripe, bank_transfer, cash, pos, cardano] }
         cpeEnvironment: { type: string, enum: [sandbox, production] }
         cpeProviderEventId: { type: string }
         cpeEventType: { type: string }
+        cpeEvidenceType: { type: string, enum: [signature_verified, untrusted_callback] }
         cpeProviderResourceId: { type: string, nullable: true }
         cpeStatus: { type: string, enum: [pending, processing, processed, retry, dead_letter, ignored] }
         cpeAttemptCount: { type: integer, minimum: 0 }
@@ -9886,6 +10524,36 @@ components:
       required: [cperReason]
       properties:
         cperReason: { type: string, minLength: 8, maxLength: 500 }
+    PaymentSessionCreate:
+      type: object
+      additionalProperties: false
+      required: [provider, paymentMethod]
+      properties:
+        provider: { type: string, enum: [placetopay, payphone] }
+        paymentMethod: { type: string, enum: [card, bank_redirect, deuna_qr, payphone_wallet] }
+        buyerPhone: { type: string, pattern: '^[0-9]{6,15}$' }
+        buyerCountryCode: { type: string, pattern: '^[0-9]{1,3}$' }
+    PaymentSession:
+      type: object
+      additionalProperties: false
+      required: [checkoutId, attemptId, operationId, provider, state, externalId, redirectUrl, outcomeCertainty, canRetryOrFallback]
+      properties:
+        checkoutId: { type: string, format: uuid }
+        attemptId: { type: string, format: uuid }
+        operationId: { type: string, format: uuid }
+        provider: { type: string, enum: [placetopay, payphone] }
+        state: { type: string, enum: [prepared, in_flight, requires_customer_action, processing, succeeded, confirmed_no_charge, ambiguous, failed] }
+        externalId: { type: string, nullable: true }
+        redirectUrl: { type: string, format: uri, nullable: true, description: Hosted provider URL; treat as a bearer capability and do not log it. }
+        outcomeCertainty: { type: string, enum: [not_contacted, rejected_before_creation, confirmed_no_charge, ambiguous, succeeded] }
+        canRetryOrFallback: { type: boolean, description: True only when the provider is known not to have created a charge. }
+    PayPhoneNotificationAck:
+      type: object
+      additionalProperties: false
+      required: [Response, ErrorCode]
+      properties:
+        Response: { type: boolean }
+        ErrorCode: { type: string, pattern: '^[0-9]{3}$' }
     DatafastCheckout:
       type: object
       required: [dcOrderId, dcCheckoutId, dcWidgetUrl, dcAmount, dcCurrency, dcLookupToken]
@@ -13693,7 +14361,7 @@ components:
           nullable: true
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
         checkoutAvailable: { type: boolean }
     CoursePaypalCaptureRequest:
       type: object

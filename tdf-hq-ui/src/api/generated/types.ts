@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/commerce/payment-capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List payment routes actually available for a transaction
+         * @description Returns only routes with verified environment, merchant, credential, contract, method and completion gates. An empty route list is authoritative. No secrets or merchant configuration are returned. Fallback requires authoritative confirmation that no charge was or will be created; ambiguous outcomes remain held for reconciliation.
+         */
+        get: operations["listPaymentCapabilities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interactions/reports": {
         parameters: {
             query?: never;
@@ -4878,6 +4898,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/services/storefront/refunds/{refundId}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Read local held-refund status and query readiness
+         * @description Strict Admin only. Does not contact the provider. Supports known PayPal refund IDs for the mixing/mastering storefront only. Missing configuration or qualification never enables the action.
+         */
+        get: operations["adminGetServiceRefundRecovery"];
+        put?: never;
+        /**
+         * Query a held refund without issuing another refund
+         * @description Requires the exact environment flag, process switch, qualified merchant account, and verified capabilities. Uses only GET for the known refund resource (OAuth token acquisition is separate). Validates original capture, refund ID, amount and currency. Exact completion may atomically update local financial records. All other outcomes remain held. Concurrent operators share a query quota. A timeout or HTTP error is never proof of no refund. Do not retry by submitting a new refund.
+         */
+        post: operations["adminReconcileServiceRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/services/storefront/orders/{orderId}/reconcile": {
         parameters: {
             query?: never;
@@ -4892,6 +4938,170 @@ export interface paths {
         put?: never;
         /** Compare an order binding with the provider without changing payment state */
         post: operations["adminReconcileServiceStorefrontOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/checkouts/{checkoutId}/payment-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkoutId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or recover a hosted provider payment session
+         * @description New provider contacts require an exact enabled provider/method/capability combination and a payable, unexpired checkout. An exact request replay with the original lookup token and idempotency key recovers a previously contacted operation even after checkout expiry or payment, account suspension, or provider credential unavailability. Recovery validates immutable request fields and still requires the operation encryption key. A merely prepared operation remains subject to all new-contact gates. An ambiguous outcome stays locked for reconciliation and cannot be retried through another provider.
+         */
+        post: operations["createProviderPaymentSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+            };
+            path: {
+                checkoutId: string;
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        /** Read a durable hosted payment-session state */
+        get: operations["getProviderPaymentSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/provider-notifications/placetopay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a signed PlaceToPay session notification
+         * @description Verifies the embedded SHA-256 signature, persists the exact encrypted body, and queues an authenticated session query. The notification alone never marks an order paid.
+         */
+        post: operations["receivePlaceToPayNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/provider-notifications/payphone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive an unsigned PayPhone external notification
+         * @description Persists the exact body as an untrusted query trigger. Payment and fulfillment advance only after the authenticated PayPhone status API matches transaction ID, client reference, amount, and USD currency.
+         */
+        post: operations["receivePayPhoneNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/NotificacionPago": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a PayPhone external notification on its required method name
+         * @description Compatibility alias required by PayPhone's notification contract. It uses the same untrusted-callback persistence and authenticated-query reconciliation as the canonical endpoint.
+         */
+        post: operations["receivePayPhoneNotificationCompatibility"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/reconciliation-exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inspect redacted individual payment reconciliation exceptions
+         * @description Additive read-only contract (2026-09-15). Requires strict Admin access. Defaults to sandbox and echoes the applied filters. Amounts are exact decimal strings of signed 64-bit minor units, never floating-point JSON numbers. Exception labels, including resolved or ignored, do not authorize payment, refund, payout, hold release or fulfillment. No provider contact, free-text notes, merchant aliases or external references are returned. Internal links are present only for a uniquely matched stored binding; an absent link is not proof that no payment occurred. Missing schema is explicit, and reads have a three-second per-statement database timeout. Live offset pages may shift and are not an immutable accounting export.
+         */
+        get: operations["adminListCommerceReconciliationExceptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/provider-queries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inspect redacted provider status-query recovery jobs
+         * @description Additive read-only contract (2026-09-15). Requires strict Admin access. Defaults to sandbox and returns only one environment. This does not claim jobs, reserve query budgets, contact providers or authorize payment retries. Completed jobs are not proof of paid orders. A disabled database flag is reported explicitly; an enabled flag is not evidence of a running worker, qualified account or valid credentials. Missing recovery schema is reported as cpqsSchemaReady=false, never as a verified empty queue. Reads have a three-second per-statement database timeout. Offset pagination is a live operational view, not an immutable export; refresh after concurrent changes.
+         */
+        get: operations["adminListCommerceProviderQueries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the redacted canonical payment operations overview
+         * @description Strict-admin view of provider activation gates and aggregate financial states. Merchant account references, credentials, secrets, and raw provider payloads are never returned.
+         */
+        get: operations["adminGetCommercePaymentOverview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4931,7 +5141,7 @@ export interface paths {
         put?: never;
         /**
          * Requeue one dead-letter provider event with immutable operator evidence
-         * @description Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+         * @description Requeueing does not mark an order paid. The bounded worker reprocesses only the original encrypted payload; untrusted callbacks still require an authenticated provider query.
          */
         post: operations["adminReplayCommerceProviderEvent"];
         delete?: never;
@@ -7706,6 +7916,30 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {string} */
+        PaymentCapabilityName: "one_time" | "recurring" | "tokenization" | "three_ds" | "installments" | "authorize" | "capture" | "void" | "full_refund" | "partial_refund" | "disputes" | "chargebacks" | "payment_link" | "signed_webhook" | "server_verification" | "connected_accounts" | "split_settlement" | "seller_payouts";
+        PaymentRoute: {
+            /** @enum {string} */
+            provider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer";
+            /** @enum {string} */
+            paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+            capabilities: components["schemas"]["PaymentCapabilityName"][];
+            priority: number;
+        };
+        PaymentCapabilityResponse: {
+            /** @enum {string} */
+            environment: "sandbox" | "production";
+            buyerCountry: string;
+            currency: string;
+            /** Format: int64 */
+            amountMinor: number;
+            /** @enum {string} */
+            paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+            /** @enum {string} */
+            productFlow: "merchandise" | "booking" | "professional_service" | "course" | "event_ticket" | "digital_product" | "subscription" | "marketplace";
+            routes: components["schemas"]["PaymentRoute"][];
+            fallbackPolicy: string;
+        };
+        /** @enum {string} */
         InteractionKind: "club_post" | "club_memory" | "event" | "event_moment" | "recording" | "recording_session" | "record_release" | "artist_release" | "classified" | "directory_profile" | "artist_update";
         InteractionMention: {
             partyId: number;
@@ -9077,7 +9311,7 @@ export interface components {
             termsAcceptedAt?: string | null;
             /** Format: date-time */
             depositPaidAt?: string | null;
-            paymentMethods: ("datafast" | "paypal")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
         };
         PublicDomoPaypalCaptureRequest: {
             paypalOrderId: string;
@@ -9187,7 +9421,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string;
             quote: components["schemas"]["PublicEventTicketQuote"];
-            paymentMethods: ("datafast" | "paypal")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
             /** @description Empty until fulfillment issues tickets after verified payment. */
             tickets: components["schemas"]["PublicEventTicket"][];
         };
@@ -9302,7 +9536,7 @@ export interface components {
             holdExpiresAt: string;
             quote: components["schemas"]["PublicBookingQuote"];
             /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
-            paymentMethods: ("datafast" | "paypal" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
             manualPayment: components["schemas"]["PublicBookingManualPayment"] | null;
         };
         PublicBookingManualPaymentCreate: {
@@ -9791,6 +10025,11 @@ export interface components {
             ssoCurrency: string;
             ssoStatus: string;
             ssoPaymentProvider: string | null;
+            /**
+             * Format: uuid
+             * @description Canonical checkout identifier used by the provider-neutral payment session API.
+             */
+            ssoCheckoutId: string | null;
             ssoLookupToken: string | null;
             /** Format: date-time */
             ssoPaidAt: string | null;
@@ -9864,6 +10103,24 @@ export interface components {
             /** Format: date-time */
             ssrfCompletedAt: string | null;
         };
+        ServiceStorefrontRefundRecovery: {
+            /** Format: uuid */
+            ssrrRefundId: string;
+            /** @enum {string} */
+            ssrrEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            ssrrStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+            /** @description Positive exact Int64 minor units; never parse through floating point */
+            ssrrAmountMinor: string;
+            /** @enum {string} */
+            ssrrCurrency: "USD";
+            /** @description Query readiness */
+            ssrrCanQuery: boolean;
+            /** @enum {string} */
+            ssrrOutcome: "not_queried" | "held" | "completed" | "already_completed";
+            /** Format: date-time */
+            ssrrCheckedAt: string | null;
+        };
         ServiceStorefrontReconciliation: {
             /** Format: uuid */
             ssrecOrderId: string;
@@ -9876,15 +10133,281 @@ export interface components {
             /** Format: date-time */
             ssrecCheckedAt: string;
         };
+        CommerceProviderCapability: {
+            cpcPaymentMethod: string;
+            cpcCapability: string;
+            /** @enum {string} */
+            cpcVerificationStatus: "documented" | "contract_required" | "sandbox_verified" | "production_verified" | "disabled";
+            /** Format: date-time */
+            cpcVerifiedAt: string | null;
+        };
+        CommerceProviderAccount: {
+            /** @enum {string} */
+            cpaProvider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer";
+            /** @enum {string} */
+            cpaEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            cpaStatus: "disabled" | "testing" | "ready" | "suspended" | "blocked";
+            /** @enum {string} */
+            cpaContractStatus: "unverified" | "pending" | "approved" | "blocked";
+            /** @enum {string} */
+            cpaCredentialStatus: "absent" | "configured" | "validated" | "invalid";
+            cpaSettlementCurrency: string;
+            cpaEnabled: boolean;
+            cpaFeatureEnabled: boolean;
+            /** Format: date-time */
+            cpaVerifiedAt: string | null;
+            cpaDisabledReason: string | null;
+            cpaCapabilities: components["schemas"]["CommerceProviderCapability"][];
+        };
+        CommercePaymentIntentSummary: {
+            /** @enum {string} */
+            cpiEnvironment: "sandbox" | "production";
+            cpiStatus: string;
+            cpiCurrency: string;
+            /** Format: int64 */
+            cpiCount: number;
+            /** Format: int64 */
+            cpiAmountMinor: number;
+            /** Format: int64 */
+            cpiAuthorizedMinor: number;
+            /** Format: int64 */
+            cpiCapturedMinor: number;
+            /** Format: int64 */
+            cpiRefundedMinor: number;
+        };
+        CommerceAmountComponentSummary: {
+            /** @enum {string} */
+            cacEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            cacComponentType: "subtotal" | "discount" | "tax" | "customer_fee" | "provider_fee" | "platform_commission" | "seller_payable" | "withholding" | "refund" | "chargeback" | "fx_adjustment";
+            /** @enum {string} */
+            cacSource: "quote" | "provider_estimate" | "provider_actual" | "tax_document" | "manual_adjustment";
+            cacCurrency: string;
+            /** Format: int64 */
+            cacCount: number;
+            /** Format: int64 */
+            cacAmountMinor: number;
+        };
+        CommerceCommissionSummary: {
+            ccmProvider: string;
+            /** @enum {string} */
+            ccmEnvironment: "sandbox" | "production";
+            ccmCurrency: string;
+            /** Format: int64 */
+            ccmCount: number;
+            /** Format: int64 */
+            ccmBasisAmountMinor: number;
+            /** Format: int64 */
+            ccmCommissionMinor: number;
+            /** Format: int64 */
+            ccmProviderFeeMinor: number;
+            /** Format: int64 */
+            ccmTaxMinor: number;
+            /** Format: int64 */
+            ccmSellerNetMinor: number;
+        };
+        CommerceRefundSummary: {
+            crfProvider: string;
+            /** @enum {string} */
+            crfEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            crfStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+            crfCurrency: string;
+            /** Format: int64 */
+            crfCount: number;
+            /** Format: int64 */
+            crfAmountMinor: number;
+        };
+        CommerceDisputeSummary: {
+            cdsProvider: string;
+            /** @enum {string} */
+            cdsEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            cdsKind: "inquiry" | "dispute" | "chargeback";
+            cdsStatus: string;
+            cdsCurrency: string;
+            /** Format: int64 */
+            cdsCount: number;
+            /** Format: int64 */
+            cdsAmountMinor: number;
+        };
+        CommerceReconciliationSummary: {
+            crsProvider: string;
+            crsEnvironment: string;
+            /** @enum {string} */
+            crsStatus: "open" | "assigned" | "resolved" | "ignored";
+            crsCurrency: string | null;
+            /** Format: int64 */
+            crsCount: number;
+            /** Format: int64 */
+            crsExpectedMinor: number;
+            /** Format: int64 */
+            crsActualMinor: number;
+        };
+        CommerceSettlementSummary: {
+            cssProvider: string;
+            cssEnvironment: string;
+            cssStatus: string;
+            cssCurrency: string;
+            /** Format: int64 */
+            cssCount: number;
+            /** Format: int64 */
+            cssGrossMinor: number;
+            /** Format: int64 */
+            cssFeeMinor: number;
+            /** Format: int64 */
+            cssWithholdingMinor: number;
+            /** Format: int64 */
+            cssRefundMinor: number;
+            /** Format: int64 */
+            cssChargebackMinor: number;
+            /** Format: int64 */
+            cssNetMinor: number;
+        };
+        CommerceSellerBalanceSummary: {
+            csbProvider: string;
+            csbEnvironment: string;
+            /** @enum {string} */
+            csbAvailability: "available" | "pending";
+            csbCurrency: string;
+            /** Format: int64 */
+            csbEntryCount: number;
+            /** Format: int64 */
+            csbNetAmountMinor: number;
+        };
+        CommercePayoutSummary: {
+            cpsProvider: string;
+            cpsEnvironment: string;
+            cpsStatus: string;
+            cpsCurrency: string;
+            /** Format: int64 */
+            cpsCount: number;
+            /** Format: int64 */
+            cpsAmountMinor: number;
+        };
+        CommercePaymentOverview: {
+            /** Format: date-time */
+            cpoGeneratedAt: string;
+            cpoProviderAccounts: components["schemas"]["CommerceProviderAccount"][];
+            cpoPaymentIntents: components["schemas"]["CommercePaymentIntentSummary"][];
+            cpoAmountComponents: components["schemas"]["CommerceAmountComponentSummary"][];
+            cpoCommissions: components["schemas"]["CommerceCommissionSummary"][];
+            cpoRefunds: components["schemas"]["CommerceRefundSummary"][];
+            cpoDisputes: components["schemas"]["CommerceDisputeSummary"][];
+            cpoReconciliationExceptions: components["schemas"]["CommerceReconciliationSummary"][];
+            cpoSettlements: components["schemas"]["CommerceSettlementSummary"][];
+            cpoSellerBalances: components["schemas"]["CommerceSellerBalanceSummary"][];
+            cpoPayouts: components["schemas"]["CommercePayoutSummary"][];
+        };
+        CommerceReconciliationEntry: {
+            /** Format: uuid */
+            creId: string;
+            /**
+             * @description A recognized stored provider, not current merchant eligibility or availability
+             * @enum {string}
+             */
+            creProvider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer" | "stripe" | "unrecognized";
+            /** @enum {string} */
+            creStatus: "open" | "assigned" | "resolved" | "ignored" | "unrecognized";
+            /**
+             * @description Fixed safe classification, not raw stored exception text
+             * @enum {string}
+             */
+            creReason: "closed_checkout_approval" | "scheduled_query_review" | "binding_mismatch" | "unknown_provider_state" | "unrecognized";
+            /** Format: uuid */
+            creCheckoutId: string | null;
+            /** Format: uuid */
+            crePaymentAttemptId: string | null;
+            /** @description Exact signed 64-bit integer minor units; null means unknown, not zero */
+            creExpectedMinor: string | null;
+            /** @description Exact observed signed 64-bit minor units; not a booked capture or settlement */
+            creActualMinor: string | null;
+            creCurrency: string | null;
+            /** Format: date-time */
+            creDetectedAt: string;
+            /** Format: date-time */
+            creResolvedAt: string | null;
+        };
+        CommerceReconciliationReport: {
+            /** Format: date-time */
+            crrGeneratedAt: string;
+            /** @enum {string} */
+            crrEnvironment: "sandbox" | "production";
+            /** @enum {string|null} */
+            crrStatus: "open" | "assigned" | "resolved" | "ignored" | null;
+            /** Format: uuid */
+            crrCheckoutId: string | null;
+            crrSchemaReady: boolean;
+            crrEntries: components["schemas"]["CommerceReconciliationEntry"][];
+            crrLimit: number;
+            crrOffset: number;
+            crrHasMore: boolean;
+        };
+        CommerceProviderQuery: {
+            /** Format: uuid */
+            cpqOperationId: string;
+            /** Format: uuid */
+            cpqCheckoutId: string;
+            /** Format: uuid */
+            cpqPaymentAttemptId: string;
+            cpqProvider: string;
+            /** @enum {string} */
+            cpqStatus: "pending" | "processing" | "retry" | "completed" | "dead_letter";
+            cpqAttemptCount: number;
+            /** @description Original operation state; not a job state */
+            cpqOperationStatus: string;
+            /** @enum {string} */
+            cpqOutcomeCertainty: "not_sent" | "confirmed_no_charge" | "ambiguous" | "succeeded";
+            /** Format: date-time */
+            cpqCreatedAt: string;
+            /** Format: date-time */
+            cpqLastAttemptAt: string | null;
+            /** Format: date-time */
+            cpqNextAttemptAt: string;
+            /** Format: date-time */
+            cpqLeaseExpiresAt: string | null;
+            /** Format: date-time */
+            cpqCompletedAt: string | null;
+            /**
+             * @description Known server-authored diagnostic only; all other stored text becomes unrecognized
+             * @enum {string|null}
+             */
+            cpqLastOutcome: "retry_exhausted" | "process_switch_disabled" | "binding_changed" | "query_unavailable" | "query_unsupported" | "query_binding_mismatch" | "query_application_rejected" | "query_applied" | "provider_nonterminal" | "provider_requires_review" | "configuration_revoked" | "operation_already_terminal" | "immutable_binding_unavailable" | "unrecognized" | null;
+        };
+        CommerceProviderQueryBudget: {
+            cpqbProvider: string;
+            /**
+             * Format: date-time
+             * @description Earliest shared query slot
+             */
+            cpqbNextQueryAt: string;
+        };
+        CommerceProviderQueries: {
+            /** Format: date-time */
+            cpqsGeneratedAt: string;
+            /** @enum {string} */
+            cpqsEnvironment: "sandbox" | "production";
+            cpqsSchemaReady: boolean;
+            /** @description Database flag only; never worker liveness or complete activation authority */
+            cpqsRecoveryFlagEnabled: boolean;
+            cpqsJobs: components["schemas"]["CommerceProviderQuery"][];
+            cpqsBudgets: components["schemas"]["CommerceProviderQueryBudget"][];
+            cpqsLimit: number;
+            cpqsOffset: number;
+            cpqsHasMore: boolean;
+        };
         CommerceProviderEvent: {
             /** Format: uuid */
             cpeId: string;
             /** @enum {string} */
-            cpeProvider: "paypal" | "datafast" | "stripe" | "bank_transfer" | "cash" | "pos" | "cardano";
+            cpeProvider: "paypal" | "datafast" | "placetopay" | "payphone" | "stripe" | "bank_transfer" | "cash" | "pos" | "cardano";
             /** @enum {string} */
             cpeEnvironment: "sandbox" | "production";
             cpeProviderEventId: string;
             cpeEventType: string;
+            /** @enum {string} */
+            cpeEvidenceType: "signature_verified" | "untrusted_callback";
             cpeProviderResourceId: string | null;
             /** @enum {string} */
             cpeStatus: "pending" | "processing" | "processed" | "retry" | "dead_letter" | "ignored";
@@ -9911,6 +10434,40 @@ export interface components {
         };
         CommerceProviderEventReplayCreate: {
             cperReason: string;
+        };
+        PaymentSessionCreate: {
+            /** @enum {string} */
+            provider: "placetopay" | "payphone";
+            /** @enum {string} */
+            paymentMethod: "card" | "bank_redirect" | "deuna_qr" | "payphone_wallet";
+            buyerPhone?: string;
+            buyerCountryCode?: string;
+        };
+        PaymentSession: {
+            /** Format: uuid */
+            checkoutId: string;
+            /** Format: uuid */
+            attemptId: string;
+            /** Format: uuid */
+            operationId: string;
+            /** @enum {string} */
+            provider: "placetopay" | "payphone";
+            /** @enum {string} */
+            state: "prepared" | "in_flight" | "requires_customer_action" | "processing" | "succeeded" | "confirmed_no_charge" | "ambiguous" | "failed";
+            externalId: string | null;
+            /**
+             * Format: uri
+             * @description Hosted provider URL; treat as a bearer capability and do not log it.
+             */
+            redirectUrl: string | null;
+            /** @enum {string} */
+            outcomeCertainty: "not_contacted" | "rejected_before_creation" | "confirmed_no_charge" | "ambiguous" | "succeeded";
+            /** @description True only when the provider is known not to have created a charge. */
+            canRetryOrFallback: boolean;
+        };
+        PayPhoneNotificationAck: {
+            Response: boolean;
+            ErrorCode: string;
         };
         DatafastCheckout: {
             dcOrderId: string;
@@ -12208,7 +12765,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string | null;
             quote: components["schemas"]["CourseCheckoutQuote"] | null;
-            paymentMethods: ("datafast" | "paypal")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
             checkoutAvailable: boolean;
         };
         CoursePaypalCaptureRequest: {
@@ -14291,6 +14848,48 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listPaymentCapabilities: {
+        parameters: {
+            query: {
+                buyerCountry: string;
+                /** @description Currency is normalized to uppercase; only USD can yield available routes. */
+                currency: string;
+                amountMinor: number;
+                paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+                productFlow: "merchandise" | "booking" | "professional_service" | "course" | "event_ticket" | "digital_product" | "subscription" | "marketplace";
+                requires?: components["schemas"]["PaymentCapabilityName"][];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ordered transaction-specific routes; empty when no route is fully available. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentCapabilityResponse"];
+                };
+            };
+            /** @description Missing or invalid query parameter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout environment configuration is invalid. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listInteractionReports: {
         parameters: {
             query?: {
@@ -25164,6 +25763,152 @@ export interface operations {
             };
         };
     };
+    adminGetServiceRefundRecovery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Local refund evidence and exact-environment readiness */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefundRecovery"];
+                };
+            };
+            /** @description Invalid refund UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Known refund or original capture binding unavailable; manual review required */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Readiness could not be verified */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminReconcileServiceRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Completed, already completed by a concurrent observation, or still held */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefundRecovery"];
+                };
+            };
+            /** @description Invalid refund UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Shared provider query limit reached */
+            429: {
+                headers: {
+                    /** @description Seconds before another query may be attempted */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence could not be verified; funds remain reserved */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reconciliation unavailable or authority changed; no financial completion applied */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     adminReconcileServiceStorefrontOrder: {
         parameters: {
             query?: never;
@@ -25208,6 +25953,379 @@ export interface operations {
             };
             /** @description Provider status could not be read */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createProviderPaymentSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                checkoutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentSessionCreate"];
+            };
+        };
+        responses: {
+            /** @description Durable provider operation; may require customer action or reconciliation */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSession"];
+                };
+            };
+            /** @description Invalid provider */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout or lookup token is invalid, or no contacted replay exists and checkout cannot accept payment. This is not no-charge evidence for an earlier transmitted request. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency conflict or another active canonical payment intent exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider/configuration is unavailable or an ambiguous result requires reconciliation */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getProviderPaymentSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+            };
+            path: {
+                checkoutId: string;
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lookup-token-scoped state without provider payloads or credentials */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSession"];
+                };
+            };
+            /** @description Session absent or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Encrypted operation storage is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receivePlaceToPayNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Verified notification durably accepted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid notification body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Signature verification failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receivePayPhoneNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Notification durably accepted in PayPhone's required acknowledgment format */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayPhoneNotificationAck"];
+                };
+            };
+            /** @description Invalid notification or mismatched store identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event identifier conflicts with different immutable evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receivePayPhoneNotificationCompatibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Notification durably accepted in PayPhone's required acknowledgment format */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayPhoneNotificationAck"];
+                };
+            };
+            /** @description Invalid notification or mismatched store identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event identifier conflicts with different immutable evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListCommerceReconciliationExceptions: {
+        parameters: {
+            query?: {
+                environment?: "sandbox" | "production";
+                status?: "open" | "assigned" | "resolved" | "ignored";
+                /** @description Exact internal checkout reference; optional, never a customer token */
+                checkoutId?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted review records, including explicit schema readiness and applied filters */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceReconciliationReport"];
+                };
+            };
+            /** @description Invalid filter or pagination */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Report temporarily unavailable; no database diagnostics exposed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListCommerceProviderQueries: {
+        parameters: {
+            query?: {
+                environment?: "sandbox" | "production";
+                status?: "pending" | "processing" | "retry" | "completed" | "dead_letter";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted operational snapshot, with explicit schema availability */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceProviderQueries"];
+                };
+            };
+            /** @description Invalid filter or pagination */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Report temporarily unavailable; no database diagnostics exposed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminGetCommercePaymentOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted provider readiness and canonical financial aggregates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommercePaymentOverview"];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

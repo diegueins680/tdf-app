@@ -820,6 +820,36 @@
       "id": "2026-10-03_discovery_ownership_metadata_boundary",
       "path": "tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql",
       "introducedBy": "6e7b87d8ad3a4c56b033484fe7174dceacec5961"
+    },
+    {
+      "id": "2026-09-11_payment_intent_runtime_sync",
+      "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+      "introducedBy": "0e07d8d1e2ab3f9831a548a9a77702f7e20c26b1"
+    },
+    {
+      "id": "2026-09-11_manual_bank_provider_activation",
+      "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+      "introducedBy": "a177068959f31f269ad24efe454c2978798105ae"
+    },
+    {
+      "id": "2026-09-11_provider_capability_catalog",
+      "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+      "introducedBy": "585ca46fd6699ec33c7520ba141500c5bf7e1139"
+    },
+    {
+      "id": "2026-09-13_provider_execution_runtime",
+      "path": "tdf-hq/sql/2026-09-13_provider_execution_runtime.sql",
+      "introducedBy": "6d81ee1296e4dfc9d5b3207904c4b3fde7f3f5e5"
+    },
+    {
+      "id": "2026-09-15_provider_query_recovery",
+      "path": "tdf-hq/sql/2026-09-15_provider_query_recovery.sql",
+      "introducedBy": "b9875ff176c35f446c64d53dccadfd15b839cda4"
+    },
+    {
+      "id": "2026-09-16_payment_intent_refund_sync",
+      "path": "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql",
+      "introducedBy": "f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b"
     }
   ]
 }

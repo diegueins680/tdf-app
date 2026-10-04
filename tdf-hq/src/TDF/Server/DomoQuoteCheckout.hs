@@ -44,10 +44,13 @@ import           System.Environment (lookupEnv)
 import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.DomoQuotes as Domo
-import           TDF.DB (Env(..), sharedTlsManager)
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
+import           TDF.DB (Env(..))
+import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.Routes.DomoQuotes as Routes
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.SocialEventsHandlers as SocialEvents
 
 type AppM = ReaderT Env Handler
@@ -753,22 +756,14 @@ loadDomoPaymentMethods runtime = do
           domainEnabled <- runDB $ Checkout.domainEnabledForEnvironment environment "domo_quotes"
           checkoutEnabled <- runDB $ Checkout.capabilityEnabledForEnvironment
             environment "domo.checkout"
-          if not (domainEnabled && checkoutEnabled) then pure [] else do
-            datafastEnabled <- ((\datafast -> do
-                if ServiceStorefront.sdfEnvironment datafast /= environment
-                  then pure False
-                  else runDB $ Checkout.providerEnabledForEnvironment
-                    environment Checkout.ProviderDatafast)
-              =<< ServiceStorefront.loadServiceDatafastEnv)
-              `catchError` const (pure False)
-            paypalEnabled <- ((\(_, _, _, configuredEnvironment, _) -> do
-                if configuredEnvironment /= environment
-                  then pure False
-                  else runDB $ Checkout.providerEnabledForEnvironment
-                    environment Checkout.ProviderPayPal)
-              =<< ServiceStorefront.loadPaypalEnvForService)
-              `catchError` const (pure False)
-            pure $ ["datafast" | datafastEnabled] <> ["paypal" | paypalEnabled]
+          if not (domainEnabled && checkoutEnabled)
+            then pure []
+            else PaymentAvailability.availableImplementedPaymentMethods
+              environment
+              PaymentAvailability.FlowBooking
+              (drvDepositMinor runtime)
+              (drvCurrency runtime)
+              False
 
 requireLookupToken :: Text -> Maybe Text -> AppM ()
 requireLookupToken quoteId mLookupToken = do
@@ -1004,7 +999,7 @@ beginDomoPaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginDomoPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = dpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = dpcEnvironment context
@@ -1219,6 +1214,7 @@ confirmPublicDomoDatafastStatus rawQuoteId mLookupToken rawResourcePath = do
           , Checkout.vpProviderResource = checkoutId
           , Checkout.vpProviderResourcePath = Just resourcePath
           , Checkout.vpOrderReference = domoReference context
+          , Checkout.vpProviderReference = domoReference context
           , Checkout.vpAmountMinor = dpcAmountMinor context
           , Checkout.vpCurrency = dpcCurrency context
           , Checkout.vpEvidence = "server_to_server"
@@ -1252,7 +1248,7 @@ createPublicDomoPaypalOrder rawQuoteId mLookupToken = do
   (paypalOrderId, approvalUrl) <- case existing of
     Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager clientId clientSecret baseUrl (domoReference context)
+      sharedProviderManager clientId clientSecret baseUrl (domoReference context)
       (fromIntegral (dpcAmountMinor context)) (dpcCurrency context)
       (dpcCustomerName context) (dpcCustomerEmail context)
       `catchError` failDomoPaymentAttempt context attempt
@@ -1300,7 +1296,7 @@ capturePublicDomoPaypalOrder rawQuoteId mLookupToken request = do
       attempt <- beginDomoPaymentAttempt context Checkout.ProviderPayPal
         Checkout.OperationCapture merchantRef "capture"
       outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedTlsManager clientId clientSecret baseUrl suppliedOrderId
+        sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
         `catchError` failDomoPaymentAttempt context attempt
           Checkout.ProviderPayPal "paypal_capture_request"
       now <- liftIO getCurrentTime
@@ -1350,6 +1346,7 @@ capturePublicDomoPaypalOrder rawQuoteId mLookupToken request = do
             , Checkout.vpProviderResourcePath = Just
                 ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture")
             , Checkout.vpOrderReference = domoReference context
+            , Checkout.vpProviderReference = domoReference context
             , Checkout.vpAmountMinor = dpcAmountMinor context
             , Checkout.vpCurrency = dpcCurrency context
             , Checkout.vpEvidence = "server_to_server"

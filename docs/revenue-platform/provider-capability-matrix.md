@@ -66,8 +66,10 @@ certificate hosts for the immutable environment, rejects events more than four d
 than five minutes in the future, and posts the exact raw event to PayPal's verification endpoint.
 Only `SUCCESS` evidence is encrypted into the inbox. Event IDs and immutable payload hashes are
 deduplicated; processing uses bounded retries and dead-letter review. The background worker is
-independently gated by `checkout.provider_event_worker`, decrypts only signature-verified rows,
-checks the stored payload hash and metadata, and never resets the total attempt counter. Strict-admin
+independently gated by `checkout.provider_event_worker`, decrypts only immutable typed evidence
+(`signature_verified` or an explicitly `untrusted_callback` query trigger), checks the stored payload
+hash and metadata, and never resets the total attempt counter. An untrusted callback can change no
+financial state without a matching authenticated provider query. Strict-admin
 requeue requires a remediation reason and appends immutable actor/status evidence. PayPal's mock webhook
 simulator cannot pass remote verification and therefore cannot transition these records.
 

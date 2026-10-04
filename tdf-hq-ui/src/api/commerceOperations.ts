@@ -1,4 +1,24 @@
 import { get, post } from './client';
+import type { components } from './generated/types';
+
+export type CommerceReconciliationReport = components['schemas']['CommerceReconciliationReport'];
+export type CommerceReconciliationEntry = components['schemas']['CommerceReconciliationEntry'];
+export interface CommerceReconciliationFilters {
+  environment?: CommerceReconciliationReport['crrEnvironment'];
+  status?: NonNullable<CommerceReconciliationReport['crrStatus']>;
+  checkoutId?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export type CommerceProviderQueries = components['schemas']['CommerceProviderQueries'];
+export type CommerceProviderQuery = components['schemas']['CommerceProviderQuery'];
+export interface CommerceProviderQueryFilters {
+  environment?: CommerceProviderQueries['cpqsEnvironment'];
+  status?: CommerceProviderQuery['cpqStatus'];
+  limit?: number;
+  offset?: number;
+}
 
 export type CommerceProviderEventStatus =
   | 'pending'
@@ -29,7 +49,154 @@ export interface CommerceProviderEvent {
   cpeErrorSummary?: string | null;
 }
 
+export interface CommerceProviderCapability {
+  cpcPaymentMethod: string;
+  cpcCapability: string;
+  cpcVerificationStatus: string;
+  cpcVerifiedAt?: string | null;
+}
+
+export interface CommerceProviderAccount {
+  cpaProvider: string;
+  cpaEnvironment: 'sandbox' | 'production';
+  cpaStatus: string;
+  cpaContractStatus: string;
+  cpaCredentialStatus: string;
+  cpaSettlementCurrency: string;
+  cpaEnabled: boolean;
+  cpaFeatureEnabled: boolean;
+  cpaVerifiedAt?: string | null;
+  cpaDisabledReason?: string | null;
+  cpaCapabilities: CommerceProviderCapability[];
+}
+
+export interface CommercePaymentIntentSummary {
+  cpiEnvironment?: 'sandbox' | 'production';
+  cpiStatus: string;
+  cpiCurrency: string;
+  cpiCount: number;
+  cpiAmountMinor: number;
+  cpiAuthorizedMinor: number;
+  cpiCapturedMinor: number;
+  cpiRefundedMinor: number;
+}
+
+export interface CommerceAmountComponentSummary {
+  cacEnvironment?: string;
+  cacComponentType: string;
+  cacSource: string;
+  cacCurrency: string;
+  cacCount: number;
+  cacAmountMinor: number;
+}
+
+export interface CommerceCommissionSummary {
+  ccmProvider: string;
+  ccmEnvironment: string;
+  ccmCurrency: string;
+  ccmCount: number;
+  ccmBasisAmountMinor: number;
+  ccmCommissionMinor: number;
+  ccmProviderFeeMinor: number;
+  ccmTaxMinor: number;
+  ccmSellerNetMinor: number;
+}
+
+export interface CommerceRefundSummary {
+  crfProvider: string;
+  crfEnvironment: string;
+  crfStatus: string;
+  crfCurrency: string;
+  crfCount: number;
+  crfAmountMinor: number;
+}
+
+export interface CommerceDisputeSummary {
+  cdsProvider: string;
+  cdsEnvironment: string;
+  cdsKind: string;
+  cdsStatus: string;
+  cdsCurrency: string;
+  cdsCount: number;
+  cdsAmountMinor: number;
+}
+
+export interface CommerceReconciliationSummary {
+  crsProvider: string;
+  crsEnvironment: string;
+  crsStatus: string;
+  crsCurrency?: string | null;
+  crsCount: number;
+  crsExpectedMinor: number;
+  crsActualMinor: number;
+}
+
+export interface CommerceSettlementSummary {
+  cssProvider: string;
+  cssEnvironment: string;
+  cssStatus: string;
+  cssCurrency: string;
+  cssCount: number;
+  cssGrossMinor: number;
+  cssFeeMinor: number;
+  cssWithholdingMinor: number;
+  cssRefundMinor: number;
+  cssChargebackMinor: number;
+  cssNetMinor: number;
+}
+
+export interface CommerceSellerBalanceSummary {
+  csbProvider: string;
+  csbEnvironment: string;
+  csbAvailability: string;
+  csbCurrency: string;
+  csbEntryCount: number;
+  csbNetAmountMinor: number;
+}
+
+export interface CommercePayoutSummary {
+  cpsProvider: string;
+  cpsEnvironment: string;
+  cpsStatus: string;
+  cpsCurrency: string;
+  cpsCount: number;
+  cpsAmountMinor: number;
+}
+
+export interface CommercePaymentOverview {
+  cpoGeneratedAt: string;
+  cpoProviderAccounts: CommerceProviderAccount[];
+  cpoPaymentIntents: CommercePaymentIntentSummary[];
+  cpoAmountComponents: CommerceAmountComponentSummary[];
+  cpoCommissions: CommerceCommissionSummary[];
+  cpoRefunds: CommerceRefundSummary[];
+  cpoDisputes: CommerceDisputeSummary[];
+  cpoReconciliationExceptions: CommerceReconciliationSummary[];
+  cpoSettlements: CommerceSettlementSummary[];
+  cpoSellerBalances: CommerceSellerBalanceSummary[];
+  cpoPayouts: CommercePayoutSummary[];
+}
+
 export const CommerceOperations = {
+  listReconciliationExceptions: (params: CommerceReconciliationFilters = {}) => {
+    const query = new URLSearchParams();
+    query.set('environment', params.environment ?? 'sandbox');
+    if (params.status !== undefined) query.set('status', params.status);
+    if (params.checkoutId !== undefined) query.set('checkoutId', params.checkoutId);
+    if (params.limit !== undefined) query.set('limit', String(params.limit));
+    if (params.offset !== undefined) query.set('offset', String(params.offset));
+    return get<CommerceReconciliationReport>(`/admin/commerce/reconciliation-exceptions?${query.toString()}`);
+  },
+  listProviderQueries: (params: CommerceProviderQueryFilters = {}) => {
+    const query = new URLSearchParams();
+    query.set('environment', params.environment ?? 'sandbox');
+    if (params.status) query.set('status', params.status);
+    if (params.limit !== undefined) query.set('limit', String(params.limit));
+    if (params.offset !== undefined) query.set('offset', String(params.offset));
+    return get<CommerceProviderQueries>(`/admin/commerce/provider-queries?${query.toString()}`);
+  },
+  getPaymentOverview: () => get<CommercePaymentOverview>('/admin/commerce/overview'),
+
   listProviderEvents: (params?: {
     status?: CommerceProviderEventStatus;
     limit?: number;

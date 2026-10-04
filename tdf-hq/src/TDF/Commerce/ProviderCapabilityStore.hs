@@ -28,7 +28,7 @@ loadProviderActivations
 loadProviderActivations environment = do
   accountRows <- (rawSql
     "SELECT account.provider, account.enabled, account.credential_status,\
-    \ account.contract_status, COALESCE(flag.enabled, FALSE)\
+    \ account.contract_status, COALESCE(flag.enabled, FALSE), account.merchant_account_ref\
     \ FROM commerce_provider_account account\
     \ LEFT JOIN revenue_feature_flag flag\
     \   ON flag.flag_key = account.feature_flag_key\
@@ -37,7 +37,7 @@ loadProviderActivations environment = do
     \ ORDER BY account.provider"
     [PersistText (checkoutEnvironmentText environment)]
     :: SqlPersistT IO
-        [(Single Text, Single Bool, Single Text, Single Text, Single Bool)])
+        [(Single Text, Single Bool, Single Text, Single Text, Single Bool, Single (Maybe Text))])
   capabilityRows <- (rawSql
     "SELECT account.provider, capability.payment_method, capability.capability\
     \ FROM commerce_provider_account account\
@@ -55,6 +55,7 @@ loadProviderActivations environment = do
   pure
     [ ProviderActivation
         { paProvider = provider
+        , paMerchantRef = merchantRef
         , paEnvironment = environment
         , paFeatureEnabled = enabled && (environment == CheckoutSandbox || featureEnabled)
         , paCredentialsValidated = credentialStatus == "validated"
@@ -68,6 +69,7 @@ loadProviderActivations environment = do
       , Single credentialStatus
       , Single contractStatus
       , Single featureEnabled
+      , Single merchantRef
       ) <- accountRows
     , Just provider <- [parseProvider providerText]
     ]

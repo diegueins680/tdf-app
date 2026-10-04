@@ -12,6 +12,7 @@ module TDF.Commerce.ProviderEventStore
   , ProviderEventReplayError(..)
   , parseProviderEventReference
   , storeVerifiedProviderEvent
+  , storeUntrustedProviderEvent
   , listProviderEvents
   , listDueProviderEventReferences
   , providerEventStaleBefore
@@ -23,14 +24,22 @@ module TDF.Commerce.ProviderEventStore
   , markProviderEventRetry
   , markProviderEventDeadLetter
   , validateProviderEventTimestamp
+  , minimizeProviderEventPayload
+  , placeToPayNotificationEventId
   ) where
 
+import           Control.Applicative ((<|>))
+import           Control.Monad (unless)
 import           Control.Monad.IO.Class (liftIO)
 import           Crypto.Hash (Digest, SHA256, hash)
-import           Data.Aeson (FromJSON, eitherDecodeStrict')
+import           Data.Aeson (FromJSON, Value(..), eitherDecodeStrict', (.:), (.:?), (.=))
+import qualified Data.Aeson as A
+import qualified Data.Aeson.KeyMap as KM
+import           Data.Aeson.Types (Parser, parseEither)
 import qualified Data.ByteArray.Encoding as BAE
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -44,7 +53,7 @@ import           GHC.Generics (Generic)
 
 import           TDF.Commerce.CheckoutStore
   ( CheckoutEnvironment
-  , PaymentProvider
+  , PaymentProvider(..)
   , checkoutEnvironmentText
   , paymentProviderText
   )
@@ -83,6 +92,7 @@ data ProviderEventRecord = ProviderEventRecord
   , perEnvironment         :: Text
   , perProviderEventId     :: Text
   , perEventType           :: Text
+  , perEvidenceType        :: Text
   , perProviderResourceId  :: Maybe Text
   , perStatus              :: Text
   , perAttemptCount        :: Int
@@ -107,10 +117,16 @@ data ProviderEventPayload = ProviderEventPayload
   , pepMerchantRef        :: Text
   , pepProviderEventId    :: Text
   , pepEventType          :: Text
+  , pepEvidenceType       :: Text
+  , pepSignatureVerified  :: Bool
   , pepProviderCreatedAt  :: Maybe UTCTime
   , pepProviderResourceId :: Maybe Text
   , pepRawPayload         :: ByteString
-  } deriving (Eq, Show)
+  } deriving (Eq)
+
+-- Never let an incidental debug/show call reveal a decrypted historical body.
+instance Show ProviderEventPayload where
+  show _ = "ProviderEventPayload {payload = <redacted>}"
 
 data ProviderEventPayloadMetadata = ProviderEventPayloadMetadata
   { ppmId                  :: Text
@@ -119,6 +135,8 @@ data ProviderEventPayloadMetadata = ProviderEventPayloadMetadata
   , ppmMerchantRef         :: Text
   , ppmProviderEventId     :: Text
   , ppmEventType           :: Text
+  , ppmEvidenceType        :: Text
+  , ppmSignatureVerified   :: Bool
   , ppmProviderCreatedAt   :: Maybe UTCTime
   , ppmProviderResourceId  :: Maybe Text
   , ppmPayloadSha256       :: Text
@@ -140,7 +158,25 @@ parseProviderEventReference rawReference =
 storeVerifiedProviderEvent
   :: ProviderEventCreation
   -> SqlPersistT IO (Either Text ProviderEventStored)
-storeVerifiedProviderEvent ProviderEventCreation{..}
+storeVerifiedProviderEvent = storeProviderEvent "signature_verified" True
+
+-- | Persist a callback that has no provider-authentication mechanism. It is a
+-- query trigger only: the worker must obtain authoritative status through the
+-- provider's authenticated server-to-server API before changing payment or
+-- fulfillment state.
+storeUntrustedProviderEvent
+  :: ProviderEventCreation
+  -> SqlPersistT IO (Either Text ProviderEventStored)
+storeUntrustedProviderEvent = storeProviderEvent "untrusted_callback" False
+
+storeProviderEvent
+  :: Text
+  -> Bool
+  -> ProviderEventCreation
+  -> SqlPersistT IO (Either Text ProviderEventStored)
+storeProviderEvent evidenceType signatureVerified creation@ProviderEventCreation{..}
+  | pecProvider == ProviderPlaceToPay && not signatureVerified =
+      pure (Left "PlaceToPay notifications require signature-verified evidence")
   | not (validEncryptionKey pecEncryptionKey) =
       pure (Left "Provider event encryption key must contain 32 to 256 safe characters")
   | not (validReference 128 pecProviderEventId) =
@@ -153,15 +189,49 @@ storeVerifiedProviderEvent ProviderEventCreation{..}
       pure (Left "Provider event resource ID is invalid")
   | BS.null pecRawPayload || BS.length pecRawPayload > maxProviderEventBytes =
       pure (Left "Provider event payload must contain 1 to 1048576 bytes")
-  | otherwise = do
+  | otherwise = case minimizeProviderEventPayload pecProvider pecRawPayload of
+    Left problem -> pure (Left problem)
+    Right retainedPayload
+      | pecProvider == ProviderPlaceToPay && signatureVerified -> do
+          -- PlaceToPay has no native event ID. A raw-body digest permits replay
+          -- amplification through unsigned fields, whitespace and hex casing.
+          -- Enforce the signed identity here, not only at the HTTP caller.
+          case placeToPayNotificationEventId pecRawPayload of
+            Left problem -> pure (Left problem)
+            Right canonicalId -> do
+              let legacyId = "ptp-" <> sha256Hex pecRawPayload
+              historical <- (rawSql
+                "SELECT id::text FROM commerce_provider_event_inbox\
+                \ WHERE provider = 'placetopay' AND environment = ?\
+                \ AND merchant_account_ref = ? AND provider_event_id = ?"
+                [ PersistText (checkoutEnvironmentText pecEnvironment)
+                , PersistText pecMerchantRef, PersistText legacyId
+                ] :: SqlPersistT IO [Single Text])
+              -- Exact historical redelivery keeps the old immutable reference.
+              -- This deliberately does not search/decrypt/rewrite old payloads.
+              -- A reformatted old delivery can create one new canonical row.
+              let selectedId = if null historical then canonicalId else legacyId
+              persistProviderEvent evidenceType signatureVerified
+                creation { pecProviderEventId = selectedId } retainedPayload
+      | otherwise -> persistProviderEvent evidenceType signatureVerified creation retainedPayload
+
+persistProviderEvent
+  :: Text -> Bool -> ProviderEventCreation -> ByteString
+  -> SqlPersistT IO (Either Text ProviderEventStored)
+persistProviderEvent evidenceType signatureVerified ProviderEventCreation{..} retainedPayload = do
       eventId <- liftIO (toText <$> nextRandom)
-      let payloadHash = sha256Hex pecRawPayload
+      let payloadHash = sha256Hex retainedPayload
+          legacyPayloadHash = sha256Hex pecRawPayload
+          -- Pre-v2 minimization retained the original signature hex casing.
+          -- Only a validated original-body projection can authorize that hash.
+          legacyProjectionHash = either (const payloadHash) sha256Hex
+            (projectProviderEventPayload pecProvider pecRawPayload)
       inserted <- (rawSql
         "INSERT INTO commerce_provider_event_inbox (\
         \ id, provider, environment, merchant_account_ref, provider_event_id,\
-        \ event_type, signature_verified, received_at, provider_created_at,\
+        \ event_type, signature_verified, evidence_type, received_at, provider_created_at,\
         \ provider_resource_id, payload_ciphertext, payload_sha256, processing_status\
-        \) VALUES (?::uuid, ?, ?, ?, ?, ?, TRUE, ?, ?, ?,\
+        \) VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,\
         \ pgp_sym_encrypt_bytea(?::bytea, ?, 'cipher-algo=aes256,compress-algo=1'),\
         \ ?, 'pending')\
         \ ON CONFLICT (provider, environment, merchant_account_ref, provider_event_id)\
@@ -172,10 +242,12 @@ storeVerifiedProviderEvent ProviderEventCreation{..}
         , PersistText pecMerchantRef
         , PersistText pecProviderEventId
         , PersistText pecEventType
+        , PersistBool signatureVerified
+        , PersistText evidenceType
         , PersistUTCTime pecReceivedAt
         , maybe PersistNull PersistUTCTime pecProviderCreatedAt
         , maybe PersistNull PersistText pecProviderResource
-        , PersistByteString pecRawPayload
+        , PersistByteString retainedPayload
         , PersistText pecEncryptionKey
         , PersistText payloadHash
         ] :: SqlPersistT IO [Single Text])
@@ -187,21 +259,169 @@ storeVerifiedProviderEvent ProviderEventCreation{..}
             "SELECT id::text FROM commerce_provider_event_inbox\
             \ WHERE provider = ? AND environment = ? AND merchant_account_ref = ?\
             \ AND provider_event_id = ? AND event_type = ?\
-            \ AND signature_verified = TRUE AND payload_sha256 = ?\
-            \ AND provider_resource_id IS NOT DISTINCT FROM ?"
+            \ AND signature_verified = ? AND evidence_type = ?\
+            \ AND (payload_sha256 = ? OR payload_sha256 = ? OR payload_sha256 = ?)\
+            \ AND provider_resource_id IS NOT DISTINCT FROM ?\
+            \ AND provider_created_at IS NOT DISTINCT FROM ?"
             [ PersistText (paymentProviderText pecProvider)
             , PersistText (checkoutEnvironmentText pecEnvironment)
             , PersistText pecMerchantRef
             , PersistText pecProviderEventId
             , PersistText pecEventType
+            , PersistBool signatureVerified
+            , PersistText evidenceType
             , PersistText payloadHash
+            -- Exact redelivery of a pre-minimization event must still find its
+            -- original row. Never rewrite that row or relax immutable metadata.
+            , PersistText legacyPayloadHash
+            , PersistText legacyProjectionHash
             , maybe PersistNull PersistText pecProviderResource
+            , maybe PersistNull PersistUTCTime pecProviderCreatedAt
             ] :: SqlPersistT IO [Single Text])
           case existing of
             [Single existingId] ->
               pure (Right (ProviderEventStored (ProviderEventReference existingId) False))
             _ -> pure (Left "Provider event ID conflicts with different immutable evidence")
         _ -> pure (Left "Provider event insert returned an ambiguous result")
+
+-- | Authentication always happens against the original body upstream. Only
+-- fields used by the current worker may cross the SQL/encryption boundary.
+-- Unrecognized card/customer/address/description/URL containers are discarded.
+-- Existing inbox rows are intentionally not rewritten by this function.
+minimizeProviderEventPayload :: PaymentProvider -> ByteString -> Either Text ByteString
+minimizeProviderEventPayload provider rawPayload = do
+  projected <- projectProviderEventPayload provider rawPayload
+  if provider == ProviderPlaceToPay
+    then do
+      value <- either (const (Left "Invalid retained notification")) Right (eitherDecodeStrict' projected)
+      case value of
+        Object fields -> case KM.lookup "signature" fields of
+          Just (String signature) -> pure $ BL.toStrict $ A.encode $
+            Object (KM.insert "signature" (String (T.toLower signature)) fields)
+          _ -> Left "Invalid retained notification"
+        _ -> Left "Invalid retained notification"
+    else pure projected
+
+-- Versioned, unambiguous JSON-array encoding, independent of object ordering
+-- and unsigned fields. This is an identity function, NOT signature verification:
+-- callers must authenticate the original body before persisting evidence.
+placeToPayNotificationEventId :: ByteString -> Either Text Text
+placeToPayNotificationEventId rawPayload = do
+  retained <- minimizeProviderEventPayload ProviderPlaceToPay rawPayload
+  value <- either (const (Left invalidIdentity)) Right (eitherDecodeStrict' retained)
+  identity <- either (const (Left invalidIdentity)) Right $ parseEither
+    (A.withObject "PlaceToPay identity" $ \fields -> do
+      requestId <- fields .: "requestId" :: Parser Int64
+      statusValue <- fields .: "status"
+      (status, date) <- A.withObject "PlaceToPay identity status"
+        (\statusFields -> (,) <$> statusFields .: "status" <*> statusFields .: "date") statusValue
+        :: Parser (Text, Text)
+      signature <- fields .: "signature" :: Parser Text
+      pure (A.toJSON ("tdf:placetopay:notification:v2" :: Text, requestId, status, date, signature))) value
+  pure ("ptp-v2-" <> sha256Hex (BL.toStrict (A.encode identity)))
+  where invalidIdentity = "PlaceToPay notification identity is invalid"
+
+projectProviderEventPayload :: PaymentProvider -> ByteString -> Either Text ByteString
+projectProviderEventPayload provider rawPayload = do
+  unless (not (BS.null rawPayload) && BS.length rawPayload <= maxProviderEventBytes) $
+    Left "Provider event payload size is invalid"
+  value <- either (const (Left invalidPayload)) Right (eitherDecodeStrict' rawPayload)
+  projected <- either (const (Left invalidPayload)) Right $ parseEither parser value
+  pure (BL.toStrict (A.encode projected))
+  where
+    invalidPayload = "Provider event payload does not match the retained evidence schema"
+    parser = case provider of
+      ProviderPayPal -> paypalEvidence
+      ProviderPlaceToPay -> placeToPayEvidence
+      ProviderPayPhone -> payPhoneEvidence
+      _ -> const (fail "Unsupported provider inbox schema")
+
+paypalEvidence :: Value -> Parser Value
+paypalEvidence = A.withObject "PayPal evidence" $ \envelope -> do
+  eventId <- envelope .: "id" >>= safeEvidenceText 128
+  eventType <- envelope .: "event_type" >>= safeEvidenceText 100
+  unless (validReference 128 eventId && validEventType eventType) (fail "Invalid identity")
+  createdAt <- envelope .: "create_time" >>= evidenceTimestamp
+  resource <- envelope .: "resource"
+  retainedResource <- case resource of
+    Object fields -> do
+      identifier <- optionalEvidenceText fields "id" 128
+      if eventType `elem`
+          ["PAYMENT.CAPTURE.COMPLETED", "PAYMENT.CAPTURE.REFUNDED", "PAYMENT.CAPTURE.REVERSED"]
+        then do
+          status <- optionalEvidenceText fields "status" 32
+          amount <- optionalEvidenceObject fields "amount" $ \amountFields -> do
+            value <- optionalEvidenceText amountFields "value" 32
+            currency <- optionalEvidenceText amountFields "currency_code" 3
+            pure (value <> currency)
+          payee <- optionalEvidenceObject fields "payee" $ \payeeFields ->
+            optionalEvidenceText payeeFields "merchant_id" 128
+          supplementary <- optionalEvidenceObject fields "supplementary_data" $ \extra ->
+            optionalEvidenceObject extra "related_ids" $ \related ->
+              optionalEvidenceText related "order_id" 128
+          pure (Object (identifier <> status <> amount <> payee <> supplementary))
+        else pure (Object identifier)
+    _ -> pure (Object KM.empty) -- Unsupported event resources are never interpreted.
+  pure $ A.object
+    [ "id" .= eventId, "event_type" .= eventType, "create_time" .= createdAt
+    , "resource" .= retainedResource ]
+
+placeToPayEvidence :: Value -> Parser Value
+placeToPayEvidence = A.withObject "PlaceToPay evidence" $ \envelope -> do
+  requestId <- envelope .: "requestId" :: Parser Int64
+  unless (requestId > 0) (fail "Invalid request ID")
+  statusValue <- envelope .: "status"
+  (status, date) <- A.withObject "PlaceToPay status" (\fields -> do
+    status <- fields .: "status" >>= safeEvidenceText 32
+    date <- fields .: "date" >>= evidenceTimestamp
+    pure (status, date)) statusValue
+  signature <- envelope .: "signature" >>= safeEvidenceText 71
+  unless (T.length signature == 71 && "sha256:" `T.isPrefixOf` T.toLower signature
+      && T.all (`elem` ("0123456789abcdef" :: String)) (T.toLower (T.drop 7 signature))) $
+    fail "Invalid signature format"
+  pure $ A.object
+    [ "requestId" .= requestId, "signature" .= signature
+    , "status" .= A.object ["status" .= status, "date" .= date] ]
+
+payPhoneEvidence :: Value -> Parser Value
+payPhoneEvidence = A.withObject "PayPhone evidence" $ \envelope -> do
+  transactionId <- (envelope .: "TransactionId" <|> envelope .: "id") :: Parser Int64
+  reference <- (envelope .: "ClientTransactionId" <|> envelope .: "clientTransactionID")
+    >>= safeEvidenceText 128
+  unless (transactionId > 0 && validReference 128 reference) (fail "Invalid binding")
+  store <- optionalEvidenceText envelope "StoreId" 128
+  -- Callback status is untrusted and unused: only the bound IDs trigger a query.
+  pure $ Object (KM.fromList
+    [ ("TransactionId", A.toJSON transactionId), ("ClientTransactionId", String reference) ]
+    <> store)
+
+safeEvidenceText :: Int -> Text -> Parser Text
+safeEvidenceText maxLength value = do
+  unless (not (T.null value) && T.length value <= maxLength
+      && T.all (\character -> character >= ' ' && character <= '~') value) $
+    fail "Invalid evidence text"
+  pure value
+
+evidenceTimestamp :: Text -> Parser Text
+evidenceTimestamp value = do
+  retained <- safeEvidenceText 64 value
+  _ <- A.parseJSON (String (T.strip retained)) :: Parser UTCTime
+  pure retained
+
+optionalEvidenceText :: A.Object -> A.Key -> Int -> Parser A.Object
+optionalEvidenceText fields key limit = do
+  value <- fields .:? key
+  case value of
+    Nothing -> pure KM.empty
+    Just textValue -> KM.singleton key . String <$> safeEvidenceText limit textValue
+
+optionalEvidenceObject
+  :: A.Object -> A.Key -> (A.Object -> Parser A.Object) -> Parser A.Object
+optionalEvidenceObject fields key project = do
+  value <- fields .:? key
+  case value of
+    Nothing -> pure KM.empty
+    Just objectValue -> KM.singleton key . Object <$> A.withObject "Evidence" project objectValue
 
 listProviderEvents
   :: Maybe Text
@@ -228,7 +448,8 @@ listDueProviderEventReferences now requestedLimit = do
   let staleBefore = providerEventStaleBefore now
   rows <- rawSql
     "SELECT event.id::text FROM commerce_provider_event_inbox event\
-    \ WHERE event.signature_verified = TRUE\
+    \ WHERE (event.signature_verified = TRUE\
+    \   OR event.evidence_type = 'untrusted_callback')\
     \ AND EXISTS (SELECT 1 FROM revenue_feature_flag flag\
     \   WHERE flag.flag_key = 'checkout.provider_event_worker'\
     \   AND flag.environment = event.environment AND flag.enabled)\
@@ -262,12 +483,14 @@ loadProviderEventPayload eventRef encryptionKey
         \ 'ppmId', id::text, 'ppmProvider', provider, 'ppmEnvironment', environment,\
         \ 'ppmMerchantRef', merchant_account_ref,\
         \ 'ppmProviderEventId', provider_event_id, 'ppmEventType', event_type,\
+        \ 'ppmEvidenceType', evidence_type,\
+        \ 'ppmSignatureVerified', signature_verified,\
         \ 'ppmProviderCreatedAt', provider_created_at,\
         \ 'ppmProviderResourceId', provider_resource_id,\
         \ 'ppmPayloadSha256', payload_sha256)::text,\
         \ pgp_sym_decrypt_bytea(payload_ciphertext, ?)\
         \ FROM commerce_provider_event_inbox\
-        \ WHERE id = ?::uuid AND signature_verified = TRUE\
+        \ WHERE id = ?::uuid\
         \ AND processing_status = 'processing'"
         [ PersistText encryptionKey
         , PersistText (providerEventReferenceId eventRef)
@@ -285,6 +508,8 @@ loadProviderEventPayload eventRef encryptionKey
               , pepMerchantRef = ppmMerchantRef metadata
               , pepProviderEventId = ppmProviderEventId metadata
               , pepEventType = ppmEventType metadata
+              , pepEvidenceType = ppmEvidenceType metadata
+              , pepSignatureVerified = ppmSignatureVerified metadata
               , pepProviderCreatedAt = ppmProviderCreatedAt metadata
               , pepProviderResourceId = ppmProviderResourceId metadata
               , pepRawPayload = rawPayload
@@ -514,6 +739,7 @@ providerEventRecordSelect =
   "SELECT jsonb_build_object(\
   \ 'perId', id::text, 'perProvider', provider, 'perEnvironment', environment,\
   \ 'perProviderEventId', provider_event_id, 'perEventType', event_type,\
+  \ 'perEvidenceType', evidence_type,\
   \ 'perProviderResourceId', provider_resource_id, 'perStatus', processing_status,\
   \ 'perAttemptCount', attempt_count, 'perCheckoutId', checkout_id::text,\
   \ 'perPaymentAttemptId', payment_attempt_id::text, 'perRefundId', refund_id::text,\

@@ -29,7 +29,7 @@ import qualified Data.UUID as UUID
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Word (Word8)
-import Database.Persist (Entity (..), Key, insert, insert_, insertKey, selectList)
+import Database.Persist (Entity (..), Key, PersistValue (..), insert, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import qualified Network.HTTP.Client as HTTP
@@ -60,6 +60,7 @@ import TDF.API.Feedback
 import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
+import qualified TDF.API.CommerceOperations as CommerceOperationsAPI
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.API.Inventory as Inventory
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
@@ -136,6 +137,9 @@ import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.ProviderCapabilities as ProviderCapabilities
+import qualified TDF.Commerce.ProviderExecutionStore as ProviderExecutionStore
+import qualified TDF.Commerce.ProviderRetrySpec as ProviderRetrySpec
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntimeStore
 import qualified TDF.Commerce.ProviderAdapter as ProviderAdapter
 import qualified TDF.Commerce.ProviderAdapter.Http as ProviderAdapterHttp
 import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhoneAdapter
@@ -152,15 +156,19 @@ import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink, passwordResetLinkWithLocale, passwordResetEmailContent)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Services.RecordsIngestionSpec as RecordsIngestion
 import qualified TDF.Services.YouTubeSpec as YouTubeSpec
 import qualified TDF.EventOperations.TypesSpec as EventOperationsTypesSpec
 import qualified TDF.EventOperations.DatabaseBoundarySpec as EventOperationsDatabaseBoundarySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
+import qualified TDF.Server.PaymentAvailability as PaymentAvailabilityServer
+import qualified TDF.Server.ProviderExecution as ProviderExecutionServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
+import qualified TDF.Server.PaymentAuditSpec as PaymentAuditSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -1001,6 +1009,7 @@ main = hspec $ do
             Merch.validateCheckoutText "recipient.name" 80 "Paola\nAdmin" `shouldSatisfy` isLeft
 
     MerchRuntimeSpec.spec
+    PaymentAuditSpec.spec
 
     describe "contextual reputation formula v1" $ do
         it "uses deterministic ROC weights that total exactly 100" $ do
@@ -1196,6 +1205,7 @@ main = hspec $ do
                   , CheckoutStore.vpProviderResource = "evidence-1"
                   , CheckoutStore.vpProviderResourcePath = Nothing
                   , CheckoutStore.vpOrderReference = "booking-1"
+                  , CheckoutStore.vpProviderReference = "booking-1"
                   , CheckoutStore.vpAmountMinor = 5000
                   , CheckoutStore.vpCurrency = "USD"
                   , CheckoutStore.vpEvidence = "staff_verified_manual"
@@ -1351,6 +1361,8 @@ main = hspec $ do
                   , ProviderEventStore.pepMerchantRef = "MERCHANT-RETRY"
                   , ProviderEventStore.pepProviderEventId = "WH-RETRY-1"
                   , ProviderEventStore.pepEventType = "PAYMENT.CAPTURE.COMPLETED"
+                  , ProviderEventStore.pepEvidenceType = "signature_verified"
+                  , ProviderEventStore.pepSignatureVerified = True
                   , ProviderEventStore.pepProviderCreatedAt = Just createdAt
                   , ProviderEventStore.pepProviderResourceId = Just "CAPTURE-RETRY-1"
                   , ProviderEventStore.pepRawPayload = rawEvent
@@ -2109,9 +2121,94 @@ main = hspec $ do
             Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
               `shouldBe` False
 
+    describe "manual transfer instruction scope" $ do
+        it "does not use merch-only instructions to qualify other product flows" $
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Nothing),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic merch instructions")] $ do
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowMerchandise
+                  `shouldReturn` True
+                mapM PaymentAvailability.manualTransferInstructionsConfigured
+                  [ ProviderCapabilities.FlowBooking, ProviderCapabilities.FlowProfessionalService
+                  , ProviderCapabilities.FlowCourse, ProviderCapabilities.FlowEventTicket
+                  , ProviderCapabilities.FlowDigitalProduct, ProviderCapabilities.FlowSubscription
+                  , ProviderCapabilities.FlowMarketplace ] `shouldReturn` replicate 7 False
+        it "allows generic instructions and rejects empty configuration" $ do
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic generic instructions"),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Nothing)] $
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowBooking
+                  `shouldReturn` True
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "  "),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Just "  ")] $
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowMerchandise
+                  `shouldReturn` False
+
+    describe "operator payment intent summaries" $ do
+        it "runs the real overview query without mixing environments and aggregates within each environment" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                summaries <- runSqlPool (do
+                    rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY, environment TEXT NOT NULL)" []
+                    rawExecute "CREATE TABLE commerce_payment_intent (checkout_id TEXT, status TEXT, currency TEXT, amount_minor BIGINT, authorized_minor BIGINT, captured_minor BIGINT, refunded_minor BIGINT)" []
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('sandbox-one','sandbox'),('sandbox-two','sandbox'),('production-one','production')" []
+                    rawExecute "INSERT INTO commerce_payment_intent VALUES ('sandbox-one','captured','USD',5000,5000,5000,500),('sandbox-two','captured','USD',2000,2000,2000,0),('production-one','captured','USD',9000,9000,9000,100)" []
+                    CommerceOperationsServer.loadPaymentIntentSummaries) pool
+                map (\summary ->
+                    ( CommerceOperationsAPI.cpiEnvironment summary
+                    , CommerceOperationsAPI.cpiStatus summary
+                    , CommerceOperationsAPI.cpiCurrency summary
+                    , CommerceOperationsAPI.cpiCount summary
+                    , CommerceOperationsAPI.cpiAmountMinor summary
+                    , CommerceOperationsAPI.cpiAuthorizedMinor summary
+                    , CommerceOperationsAPI.cpiCapturedMinor summary
+                    , CommerceOperationsAPI.cpiRefundedMinor summary
+                    )) summaries `shouldBe`
+                      [ ("production", "captured", "USD", 1, 9000, 9000, 9000, 100)
+                      , ("sandbox", "captured", "USD", 2, 7000, 7000, 7000, 500)
+                      ]
+
+        it "aggregates amount components only within the checkout environment" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                summaries <- runSqlPool (do
+                    rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY, environment TEXT NOT NULL)" []
+                    rawExecute "CREATE TABLE commerce_payment_intent (id TEXT PRIMARY KEY, checkout_id TEXT)" []
+                    rawExecute "CREATE TABLE commerce_payment_amount_component (payment_intent_id TEXT, component_type TEXT, source TEXT, currency TEXT, amount_minor BIGINT)" []
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('s','sandbox'),('p','production')" []
+                    rawExecute "INSERT INTO commerce_payment_intent VALUES ('si','s'),('pi','p')" []
+                    rawExecute "INSERT INTO commerce_payment_amount_component VALUES ('si','tax','tax_document','USD',100),('si','tax','tax_document','USD',200),('pi','tax','tax_document','USD',900)" []
+                    CommerceOperationsServer.loadAmountComponentSummaries) pool
+                summaries `shouldBe`
+                    [ CommerceOperationsAPI.CommerceAmountComponentSummaryDTO "production" "tax" "tax_document" "USD" 1 900
+                    , CommerceOperationsAPI.CommerceAmountComponentSummaryDTO "sandbox" "tax" "tax_document" "USD" 2 300
+                    ]
+
+    describe "manual transfer runtime configuration" $ do
+        it "uses merchandise instructions only for merchandise and general instructions for all flows" $
+            forM_ [minBound .. maxBound] $ \flow -> do
+                PaymentAvailability.bankTransferInstructionsReady flow False True
+                    `shouldBe` (flow == ProviderCapabilities.FlowMerchandise)
+                PaymentAvailability.bankTransferInstructionsReady flow True False `shouldBe` True
+                PaymentAvailability.bankTransferInstructionsReady flow False False `shouldBe` False
+
+    describe "marketplace contact checkout boundary" $ do
+        it "retains checkout preparation without selecting a payment rail or changing payment state" $ do
+            source <- readFile "src/TDF/Server.hs"
+            let handler = unlines . takeWhile (/= "prepareMarketplaceSaleCheckout")
+                        . dropWhile (/= "checkoutCart rawId mIdempotency payload = do")
+                        $ lines source
+            handler `shouldContain` "prepareMarketplaceSaleCheckout \"contact\""
+            handler `shouldContain` "loadMarketplaceOrderWithLookup context"
+            handler `shouldContain` "when (msccCreated context)"
+            handler `shouldNotContain` "beginPaymentAttempt"
+            handler `shouldNotContain` "recordManualPaymentSelection"
+            handler `shouldNotContain` "MarketplaceOrderPaymentProvider"
+            handler `shouldNotContain` "MarketplaceOrderStatus"
+
     describe "provider-neutral payment routing" $ do
         let active provider = ProviderCapabilities.ProviderActivation
               { ProviderCapabilities.paProvider = provider
+              , ProviderCapabilities.paMerchantRef = Just "merchant-test"
               , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
               , ProviderCapabilities.paFeatureEnabled = True
               , ProviderCapabilities.paCredentialsValidated = True
@@ -2148,6 +2245,28 @@ main = hspec $ do
               , CheckoutStore.ProviderPlaceToPay
               ]
 
+        it "uses exact public labels for each executable provider-method pair" $ do
+            let label provider method = PaymentAvailabilityServer.publicPaymentRouteLabel
+                  ProviderCapabilities.PaymentRoute
+                    { ProviderCapabilities.routeProvider = provider
+                    , ProviderCapabilities.routeMethod = method
+                    , ProviderCapabilities.routeCapabilities =
+                        [ProviderCapabilities.CapabilityOneTime]
+                    , ProviderCapabilities.routePriority = 10
+                    }
+            label CheckoutStore.ProviderDatafast ProviderCapabilities.MethodCard
+              `shouldBe` Just "datafast"
+            label CheckoutStore.ProviderPlaceToPay ProviderCapabilities.MethodCard
+              `shouldBe` Just "placetopay_card"
+            label CheckoutStore.ProviderPlaceToPay ProviderCapabilities.MethodBankRedirect
+              `shouldBe` Just "placetopay_bank_redirect"
+            label CheckoutStore.ProviderPlaceToPay ProviderCapabilities.MethodDeunaQr
+              `shouldBe` Just "placetopay_deuna_qr"
+            label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodPayPhoneWallet
+              `shouldBe` Just "payphone_wallet"
+            label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodCard
+              `shouldBe` Nothing
+
         it "does not route a documented capability until every runtime gate is true" $ do
             let disabled = (active CheckoutStore.ProviderPlaceToPay)
                   { ProviderCapabilities.paContractApproved = False }
@@ -2171,6 +2290,25 @@ main = hspec $ do
                       [ProviderCapabilities.CapabilityPartialRefund]
                   }
             ProviderCapabilities.routePayments [methodOnly] request `shouldBe` []
+
+        it "never routes a method that has no environment-specific verification evidence" $ do
+            let capabilityWithoutMethod = (active CheckoutStore.ProviderBankTransfer)
+                  { ProviderCapabilities.paVerifiedMethods = []
+                  , ProviderCapabilities.paVerifiedCapabilities =
+                      [ProviderCapabilities.CapabilityOneTime]
+                  , ProviderCapabilities.paVerifiedMethodCapabilities =
+                      [ ( ProviderCapabilities.MethodManualBankTransfer
+                        , ProviderCapabilities.CapabilityOneTime
+                        )
+                      ]
+                  }
+                request = cardRequest
+                  { ProviderCapabilities.prMethod =
+                      ProviderCapabilities.MethodManualBankTransfer
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowBooking
+                  }
+            ProviderCapabilities.routePayments [capabilityWithoutMethod] request
+              `shouldBe` []
 
         it "never combines a capability verified for one method with another method" $ do
             let mismatched = (active CheckoutStore.ProviderPlaceToPay)
@@ -2252,6 +2390,248 @@ main = hspec $ do
               `shouldBe` Right ProviderCapabilities.CapabilityPartialRefund
             PaymentCapabilitiesServer.parsePaymentMethod "crypto" `shouldSatisfy` isLeft
 
+        it "binds only unambiguous selected rails into legacy payment flows" $ do
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderDatafast
+              `shouldBe` Just ProviderCapabilities.MethodCard
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderPayPal
+              `shouldBe` Just ProviderCapabilities.MethodPayPalWallet
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderBankTransfer
+              `shouldBe` Just ProviderCapabilities.MethodManualBankTransfer
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderPlaceToPay
+              `shouldBe` Nothing
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderStripe
+              `shouldBe` Nothing
+
+        it "requires marketplace money movement capabilities at the attempt boundary" $ do
+            PaymentRuntimeStore.operationCapabilities
+              ProviderCapabilities.FlowMarketplace
+              CheckoutStore.OperationCreate
+              `shouldBe`
+                [ ProviderCapabilities.CapabilityOneTime
+                , ProviderCapabilities.CapabilityConnectedAccounts
+                , ProviderCapabilities.CapabilitySplitSettlement
+                , ProviderCapabilities.CapabilitySellerPayouts
+                ]
+            PaymentRuntimeStore.operationCapabilities
+              ProviderCapabilities.FlowBooking
+              CheckoutStore.OperationCapture
+              `shouldBe` [ProviderCapabilities.CapabilityCapture]
+
+        it "rejects creating or authorizing payments without verified completion capabilities" $ do
+            forM_
+              [ (CheckoutStore.ProviderDatafast, ProviderCapabilities.MethodCard, ProviderCapabilities.CapabilityServerVerification, [CheckoutStore.OperationCreate])
+              , (CheckoutStore.ProviderPayPal, ProviderCapabilities.MethodPayPalWallet, ProviderCapabilities.CapabilityCapture, [CheckoutStore.OperationCreate, CheckoutStore.OperationAuthorize])
+              ] $ \(provider, method, completion, operations) ->
+              forM_ operations $ \operation -> do
+                let verified = active provider
+                    incomplete = verified
+                      { ProviderCapabilities.paVerifiedMethodCapabilities =
+                          filter ((/= completion) . snd)
+                            (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                      }
+                    request = cardRequest
+                      { ProviderCapabilities.prMethod = method
+                      , ProviderCapabilities.prRequiredCapabilities =
+                          PaymentRuntimeStore.providerOperationCapabilities provider
+                            ProviderCapabilities.FlowBooking operation
+                      }
+                ProviderCapabilities.routePayments [incomplete] request `shouldBe` []
+                map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [verified] request) `shouldBe` [provider]
+
+        it "routes Datafast confirmation only with verified one-time and server capabilities" $ do
+            let request = cardRequest
+                  { ProviderCapabilities.prFlow = ProviderCapabilities.FlowProfessionalService
+                  , ProviderCapabilities.prRequiredCapabilities =
+                      PaymentRuntimeStore.providerOperationCapabilities
+                        CheckoutStore.ProviderDatafast
+                        ProviderCapabilities.FlowProfessionalService
+                        CheckoutStore.OperationCapture
+                  }
+                verified = active CheckoutStore.ProviderDatafast
+                without capability = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= capability) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+                routes activation = map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [activation] request)
+            routes verified `shouldBe` [CheckoutStore.ProviderDatafast]
+            routes (without ProviderCapabilities.CapabilityServerVerification) `shouldBe` []
+            routes (without ProviderCapabilities.CapabilityOneTime) `shouldBe` []
+            routes verified { ProviderCapabilities.paContractApproved = False } `shouldBe` []
+            ProviderCapabilities.routePayments [verified]
+              request { ProviderCapabilities.prEnvironment = CheckoutStore.CheckoutProduction }
+              `shouldBe` []
+            PaymentRuntimeStore.providerOperationCapabilities
+              CheckoutStore.ProviderPayPal ProviderCapabilities.FlowBooking
+              CheckoutStore.OperationCapture `shouldBe` [ProviderCapabilities.CapabilityCapture]
+
+        it "hides PayPal until capture is verified even when public callers omit capabilities" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prRequiredCapabilities = []
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                createOnly = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= ProviderCapabilities.CapabilityCapture) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            ProviderCapabilities.routePayments [createOnly] request `shouldBe` []
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [verified] request)
+              `shouldBe` [CheckoutStore.ProviderPayPal]
+
+        it "requires recurring and completion evidence for public subscription routes" $ do
+            forM_
+              [ (CheckoutStore.ProviderDatafast, ProviderCapabilities.MethodCard, ProviderCapabilities.CapabilityServerVerification)
+              , (CheckoutStore.ProviderPayPal, ProviderCapabilities.MethodPayPalWallet, ProviderCapabilities.CapabilityCapture)
+              ] $ \(provider, method, completion) -> do
+                let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                      { ProviderCapabilities.prFlow = ProviderCapabilities.FlowSubscription
+                      , ProviderCapabilities.prMethod = method
+                      , ProviderCapabilities.prRequiredCapabilities = []
+                      }
+                    verified = active provider
+                    without capability = verified
+                      { ProviderCapabilities.paVerifiedMethodCapabilities =
+                          filter ((/= capability) . snd)
+                            (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                      }
+                map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [verified] request) `shouldBe` [provider]
+                forM_ [ProviderCapabilities.CapabilityRecurring, completion, ProviderCapabilities.CapabilityOneTime] $ \capability ->
+                  ProviderCapabilities.routePayments [without capability] request `shouldBe` []
+
+        it "preserves caller and marketplace restrictions when qualifying complete checkout" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowMarketplace
+                  , ProviderCapabilities.prRequiredCapabilities =
+                      [ProviderCapabilities.CapabilityPartialRefund]
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                missing capability = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= capability) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [verified] request)
+              `shouldBe` [CheckoutStore.ProviderPayPal]
+            forM_
+              [ ProviderCapabilities.CapabilityPartialRefund
+              , ProviderCapabilities.CapabilityOneTime
+              , ProviderCapabilities.CapabilityCapture
+              , ProviderCapabilities.CapabilityConnectedAccounts
+              , ProviderCapabilities.CapabilitySplitSettlement
+              , ProviderCapabilities.CapabilitySellerPayouts
+              ] $ \capability ->
+                ProviderCapabilities.routePayments [missing capability] request `shouldBe` []
+
+        it "advertises manual bank transfer only for the settlement merchant used by checkout" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                flip runSqlPool pool $ do
+                    rawExecute "CREATE TABLE commerce_provider_account (id TEXT, provider TEXT, environment TEXT, enabled BOOLEAN, credential_status TEXT, contract_status TEXT, feature_flag_key TEXT, merchant_account_ref TEXT)" []
+                    rawExecute "CREATE TABLE commerce_provider_capability (provider_account_id TEXT, payment_method TEXT, capability TEXT, verification_status TEXT)" []
+                    rawExecute "CREATE TABLE revenue_feature_flag (flag_key TEXT, environment TEXT, enabled BOOLEAN)" []
+                    rawExecute "INSERT INTO commerce_provider_account VALUES ('b','bank_transfer','sandbox',1,'validated','approved','bank_transfer','wrong-merchant')" []
+                    rawExecute "INSERT INTO commerce_provider_capability VALUES ('b','manual_bank_transfer','one_time','sandbox_verified')" []
+                let routes = fmap (fmap (map ProviderCapabilities.routeProvider)) $
+                      runHandler $ runReaderT
+                        (PaymentAvailability.loadRuntimeReadyRoutes cardRequest
+                          { ProviderCapabilities.prMethod = ProviderCapabilities.MethodManualBankTransfer
+                          , ProviderCapabilities.prFlow = ProviderCapabilities.FlowBooking })
+                        (Env pool (error "Availability must not read unrelated application configuration"))
+                    setMerchant value = flip runSqlPool pool $
+                      rawExecute "UPDATE commerce_provider_account SET merchant_account_ref=?" [value]
+                withEnvOverrides [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic bank instructions")] $ do
+                    routes `shouldReturn` Right []
+                    setMerchant (PersistText "tdf-manual-settlement")
+                    routes `shouldReturn` Right [CheckoutStore.ProviderBankTransfer]
+                    setMerchant PersistNull
+                    routes `shouldReturn` Right []
+                    setMerchant (PersistText "tdf-manual-settlement")
+                    withEnvOverrides [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Nothing), ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Nothing)] $
+                      routes `shouldReturn` Right []
+
+        it "advertises PayPal and Datafast only for the configured approved merchant" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                flip runSqlPool pool $ do
+                    rawExecute "CREATE TABLE commerce_provider_account (id TEXT, provider TEXT, environment TEXT, enabled BOOLEAN, credential_status TEXT, contract_status TEXT, feature_flag_key TEXT, merchant_account_ref TEXT)" []
+                    rawExecute "CREATE TABLE commerce_provider_capability (provider_account_id TEXT, payment_method TEXT, capability TEXT, verification_status TEXT)" []
+                    rawExecute "CREATE TABLE revenue_feature_flag (flag_key TEXT, environment TEXT, enabled BOOLEAN)" []
+                    rawExecute "INSERT INTO commerce_provider_account VALUES ('p','paypal','sandbox',1,'validated','approved','paypal','merchant-A'),('d','datafast','sandbox',1,'validated','approved','datafast','merchant-A')" []
+                    rawExecute "INSERT INTO commerce_provider_capability VALUES ('p','paypal_wallet','one_time','sandbox_verified'),('p','paypal_wallet','capture','sandbox_verified'),('d','card','one_time','sandbox_verified'),('d','card','server_verification','sandbox_verified')" []
+                let routes method = fmap (fmap (map ProviderCapabilities.routeProvider)) $
+                      runHandler $ runReaderT
+                        (PaymentAvailability.loadRuntimeReadyRoutes cardRequest
+                          { ProviderCapabilities.prMethod = method })
+                        (Env pool (error "Availability must not read unrelated application configuration"))
+                    checkBoth paypal datafast = do
+                      routes ProviderCapabilities.MethodPayPalWallet `shouldReturn` Right paypal
+                      routes ProviderCapabilities.MethodCard `shouldReturn` Right datafast
+                    fixture merchant =
+                      [ ("PAYPAL_CLIENT_ID", Just "synthetic-client")
+                      , ("PAYPAL_CLIENT_SECRET", Just "synthetic-secret")
+                      , ("PAYPAL_MERCHANT_ID", Just merchant)
+                      , ("PAYPAL_ENV", Just "sandbox")
+                      , ("PAYPAL_WEBHOOK_ID", Just "synthetic-webhook")
+                      , ("COMMERCE_EVENT_ENCRYPTION_KEY", Just (replicate 32 'x'))
+                      , ("DATAFAST_ENTITY_ID", Just merchant)
+                      , ("DATAFAST_BEARER_TOKEN", Just "synthetic-token")
+                      , ("DATAFAST_BASE_URL", Just "https://eu-test.oppwa.com")
+                      , ("DATAFAST_ENV", Just "sandbox")
+                      , ("DATAFAST_TEST_MODE", Nothing)
+                      ]
+                -- Only local environment parsing and SQLite queries; no provider requests.
+                withEnvOverrides (fixture "merchant-A") $
+                  checkBoth [CheckoutStore.ProviderPayPal] [CheckoutStore.ProviderDatafast]
+                withEnvOverrides (fixture "merchant-B") $ checkBoth [] []
+                withEnvOverrides (fixture "") $ checkBoth [] []
+                withEnvOverrides (fixture "merchant-A") $
+                  withEnvOverrides [("PAYPAL_ENV", Just "production"), ("DATAFAST_ENV", Just "production")] $
+                    checkBoth [] []
+                flip runSqlPool pool $
+                  rawExecute "UPDATE commerce_provider_account SET merchant_account_ref=NULL" []
+                withEnvOverrides (fixture "merchant-A") $ checkBoth [] []
+
+        it "requires recurring verification in addition to completion for subscriptions" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowSubscription
+                  , ProviderCapabilities.prRequiredCapabilities = []
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                oneTimeOnly = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= ProviderCapabilities.CapabilityRecurring) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            ProviderCapabilities.prRequiredCapabilities request `shouldMatchList`
+                [ ProviderCapabilities.CapabilityOneTime
+                , ProviderCapabilities.CapabilityRecurring
+                , ProviderCapabilities.CapabilityCapture
+                ]
+            ProviderCapabilities.routePayments [oneTimeOnly] request `shouldBe` []
+            map ProviderCapabilities.routeProvider
+                (ProviderCapabilities.routePayments [verified] request)
+                `shouldBe` [CheckoutStore.ProviderPayPal]
+
+        it "derives routing policy from the immutable checkout domain" $ do
+            PaymentRuntimeStore.productFlowForDomain "event_ticket_order"
+              `shouldBe` Just ProviderCapabilities.FlowEventTicket
+            PaymentRuntimeStore.productFlowForDomain "marketplace_rental"
+              `shouldBe` Just ProviderCapabilities.FlowMarketplace
+            PaymentRuntimeStore.productFlowForDomain "unknown"
+              `shouldBe` Nothing
+
     describe "provider adapter contracts" $ do
         let now = UTCTime (fromGregorian 2026 9 10)
               (secondsToDiffTime (22 * 60 * 60))
@@ -2269,7 +2649,8 @@ main = hspec $ do
               , ProviderAdapter.mbTipMinor = 0
               }
             createPayment = ProviderAdapter.CreatePayment
-              { ProviderAdapter.cpReference = "TDF-payment-001"
+              { ProviderAdapter.cpPaymentMethod = ProviderCapabilities.MethodCard
+              , ProviderAdapter.cpReference = "TDF-payment-001"
               , ProviderAdapter.cpDescription = "TDF order payment"
               , ProviderAdapter.cpMoney = money
               , ProviderAdapter.cpReturnUrl = "https://app.tdfrecords.com/payments/return"
@@ -2294,6 +2675,8 @@ main = hspec $ do
                 { PlaceToPayAdapter.ptpEnvironment = CheckoutStore.CheckoutSandbox
                 , PlaceToPayAdapter.ptpLogin = "test-login"
                 , PlaceToPayAdapter.ptpSecretKey = "test-secret"
+                , PlaceToPayAdapter.ptpPaymentMethods =
+                    [(ProviderCapabilities.MethodCard, "visa,master")]
                 })
             payPhone = fromRight (error "valid PayPhone fixture config")
               (PayPhoneAdapter.payPhoneAdapter PayPhoneAdapter.PayPhoneConfig
@@ -2309,6 +2692,14 @@ main = hspec $ do
               money { ProviderAdapter.mbTaxMinor = 314 }
               `shouldSatisfy` isLeft
 
+        it "rejects an Int64 component sum that wraps back to a positive total" $ do
+            ProviderAdapter.validateUsdMoney money
+              { ProviderAdapter.mbTotalMinor = 1
+              , ProviderAdapter.mbWithoutTaxMinor = maxBound
+              , ProviderAdapter.mbTaxableBaseMinor = maxBound
+              , ProviderAdapter.mbTaxMinor = 3
+              } `shouldSatisfy` isLeft
+
         it "builds a fixed-host PlaceToPay session with a stable retry reference" $ do
             let request = fromRight (error "valid PlaceToPay create fixture")
                   (ProviderAdapter.adapterBuildCreate ptp adapterContext createPayment)
@@ -2316,11 +2707,22 @@ main = hspec $ do
             ProviderAdapter.arUrl request
               `shouldBe` "https://checkout-test.placetopay.ec/api/session"
             ProviderAdapter.arRetryPolicy request
-              `shouldBe` ProviderAdapter.ReuseStableReference
+              `shouldBe` ProviderAdapter.QueryBeforeRetry
+            maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody request)
+              `shouldContain` "\"paymentMethod\":\"visa,master\""
             show summary `shouldNotContain` "test-login"
             show summary `shouldNotContain` "test-secret"
             Data.Text.length (PlaceToPayAdapter.placeToPayReference
               "c07196fb-aedf-4a8d-ac50-0f97291c29f9") `shouldBe` 32
+
+        it "fails closed when a PlaceToPay method has no exact site mapping" $ do
+            either (const True) (const False)
+              (ProviderAdapter.adapterBuildCreate ptp adapterContext
+                createPayment
+                  { ProviderAdapter.cpPaymentMethod =
+                      ProviderCapabilities.MethodBankRedirect
+                  })
+              `shouldBe` True
 
         it "accepts only a PlaceToPay create redirect on the configured Ecuador host" $ do
             let good = A.object
@@ -2370,6 +2772,13 @@ main = hspec $ do
                       [ A.object
                           [ "status" .= A.object
                               ["status" .= ("APPROVED" :: Text)]
+                          , "internalReference" .= (456 :: Int)
+                          , "reference" .= (reference :: Text)
+                          , "refunded" .= False
+                          , "amount" .= A.object
+                              [ "from" .= A.object ["currency" .= currency, "total" .= amount]
+                              , "to" .= A.object ["currency" .= currency, "total" .= amount]
+                              ]
                           ]
                       ]
                   ]
@@ -2382,6 +2791,73 @@ main = hspec $ do
               `shouldSatisfy` isLeft
             ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterQuery ptpLocator changedReference
               `shouldSatisfy` isLeft
+
+        describe "PlaceToPay provider transaction evidence" $ do
+            let ptpLocator = locator { ProviderAdapter.plExternalId = "9911" }
+                transaction status amount reference currency refunded = A.object
+                  [ "status" .= A.object ["status" .= (status :: Text)]
+                  , "internalReference" .= (456 :: Int)
+                  , "reference" .= (reference :: Text)
+                  , "refunded" .= (refunded :: Bool)
+                  , "amount" .= A.object
+                      [ "from" .= A.object ["currency" .= (currency :: Text), "total" .= (amount :: A.Value)]
+                      , "to" .= A.object ["currency" .= currency, "total" .= amount]
+                      ]
+                  ]
+                good = transaction "APPROVED" (A.Number 125.15) "TDF-payment-001" "USD" False
+                rejected = transaction "REJECTED" (A.Number 125.15) "TDF-payment-001" "USD" False
+                session status payments = A.object
+                  [ "requestId" .= (9911 :: Int)
+                  , "status" .= A.object ["status" .= (status :: Text)]
+                  , "request" .= A.object
+                      [ "payment" .= A.object
+                          [ "reference" .= ("TDF-payment-001" :: Text)
+                          , "amount" .= A.object
+                              ["currency" .= ("USD" :: Text), "total" .= A.Number 125.15]
+                          ]
+                      ]
+                  , "payment" .= (payments :: [A.Value])
+                  ]
+                parse = ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterQuery ptpLocator
+            it "accepts exactly one complete sale after rejected attempts" $ do
+                fmap ProviderAdapter.adapterResultCertainty (parse (session "APPROVED" [rejected, good]))
+                  `shouldBe` Right ProviderCapabilities.ProviderSucceeded
+            it "rejects underpayment, overpayment, foreign currency, wrong reference and refunded sale" $ do
+                forM_
+                  [ transaction "APPROVED" (A.Number 1) "TDF-payment-001" "USD" False
+                  , transaction "APPROVED" (A.Number 126) "TDF-payment-001" "USD" False
+                  , transaction "APPROVED" (A.Number 125.15) "TDF-payment-001" "EUR" False
+                  , transaction "APPROVED" (A.Number 125.15) "another-order" "USD" False
+                  , transaction "APPROVED" (A.Number 125.15) "TDF-payment-001" "USD" True
+                  , transaction "APPROVED" (A.Number 125.151) "TDF-payment-001" "USD" False
+                  , A.object ["status" .= A.object ["status" .= ("APPROVED" :: Text)]]
+                  ] $ \invalid -> parse (session "APPROVED" [invalid]) `shouldSatisfy` isLeft
+            it "rejects duplicate or missing approvals" $ do
+                parse (session "APPROVED" [good, good]) `shouldSatisfy` isLeft
+                parse (session "APPROVED" []) `shouldSatisfy` isLeft
+            it "never permits fallback for contradictory or partial session evidence" $ do
+                forM_ ["REJECTED", "EXPIRED", "CANCELLED", "APPROVED_PARTIAL", "PARTIAL_EXPIRED"] $
+                  \status -> fmap ProviderAdapter.adapterResultCertainty (parse (session status [good]))
+                    `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
+            it "does not mistake a pending confirmation for a confirmed decline" $ do
+                let pending = transaction "PENDING_CONFIRMATION" (A.Number 125.15)
+                      "TDF-payment-001" "USD" False
+                fmap ProviderAdapter.adapterResultCertainty (parse (session "REJECTED" [pending]))
+                  `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
+                parse (session "APPROVED" [good, pending]) `shouldSatisfy` isLeft
+            it "permits fallback only for terminal sessions without any non-rejected transaction" $ do
+                forM_ ["REJECTED", "EXPIRED", "CANCELLED"] $ \status ->
+                  forM_ [[], [rejected]] $ \payments ->
+                    fmap ProviderAdapter.adapterResultCertainty (parse (session status payments))
+                      `shouldBe` Right ProviderCapabilities.ProviderConfirmedNoCharge
+            it "requires cancellation to contain the exact bound session and no-charge evidence" $ do
+                let cancel value = ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterCancel
+                      ptpLocator (A.object ["status" .= A.object ["status" .= ("OK" :: Text)], "session" .= value])
+                fmap ProviderAdapter.adapterResultState (cancel (session "REJECTED" []))
+                  `shouldBe` Right ProviderAdapter.AdapterCancelled
+                cancel (session "APPROVED" [good]) `shouldSatisfy` isLeft
+                cancel (session "REJECTED" [good]) `shouldSatisfy` isLeft
+                cancel A.Null `shouldSatisfy` isLeft
 
         it "verifies PlaceToPay SHA-256 notifications but still requires reconciliation" $ do
             let status = "APPROVED"
@@ -2406,7 +2882,11 @@ main = hspec $ do
 
         it "builds PayPhone API Sale with integer cents and query-before-retry" $ do
             let request = fromRight (error "valid PayPhone create fixture")
-                  (ProviderAdapter.adapterBuildCreate payPhone adapterContext createPayment)
+                  (ProviderAdapter.adapterBuildCreate payPhone adapterContext
+                    createPayment
+                      { ProviderAdapter.cpPaymentMethod =
+                          ProviderCapabilities.MethodPayPhoneWallet
+                      })
                 encodedBody = maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody request)
                 summary = ProviderAdapter.safeRequestSummary request
             ProviderAdapter.arUrl request
@@ -2415,6 +2895,9 @@ main = hspec $ do
             encodedBody `shouldContain` "\"amount\":12515"
             encodedBody `shouldContain` "\"tax\":315"
             show summary `shouldNotContain` "test-token"
+            either (const True) (const False)
+              (ProviderAdapter.adapterBuildCreate payPhone adapterContext createPayment)
+              `shouldBe` True
 
         it "trusts PayPhone success only after an authenticated exact-binding query" $ do
             let response amount reference currency statusCode = A.object
@@ -2426,6 +2909,13 @@ main = hspec $ do
                   ]
                 good = response 12515 "TDF-payment-001" "USD" 3
                 tampered = response 12516 "TDF-payment-001" "USD" 3
+                wrongTransaction = A.object
+                  [ "amount" .= (12515 :: Int)
+                  , "clientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "currency" .= ("USD" :: Text)
+                  , "statusCode" .= (3 :: Int)
+                  , "transactionId" .= (45441138 :: Int)
+                  ]
                 parsed = ProviderAdapter.adapterParseResponse
                   payPhone ProviderAdapter.AdapterQuery locator good
             fmap ProviderAdapter.adapterResultState parsed
@@ -2435,6 +2925,29 @@ main = hspec $ do
             ProviderAdapter.adapterParseResponse
               payPhone ProviderAdapter.AdapterQuery locator tampered
               `shouldSatisfy` isLeft
+            ProviderAdapter.adapterParseResponse
+              payPhone ProviderAdapter.AdapterQuery locator wrongTransaction
+              `shouldSatisfy` isLeft
+
+        it "classifies PayPhone code 2 as canceled without inferring an issuer decline" $ do
+            let response code = A.object
+                  [ "amount" .= (12515 :: Int)
+                  , "clientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "currency" .= ("USD" :: Text)
+                  , "statusCode" .= (code :: Int)
+                  , "transactionId" .= (45441137 :: Int)
+                  ]
+                parse = ProviderAdapter.adapterParseResponse
+                  payPhone ProviderAdapter.AdapterQuery locator
+                cancelled = parse (response 2)
+            fmap ProviderAdapter.adapterResultState cancelled
+              `shouldBe` Right ProviderAdapter.AdapterCancelled
+            fmap ProviderAdapter.adapterResultCertainty cancelled
+              `shouldBe` Right ProviderCapabilities.ProviderConfirmedNoCharge
+            fmap ProviderAdapter.adapterResultState (parse (response 1))
+              `shouldBe` Right ProviderAdapter.AdapterPending
+            fmap ProviderAdapter.adapterResultCertainty (parse (response 99))
+              `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
 
         it "never treats an unsigned PayPhone browser callback as payment evidence" $ do
             let callback = A.object
@@ -2444,6 +2957,30 @@ main = hspec $ do
                 assessed = ProviderAdapter.adapterAssessNotification payPhone callback
             fmap ProviderAdapter.notificationAuthenticated assessed `shouldBe` Right False
             fmap ProviderAdapter.notificationRequiresQuery assessed `shouldBe` Right True
+
+        it "parses the official PayPhone external notification only as an untrusted query trigger" $ do
+            let notification storeId = A.object
+                  [ "Amount" .= (12515 :: Int)
+                  , "AuthorizationCode" .= ("W32805807" :: Text)
+                  , "ClientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "StatusCode" .= (3 :: Int)
+                  , "TransactionStatus" .= ("Approved" :: Text)
+                  , "StoreId" .= (storeId :: Text)
+                  , "Currency" .= ("USD" :: Text)
+                  , "TransactionId" .= (45441137 :: Int)
+                  ]
+                assessed = ProviderAdapter.adapterAssessNotification payPhone
+                  (notification "test-store")
+            fmap ProviderAdapter.notificationExternalId assessed
+              `shouldBe` Right "45441137"
+            fmap ProviderAdapter.notificationMerchantReference assessed
+              `shouldBe` Right (Just "TDF-payment-001")
+            fmap ProviderAdapter.notificationProviderStatus assessed
+              `shouldBe` Right (Just "3")
+            fmap ProviderAdapter.notificationAuthenticated assessed
+              `shouldBe` Right False
+            ProviderAdapter.adapterAssessNotification payPhone
+              (notification "another-store") `shouldSatisfy` isLeft
 
         it "enforces PayPhone's full-only same-day 20:00 Ecuador reversal cutoff" $ do
             let actionAt = UTCTime (fromGregorian 2026 9 10)
@@ -2474,6 +3011,7 @@ main = hspec $ do
         it "advertises only adapter-backed methods and operations" $ do
             let activePayPhone = ProviderCapabilities.ProviderActivation
                   { ProviderCapabilities.paProvider = CheckoutStore.ProviderPayPhone
+                  , ProviderCapabilities.paMerchantRef = Just "merchant-test"
                   , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
                   , ProviderCapabilities.paFeatureEnabled = True
                   , ProviderCapabilities.paCredentialsValidated = True
@@ -2508,6 +3046,39 @@ main = hspec $ do
               `shouldNotContain` [ProviderCapabilities.CapabilityCapture]
             placeToPayCapabilities
               `shouldNotContain` [ProviderCapabilities.CapabilityPartialRefund]
+
+        it "derives provider-safe references and exact checkout amount components" $ do
+            let checkout = ProviderExecutionStore.CheckoutExecution
+                  { ProviderExecutionStore.ceCheckout =
+                      CheckoutStore.CheckoutReference
+                        "c07196fb-aedf-4a8d-ac50-0f97291c29f9"
+                  , ProviderExecutionStore.ceDomainOrderId =
+                      "internal-order-reference-that-may-exceed-provider-limits"
+                  , ProviderExecutionStore.ceDomainType = "event_ticket_order"
+                  , ProviderExecutionStore.ceEnvironment = CheckoutStore.CheckoutSandbox
+                  , ProviderExecutionStore.ceCurrency = "USD"
+                  , ProviderExecutionStore.ceSubtotalMinor = 12000
+                  , ProviderExecutionStore.ceDiscountMinor = 500
+                  , ProviderExecutionStore.ceTaxMinor = 1725
+                  , ProviderExecutionStore.ceFeeMinor = 290
+                  , ProviderExecutionStore.ceTotalMinor = 13515
+                  , ProviderExecutionStore.ceCustomerEmail = "buyer@example.test"
+                  }
+                breakdown = ProviderExecutionServer.checkoutMoneyBreakdown checkout
+                placeToPayReference = ProviderExecutionServer.providerReference
+                  CheckoutStore.ProviderPlaceToPay
+                  (CheckoutStore.checkoutReferenceId
+                    (ProviderExecutionStore.ceCheckout checkout))
+                payPhoneReference = ProviderExecutionServer.providerReference
+                  CheckoutStore.ProviderPayPhone
+                  (CheckoutStore.checkoutReferenceId
+                    (ProviderExecutionStore.ceCheckout checkout))
+            Data.Text.length placeToPayReference `shouldBe` 32
+            Data.Text.length payPhoneReference `shouldBe` 32
+            placeToPayReference `shouldNotBe` payPhoneReference
+            ProviderAdapter.mbTaxableBaseMinor breakdown `shouldBe` 11500
+            ProviderAdapter.mbWithoutTaxMinor breakdown `shouldBe` 0
+            ProviderAdapter.validateUsdMoney breakdown `shouldBe` Right ()
 
     describe "provider-neutral payment lifecycle" $ do
         let created = Commerce.PaymentLifecycle
@@ -17068,6 +17639,7 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ProviderRetrySpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
     CatalogRecordsSpec.spec

@@ -1,4 +1,7 @@
 import { get, post, put } from './client';
+import type { components } from './generated/types';
+
+export type ServiceRefundRecovery = components['schemas']['ServiceStorefrontRefundRecovery'];
 
 export interface ServiceStorefrontPackageDTO {
   sspId: string;
@@ -45,6 +48,7 @@ export interface ServiceStorefrontOrderDTO {
   ssoCurrency: string;
   ssoStatus: string;
   ssoPaymentProvider?: string | null;
+  ssoCheckoutId?: string | null;
   /** Returned only once, when a guest order is created. */
   ssoLookupToken?: string | null;
   ssoPaidAt?: string | null;
@@ -159,6 +163,12 @@ export const ServiceStorefront = {
     }),
 
   // Admin endpoints
+  readRefundRecovery: (refundId: string) =>
+    get<ServiceRefundRecovery>(`/admin/services/storefront/refunds/${encodeURIComponent(refundId)}/reconcile`),
+
+  reconcileRefund: (refundId: string) =>
+    post<ServiceRefundRecovery>(`/admin/services/storefront/refunds/${encodeURIComponent(refundId)}/reconcile`, {}),
+
   listOrders: (params?: { status?: string; limit?: number; offset?: number }) => {
     const qs = new URLSearchParams();
     if (params?.status) qs.set('status', params.status);

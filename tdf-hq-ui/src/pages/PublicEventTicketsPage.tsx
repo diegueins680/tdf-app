@@ -31,6 +31,7 @@ import {
   type PublicEventTicketCheckoutRequest,
 } from '../api/eventTickets';
 import type { DatafastCheckoutDTO } from '../api/types';
+import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
 
@@ -78,8 +79,15 @@ export default function PublicEventTicketsPage() {
   const navigate = useNavigate();
   const { locale, timezone } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
-  const [tierId, setTierId] = useState('');
-  const [quantity, setQuantity] = useState('1');
+  const checkoutPrefill = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const prefilledTierId = checkoutPrefill.get('tierId') ?? '';
+  const prefilledQuantity = checkoutPrefill.get('quantity') ?? '1';
+  const [tierId, setTierId] = useState(() =>
+    /^[1-9]\d*$/.test(prefilledTierId) ? prefilledTierId : '');
+  const [quantity, setQuantity] = useState(() => {
+    const parsed = Number(prefilledQuantity);
+    return Number.isSafeInteger(parsed) && parsed >= 1 && parsed <= 10 ? String(parsed) : '1';
+  });
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -88,6 +96,7 @@ export default function PublicEventTicketsPage() {
   const [checkout, setCheckout] = useState<PublicEventTicketCheckout | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
+  const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
@@ -108,7 +117,7 @@ export default function PublicEventTicketsPage() {
   });
 
   useEffect(() => {
-    if (tierId) return;
+    if (tierId && storefront.data?.tiers.some((tier) => String(tier.tierId) === tierId)) return;
     const firstTier = storefront.data?.tiers[0];
     if (firstTier) setTierId(String(firstTier.tierId));
   }, [storefront.data?.tiers, tierId]);
@@ -477,12 +486,33 @@ export default function PublicEventTicketsPage() {
                   {!paid && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
                     : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}
-                  {!paid && (
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy} onClick={() => void handleDatafast()}>Datafast</Button>}
-                      {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
-                    </Stack>
-                  )}
+                  <Stack spacing={1.5}>
+                    {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
+                        {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
+                    </Stack>}
+                    {checkoutLookupToken && (
+                        <HostedProviderCheckout
+                          checkout={{
+                            checkoutId: checkout.checkoutId,
+                            lookupToken: checkoutLookupToken,
+                            returnPath: `/eventos/${checkout.eventId}/orden/${checkout.orderId}`,
+                          }}
+                          offeredMethods={paid ? [] : checkout.paymentMethods}
+                          disabled={paid || paymentBusy || datafastOpen || paypalOpen}
+                          english={english}
+                          initialBuyerPhone={buyerPhone}
+                          onSafetyLockChange={setHostedPaymentLocked}
+                          onPaymentConfirmed={async () => {
+                            setCheckout(await EventTickets.getCheckout(
+                              checkout.eventId,
+                              checkout.orderId,
+                              checkoutLookupToken,
+                            ));
+                          }}
+                        />
+                    )}
+                  </Stack>
                   {paid && checkout.tickets.length > 0 && (
                     <Stack spacing={1}>
                       <Typography variant="h6">{english ? 'Issued tickets' : 'Entradas emitidas'}</Typography>

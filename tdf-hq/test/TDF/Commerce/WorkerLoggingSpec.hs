@@ -14,6 +14,7 @@ import qualified Test.QuickCheck as QC
 
 import qualified TDF.Commerce.MerchReservationWorker as Merch
 import qualified TDF.Commerce.ProviderEventWorker as Events
+import qualified TDF.Commerce.ProviderReconciliation as Query
 
 -- The names are markers, not real credentials, card data, accounts or customers.
 syntheticFailure :: String
@@ -40,6 +41,9 @@ spec = describe "payment worker logging boundary" $ do
   failureBoundary "merch reservation expiry"
     (\tick -> Merch.merchReservationWorkerIterationWith (tick >> pure 0))
     "merch-reservation-worker" "tick failed"
+  failureBoundary "provider query recovery"
+    (\tick logError _ -> Query.providerQueryWorkerIterationWith (tick >> pure 0) logError)
+    "provider-query-worker" "tick failed; lease recovery required"
 
   it "keeps provider-event counters on the information sink without payment claims" $ do
     (info, captureInfo) <- captureLog

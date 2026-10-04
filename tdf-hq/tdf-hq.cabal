@@ -26,6 +26,7 @@ executable tdf-hq-exe
     TDF.API.Feedback
     TDF.API.Payments
     TDF.API.PaymentCapabilities
+    TDF.API.ProviderExecution
     TDF.API.Inventory
     TDF.API.Pipelines
     TDF.API.Proposals
@@ -87,14 +88,20 @@ executable tdf-hq-exe
     TDF.Commerce.MerchReservationWorker
     TDF.Commerce.ServiceBookings
     TDF.Commerce.PaymentIntentStore
+    TDF.Commerce.PaymentRuntimeStore
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
+    TDF.Commerce.ProviderExecutionStore
+    TDF.Commerce.ProviderReconciliation
+    TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
     TDF.Commerce.ProviderAdapter.PayPhone
+    TDF.Commerce.ProviderAdapter.PayPalRefund
+    TDF.Commerce.RefundReconciliation
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -154,6 +161,8 @@ executable tdf-hq-exe
     TDF.Server
     TDF.Server.CommerceOperations
     TDF.Server.PaymentCapabilities
+    TDF.Server.PaymentAvailability
+    TDF.Server.ProviderExecution
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
@@ -258,6 +267,7 @@ executable tdf-hq-exe
     , directory
     , transformers
     , mtl
+    , network
     , mime-mail
     , unordered-containers
     , uuid-types
@@ -303,6 +313,7 @@ test-suite tdf-hq-test
     TDF.API.Future
     TDF.API.Payments
     TDF.API.PaymentCapabilities
+    TDF.API.ProviderExecution
     TDF.API.Feedback
     TDF.API.Inventory
     TDF.API.Instagram
@@ -368,14 +379,20 @@ test-suite tdf-hq-test
     TDF.Commerce.MerchReservationWorker
     TDF.Commerce.ServiceBookings
     TDF.Commerce.PaymentIntentStore
+    TDF.Commerce.PaymentRuntimeStore
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
+    TDF.Commerce.ProviderExecutionStore
+    TDF.Commerce.ProviderReconciliation
+    TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
     TDF.Commerce.ProviderAdapter.PayPhone
+    TDF.Commerce.ProviderAdapter.PayPalRefund
+    TDF.Commerce.RefundReconciliation
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -436,6 +453,8 @@ test-suite tdf-hq-test
     TDF.Server.Catalog
     TDF.Server.CommerceOperations
     TDF.Server.PaymentCapabilities
+    TDF.Server.PaymentAvailability
+    TDF.Server.ProviderExecution
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
@@ -444,6 +463,10 @@ test-suite tdf-hq-test
     TDF.Server.MerchReputation
     TDF.Server.Merch
     TDF.Server.MerchRuntimeSpec
+    TDF.Commerce.ProviderRetrySpec
+    TDF.Commerce.RefundSafetySpec
+    TDF.Commerce.RefundRecoverySpec
+    TDF.Server.PaymentAuditSpec
     TDF.Server.ServiceStorefront
     TDF.ServerAuth
     TDF.ServerAuthSpec
@@ -551,6 +574,7 @@ test-suite tdf-hq-test
     , directory
     , transformers
     , mtl
+    , network
     , mime-mail
     , tagged
     , unordered-containers
