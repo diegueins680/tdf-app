@@ -4,6 +4,7 @@
  * Mocks posthog-js so we never reach the network from a unit test.
  */
 import { jest } from '@jest/globals';
+import { readFileSync } from 'node:fs';
 
 const initMock = jest.fn();
 const captureMock = jest.fn();
@@ -208,6 +209,30 @@ describe('analytics/posthog (web)', () => {
       expect(redactSensitiveQueryValues(`https://tdf.test${path}?id=${sentinel}&reference=${sentinel}&t=${sentinel}`))
         .not.toContain(sentinel);
     }
+  });
+
+  test('keeps configured private navigation identifiers out of automatic pageviews', () => {
+    const sentinel = 'PRIVATE-ROUTE-CAPABILITY';
+    const privateParam = /^(?:orderId|orderNumber|registrationId|bookingId|quoteId|token|notificationId|partyId|reportId|taskId|planId|destinationId|id)$/;
+    let checked = 0;
+    for (const file of ['publicRoutes.tsx', 'protectedRoutes.tsx']) {
+      const source = readFileSync(new URL(`../routes/${file}`, import.meta.url), 'utf8');
+      for (const match of source.matchAll(/path="([^"]*:[^"]+)"/g)) {
+        const route = match[1]!;
+        let sensitive = false;
+        const path = route.replace(/:([A-Za-z0-9_]+)/g, (_value, name: string) => {
+          if (privateParam.test(name)) { sensitive = true; return sentinel; }
+          return 'public';
+        });
+        if (!sensitive) continue;
+        checked += 1;
+        const url = `https://tdf.test/${path.replace(/^\//, '')}`;
+        expect(redactSensitiveQueryValues(url)).not.toContain(sentinel);
+      }
+    }
+    expect(checked).toBeGreaterThan(15);
+    expect(redactSensitiveQueryValues(`/inscripcion/produccion?lead=${sentinel}&t=${sentinel}`))
+      .not.toContain(sentinel);
   });
 
   test('preserves ordinary fragment-like campaign names outside URL values', () => {

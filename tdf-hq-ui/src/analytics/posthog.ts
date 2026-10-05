@@ -95,9 +95,9 @@ const isSensitivePropertyName = (key: string): boolean =>
 // Private order/credential paths also reach SDK-generated URL properties. Keep
 // public event IDs for funnel analysis, but never export private resource IDs.
 const privatePath = (pathname: string): string => pathname.replace(
-  /(\/(?:orden|pedido|orders|ticket-orders|ticket-transfers|tickets|checkouts|cotizaciones)\/)[^/]+/gi,
+  /(\/(?:orden|pedido|orders|ticket-orders|ticket-transfers|tickets|checkouts|cotizaciones|scan|notificaciones|perfil|members|tareas|auditorias|interno|documents)\/)[^/]+/gi,
   '$1[REDACTED]',
-);
+).replace(/(\/conversacion\/[^/]+\/)[^/]+/gi, '$1[REDACTED]');
 
 export function redactSensitiveQueryValues(value: string, depth = 0): string {
   const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(value);
@@ -110,7 +110,8 @@ export function redactSensitiveQueryValues(value: string, depth = 0): string {
       ? '/[REDACTED]'
       : privatePath(decodedPath);
     const privateResource = pathname !== decodedPath
-      || /\/(?:pagos\/retorno|pago-datafast|live-sessions\/registro)\/?$/i.test(decodedPath);
+      || /\/(?:pagos\/retorno|pago-datafast|live-sessions\/registro)\/?$/i.test(decodedPath)
+      || /^\/inscripcion\//i.test(decodedPath);
     let changed = privateResource || Boolean(parsed.hash) || Boolean(parsed.username || parsed.password);
     if (pathname !== decodedPath) parsed.pathname = pathname;
     parsed.hash = '';
