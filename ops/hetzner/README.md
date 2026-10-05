@@ -51,6 +51,58 @@ It does not invoke SSH, Docker, a database, or a deployment service. Receipts ar
 local evidence, not signed attestations or approval; an executor must re-observe
 runtime state under its release lock.
 
+## Isolated online database restore rehearsal
+
+From a clean reviewed source revision:
+
+```sh
+node scripts/rehearse-hetzner-restore.mjs --identity-file /absolute/private/key --output /absolute/private/new-restore.json
+```
+
+The collector and rehearsal pin the host's local Docker Unix socket and discard
+Docker context/TLS routing overrides. The helper holds a nonblocking exclusive
+host lock for its entire operation, verifies available memory/disk and the source
+identity, then exports a read-only PostgreSQL snapshot. Table counts and the custom
+archive use that same snapshot. Source queries are read-only, use the explicit
+local database socket, and have database and in-container process timeouts.
+
+Database and password-free role archives remain in a new root-private directory
+under `/opt/tdf/backups`. Only hashes, relation counts, migration identities and
+operational metadata leave the host. Ownership and ACL definitions are restored;
+role credentials remain a separate recovery obligation. The existing `postgres`
+role is retained from initdb, then its dumped attributes are applied.
+
+Restoration targets a unique nonce-owned container running the exact production
+PostgreSQL image. It has no external network, published ports, host mounts or
+production credentials, a read-only root filesystem, 256MiB tmpfs data, 384MiB
+memory with no extra swap allowance, half a CPU and 64-process limit. Rehearsal
+requires at least 1GiB available memory, 2GiB disk and a source database no larger
+than 128MiB. These conservative bounds deliberately reject growth; do not silently
+raise them on a production host. Archives are each capped at 256MiB.
+
+A pass requires successful role/archive replay, matching snapshot relation counts,
+matching migration identities, a stable production database identity/ledger, and
+confirmed removal of the fully inspected isolate. No count-only or archive-listing
+shortcut can pass. Local tests inject dump, role, restore, count, ledger, interruption
+and cleanup failures; invalid target controls and source/receipt drift must reject.
+This is empirical conformance of this boundary, not a formal proof of recovery.
+
+The 540-second operation deadline reserves another 90 seconds for bounded cleanup.
+A lost create response is recovered using the unique name, then full identity and
+isolation validation. On failure, partial archives and a stage-only failure record
+remain private. A host crash, daemon outage or forced process kill can still leave
+an isolate: inspect the `net.tdf.restore-rehearsal` label, nonce name, immutable image
+and isolation before removing that specific container. Never prune unrelated
+containers or remove the permanent lock inode. A failure is never a passing receipt.
+
+**This does not establish release readiness.** The online database snapshot is not
+coordinated with assets or cluster-global role/schema changes; the rehearsal lock
+only excludes other rehearsals. No provider action, application canary, production
+restore or deployment occurs. Counts do not establish bytewise logical equality.
+Keep provider flags disabled and production writes intact. A release still needs
+writer drainage, a coordinated database/assets backup, tested secret/off-host
+recovery, migration rehearsal and compatible application recovery.
+
 ## Routine release status
 
 The guarded routine Hetzner release executor remains an open implementation and

@@ -6,6 +6,9 @@ import subprocess
 import sys
 import urllib.request
 
+DOCKER = ['env', '-u', 'DOCKER_HOST', '-u', 'DOCKER_CONTEXT', '-u', 'DOCKER_TLS_VERIFY',
+          '-u', 'DOCKER_CERT_PATH', 'docker', '--host', 'unix:///var/run/docker.sock']
+
 PROJECT = 'tdf-production'
 DIRECTORY = '/opt/tdf/production'
 DATABASE = 'tdf_hq'
@@ -145,7 +148,7 @@ def summarize_database(data):
 
 def database_command(container_id):
     require(re.fullmatch(r'[a-f0-9]{64}', container_id))
-    return ['docker', 'exec', '-i', container_id, 'env', '-u', 'PGHOSTADDR',
+    return DOCKER + ['exec', '-i', container_id, 'env', '-u', 'PGHOSTADDR',
             '-u', 'PGSERVICE', '-u', 'PGSERVICEFILE',
             'PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=15000',
             'psql', '-X', '-h', '/var/run/postgresql', '-p', '5432', '-v', 'ON_ERROR_STOP=1',
@@ -155,11 +158,11 @@ def database_command(container_id):
 def inspect():
     containers = {}
     for service in ('api', 'db', 'edge'):
-        ids = capture(['docker', 'ps', '--all', '--quiet', '--no-trunc',
+        ids = capture(DOCKER + ['ps', '--all', '--quiet', '--no-trunc',
                        '--filter', 'label=com.docker.compose.project=' + PROJECT,
                        '--filter', 'label=com.docker.compose.service=' + service]).split()
         require(len(ids) == 1 and re.fullmatch(r'[a-f0-9]{64}', ids[0]))
-        values = json.loads(capture(['docker', 'inspect', ids[0]]))
+        values = json.loads(capture(DOCKER + ['inspect', ids[0]]))
         require(len(values) == 1)
         containers[service] = summarize_container(service, values[0])
     data = json.loads(capture(database_command(containers['db']['containerId']), input=SQL))

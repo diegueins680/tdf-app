@@ -101,7 +101,8 @@ class Boundaries(unittest.TestCase):
 
     def test_actual_database_command_pins_socket_and_clears_routing(self):
         command=module.database_command('a'*64)
-        self.assertEqual(command[:8],['docker','exec','-i','a'*64,'env','-u','PGHOSTADDR','-u'])
+        self.assertEqual(command[:len(module.DOCKER)], module.DOCKER)
+        self.assertEqual(command[len(module.DOCKER):len(module.DOCKER)+7], ['exec','-i','a'*64,'env','-u','PGHOSTADDR','-u'])
         for variable in ['PGHOSTADDR','PGSERVICE','PGSERVICEFILE']:
             self.assertEqual(command[command.index(variable)-1],'-u')
         self.assertEqual(command[command.index('-h')+1],'/var/run/postgresql')

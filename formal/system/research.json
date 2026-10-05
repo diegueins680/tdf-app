@@ -218,6 +218,33 @@
       "applicability": "Chat SQL effects and server-side response validation",
       "decision": "adopted",
       "rationale": "A normal return from the SQL action can commit even when later application decoding rejects its result. Keep validation inside the transaction and explicitly undo rejected operations; this does not solve lost post-commit network responses."
+    },
+    {
+      "id": "RES-DEPLOY-006",
+      "source": "https://www.postgresql.org/docs/17/app-pgdump.html",
+      "title": "PostgreSQL exported snapshot backup",
+      "recommendation": "Use --snapshot to synchronize a dump with an existing transaction snapshot.",
+      "applicability": "Online snapshot-count and restored-data correspondence",
+      "decision": "adopted",
+      "rationale": "Hold an exporting read-only transaction until the archive completes; table counts derive from the same snapshot. This does not coordinate role or asset changes."
+    },
+    {
+      "id": "RES-DEPLOY-007",
+      "source": "https://www.postgresql.org/docs/17/app-pg-dumpall.html",
+      "title": "PostgreSQL cluster role backup",
+      "recommendation": "Handle cluster-global roles separately and exclude password material when disclosure is unnecessary.",
+      "applicability": "Restore ownership and ACLs without exporting production credentials",
+      "decision": "adopted",
+      "rationale": "Dump roles using --no-role-passwords and retain grants/ownership during restore. Credential recovery remains a separate unverified obligation."
+    },
+    {
+      "id": "RES-DEPLOY-008",
+      "source": "https://docs.docker.com/engine/storage/tmpfs/",
+      "title": "Docker temporary storage and memory accounting",
+      "recommendation": "Bound tmpfs and container resources explicitly; temporary data consumes container memory.",
+      "applicability": "Production-host isolated restore resource safety",
+      "decision": "adopted",
+      "rationale": "Use bounded tmpfs, memory/swap/CPU/pids with no host mounts or external network; require host capacity and an exclusive rehearsal lock. Reject source growth rather than silently increasing limits."
     }
   ]
 }
