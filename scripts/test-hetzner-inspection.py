@@ -5,6 +5,7 @@ import importlib.util
 import json
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location('hetzner_inspection', ROOT/'ops/hetzner/inspect-runtime.py')
@@ -33,9 +34,13 @@ def database():
             'serverVersion': '17.8', 'localConnection': True, 'migrations': [{'migration_id': '2026-10-04_synthetic',
                 'checksum': 'a'*64, 'source_commit': 'b'*40, 'extra': SECRET}],
             'revenueFlags': [{'flag_key': 'checkout.provider', 'enabled': False, 'environment': 'production'}],
+            'merchReputationFlags': [{'flag_key': 'store_reviews', 'enabled': False, 'environment': 'production', 'reason': SECRET}],
             'providerAccounts': [{'provider': 'manual_bank', 'status': 'ready', 'contract_status': 'approved',
                 'credential_status': 'validated', 'environment': 'production', 'enabled': False,
                 'feature_flag_key': None, 'credentials': SECRET}],
+            'eventOperationFlags': [{'feature_code': 'event.operations.api', 'enabled': False, 'reason': SECRET}],
+            'interactionRuntime': {'enabled': False, 'activatedOnce': True, 'private': SECRET},
+            'interactionEntityKinds': [{'code': 'event', 'enabled': True, 'reactable': True, 'commentable': True, 'shareable': True, 'private': SECRET}],
             'extensions': [{'extname': 'vector', 'extversion': '0.8.1'}],
             'socialRuntime': {'enabled': False, 'activatedOnce': True, 'private': SECRET}, 'extra': SECRET}
 
@@ -99,6 +104,47 @@ class Boundaries(unittest.TestCase):
         for invalid in [{}, {'enabled': False, 'activatedOnce': SECRET},
                         {'enabled': 'false', 'activatedOnce': True}]:
             value['socialRuntime'] = invalid
+            with self.assertRaises(ValueError): module.summarize_database(value)
+
+    def test_merch_flags_are_allowlisted_and_missing_values_remain_unknown(self):
+        value = module.summarize_database(database())
+        self.assertEqual(value['merchReputationFlags'], [{'flag': 'store_reviews', 'enabled': False}])
+        self.assertEqual(set(value['missingMerchReputationFlags']), module.MERCH_REPUTATION_FLAGS - {'store_reviews'})
+        missing = database(); missing['merchReputationFlags'] = []
+        self.assertEqual(module.summarize_database(missing)['missingMerchReputationFlags'], sorted(module.MERCH_REPUTATION_FLAGS))
+        for mutation in [
+            lambda rows: rows.append(copy.deepcopy(rows[0])),
+            lambda rows: rows[0].update(environment='development'),
+            lambda rows: rows[0].update(enabled='false'),
+            lambda rows: rows[0].update(flag_key=SECRET),
+        ]:
+            bad = database(); mutation(bad['merchReputationFlags'])
+            with self.assertRaises(ValueError): module.summarize_database(bad)
+
+    def test_optional_event_flags_distinguish_absent_table_from_disabled_row(self):
+        with patch.object(module, 'capture', return_value='f') as capture:
+            self.assertIsNone(module.optional_event_flags('a'*64))
+            self.assertEqual(capture.call_count, 1)
+        with patch.object(module, 'capture', side_effect=['t', '[{"feature_code":"event.operations.api","enabled":false}]']) as capture:
+            self.assertEqual(module.optional_event_flags('a'*64), [{'feature_code': 'event.operations.api', 'enabled': False}])
+            self.assertEqual(capture.call_count, 2)
+            for args, kwargs in capture.call_args_list:
+                self.assertEqual(args[0], module.database_command('a'*64))
+                self.assertTrue(kwargs['input'].startswith('BEGIN READ ONLY;'))
+        value = database(); value['eventOperationFlags'] = None; value['interactionRuntime'] = None
+        result = module.summarize_database(value)
+        self.assertIsNone(result['eventOperationFlags']); self.assertIsNone(result['interactionRuntime'])
+
+    def test_interaction_and_event_switches_reject_invalid_or_duplicate_values(self):
+        for mutation in [
+            lambda x: x['eventOperationFlags'][0].update(enabled='false'),
+            lambda x: x['eventOperationFlags'][0].update(feature_code=SECRET),
+            lambda x: x['eventOperationFlags'].append(x['eventOperationFlags'][0]),
+            lambda x: x['interactionEntityKinds'][0].update(reactable='true'),
+            lambda x: x['interactionEntityKinds'].append(x['interactionEntityKinds'][0]),
+            lambda x: x['interactionRuntime'].update(enabled='false'),
+        ]:
+            value = database(); mutation(value)
             with self.assertRaises(ValueError): module.summarize_database(value)
 
     def test_database_identity_and_ledger_controls(self):

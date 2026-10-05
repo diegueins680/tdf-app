@@ -18,7 +18,10 @@ node scripts/inspect-hetzner-production.mjs --identity-file /absolute/private/ke
 The command pins the host, requires existing SSH host trust and a specific key,
 checks Compose identity, immutable image references, private database networking
 and the expected volume. It reads the ledger and production capability flags
-through the existing `tdf_catalog_inventory` role in read-only transactions. Social
+through the existing `tdf_catalog_inventory` role in read-only transactions. The nine merchandise-reputation database flags are observed separately, with
+missing rows listed as unknown rather than disabled. Interaction runtime/entity-kind
+switches and the optional event-operations API flag are also recorded. An absent
+event-operations flag table is represented as null; it is not inferred disabled. Social
 observations contain only runtime enablement and activation history, never pair,
 consent or message data. A missing singleton remains unknown rather than inferred
 disabled. Only the container's pinned Unix socket and port are used; inherited libpq routing

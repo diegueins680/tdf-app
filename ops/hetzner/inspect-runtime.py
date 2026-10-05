@@ -14,6 +14,10 @@ DIRECTORY = '/opt/tdf/production'
 DATABASE = 'tdf_hq'
 VOLUME = 'tdf_production_postgres_data'
 ORIGINS = {'https://www.tdfrecords.net', 'https://tdfrecords.net'}
+MERCH_REPUTATION_FLAGS = {
+    'store_reviews', 'product_reviews', 'seller_responses', 'review_images', 'badges',
+    'search_influence', 'comparison_cards', 'moderation', 'notifications',
+}
 BOOLEAN_KEYS = {
     'RUN_MIGRATIONS', 'AUTO_APPLY_PRODUCTION_MIGRATIONS', 'RESET_DB', 'SEED_DB',
     'ALLOW_ALL_ORIGINS', 'CORS_DISABLE_DEFAULTS', 'SESSION_COOKIE_SECURE',
@@ -106,11 +110,17 @@ SELECT json_build_object(
    (SELECT migration_id,checksum,source_commit FROM public.tdf_schema_migration) x),
  'revenueFlags',(SELECT coalesce(json_agg(x ORDER BY flag_key),'[]'::json) FROM
    (SELECT flag_key,enabled,environment FROM public.revenue_feature_flag WHERE environment='production') x),
+ 'merchReputationFlags',(SELECT coalesce(json_agg(x ORDER BY flag_key),'[]'::json) FROM
+   (SELECT flag_key,enabled,environment FROM public.merch_reputation_feature_flag WHERE environment='production') x),
  'providerAccounts',(SELECT coalesce(json_agg(x ORDER BY provider),'[]'::json) FROM
    (SELECT provider,environment,status,contract_status,credential_status,enabled,feature_flag_key
       FROM public.commerce_provider_account WHERE environment='production') x),
  'socialRuntime',(SELECT json_build_object('enabled',enabled,'activatedOnce',activated_once)
       FROM public.social_v2_runtime WHERE singleton),
+ 'interactionRuntime',(SELECT json_build_object('enabled',enabled,'activatedOnce',activated_once)
+      FROM public.interaction_runtime WHERE singleton),
+ 'interactionEntityKinds',(SELECT coalesce(json_agg(x ORDER BY code),'[]'::json) FROM
+   (SELECT code,enabled,reactable,commentable,shareable FROM public.interaction_entity_kind) x),
  'extensions',(SELECT json_agg(x ORDER BY extname) FROM
    (SELECT extname,extversion FROM pg_extension) x));
 ROLLBACK;
@@ -132,6 +142,27 @@ def summarize_database(data):
     # No row is unknown authority, not a false activation-history claim.
     result['socialRuntime'] = None if social is None else {
         key: social[key] for key in ('enabled', 'activatedOnce')}
+    interaction = data['interactionRuntime']
+    require(interaction is None or (isinstance(interaction, dict)
+            and isinstance(interaction.get('enabled'), bool)
+            and isinstance(interaction.get('activatedOnce'), bool)))
+    result['interactionRuntime'] = None if interaction is None else {
+        key: interaction[key] for key in ('enabled', 'activatedOnce')}
+    kinds = {}; switches = ('enabled', 'reactable', 'commentable', 'shareable')
+    for row in data['interactionEntityKinds']:
+        code = token(row['code'])
+        require(code not in kinds and all(isinstance(row.get(k), bool) for k in switches))
+        kinds[code] = {k: row[k] for k in switches}
+    result['interactionEntityKinds'] = [{'code': code, **kinds[code]} for code in sorted(kinds)]
+    event_flags = data['eventOperationFlags']
+    require(event_flags is None or isinstance(event_flags, list))
+    result['eventOperationFlags'] = None if event_flags is None else []
+    seen_event = set()
+    for row in event_flags or []:
+        require(row['feature_code'] == 'event.operations.api'
+                and row['feature_code'] not in seen_event and isinstance(row['enabled'], bool))
+        seen_event.add(row['feature_code'])
+        result['eventOperationFlags'].append({'flag': row['feature_code'], 'enabled': row['enabled']})
     seen = set()
     for row in data['migrations']:
         identifier = token(row['migration_id'])
@@ -143,6 +174,14 @@ def summarize_database(data):
     for row in data['revenueFlags']:
         require(row['environment'] == 'production' and isinstance(row['enabled'], bool))
         result['revenueFlags'].append({'flag': token(row['flag_key']), 'enabled': row['enabled']})
+    merch_flags = {}
+    for row in data['merchReputationFlags']:
+        require(row['environment'] == 'production' and isinstance(row['enabled'], bool))
+        key = row['flag_key']
+        require(key in MERCH_REPUTATION_FLAGS and key not in merch_flags)
+        merch_flags[key] = row['enabled']
+    result['merchReputationFlags'] = [{'flag': key, 'enabled': merch_flags[key]} for key in sorted(merch_flags)]
+    result['missingMerchReputationFlags'] = sorted(MERCH_REPUTATION_FLAGS - set(merch_flags))
     for row in data['providerAccounts']:
         require(row['environment'] == 'production' and isinstance(row['enabled'], bool))
         safe = {k: token(row[k]) for k in ('provider', 'status', 'contract_status', 'credential_status')}
@@ -163,6 +202,17 @@ def database_command(container_id):
             '-qAt', '-U', 'tdf_catalog_inventory', '-d', DATABASE]
 
 
+def optional_event_flags(container_id):
+    # This experimental migration is not in the current production manifest.
+    # Observe table absence explicitly without inventing a disabled row.
+    command = database_command(container_id)
+    present = capture(command, input="BEGIN READ ONLY; SELECT to_regclass('public.event_operation_feature_flag') IS NOT NULL; ROLLBACK;").strip()
+    require(present in ('t', 'f'))
+    if present == 'f':
+        return None
+    return json.loads(capture(command, input="BEGIN READ ONLY; SELECT coalesce(json_agg(x),'[]'::json) FROM (SELECT feature_code,enabled FROM public.event_operation_feature_flag ORDER BY feature_code) x; ROLLBACK;"))
+
+
 def inspect():
     containers = {}
     for service in ('api', 'db', 'edge'):
@@ -174,6 +224,7 @@ def inspect():
         require(len(values) == 1)
         containers[service] = summarize_container(service, values[0])
     data = json.loads(capture(database_command(containers['db']['containerId']), input=SQL))
+    data['eventOperationFlags'] = optional_event_flags(containers['db']['containerId'])
     with urllib.request.urlopen('https://api.tdfrecords.net/version', timeout=15) as response:
         require(response.status == 200)
         public = json.loads(response.read(4096))

@@ -107,7 +107,10 @@ test('preparation records current drift and required CORS repair without enablin
   assert.equal(plan.requiredCorsConfiguration.ALLOW_ALL_ORIGINS, 'false');
   assert.equal(plan.observedFlags.ARTIST_ENRICHMENT_ENABLED, 'true');
   assert.equal(plan.requiredCorsConfiguration.ARTIST_ENRICHMENT_ENABLED, undefined);
-  assert.deepEqual(plan.observedDatabaseControls, { socialRuntime: { enabled: false, activatedOnce: true },
+  assert.deepEqual(plan.observedDatabaseControls, {
+    merchReputationFlags: null, missingMerchReputationFlags: null,
+    eventOperationFlags: null, interactionRuntime: null, interactionEntityKinds: null,
+    socialRuntime: { enabled: false, activatedOnce: true },
     revenueFlags: [{ flag: 'checkout.synthetic', enabled: false }], providerAccounts: [] });
   assert.ok(plan.remainingGates.some(x => x.includes('actual isolated restore')));
   assert.ok(plan.remainingGates.some(x => x.includes('all old writers')));

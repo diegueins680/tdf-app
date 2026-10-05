@@ -2129,7 +2129,7 @@
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
       "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
-      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations.",
+      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata.",
       "formalModels": [],
       "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established.",
       "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
@@ -2137,7 +2137,8 @@
       "confidence": "High within read-only target/disclosure guard scope; routine guarded release remains unimplemented.",
       "ambiguity": [
         "Absent environment variables need effective-default analysis.",
-        "Container image/public version observations require artifact metadata correspondence before release."
+        "Container image/public version observations require artifact metadata correspondence before release.",
+        "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features."
       ],
       "conformance": {
         "classification": "PARTIAL",
