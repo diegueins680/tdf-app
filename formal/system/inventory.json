@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "119e1e23b43bbec2cf03f8311e297f3ecb105c83",
+  "mobileRevision": "d46c83b045770eb6e691ef6cf2b652d6e4f7fd80",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -225,6 +225,7 @@
       "scripts/lib/logical-correctness-audit.mjs",
       "scripts/lib/migration-contract.mjs",
       "scripts/lib/openclaw-cdp.mjs",
+      "scripts/lib/operations_conformance.py",
       "scripts/lib/postgres-test-database.sh",
       "scripts/lib/production-release.mjs",
       "scripts/lib/requirement_declarations.py",
@@ -3468,6 +3469,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-3239206d050f7bd9",
+      "path": "scripts/lib/operations_conformance.py",
+      "sha256": "a820fd5c346f4ae5d21f9933397c361e22cbfe0daa1c6f475f6dae9d6f6e0081",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-963aae603c04dcfb",
       "path": "scripts/lib/postgres-test-database.sh",
       "sha256": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
@@ -4154,7 +4161,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "dbae479703cb26529c6cd31991881585aef7c721f74ad35467bc4d9c8b332eaa",
+      "sha256": "50d619ae4725aea589c3bd5f1edcadad9cc2597658268c0cf2e27e114776cee6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4658,7 +4665,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a408a0cf428ae03807a594e04d6dc4e979894000b6e662bb72dc3ce66a28f668",
+      "sha256": "fbd72b085f58f5256a1b5303a661b5f25b15518c2cef9179334e1ec9de9b32b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5294,7 +5301,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "e51da2dd6d81a657d51917df32ae69fd0c19c136ef7551ce297e78848488b703",
+      "sha256": "1c379b1c3befce44ca94d3c585f199c45b622ce59db60a63fa99dc214dc2d051",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9074,7 +9081,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "2169d96fe2a7ca67560c12f39c7bb501740934b17b847d459b18bd46b5ab87ae",
+      "sha256": "86b9203b6712847625434a901c11340295a07021cf5519b4836b6eba5f5dac8c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12068,7 +12075,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "a85231de89bbcc39a2626cfd70a7c78a4f8b3e08b4afae14201cbcb3e2bb0d7a",
+      "sha256": "dc9294978b41138e488bc8a14e13447088d614dbee141388eb3dee55f02d0b7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12080,7 +12087,7 @@
     {
       "id": "SURFACE-3760e982b560b6c3",
       "path": "tdf-hq/src/TDF/Operations/Worker.hs",
-      "sha256": "9c0245634b9e300de527ccd35f4c7d4d4cfe89b34564217f5f16185cf159948e",
+      "sha256": "1a72f95139a6a7f8d016599660c568eb0d1d99c9a5e32fd5936a52f7cc676019",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12656,7 +12663,7 @@
     {
       "id": "SURFACE-2c3fc05077df1f30",
       "path": "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
-      "sha256": "9f59220bac0a97e414f1da8631ab53e33b1626ec7b1cce7ea9921a742a7c9c92",
+      "sha256": "1654d960b82e533a43ebc953153d0d7edf0da96d2475b44d94c2fa0d2451527b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14540,7 +14547,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "e51da2dd6d81a657d51917df32ae69fd0c19c136ef7551ce297e78848488b703",
+      "sha256": "1c379b1c3befce44ca94d3c585f199c45b622ce59db60a63fa99dc214dc2d051",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17441,7 +17448,7 @@
     },
     {
       "path": "docs/operations-control-center/formal-model.yaml",
-      "sha256": "87a352318ec36ef88cb4e6d3092840b758b7b6b2ec1d01e365aec97af7c854df",
+      "sha256": "1a454f211268fc68fded994c35044b1788975ff8829f728408a092607c0b9fd2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19288,6 +19295,90 @@
       "kind": "formal-model"
     },
     {
+      "path": "formal/event-operations/OperationsApproval.cfg",
+      "sha256": "8d8d0648aaec5ac8b2c0f736ac978d06d13aff851dbefb48be68a8a1db3ff57d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsApproval.tla",
+      "sha256": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/OperationsApprovalDuplicateAudit.cfg",
+      "sha256": "b0b266939b10c98392fb73ff6823e76607f9133b9d4a4d8187032385435dabc8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsApprovalIgnoreExpiry.cfg",
+      "sha256": "eaf96eac0c8fa0e58cc0911b0c10e3655b2a4f234c6ca179091549725aa4dad9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsApprovalReopen.cfg",
+      "sha256": "81da769be6fb8fb3dafb818c5c708431df18750002874412e8c823af99182a69",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsApprovalSelfApprove.cfg",
+      "sha256": "3606a12806a291b1ae85c7405702713f4f62a95ea41ad7f57a285985e95e7ecf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsApprovalUnboundReplay.cfg",
+      "sha256": "d3b1bf84b600586e526af81adbb4403ae839e7c03cda6cbfd07fefa480526659",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsCommandFence.cfg",
+      "sha256": "d55b9c5138ba28c19a9b4e2e6c136aad000ceec2fda633754a38deef33588ac1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsCommandFence.tla",
+      "sha256": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/OperationsCommandFenceAllowRevoked.cfg",
+      "sha256": "358308f4a69eaf3ed95e27a4163e5b193a43412f0254aaa5b004ca5cf10953b7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsCommandFenceAllowStale.cfg",
+      "sha256": "3ddc78d79f4d727258dba948c65d99929fd00e3a24496020e5e35d6332a9e680",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsCommandFenceLeakEffect.cfg",
+      "sha256": "0a3854f8a7205b1be0d065c72eef9dff67a123628a51ada70109377fe869962e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/OptionalTokenRecovery.cfg",
       "sha256": "f3ca0562255d81aaac483b10f2a7e2b7bc832ff2f5a0ccd6ea3f8d75ef2a4809",
       "authority": "inferred",
@@ -20822,14 +20913,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "c1a4972dcd568cebce2e896d52dbe7707b5299df836df22b8ea86f58b4bf1e6c",
+      "sha256": "4ada4889cd62773f12ece60f9fb29e552b94b0a6bcfd57ef42e691b16146f108",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "d1353d4ecc3aabacaa03a1b918b6705093159dc2e2c04796cb4c7ce73c532fb2",
+      "sha256": "61a5a8bd134b77ec899c2899c764a8bfdfa552903878c5faeb7ab4e27f408a84",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20975,6 +21066,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/operations-command-boundary.md",
+      "sha256": "1b37c35e50ff41108b0ddc93269879549044a357df19ebeaff407d8bef91704c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-arithmetic.md",
       "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
       "authority": "inferred",
@@ -20997,14 +21095,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "558e1307d7bef2848328557393a6ff591cb00c46b4ae4bc9bdda70b644f68256",
+      "sha256": "e7ece3a058a1114b758c4faf0c89760357ad9872072fd1e6e85bc9effcc52975",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "bed07e1c156d6a3f2e2cb1dbcede463a3528dc6762542581950ef6f545ad5819",
+      "sha256": "8356fab890acf84fddff1bd755949c77f9006a64679a498b0a17711e19512c22",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21291,7 +21389,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "2169d96fe2a7ca67560c12f39c7bb501740934b17b847d459b18bd46b5ab87ae",
+      "sha256": "86b9203b6712847625434a901c11340295a07021cf5519b4836b6eba5f5dac8c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -29367,6 +29465,158 @@
         "  OfflineTerminates",
         "  WorkTerminates",
         "  FinanceTerminates"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsApproval.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnboundReplay = FALSE",
+        "  DuplicateAudit = FALSE",
+        "  Reopen = FALSE",
+        "  IgnoreExpiry = FALSE",
+        "  SelfApprove = FALSE",
+        "INVARIANTS BoundReplay DecisionGuard SingleEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsApprovalDuplicateAudit.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnboundReplay = FALSE",
+        "  DuplicateAudit = TRUE",
+        "  Reopen = FALSE",
+        "  IgnoreExpiry = FALSE",
+        "  SelfApprove = FALSE",
+        "INVARIANTS BoundReplay DecisionGuard SingleEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsApprovalIgnoreExpiry.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnboundReplay = FALSE",
+        "  DuplicateAudit = FALSE",
+        "  Reopen = FALSE",
+        "  IgnoreExpiry = TRUE",
+        "  SelfApprove = FALSE",
+        "INVARIANTS BoundReplay DecisionGuard SingleEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsApprovalReopen.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnboundReplay = FALSE",
+        "  DuplicateAudit = FALSE",
+        "  Reopen = TRUE",
+        "  IgnoreExpiry = FALSE",
+        "  SelfApprove = FALSE",
+        "INVARIANTS BoundReplay DecisionGuard SingleEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsApprovalSelfApprove.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnboundReplay = FALSE",
+        "  DuplicateAudit = FALSE",
+        "  Reopen = FALSE",
+        "  IgnoreExpiry = FALSE",
+        "  SelfApprove = TRUE",
+        "INVARIANTS BoundReplay DecisionGuard SingleEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsApprovalUnboundReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnboundReplay = TRUE",
+        "  DuplicateAudit = FALSE",
+        "  Reopen = FALSE",
+        "  IgnoreExpiry = FALSE",
+        "  SelfApprove = FALSE",
+        "INVARIANTS BoundReplay DecisionGuard SingleEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsCommandFence.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  AllowStale = FALSE",
+        "  AllowRevoked = FALSE",
+        "  LeakEffect = FALSE",
+        "INVARIANTS NoStaleCommit NoRevokedCommit AtomicEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsCommandFenceAllowRevoked.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  AllowStale = FALSE",
+        "  AllowRevoked = TRUE",
+        "  LeakEffect = FALSE",
+        "INVARIANTS NoStaleCommit NoRevokedCommit AtomicEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsCommandFenceAllowStale.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  AllowStale = TRUE",
+        "  AllowRevoked = FALSE",
+        "  LeakEffect = FALSE",
+        "INVARIANTS NoStaleCommit NoRevokedCommit AtomicEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsCommandFenceLeakEffect.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  AllowStale = FALSE",
+        "  AllowRevoked = FALSE",
+        "  LeakEffect = TRUE",
+        "INVARIANTS NoStaleCommit NoRevokedCommit AtomicEvidence",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

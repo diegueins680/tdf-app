@@ -4433,7 +4433,9 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
-      }
+      },
+      "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded safety models with required negative controls where mapped.",
+      "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
     },
     {
       "id": "OPS-APPROVAL-001",
@@ -4500,7 +4502,9 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
-      }
+      },
+      "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded safety models with required negative controls where mapped.",
+      "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
     },
     {
       "id": "OPS-WORKER-001",
@@ -4562,7 +4566,9 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
-      }
+      },
+      "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded safety models with required negative controls where mapped.",
+      "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
     }
   ]
 }
