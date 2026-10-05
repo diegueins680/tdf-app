@@ -50,6 +50,7 @@ import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
+import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
@@ -853,6 +854,7 @@ main = hspec $ do
     PaymentArithmeticSpec.spec
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
+    TicketConfirmationSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
             commercialStoreScore initialCommercialFormula 4

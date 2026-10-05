@@ -1,7 +1,7 @@
 module Main (main) where
 
 import Control.Monad (forM_, unless)
-import TDF.DisposableTicketDatabase (safeTicketDatabase)
+import TDF.DisposableTicketDatabase (safeTicketDatabase, safeConfirmationDatabase)
 
 main :: IO ()
 main = do
@@ -20,4 +20,13 @@ main = do
   forM_ [[Just "remote", Nothing, Nothing], [Nothing, Just "remote", Nothing],
          [Nothing, Nothing, Just "/synthetic/service"]] $ \overrides ->
     check "inherited routing override rejected" (not (safeTicketDatabase True overrides local))
-  putStrLn "Ticket direct-harness routing: 13 admission/negative controls passed"
+  let confirmation = "postgresql://127.0.0.1/tdf_ticket_confirmation_worker_test"
+  check "confirmation local" (safeConfirmationDatabase False [] confirmation)
+  check "confirmation CI" (safeConfirmationDatabase True [] "postgresql://postgres:postgres@postgres:5432/tdf_ticket_confirmation_worker_test")
+  check "admission name is not confirmation" (not (safeConfirmationDatabase True [] local))
+  forM_ ["postgresql://remote.example/tdf_ticket_confirmation_worker_test",
+         confirmation ++ "?host=remote.example", confirmation ++ "#fragment",
+         "host=127.0.0.1 dbname=tdf_ticket_confirmation_worker_test"] $ \dsn ->
+    check "unsafe confirmation URI rejected" (not (safeConfirmationDatabase True [] dsn))
+  check "confirmation overrides rejected" (not (safeConfirmationDatabase True [Just "remote"] confirmation))
+  putStrLn "Ticket direct-harness routing: admission and confirmation controls passed"

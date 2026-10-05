@@ -15993,6 +15993,36 @@
           }
         }
       }
+    },
+    {
+      "id": "3ee08dce6444317ab183",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying delivery acceptance or retry authority may lose receipts or leak credentials.",
+      "justification": "Delivery worker protocol states are constrained by SQL leasing and completion functions, not selectable event or commerce categories. Accepted means SMTP acceptance only; replays, expired/foreign leases, cancellation and dead-letter exhaustion are tested. Adding an editable label must never bypass these transitions.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
+        "line": 6
+      },
+      "reviewBatch": "ticket-confirmation-2026-10-05"
+    },
+    {
+      "id": "232c350c52f21219763d",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying delivery acceptance or retry authority may lose receipts or leak credentials.",
+      "justification": "Fixed diagnostic codes deliberately replace exception text, addresses and ticket credentials in the delivery ledger. They identify transport/lease/eligibility outcomes, not business categories or operator choices; no untrusted exception payload is persisted.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
+        "line": 12
+      },
+      "reviewBatch": "ticket-confirmation-2026-10-05"
     }
   ]
 }

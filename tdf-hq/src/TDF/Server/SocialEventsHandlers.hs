@@ -125,7 +125,7 @@ module TDF.Server.SocialEventsHandlers (
 ) where
 
 import Control.Applicative ((<|>))
-import Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
+import Control.Exception (SomeAsyncException, SomeException, fromException, throwIO, try)
 import Control.Monad (filterM, forM, forM_, join, unless, void, when)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -967,6 +967,10 @@ finalizePaidTicketOrder now orderKey = do
                 \) VALUES (?, 'seat_held', 'issued', 'provider', 'verified_payment',\
                 \ 'Tickets issued only after canonical provider verification')"
                 [toPersistValue orderKey]
+            -- Persist delivery intent in the issuance transaction. Network SMTP
+            -- happens in the leased worker only after this transaction commits.
+            _ <- (rawSql "SELECT event_ticket_queue_confirmation(?) IS NULL"
+                [toPersistValue orderKey] :: SqlPersistT IO [Single Bool])
             pure (order, ticketCodes, True)
         "issued" -> do
             existingTickets <-
@@ -1064,12 +1068,10 @@ sendTicketConfirmationEmailBestEffort
                     IO (Either SomeException ())
                 )
         case result of
-            Left err ->
+            Left _ ->
                 hPutStrLn
                     stderr
-                    ( "[TicketConfirmation] Email delivery failed after ticket issuance: "
-                        <> displayException err
-                    )
+                    "[TicketConfirmation] Email delivery failed after ticket issuance"
             Right () -> pure ()
 
 formatTicketEventDate :: UTCTime -> T.Text

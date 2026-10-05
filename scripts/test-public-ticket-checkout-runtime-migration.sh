@@ -309,6 +309,25 @@ assert_equal "$(psql_exec -Atc "SELECT current_redemptions FROM promo_code WHERE
   "0" "Expired hold releases promotion exactly once"
 
 apply_file tdf-hq/test/integration/ticket_order_quantity_limit.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql
+assert_equal "$(psql_exec -Atc 'SELECT COUNT(*) FROM event_ticket_confirmation_delivery')" "0" "No historical confirmation backfill"
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM pg_indexes WHERE indexname='event_ticket_confirmation_expired_lease_idx' AND indexdef LIKE '%lease_expires_at%' AND indexdef LIKE '%processing%';")" "1" "Expired lease recovery has a partial processing index"
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql
+apply_file tdf-hq/test/integration/ticket_confirmation_delivery.sql
+psql_exec -c 'SELECT event_ticket_queue_confirmation(1)' >/dev/null
+if apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql; then
+  echo "Ticket rollback discarded confirmation delivery evidence" >&2
+  exit 1
+fi
 if apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql; then
   echo "Ticket rollback removed an approved quantity limit" >&2
   exit 1

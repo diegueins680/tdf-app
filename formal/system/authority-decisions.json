@@ -419,6 +419,16 @@
       "conflict": "ReadOnly list and detail disagree; incidental producer fallback and role precedence differ across reads; failure list leaks other branches and notes/retries use stale admission.",
       "authority": "formal/system/operations-projection-boundary.md",
       "resolution": "Use one explicit read-domain policy with action-specific union, preserve documented ReadOnly read but not write authority, default unknown producer domain grants to deny, and revalidate auxiliary command scope/current roles in the atomic transaction."
+    },
+    {
+      "id": "AUTHORITY-040",
+      "sources": [
+        "formal/ticket-admission/confirmation-delivery.md",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql"
+      ],
+      "conflict": "The shipped lease contract requires current unexpired authority, but transaction-stable time accepts completion after expiry during a lock wait. New fixture entrypoints also admit remote databases with the expected name.",
+      "authority": "formal/ticket-admission/confirmation-delivery.md",
+      "resolution": "Preserve historical SQL and append a lock-before-real-clock completion correction, verified by actual PostgreSQL negative control; require pre-connection destination and override guards on every direct fixture entrypoint."
     }
   ]
 }
