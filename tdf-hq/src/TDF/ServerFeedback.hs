@@ -138,18 +138,18 @@ feedbackServer authorizationHeader cookieHeader =
             (throwError err400 { errBody = "Account deletion requests do not accept attachments" })
       attachmentPath <- traverse validateAndStoreAttachment fpAttachment
       let insertRequest = insert Feedback
-          { feedbackTitle        = title
-          , feedbackDescription  = body
-          , feedbackCategory     = Nothing
-          , feedbackSeverity     = Nothing
-          , feedbackCategoryId   = Just categoryId
-          , feedbackSeverityId   = Just severityId
-          , feedbackContactEmail = contactEmail
-          , feedbackAttachment   = fmap T.pack attachmentPath
-          , feedbackConsent      = fpConsent
-          , feedbackCreatedBy    = auPartyId <$> creator
-          , feedbackCreatedAt    = now
-          }
+            { feedbackTitle        = title
+            , feedbackDescription  = body
+            , feedbackCategory     = Nothing
+            , feedbackSeverity     = Nothing
+            , feedbackCategoryId   = Just categoryId
+            , feedbackSeverityId   = Just severityId
+            , feedbackContactEmail = contactEmail
+            , feedbackAttachment   = fmap T.pack attachmentPath
+            , feedbackConsent      = fpConsent
+            , feedbackCreatedBy    = auPartyId <$> creator
+            , feedbackCreatedAt    = now
+            }
       accepted <- liftIO $ runSqlPool (case expectedAccount of
         Nothing -> Just <$> insertRequest
         Just _ -> maybe (pure Nothing) (\owner -> withCurrentAuthSession owner insertRequest) creator) envPool
