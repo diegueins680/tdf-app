@@ -9625,6 +9625,22 @@ export interface components {
             ubEngineerName?: string | null;
             /** Format: uuid */
             ubServiceOfferingId?: string | null;
+        } | {
+            ubTitle: string;
+        } | {
+            ubStartsAt: string;
+        } | {
+            ubEndsAt: string;
+        } | {
+            ubStatus: string;
+        } | {
+            ubNotes: string;
+        } | {
+            ubEngineerPartyId: number;
+        } | {
+            ubEngineerName: string;
+        } | {
+            ubServiceOfferingId: string;
         };
         PublicBookingCreate: {
             pbFullName: string;

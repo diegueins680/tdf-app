@@ -1,0 +1,19 @@
+{
+  "scope": "Synthetic local HTTP reproduction on previous implementation; NOT validation of repaired candidate. No production data or provider calls.",
+  "sourceRevision": "bea8cd79147254fd41f139a03732155c5a487040",
+  "cachedBackendSourceRevision": "6bfabde58",
+  "reviewedSourceCorrespondence": "Reviewer verified relevant backend implementation equivalent to bea for these repros.",
+  "backendSha256": "ee9fef01022b3a9b4e5b9fbd41e80aa59c1f3c69a0ce8b90709ddb2f9ff6d74e",
+  "findings": [
+    "Foreign private booking read and cancellation",
+    "Conflicting time edit leaves stale allocation",
+    "Reactivation leaves released allocation",
+    "Anonymous assistant returns private indexed booking content"
+  ],
+  "productionMutated": false,
+  "ownedTestDatabasesRemoved": true,
+  "logs": {
+    "public-rag.log": "1a99e024a277a8eee4eb4b5c95cf054d70b49a19221b26ac068ee314a70f9dee",
+    "booking-scope-calendar.log": "f8f301207995a536de015383fa1e65ee2ce38e5810dca822ae46b0d350033411"
+  }
+}

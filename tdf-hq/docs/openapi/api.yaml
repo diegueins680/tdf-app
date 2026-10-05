@@ -9771,6 +9771,23 @@ components:
       additionalProperties: false
       minProperties: 1
       description: At least one supported field must be non-null; null alone is not an update.
+      anyOf:
+        - required: [ubTitle]
+          properties: { ubTitle: { type: string, nullable: false } }
+        - required: [ubStartsAt]
+          properties: { ubStartsAt: { type: string, nullable: false } }
+        - required: [ubEndsAt]
+          properties: { ubEndsAt: { type: string, nullable: false } }
+        - required: [ubStatus]
+          properties: { ubStatus: { type: string, nullable: false } }
+        - required: [ubNotes]
+          properties: { ubNotes: { type: string, nullable: false } }
+        - required: [ubEngineerPartyId]
+          properties: { ubEngineerPartyId: { type: integer, nullable: false } }
+        - required: [ubEngineerName]
+          properties: { ubEngineerName: { type: string, nullable: false } }
+        - required: [ubServiceOfferingId]
+          properties: { ubServiceOfferingId: { type: string, nullable: false } }
       properties:
         ubTitle: { nullable: true, type: string, minLength: 1, maxLength: 160 }
         ubStartsAt: { nullable: true, type: string, format: date-time }
