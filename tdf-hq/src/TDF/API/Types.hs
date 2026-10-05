@@ -2595,11 +2595,13 @@ instance MimeUnrender RawJSON BL.ByteString where
     mimeUnrender _ = Right
 
 -- | Verify the HMAC-SHA256 signature of a Meta webhook payload.
--- When no app secret is configured the check is skipped (useful for local dev).
+-- Missing configuration disables receipt; it never disables authentication.
 verifyMetaWebhookSignature :: Maybe Text -> Maybe Text -> BL.ByteString -> Either ServerError ()
 verifyMetaWebhookSignature mAppSecret mSigHeader body =
   case mAppSecret of
-    Nothing -> Right ()
+    Nothing -> Left err503 { errBody = "Meta webhook signing secret is not configured" }
+    Just appSecret | T.null (T.strip appSecret) ->
+      Left err503 { errBody = "Meta webhook signing secret is not configured" }
     Just appSecret ->
       case mSigHeader of
         Nothing -> Left err401 { errBody = "Missing X-Hub-Signature-256 header" }

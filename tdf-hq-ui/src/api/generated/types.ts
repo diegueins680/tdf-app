@@ -1499,6 +1499,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/hooks/whatsapp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify WhatsApp webhook
+         * @description Echoes the hub.challenge parameter when the verify token matches.
+         */
+        get: operations["verifyWhatsAppWebhookLegacy"];
+        put?: never;
+        /**
+         * Receive WhatsApp webhook
+         * @description Consumes WhatsApp Cloud API message payloads and triggers keyword-based enrollment.
+         */
+        post: operations["handleWhatsAppWebhookLegacy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/instagram/reply": {
         parameters: {
             query?: never;
@@ -1559,6 +1583,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/instagram/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify Instagram webhook
+         * @description Echoes hub.challenge when verify token matches.
+         */
+        get: operations["verifyInstagramWebhook"];
+        put?: never;
+        /**
+         * Receive Instagram webhook
+         * @description Consumes Meta Instagram webhook payloads for Messenger inbox ingestion.
+         */
+        post: operations["handleInstagramWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/facebook/webhook": {
         parameters: {
             query?: never;
@@ -1609,7 +1657,10 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header: {
+                    /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                    "X-Hub-Signature-256": string;
+                };
                 path?: never;
                 cookie?: never;
             };
@@ -1621,6 +1672,27 @@ export interface paths {
             responses: {
                 /** @description Processed */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid JSON or webhook envelope. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Missing or invalid signature with a configured app secret. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -19338,7 +19410,10 @@ export interface operations {
     handleWhatsAppWebhook: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                "X-Hub-Signature-256": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -19350,6 +19425,104 @@ export interface operations {
         responses: {
             /** @description Processed */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid JSON or webhook envelope. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature with a configured app secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    verifyWhatsAppWebhookLegacy: {
+        parameters: {
+            query?: {
+                "hub.mode"?: string;
+                "hub.verify_token"?: string;
+                "hub.challenge"?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Challenge echoed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Verify token mismatch */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    handleWhatsAppWebhookLegacy: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                "X-Hub-Signature-256": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppWebhook"];
+            };
+        };
+        responses: {
+            /** @description Processed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid JSON or webhook envelope. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature with a configured app secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19436,6 +19609,83 @@ export interface operations {
                 content: {
                     "application/json": Record<string, never>;
                 };
+            };
+        };
+    };
+    verifyInstagramWebhook: {
+        parameters: {
+            query?: {
+                "hub.mode"?: string;
+                "hub.verify_token"?: string;
+                "hub.challenge"?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verification challenge */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Verify token mismatch */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    handleInstagramWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                "X-Hub-Signature-256": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Processed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid JSON or webhook envelope. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature with a configured app secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

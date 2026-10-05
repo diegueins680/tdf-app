@@ -127,16 +127,16 @@ try:
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0)); http_port = sock.getsockname()[1]
     assets = OUTPUT / 'assets'; assets.mkdir()
-    with (OUTPUT / 'backend.log').open('w') as log:
-        server = subprocess.Popen([str(BINARY)], cwd=OUTPUT, stdout=log, stderr=log,
-            env={'PATH': ENV['PATH'], 'APP_ENV': 'test', 'DATABASE_URL': URL,
+    server_env = {'PATH': ENV['PATH'], 'APP_ENV': 'test', 'DATABASE_URL': URL,
                  'APP_PORT': str(http_port), 'RESET_DB': 'false', 'RUN_MIGRATIONS': 'false',
                  'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false', 'SEED_DB': 'false',
                  'HQ_ASSETS_DIR': str(assets), 'DEFAULT_LOCALE': 'es',
                  'FACEBOOK_APP_SECRET': 'synthetic-local-webhook-secret',
                  'DDEX_STORAGE_BACKEND': 'local-private', 'DDEX_PRIVATE_STORAGE_ROOT': str(OUTPUT / 'ddex-private'),
                  'EVENT_DISCOVERY_ENABLED': 'false', 'ARTIST_ENRICHMENT_ENABLED': 'false',
-                 'EVENT_LOGISTICS_RECHECK_ENABLED': 'false', 'REPUTATION_AGGREGATION_WORKER_ENABLED': 'false'})
+                 'EVENT_LOGISTICS_RECHECK_ENABLED': 'false', 'REPUTATION_AGGREGATION_WORKER_ENABLED': 'false'}
+    with (OUTPUT / 'backend.log').open('w') as log:
+        server = subprocess.Popen([str(BINARY)], cwd=OUTPUT, stdout=log, stderr=log, env=server_env)
     for _ in range(120):
         if server.poll() is not None: raise RuntimeError('Fixture backend exited')
         try:
@@ -160,7 +160,9 @@ try:
     # 204 override of Servant's declared 200. Empty webhook entries cannot enqueue
     # messages or trigger a provider call; the only signing key is synthetic.
     for path, payload in [('/facebook/webhook', {'object': 'page', 'entry': [{}]}),
-                          ('/webhooks/whatsapp', {'entry': []})]:
+                          ('/webhooks/whatsapp', {'entry': []}),
+                          ('/hooks/whatsapp', {'entry': []}),
+                          ('/instagram/webhook', {'object': 'instagram', 'entry': [{}]})]:
         check('webhook rejects unsigned transport ' + path,
               request(path, payload, token=None, method='POST')[0] == 401)
         check('signed empty webhook returns 200 with empty body ' + path,
@@ -553,6 +555,44 @@ try:
     check('RAG renders current public course rather than cached private text', 'PUBLIC_CURRENT' in content and all(value not in content for value in ['PRIVATE_SENTINEL', 'POISONED_CACHED_PRIVATE_TEXT', 'PUBLIC_BEFORE']))
     sql("DELETE FROM course WHERE slug='public-conformance-course'")
     check('deleted course cannot survive through stale index', knowledge() == [])
+    # AUTH-WEBHOOK-001: unavailable keys disable all public aliases, even if
+    # the caller supplies a signature. Deletion-only payloads cannot send replies.
+    for secret_mode in ['absent', 'blank']:
+        saved_port = http_port
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0)); http_port = sock.getsockname()[1]
+        unavailable_env = dict(server_env, APP_PORT=str(http_port))
+        unavailable_env.pop('FACEBOOK_APP_SECRET', None)
+        unavailable_env.pop('META_APP_SECRET', None)
+        if secret_mode == 'blank': unavailable_env['FACEBOOK_APP_SECRET'] = '   '
+        unavailable_server = None
+        try:
+            with (OUTPUT / ('webhook-' + secret_mode + '.log')).open('w') as log:
+                unavailable_server = subprocess.Popen([str(BINARY)], cwd=OUTPUT, stdout=log, stderr=log, env=unavailable_env)
+            for _ in range(120):
+                if unavailable_server.poll() is not None: raise RuntimeError('Unavailable-key fixture exited')
+                try:
+                    if request('/health')[0] == 200: break
+                except urllib.error.URLError: pass
+                time.sleep(.1)
+            else: raise RuntimeError('Unavailable-key fixture did not become healthy')
+            paths = [('/facebook/webhook', 'page', 'facebook_message'),
+                     ('/instagram/webhook', 'instagram', 'instagram_message'),
+                     ('/webhooks/whatsapp', None, None), ('/hooks/whatsapp', None, None)]
+            for path, channel, table in paths:
+                identity = 'synthetic-unavailable-' + secret_mode + '-' + str(uuid.uuid4())
+                payload = {'object': channel, 'entry': [{'messaging': [{'sender': {'id': 'synthetic-sender'}, 'message': {'mid': identity, 'is_deleted': True}}]}]} if channel else {'entry': []}
+                for signed in [False, True]:
+                    check('unavailable Meta secret rejects ' + secret_mode + ' ' + path + ' signed=' + str(signed), request(path, payload, token=None, method='POST', signed=signed)[0] == 503)
+                if table:
+                    check('unavailable webhook cannot create tombstone ' + secret_mode + ' ' + path, sql("SELECT count(*) FROM " + table + " WHERE external_id='" + identity + "'") == '0')
+        finally:
+            if unavailable_server is not None:
+                unavailable_server.terminate()
+                try: unavailable_server.wait(timeout=10)
+                except subprocess.TimeoutExpired: unavailable_server.kill(); unavailable_server.wait(timeout=5)
+            http_port = saved_port
+
     result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
 finally:
     if server is not None:

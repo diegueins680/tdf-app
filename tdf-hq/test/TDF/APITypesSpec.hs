@@ -5,11 +5,14 @@
 
 module TDF.APITypesSpec (spec) where
 
+import Crypto.Hash (SHA256)
+import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
+import Data.Word (Word8)
 import Data.Aeson (Value, eitherDecode, encode, object, toJSON, (.=))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Proxy (Proxy(..))
-import Servant (AuthProtect, Get, Header, Header', JSON, Post, Required, Strict, (:>))
+import Servant (ServerError, errHTTPCode, AuthProtect, Get, Header, Header', JSON, Post, Required, Strict, (:>))
 import Data.Maybe (isJust)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -176,7 +179,7 @@ spec = do
             verifyMetaWebhookSignature (Just "secret") (Just validHeader) body
                 `shouldSatisfy` isRightUnit
             verifyMetaWebhookSignature Nothing Nothing body
-                `shouldSatisfy` isRightUnit
+                `shouldSatisfy` isUnavailable
             verifyMetaWebhookSignature (Just "secret") (Just ("SHA256=" <> digest)) body
                 `shouldSatisfy` isLeft
             verifyMetaWebhookSignature
@@ -197,6 +200,20 @@ spec = do
                 `shouldSatisfy` isLeft
             verifyMetaWebhookSignature (Just "secret") Nothing body
                 `shouldSatisfy` isLeft
+
+        it "rejects absent or blank secrets regardless of supplied signature" $ do
+            let unavailable secret header =
+                    verifyMetaWebhookSignature secret header "{}" `shouldSatisfy` isUnavailable
+            mapM_ (\secret -> mapM_ (unavailable secret)
+                [Nothing, Just "sha256=untrusted", Just ""])
+                [Nothing, Just "", Just "   ", Just "\t\n"]
+        it "binds configured HMAC authentication to the exact raw bytes" $
+            property $ \bytes ->
+                let body = BL.pack (bytes :: [Word8])
+                    signature = "sha256=" <> T.pack (show (hmacGetDigest
+                        (hmac (TE.encodeUtf8 "synthetic-test-secret") (BL.toStrict body) :: HMAC SHA256)))
+                in isRightUnit (verifyMetaWebhookSignature (Just "synthetic-test-secret") (Just signature) body)
+                   && isLeft (verifyMetaWebhookSignature (Just "synthetic-test-secret") (Just signature) (body <> BL.singleton 0))
 
     describe "ArtistTipRequest FromJSON" $ do
         it "normalizes canonical tip payloads into the Stripe request contract" $
@@ -3378,6 +3395,9 @@ spec = do
     decodeTrialRequest = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
+    isUnavailable :: Either ServerError a -> Bool
+    isUnavailable (Left err) = errHTTPCode err == 503
+    isUnavailable (Right _) = False
     isRightUnit (Right ()) = True
     isRightUnit _ = False
 

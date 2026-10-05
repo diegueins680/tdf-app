@@ -1556,6 +1556,14 @@ paths:
       description: Consumes WhatsApp Cloud API message payloads and triggers keyword-based enrollment.
       operationId: handleWhatsAppWebhook
       security: [ ]
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          description: HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient.
+          schema:
+            type: string
+            pattern: '^sha256=[a-fA-F0-9]{64}$'
       requestBody:
         required: true
         content:
@@ -1565,6 +1573,73 @@ paths:
       responses:
         '200':
           description: Processed
+        '400':
+          description: Invalid JSON or webhook envelope.
+        '401':
+          description: Missing or invalid signature with a configured app secret.
+        '503':
+          description: Meta app secret is absent or blank; ingestion is unavailable.
+  /hooks/whatsapp:
+    get:
+      tags: [Webhooks]
+      summary: Verify WhatsApp webhook
+      description: Echoes the hub.challenge parameter when the verify token matches.
+      operationId: verifyWhatsAppWebhookLegacy
+      security: [ ]
+      parameters:
+        - name: hub.mode
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.verify_token
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.challenge
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Challenge echoed
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Verify token mismatch
+    post:
+      tags: [Webhooks]
+      summary: Receive WhatsApp webhook
+      description: Consumes WhatsApp Cloud API message payloads and triggers keyword-based enrollment.
+      operationId: handleWhatsAppWebhookLegacy
+      security: [ ]
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          description: HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient.
+          schema:
+            type: string
+            pattern: '^sha256=[a-fA-F0-9]{64}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhatsAppWebhook'
+      responses:
+        '200':
+          description: Processed
+        '400':
+          description: Invalid JSON or webhook envelope.
+        '401':
+          description: Missing or invalid signature with a configured app secret.
+        '503':
+          description: Meta app secret is absent or blank; ingestion is unavailable.
   /instagram/reply:
     post:
       tags: [Instagram]
@@ -1664,6 +1739,67 @@ paths:
             application/json:
               schema:
                 type: object
+  /instagram/webhook:
+    get:
+      operationId: verifyInstagramWebhook
+      tags: [Instagram]
+      summary: Verify Instagram webhook
+      description: Echoes hub.challenge when verify token matches.
+      security: [ ]
+      parameters:
+        - name: hub.mode
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.verify_token
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.challenge
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification challenge
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Verify token mismatch
+    post:
+      operationId: handleInstagramWebhook
+      tags: [Instagram]
+      summary: Receive Instagram webhook
+      description: Consumes Meta Instagram webhook payloads for Messenger inbox ingestion.
+      security: [ ]
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          description: HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient.
+          schema:
+            type: string
+            pattern: '^sha256=[a-fA-F0-9]{64}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Processed
+        '400':
+          description: Invalid JSON or webhook envelope.
+        '401':
+          description: Missing or invalid signature with a configured app secret.
+        '503':
+          description: Meta app secret is absent or blank; ingestion is unavailable.
   /facebook/webhook:
     get:
       tags: [Facebook]
@@ -1700,6 +1836,14 @@ paths:
       summary: Receive Facebook webhook
       description: Consumes Meta Page webhook payloads for Messenger inbox ingestion.
       security: [ ]
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          description: HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient.
+          schema:
+            type: string
+            pattern: '^sha256=[a-fA-F0-9]{64}$'
       requestBody:
         required: true
         content:
@@ -1709,6 +1853,12 @@ paths:
       responses:
         '200':
           description: Processed
+        '400':
+          description: Invalid JSON or webhook envelope.
+        '401':
+          description: Missing or invalid signature with a configured app secret.
+        '503':
+          description: Meta app secret is absent or blank; ingestion is unavailable.
   /facebook/messages:
     get:
       tags: [Facebook]
