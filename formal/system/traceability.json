@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "ff10746207ba5b57428560db64fb255d7417a481",
+  "mobileRevision": "b970939c862b2a4b80984b49cc301c04413de9bc",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -3228,6 +3228,153 @@
         "classification": "PARTIAL",
         "reason": "Bounded admission model and runtime tests exist; exact final-candidate PostgreSQL gate and complete runtime refinement remain required."
       }
+    },
+    {
+      "authority": "Current published API security plus explicit handler guards, reconciled by AUTHORITY-023 and AUTHORITY-024.",
+      "source": "formal/system/routed-read-boundaries.md",
+      "contract": "formal/system/routed-read-boundaries.md",
+      "preconditions": [
+        "A live initialized canonical schema and current bearer-session authentication for protected requests."
+      ],
+      "inputs": [
+        "HTTP method/path, bearer token and route-specific query/capture values."
+      ],
+      "allowedTransitions": [
+        "Read accepted only after the applicable authentication and visibility predicates."
+      ],
+      "forbiddenTransitions": [
+        "Read-only request changes persisted domain state.",
+        "An inactive token authorizes a protected read."
+      ],
+      "effects": [
+        "Return the selected current database projection; no write."
+      ],
+      "privacy": "Never serialize restricted rows through the public branch. Authentication is required by the protected contract.",
+      "concurrency": "Read-committed observation after boundary authentication; no claim of linearizable revocation concurrent with an already admitted read.",
+      "idempotency": "GET is read-only; repeated results may change when authoritative data changes. No mutation idempotency key.",
+      "failure": "Return 400 for invalid protected parameters, 401 for invalid/missing session, 403 for missing required role/capability.",
+      "recovery": "Retry after correcting input or obtaining current authorization. No rejected request writes to recover.",
+      "observability": "Compiled route metadata and owned PostgreSQL HTTP evidence record the candidate, executable hash, positive responses and denial controls.",
+      "implementation": [
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/Auth.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "verification": "Actual mounted CombinedAPI HTTP requests with canonical role fixtures and deliberately invalid authentication/query values.",
+      "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for the scoped read boundary; full domain and concurrent revocation remain outside this contract",
+      "ambiguity": [
+        "Does not establish complete domain authorization or whole API conformance."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+      },
+      "id": "AUTH-RADIO-001",
+      "title": "Authenticated party radio-presence read",
+      "domain": "AUTH",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
+      "actors": [
+        "Visitor",
+        "Authenticated party"
+      ],
+      "state": {
+        "presence": [
+          "absent",
+          "present"
+        ],
+        "access": [
+          "unauthenticated",
+          "authenticated"
+        ]
+      },
+      "authorization": "Any currently authenticated actor; the existing published endpoint has no relationship/ownership filter."
+    },
+    {
+      "authority": "Current published API security plus explicit handler guards, reconciled by AUTHORITY-023 and AUTHORITY-024.",
+      "source": "formal/system/routed-read-boundaries.md",
+      "contract": "formal/system/routed-read-boundaries.md",
+      "preconditions": [
+        "A live initialized canonical schema and current bearer-session authentication for protected requests."
+      ],
+      "inputs": [
+        "HTTP method/path, bearer token and route-specific query/capture values."
+      ],
+      "allowedTransitions": [
+        "Read accepted only after the applicable authentication and visibility predicates."
+      ],
+      "forbiddenTransitions": [
+        "Read-only request changes persisted domain state.",
+        "An inactive token authorizes a protected read."
+      ],
+      "effects": [
+        "Return the selected current database projection; no write."
+      ],
+      "privacy": "Never serialize restricted rows through the public branch. Authentication is required by the protected contract.",
+      "concurrency": "Read-committed observation after boundary authentication; no claim of linearizable revocation concurrent with an already admitted read.",
+      "idempotency": "GET is read-only; repeated results may change when authoritative data changes. No mutation idempotency key.",
+      "failure": "Return 400 for invalid protected parameters, 401 for invalid/missing session, 403 for missing required role/capability.",
+      "recovery": "Retry after correcting input or obtaining current authorization. No rejected request writes to recover.",
+      "observability": "Compiled route metadata and owned PostgreSQL HTTP evidence record the candidate, executable hash, positive responses and denial controls.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/API.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/Models.hs",
+        "tdf-hq/src/TDF/Auth.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "verification": "Actual mounted CombinedAPI HTTP requests with canonical role fixtures and deliberately invalid authentication/query values.",
+      "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for the scoped read boundary; full domain and concurrent revocation remain outside this contract",
+      "ambiguity": [
+        "Does not establish complete domain authorization or whole API conformance."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+      },
+      "id": "COURSE-SUBJECT-001",
+      "title": "Separate public and managed trial subject catalogs",
+      "domain": "COURSE",
+      "statement": "GET /trials/v1/subjects returns only active subjects publicly. GET /trials/v1/subjects/catalog requires current bearer authentication, Scheduling access, and Teacher, Admin, Manager, Studio Manager or Reception; it includes inactive subjects only when includeInactive=true. Distinct routes must prevent the public handler from shadowing the protected listing.",
+      "property": "Public results contain only active subjects; managed inactive results require the explicit school-access predicate.",
+      "actors": [
+        "Visitor",
+        "Teacher",
+        "Admin",
+        "Manager",
+        "Studio Manager",
+        "Reception",
+        "Other authenticated party"
+      ],
+      "state": {
+        "subject": [
+          "active",
+          "inactive"
+        ],
+        "managementRoles": [
+          "teacher",
+          "admin",
+          "manager",
+          "studio-manager",
+          "reception"
+        ]
+      },
+      "authorization": "Public active list is anonymous. Managed listing uses the existing ensureSchoolAccess conjunction of Scheduling admission and school role."
     }
   ],
   "sourceFingerprints": {
@@ -3339,7 +3486,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "31bab3c26a945391c5c6fc749c961e65543b40e4fa09235a66b15a9a8230d484",
+    "scripts/test-booking-conformance.py": "11e73a7ff90cfa5788bf6eb977d6e065b0944a15195073a2dbaf05944f855a5c",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "65bfd55b856baf7ded66010a5fc809bb762384078fd36f1b28eade998b263bab",
     "scripts/test-hetzner-restore.py": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
@@ -3377,7 +3524,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "e26061fe62ed366d66059b768c62e151bbf1bec46c63e048e45e16458d046714",
+    "tdf-hq/docs/openapi/api.yaml": "dbec0e808727a0d21e5cffde482e1ebc5fad281267cd381bd3a5075c2c8514fa",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -3388,7 +3535,8 @@
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
     "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": "ff27157ab7ad9b9ba559d80ff40b88f11c8c0f6857bdce0aa0ff58966e8be98d",
-    "tdf-hq/src/TDF/API.hs": "3254ce2083c37d35508059895ca4d49657744598ec7a47648981f373643b2a6b",
+    "tdf-hq/src/TDF/API.hs": "3b1f027ffe718dd547fc2299f6aa8977b9db9915736d4210dc1df235cb1372bc",
+    "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
@@ -3405,7 +3553,7 @@
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
-    "tdf-hq/src/TDF/Server.hs": "348f5a07fa5264ec8e306e71d435ce3f09d239b3f058aa9f844f1ba956123017",
+    "tdf-hq/src/TDF/Server.hs": "f4ff8ec05572f9c96009bd6e4bdfe808327192672ead560d7996f831164048d2",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
@@ -3414,8 +3562,12 @@
     "tdf-hq/src/TDF/ServerAuth.hs": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
     "tdf-hq/src/TDF/ServerFeedback.hs": "55a0f22b890416af1a9e48cccb5fcff733114e4a748a9c87ea616001e2584866",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
+    "tdf-hq/src/TDF/ServerRadio.hs": "74459d8820e98faa2d2567ddcd61e184d430dca96f9a160e31cae83aedf3974d",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
+    "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
+    "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
+    "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
     "tdf-hq/test/Spec.hs": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
@@ -3689,6 +3841,10 @@
       {
         "requirement": "SYS-API-003",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -3702,6 +3858,10 @@
       },
       {
         "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-RADIO-001",
         "relationship": "implementation"
       }
     ],
@@ -3996,6 +4156,14 @@
       },
       {
         "requirement": "ID-SESSION-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-SUBJECT-001",
         "relationship": "implementation"
       }
     ],
@@ -4823,6 +4991,14 @@
       {
         "requirement": "PRIV-RAG-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COURSE-SUBJECT-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/StudioBookingScope.tla": [
@@ -5021,6 +5197,36 @@
       {
         "requirement": "PAY-RETRY-001",
         "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/src/TDF/API/Radio.hs": [
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/ServerRadio.hs": [
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Trials/API.hs": [
+      {
+        "requirement": "COURSE-SUBJECT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Trials/Server.hs": [
+      {
+        "requirement": "COURSE-SUBJECT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Trials/Models.hs": [
+      {
+        "requirement": "COURSE-SUBJECT-001",
+        "relationship": "implementation"
       }
     ]
   },
@@ -7657,7 +7863,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "31bab3c26a945391c5c6fc749c961e65543b40e4fa09235a66b15a9a8230d484",
+      "sha256": "11e73a7ff90cfa5788bf6eb977d6e065b0944a15195073a2dbaf05944f855a5c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7670,6 +7876,14 @@
         },
         {
           "requirement": "PRIV-RAG-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-RADIO-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COURSE-SUBJECT-001",
           "relationship": "tests"
         }
       ]
@@ -9047,7 +9261,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "99c36e69ad9888faf20d3cefc6dcb13629b42c4f7e65ca12b4d59a303ecc1be0",
+      "sha256": "4b53e695a09bbf80bcf766107bff0739a2e372559bf73c1f7b3302ced812ed5d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -13547,7 +13761,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e26061fe62ed366d66059b768c62e151bbf1bec46c63e048e45e16458d046714",
+      "sha256": "dbec0e808727a0d21e5cffde482e1ebc5fad281267cd381bd3a5075c2c8514fa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16056,7 +16270,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "3254ce2083c37d35508059895ca4d49657744598ec7a47648981f373643b2a6b",
+      "sha256": "3b1f027ffe718dd547fc2299f6aa8977b9db9915736d4210dc1df235cb1372bc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16069,6 +16283,10 @@
         },
         {
           "requirement": "SYS-API-003",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-RADIO-001",
           "relationship": "implementation"
         }
       ]
@@ -16281,7 +16499,12 @@
       "path": "tdf-hq/src/TDF/API/Radio.hs",
       "sha256": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-RADIO-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f4f87f692fd74e88",
@@ -16421,6 +16644,14 @@
         },
         {
           "requirement": "ID-SESSION-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-RADIO-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-SUBJECT-001",
           "relationship": "implementation"
         }
       ]
@@ -17273,7 +17504,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "348f5a07fa5264ec8e306e71d435ce3f09d239b3f058aa9f844f1ba956123017",
+      "sha256": "f4ff8ec05572f9c96009bd6e4bdfe808327192672ead560d7996f831164048d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17298,6 +17529,10 @@
         },
         {
           "requirement": "SYS-API-003",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-RADIO-001",
           "relationship": "implementation"
         }
       ]
@@ -17573,7 +17808,12 @@
       "path": "tdf-hq/src/TDF/ServerRadio.hs",
       "sha256": "74459d8820e98faa2d2567ddcd61e184d430dca96f9a160e31cae83aedf3974d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-RADIO-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-3538414933fee775",
@@ -17718,9 +17958,14 @@
     {
       "id": "SURFACE-4d1393b620b6aed0",
       "path": "tdf-hq/src/TDF/Trials/API.hs",
-      "sha256": "712e074921f20c0954085ed8769f4dde567671ee9e56a7605dda130bff0d65df",
+      "sha256": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COURSE-SUBJECT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-981d668b9e163412",
@@ -17734,7 +17979,12 @@
       "path": "tdf-hq/src/TDF/Trials/Models.hs",
       "sha256": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COURSE-SUBJECT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8f34cfa4bb16ce16",
@@ -17748,7 +17998,12 @@
       "path": "tdf-hq/src/TDF/Trials/Server.hs",
       "sha256": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COURSE-SUBJECT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-35696a048b2fd035",
@@ -20204,7 +20459,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "99c36e69ad9888faf20d3cefc6dcb13629b42c4f7e65ca12b4d59a303ecc1be0",
+      "sha256": "4b53e695a09bbf80bcf766107bff0739a2e372559bf73c1f7b3302ced812ed5d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -22642,7 +22897,6 @@
     "SURFACE-4ec58002d2eff1e2",
     "SURFACE-bab78e6c1c75dd3b",
     "SURFACE-7372ceb0e4611b65",
-    "SURFACE-9deb4ef00a69e5d0",
     "SURFACE-f4f87f692fd74e88",
     "SURFACE-4669c83019e74b2e",
     "SURFACE-6a44888932d60538",
@@ -22774,7 +23028,6 @@
     "SURFACE-48a864e76f6a2ed9",
     "SURFACE-c44b09e0d89d05c3",
     "SURFACE-063a8df8dc4a2bba",
-    "SURFACE-5a72b47f8b63ff19",
     "SURFACE-3538414933fee775",
     "SURFACE-f53dee8d468f33b8",
     "SURFACE-8feae87922bfebcd",
@@ -22791,11 +23044,8 @@
     "SURFACE-effe2030880b0cfd",
     "SURFACE-f0cebaafb30d082c",
     "SURFACE-24f8d92d510c1f2c",
-    "SURFACE-4d1393b620b6aed0",
     "SURFACE-981d668b9e163412",
-    "SURFACE-fef2c7b829d4aefc",
     "SURFACE-8f34cfa4bb16ce16",
-    "SURFACE-f9d35ff622573006",
     "SURFACE-35696a048b2fd035",
     "SURFACE-41f19892e354f9ef",
     "SURFACE-8e95ce26cbe1127d",
@@ -23289,7 +23539,9 @@
     "PRIV-RAG-001",
     "MEDIA-PERSIST-001",
     "SYS-API-003",
-    "SYS-VERIFY-004"
+    "SYS-VERIFY-004",
+    "AUTH-RADIO-001",
+    "COURSE-SUBJECT-001"
   ],
   "stateMachines": [
     {
@@ -24410,6 +24662,33 @@
     }
   ],
   "apiOperations": [
+    {
+      "id": "GET /trials/v1/subjects",
+      "operationId": "listPublicTrialSubjects",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /trials/v1/subjects/catalog",
+      "operationId": "listManagedTrialSubjects",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
     {
       "id": "GET /commerce/payment-capabilities",
       "operationId": "listPaymentCapabilities",
@@ -45209,7 +45488,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 45,
+    "PARTIAL": 47,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
