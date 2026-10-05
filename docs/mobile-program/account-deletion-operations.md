@@ -28,6 +28,10 @@ attachments, diagnostic logs or analytics events are added. A successful
 response means **request received**, never **account deleted**. Processing is
 manual with the already stated target of 30 days and a completion confirmation.
 
+## Operator authorization
+
+The backend requires an Admin, Manager or StudioManager role **and** the canonical `internships` module grant for both legacy-feedback reads and deletion resolution, matching the UI boundary. A role alone, or an unrelated admin-module grant, cannot read the privacy queue or mark a request terminal. Each HTTP request reloads canonical role/module grants; this is not a claim that a concurrent in-flight permission change is serialized by the session lock.
+
 ## Operator procedure
 
 1. Find the `account_deletion_request` in the existing internal feedback queue

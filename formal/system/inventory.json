@@ -4839,7 +4839,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "8adf2bdd2b282213bd6a8c6ba7ba3190ffd546945cd4ba37df781cb19afe8431",
+      "sha256": "03ac8c4156907e8810ad2f001315fc8bf060ad34bf59c041c5b789c2686f9196",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12609,7 +12609,7 @@
     {
       "id": "SURFACE-4e1ca7d206cc436f",
       "path": "tdf-hq/src/TDF/ServerFeedback.hs",
-      "sha256": "b644fd64b85c7724c45b35510be9306c40dd571a32d03e3795857cf435eab497",
+      "sha256": "e0775fe4075f16f1974bf32842526728f691bf93a4a05848210215b7c17c4ea1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12915,7 +12915,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "85a49e576be46f9fa62f3b7d0936c093743c3553af7ce806821cdc892c891347",
+      "sha256": "cd85f5998755fdad8310bf88e83153713320cbb835f601475d8fdb7b0c931379",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17728,7 +17728,7 @@
     },
     {
       "path": "docs/mobile-program/account-deletion-operations.md",
-      "sha256": "2585ca8c0e36dd8a450033b6f0dc01dd3e1725473995bfa8c3d15369a594af64",
+      "sha256": "bf3e2e2c51251d3e1db10bf257e098ca2ef83edcae5eac60a20f8b79d4cd00c3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18926,6 +18926,34 @@
     {
       "path": "formal/event-operations/AccountDeletionIntakeReplayNotification.cfg",
       "sha256": "0d1e2917dd904b2b671b3d091f1c7593b8e42643b6ef639a2515c853776b8f5b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionOperator.cfg",
+      "sha256": "99cd30c1adbb18bbfe816436629af126b771a8db0547d4cd5b4d9cc82c372215",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionOperator.tla",
+      "sha256": "3d9906c8ad39be476c4a91b360d6fe31a7abe598e18466fea16d14934632d6e7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg",
+      "sha256": "ef3187d5ca6caa1ee13bf6363fb28f4b7387ba611d470c6bf8b49b18fa315c06",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg",
+      "sha256": "4e23f0abecc00bee64ce49bab3b529314041cf087766ca7aa8bcc4172b306e7e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -21641,7 +21669,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c66e0f010dc463da44364a147b60c8d93a92372fd7aa5d37249dea36b59d6044",
+      "sha256": "7b47448633afa48636a2aaaa542e240aa357e6479f6894d5dee274a1da05d16b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -28862,6 +28890,45 @@
         "  OnePendingOwnerReceipt",
         "  OneNoticePerNewReceipt",
         "  OnlyPrivacyAudience"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionOperator.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireRole = TRUE",
+        "  RequireModule = TRUE",
+        "INVARIANT OnlyAuthorizedPrivacyEffects",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireRole = FALSE",
+        "  RequireModule = TRUE",
+        "INVARIANT OnlyAuthorizedPrivacyEffects",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireRole = TRUE",
+        "  RequireModule = FALSE",
+        "INVARIANT OnlyAuthorizedPrivacyEffects",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

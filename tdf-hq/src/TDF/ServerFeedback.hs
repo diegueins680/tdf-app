@@ -76,6 +76,8 @@ import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPie
 
 import           TDF.API.Feedback
 import           TDF.Auth                   ( AuthedUser(..)
+                                            , ModuleAccess(ModuleInternships)
+                                            , hasModuleAccess
                                             , extractTokenFromHeaders
                                             , loadAuthedUser
                                             , withCurrentAuthSession
@@ -287,7 +289,9 @@ internalFeedbackServer user =
     ensureInternalAccess = unless (isAdminUser || isInternUser) $
       throwError err403 { errBody = "Internal testing report access required" }
 
-    ensureAdmin = unless isAdminUser $
+    -- Match the UI administrator boundary using canonical module grants,
+    -- including direct API calls after a module grant has been removed.
+    ensureAdmin = unless (isAdminUser && hasModuleAccess ModuleInternships user) $
       throwError err403 { errBody = "Report administration access required" }
 
     reportByIdH rawReportId =

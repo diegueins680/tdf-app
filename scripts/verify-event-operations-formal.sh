@@ -110,6 +110,9 @@ run_negative_tlc OperationsApprovalDuplicateAudit.cfg operationsapprovalduplicat
 run_negative_tlc OperationsApprovalReopen.cfg operationsapprovalreopen 'Invariant DecisionGuard is violated' OperationsApproval.tla
 run_negative_tlc OperationsApprovalIgnoreExpiry.cfg operationsapprovalignoreexpiry 'Invariant DecisionGuard is violated' OperationsApproval.tla
 run_negative_tlc OperationsApprovalSelfApprove.cfg operationsapprovalselfapprove 'Invariant DecisionGuard is violated' OperationsApproval.tla
+run_tlc AccountDeletionOperator.tla AccountDeletionOperator.cfg account-deletion-operator
+run_negative_tlc AccountDeletionOperatorRoleOnly.cfg deletion-operator-role-only 'Invariant OnlyAuthorizedPrivacyEffects is violated' AccountDeletionOperator.tla
+run_negative_tlc AccountDeletionOperatorModuleOnly.cfg deletion-operator-module-only 'Invariant OnlyAuthorizedPrivacyEffects is violated' AccountDeletionOperator.tla
 run_tlc AccountDeletionIntake.tla AccountDeletionIntake.cfg account-deletion-intake
 run_negative_tlc AccountDeletionIntakeNoOwnerLock.cfg deletion-intake-race 'Invariant OnePendingOwnerReceipt is violated' AccountDeletionIntake.tla
 run_negative_tlc AccountDeletionIntakeReplayNotification.cfg deletion-intake-replay 'Invariant OneNoticePerNewReceipt is violated' AccountDeletionIntake.tla

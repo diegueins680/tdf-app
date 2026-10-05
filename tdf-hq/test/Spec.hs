@@ -5,6 +5,7 @@ module Main (main) where
 
 import Control.Exception (IOException, bracket)
 import Control.Monad (forM_)
+import qualified Data.Set as Set
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
@@ -57,6 +58,8 @@ import Web.PathPieces (toPathPiece)
 import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
 import TDF.API.Feedback
     ( FeedbackPayload (..),
+      InternalFeedbackAPI,
+      AccountDeletionResolution (..),
       InternalFeedbackSummaryDTO (..),
       InternalFeedbackUpdate (..) )
 import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
@@ -215,7 +218,7 @@ import TDF.Models.SocialEventsModels
       EventTicketTier (..),
       SocialEvent (..),
       SocialEventId )
-import TDF.Auth (AuthedUser (..), moduleName, modulesForRoles)
+import TDF.Auth (AuthedUser (..), ModuleAccess (..), moduleName, modulesForRoles)
 import TDF.FeatureRegistry
     ( RegistryFeature(registryFeatureId),
       allRegistryFeatures,
@@ -321,6 +324,7 @@ import TDF.ServerProposals
       validateTemplateKey )
 import TDF.ServerFeedback
     ( csvField,
+      internalFeedbackServer,
       filterInternalReportSummaries,
       internalReportTypeForCategoryCode,
       validateAccountDeletionIdentity,
@@ -9587,6 +9591,34 @@ main = hspec $ do
                 let normalized = normalizeAccountDeletionDescription (Data.Text.pack raw)
                 in normalizeAccountDeletionDescription normalized == normalized
                     && not (Data.Text.any (== '\r') normalized)
+
+    describe "internal feedback administrator module boundary" $ do
+        forM_ [Admin, Manager, StudioManager] $ \role ->
+            it ("rejects direct queue and resolution calls without internships access: " <> show role) $ do
+                let user = AuthedUser
+                        { auPartyId = toSqlKey 7
+                        , auRoles = [role]
+                        , auModules = Set.singleton ModuleAdmin
+                        , auApiTokenId = Nothing
+                        , auSessionWitness = Nothing
+                        }
+                    handler = internalFeedbackServer user
+                        :: ServerT InternalFeedbackAPI (ReaderT Env (ExceptT ServerError IO))
+                    _ :<|> _ :<|> _ :<|> listLegacy :<|> resolveDeletion :<|> _ :<|> _ = handler
+                    unusedEnv = Env
+                        { envPool = error "Denied privacy access must not query or mutate the database"
+                        , envConfig = error "Denied privacy access must not inspect runtime config"
+                        }
+                    assertForbidden action = do
+                        result <- runExceptT (runReaderT action unusedEnv)
+                        case result of
+                            Left serverErr -> errHTTPCode serverErr `shouldBe` 403
+                            Right _ -> expectationFailure "Missing internships module must deny access"
+                assertForbidden (listLegacy (Just True) (Just 0))
+                assertForbidden (listLegacy Nothing Nothing)
+                forM_ ["completed", "rejected"] $ \outcome ->
+                    assertForbidden (resolveDeletion "00000000-0000-4000-8000-000000000001"
+                        (AccountDeletionResolution outcome "Synthetic resolution; no real erasure"))
 
     describe "feedbackNotificationRecipients" $ do
         it "restricts every authenticated deletion notice to the confirmed privacy inbox" $

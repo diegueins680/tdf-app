@@ -3313,7 +3313,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5917,7 +5917,8 @@
       ],
       "preconditions": [
         "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational.",
-        "VITE_ACCOUNT_DELETION_FORM_ENABLED must equal the literal string true to expose either the form or administrator queue; all other values keep them off."
+        "VITE_ACCOUNT_DELETION_FORM_ENABLED must equal the literal string true to expose either the form or administrator queue; all other values keep them off.",
+        "Operator reads and resolution require both an Admin/Manager/StudioManager role and the canonical internships module, including direct API calls."
       ],
       "inputs": [
         "Account ID bound to authenticated identity",
@@ -6004,9 +6005,13 @@
         "formal/event-operations/AccountDeletionIntake.cfg",
         "formal/event-operations/AccountDeletionIntakeNoOwnerLock.cfg",
         "formal/event-operations/AccountDeletionIntakeReplayNotification.cfg",
-        "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg"
+        "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg",
+        "formal/event-operations/AccountDeletionOperator.tla",
+        "formal/event-operations/AccountDeletionOperator.cfg",
+        "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg",
+        "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg"
       ],
-      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking with three named negative controls; no refinement, resolution, crashes or delivery proof. Actual Servant CORS tests include trailing-slash aliases.",
+      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking with three named negative controls; no refinement, resolution, crashes or delivery proof. Actual Servant CORS tests include trailing-slash aliases. Actual Servant handler tests deny queue reads and both terminal outcomes for each administrator role without the internships module before any database access. AccountDeletionOperator bounds eight grant combinations and four private operations, with role-only and module-only counterexamples; concurrent grant revocation is outside this abstraction.",
       "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
       "status": "specified and implemented",
       "critical": true,

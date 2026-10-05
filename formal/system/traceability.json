@@ -5918,7 +5918,8 @@
       ],
       "preconditions": [
         "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational.",
-        "VITE_ACCOUNT_DELETION_FORM_ENABLED must equal the literal string true to expose either the form or administrator queue; all other values keep them off."
+        "VITE_ACCOUNT_DELETION_FORM_ENABLED must equal the literal string true to expose either the form or administrator queue; all other values keep them off.",
+        "Operator reads and resolution require both an Admin/Manager/StudioManager role and the canonical internships module, including direct API calls."
       ],
       "inputs": [
         "Account ID bound to authenticated identity",
@@ -6005,9 +6006,13 @@
         "formal/event-operations/AccountDeletionIntake.cfg",
         "formal/event-operations/AccountDeletionIntakeNoOwnerLock.cfg",
         "formal/event-operations/AccountDeletionIntakeReplayNotification.cfg",
-        "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg"
+        "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg",
+        "formal/event-operations/AccountDeletionOperator.tla",
+        "formal/event-operations/AccountDeletionOperator.cfg",
+        "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg",
+        "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg"
       ],
-      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking with three named negative controls; no refinement, resolution, crashes or delivery proof. Actual Servant CORS tests include trailing-slash aliases.",
+      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking with three named negative controls; no refinement, resolution, crashes or delivery proof. Actual Servant CORS tests include trailing-slash aliases. Actual Servant handler tests deny queue reads and both terminal outcomes for each administrator role without the internships module before any database access. AccountDeletionOperator bounds eight grant combinations and four private operations, with role-only and module-only counterexamples; concurrent grant revocation is outside this abstraction.",
       "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
       "status": "specified and implemented",
       "critical": true,
@@ -6040,6 +6045,10 @@
     "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg": "d908f45d0dc392a5bc29f7ba6a3c9289a4a3f3d8eeb4de59e5de4e9d05c80c43",
     "formal/event-operations/AccountDeletionIntakeNoOwnerLock.cfg": "a07c4cb9c809ab676d039a29ecfc56d8e80e17577fb9cfafb8b90d5d41617318",
     "formal/event-operations/AccountDeletionIntakeReplayNotification.cfg": "0d1e2917dd904b2b671b3d091f1c7593b8e42643b6ef639a2515c853776b8f5b",
+    "formal/event-operations/AccountDeletionOperator.cfg": "99cd30c1adbb18bbfe816436629af126b771a8db0547d4cd5b4d9cc82c372215",
+    "formal/event-operations/AccountDeletionOperator.tla": "3d9906c8ad39be476c4a91b360d6fe31a7abe598e18466fea16d14934632d6e7",
+    "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg": "ef3187d5ca6caa1ee13bf6363fb28f4b7387ba611d470c6bf8b49b18fa315c06",
+    "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg": "4e23f0abecc00bee64ce49bab3b529314041cf087766ca7aa8bcc4172b306e7e",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
     "formal/event-operations/ChatMutationBoundary.tla": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
@@ -6223,7 +6232,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "8adf2bdd2b282213bd6a8c6ba7ba3190ffd546945cd4ba37df781cb19afe8431",
+    "scripts/verify-event-operations-formal.sh": "03ac8c4156907e8810ad2f001315fc8bf060ad34bf59c041c5b789c2686f9196",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
@@ -6381,7 +6390,7 @@
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "4b53165a764b1d6dd083f193ad1f0d752b42d10ef48bcab2ac9337fb791288e7",
     "tdf-hq/src/TDF/ServerExtra.hs": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
-    "tdf-hq/src/TDF/ServerFeedback.hs": "b644fd64b85c7724c45b35510be9306c40dd571a32d03e3795857cf435eab497",
+    "tdf-hq/src/TDF/ServerFeedback.hs": "e0775fe4075f16f1974bf32842526728f691bf93a4a05848210215b7c17c4ea1",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
@@ -6395,7 +6404,7 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "c2f2de27bae619934ebd0f05e680e15c4990f5101478ba08587786d94f9a240c",
-    "tdf-hq/test/Spec.hs": "85a49e576be46f9fa62f3b7d0936c093743c3553af7ce806821cdc892c891347",
+    "tdf-hq/test/Spec.hs": "cd85f5998755fdad8310bf88e83153713320cbb835f601475d8fdb7b0c931379",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -10044,6 +10053,30 @@
       }
     ],
     "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AccountDeletionOperator.tla": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AccountDeletionOperator.cfg": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg": [
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "formalModels"
@@ -14038,7 +14071,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "8adf2bdd2b282213bd6a8c6ba7ba3190ffd546945cd4ba37df781cb19afe8431",
+      "sha256": "03ac8c4156907e8810ad2f001315fc8bf060ad34bf59c041c5b789c2686f9196",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24143,7 +24176,7 @@
     {
       "id": "SURFACE-4e1ca7d206cc436f",
       "path": "tdf-hq/src/TDF/ServerFeedback.hs",
-      "sha256": "b644fd64b85c7724c45b35510be9306c40dd571a32d03e3795857cf435eab497",
+      "sha256": "e0775fe4075f16f1974bf32842526728f691bf93a4a05848210215b7c17c4ea1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24590,7 +24623,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "85a49e576be46f9fa62f3b7d0936c093743c3553af7ce806821cdc892c891347",
+      "sha256": "cd85f5998755fdad8310bf88e83153713320cbb835f601475d8fdb7b0c931379",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
