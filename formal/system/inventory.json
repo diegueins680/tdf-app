@@ -2318,7 +2318,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
+      "sha256": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4802,7 +4802,7 @@
     {
       "id": "SURFACE-df96772a4b1d23c5",
       "path": "scripts/verify-system-evidence.mjs",
-      "sha256": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
+      "sha256": "09fda1a80dd1f221b5bb4521dc8d81af794bd166f67ea811a676251009a8eb1b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
