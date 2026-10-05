@@ -2737,6 +2737,149 @@
         "scripts/verify-event-operations-formal.sh"
       ],
       "critical": true
+    },
+    {
+      "id": "SYS-UX-001",
+      "title": "Replay-safe deep-link pagination",
+      "statement": "A valid linked item must select its containing page after list initialization or reset, including React effect replay; subsequent manual pagination must remain possible until the selection, reset key or page size changes.",
+      "domain": "SYS",
+      "actors": [
+        "Web reader"
+      ],
+      "preconditions": [
+        "The linked item is present in the currently supplied readable items."
+      ],
+      "inputs": [
+        "Items",
+        "Selected item index",
+        "Reset key",
+        "Page size",
+        "Manual page change"
+      ],
+      "state": {
+        "fields": [
+          "page",
+          "rowsPerPage",
+          "appliedSelection"
+        ],
+        "initial": "First page until valid linked selection is applied."
+      },
+      "allowedTransitions": [
+        "Apply valid selection to its containing page.",
+        "Reset invalidates the remembered selection before replaying it.",
+        "Manual pagination changes page without changing link intent."
+      ],
+      "forbiddenTransitions": [
+        "Effect replay leaves a valid initially selected item on a different page.",
+        "An unrelated rerender repeatedly overrides the reader's manual page choice."
+      ],
+      "effects": [
+        "Rendered slice and pagination metadata agree."
+      ],
+      "authorization": "Pagination only presents supplied readable items and never grants backend access.",
+      "privacy": "No additional records are fetched or disclosed by selecting a page.",
+      "concurrency": "React development StrictMode may replay effect setup; deferred data refresh may reposition a linked item.",
+      "idempotency": "Repeated setup for the same valid selection produces the same selected page.",
+      "failure": "Missing or invalid selection retains normal bounded pagination.",
+      "recovery": "A reset or changed selection reapplies the current valid target.",
+      "observability": "Selected item presence and rendered page metadata are observable in component tests.",
+      "source": "docs/interactions/implementation.md; existing publication-selection and artist/fan-club deep-link tests; independent StrictMode regression.",
+      "implementation": [
+        "tdf-hq-ui/src/components/LazyPaginatedList.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx",
+        "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "This component contract does not establish every route's cache, authorization or navigation-race behavior."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Actual-component StrictMode regression and old-code negative control require exact-candidate execution evidence; no whole-UI refinement proof."
+      },
+      "critical": false,
+      "authority": "Existing publication deep-link contract and observable selected-item intent; formal/system/requirements.json",
+      "property": "Effect replay preserves a valid selected page; manual paging remains possible.",
+      "contract": "formal/system/requirements.json",
+      "verification": "Actual React component tests in normal and StrictMode renderers; known-old component must fail the replay regression.",
+      "evidence": "Exact-source component/CI logs are required; negative control and fixed-run receipts must remain distinct."
+    },
+    {
+      "id": "PRIV-RAG-001",
+      "title": "Current public knowledge at customer-facing retrieval",
+      "statement": "Customer-facing knowledge retrieval may rank existing public courses using cached embeddings, but must render current public metadata, never raw indexed private content, and omit a course absent when its metadata is read.",
+      "domain": "PRIV",
+      "actors": [
+        "Anonymous assistant visitor",
+        "Instagram/Facebook/WhatsApp automated reply recipient"
+      ],
+      "preconditions": [
+        "A customer-facing retrieval request has no studio-private identity scope."
+      ],
+      "inputs": [
+        "Query embedding",
+        "Rank limit",
+        "Persisted index",
+        "Current course rows"
+      ],
+      "state": {
+        "fields": [
+          "Indexed source kind and identity",
+          "Current course presence",
+          "Current course metadata"
+        ],
+        "initial": "Historical index may contain private or stale chunks."
+      },
+      "allowedTransitions": [
+        "Use a course index hit to select an existing course identity.",
+        "Render current public metadata from that course.",
+        "Exclude deleted or unapproved sources."
+      ],
+      "forbiddenTransitions": [
+        "Return a private availability/studio/campaign chunk.",
+        "Return poisoned cached raw content for an otherwise valid public course.",
+        "Return deleted-course content from a stale index."
+      ],
+      "effects": [
+        "Only current public course documents reach the calling assistant adapter."
+      ],
+      "authorization": "Anonymous and customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
+      "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
+      "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
+      "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
+      "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
+      "recovery": "Public metadata changes take effect on the next read; stale raw text need not be purged to enforce this retrieval boundary.",
+      "observability": "Synthetic anonymous HTTP checks observe private-source exclusion, poisoned-cache rejection, metadata freshness and deleted-course exclusion.",
+      "source": "Observed anonymous private-booking-content disclosure; formal/system/bookings.md customer-facing retrieval boundary.",
+      "implementation": [
+        "tdf-hq/src/TDF/RagStore.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Embedding-provider sharing, internal retention and curated conversation examples need separate privacy reconciliation.",
+        "Channel-specific provider delivery is not exercised by the anonymous HTTP fixture."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Old-binary disclosure was reproduced; repaired HTTP checks and all channel integrations need execution evidence. No formal deletion linearization proof is claimed."
+      },
+      "critical": true,
+      "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
+      "property": "Every returned document is freshly rendered from an existing public course, never raw private indexed content.",
+      "contract": "formal/system/bookings.md",
+      "verification": "Anonymous HTTP on a fresh synthetic PostgreSQL database with private, poisoned, updated and deleted index fixtures.",
+      "evidence": "Preserved old-backend anonymous disclosure reproduction and exact-candidate booking-conformance HTTP artifact; repaired execution remains pending."
     }
   ]
 }

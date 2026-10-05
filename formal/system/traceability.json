@@ -2738,6 +2738,149 @@
         "scripts/verify-event-operations-formal.sh"
       ],
       "critical": true
+    },
+    {
+      "id": "SYS-UX-001",
+      "title": "Replay-safe deep-link pagination",
+      "statement": "A valid linked item must select its containing page after list initialization or reset, including React effect replay; subsequent manual pagination must remain possible until the selection, reset key or page size changes.",
+      "domain": "SYS",
+      "actors": [
+        "Web reader"
+      ],
+      "preconditions": [
+        "The linked item is present in the currently supplied readable items."
+      ],
+      "inputs": [
+        "Items",
+        "Selected item index",
+        "Reset key",
+        "Page size",
+        "Manual page change"
+      ],
+      "state": {
+        "fields": [
+          "page",
+          "rowsPerPage",
+          "appliedSelection"
+        ],
+        "initial": "First page until valid linked selection is applied."
+      },
+      "allowedTransitions": [
+        "Apply valid selection to its containing page.",
+        "Reset invalidates the remembered selection before replaying it.",
+        "Manual pagination changes page without changing link intent."
+      ],
+      "forbiddenTransitions": [
+        "Effect replay leaves a valid initially selected item on a different page.",
+        "An unrelated rerender repeatedly overrides the reader's manual page choice."
+      ],
+      "effects": [
+        "Rendered slice and pagination metadata agree."
+      ],
+      "authorization": "Pagination only presents supplied readable items and never grants backend access.",
+      "privacy": "No additional records are fetched or disclosed by selecting a page.",
+      "concurrency": "React development StrictMode may replay effect setup; deferred data refresh may reposition a linked item.",
+      "idempotency": "Repeated setup for the same valid selection produces the same selected page.",
+      "failure": "Missing or invalid selection retains normal bounded pagination.",
+      "recovery": "A reset or changed selection reapplies the current valid target.",
+      "observability": "Selected item presence and rendered page metadata are observable in component tests.",
+      "source": "docs/interactions/implementation.md; existing publication-selection and artist/fan-club deep-link tests; independent StrictMode regression.",
+      "implementation": [
+        "tdf-hq-ui/src/components/LazyPaginatedList.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx",
+        "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "This component contract does not establish every route's cache, authorization or navigation-race behavior."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Actual-component StrictMode regression and old-code negative control require exact-candidate execution evidence; no whole-UI refinement proof."
+      },
+      "critical": false,
+      "authority": "Existing publication deep-link contract and observable selected-item intent; formal/system/requirements.json",
+      "property": "Effect replay preserves a valid selected page; manual paging remains possible.",
+      "contract": "formal/system/requirements.json",
+      "verification": "Actual React component tests in normal and StrictMode renderers; known-old component must fail the replay regression.",
+      "evidence": "Exact-source component/CI logs are required; negative control and fixed-run receipts must remain distinct."
+    },
+    {
+      "id": "PRIV-RAG-001",
+      "title": "Current public knowledge at customer-facing retrieval",
+      "statement": "Customer-facing knowledge retrieval may rank existing public courses using cached embeddings, but must render current public metadata, never raw indexed private content, and omit a course absent when its metadata is read.",
+      "domain": "PRIV",
+      "actors": [
+        "Anonymous assistant visitor",
+        "Instagram/Facebook/WhatsApp automated reply recipient"
+      ],
+      "preconditions": [
+        "A customer-facing retrieval request has no studio-private identity scope."
+      ],
+      "inputs": [
+        "Query embedding",
+        "Rank limit",
+        "Persisted index",
+        "Current course rows"
+      ],
+      "state": {
+        "fields": [
+          "Indexed source kind and identity",
+          "Current course presence",
+          "Current course metadata"
+        ],
+        "initial": "Historical index may contain private or stale chunks."
+      },
+      "allowedTransitions": [
+        "Use a course index hit to select an existing course identity.",
+        "Render current public metadata from that course.",
+        "Exclude deleted or unapproved sources."
+      ],
+      "forbiddenTransitions": [
+        "Return a private availability/studio/campaign chunk.",
+        "Return poisoned cached raw content for an otherwise valid public course.",
+        "Return deleted-course content from a stale index."
+      ],
+      "effects": [
+        "Only current public course documents reach the calling assistant adapter."
+      ],
+      "authorization": "Anonymous and customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
+      "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
+      "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
+      "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
+      "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
+      "recovery": "Public metadata changes take effect on the next read; stale raw text need not be purged to enforce this retrieval boundary.",
+      "observability": "Synthetic anonymous HTTP checks observe private-source exclusion, poisoned-cache rejection, metadata freshness and deleted-course exclusion.",
+      "source": "Observed anonymous private-booking-content disclosure; formal/system/bookings.md customer-facing retrieval boundary.",
+      "implementation": [
+        "tdf-hq/src/TDF/RagStore.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Embedding-provider sharing, internal retention and curated conversation examples need separate privacy reconciliation.",
+        "Channel-specific provider delivery is not exercised by the anonymous HTTP fixture."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Old-binary disclosure was reproduced; repaired HTTP checks and all channel integrations need execution evidence. No formal deletion linearization proof is claimed."
+      },
+      "critical": true,
+      "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
+      "property": "Every returned document is freshly rendered from an existing public course, never raw private indexed content.",
+      "contract": "formal/system/bookings.md",
+      "verification": "Anonymous HTTP on a fresh synthetic PostgreSQL database with private, poisoned, updated and deleted index fixtures.",
+      "evidence": "Preserved old-backend anonymous disclosure reproduction and exact-candidate booking-conformance HTTP artifact; repaired execution remains pending."
     }
   ],
   "sourceFingerprints": {
@@ -2832,7 +2975,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "0c2d1fd2118efcd3fc01293c701dc5bef307e77ddb44d11c17c9e9118401bd6e",
+    "scripts/test-booking-conformance.py": "e37686e46bf4dd8fa4bfc461c6f2d9b25177cc21f605e85ac34a5a8acddd09de",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "bd6d20cea85b0e1c3c29a342bf78e512345b8f224c4d880563d3634ac18c923c",
     "scripts/test-hetzner-restore.py": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
@@ -2847,11 +2990,16 @@
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
+    "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
+    "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
+    "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
+    "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "f88e22a6253b0cefe744d8e09b7edc088c2f45c52934855eba384365af88cac0",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "78885e7bb418d22f98657a2823effb36743857f0edc8b4fa9849a219e9aa3c3b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
@@ -4190,6 +4338,10 @@
       {
         "requirement": "AUTH-BOOK-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-RAG-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/test-booking-conformance.py": [
@@ -4199,6 +4351,10 @@
       },
       {
         "requirement": "BOOK-CALENDAR-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-RAG-001",
         "relationship": "tests"
       }
     ],
@@ -4212,6 +4368,36 @@
       {
         "requirement": "BOOK-CALENDAR-001",
         "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq-ui/src/components/LazyPaginatedList.tsx": [
+      {
+        "requirement": "SYS-UX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": [
+      {
+        "requirement": "SYS-UX-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": [
+      {
+        "requirement": "SYS-UX-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": [
+      {
+        "requirement": "SYS-UX-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": [
+      {
+        "requirement": "SYS-UX-001",
+        "relationship": "tests"
       }
     ]
   },
@@ -6736,7 +6922,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "0c2d1fd2118efcd3fc01293c701dc5bef307e77ddb44d11c17c9e9118401bd6e",
+      "sha256": "e37686e46bf4dd8fa4bfc461c6f2d9b25177cc21f605e85ac34a5a8acddd09de",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6745,6 +6931,10 @@
         },
         {
           "requirement": "BOOK-CALENDAR-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PRIV-RAG-001",
           "relationship": "tests"
         }
       ]
@@ -8677,16 +8867,26 @@
     {
       "id": "SURFACE-058ec694a56b8a00",
       "path": "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx",
-      "sha256": "c831ed7f9088d30b1c605b00189333e652f8b2e68e5aa71aa099098df2a09bfd",
+      "sha256": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UX-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9f568feb3495d5f6",
       "path": "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
-      "sha256": "cd04a8c227c566f4b1e82f0a37cda0fb2c1fe25b8e8371dd4c8722e44a47a2d8",
+      "sha256": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-df42e6ad7db6be04",
@@ -9520,7 +9720,12 @@
       "path": "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx",
       "sha256": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UX-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f52af309e20961f9",
@@ -10052,7 +10257,12 @@
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
       "sha256": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UX-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-67734f5e4107b4c6",
@@ -10461,7 +10671,12 @@
       "path": "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
       "sha256": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UX-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-60cd6659a77e2df2",
@@ -16167,6 +16382,10 @@
         {
           "requirement": "AUTH-BOOK-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "PRIV-RAG-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -20681,8 +20900,6 @@
     "SURFACE-0918e49c017af22f",
     "SURFACE-19cebc297ff26373",
     "SURFACE-38bb7b3066524a69",
-    "SURFACE-058ec694a56b8a00",
-    "SURFACE-9f568feb3495d5f6",
     "SURFACE-df42e6ad7db6be04",
     "SURFACE-0c704471f2e1ce6c",
     "SURFACE-90c681fa43de9fd3",
@@ -20796,7 +21013,6 @@
     "SURFACE-f2e0a49b87ad055e",
     "SURFACE-2de584dd8e7ea4f1",
     "SURFACE-32abfb433a95e5e7",
-    "SURFACE-f1973f04fc18b442",
     "SURFACE-f52af309e20961f9",
     "SURFACE-98a5c01f28e25f9b",
     "SURFACE-a6ce6252bfc09db4",
@@ -20872,7 +21088,6 @@
     "SURFACE-7d1cdc171a244d93",
     "SURFACE-211c2d4c89fbcb63",
     "SURFACE-a22dcf6e94d1d682",
-    "SURFACE-feace0cde60c7f70",
     "SURFACE-67734f5e4107b4c6",
     "SURFACE-f23ba2e5ecf07fe3",
     "SURFACE-fffcbad1b08fd3bd",
@@ -20927,7 +21142,6 @@
     "SURFACE-acd0be5e389457cc",
     "SURFACE-63a292b2e11fa9e9",
     "SURFACE-49d3b4b191a6a827",
-    "SURFACE-a90d5d67ce529d4f",
     "SURFACE-60cd6659a77e2df2",
     "SURFACE-843ecd90497b82eb",
     "SURFACE-8e582de4b6234f44",
@@ -22224,7 +22438,8 @@
     "PAY-CHECKOUT-002",
     "PAY-CHECKOUT-003",
     "DEPLOY-TARGET-001",
-    "DEPLOY-MIGRATION-001"
+    "DEPLOY-MIGRATION-001",
+    "PRIV-RAG-001"
   ],
   "stateMachines": [
     {
@@ -44202,7 +44417,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 39,
+    "PARTIAL": 41,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

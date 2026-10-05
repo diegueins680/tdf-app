@@ -45,6 +45,12 @@ revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=
 def run(args, **kwargs):
     result = subprocess.run(args, env=ENV, **kwargs)
     if result.returncode:
+        # All data and credentials in this fixture are synthetic. Retain captured
+        # database diagnostics privately instead of losing the cause on cleanup.
+        with (OUTPUT / 'fixture-errors.log').open('a') as log:
+            log.write(Path(args[0]).name + ' exited ' + str(result.returncode) + '\n')
+            for value in [result.stdout, result.stderr]:
+                if isinstance(value, str): log.write(value)
         raise RuntimeError('Fixture command failed: ' + Path(args[0]).name)
     return result
 

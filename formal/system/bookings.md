@@ -100,7 +100,8 @@ The exact four-role policy comes from the product owner, not those references.
 
 ## Customer-facing retrieval boundary
 
-The public assistant and Instagram/Facebook/WhatsApp automated replies have no
+`PRIV-RAG-001` separately owns this privacy boundary. The public assistant and
+Instagram/Facebook/WhatsApp automated replies have no
 studio booking identity scope. `TDF.RagStore.selectRagChunks` therefore uses the
 index only to rank existing public course IDs and renders current course metadata
 from the database. It never returns cached raw chunk content. Historical private

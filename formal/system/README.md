@@ -60,22 +60,35 @@ and Mobile `ede1f2a0ccf75f3794c7892f291e1751b279d19e`. The shared dirty checkout
 was not used as the candidate. Read-only baseline and source hashes are in
 [evidence/2026-10-04-baseline/baseline.json](evidence/2026-10-04-baseline/baseline.json).
 
-The user explicitly chose on 2026-10-04 to retain the shipped Mobile lineage.
+The user initially chose on 2026-10-04 to retain the shipped Mobile lineage.
 Mobile `main` at `d2fd9399126e3b456c310497fb7d9edba09f981d` contains additional
 payment flows/contracts absent from this root baseline. Compatible Mobile fixes
-must descend from the shipped pin; merging that newer Mobile line is out of scope.
+were restricted to that shipped pin at this checkpoint. The subsequent explicit
+decision below supersedes that restriction for the newly shipped revision only.
 
 During reconciliation, root main advanced to
 `fdac8e76523befee1603f49f6c7cf7d00762931b` through payment consolidation PR #414.
-The audit integrates that root revision while preserving the explicit Mobile
-lineage decision. Mobile receives generated API types and feature metadata for
-the consolidated backend; native provider payment flows are not inferred from
-those types. The provider-return feature remains a technical web callback with
-no native destination. The combined manifest retains all 166 entries from that
-main and appends the three audit migrations, for 169 entries. Earlier receipts
-remain evidence for their recorded trees, not this combined candidate.
+That checkpoint preserved the original Mobile lineage and combined all166 main
+migrations with three audit migrations, for169 entries. Its generated API types
+alone did not establish native payment-flow parity. Earlier receipts remain
+evidence for their recorded trees, not later combined candidates.
 
-The public frontend bundle identifies that root SHA. Public `/version` and
+Root main then advanced through PR#479 to
+`5efd7ff31d55c1eb5b66b2f7710ea4ef87328727`, shipping Mobile
+`147ec8bc4ad4150eaab1ad410aa1803822075697`. The product owner explicitly chose
+**Use newly shipped Mobile pin**. The audit preserves that consolidated root and
+Mobile lineage, including its already shipped tester/payment functionality; it
+does not import unrelated later Mobile-main work. The compatibility revision
+`ff10746207ba5b57428560db64fb255d7417a481` descends from147ec8bc and carries
+the reviewed dependency, feature-registry and generated API repairs. These
+ancestry facts do not establish every native payment workflow's conformance.
+The additive booking-calendar repair brings the current manifest to170 entries.
+AUTHORITY-020 records this baseline supersession; the original starting SHA
+and its evidence remain unchanged.
+
+The frontend observation at the fdac8e checkpoint identified that root SHA; it
+is historical observation, not a claim about the latest frontend deployment.
+Public `/version` and
 container inspection independently identify production backend
 `645f56fcc44f81609fbfd0e03d683b40376ce77a`, version `0.1.0.0`, on Hetzner.
 PostgreSQL is 17.8 on the verified `tdf_production_postgres_data` volume.

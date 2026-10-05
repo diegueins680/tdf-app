@@ -197,6 +197,17 @@
       "conflict": "Broad Scheduling module access allowed private foreign bookings despite own-booking persona intent; legacy edits bypassed the authoritative exclusion calendar and checkout snapshot.",
       "authority": "Product owner explicitly selected four studio-wide roles on 2026-10-04; formal/system/bookings.md",
       "resolution": "Require backend object scope; preserve four-role staff operations and own/assigned access, row-lock edits, repair allocation projection additively and reject checkout evidence drift. Document three previously missing authenticated API operations and regenerate both shipped clients."
+    },
+    {
+      "id": "AUTHORITY-020",
+      "sources": [
+        "formal/system/README.md",
+        ".gitmodules",
+        "formal/system/inventory.json"
+      ],
+      "conflict": "The initial shipped-Mobile decision and its documentation referred to ede1f2a, but concurrent consolidated-main PR479 shipped Mobile147ec8bc with additional functionality.",
+      "authority": "Product owner explicitly selected Use newly shipped Mobile pin after being shown root5efd7ff and Mobile147ec8bc.",
+      "resolution": "Preserve root5efd7ff and Mobile147ec8bc ancestry; apply reviewed compatibility fixes at ff107462. Supersede the earlier lineage restriction only for this newly shipped pin, retain original-baseline evidence, and do not infer authorization to follow unrelated later Mobile-main changes or activate providers."
     }
   ]
 }
