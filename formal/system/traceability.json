@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "4c23fea473656fb7bdc9dc90c625acd1551a6888",
+  "mobileRevision": "ff10746207ba5b57428560db64fb255d7417a481",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -2862,7 +2862,7 @@
     "tdf-hq/Dockerfile": "d5afe1363da6c68cba251ab928fe10ad4c47aafea2924c27402e50c9d323fb1a",
     "tdf-hq/Dockerfile.runtime": "cc561dc926a491699de7b34ad3d01e1dd0e13d53cdc5dc87484aeb7e303129b8",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "22fabcb83e3beb9144c4c93cc5d2d6351bdc1c9814b2391237fddc6e40c56e16",
+    "tdf-hq/docs/openapi/api.yaml": "e26061fe62ed366d66059b768c62e151bbf1bec46c63e048e45e16458d046714",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
     "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql": "8f86bc3c25209d6f56987dd3f84123e2be4fd78e3a9ee9876075ca1077a1864c",
@@ -8082,7 +8082,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "bd0ba5be85e50082608d2046c6d4d88e5f691ad836156761c3f2f0d7a09f2908",
+      "sha256": "99c36e69ad9888faf20d3cefc6dcb13629b42c4f7e65ca12b4d59a303ecc1be0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -12544,7 +12544,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "22fabcb83e3beb9144c4c93cc5d2d6351bdc1c9814b2391237fddc6e40c56e16",
+      "sha256": "e26061fe62ed366d66059b768c62e151bbf1bec46c63e048e45e16458d046714",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19126,7 +19126,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "bd0ba5be85e50082608d2046c6d4d88e5f691ad836156761c3f2f0d7a09f2908",
+      "sha256": "99c36e69ad9888faf20d3cefc6dcb13629b42c4f7e65ca12b4d59a303ecc1be0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
