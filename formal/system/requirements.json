@@ -3527,11 +3527,14 @@
         "scripts/lib/compiled-api-surface.mjs",
         "formal/system/api-availability.json",
         "tdf-hq/src/TDF/API/MerchReputation.hs",
-        "tdf-hq/src/TDF/Server/MerchReputation.hs"
+        "tdf-hq/src/TDF/Server/MerchReputation.hs",
+        "scripts/check-api-availability.mjs",
+        "scripts/quality-repo.sh"
       ],
       "tests": [
         "scripts/__tests__/compiled-api-surface.test.mjs",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-specification-conformance.py",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",

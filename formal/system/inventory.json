@@ -155,6 +155,7 @@
       "scripts/capture-feature-audit-visuals.mjs",
       "scripts/capture-music-directory-visuals.mjs",
       "scripts/catalog-list-audit.mjs",
+      "scripts/check-api-availability.mjs",
       "scripts/check-build-trust.mjs",
       "scripts/check-dependency-security.mjs",
       "scripts/check-generated-api.mjs",
@@ -2547,13 +2548,13 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "a431e137bb4669893ee93ab56591b986f7835b97d5da80222db9fa753cbe1417",
+      "sha256": "94b1f5ae51398abe35ee0bbe8c372814f6890cbbaea26cf50e55766b77d476d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "e6df8ffa2effd62841e6d0131104c327d91257b89836d6b3e71234468c64c2b3",
+      "sha256": "2888bc377a0f3bf18d097385b8eaa39b011762f1792682a3d0b202c6e5c90d74",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2998,6 +2999,12 @@
       "id": "SURFACE-74289e89f4a7d171",
       "path": "scripts/catalog-list-audit.mjs",
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4bf839700e64b995",
+      "path": "scripts/check-api-availability.mjs",
+      "sha256": "b7be654b761f992d1e21b6e772dc50ba606291573dc55eb57e969c3bab2f2f50",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3537,7 +3544,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "d026bfc0f118e5c747a618d1de94dd2a71308f89a5f93e3fa33acfef1abd0113",
+      "sha256": "9adef283f9208adaea66e3c12e058c9469d87b59396ba81ba1e6631a22c61003",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3969,7 +3976,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "9ed7ec818fb0f80ca4522129276db3ead0110e273dee4c73c7d7d1980ff5acea",
+      "sha256": "3c4ce005ac4e217b636e2671897218c81790f4e04ab14f6a415900faacc0259e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4437,7 +4444,7 @@
     {
       "id": "SURFACE-21c4ed4ad1e7c32f",
       "path": "scripts/test-specification-conformance.py",
-      "sha256": "d9a85530946bce9fbbfe2f03c532fc4630757fca9337e93712ebba031b010cb9",
+      "sha256": "1e015b978a90fffecf5eaef1b6ce6e4baee3d85c1460d9a2bc2f8acebcdcfb7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20402,7 +20409,7 @@
     },
     {
       "path": "formal/system/compiled-api-boundary.md",
-      "sha256": "05ad41def9fbe46945b07e66ac5e7b82a2dffba1c94a1dea8a66858d2bcf71ca",
+      "sha256": "8ed3bc7a77518895dc2312ea45a0510dc940af25a3524d0064b875d40d29d082",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20500,7 +20507,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6a7e5d039ccf4f5be295d43ee3f461c422e848b5254984dd0b7c54e38f8460b1",
+      "sha256": "698eead031d7e46b31750b6a7fcbea5e32e22b15d879c5528f346ee8041aa4a5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -338,3 +338,8 @@ test('every PR reaches specification admission, including previously omitted mat
     assert.equal(classifyChangedFiles([file]).repo, true, file);
   }
 });
+
+test('repository lane checks actual API availability policy without a backend build', async () => {
+  const quality = await source('scripts/quality-repo.sh');
+  assert.match(quality, /node "\$ROOT\/scripts\/check-api-availability\.mjs"/);
+});

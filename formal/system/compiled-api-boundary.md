@@ -96,3 +96,9 @@ activation history true, social runtime disabled with no activation history, and
 no event-operation flag table. These are distinct control families. Missing
 controls are unknown, never silently interpreted as disabled. This historical
 observation is not a substitute for a fresh release inspection.
+
+The always-selected repository lane runs `check-api-availability.mjs` against the
+actual policy, resolved OpenAPI and canonical compiled snapshot, so policy-only
+changes cannot bypass admission by skipping a backend build. Python also rejects
+missing/duplicate operation identities and invalid requirement/provenance links.
+The backend inspector separately verifies the snapshot against the new executable.

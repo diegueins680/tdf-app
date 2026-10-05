@@ -95,13 +95,20 @@ class ConformanceControls(unittest.TestCase):
         policy = copy.deepcopy(self.generated['apiAvailability'])
         self.assertEqual(len(policy['deferredOperations']), 25)
         conformance.validate_availability(policy, self.generated['requirements'])
-        for field, value in [('requirement', 'MKT-UNKNOWN-999'), ('sources', []),
+        for field, value in [('id', None), ('id', 'GET /x/{named}'), ('id', 'BAD /x'),
+                             ('reason', ''), ('requirement', 'MKT-UNKNOWN-999'), ('sources', []),
                              ('sources', ['../outside.md']), ('sources', ['/etc/passwd']),
                              ('sources', ['absent-file.md']), ('sources', [None])]:
             invalid = copy.deepcopy(policy)
             invalid['deferredOperations'][0][field] = value
             with self.subTest(field=field, value=value), self.assertRaises(ValueError):
                 conformance.validate_availability(invalid, self.generated['requirements'])
+
+    def test_duplicate_deferred_api_identity_is_rejected(self):
+        policy = copy.deepcopy(self.generated['apiAvailability'])
+        policy['deferredOperations'].append(copy.deepcopy(policy['deferredOperations'][0]))
+        with self.assertRaisesRegex(ValueError, 'duplicate deferred'):
+            conformance.validate_availability(policy, self.generated['requirements'])
 
     def test_openapi_negative_controls(self):
         with tempfile.TemporaryDirectory() as directory:

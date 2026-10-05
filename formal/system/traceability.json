@@ -3528,11 +3528,14 @@
         "scripts/lib/compiled-api-surface.mjs",
         "formal/system/api-availability.json",
         "tdf-hq/src/TDF/API/MerchReputation.hs",
-        "tdf-hq/src/TDF/Server/MerchReputation.hs"
+        "tdf-hq/src/TDF/Server/MerchReputation.hs",
+        "scripts/check-api-availability.mjs",
+        "scripts/quality-repo.sh"
       ],
       "tests": [
         "scripts/__tests__/compiled-api-surface.test.mjs",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-specification-conformance.py",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -3618,8 +3621,8 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
-    "scripts/__tests__/ci-pipeline.test.mjs": "a431e137bb4669893ee93ab56591b986f7835b97d5da80222db9fa753cbe1417",
-    "scripts/__tests__/compiled-api-surface.test.mjs": "e6df8ffa2effd62841e6d0131104c327d91257b89836d6b3e71234468c64c2b3",
+    "scripts/__tests__/ci-pipeline.test.mjs": "94b1f5ae51398abe35ee0bbe8c372814f6890cbbaea26cf50e55766b77d476d8",
+    "scripts/__tests__/compiled-api-surface.test.mjs": "2888bc377a0f3bf18d097385b8eaa39b011762f1792682a3d0b202c6e5c90d74",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -3640,6 +3643,7 @@
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "4d9f8f5d55a1e2383f44590933f5ea2929bee12107750773892ee770f167099b",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
+    "scripts/check-api-availability.mjs": "b7be654b761f992d1e21b6e772dc50ba606291573dc55eb57e969c3bab2f2f50",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
@@ -3663,14 +3667,14 @@
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-backend.sh": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "d026bfc0f118e5c747a618d1de94dd2a71308f89a5f93e3fa33acfef1abd0113",
+    "scripts/quality-repo.sh": "9adef283f9208adaea66e3c12e058c9469d87b59396ba81ba1e6631a22c61003",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
-    "scripts/specification-conformance.py": "9ed7ec818fb0f80ca4522129276db3ead0110e273dee4c73c7d7d1980ff5acea",
+    "scripts/specification-conformance.py": "3c4ce005ac4e217b636e2671897218c81790f4e04ab14f6a415900faacc0259e",
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
@@ -3684,7 +3688,7 @@
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
-    "scripts/test-specification-conformance.py": "d9a85530946bce9fbbfe2f03c532fc4630757fca9337e93712ebba031b010cb9",
+    "scripts/test-specification-conformance.py": "1e015b978a90fffecf5eaef1b6ce6e4baee3d85c1460d9a2bc2f8acebcdcfb7f",
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
@@ -4186,6 +4190,10 @@
       },
       {
         "requirement": "SYS-VERIFY-004",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-REPUTATION-001",
         "relationship": "tests"
       }
     ],
@@ -5099,6 +5107,10 @@
       {
         "requirement": "SYS-DEPENDENCY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-REPUTATION-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/quality-mobile.sh": [
@@ -5578,6 +5590,12 @@
       }
     ],
     "tdf-hq/src/TDF/Server/MerchReputation.hs": [
+      {
+        "requirement": "MKT-REPUTATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/check-api-availability.mjs": [
       {
         "requirement": "MKT-REPUTATION-001",
         "relationship": "implementation"
@@ -6107,7 +6125,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "a431e137bb4669893ee93ab56591b986f7835b97d5da80222db9fa753cbe1417",
+      "sha256": "94b1f5ae51398abe35ee0bbe8c372814f6890cbbaea26cf50e55766b77d476d8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6121,13 +6139,17 @@
         {
           "requirement": "SYS-VERIFY-004",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-REPUTATION-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "e6df8ffa2effd62841e6d0131104c327d91257b89836d6b3e71234468c64c2b3",
+      "sha256": "2888bc377a0f3bf18d097385b8eaa39b011762f1792682a3d0b202c6e5c90d74",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6805,6 +6827,18 @@
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-4bf839700e64b995",
+      "path": "scripts/check-api-availability.mjs",
+      "sha256": "b7be654b761f992d1e21b6e772dc50ba606291573dc55eb57e969c3bab2f2f50",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MKT-REPUTATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-26a97266f867ecd7",
@@ -7595,11 +7629,15 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "d026bfc0f118e5c747a618d1de94dd2a71308f89a5f93e3fa33acfef1abd0113",
+      "sha256": "9adef283f9208adaea66e3c12e058c9469d87b59396ba81ba1e6631a22c61003",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-REPUTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -8138,7 +8176,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "9ed7ec818fb0f80ca4522129276db3ead0110e273dee4c73c7d7d1980ff5acea",
+      "sha256": "3c4ce005ac4e217b636e2671897218c81790f4e04ab14f6a415900faacc0259e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8814,7 +8852,7 @@
     {
       "id": "SURFACE-21c4ed4ad1e7c32f",
       "path": "scripts/test-specification-conformance.py",
-      "sha256": "d9a85530946bce9fbbfe2f03c532fc4630757fca9337e93712ebba031b010cb9",
+      "sha256": "1e015b978a90fffecf5eaef1b6ce6e4baee3d85c1460d9a2bc2f8acebcdcfb7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

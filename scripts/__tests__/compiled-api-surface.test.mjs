@@ -128,7 +128,7 @@ test('inspection binds captured snapshot bytes and rejects a baseline replacemen
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), 'tdf-api-provenance-')));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   for (const dir of ['scripts/lib', 'formal/system']) mkdirSync(path.join(root, dir), { recursive: true });
-  for (const file of ['scripts/inspect-compiled-api.mjs', 'scripts/lib/compiled-api-surface.mjs', 'scripts/lib/verification-evidence.mjs']) {
+  for (const file of ['scripts/check-api-availability.mjs', 'scripts/inspect-compiled-api.mjs', 'scripts/lib/compiled-api-surface.mjs', 'scripts/lib/verification-evidence.mjs']) {
     copyFileSync(new URL(`../../${file}`, import.meta.url), path.join(root, file));
   }
   const description = { schemaVersion: 1, api: sub(symbol('new'), verb()) };
@@ -145,6 +145,19 @@ test('inspection binds captured snapshot bytes and rejects a baseline replacemen
   const run = (name, preload) => spawnSync(process.execPath,
     [...(preload ? ['--import', preload] : []), 'scripts/inspect-compiled-api.mjs', '--binary', binary, '--output', path.join(root, name)],
     { cwd: root, encoding: 'utf8' });
+  const availabilityFile = path.join(root, 'formal/system/api-availability.json');
+  const validPolicy = readFileSync(availabilityFile, 'utf8');
+  const checkPolicy = () => spawnSync(process.execPath, ['scripts/check-api-availability.mjs'], { cwd: root, encoding: 'utf8' });
+  assert.equal(checkPolicy().status, 0, 'Always-selected command must read the real fixture policy');
+  writeFileSync(availabilityFile, JSON.stringify({ schemaVersion: 1, authority: 'fixture', deferredOperations: [{}] }));
+  assert.notEqual(checkPolicy().status, 0, 'Actual malformed policy must fail without a backend build');
+  writeFileSync(availabilityFile, JSON.stringify({ schemaVersion: 1, authority: 'fixture', deferredOperations: [
+    { id: 'GET /new', requirement: 'MKT-REPUTATION-001', reason: 'fixture', sources: ['contract.md'] },
+  ] }));
+  writeFileSync(path.join(root, 'formal/system/traceability.json'), JSON.stringify({ apiOperations: [{ id: 'GET /new', responses: ['200'] }] }));
+  assert.match(checkPolicy().stderr, /unexpectedly mounted/);
+  writeFileSync(availabilityFile, validPolicy);
+  writeFileSync(path.join(root, 'formal/system/traceability.json'), JSON.stringify({ apiOperations: [] }));
   const passing = run('positive');
   assert.equal(passing.status, 0, passing.stderr);
   const receipt = JSON.parse(readFileSync(path.join(root, 'positive/surface.json')));

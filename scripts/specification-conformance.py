@@ -127,7 +127,21 @@ def validate_availability(policy, requirements, root=ROOT):
     ids = {row['id'] for row in requirements}
     if policy.get('schemaVersion') != 1 or not isinstance(policy.get('deferredOperations'), list):
         raise ValueError('Invalid API availability policy')
+    if not isinstance(policy.get('authority'), str) or not policy['authority'].strip():
+        raise ValueError('Invalid API availability authority')
+    seen = set()
     for row in policy['deferredOperations']:
+        if not isinstance(row, dict):
+            raise ValueError('Invalid deferred API entry')
+        identity = row.get('id')
+        if (not isinstance(identity, str)
+                or not re.fullmatch(r'(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|TRACE|CONNECT) /[^?\s]*', identity)
+                or re.sub(r'\{([^}]+)\}', lambda m: '{*}' if m[1].endswith('*') else '{}', identity) != identity
+                or identity in seen):
+            raise ValueError('Invalid or duplicate deferred API identity')
+        seen.add(identity)
+        if not isinstance(row.get('reason'), str) or not row['reason'].strip():
+            raise ValueError('Deferred API lacks rationale')
         if row.get('requirement') not in ids:
             raise ValueError('Deferred API lacks requirement ownership')
         sources = row.get('sources')
