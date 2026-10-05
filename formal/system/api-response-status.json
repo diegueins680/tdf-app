@@ -61,6 +61,26 @@
       "sources": [
         "tdf-hq/src/TDF/Server.hs"
       ]
+    },
+    {
+      "id": "POST /radio/transmissions",
+      "requirement": "MEDIA-STREAM-001",
+      "compiledStatus": 200,
+      "unavailableStatus": 503,
+      "reason": "Native streaming lacks a verified publisher authorization binding; configuration cannot enable it.",
+      "sources": [
+        "tdf-hq/src/TDF/ServerRadio.hs"
+      ]
+    },
+    {
+      "id": "POST /social-events/events/{}/live-broadcasts",
+      "requirement": "MEDIA-STREAM-001",
+      "compiledStatus": 200,
+      "unavailableStatus": 503,
+      "reason": "Native streaming lacks a verified publisher authorization binding; configuration cannot enable it.",
+      "sources": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ]
     }
   ]
 }

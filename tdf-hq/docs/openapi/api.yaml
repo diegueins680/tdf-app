@@ -597,6 +597,120 @@ paths:
                 $ref: '#/components/schemas/SocialEvent'
         '422':
           description: Event type is unknown, inactive, ineffective, deprecated, or unpublished
+  /social-events/events/{eventId}/live-broadcasts:
+    get:
+      tags: [Social events]
+      operationId: listEventLiveBroadcasts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+      description: List legacy metadata visible to the broadcaster or artist followers; streaming URLs and keys are null.
+      responses:
+        '200':
+          description: Legacy broadcast metadata without streaming endpoints or keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventLiveBroadcastDTO'
+        '400': { description: Invalid request, path identifier, event relation or actor claim }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Actor is not authorized for this broadcast operation }
+        '404': { description: Event or referenced resource missing or hidden }
+    post:
+      tags: [Social events]
+      operationId: createEventLiveBroadcast
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventLiveBroadcastCreateDTO'
+      description: Native creation is unavailable503 after event, lineup, follower and caller-identity checks. No broadcast is persisted.
+      responses:
+        '503': { description: Native broadcasting unavailable pending verified publisher authorization }
+        '400': { description: Invalid request, path identifier, event relation or actor claim }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Actor is not authorized for this broadcast operation }
+        '404': { description: Event or referenced resource missing or hidden }
+  /social-events/events/{eventId}/live-broadcasts/{broadcastId}/heartbeat:
+    post:
+      tags: [Social events]
+      operationId: heartbeatEventLiveBroadcast
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: broadcastId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventLiveBroadcastHeartbeatDTO'
+      description: Broadcaster or follower updates the legacy viewer count and heartbeat. This is not evidence of provider connection; streaming URLs and keys are null.
+      responses:
+        '200':
+          description: Legacy broadcast metadata without streaming endpoints or keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventLiveBroadcastDTO'
+        '400': { description: Invalid request, path identifier, event relation or actor claim }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Actor is not authorized for this broadcast operation }
+        '404': { description: Event or referenced resource missing or hidden }
+  /social-events/events/{eventId}/live-broadcasts/{broadcastId}/end:
+    post:
+      tags: [Social events]
+      operationId: endEventLiveBroadcast
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: broadcastId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventLiveBroadcastEndDTO'
+      description: Only the broadcaster may end the legacy session. Streaming URLs and keys are null; this does not revoke remote provider credentials.
+      responses:
+        '200':
+          description: Legacy broadcast metadata without streaming endpoints or keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventLiveBroadcastDTO'
+        '400': { description: Invalid request, path identifier, event relation or actor claim }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Actor is not authorized for this broadcast operation }
+        '404': { description: Event or referenced resource missing or hidden }
   /social-events/events/{eventId}/rsvp:
     parameters:
       - name: eventId
@@ -4586,7 +4700,7 @@ paths:
     get:
       tags: [Radio]
       summary: Search active radio streams
-      description: Returns active streams. Country and genre filtering use immutable UUIDs of active persisted references.
+      description: Returns active streams excluding quarantined UUID-path URLs that can contain historical native publishing keys. Country and genre filtering use immutable UUIDs of active persisted references.
       operationId: searchRadioStreams
       parameters:
         - name: countryId
@@ -4632,6 +4746,7 @@ paths:
                 $ref: '#/components/schemas/RadioStream'
         '400':
           description: Invalid stream metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID
+        '503': { description: UUID-path URL quarantined pending legacy broadcast reconciliation }
   /radio/streams/import:
     post:
       tags: [Radio]
@@ -4700,9 +4815,14 @@ paths:
   /radio/transmissions:
     post:
       tags: [Radio]
-      summary: Create a radio transmission
-      description: Creates ingest and listening endpoints. The optional genre is referenced only by canonical UUID.
+      summary: Native radio broadcasting unavailable
+      description: >-
+        Returns 503 after normal authentication and request decoding. No stream is
+        persisted. Endpoint configuration cannot override this safety boundary;
+        a verified provider must separate listener identity from publish authority.
       operationId: createRadioTransmission
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -4710,18 +4830,15 @@ paths:
             schema:
               $ref: '#/components/schemas/RadioTransmissionRequest'
       responses:
-        '200':
-          description: Transmission endpoints
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RadioTransmissionInfo'
-        '400':
-          description: Invalid metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID
+        '400': { description: Invalid request representation }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Radio access denied }
+        '503': { description: Native broadcasting unavailable pending verified publisher authorization }
   /radio/presence:
     get:
       tags: [Radio]
       summary: Get current user's radio presence
+      description: Quarantined UUID-path presence is returned as null.
       operationId: getRadioPresence
       responses:
         '200':
@@ -4751,6 +4868,7 @@ paths:
                 $ref: '#/components/schemas/RadioPresence'
         '400':
           description: Invalid presence metadata
+        '503': { description: UUID-path URL quarantined pending legacy broadcast reconciliation }
     delete:
       tags: [Radio]
       summary: Clear current user's radio presence
@@ -4762,6 +4880,7 @@ paths:
     get:
       tags: [Radio]
       summary: Get a party's radio presence
+      description: Quarantined UUID-path presence is returned as null.
       operationId: getPartyRadioPresence
       parameters:
         - name: partyId
@@ -8629,6 +8748,49 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    EventLiveBroadcastDTO:
+      type: object
+      required: [elbId, elbEventId, elbArtistId, elbArtistName, elbBroadcasterName, elbBroadcasterPartyId, elbTitle, elbDescription, elbStatus, elbPlaybackUrl, elbIngestUrl, elbWhipUrl, elbStreamKey, elbViewerCount, elbStartedAt, elbEndedAt, elbLastHeartbeatAt]
+      properties:
+        elbId: { type: string, nullable: true }
+        elbEventId: { type: string, nullable: true }
+        elbArtistId: { type: string }
+        elbArtistName: { type: string }
+        elbBroadcasterName: { type: string }
+        elbBroadcasterPartyId: { type: string, nullable: true }
+        elbTitle: { type: string }
+        elbDescription: { type: string, nullable: true }
+        elbStatus: { type: string }
+        elbPlaybackUrl: { type: string, nullable: true, description: 'Always null while native streaming is unavailable' }
+        elbIngestUrl: { type: string, nullable: true, description: 'Always null while native streaming is unavailable' }
+        elbWhipUrl: { type: string, nullable: true, description: 'Always null while native streaming is unavailable' }
+        elbStreamKey: { type: string, nullable: true, description: 'Always null while native streaming is unavailable' }
+        elbViewerCount: { type: integer }
+        elbStartedAt: { type: string, nullable: true, format: date-time }
+        elbEndedAt: { type: string, nullable: true, format: date-time }
+        elbLastHeartbeatAt: { type: string, nullable: true, format: date-time }
+    EventLiveBroadcastCreateDTO:
+      type: object
+      additionalProperties: false
+      required: [elbCreateArtistId]
+      properties:
+        elbCreateArtistId: { type: string, minLength: 1 }
+        elbCreateArtistName: { type: string }
+        elbCreateBroadcasterName: { type: string }
+        elbCreateBroadcasterPartyId: { type: string }
+        elbCreateTitle: { type: string }
+        elbCreateDescription: { type: string }
+        elbCreateQuality: { type: string }
+    EventLiveBroadcastHeartbeatDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        elbhViewerDelta: { type: integer, description: Clamped to -1000 through 1000 by the legacy handler }
+    EventLiveBroadcastEndDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        elbEndBroadcasterPartyId: { type: string }
     TrialSubject:
       type: object
       required: [subjectId, name, active, roomIds]

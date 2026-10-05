@@ -300,7 +300,7 @@
       ],
       "conflict": "A reorder returns409 for an invalid later item but earlier per-item transactions already committed; revision and audit remain unchanged.",
       "authority": "formal/system/catalog-reorder.md",
-      "resolution": "Repair transaction atomicity and locked revision admission. Apply the existing OpenAPI incomplete-set rejection as the working authority; product-owner clarification is pending because the old implementation accepted subsets. Require every current item exactly once."
+      "resolution": "Repair transaction atomicity and locked revision admission. Apply the existing OpenAPI incomplete-set rejection as the working authority; product-owner clarification is pending because the old implementation accepted subsets. Require every current item exactly once. Product owner explicitly confirmed the complete catalog item list on 2026-10-05; that policy ambiguity is resolved."
     },
     {
       "id": "AUTHORITY-029",
@@ -353,6 +353,18 @@
       "conflict": "Token changes clear a shared client, but old favorite/visit callbacks repopulate it and expose personal metadata to the next account.",
       "authority": "formal/system/mobile-query-isolation.md",
       "resolution": "Use per-occurrence clients and remount query consumers; keep the exact shipped lineage and existing retry semantics. Clearing a shared cache is insufficient isolation. No offline or provider exactly-once guarantee is inferred."
+    },
+    {
+      "id": "AUTHORITY-034",
+      "sources": [
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-mobile/src/lib/liveBroadcastsRepository.ts",
+        "streaming/README.md"
+      ],
+      "conflict": "Fallback endpoints and shared playback/publish keys imply usable broadcasting without a provider authorization contract; Mobile error fallback fabricates local acceptance.",
+      "authority": "formal/system/streaming-admission.md",
+      "resolution": "Contain native creation with unconditional503, withhold legacy event endpoints, quarantine UUID-path radio projections, retain cleanup and external listening, propagate remote mutation failures. Historical example is explicitly unverified. Provider re-enablement and prior-key revocation remain separate work. Product owner explicitly approved keeping broadcasting unavailable during repair on 2026-10-05."
     }
   ]
 }

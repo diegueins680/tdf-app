@@ -426,6 +426,15 @@
       "applicability": "Old queries/mutations may still hold client references.",
       "decision": "adopted with boundary",
       "rationale": "Clear the retired cache for cancellation/retention, but use different actual client objects to isolate late callbacks. Do not equate client cleanup with canceling backend effects."
+    },
+    {
+      "id": "RES-STREAM-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc9725.html",
+      "title": "RFC9725 sections3,4.7,5",
+      "recommendation": "Separate HTTP offer/answer acceptance from established ICE/DTLS media, use HTTPS and an explicit authorization mechanism for publishing.",
+      "applicability": "Native radio and event WHIP integration",
+      "decision": "adopted for admission boundary; secure provider adapter remains unimplemented",
+      "rationale": "Endpoint URLs and shared public stream keys do not establish publisher authorization. Fail closed rather than claim configuration or SDP exchange proves secure live media."
     }
   ]
 }

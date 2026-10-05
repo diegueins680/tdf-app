@@ -696,6 +696,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/events/{eventId}/live-broadcasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List legacy metadata visible to the broadcaster or artist followers; streaming URLs and keys are null. */
+        get: operations["listEventLiveBroadcasts"];
+        put?: never;
+        /** @description Native creation is unavailable503 after event, lineup, follower and caller-identity checks. No broadcast is persisted. */
+        post: operations["createEventLiveBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Broadcaster or follower updates the legacy viewer count and heartbeat. This is not evidence of provider connection; streaming URLs and keys are null. */
+        post: operations["heartbeatEventLiveBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Only the broadcaster may end the legacy session. Streaming URLs and keys are null; this does not revoke remote provider credentials. */
+        post: operations["endEventLiveBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social-events/events/{eventId}/rsvp": {
         parameters: {
             query?: never;
@@ -3481,7 +3533,7 @@ export interface paths {
         };
         /**
          * Search active radio streams
-         * @description Returns active streams. Country and genre filtering use immutable UUIDs of active persisted references.
+         * @description Returns active streams excluding quarantined UUID-path URLs that can contain historical native publishing keys. Country and genre filtering use immutable UUIDs of active persisted references.
          */
         get: operations["searchRadioStreams"];
         put?: never;
@@ -3579,8 +3631,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create a radio transmission
-         * @description Creates ingest and listening endpoints. The optional genre is referenced only by canonical UUID.
+         * Native radio broadcasting unavailable
+         * @description Returns 503 after normal authentication and request decoding. No stream is persisted. Endpoint configuration cannot override this safety boundary; a verified provider must separate listener identity from publish authority.
          */
         post: operations["createRadioTransmission"];
         delete?: never;
@@ -3596,7 +3648,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get current user's radio presence */
+        /**
+         * Get current user's radio presence
+         * @description Quarantined UUID-path presence is returned as null.
+         */
         get: operations["getRadioPresence"];
         put?: never;
         /** Set current user's radio presence */
@@ -3615,7 +3670,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a party's radio presence */
+        /**
+         * Get a party's radio presence
+         * @description Quarantined UUID-path presence is returned as null.
+         */
         get: operations["getPartyRadioPresence"];
         put?: never;
         post?: never;
@@ -8174,6 +8232,48 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        EventLiveBroadcastDTO: {
+            elbId: string | null;
+            elbEventId: string | null;
+            elbArtistId: string;
+            elbArtistName: string;
+            elbBroadcasterName: string;
+            elbBroadcasterPartyId: string | null;
+            elbTitle: string;
+            elbDescription: string | null;
+            elbStatus: string;
+            /** @description Always null while native streaming is unavailable */
+            elbPlaybackUrl: string | null;
+            /** @description Always null while native streaming is unavailable */
+            elbIngestUrl: string | null;
+            /** @description Always null while native streaming is unavailable */
+            elbWhipUrl: string | null;
+            /** @description Always null while native streaming is unavailable */
+            elbStreamKey: string | null;
+            elbViewerCount: number;
+            /** Format: date-time */
+            elbStartedAt: string | null;
+            /** Format: date-time */
+            elbEndedAt: string | null;
+            /** Format: date-time */
+            elbLastHeartbeatAt: string | null;
+        };
+        EventLiveBroadcastCreateDTO: {
+            elbCreateArtistId: string;
+            elbCreateArtistName?: string;
+            elbCreateBroadcasterName?: string;
+            elbCreateBroadcasterPartyId?: string;
+            elbCreateTitle?: string;
+            elbCreateDescription?: string;
+            elbCreateQuality?: string;
+        };
+        EventLiveBroadcastHeartbeatDTO: {
+            /** @description Clamped to -1000 through 1000 by the legacy handler */
+            elbhViewerDelta?: number;
+        };
+        EventLiveBroadcastEndDTO: {
+            elbEndBroadcasterPartyId?: string;
+        };
         TrialSubject: {
             /** Format: int64 */
             subjectId: number;
@@ -17777,6 +17877,218 @@ export interface operations {
             };
         };
     };
+    listEventLiveBroadcasts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Legacy broadcast metadata without streaming endpoints or keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventLiveBroadcastDTO"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createEventLiveBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventLiveBroadcastCreateDTO"];
+            };
+        };
+        responses: {
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Native broadcasting unavailable pending verified publisher authorization */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    heartbeatEventLiveBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                broadcastId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventLiveBroadcastHeartbeatDTO"];
+            };
+        };
+        responses: {
+            /** @description Legacy broadcast metadata without streaming endpoints or keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventLiveBroadcastDTO"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    endEventLiveBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                broadcastId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventLiveBroadcastEndDTO"];
+            };
+        };
+        responses: {
+            /** @description Legacy broadcast metadata without streaming endpoints or keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventLiveBroadcastDTO"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getMyEventRsvp: {
         parameters: {
             query?: never;
@@ -23111,6 +23423,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description UUID-path URL quarantined pending legacy broadcast reconciliation */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     importRadioStreams: {
@@ -23219,17 +23538,29 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Transmission endpoints */
-            200: {
+            /** @description Invalid request representation */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["RadioTransmissionInfo"];
-                };
+                content?: never;
             };
-            /** @description Invalid metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID */
-            400: {
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Radio access denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Native broadcasting unavailable pending verified publisher authorization */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23281,6 +23612,13 @@ export interface operations {
             };
             /** @description Invalid presence metadata */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description UUID-path URL quarantined pending legacy broadcast reconciliation */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -3728,14 +3728,13 @@
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "OpenAPI complete-set requirement is the working authority; product owner has been asked to resolve the subset implementation conflict.",
         "Dynamic revocation, other catalog writers, mixed-operation deadlocks and transport ambiguity need wider verification."
       ],
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Scoped transaction repair, executable HTTP controls and bounded model require final candidate validation and deployed verification; broader catalog lifecycle remains uncovered."
       },
-      "authority": "AUTHORITY-028; rejected mutations must not be accepted piecemeal.",
+      "authority": "Product owner explicit complete-catalog-list decision on 2026-10-05; AUTHORITY-028",
       "property": "NoRejectedEffect, AtomicEvidence, NoStaleCommit, NoUnauthorizedCommit",
       "contract": "formal/system/catalog-reorder.md",
       "verification": "Real PostgreSQL HTTP denial/rollback/failure/concurrency checks and bounded TLC model with four named negative controls.",
@@ -4118,6 +4117,88 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Repair and actual-screen regression checks exist; exact final gates, native device and deployed correspondence remain open."
+      }
+    },
+    {
+      "id": "MEDIA-STREAM-001",
+      "title": "Contain native streaming until publishing authority is independently enforced",
+      "statement": "Native radio/event creation must fail503 without persistence until a reviewed provider binding separates publishing authority from playback identity; legacy projections must withhold stream credentials and Mobile must not replace remote mutation failure with local acceptance.",
+      "authority": "Product owner approved unavailable broadcasting during repair on 2026-10-05; AUTHORITY-034",
+      "domain": "MEDIA",
+      "actors": [
+        "Broadcaster",
+        "Artist follower",
+        "Radio listener",
+        "Media provider"
+      ],
+      "preconditions": [
+        "Authenticated API routing remains active; no verified publisher authorization adapter exists."
+      ],
+      "inputs": [
+        "Native creation requests",
+        "Legacy broadcast DTOs and radio URLs",
+        "Remote Mobile mutation outcomes"
+      ],
+      "state": {
+        "boundary": "API creation, legacy projection and Mobile mutation acknowledgment",
+        "states": [
+          "unavailable native creation",
+          "legacy record",
+          "ended legacy record"
+        ]
+      },
+      "allowedTransitions": [
+        "authorized owner ends legacy record",
+        "remote error propagates",
+        "ordinary external station is read"
+      ],
+      "forbiddenTransitions": [
+        "endpoint configuration alone enables native creation",
+        "legacy key-bearing playback/ingest/WHIP appears in event DTO",
+        "remote mutation failure becomes local acceptance"
+      ],
+      "effects": [
+        "No native create persistence; retain legacy rows; quarantine UUID-path radio projections."
+      ],
+      "authorization": "Preserve session and event/follower guards; only broadcaster ends legacy session. No new provider permission is granted.",
+      "privacy": "Withhold legacy event URLs/keys and UUID-path radio URLs; prior disclosure and other transformed/cached copies require reconciliation.",
+      "concurrency": "Creation is unavailable independent of concurrent requests. Existing viewer-count read/write behavior is not proven linearizable.",
+      "idempotency": "Repeated unavailable creation makes no write. No retry or provider exactly-once claim.",
+      "failure": "503 for native create and quarantined stream/presence writes; Mobile remote failures propagate.",
+      "recovery": "Reviewed secure provider implementation and legacy credential reconciliation before re-enablement; no environment bypass.",
+      "observability": "Retain revision, binary hash, no-write counts and positive/negative fixture outcomes without production credentials.",
+      "source": "ServerRadio createTransmission; SocialEventsHandlers legacy projection; shipped Mobile WHIP headers; streaming reference; AUTHORITY-034",
+      "property": "Unavailable creation makes no durable effect; rejected remote mutation does not become local success.",
+      "contract": "formal/system/streaming-admission.md",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-mobile/src/lib/liveBroadcastsRepository.ts",
+        "tdf-mobile/src/lib/liveBroadcastPublishing.ts",
+        "tdf-mobile/app/eventDetail.tsx",
+        "streaming/mediamtx.yml",
+        "streaming/docker-compose.streaming.yml"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py",
+        "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts",
+        "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Actual HTTP/PostgreSQL and synthetic Mobile tests; no formal refinement or provider/media proof.",
+      "evidence": "Exact final commands pending; original source evidence retained.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for source-confirmed disclosure and scoped fail-closed containment; provider and production applicability unverified.",
+      "ambiguity": [
+        "Legacy transformed/cached credentials require provider/data reconciliation.",
+        "UUID-path quarantine can withhold legitimate external stations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Containment is implemented; full provider authorization, historical reconciliation, media lifecycle and deployed verification remain open."
       }
     }
   ]

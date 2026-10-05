@@ -300,12 +300,7 @@ import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.SocialEventLifecycle as EventLifecycle
-import TDF.ServerRadio (
-    resolveRadioTransmissionEnvBase,
-    validateRadioTransmissionIngestBase,
-    validateRadioTransmissionPublicBase,
-    validateRadioTransmissionWhipBase,
- )
+import TDF.ServerRadio (nativeBroadcastUnavailable)
 import qualified TDF.Services.Stripe as Stripe
 import TDF.Services.EventLogisticsRoutes
     ( RouteEstimateInput (..)
@@ -4015,66 +4010,13 @@ socialEventsServer user =
         AppM EventLiveBroadcastDTO
     createLiveBroadcast eventIdStr EventLiveBroadcastCreateDTO{..} = do
         Env{..} <- ask
-        now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
         artistKey <- parseArtistId elbCreateArtistId
-        artistRow <- requireEventArtistProfile envPool eventKey artistKey
+        _ <- requireEventArtistProfile envPool eventKey artistKey
         requireArtistFollower envPool artistKey currentPartyId
         validateLiveBroadcastBroadcaster currentPartyId elbCreateBroadcasterPartyId
-        let fallbackTitle = artistProfileName artistRow <> " en vivo"
-        titleVal <-
-            either throwError pure $
-                normalizeLiveBroadcastTitle (cleanMaybeText elbCreateTitle <|> Just fallbackTitle)
-        descriptionVal <-
-            either throwError pure $
-                normalizeLiveBroadcastDescription elbCreateDescription
-        _quality <-
-            either throwError pure $
-                normalizeLiveBroadcastQuality elbCreateQuality
-        mExisting <-
-            liftIO $
-                runSqlPool
-                    ( selectFirst
-                        [ EventLiveBroadcastEventId ==. eventKey
-                        , EventLiveBroadcastBroadcasterPartyId ==. currentPartyId
-                        , EventLiveBroadcastStatus ==. "live"
-                        ]
-                        []
-                    )
-                    envPool
-        when (isJust mExisting) $
-            throwError err409{errBody = "Broadcaster already has an active live session for this event"}
-        streamKey <- liftIO (UUID.toText <$> UUIDV4.nextRandom)
-        (playbackUrl, ingestUrl, whipUrl) <- resolveLiveBroadcastStreamEndpoints streamKey
-        let broadcasterName =
-                fromMaybe ("Party " <> currentPartyId) (cleanMaybeText elbCreateBroadcasterName)
-        broadcastKey <-
-            liftIO $
-                runSqlPool
-                    ( insert
-                        EventLiveBroadcast
-                            { eventLiveBroadcastEventId = eventKey
-                            , eventLiveBroadcastArtistId = artistKey
-                            , eventLiveBroadcastBroadcasterPartyId = currentPartyId
-                            , eventLiveBroadcastBroadcasterName = broadcasterName
-                            , eventLiveBroadcastTitle = titleVal
-                            , eventLiveBroadcastDescription = descriptionVal
-                            , eventLiveBroadcastStatus = "live"
-                            , eventLiveBroadcastPlaybackUrl = Just playbackUrl
-                            , eventLiveBroadcastIngestUrl = Just ingestUrl
-                            , eventLiveBroadcastWhipUrl = Just whipUrl
-                            , eventLiveBroadcastStreamKey = Just streamKey
-                            , eventLiveBroadcastViewerCount = 0
-                            , eventLiveBroadcastStartedAt = now
-                            , eventLiveBroadcastEndedAt = Nothing
-                            , eventLiveBroadcastLastHeartbeatAt = now
-                            , eventLiveBroadcastCreatedAt = now
-                            , eventLiveBroadcastUpdatedAt = now
-                            }
-                    )
-                    envPool
-        liftIO $ loadLiveBroadcastDTO envPool broadcastKey
+        throwError nativeBroadcastUnavailable
 
     heartbeatLiveBroadcast ::
         T.Text ->
@@ -8124,55 +8066,6 @@ normalizeLiveBroadcastQuality mQuality =
         | otherwise =
             Left err400{errBody = "Live broadcast quality must be one of: auto, 720p, 480p"}
 
-resolveLiveBroadcastStreamEndpoints :: T.Text -> AppM (T.Text, T.Text, T.Text)
-resolveLiveBroadcastStreamEndpoints streamKey = do
-    mListenBaseRaw <- liftIO (lookupEnv "RADIO_PUBLIC_BASE")
-    listenBaseRaw <-
-        either throwError pure $
-            resolveRadioTransmissionEnvBase
-                "RADIO_PUBLIC_BASE"
-                "https://tdf-hq.fly.dev/live"
-                mListenBaseRaw
-    listenBase <- either throwError pure (validateRadioTransmissionPublicBase listenBaseRaw)
-    let fallbackIngest = deriveLiveBroadcastBase listenBase "rtmp" "/live"
-        fallbackWhip = deriveLiveBroadcastBase listenBase "https" "/whip"
-    mIngestBaseRaw <- liftIO (lookupEnv "RADIO_INGEST_BASE")
-    mWhipBaseRaw <- liftIO (lookupEnv "RADIO_WHIP_BASE")
-    ingestBaseRaw <-
-        either throwError pure $
-            resolveRadioTransmissionEnvBase
-                "RADIO_INGEST_BASE"
-                fallbackIngest
-                mIngestBaseRaw
-    whipBaseRaw <-
-        either throwError pure $
-            resolveRadioTransmissionEnvBase
-                "RADIO_WHIP_BASE"
-                fallbackWhip
-                mWhipBaseRaw
-    ingestBase <- either throwError pure (validateRadioTransmissionIngestBase ingestBaseRaw)
-    whipBase <- either throwError pure (validateRadioTransmissionWhipBase whipBaseRaw)
-    pure
-        ( appendLiveBroadcastPath listenBase streamKey
-        , appendLiveBroadcastPath ingestBase streamKey
-        , appendLiveBroadcastPath whipBase streamKey
-        )
-
-appendLiveBroadcastPath :: T.Text -> T.Text -> T.Text
-appendLiveBroadcastPath base path =
-    T.dropWhileEnd (== '/') base <> "/" <> path
-
-deriveLiveBroadcastBase :: T.Text -> T.Text -> T.Text -> T.Text
-deriveLiveBroadcastBase baseUrl newScheme newPath =
-    let noScheme =
-            fromMaybe
-                baseUrl
-                (T.stripPrefix "https://" baseUrl <|> T.stripPrefix "http://" baseUrl)
-        host = T.takeWhile (/= '/') noScheme
-        cleanHost = if T.null host then "localhost" else host
-        normalizedPath = if T.isPrefixOf "/" newPath then newPath else "/" <> newPath
-     in newScheme <> "://" <> cleanHost <> normalizedPath
-
 normalizeBudgetCentsMaybe :: Maybe Int -> Maybe Int
 normalizeBudgetCentsMaybe mBudget =
     case mBudget of
@@ -9590,10 +9483,10 @@ liveBroadcastEntityToDTO pool broadcastKey broadcastRow =
                     , elbTitle = eventLiveBroadcastTitle broadcastRow
                     , elbDescription = eventLiveBroadcastDescription broadcastRow
                     , elbStatus = eventLiveBroadcastStatus broadcastRow
-                    , elbPlaybackUrl = eventLiveBroadcastPlaybackUrl broadcastRow
-                    , elbIngestUrl = eventLiveBroadcastIngestUrl broadcastRow
-                    , elbWhipUrl = eventLiveBroadcastWhipUrl broadcastRow
-                    , elbStreamKey = eventLiveBroadcastStreamKey broadcastRow
+                    , elbPlaybackUrl = Nothing
+                    , elbIngestUrl = Nothing
+                    , elbWhipUrl = Nothing
+                    , elbStreamKey = Nothing
                     , elbViewerCount = eventLiveBroadcastViewerCount broadcastRow
                     , elbStartedAt = Just (eventLiveBroadcastStartedAt broadcastRow)
                     , elbEndedAt = eventLiveBroadcastEndedAt broadcastRow

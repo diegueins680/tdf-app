@@ -606,6 +606,102 @@ try:
                 except subprocess.TimeoutExpired: unavailable_server.kill(); unavailable_server.wait(timeout=5)
             http_port = saved_port
 
+    # MEDIA-STREAM-001: no native creation until publisher authorization is
+    # implemented. Synthetic endpoints are never contacted. Legacy projection
+    # controls cannot revoke previously disclosed provider credentials.
+    stream_viewer = actor('artist', 'stream-viewer')
+    stream_artist = sql("INSERT INTO social_artist_profile(name) VALUES ('Synthetic streaming artist') RETURNING id")
+    stream_event = sql("INSERT INTO social_event(organizer_party_id,title,start_time,event_type_id,workflow_state_id,metadata) VALUES ('" + actors['admin'] + "','Synthetic streaming event',now(),(SELECT id FROM event_type WHERE active ORDER BY code LIMIT 1),(SELECT s.id FROM workflow_state s JOIN workflow_definition w ON w.id=s.workflow_id WHERE w.code='social-event-lifecycle' AND s.code='planning' AND s.active LIMIT 1),'{\"isPublic\":true}') RETURNING id")
+    sql("INSERT INTO event_artist(event_id,artist_id) VALUES (" + stream_event + "," + stream_artist + ")")
+    sql("INSERT INTO artist_follow(artist_id,follower_party_id) VALUES (" + stream_artist + ",'" + actors['admin'] + "')")
+    stream_payload = {'elbCreateArtistId': stream_artist}
+    stream_path = '/social-events/events/' + stream_event + '/live-broadcasts'
+    configured = {'RADIO_PUBLIC_BASE': 'https://listen.example.com/hls',
+                  'RADIO_INGEST_BASE': 'rtmps://ingest.example.com/live',
+                  'RADIO_WHIP_BASE': 'https://publish.example.com/whip'}
+    stream_modes = [('absent', {}, 503), ('public-only', {'RADIO_PUBLIC_BASE': configured['RADIO_PUBLIC_BASE']}, 503)]
+    stream_modes.append(('explicit', configured, 503))
+    for mode, values, expected in stream_modes:
+        saved_port = http_port
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0)); http_port = sock.getsockname()[1]
+        stream_server = None
+        try:
+            with (OUTPUT / ('stream-' + mode + '.log')).open('w') as log:
+                stream_server = subprocess.Popen([str(BINARY)], cwd=OUTPUT, stdout=log, stderr=log,
+                    env=dict(server_env, APP_PORT=str(http_port), **values))
+            for _ in range(120):
+                if stream_server.poll() is not None: raise RuntimeError('Streaming fixture exited')
+                try:
+                    if request('/health')[0] == 200: break
+                except urllib.error.URLError: pass
+                time.sleep(.1)
+            else: raise RuntimeError('Streaming fixture did not become healthy')
+            before = sql('SELECT (SELECT count(*) FROM radio_stream), (SELECT count(*) FROM event_live_broadcast)')
+            check('anonymous radio admission denied ' + mode,
+                  request('/radio/transmissions', {}, token=None, method='POST')[0] == 401)
+            check('anonymous event broadcast admission denied ' + mode,
+                  request(stream_path, stream_payload, token=None, method='POST')[0] == 401)
+            check('nonfollower broadcast admission denied ' + mode,
+                  request(stream_path, stream_payload, token='fixture-stream-viewer', method='POST')[0] == 403)
+            radio_response = request('/radio/transmissions', {}, method='POST')
+            event_response = request(stream_path, stream_payload, method='POST')
+            # Keep actual status/body in private synthetic evidence on a negative control.
+            (OUTPUT / ('stream-' + mode + '-responses.json')).write_text(json.dumps({'radio': radio_response, 'event': event_response}))
+            check('radio configuration admission ' + mode, radio_response[0] == expected)
+            check('event configuration admission ' + mode, event_response[0] == expected)
+            after = sql('SELECT (SELECT count(*) FROM radio_stream), (SELECT count(*) FROM event_live_broadcast)')
+            check('unavailable streaming persists no records ' + mode, before == after)
+        finally:
+            if stream_server is not None:
+                stream_server.terminate()
+                try: stream_server.wait(timeout=10)
+                except subprocess.TimeoutExpired: stream_server.kill(); stream_server.wait(timeout=5)
+            http_port = saved_port
+
+    legacy_key = str(uuid.uuid4())
+    legacy_url = 'https://retired.example.com/live/' + legacy_key
+    legacy = sql("INSERT INTO event_live_broadcast(event_id,artist_id,broadcaster_party_id,broadcaster_name,title,status,playback_url,ingest_url,whip_url,stream_key,viewer_count,started_at,last_heartbeat_at) VALUES (" + stream_event + "," + stream_artist + ",'" + actors['admin'] + "','Synthetic broadcaster','Synthetic legacy broadcast','live','" + legacy_url + "','rtmp://retired.example.com/live/" + legacy_key + "','https://retired.example.com/whip/" + legacy_key + "','" + legacy_key + "',0,now(),now()) RETURNING id")
+    sql("INSERT INTO artist_follow(artist_id,follower_party_id) VALUES (" + stream_artist + ",'" + stream_viewer + "')")
+    for token in ['fixture-admin', 'fixture-stream-viewer']:
+        status, body = request(stream_path, token=token)
+        check('legacy broadcast metadata retained without publishing credentials ' + token,
+              status == 200 and legacy_key not in body and [row['elbId'] for row in json.loads(body)] == [legacy] and all(row[field] is None for row in json.loads(body)
+                for field in ['elbPlaybackUrl', 'elbIngestUrl', 'elbWhipUrl', 'elbStreamKey']))
+        status, body = request(stream_path + '/' + legacy + '/heartbeat', {}, token=token, method='POST')
+        check('legacy heartbeat cannot reveal publishing credentials ' + token,
+              status == 200 and json.loads(body)['elbId'] == legacy and legacy_key not in body and all(json.loads(body)[field] is None
+                for field in ['elbPlaybackUrl', 'elbIngestUrl', 'elbWhipUrl', 'elbStreamKey']))
+    check('viewer cannot end another broadcaster session',
+          request(stream_path + '/' + legacy + '/end', {}, token='fixture-stream-viewer', method='POST')[0] == 403)
+    status, body = request(stream_path + '/' + legacy + '/end', {}, method='POST')
+    check('owner can end legacy broadcast without redisclosing keys',
+          status == 200 and legacy_key not in body and json.loads(body)['elbStatus'] == 'ended' and
+          all(json.loads(body)[field] is None for field in ['elbPlaybackUrl', 'elbIngestUrl', 'elbWhipUrl', 'elbStreamKey']) and
+          sql('SELECT status FROM event_live_broadcast WHERE id=' + legacy) == 'ended')
+    public_url = 'https://external.example.com/stream.mp3'
+    sql("INSERT INTO radio_stream(stream_url,name,is_active) VALUES ('" + legacy_url + "','Legacy UUID',true),('" + public_url + "','Public station',true)")
+    sql("INSERT INTO party_radio_presence(party_id,stream_url,updated_at) VALUES (" + actors['admin'] + ",'" + legacy_url + "',now())")
+    status, body = request('/radio/streams')
+    check('radio discovery quarantines UUID paths and preserves ordinary external stations',
+          status == 200 and legacy_key not in body and public_url in body)
+    check('legacy key-bearing presence withheld', request('/radio/presence') == (200, 'null'))
+    check('legacy key-bearing foreign presence withheld',
+          request('/radio/presence/' + actors['admin'], token='fixture-stream-viewer') == (200, 'null'))
+    check('quarantined radio upsert rejected',
+          request('/radio/streams/active', {'rsuStreamUrl': legacy_url}, method='POST')[0] == 503)
+    check('quarantined presence write rejected',
+          request('/radio/presence', {'rpuStreamUrl': legacy_url}, method='POST')[0] == 503)
+    for encoded_key in [('%' + format(ord(legacy_key[0]), '02x')) + legacy_key[1:],
+                        ('%25' + format(ord(legacy_key[0]), '02x')) + legacy_key[1:]]:
+        encoded_url = 'https://retired.example.com/live/' + encoded_key
+        check('encoded key-bearing station write rejected ' + encoded_key[:5],
+              request('/radio/streams/active', {'rsuStreamUrl': encoded_url}, method='POST')[0] == 503)
+        check('encoded key-bearing presence write rejected ' + encoded_key[:5],
+              request('/radio/presence', {'rpuStreamUrl': encoded_url}, method='POST')[0] == 503)
+    check('ordinary external presence remains usable',
+          request('/radio/presence', {'rpuStreamUrl': public_url}, method='POST')[0] == 200)
+
     result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
 finally:
     if server is not None:

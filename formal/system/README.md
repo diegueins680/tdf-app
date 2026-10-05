@@ -36,6 +36,7 @@ Historical green results are not current-candidate evidence.
 - [cors-boundary.md](cors-boundary.md): credentialed production browser origins,
   startup guards, runtime mutation controls and coordinated configuration rollout.
 - [dependency-security.md](dependency-security.md): known-version regression floors, scan evidence and unresolved runtime/build-tool exposure.
+- [streaming-admission.md](streaming-admission.md): native creation unavailable, legacy credential containment and Mobile remote failure semantics.
 - [routed-read-boundaries.md](routed-read-boundaries.md): radio presence authentication and separate public/managed trial subject visibility.
 - [compiled-api-boundary.md](compiled-api-boundary.md): compiler-derived route discovery, OpenAPI correspondence and unresolved handler/codec boundaries.
 - [private-upload-persistence.md](private-upload-persistence.md): private attachment mount admission, legacy-file preservation and remaining coordinated recovery obligations.

@@ -10,7 +10,8 @@ module TDF.ServerRadio
   , validateRadioTransmissionPublicBase
   , validateRadioTransmissionIngestBase
   , validateRadioTransmissionWhipBase
-  , resolveRadioTransmissionEnvBase
+  , nativeBroadcastUnavailable
+  , isLegacyBroadcastUrl
   , validateRadioOptionalMetadataField
   , validateRadioCountryMutation
   , validateRadioGenreMutation
@@ -44,7 +45,6 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Text.Encoding.Error (lenientDecode)
 import           Data.Time              (UTCTime, getCurrentTime)
-import           System.Environment     (lookupEnv)
 import           Text.Read              (readMaybe)
 import qualified Data.ByteString.Lazy   as BL
 import           Database.Persist       (Entity(..), PersistValue(PersistText), (=.), (==.), (+=.), (<-.),
@@ -54,8 +54,9 @@ import           Database.Persist.Sql   (Single(..), SqlPersistT, fromSqlKey, ra
 import           Servant                (NoContent(..), ServerError, ServerT, err400, err500, err502, err503, errBody, throwError, (:<|>)(..))
 import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, parseRequest, responseBody,
                                          responseHeaders, responseTimeoutMicro, requestHeaders, withResponse, Request(..))
-import           Data.UUID              (UUID, toText)
-import           Data.UUID.V4           (nextRandom)
+import           Network.HTTP.Types.URI (urlDecode)
+import           Data.UUID              (UUID)
+import qualified Data.UUID              as UUID
 
 import           TDF.API.Radio          (RadioAPI)
 import           TDF.API.Types          (RadioAutoStopOptionDTO(..), RadioAutoStopOptionsDTO(..), RadioStreamDTO(..), RadioStreamUpsert(..), RadioPresenceDTO(..),
@@ -188,37 +189,21 @@ validateRadioTransmissionWhipBase :: Text -> Either ServerError Text
 validateRadioTransmissionWhipBase =
   validateRadioTransmissionEndpointBase "RADIO_WHIP_BASE" "https" ["https"]
 
-resolveRadioTransmissionEnvBase :: Text -> Text -> Maybe String -> Either ServerError Text
-resolveRadioTransmissionEnvBase _ defaultBase Nothing = Right defaultBase
-resolveRadioTransmissionEnvBase label _ (Just rawValue)
-  | T.null cleaned =
-      Left err500
-        { errBody =
-            BL.fromStrict . TE.encodeUtf8 $
-              label <> " is configured but blank"
-        }
-  | T.any isSpace cleaned =
-      Left err500
-        { errBody =
-            BL.fromStrict . TE.encodeUtf8 $
-              label <> " must not contain whitespace"
-        }
-  | T.any isControl cleaned =
-      Left err500
-        { errBody =
-            BL.fromStrict . TE.encodeUtf8 $
-              label <> " must not contain control characters"
-        }
-  | T.any isHiddenRadioFormatChar cleaned =
-      Left err500
-        { errBody =
-            BL.fromStrict . TE.encodeUtf8 $
-              label <> " must not contain hidden formatting characters"
-        }
-  | otherwise =
-      Right cleaned
-  where
-    cleaned = T.strip (T.pack rawValue)
+-- No deployed/provider contract currently separates playback identity from
+-- publisher authority. Configuration alone cannot establish that boundary.
+nativeBroadcastUnavailable :: ServerError
+nativeBroadcastUnavailable = err503
+  { errBody = "Native broadcasting is unavailable pending verified publisher authorization" }
+
+-- Historical native creation published the UUID stream key as a URL path.
+-- With no provenance column, conservatively quarantine that shape. This can
+-- also withhold public UUID-addressed stations; it is not a privacy classifier.
+isLegacyBroadcastUrl :: Text -> Bool
+isLegacyBroadcastUrl url =
+  let rawPath = T.intercalate "/" . drop 3 . T.splitOn "/" $
+        T.takeWhile (\c -> c /= '?' && c /= '#') url
+      decoded = TE.decodeUtf8With lenientDecode (urlDecode False (TE.encodeUtf8 rawPath))
+  in T.any (== '%') decoded || any (isJust . UUID.fromText) (T.splitOn "/" decoded)
 
 validateRadioOptionalMetadataField
   :: Text
@@ -948,6 +933,7 @@ radioServer user =
     upsertActive :: RadioStreamUpsert -> m RadioStreamDTO
     upsertActive payload = do
       streamUrl <- either throwError pure (validateRadioStreamUrl (rsuStreamUrl payload))
+      when (isLegacyBroadcastUrl streamUrl) $ throwError nativeBroadcastUnavailable
       name <- either throwError pure $
         validateRadioOptionalMetadataField "rsuName" 160 (rsuName payload)
       either throwError pure $
@@ -1494,7 +1480,7 @@ radioServer user =
               , rsActive = radioStreamIsActive
               , rsLastCheckedAt = radioStreamLastCheckedAt
               }
-      pure (map toDTO streams)
+      pure (map toDTO (filter (not . isLegacyBroadcastUrl . radioStreamStreamUrl . entityVal) streams))
 
     getSelfPresence :: m (Maybe RadioPresenceDTO)
     getSelfPresence = fetchPresence (auPartyId user)
@@ -1510,11 +1496,13 @@ radioServer user =
       Env{..} <- ask
       liftIO $ flip runSqlPool envPool $ do
         mRow <- selectFirst [PartyRadioPresencePartyId ==. partyId] []
-        pure (presenceToDTO <$> mRow)
+        pure (presenceToDTO <$> (mRow >>= \row ->
+          if isLegacyBroadcastUrl (partyRadioPresenceStreamUrl (entityVal row)) then Nothing else Just row))
 
     upsertPresence :: RadioPresenceUpsert -> m RadioPresenceDTO
     upsertPresence RadioPresenceUpsert{..} = do
       streamUrl <- either throwError pure (validateRadioStreamUrl rpuStreamUrl)
+      when (isLegacyBroadcastUrl streamUrl) $ throwError nativeBroadcastUnavailable
       name <- either throwError pure $
         validateRadioOptionalMetadataField "rpuStationName" 160 rpuStationName
       stationId <- either throwError pure $
@@ -1577,71 +1565,4 @@ radioServer user =
         }
 
     createTransmission :: RadioTransmissionRequest -> m RadioTransmissionInfo
-    createTransmission RadioTransmissionRequest{..} = do
-      now <- liftIO getCurrentTime
-      Env{..} <- ask
-      name <- either throwError pure $
-        validateRadioOptionalMetadataField "rtrName" 160 rtrName
-      streamKey <- liftIO (toText <$> nextRandom)
-      mListenBaseRaw <- liftIO (lookupEnv "RADIO_PUBLIC_BASE")
-      listenBaseRaw <- either throwError pure $
-        resolveRadioTransmissionEnvBase
-          "RADIO_PUBLIC_BASE"
-          "https://tdf-hq.fly.dev/live"
-          mListenBaseRaw
-      listenBase <- either throwError pure (validateRadioTransmissionPublicBase listenBaseRaw)
-      let fallbackIngest = deriveBase listenBase "rtmp" "/live"
-          fallbackWhip   = deriveBase listenBase "https" "/whip"
-      mIngestBaseRaw <- liftIO (lookupEnv "RADIO_INGEST_BASE")
-      mWhipBaseRaw <- liftIO (lookupEnv "RADIO_WHIP_BASE")
-      ingestBaseRaw <- either throwError pure $
-        resolveRadioTransmissionEnvBase
-          "RADIO_INGEST_BASE"
-          fallbackIngest
-          mIngestBaseRaw
-      whipBaseRaw <- either throwError pure $
-        resolveRadioTransmissionEnvBase
-          "RADIO_WHIP_BASE"
-          fallbackWhip
-          mWhipBaseRaw
-      ingestBase <- either throwError pure (validateRadioTransmissionIngestBase ingestBaseRaw)
-      whipBase <- either throwError pure (validateRadioTransmissionWhipBase whipBaseRaw)
-      let publicUrl = appendPath listenBase streamKey
-          ingestUrl = appendPath ingestBase streamKey
-          whipUrl = appendPath whipBase streamKey
-          upsertPayload = RadioStreamUpsert
-            { rsuStreamUrl = publicUrl
-            , rsuName      = name
-            , rsuCountryId = rtrCountryId
-            , rsuClearCountry = Just False
-            , rsuGenreId   = rtrGenreId
-            , rsuClearGenre = Just False
-            }
-      result <- liftIO $ flip runSqlPool envPool $ do
-        countryValidation <- validateActiveCountryReference "rtrCountryId" rtrCountryId
-        genreValidation <- validatePublishedGenreReference "rtrGenreId" rtrGenreId
-        case countryValidation >> genreValidation of
-          Left err -> pure (Left err)
-          Right _ -> do
-            (entity, _) <- saveStream now upsertPayload
-            pure (Right entity)
-      entity <- either (throwError . radioCatalogValidationError) pure result
-      pure RadioTransmissionInfo
-        { rtiStreamId  = fromIntegral (fromSqlKey (entityKey entity))
-        , rtiStreamUrl = publicUrl
-        , rtiIngestUrl = ingestUrl
-        , rtiStreamKey = streamKey
-        , rtiWhipUrl   = whipUrl
-        }
-
-    appendPath base path =
-      let trimmed = T.dropWhileEnd (== '/') base
-      in trimmed <> "/" <> path
-
-    deriveBase :: Text -> Text -> Text -> Text
-    deriveBase baseUrl newScheme newPath =
-      let noScheme = fromMaybe baseUrl (T.stripPrefix "https://" baseUrl <|> T.stripPrefix "http://" baseUrl)
-          host     = T.takeWhile (/= '/') noScheme
-          cleanHost = if T.null host then "localhost" else host
-          normalizedPath = if T.isPrefixOf "/" newPath then newPath else "/" <> newPath
-      in newScheme <> "://" <> cleanHost <> normalizedPath
+    createTransmission _ = throwError nativeBroadcastUnavailable

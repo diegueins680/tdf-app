@@ -3729,14 +3729,13 @@
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "OpenAPI complete-set requirement is the working authority; product owner has been asked to resolve the subset implementation conflict.",
         "Dynamic revocation, other catalog writers, mixed-operation deadlocks and transport ambiguity need wider verification."
       ],
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Scoped transaction repair, executable HTTP controls and bounded model require final candidate validation and deployed verification; broader catalog lifecycle remains uncovered."
       },
-      "authority": "AUTHORITY-028; rejected mutations must not be accepted piecemeal.",
+      "authority": "Product owner explicit complete-catalog-list decision on 2026-10-05; AUTHORITY-028",
       "property": "NoRejectedEffect, AtomicEvidence, NoStaleCommit, NoUnauthorizedCommit",
       "contract": "formal/system/catalog-reorder.md",
       "verification": "Real PostgreSQL HTTP denial/rollback/failure/concurrency checks and bounded TLC model with four named negative controls.",
@@ -4120,6 +4119,88 @@
         "classification": "PARTIAL",
         "reason": "Repair and actual-screen regression checks exist; exact final gates, native device and deployed correspondence remain open."
       }
+    },
+    {
+      "id": "MEDIA-STREAM-001",
+      "title": "Contain native streaming until publishing authority is independently enforced",
+      "statement": "Native radio/event creation must fail503 without persistence until a reviewed provider binding separates publishing authority from playback identity; legacy projections must withhold stream credentials and Mobile must not replace remote mutation failure with local acceptance.",
+      "authority": "Product owner approved unavailable broadcasting during repair on 2026-10-05; AUTHORITY-034",
+      "domain": "MEDIA",
+      "actors": [
+        "Broadcaster",
+        "Artist follower",
+        "Radio listener",
+        "Media provider"
+      ],
+      "preconditions": [
+        "Authenticated API routing remains active; no verified publisher authorization adapter exists."
+      ],
+      "inputs": [
+        "Native creation requests",
+        "Legacy broadcast DTOs and radio URLs",
+        "Remote Mobile mutation outcomes"
+      ],
+      "state": {
+        "boundary": "API creation, legacy projection and Mobile mutation acknowledgment",
+        "states": [
+          "unavailable native creation",
+          "legacy record",
+          "ended legacy record"
+        ]
+      },
+      "allowedTransitions": [
+        "authorized owner ends legacy record",
+        "remote error propagates",
+        "ordinary external station is read"
+      ],
+      "forbiddenTransitions": [
+        "endpoint configuration alone enables native creation",
+        "legacy key-bearing playback/ingest/WHIP appears in event DTO",
+        "remote mutation failure becomes local acceptance"
+      ],
+      "effects": [
+        "No native create persistence; retain legacy rows; quarantine UUID-path radio projections."
+      ],
+      "authorization": "Preserve session and event/follower guards; only broadcaster ends legacy session. No new provider permission is granted.",
+      "privacy": "Withhold legacy event URLs/keys and UUID-path radio URLs; prior disclosure and other transformed/cached copies require reconciliation.",
+      "concurrency": "Creation is unavailable independent of concurrent requests. Existing viewer-count read/write behavior is not proven linearizable.",
+      "idempotency": "Repeated unavailable creation makes no write. No retry or provider exactly-once claim.",
+      "failure": "503 for native create and quarantined stream/presence writes; Mobile remote failures propagate.",
+      "recovery": "Reviewed secure provider implementation and legacy credential reconciliation before re-enablement; no environment bypass.",
+      "observability": "Retain revision, binary hash, no-write counts and positive/negative fixture outcomes without production credentials.",
+      "source": "ServerRadio createTransmission; SocialEventsHandlers legacy projection; shipped Mobile WHIP headers; streaming reference; AUTHORITY-034",
+      "property": "Unavailable creation makes no durable effect; rejected remote mutation does not become local success.",
+      "contract": "formal/system/streaming-admission.md",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-mobile/src/lib/liveBroadcastsRepository.ts",
+        "tdf-mobile/src/lib/liveBroadcastPublishing.ts",
+        "tdf-mobile/app/eventDetail.tsx",
+        "streaming/mediamtx.yml",
+        "streaming/docker-compose.streaming.yml"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py",
+        "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts",
+        "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Actual HTTP/PostgreSQL and synthetic Mobile tests; no formal refinement or provider/media proof.",
+      "evidence": "Exact final commands pending; original source evidence retained.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for source-confirmed disclosure and scoped fail-closed containment; provider and production applicability unverified.",
+      "ambiguity": [
+        "Legacy transformed/cached credentials require provider/data reconciliation.",
+        "UUID-path quarantine can withhold legitimate external stations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Containment is implemented; full provider authorization, historical reconciliation, media lifecycle and deployed verification remain open."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -4177,7 +4258,7 @@
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
-    "formal/system/api-response-status.json": "a38b84f690e790cdff67a19c51efa29f1855d39619a3b25c58464ee559d84483",
+    "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "e42c7becdc4bfeb4966dc7eeed09952b56a9420f1f1937ec4975cedb0181f012",
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
@@ -4247,7 +4328,7 @@
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "0afc012d5980f287d6199e27c1761264fa77baeb4d2991b88aa1d21f546da806",
+    "scripts/test-booking-conformance.py": "c1f85c86d4e055f4bf2e3bfd7e94b3b54df8010a3f8434a58031c6d7e2c12971",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -4265,10 +4346,12 @@
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
+    "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
+    "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
-    "tdf-hq-ui/src/api/generated/types.ts": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
+    "tdf-hq-ui/src/api/generated/types.ts": "e51da2dd6d81a657d51917df32ae69fd0c19c136ef7551ce297e78848488b703",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
@@ -4300,7 +4383,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "d37f04e9584343fe885cdc4453963e475cb93177e35acc6ba24712b4f6dae1da",
+    "tdf-hq/docs/openapi/api.yaml": "2169d96fe2a7ca67560c12f39c7bb501740934b17b847d459b18bd46b5ab87ae",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -4346,12 +4429,13 @@
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "42c5fcbad81ef00f008c770ceb14417c483b53d87c41a2c154777bbd9c954742",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
     "tdf-hq/src/TDF/ServerExtra.hs": "8a730148e0a55bb0c1afdc1d0c6d5604d92a5e322e4f7a3e09d8740e1d410796",
     "tdf-hq/src/TDF/ServerFeedback.hs": "55a0f22b890416af1a9e48cccb5fcff733114e4a748a9c87ea616001e2584866",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
-    "tdf-hq/src/TDF/ServerRadio.hs": "74459d8820e98faa2d2567ddcd61e184d430dca96f9a160e31cae83aedf3974d",
+    "tdf-hq/src/TDF/ServerRadio.hs": "26aab8d39dba5eb065a6acfc37f3f3b4c277e5d3bb80b4ce9645912b970d96bb",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
@@ -4359,7 +4443,7 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "c727ade00f072b8dfd5598ed203f89e66341bfaf7952213df2d183f0ae1f2725",
-    "tdf-hq/test/Spec.hs": "9e35bfb269b54fcc35708706dab4da407241eae5ec3ad56801015597d2413baf",
+    "tdf-hq/test/Spec.hs": "69d64d4a2816d0fcb54530da0595767bbcc819afc901a5977fe2f5405a4b9d27",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -4379,17 +4463,22 @@
     "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
     "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
+    "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx": "4cbc66b4cbefc8022e1b5ca2f356d78173ce96ef227a7bccad9b0ad1a17bf78d",
     "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
+    "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
     "tdf-mobile/app/(tabs)/more.tsx": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
     "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
+    "tdf-mobile/app/eventDetail.tsx": "3d6457bb18f42d5fac7c00590e47f7b250a9b8f739cd6aa2c127be9610b6f36c",
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
-    "tdf-mobile/src/api/generated/types.ts": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
+    "tdf-mobile/src/api/generated/types.ts": "e51da2dd6d81a657d51917df32ae69fd0c19c136ef7551ce297e78848488b703",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
+    "tdf-mobile/src/lib/liveBroadcastPublishing.ts": "9b00774ddd70fd6f3425e6877cb52d9c6fa933f5c0af13f3af3327a5db042b98",
+    "tdf-mobile/src/lib/liveBroadcastsRepository.ts": "b7fed7ab7c9ad18a065f59ecc1cb2dcf7abf841aae555cee3fc8c0121036083c",
     "tdf-mobile/src/lib/queryClient.ts": "149f05c3a7463dfe5de259414a14fa30619277ce4f46adc6f166b51e775a4ff2",
     "tdf-mobile/src/providers/AppProviders.tsx": "5a53c52ab7582cea2457b146a52e913fcf8174a650d2791e21da028ea69efd03",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
@@ -4954,6 +5043,10 @@
       {
         "requirement": "AUTH-WEBHOOK-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": [
@@ -5504,6 +5597,10 @@
       {
         "requirement": "MEDIA-DRIVE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/PaymentRecovery.tla": [
@@ -5942,6 +6039,10 @@
       {
         "requirement": "AUTH-WEBHOOK-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/StudioBookingScope.tla": [
@@ -6189,6 +6290,10 @@
     "tdf-hq/src/TDF/ServerRadio.hs": [
       {
         "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STREAM-001",
         "relationship": "implementation"
       }
     ],
@@ -6515,6 +6620,54 @@
     "tdf-mobile/__tests__/AuthProvider.test.tsx": [
       {
         "requirement": "PRIV-CACHE-002",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": [
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/liveBroadcastsRepository.ts": [
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/liveBroadcastPublishing.ts": [
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/eventDetail.tsx": [
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "streaming/mediamtx.yml": [
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "streaming/docker-compose.streaming.yml": [
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": [
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx": [
+      {
+        "requirement": "MEDIA-STREAM-001",
         "relationship": "tests"
       }
     ]
@@ -9231,7 +9384,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "0afc012d5980f287d6199e27c1761264fa77baeb4d2991b88aa1d21f546da806",
+      "sha256": "c1f85c86d4e055f4bf2e3bfd7e94b3b54df8010a3f8434a58031c6d7e2c12971",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9272,6 +9425,10 @@
         },
         {
           "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-STREAM-001",
           "relationship": "tests"
         }
       ]
@@ -10058,14 +10215,24 @@
       "path": "streaming/docker-compose.streaming.yml",
       "sha256": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STREAM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-25a52c3a3f4b4e0f",
       "path": "streaming/mediamtx.yml",
       "sha256": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STREAM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e678e87f09e1d641",
@@ -10764,7 +10931,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
+      "sha256": "e51da2dd6d81a657d51917df32ae69fd0c19c136ef7551ce297e78848488b703",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15347,7 +15514,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "d37f04e9584343fe885cdc4453963e475cb93177e35acc6ba24712b4f6dae1da",
+      "sha256": "2169d96fe2a7ca67560c12f39c7bb501740934b17b847d459b18bd46b5ab87ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15356,6 +15523,10 @@
         },
         {
           "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-STREAM-001",
           "relationship": "implementation"
         }
       ]
@@ -19352,9 +19523,14 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "36ab5cc7d443e66a82719b89230407a9e027ef5dafa2ae70671341a9bf529446",
+      "sha256": "42c5fcbad81ef00f008c770ceb14417c483b53d87c41a2c154777bbd9c954742",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STREAM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-cb2c54ef31474aee",
@@ -19484,11 +19660,15 @@
     {
       "id": "SURFACE-5a72b47f8b63ff19",
       "path": "tdf-hq/src/TDF/ServerRadio.hs",
-      "sha256": "74459d8820e98faa2d2567ddcd61e184d430dca96f9a160e31cae83aedf3974d",
+      "sha256": "26aab8d39dba5eb065a6acfc37f3f3b4c277e5d3bb80b4ce9645912b970d96bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-RADIO-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-STREAM-001",
           "relationship": "implementation"
         }
       ]
@@ -19812,7 +19992,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "9e35bfb269b54fcc35708706dab4da407241eae5ec3ad56801015597d2413baf",
+      "sha256": "69d64d4a2816d0fcb54530da0595767bbcc819afc901a5977fe2f5405a4b9d27",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19825,6 +20005,10 @@
         },
         {
           "requirement": "MEDIA-DRIVE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-STREAM-001",
           "relationship": "tests"
         }
       ]
@@ -20912,9 +21096,14 @@
     {
       "id": "SURFACE-547a7176f0a822e5",
       "path": "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx",
-      "sha256": "7fa5086bdb7ae029781f4dd10ce850288871fd21f9905d31f96aba25c837e585",
+      "sha256": "4cbc66b4cbefc8022e1b5ca2f356d78173ce96ef227a7bccad9b0ad1a17bf78d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STREAM-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-aa9a5dc6fca02108",
@@ -21204,9 +21393,14 @@
     {
       "id": "SURFACE-32303e069b63d671",
       "path": "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts",
-      "sha256": "91698d70ac0c32c15748db7149f48cf22ec0e2f62f770571d4b6213dc55df5a4",
+      "sha256": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STREAM-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-28c3118e24cc2238",
@@ -21688,7 +21882,12 @@
       "path": "tdf-mobile/app/eventDetail.tsx",
       "sha256": "3d6457bb18f42d5fac7c00590e47f7b250a9b8f739cd6aa2c127be9610b6f36c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STREAM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-94bd0afe2e810e19",
@@ -22254,7 +22453,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
+      "sha256": "e51da2dd6d81a657d51917df32ae69fd0c19c136ef7551ce297e78848488b703",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22915,7 +23114,12 @@
       "path": "tdf-mobile/src/lib/liveBroadcastPublishing.ts",
       "sha256": "9b00774ddd70fd6f3425e6877cb52d9c6fa933f5c0af13f3af3327a5db042b98",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STREAM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fefcd38d58b49124",
@@ -22927,9 +23131,14 @@
     {
       "id": "SURFACE-335aaf003e5cc81d",
       "path": "tdf-mobile/src/lib/liveBroadcastsRepository.ts",
-      "sha256": "e029d309bd2b1b62e6179a0cbd809ab4920b40b2b5077abe9f908282ec31d18f",
+      "sha256": "b7fed7ab7c9ad18a065f59ecc1cb2dcf7abf841aae555cee3fc8c0121036083c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STREAM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-98ec2a53efd9fb83",
@@ -23663,8 +23872,6 @@
     "SURFACE-7ade12b1e0a8aa7b",
     "SURFACE-488ec868b5fc5265",
     "SURFACE-531960a153f9c90c",
-    "SURFACE-343c59104145438a",
-    "SURFACE-25a52c3a3f4b4e0f",
     "SURFACE-e678e87f09e1d641",
     "SURFACE-4d91a2ae6d7c7367",
     "SURFACE-4573385494ace809",
@@ -24835,7 +25042,6 @@
     "SURFACE-c446ba475dccb0e6",
     "SURFACE-f26997e896f3fcbc",
     "SURFACE-e4ab6ea991643db1",
-    "SURFACE-b256b583899a43d4",
     "SURFACE-cb2c54ef31474aee",
     "SURFACE-5cfb0ad2589bfb68",
     "SURFACE-81312ef85a6b405a",
@@ -24991,7 +25197,6 @@
     "SURFACE-b008aa9647a19740",
     "SURFACE-34f76aa7fd7d8a7d",
     "SURFACE-a4f08b34347d1281",
-    "SURFACE-547a7176f0a822e5",
     "SURFACE-aa9a5dc6fca02108",
     "SURFACE-7924613b1e052502",
     "SURFACE-3677524f8992889a",
@@ -25031,7 +25236,6 @@
     "SURFACE-a44fa1219b230d2b",
     "SURFACE-27d00a7896b43cdb",
     "SURFACE-42687e63082cfbc2",
-    "SURFACE-32303e069b63d671",
     "SURFACE-28c3118e24cc2238",
     "SURFACE-0fb421e98d3f4d99",
     "SURFACE-0f816b9eb1e4f3e8",
@@ -25093,7 +25297,6 @@
     "SURFACE-cb8e4fcf471e53e1",
     "SURFACE-095e45eb2a4a4ad4",
     "SURFACE-9ba898720027410e",
-    "SURFACE-ab43846a5d628103",
     "SURFACE-94bd0afe2e810e19",
     "SURFACE-c81dc193eacb9538",
     "SURFACE-9c44d04f2a433b19",
@@ -25258,9 +25461,7 @@
     "SURFACE-dbeee33c014d1248",
     "SURFACE-4f50cdad8268e254",
     "SURFACE-e225dab1b3e6e242",
-    "SURFACE-3c87b5908ae017f4",
     "SURFACE-fefcd38d58b49124",
-    "SURFACE-335aaf003e5cc81d",
     "SURFACE-98ec2a53efd9fb83",
     "SURFACE-9402fc6818e454b1",
     "SURFACE-d0a53a40b5d73f1e",
@@ -25347,7 +25548,8 @@
     "REC-DDEX-001",
     "PRIV-WEBHOOK-001",
     "AUTH-WEBHOOK-001",
-    "MEDIA-DRIVE-001"
+    "MEDIA-DRIVE-001",
+    "MEDIA-STREAM-001"
   ],
   "stateMachines": [
     {
@@ -27242,6 +27444,78 @@
       "responses": [
         "200",
         "422"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /social-events/events/{eventId}/live-broadcasts",
+      "operationId": "listEventLiveBroadcasts",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /social-events/events/{eventId}/live-broadcasts",
+      "operationId": "createEventLiveBroadcast",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "503",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /social-events/events/{eventId}/live-broadcasts/{broadcastId}/heartbeat",
+      "operationId": "heartbeatEventLiveBroadcast",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /social-events/events/{eventId}/live-broadcasts/{broadcastId}/end",
+      "operationId": "endEventLiveBroadcast",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -29639,7 +29913,8 @@
       ],
       "responses": [
         "200",
-        "400"
+        "400",
+        "503"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -29698,8 +29973,10 @@
         }
       ],
       "responses": [
-        "200",
-        "400"
+        "400",
+        "401",
+        "403",
+        "503"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -29728,7 +30005,8 @@
       ],
       "responses": [
         "200",
-        "400"
+        "400",
+        "503"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -33978,6 +34256,26 @@
         "reason": "Legacy Stripe checkout is disabled pending canonical verified-payment integration.",
         "sources": [
           "tdf-hq/src/TDF/Server.hs"
+        ]
+      },
+      {
+        "id": "POST /radio/transmissions",
+        "requirement": "MEDIA-STREAM-001",
+        "compiledStatus": 200,
+        "unavailableStatus": 503,
+        "reason": "Native streaming lacks a verified publisher authorization binding; configuration cannot enable it.",
+        "sources": [
+          "tdf-hq/src/TDF/ServerRadio.hs"
+        ]
+      },
+      {
+        "id": "POST /social-events/events/{}/live-broadcasts",
+        "requirement": "MEDIA-STREAM-001",
+        "compiledStatus": 200,
+        "unavailableStatus": 503,
+        "reason": "Native streaming lacks a verified publisher authorization binding; configuration cannot enable it.",
+        "sources": [
+          "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
         ]
       }
     ]
@@ -47670,7 +47968,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 56,
+    "PARTIAL": 57,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

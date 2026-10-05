@@ -7,8 +7,8 @@ leave no committed prefix. The existing permission is `catalog.update` plus
 `ModuleCatalog`; this requirement does not grant new roles access.
 
 `orderedItemIds` is a nonempty unique list containing every item UUID in the
-catalog, including inactive items. The OpenAPI incomplete-set rejection is the
-working authority pending product-owner clarification. Existing subset acceptance
+catalog, including inactive items. The product owner explicitly confirmed the complete-list requirement on
+2026-10-05, agreeing with the OpenAPI incomplete-set rejection. Existing subset acceptance
 violates that contract and can leave conflicting positions; it is not preserved.
 Accepted positions form the contiguous sequence0..n-1. A correlation ID labels the audit; it is not an idempotency key.
 A successful request increments each selected version and the catalog revision
