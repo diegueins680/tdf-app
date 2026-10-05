@@ -8,6 +8,10 @@ import { fireEvent } from '@testing-library/react';
 
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<unknown>>();
 const createCheckoutMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const createPaypalOrderMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const capturePaypalOrderMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const readEnvMock = jest.fn<(key: string) => string | undefined>();
+jest.unstable_mockModule('../utils/env', () => ({ env: { read: readEnvMock } }));
 const getCheckoutMock = jest.fn<(eventId: number, orderId: number, token: string) => Promise<unknown>>();
 const confirmDatafastStatusMock = jest.fn<(
   eventId: number,
@@ -29,8 +33,8 @@ jest.unstable_mockModule('../api/eventTickets', () => ({
     ) => confirmDatafastStatusMock(eventId, orderId, resourcePath, token),
     createCheckout: createCheckoutMock,
     createDatafastCheckout: jest.fn(),
-    createPaypalOrder: jest.fn(),
-    capturePaypalOrder: jest.fn(),
+    createPaypalOrder: createPaypalOrderMock,
+    capturePaypalOrder: capturePaypalOrderMock,
   },
 }));
 
@@ -148,6 +152,10 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     window.localStorage.setItem('tdf:event-ticket-checkout:41:92', 'secure-lookup-token');
     getStorefrontMock.mockReset().mockResolvedValue(storefrontFixture);
     createCheckoutMock.mockReset().mockResolvedValue(checkoutFixture());
+    createPaypalOrderMock.mockReset();
+    capturePaypalOrderMock.mockReset();
+    readEnvMock.mockReset();
+    delete window.paypal;
     getCheckoutMock.mockReset();
     confirmDatafastStatusMock.mockReset();
     metaTagsMock.mockReset();
@@ -161,6 +169,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await act(async () => root.unmount());
     queryClient.clear();
     container.remove();
+    delete window.paypal;
   });
 
   const renderTracking = async (route: string) => {
@@ -214,6 +223,34 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(metadata).toMatchObject({ canonical: `${window.location.origin}/eventos/41`, robots: 'noindex,follow' });
     expect(metadata).not.toHaveProperty('structuredData');
     expect(JSON.stringify(metadata)).not.toContain('secure-lookup-token');
+  });
+
+  it('mounts already-loaded PayPal buttons on the first portal opening and captures only the bound order', async () => {
+    readEnvMock.mockReturnValue('synthetic-public-client');
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'awaiting_payment' }));
+    createPaypalOrderMock.mockResolvedValue({ pcPaypalOrderId: 'BOUND-PAYPAL-ORDER' });
+    capturePaypalOrderMock.mockResolvedValue(checkoutFixture());
+    const render = jest.fn<(target: string | HTMLElement) => Promise<void>>().mockResolvedValue(undefined);
+    const close = jest.fn<() => void>();
+    const buttons = jest.fn<NonNullable<typeof window.paypal>['Buttons']>(() => ({ render, close }));
+    window.paypal = { Buttons: buttons };
+    await renderTracking('/eventos/41/orden/92');
+    const paypalButton = () => Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'PayPal')!;
+    await waitForExpectation(() => expect(paypalButton()?.disabled).toBe(false));
+    await act(async () => fireEvent.click(paypalButton()));
+    await waitForExpectation(() => expect(render).toHaveBeenCalledTimes(1));
+    expect(render.mock.calls[0]?.[0]).toBeInstanceOf(HTMLElement);
+    expect((render.mock.calls[0]?.[0] as HTMLElement).isConnected).toBe(true);
+    const options = buttons.mock.calls[0]![0];
+    expect(options.createOrder?.()).toBe('BOUND-PAYPAL-ORDER');
+    await act(async () => options.onApprove?.({ orderID: 'OTHER-ORDER' }));
+    expect(capturePaypalOrderMock).not.toHaveBeenCalled();
+    await act(async () => options.onApprove?.({ orderID: 'BOUND-PAYPAL-ORDER' }));
+    expect(capturePaypalOrderMock).toHaveBeenCalledWith(41, 92, 'BOUND-PAYPAL-ORDER', 'secure-lookup-token');
+    expect(container.textContent).toContain('La orden no está pagada');
+    expect(container.querySelector('canvas')).toBeNull();
+    expect(close).toHaveBeenCalled();
   });
 
   it('shows the server policy limit and rejects an oversized quantity even when HTML validation is bypassed', async () => {
@@ -274,7 +311,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
       'secure-lookup-token',
     ));
     expect(container.textContent).toContain('La orden no está pagada');
-    expect(container.textContent).toContain('Pago: processing');
+    expect(container.textContent).not.toContain('processing');
     expect(container.textContent).not.toContain('Pago verificado por el servidor');
     expect(container.textContent).not.toContain('TICKET-');
   });
@@ -323,8 +360,8 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     ));
     expect(container.textContent).toContain('El servidor verificó el pago y emitió las entradas.');
     expect(container.textContent).toContain('TICKET-VERIFIED-501');
-    expect(container.textContent).toContain('Pago: paid');
-    expect(container.textContent).toContain('Cumplimiento: issued');
+    expect(container.textContent).toContain('Entradas emitidas');
+    expect(container.querySelector('canvas')).not.toBeNull();
   });
   it.each(['checked_in', 'refunded', 'cancelled'])('never displays a QR for a %s ticket', async (status) => {
     qrCanvasMock.mockClear();
@@ -344,7 +381,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
       tickets: [{ ticketId: 503, ticketCode: 'NOT-YET-ISSUED', status: 'issued', holderName: 'Titular' }],
     }));
     await renderTracking('/eventos/41/orden/92');
-    await waitForExpectation(() => expect(container.textContent).toContain('Pago: paid'));
+    await waitForExpectation(() => expect(container.textContent).toContain('La emisión de entradas todavía está pendiente.'));
     expect(container.textContent).not.toContain('NOT-YET-ISSUED');
     expect(container.querySelector('canvas')).toBeNull();
   });

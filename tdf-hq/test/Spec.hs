@@ -1538,8 +1538,8 @@ main = hspec $ do
                 validUrl = "https://api.sandbox.paypal.com/v2/payments/captures/CAPTURE-1" :: Text
                 parse = ServiceStorefront.parsePaypalExternalCaptureChange CheckoutStore.CheckoutSandbox
             parse (envelope validUrl) `shouldBe` Right ("CAPTURE-1", 2000, "USD")
-            parse (envelope "https://api.paypal.com/v2/payments/captures/CAPTURE-1") `shouldSatisfy` isLeft
-            parse (envelope "https://api.sandbox.paypal.com.attacker.invalid/v2/payments/captures/CAPTURE-1") `shouldSatisfy` isLeft
+            parse (envelope ("https://api.paypal.com/v2/payments/captures/CAPTURE-1" :: Text)) `shouldSatisfy` isLeft
+            parse (envelope ("https://api.sandbox.paypal.com.attacker.invalid/v2/payments/captures/CAPTURE-1" :: Text)) `shouldSatisfy` isLeft
             parse (envelope (validUrl <> "?other=1")) `shouldSatisfy` isLeft
             let raw = BL.toStrict $ A.encode $ A.object
                   [ "id" .= ("WH-REFUND-1" :: Text), "event_type" .= ("PAYMENT.CAPTURE.REFUNDED" :: Text)

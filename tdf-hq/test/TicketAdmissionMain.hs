@@ -127,6 +127,9 @@ main = do
             rawExecute "INSERT INTO commerce_reconciliation_exception VALUES ('paypal','sandbox','merchant','capture','1','external_refund_detected','open')" []
             ) pool
           deny scan AdmissionPaymentReview
+          forM_ (["assigned", "resolved", "ignored"] :: [Text]) $ \reviewStatus -> do
+            runSqlPool (rawExecute "UPDATE commerce_reconciliation_exception SET status=?" [PersistText reviewStatus]) pool
+            deny scan AdmissionPaymentReview
           runSqlPool (rawSql "SELECT count(*) FROM event_ticket_admission_audit" []) pool
             `shouldReturn` [Single (0 :: Int)]
           runSqlPool (rawExecute "UPDATE commerce_reconciliation_exception SET exception_type='external_reversal_detected'" []) pool

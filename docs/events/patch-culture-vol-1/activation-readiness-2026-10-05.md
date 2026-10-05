@@ -8,6 +8,25 @@ finales, una pinta y acceso a jam/showcase. No corresponde solicitar otra
 aprobación comercial para esos mismos términos. Autorización y funcionamiento
 verificado se registran por separado.
 
+## Compra oficial de prueba completada; activación aún pendiente
+
+El 5 de octubre se completó la compra desde web 390×844: selección de dos entradas,
+checkout USD40, aprobación y captura real en **PayPal sandbox**, dos tickets, QR
+decodificados y check-in HTTP atómico (ocho intentos: un 200 y siete 409). Los
+reintentos de captura y webhook conservaron dos tickets, un asiento balanceado y
+una confirmación aceptada por SMTP local. El pago de prueba fue reembolsado por
+USD40; el callback firmado bloqueó la entrada restante. La evidencia sin datos
+personales ni credenciales está en [el reporte de ejecución](official-sandbox-purchase-2026-10-05.json).
+
+Se corrigieron cuatro fallos observados: CORS de consulta de la orden, ausencia de
+binding en la respuesta POST de PayPal, asiento de comisión cero y montaje del
+botón dentro del diálogo. El reembolso externo **no** completa todavía el flujo
+financiero de TDF (aprobación, asignación por ticket, asiento y nota de crédito).
+El estado de la revisión administrativa tampoco puede rehabilitar un ticket con
+reembolso verificado. Siguen pendientes el tratamiento fiscal, la integración
+protegida y el despliegue, la entrega externa de correo y la validación nativa.
+No se activaron ventas de producción ni se solicita de nuevo la autorización comercial.
+
 ## Continuación: sandbox oficial disponible
 
 Después de que Diego inició sesión en PayPal Developer, se verificó la aplicación
@@ -22,7 +41,7 @@ El webhook temporal expone exclusivamente su ruta de recepción; el resto respon
 La base local aplica el manifiesto canónico de 181 migraciones, conservando sus
 identidades y checksums. La configuración de habilitación del proveedor en esta
 base es una **precondición sintética**, no prueba de una transacción verificada.
-La compra, captura, reembolso y entrega externa siguen pendientes de ejecución.
+La compra y captura posteriores se acreditan en el reporte anterior; el reembolso financiero en TDF y la entrega externa siguen pendientes.
 El receptor SMTP local prueba procesamiento de la cola, no llegada a una bandeja.
 
 La revisión del backend combinado identifica dos puntos que deben comprobarse y
