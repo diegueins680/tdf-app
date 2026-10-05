@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -314,6 +314,16 @@
       "applicability": "Feedback attachments and live-session riders on the current Hetzner deployment",
       "decision": "adopted",
       "rationale": "Dedicated private host bind preserves current relative paths without moving private uploads into public assets. Startup guard and container controls are necessary; coordinated backup and host-loss recovery remain separate obligations."
+    },
+    {
+      "id": "RES-PAY-RETRY-001",
+      "source": "https://developer.paypal.com/api/rest/reference/idempotency/",
+      "title": "PayPal operation-scoped idempotency and retry retention",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Reuse the same operation request ID after ambiguous transport outcomes; do not assume all APIs or unlimited retention, or identical success for simultaneous requests.",
+      "applicability": "TDF canonical provider attempt admission and reconciliation",
+      "decision": "adopted",
+      "rationale": "Local immutable receipts and checkout serialization complement provider idempotency. Reject automatic new-charge fallback while unresolved; bounded model does not prove provider behavior."
     }
   ]
 }

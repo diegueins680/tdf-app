@@ -4545,7 +4545,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "d265e074a29f24cfadecc982f24a07301a218c8436320be73473b7674ba71b63",
+      "sha256": "b3c7e6122173e915c03efff2dd3efe2ee55660991140c9039d42a9e2689eb9d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11475,7 +11475,7 @@
     {
       "id": "SURFACE-67d742e6e43473e6",
       "path": "tdf-hq/src/TDF/Commerce/StateMachine.hs",
-      "sha256": "f3b3183fc1a089b71c135b5fc6e7ca4ef370e6e42b376230815a82a9ae5b7b03",
+      "sha256": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17532,7 +17532,7 @@
     },
     {
       "path": "docs/revenue-platform/formal-model.yaml",
-      "sha256": "2235e2c1c7894abfd733fe662820c9893480205ec4f4b6ff5250497f511f7e4f",
+      "sha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18966,6 +18966,55 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/ProviderRetryAdmission.cfg",
+      "sha256": "ebdb058f9c29ed8b700fe2ad03851eace6b4f85ec4697f38121af94c6af5c7df",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ProviderRetryAdmission.tla",
+      "sha256": "c2d3737e6d40813a8cac48341543c52e0974d263da81a12fbd22ba8f3afb9f3c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ProviderRetryAdmissionAmbiguous.cfg",
+      "sha256": "93a25d64312e77fa57bc5e85631794e6475fa444a7eff7711d5b44d121733113",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ProviderRetryAdmissionClosed.cfg",
+      "sha256": "93c5d46528a39fecaf1e74feeb125c6fcdeba57d9f039fde45b2587b1441d4fd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ProviderRetryAdmissionDuplicate.cfg",
+      "sha256": "1b7dff158caead2d9fc3770b21c90a092eb65fc9a4b092baecd7c10e1c3f581b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ProviderRetryAdmissionLate.cfg",
+      "sha256": "07c204208401b2f2bd8dfffdff0fccd86ebb1064b7f8d06e6b8f1db65ba48135",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ProviderRetryAdmissionPayload.cfg",
+      "sha256": "877fd249e897132ff8ff51d63ba032e7052513aec948504b9581f33b22045be0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/ProviderRollback.cfg",
       "sha256": "a27970ead639d87ddc54113bc53930ababed2b580f4ecb59a9a24c7d20e845ec",
       "authority": "inferred",
@@ -19016,7 +19065,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "bdd4972da406c7886e036b0aafe90a11efca6d53f32a54989e2bb78bd9202559",
+      "sha256": "ce129571c1a938f74cb2fa8b79e004fa29583954837be448c4446833a6664c83",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20290,14 +20339,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "f1f20a24d565b0494bb0844a9e2924e9cbc3b2fe4ec952b9f5fb0e4926246de6",
+      "sha256": "45fb611ef79f0449d99ebb9eb810c205094dcf278dcea8764e50048fb8c71d00",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "80303d1ad3ac454ad8caa6ee26a2eedeb0b66629eecedcf43707513e86296cc0",
+      "sha256": "0d13b52f7d55771da08ac231bbb4ae54d3c06d5fb5f27ebcf4044eb8f43ab2e1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20408,6 +20457,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/payment-retry.md",
+      "sha256": "e8aad9e0209f8d9d4a6d29fab92125b993a51761433ec00b04f8b89f91b74e22",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/private-upload-persistence.md",
       "sha256": "e03474bf3029a4b23e1ecc0b9818483fb693331ca2df667e7f0fe58ba82e7896",
       "authority": "inferred",
@@ -20416,14 +20472,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6dd2a858f3c64f1acf420b07f716fc3d6fe693e64ef46b9bbb552716bb2cf1bc",
+      "sha256": "a386fd06c0399ed8ddfe8be26be7c488cea46db3c61660919f438f26bd17f74d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "ab5ece45010ca5f07e0ecd6cab84bb4dd44e3112e78c080695c0f3ead01d9b63",
+      "sha256": "93e49b5ae2ff672fc9ba9f52d1077a4e7ea7fd8e463ded834f4c76c111615afe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28694,6 +28750,137 @@
         "CHECK_DEADLOCK FALSE",
         "INVARIANTS",
         "  CorrectReturn"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ProviderRetryAdmission.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Keys = {rail_one_key, rail_two_key}",
+        "  Payloads = {original, changed}",
+        "  MaxAttempts = 2",
+        "  UnsafeAmbiguousRetry = FALSE",
+        "  UnsafeDuplicateKey = FALSE",
+        "  UnsafePayloadReplay = FALSE",
+        "  UnsafeClosedCreate = FALSE",
+        "  UnsafeLateNoCharge = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OneLiveAttempt",
+        "  ImmutableKey",
+        "  BoundReplay",
+        "  ClosedCreationDenied",
+        "  CapturedEvidenceRetained",
+        "  AtMostOneCapture"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ProviderRetryAdmissionAmbiguous.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Keys = {rail_one_key, rail_two_key}",
+        "  Payloads = {original, changed}",
+        "  MaxAttempts = 2",
+        "  UnsafeAmbiguousRetry = TRUE",
+        "  UnsafeDuplicateKey = FALSE",
+        "  UnsafePayloadReplay = FALSE",
+        "  UnsafeClosedCreate = FALSE",
+        "  UnsafeLateNoCharge = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OneLiveAttempt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ProviderRetryAdmissionClosed.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Keys = {rail_one_key, rail_two_key}",
+        "  Payloads = {original, changed}",
+        "  MaxAttempts = 2",
+        "  UnsafeAmbiguousRetry = FALSE",
+        "  UnsafeDuplicateKey = FALSE",
+        "  UnsafePayloadReplay = FALSE",
+        "  UnsafeClosedCreate = TRUE",
+        "  UnsafeLateNoCharge = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ClosedCreationDenied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ProviderRetryAdmissionDuplicate.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Keys = {rail_one_key, rail_two_key}",
+        "  Payloads = {original, changed}",
+        "  MaxAttempts = 2",
+        "  UnsafeAmbiguousRetry = FALSE",
+        "  UnsafeDuplicateKey = TRUE",
+        "  UnsafePayloadReplay = FALSE",
+        "  UnsafeClosedCreate = FALSE",
+        "  UnsafeLateNoCharge = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ImmutableKey"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ProviderRetryAdmissionLate.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Keys = {rail_one_key, rail_two_key}",
+        "  Payloads = {original, changed}",
+        "  MaxAttempts = 2",
+        "  UnsafeAmbiguousRetry = FALSE",
+        "  UnsafeDuplicateKey = FALSE",
+        "  UnsafePayloadReplay = FALSE",
+        "  UnsafeClosedCreate = FALSE",
+        "  UnsafeLateNoCharge = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  CapturedEvidenceRetained"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ProviderRetryAdmissionPayload.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Keys = {rail_one_key, rail_two_key}",
+        "  Payloads = {original, changed}",
+        "  MaxAttempts = 2",
+        "  UnsafeAmbiguousRetry = FALSE",
+        "  UnsafeDuplicateKey = FALSE",
+        "  UnsafePayloadReplay = TRUE",
+        "  UnsafeClosedCreate = FALSE",
+        "  UnsafeLateNoCharge = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  BoundReplay"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

@@ -3123,6 +3123,101 @@
         "classification": "PARTIAL",
         "reason": "Shared routing rejection and selected actual runner controls exist; whole-system fixture ownership/isolation is not established."
       }
+    },
+    {
+      "id": "PAY-RETRY-001",
+      "title": "Serialized payment retry and immutable replay admission",
+      "statement": "A checkout must not admit another payment while an earlier outcome is unresolved; confirmed no-charge may enable a new attempt, exact authenticated key replays retain original identity, changed payloads conflict, closed checkouts deny new attempts, and late outcomes cannot erase captured evidence.",
+      "domain": "PAY",
+      "authority": "User payment reliability/idempotency requirements; existing canonical provider retry contracts and PostgreSQL tests corroborate supported recovery behavior.",
+      "source": "formal/system/payment-retry.md; AUTHORITY-021",
+      "property": "One unresolved-or-captured attempt; immutable key/payload receipt; no post-closure creation; no lost capture history.",
+      "contract": "formal/system/payment-retry.md",
+      "actors": [
+        "Checkout customer",
+        "Authenticated provider adapter",
+        "Reconciliation worker"
+      ],
+      "preconditions": [
+        "Checkout capability/session and immutable economic/provider binding have been validated.",
+        "Runtime transitions execute in the caller-owned PostgreSQL transaction with required checkout/attempt locks."
+      ],
+      "inputs": [
+        "Canonical idempotency scope",
+        "Immutable request payload",
+        "Provider outcome evidence",
+        "Checkout payable state"
+      ],
+      "state": {
+        "attempt": [
+          "absent",
+          "active",
+          "ambiguous",
+          "confirmed_no_charge",
+          "captured"
+        ],
+        "checkoutAdmission": [
+          "open",
+          "closed"
+        ],
+        "evidence": [
+          "immutable receipt",
+          "capture history"
+        ]
+      },
+      "allowedTransitions": [
+        "Absent -> active only while checkout admission is open and every earlier attempt is confirmed no-charge.",
+        "Active -> ambiguous on uncertain outcome; active/ambiguous -> no-charge or captured only with authentic final evidence.",
+        "Exact authenticated replay -> original attempt with no new attempt allocation."
+      ],
+      "forbiddenTransitions": [
+        "Ambiguous prior attempt -> fresh attempt on any rail.",
+        "Same scoped key with changed immutable payload -> accepted replay.",
+        "Closed checkout -> new payment attempt.",
+        "Captured attempt -> no-charge because of a conflicting late callback."
+      ],
+      "effects": [
+        "Serialize attempt admission and retain immutable replay/capture evidence."
+      ],
+      "authorization": "Current checkout lookup capability and provider/environment/method scope remain required; idempotency keys alone grant no authority.",
+      "privacy": "Synthetic integration tests do not contact real providers or expose customer lookup capabilities.",
+      "concurrency": "Atomic transaction abstraction requires actual PostgreSQL row locks and rollback; separate integration tests must establish the implementation boundary.",
+      "idempotency": "Key domain is provider, merchant account, operation and key; exact replay additionally binds checkout, environment, amount and currency. Provider operation hashes retain additional request binding.",
+      "failure": "Ambiguous provider response retains original identity and blocks fresh-charge fallback pending reconciliation. Conflicting replay rejects without repairing historical evidence.",
+      "recovery": "Reconcile the original operation; allow a fresh reference only after authoritative no-charge and current payable-state admission.",
+      "observability": "Retain attempt/intent/provider operation identity and redacted reconciliation outcomes; exact candidate integration and bounded-model receipts.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "scripts/test-provider-retry-runtime.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/ProviderRetryAdmission.tla",
+        "formal/event-operations/ProviderRetryAdmission.cfg",
+        "formal/event-operations/ProviderRetryAdmissionAmbiguous.cfg",
+        "formal/event-operations/ProviderRetryAdmissionDuplicate.cfg",
+        "formal/event-operations/ProviderRetryAdmissionPayload.cfg",
+        "formal/event-operations/ProviderRetryAdmissionClosed.cfg",
+        "formal/event-operations/ProviderRetryAdmissionLate.cfg"
+      ],
+      "verification": "Bounded TLC positive and five named mutation counterexamples plus environment-enabled actual PostgreSQL provider retry integration.",
+      "evidence": "Exact candidate formal and PostgreSQL integration logs; ordinary Hspec without integration environment is insufficient.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for scoped intended retry rule; full SQL/model refinement and final candidate execution remain obligations",
+      "ambiguity": [
+        "Complete checkout lifecycle beyond this admission boundary is not reconciled.",
+        "Model assumes verified authorization and authentic final provider evidence; it does not prove provider truthfulness or eventual response."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded admission model and runtime tests exist; exact final-candidate PostgreSQL gate and complete runtime refinement remain required."
+      }
     }
   ]
 }

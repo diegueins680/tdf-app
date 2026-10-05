@@ -597,3 +597,11 @@ existing payment models and HTTP contracts remain separate evidence.
     generation fixed the specification. Those parser/evaluation errors were not accepted as
     invariant counterexamples. A separate sandbox RMI denial required an approved unsandboxed
     rerun. The complete corrected suite passed; no safety assertion was weakened or omitted.
+
+## Provider retry admission
+
+`ProviderRetryAdmission.tla` and six configurations check the scoped payment retry
+admission contract in [payment-retry.md](../system/payment-retry.md). The positive
+model and five named negative controls are mandatory in the formal runner. Bounds,
+transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
+are defined there; the model does not establish a complete checkout lifecycle.

@@ -208,6 +208,18 @@
       "conflict": "The initial shipped-Mobile decision and its documentation referred to ede1f2a, but concurrent consolidated-main PR479 shipped Mobile147ec8bc with additional functionality.",
       "authority": "Product owner explicitly selected Use newly shipped Mobile pin after being shown root5efd7ff and Mobile147ec8bc.",
       "resolution": "Preserve root5efd7ff and Mobile147ec8bc ancestry; apply reviewed compatibility fixes at ff107462. Supersede the earlier lineage restriction only for this newly shipped pin, retain original-baseline evidence, and do not infer authorization to follow unrelated later Mobile-main changes or activate providers."
+    },
+    {
+      "id": "AUTHORITY-021",
+      "sources": [
+        "docs/revenue-platform/formal-model.yaml",
+        "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "conflict": "The historical checkout table declares failed terminal and draft initial; runtime explicitly supports no-charge retry and begins accepted checkouts awaiting_payment. The pure checkout helper differs and has no production caller.",
+      "authority": "formal/system/payment-retry.md; user payment reliability requirements corroborated by existing runtime guards and PostgreSQL retry tests",
+      "resolution": "Retire the old checkout table to historical_state_machines, label the pure helper as non-runtime reference, and formalize scoped retry admission with negative controls. Do not redefine every existing SQL transition as approved or claim the full checkout state machine is reconciled."
     }
   ]
 }
