@@ -865,6 +865,11 @@
       "id": "2026-10-05_ticket_order_quantity_limit",
       "path": "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
       "introducedBy": "67616c06acf9fca8810d918904510574b7a44eb3"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_delivery",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
+      "introducedBy": "409293891a255bb722ee026f3c7ba80a8f835589"
     }
   ]
 }

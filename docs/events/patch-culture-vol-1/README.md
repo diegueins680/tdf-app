@@ -4,6 +4,8 @@ La infraestructura de inventario, admisión, QR y transferencias se fusionó en 
 
 La continuación añade un límite reutilizable por orden a la política existente, con validación de servidor y PostgreSQL y exposición en el checkout. El valor aprobado para este evento es cuatro. No se activa una política provisional con tarifa fiscal inventada: configurar cuatro, retención de diez minutos y el límite de transferencia de 13:30 al preparar la política fiscal definitiva, manteniendo el evento privado hasta completar la validación. Este límite no se presenta como cuota acumulada por comprador.
 
+La confirmación de compra pública se está extendiendo con una cola durable: emisión y envío pendiente se guardan juntos, con reintentos y bloqueo entre workers. El mensaje incluye códigos de acceso y enlace web; usar la app es opcional. Ver [diseño y límites de entrega](../../../formal/ticket-admission/confirmation-delivery.md). El worker permanece apagado hasta verificar SMTP; una prueba local no acredita entrega a una bandeja externa.
+
 # PATCH CULTURE Vol. 1 — investigación y auditoría inicial
 
 Estado actualizado: condiciones comerciales aprobadas por el organizador («Approved. Continue»). Borrador creado en TDF; **sin publicación, cobros activados ni E2E de proveedor acreditado**. Ver [condiciones aprobadas v1](propuesta-condiciones.md) y `event-candidate.json`.
