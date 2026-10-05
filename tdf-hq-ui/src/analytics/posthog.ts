@@ -103,7 +103,8 @@ const privatePath = (pathname: string): string => pathname.replace(
 
 export function redactSensitiveQueryValues(value: string, depth = 0, relativeUrl = false): string {
   const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(value);
-  if (!isAbsolute && !value.startsWith('/') && !relativeUrl) return value;
+  const recognizableUrl = /^(?:https?|tdf):\/\//i.test(value) || value.startsWith('/');
+  if (!recognizableUrl && !relativeUrl) return value;
 
   try {
     const parsed = new URL(value, 'https://analytics.invalid');
