@@ -11973,7 +11973,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "3c1fd081957c0038457f1da06f517fdc7bedbdb054f7a785e18106ff950c84cd",
+      "sha256": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12831,7 +12831,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
+      "sha256": "4b8ae539be015513ebe752e84c73ac814a4b4832e46f59622dd2fed7b34e5a53",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21508,7 +21508,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b36f7d1cd4cd9b7860e66787f9fca5bf0606a722ea7f2c8f9e9ffe0bef568055",
+      "sha256": "dce38695656a235c40f67049475458e26c9ebac921fbbd4b6213936bf46b980d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21550,7 +21550,7 @@
     },
     {
       "path": "formal/system/web-cutover-correspondence.md",
-      "sha256": "d43c55e0f89d19f0c0b0f6b97a644fc334bdd712ac88e164b7b7ca2b6a2b605b",
+      "sha256": "e768a735c699d7f80e43940845521ece4436f34c2bf184284a47e33cd55677d1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

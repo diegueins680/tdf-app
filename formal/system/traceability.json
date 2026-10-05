@@ -4926,8 +4926,8 @@
     {
       "id": "OPS-CLIENT-001",
       "title": "Canonical operational clients and retired credential helpers",
-      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
-      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
+      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
+      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
       "domain": "OPS",
       "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
       "source": "docs/INSTAGRAM_TOKEN_SETUP.md; reviewed #468 helper/provider-cutover decisions",
@@ -4973,14 +4973,17 @@
         "scripts/refresh-messaging-token.mjs",
         "scripts/test-stripe-integration.sh",
         "scripts/upsert-course.mjs",
-        "tdf-hq/scripts/create_artists_from_list.sh"
+        "tdf-hq/scripts/create_artists_from_list.sh",
+        "tdf-hq/src/TDF/Config.hs"
       ],
       "tests": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/retired-messaging-refresher.test.mjs",
         "scripts/__tests__/payment-readiness-helper.test.mjs",
         "scripts/__tests__/artist-import-idempotency.test.mjs",
-        "scripts/__tests__/diagnose-social.test.mjs"
+        "scripts/__tests__/diagnose-social.test.mjs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
@@ -6127,6 +6130,7 @@
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "4ba88b3c7f5a9b50feabbd44bb7172e5297866b5e279d60f6329d44e0090978a",
@@ -6197,7 +6201,7 @@
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "f207af0c4782901684ca101b8c9e667c1e127c205ae14f5702a39549da1d6dcf",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
-    "tdf-hq/src/TDF/Config.hs": "3c1fd081957c0038457f1da06f517fdc7bedbdb054f7a785e18106ff950c84cd",
+    "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
@@ -6240,7 +6244,7 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "c2f2de27bae619934ebd0f05e680e15c4990f5101478ba08587786d94f9a240c",
-    "tdf-hq/test/Spec.hs": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
+    "tdf-hq/test/Spec.hs": "4b8ae539be015513ebe752e84c73ac814a4b4832e46f59622dd2fed7b34e5a53",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -6816,6 +6820,10 @@
       },
       {
         "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-CLIENT-001",
         "relationship": "implementation"
       }
     ],
@@ -7482,6 +7490,10 @@
       },
       {
         "requirement": "MEDIA-STREAM-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-CLIENT-001",
         "relationship": "tests"
       }
     ],
@@ -9372,6 +9384,12 @@
       }
     ],
     "scripts/__tests__/diagnose-social.test.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": [
       {
         "requirement": "OPS-CLIENT-001",
         "relationship": "tests"
@@ -16829,7 +16847,12 @@
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
       "sha256": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-932153a167d40c81",
@@ -22600,7 +22623,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "3c1fd081957c0038457f1da06f517fdc7bedbdb054f7a785e18106ff950c84cd",
+      "sha256": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22609,6 +22632,10 @@
         },
         {
           "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-CLIENT-001",
           "relationship": "implementation"
         }
       ]
@@ -23944,7 +23971,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
+      "sha256": "4b8ae539be015513ebe752e84c73ac814a4b4832e46f59622dd2fed7b34e5a53",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23961,6 +23988,10 @@
         },
         {
           "requirement": "MEDIA-STREAM-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-CLIENT-001",
           "relationship": "tests"
         }
       ]
@@ -28598,7 +28629,6 @@
     "SURFACE-ac24f384b7949bc7",
     "SURFACE-b1d115adebe79a56",
     "SURFACE-814a4782598cab3d",
-    "SURFACE-5fd31c626962ad2f",
     "SURFACE-932153a167d40c81",
     "SURFACE-857a51643aefc9ce",
     "SURFACE-cc7e604a9ece48cd",
