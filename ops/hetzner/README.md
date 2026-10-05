@@ -7,6 +7,11 @@ The observed production target is the dedicated Hetzner host, Compose project
 production operation. The authoritative system index is
 [formal/system/README.md](../../formal/system/README.md).
 
+Google interactive login was observed on October5. The corrective cookie-upload
+client must still be deployed and pass without browser instrumentation; see
+[the cutover validation record](validation-2026-09-28.md). Repository integration
+does not activate experimental event, payment or ticket-email flags.
+
 ## Read-only inspection
 
 Run from the repository root with the operator's dedicated SSH identity:
@@ -145,26 +150,19 @@ and cannot satisfy these obligations.
 ## Routine release status
 
 The guarded routine Hetzner release executor remains an open implementation and
-verification obligation. `release:backend` and `release:backend:preflight` now
-reject before remote action because their former executor targets Fly. Historical
-source-only `release:backend:plan` and importable migration/recovery validators
-remain available for correspondence and restore preparation. Do not use the
-historical executor to redirect production or treat its Fly plan as a Hetzner
-release plan.
+verification obligation. Direct invocation of `scripts/production-release.mjs`
+is retired and rejects before any provider or database action. The former
+`release:backend`, `release:backend:plan` and `release:backend:preflight` commands
+are removed. Its reviewed importable source/artifact helpers remain available to
+`npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY`.
+That command only prepares portable artifacts; it is not the canonical current-ledger
+plan described above and does not deploy or authorize database changes.
 
-Before an eligible rollout, the canonical executor must bind reviewed source,
-immutable target/recovery images, the exact migration manifest, actual Compose
-configuration and current flags; acquire a release lock; drain existing writers;
-back up database, public assets and private uploads; verify an actual isolated restore; apply and verify
-reviewed migrations; exercise a restricted canary; then verify the live version,
-configuration, database and safe smoke behavior. An archive listing alone does
-not establish restoration. Existing CORS permissiveness requires coordinated
-configuration and enforcing-image rollout. Recovery expiry requires draining
-old handlers. Provider and experiment gates must not activate incidentally.
-
-Recovery after accepting writes must preserve the current database and use a
-compatible enforcing image. Never restore an old backup over newer financial,
-audit, identity or user data merely to reverse an application release.
+A production executor must re-observe identity, flags, approved manifest/checksums,
+backups and recovery eligibility under its release lock. It must fence writers,
+apply only reviewed pending migrations and verify health, release identity and
+critical authenticated flows before reopening traffic. Never restore an old backup
+over newer financial, audit, identity or user data to reverse an application release.
 
 ## Historical material
 
@@ -172,3 +170,64 @@ The [September28 restore/cutover plan](../../docs/archive/hetzner-restore-rehear
 records the original Fly-to-Hetzner transition. It is not current release
 instruction. The Compose, Caddy and backup files here remain implementation
 inputs; installed configuration must be compared with them before execution.
+
+## Read-only operational tools after cutover
+
+The catalog inventory and daily mail monitor use the existing dedicated TDF SSH
+connection through `scripts/production_access.py`. The recorded connection is
+`root@178.105.93.101` with `~/.ssh/tdf_hetzner_deploy_20260928`; set
+`TDF_PRODUCTION_SSH_HOST` / `TDF_PRODUCTION_SSH_KEY` only when moving that
+already-authorized connection. Strict host-key checking, batch authentication
+and the dedicated identity are required. Never disable host verification.
+
+Both tools require the running `tdf-production` API and database under
+`/opt/tdf/production`, their expected database/network binding, and the configured
+immutable API and PostgreSQL images (`TDF_IMAGE` and `POSTGRES_IMAGE`). Both
+references must match the running container or its registry digest. They fail
+closed instead of falling back to Fly or the
+quarantined restore database. Catalog inventory also compares the public API
+commit/health with the inspected deployment before and after its existing bounded,
+anonymized read-only SQL, making fresh DNS/TLS/peer-bound public requests on both
+sides of the query. PostgreSQL defaults to read-only before the transaction;
+statement/lock timeouts and sensitive-column exclusions remain in force.
+
+The mail monitor reads only `SMTP_USERNAME` and `SMTP_PASSWORD` from the protected
+mode-0600 `api.env` into memory and requires agreement with the running API.
+Neither subprocess diagnostics nor credentials are logged. It retains read-only
+IMAP selection, BODY.PEEK, size limits, aggregate-only reports and error status.
+The installed LaunchAgent copy needs both `monitor.py` (from
+`scripts/mail-deliverability-monitor.py`) and `production_access.py` alongside it;
+verify their hashes and a read-only run after an update. Updating these local
+tools does not deploy the application or rotate runtime credentials.
+
+
+Catalog SQL runs as the dedicated `tdf_catalog_inventory` role, never `postgres`.
+Its reviewed operational setup is `catalog-readonly-role.sql`: no superuser,
+role/database creation, inherited roles or row-security bypass; SELECT only in
+public, with no password or new network access. Provisioning an existing role
+name fails instead of changing it. Existing roles retain their effective CREATE capability explicitly before the
+ambient PUBLIC schema-CREATE grant is removed. Their login, membership and other
+privileges remain unchanged; the new reader cannot create persistent objects.
+The helper also accepts only the exact reviewed inventory SQL digest and refuses
+coverage gaps after new tables are added. Review SELECT grants for those tables
+before the next inventory; do not silently omit them or use the application role.
+An explicit read-write transaction must still receive permission denied on a
+zero-row UPDATE probe. The live setup/negative control is recorded by the audit.
+
+Immutable-image checks compare `TDF_IMAGE` with the container's configured image
+reference or the image's matching registry RepoDigest. Docker's local image/config
+ID is recorded for race detection, but is not assumed to equal a manifest digest.
+The root-level legacy Instagram diagnostic is also retired; use the existing
+read-only `scripts/check-messaging-token.mjs` instead.
+
+The catalog public health/version reads require normal certificate/hostname TLS
+validation and require every DNS answer and the actual HTTPS socket peer to match
+the server address reported by the authenticated SSH connection. A healthy copy of
+the same Git SHA on another host is rejected before the inventory query runs.
+Introducing a CDN or load balancer requires a reviewed replacement for this direct
+origin binding; the inventory intentionally fails closed in that topology.
+
+The shared access helper also requires the database container to mount the named
+`tdf_production_postgres_data` volume at `/var/lib/postgresql/data`, with no child
+mount shadowing that store. A replacement volume, bind mount or missing mount is
+rejected before metadata, credentials or inventory are returned.

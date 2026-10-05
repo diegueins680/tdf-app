@@ -12,6 +12,7 @@ import {
   automaticMatchAllowed,
   artistNameAliasCandidate,
   detectImageMime,
+  isTdfManagedImageUrl,
   isPersistableResearchUrl,
   meaningfulSignals,
   normalizeName,
@@ -457,4 +458,51 @@ test('scheduled enrichment targets canonical production and retains publication 
   assert.ok(scheduled);
   assert.doesNotMatch(scheduled.run, /--auto-publish|--image-source/);
   assert.equal(workflow.concurrency['cancel-in-progress'], false);
+});
+
+test('manual enrichment uses the current API while retaining both explicit overrides', async () => {
+  const savedFetch = globalThis.fetch;
+  const keys = ['ADMIN_TOKEN', 'TDF_API_BASE', 'API_BASE'];
+  const savedEnv = Object.fromEntries(keys.map(key => [key, process.env[key]]));
+  try {
+    process.env.ADMIN_TOKEN = 'audit-test-token';
+    for (const [tdfBase, legacyBase, expected] of [
+      [undefined, undefined, 'https://api.tdfrecords.net'],
+      ['https://isolated.invalid', 'https://unused.invalid', 'https://isolated.invalid'],
+      [undefined, 'https://legacy-test.invalid', 'https://legacy-test.invalid'],
+    ]) {
+      for (const [key, value] of [['TDF_API_BASE', tdfBase], ['API_BASE', legacyBase]]) {
+        if (value === undefined) delete process.env[key]; else process.env[key] = value;
+      }
+      const requests = [];
+      globalThis.fetch = async (url, options) => {
+        requests.push({ url, options });
+        return { ok: true, status: 200, text: async () => JSON.stringify({
+          aerStatus: 'running', aerHeartbeatAt: new Date().toISOString(), aerRunKey: 'audit',
+        }) };
+      };
+      await assert.rejects(runPipeline(parseArgs(['--mode', 'dry-run', '--scope', 'audit'])), /already active/);
+      assert.equal(requests.length, 1);
+      assert.equal(requests[0].url, expected + '/admin/artists/enrichment/runs');
+      assert.equal(requests[0].options.headers.Authorization, 'Bearer audit-test-token');
+    }
+  } finally {
+    globalThis.fetch = savedFetch;
+    for (const key of keys) {
+      if (savedEnv[key] === undefined) delete process.env[key]; else process.env[key] = savedEnv[key];
+    }
+  }
+});
+
+test('managed image recognition includes the canonical API without trusting lookalike hosts', () => {
+  for (const url of [
+    'https://api.tdfrecords.net/assets/serve/artist.jpg',
+    'https://tdf-hq.fly.dev/assets/serve/legacy.jpg',
+    'https://drive.google.com/file/d/reviewed-file',
+  ]) assert.equal(isTdfManagedImageUrl(url), true, url);
+  for (const url of [
+    'https://api.tdfrecords.net.attacker.invalid/assets/serve/artist.jpg',
+    'https://untrusted.example/artist.jpg',
+    'not a URL',
+  ]) assert.equal(isTdfManagedImageUrl(url), false, url);
 });

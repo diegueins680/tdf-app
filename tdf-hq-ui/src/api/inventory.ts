@@ -1,6 +1,7 @@
 import type { DriveFileInfo } from '../services/googleDrive';
 import { del, get, patch, post } from './client';
 import { buildAuthorizationHeader } from './authHeader';
+import { resolveApiBase } from '../config/apiBase';
 import type {
   AssetCheckoutDTO,
   AssetCreate,
@@ -70,7 +71,7 @@ async function uploadAssetPhotoToPath(
   file: File,
   options: AssetUploadOptions = {},
 ): Promise<DriveFileInfo> {
-  const base = import.meta.env.VITE_API_BASE ?? '';
+  const base = resolveApiBase();
   const authHeader = buildAuthorizationHeader();
 
   const form = new FormData();
@@ -80,6 +81,8 @@ async function uploadAssetPhotoToPath(
   const dto = await new Promise<AssetUploadDTO>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${base}${path}`);
+    // Google sessions use HttpOnly cookies, like the shared fetch client.
+    xhr.withCredentials = true;
     if (authHeader) xhr.setRequestHeader('Authorization', authHeader);
     xhr.onreadystatechange = () => {
       if (xhr.readyState !== XMLHttpRequest.DONE) return;

@@ -76,6 +76,9 @@ the generated Drive URL.
 ## Operator commands
 
 Install the repository-supported Node22+ and FFmpeg/FFprobe. Run from the repository root.
+The manual CLI and scheduled workflow default to `https://api.tdfrecords.net`.
+For an isolated local/staging target, set `TDF_API_BASE` explicitly; `API_BASE`
+is the legacy fallback override. Do not target the retired Fly database.
 
 Audit only, with no external research or profile publication:
 

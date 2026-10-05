@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Deprecated compatibility helper. Production releases must use the guarded
-# current operational contract in ops/hetzner/README.md.
+# Hetzner procedure in ops/hetzner/README.md; preparation does not deploy.
 
 set -euo pipefail
 
@@ -24,9 +24,13 @@ case "$environment" in
     cat >&2 <<'EOF'
 [refused] scripts/deploy-stripe-ticketing.sh no longer performs remote releases.
 
-Production is Hetzner. See ops/hetzner/README.md for read-only inspection and
-the open guarded-release implementation requirements. The former Fly release
-and preflight commands are retired; do not use them to redirect production.
+Prepare the release/recovery bundle from the repository root with full SHAs:
+
+  npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY
+
+This command only prepares artifacts; it does not deploy. Follow
+ops/hetzner/README.md for reviewed migrations, backups, rollout and recovery.
+Keep application-startup migrations and experimental event discovery disabled.
 EOF
     exit 1
     ;;

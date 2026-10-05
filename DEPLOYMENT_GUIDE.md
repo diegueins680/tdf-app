@@ -1,6 +1,22 @@
-# Deployment Guide - TDF Records Platform
+# Historical platform deployment reference
 
-This guide covers deployment procedures for all components of the TDF Records platform.
+**Retired as a production procedure on 2026-09-28.** The current TDF backend
+runs on Hetzner at `https://api.tdfrecords.net`. Use the
+[current deployment and recovery runbook](ops/hetzner/README.md) and its
+[cutover evidence and outstanding validation](ops/hetzner/validation-2026-09-28.md).
+Google interactive login and authenticated upload validation remain incomplete.
+
+The provider setup, secret writes, migration, ticketing and rollback commands
+below are historical reference, not authorization or instructions for the live
+service. Do not reactivate the old Fly API, restore its stale TDF database, or
+modify the retained Trader/shared Fly database. Follow the current runbook's
+writer-freeze, migration-ancestry, backup and recovery safeguards. Do not use
+this document to enable financial writes or bypass the guarded release lane.
+
+Frontend production builds must use `VITE_API_BASE=https://api.tdfrecords.net`;
+the Cloudflare Pages and Vercel examples below reflect that canonical API.
+Mobile release verification follows the companion repository's current release
+guide; updating an example does not update an installed binary.
 
 ## Overview
 
@@ -8,7 +24,7 @@ The TDF platform consists of three deployable components:
 
 | Component | Technology | Deployment Target | Status |
 |-----------|-----------|-------------------|--------|
-| **Backend API** | Haskell + PostgreSQL | Koyeb / Fly.io | Production |
+| **Backend API** | Haskell + PostgreSQL | Koyeb / Fly.io | Historical; see current runbook |
 | **Web UI** | React/Vite SPA | Cloudflare Pages / Vercel | Production |
 | **Mobile App** | Expo/React Native | App Store / Play Store | Development |
 
@@ -190,7 +206,7 @@ server {
 
 ## Backend Deployment (Fly.io)
 
-Fly powers the production `tdf-hq` API. Production releases must use the guarded release lane; do not run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
+Fly formerly powered the production `tdf-hq` API; this section is historical. Production releases must use the guarded release lane; do not run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
 
 Application startup never owns production schema changes. `RUN_MIGRATIONS`,
 `CONTEXTUAL_REPUTATION_ENABLED`, `REPUTATION_AGGREGATION_WORKER_ENABLED`, and
@@ -320,7 +336,7 @@ Add in Cloudflare Pages settings:
 
 ```env
 NODE_VERSION=20.19.4
-VITE_API_BASE=https://tdf-hq.fly.dev
+VITE_API_BASE=https://api.tdfrecords.net
 VITE_TZ=America/Guayaquil
 VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
 VITE_GOOGLE_CLIENT_ID=your-google-client-id
@@ -334,7 +350,7 @@ Bearer credentials must never be configured as `VITE_*` variables because Vite e
 the public browser bundle. Use authenticated sessions for staff access and the purpose-built
 public APIs for guest flows.
 
-**Important:** The `VITE_PAYPAL_CLIENT_ID` must be set in Cloudflare Pages environment variables for PayPal buttons to appear in the Marketplace. This is separate from the Fly secret since the UI is built and served by Cloudflare Pages.
+**Important:** The `VITE_PAYPAL_CLIENT_ID` must be set in Cloudflare Pages environment variables for PayPal buttons to appear in the Marketplace. This public client identifier is separate from the protected backend credentials; the UI is built and served by Cloudflare Pages.
 
 #### 4. Deploy
 
@@ -375,7 +391,7 @@ Vercel is a great alternative with similar features.
 Add in Vercel project settings:
 
 ```env
-VITE_API_BASE=https://tdf-hq.fly.dev
+VITE_API_BASE=https://api.tdfrecords.net
 VITE_TZ=America/Guayaquil
 VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
 VITE_GOOGLE_CLIENT_ID=your-google-client-id

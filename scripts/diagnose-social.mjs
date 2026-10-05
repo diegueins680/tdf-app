@@ -3,15 +3,14 @@
  * Social Infrastructure Diagnostic
  *
  * Checks Instagram + Facebook webhook subscriptions and messaging tokens.
- * Run from Fly machine: flyctl ssh console --app tdf-hq
- * Or locally with env vars set.
+ * Run locally with securely supplied current-deployment environment variables.
+ * This diagnostic does not apply callback or credential changes.
  */
 
 const APP_ID = process.env.FACEBOOK_APP_ID || process.env.META_APP_ID;
 const APP_SECRET = process.env.FACEBOOK_APP_SECRET || process.env.META_APP_SECRET;
 const IG_MSG_TOKEN = process.env.INSTAGRAM_MESSAGING_TOKEN;
 const IG_ACCOUNT_ID = process.env.INSTAGRAM_MESSAGING_ACCOUNT_ID;
-const IG_VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN;
 const FB_MSG_TOKEN = process.env.FACEBOOK_MESSAGING_TOKEN || process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 const FB_PAGE_ID = process.env.FACEBOOK_MESSAGING_PAGE_ID || process.env.FACEBOOK_PAGE_ID;
 
@@ -47,17 +46,20 @@ async function main() {
   const igSub = subs.data?.find(s => s.object === 'instagram');
   const fbSub = subs.data?.find(s => s.object === 'page');
 
-  check('Instagram webhook subscribed', !!igSub, igSub ? `callback=${igSub.callback_url}, active=${igSub.active}` : 'missing');
-  check('Facebook webhook subscribed', !!fbSub, fbSub ? `callback=${fbSub.callback_url}, active=${fbSub.active}` : 'missing');
+  const igSubscribed = igSub?.active === true && igSub.callback_url === 'https://api.tdfrecords.net/instagram/webhook';
+  const fbSubscribed = fbSub?.active === true && fbSub.callback_url === 'https://api.tdfrecords.net/facebook/webhook';
 
-  if (!igSub) {
+  check('Instagram webhook subscribed', igSubscribed, igSub ? `callback=${igSub.callback_url}, active=${igSub.active}` : 'missing');
+  check('Facebook webhook subscribed', fbSubscribed, fbSub ? `callback=${fbSub.callback_url}, active=${fbSub.active}` : 'missing');
+
+  if (!igSubscribed) {
     console.log('\n🔧 To fix Instagram subscription:');
-    console.log(`  curl -X POST "https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}"`);
+    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID:-${META_APP_ID}}/subscriptions" --data-urlencode "object=instagram" --data-urlencode "callback_url=https://api.tdfrecords.net/instagram/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${INSTAGRAM_VERIFY_TOKEN:-${IG_VERIFY_TOKEN:?Set INSTAGRAM_VERIFY_TOKEN or IG_VERIFY_TOKEN from the current protected configuration}}" --data-urlencode "access_token=${FACEBOOK_APP_ID:-${META_APP_ID}}|${FACEBOOK_APP_SECRET:-${META_APP_SECRET}}"');
   }
 
-  if (!fbSub) {
+  if (!fbSubscribed) {
     console.log('\n🔧 To fix Facebook subscription:');
-    console.log(`  curl -X POST "https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=page&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Ffacebook%2Fwebhook&fields=messages&verify_token=${FB_MSG_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}"`);
+    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID:-${META_APP_ID}}/subscriptions" --data-urlencode "object=page" --data-urlencode "callback_url=https://api.tdfrecords.net/facebook/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${FACEBOOK_MESSAGING_TOKEN:-${FACEBOOK_PAGE_ACCESS_TOKEN:-${INSTAGRAM_VERIFY_TOKEN:-${IG_VERIFY_TOKEN:?Set INSTAGRAM_VERIFY_TOKEN or IG_VERIFY_TOKEN from the current protected configuration}}}}" --data-urlencode "access_token=${FACEBOOK_APP_ID:-${META_APP_ID}}|${FACEBOOK_APP_SECRET:-${META_APP_SECRET}}"');
   }
 
   // 3. Instagram messaging token
@@ -129,8 +131,8 @@ async function main() {
   // 5. Summary
   console.log('\n=== Summary ===');
   const issues = [];
-  if (!igSub) issues.push('Re-subscribe Instagram webhook');
-  if (!fbSub) issues.push('Re-subscribe Facebook webhook + set FACEBOOK_MESSAGING_TOKEN');
+  if (!igSubscribed) issues.push('Re-subscribe Instagram webhook');
+  if (!fbSubscribed) issues.push('Re-subscribe Facebook webhook + set FACEBOOK_MESSAGING_TOKEN');
   if (!IG_MSG_TOKEN || (await graph('/debug_token?input_token=' + encodeURIComponent(IG_MSG_TOKEN || 'x'), `${APP_ID}|${APP_SECRET}`)).error?.code === 190) {
     issues.push('Refresh INSTAGRAM_MESSAGING_TOKEN');
   }
@@ -149,9 +151,9 @@ async function main() {
     console.log('   4. Exchange for Page Token:');
     console.log(`      GET /me/accounts?access_token=USER_TOKEN`);
     console.log('   5. Copy the page access_token for "TDF Studio"');
-    console.log('   6. Set as Fly secret:');
-    console.log('      flyctl secrets set INSTAGRAM_MESSAGING_TOKEN="token" FACEBOOK_MESSAGING_TOKEN="token" --app tdf-hq');
-    console.log('   7. Restart: flyctl apps restart tdf-hq');
+    console.log('   6. Follow docs/INSTAGRAM_TOKEN_SETUP.md: Messaging credential rotation after the cutover.');
+    console.log('   7. An authorized operator must update the current Hetzner secret store, verify live messaging, and synchronize GitHub check credentials.');
+    console.log('      Do not update or restart the retired Fly app; this diagnostic performs no writes.');
   }
 }
 

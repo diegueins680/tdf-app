@@ -8,6 +8,7 @@
 
 ## Build, Run, and Dev
 - Toolchain: **stack only** — `stack.yaml` uses `lts-24.42` (GHC 9.10.3). Do **not** use `cabal` or the system GHC; it is a different toolchain the project does not use, its `dist-newstyle/` artifacts are ignored, and a green `cabal` build does not imply a green project build.
+- Package/dependency/module authority: `tdf-hq.cabal`, consumed by Stack and Docker. The obsolete ignored `package.yaml` was removed; do not regenerate the Cabal manifest from historical Hpack metadata.
 - Env: `set -a; source config/default.env; set +a`.
 - Build: `stack setup` then `stack build`.
 - Run: `stack run` (or `bash scripts/dev_run.sh`).
@@ -25,6 +26,8 @@
 - The existing `test/` Hspec/QuickCheck suite runs with `stack test`. PostgreSQL, HTTP and concurrency runners under root `scripts/` cover additional boundaries; see `.github/workflows/ci.yml` for the complete backend lane.
 - Local invitation/event-relation runners can use an existing loopback PostgreSQL server with `TDF_TEST_NATIVE_POSTGRES=1` (optional `TDF_TEST_NATIVE_POSTGRES_USER` / `TDF_TEST_NATIVE_POSTGRES_PORT`). They create and remove only their own new `_test` databases; pre-existing names fail closed. Default local behavior still uses Docker, and CI uses its isolated service. Never inherit libpq routing overrides.
 - Prefer observable handler/database tests with isolated fixtures. Follow `FORMAL_VERIFICATION.md` for critical invariants and negative controls.
+
+Pending external-runner Hspec cases are not PostgreSQL test passes.
 
 ## Commit & Pull Requests
 - Commits: short, imperative subjects (e.g., "Enable CORS"). Optional prefixes like `feat:`, `fix:`, `chore:` are welcome.
@@ -45,6 +48,9 @@
 - **Vercel** – set the root directory to `tdf-hq-ui`, install via `npm install`, build with `npm run build`, output `dist`.
 - **Backend** – start at `formal/system/README.md` and verify live identity. The October 4 baseline is Hetzner; Koyeb/Fly instructions are historical targets, not permission to redirect production. Preserve reviewed migrations and recovery guards.
 - Whenever you need to test end-to-end, ensure the frontend env vars point at the deployed API and that the API allows the frontend’s origin.
+
+Do not modify shared Trader resources. Current rollout prerequisites and flags
+require inspection; a successful build does not establish production upload behavior.
 
 ## Branding
 - The React shell renders SVG logos through `BrandLogo`. Swap SVG assets (`tdf-hq-ui/src/assets/tdf-*.svg`) rather than hardcoding text to maintain contrast in both themes.
