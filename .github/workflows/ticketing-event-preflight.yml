@@ -6,6 +6,8 @@ on:
     paths:
       - scripts/inspect-ticketing-event-access.mjs
       - .github/workflows/ticketing-event-preflight.yml
+      - scripts/prepare-event-draft.mjs
+      - docs/events/patch-culture-vol-1/draft-plan.json
 permissions:
   contents: read
 concurrency:
@@ -29,4 +31,15 @@ jobs:
         with:
           name: ticketing-event-access
           path: ticketing-event-access.json
+          retention-days: 7
+      - name: Validate reviewed private draft plan
+        run: node --test scripts/__tests__/event-draft-plan.test.mjs
+      - name: Prepare authorized private draft and inactive inventory
+        env:
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: node scripts/prepare-event-draft.mjs docs/events/patch-culture-vol-1/draft-plan.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ticketing-event-draft
+          path: ticketing-event-draft.json
           retention-days: 7
