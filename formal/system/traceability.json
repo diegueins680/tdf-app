@@ -6221,8 +6221,8 @@
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
-    "scripts/test-studio-internship-audit-api-e2e.mjs": "c051228cf890bdc3ec2079f9afbbc3e8e2bf1ead0743e192f54c8281d442db7e",
-    "scripts/test-studio-internship-audit-api-e2e.sh": "5c0236ad2a923c9891a8d8239055865828060a78a96ab57e572330714583f8c6",
+    "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
+    "scripts/test-studio-internship-audit-api-e2e.sh": "3ee6f1246dcfb371885bb56e7277cb8532db3a46bfd42d44afbe2e56be6d92f5",
     "scripts/test-ticket-admission.sh": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
@@ -13864,7 +13864,7 @@
     {
       "id": "SURFACE-df93425ce321f1fb",
       "path": "scripts/test-studio-internship-audit-api-e2e.mjs",
-      "sha256": "c051228cf890bdc3ec2079f9afbbc3e8e2bf1ead0743e192f54c8281d442db7e",
+      "sha256": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13876,7 +13876,7 @@
     {
       "id": "SURFACE-712726a891f46cde",
       "path": "scripts/test-studio-internship-audit-api-e2e.sh",
-      "sha256": "5c0236ad2a923c9891a8d8239055865828060a78a96ab57e572330714583f8c6",
+      "sha256": "3ee6f1246dcfb371885bb56e7277cb8532db3a46bfd42d44afbe2e56be6d92f5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -4719,13 +4719,13 @@
     {
       "id": "SURFACE-df93425ce321f1fb",
       "path": "scripts/test-studio-internship-audit-api-e2e.mjs",
-      "sha256": "c051228cf890bdc3ec2079f9afbbc3e8e2bf1ead0743e192f54c8281d442db7e",
+      "sha256": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-712726a891f46cde",
       "path": "scripts/test-studio-internship-audit-api-e2e.sh",
-      "sha256": "5c0236ad2a923c9891a8d8239055865828060a78a96ab57e572330714583f8c6",
+      "sha256": "3ee6f1246dcfb371885bb56e7277cb8532db3a46bfd42d44afbe2e56be6d92f5",
       "semanticConformance": "not-established-by-discovery"
     },
     {

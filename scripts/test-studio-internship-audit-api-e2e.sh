@@ -154,6 +154,20 @@ TDF_AUDIT_E2E_PASSWORD="$TDF_AUDIT_PASSWORD" \
 TDF_AUDIT_E2E_OTHER_INTERN_EMAIL="audit.other-intern@persona.test" \
 node "$TDF_AUDIT_ROOT/scripts/test-studio-internship-audit-api-e2e.mjs"
 
+# A role alone must not authorize privacy administration. Revoke only this
+# disposable fixture's canonical StudioManager module grant, preserving its role.
+psql -X -v ON_ERROR_STOP=1 -d "$TDF_AUDIT_DATABASE" <<'SQL' >/dev/null
+UPDATE role_permission rp SET active=FALSE
+FROM security_role r, security_permission p, security_module m, security_action a
+WHERE rp.role_id=r.id AND rp.permission_id=p.id AND p.module_id=m.id AND p.action_id=a.id
+  AND r.code='studio-manager' AND m.code='internships' AND a.code='access'
+  AND p.resource_scope='module';
+SQL
+TDF_AUDIT_E2E_API_BASE="http://127.0.0.1:$TDF_AUDIT_PORT" \
+TDF_AUDIT_E2E_PASSWORD="$TDF_AUDIT_PASSWORD" \
+TDF_AUDIT_E2E_EXPECT_MISSING_MODULE=1 \
+node "$TDF_AUDIT_ROOT/scripts/test-studio-internship-audit-api-e2e.mjs"
+
 OUTBOX_CHECK=$(psql -X -d "$TDF_AUDIT_DATABASE" -Atqc \
   "SELECT count(*) > 0 AND bool_and(test_transport) AND bool_and(dispatched_at IS NULL) FROM intern_audit_notification_outbox")
 if [ "$OUTBOX_CHECK" != "t" ]; then

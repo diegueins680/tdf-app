@@ -52,6 +52,21 @@ const otherIntern = otherInternEmail ? await login(otherInternEmail) : null;
 assert.ok(admin.roles.includes('Studio Manager'));
 assert.ok(intern.roles.includes('Intern'));
 
+if (process.env.TDF_AUDIT_E2E_EXPECT_MISSING_MODULE === '1') {
+  const session = await request('/session', { token: admin.token });
+  assert.ok(session.roles.includes('Studio Manager'), 'Role must remain granted');
+  assert.ok(Array.isArray(session.modules));
+  assert.ok(!session.modules.some(module => module.toLowerCase() === 'internships'), 'The canonical module grant must actually be absent');
+  await request('/feedback/internal/legacy', { token: admin.token, expected: 403 });
+  await request('/feedback/internal/legacy?accountDeletionOnly=true&offset=0', { token: admin.token, expected: 403 });
+  await request('/feedback/internal/account-deletion/00000000-0000-4000-8000-000000000001', {
+    token: admin.token, method: 'POST', expected: 403,
+    json: { adrOutcome: 'completed', adrNote: 'Synthetic forbidden resolution; must not reach object lookup.' },
+  });
+  console.log('Account deletion module boundary passed: role retained, canonical module revoked, queue and resolution denied');
+  process.exit(0);
+}
+
 const catalogs = await request('/catalogs/batch?code=feedback-categories&code=feedback-severities&locale=es&page=1&pageSize=100');
 const feedbackCategories = catalogs.catalogs.find((entry) => entry.catalog.code === 'feedback-categories')?.items ?? [];
 const category = feedbackCategories.find((item) => item.code === 'bug' && item.active && item.workflowState === 'published');
