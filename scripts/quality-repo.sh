@@ -13,6 +13,8 @@ run_npm() {
 }
 
 echo "▶ Verifying repository-wide invariants"
+node "$ROOT/scripts/check-dependency-security.mjs"
+node --test "$ROOT/scripts/__tests__/dependency-security.test.mjs"
 node "$ROOT/scripts/check-build-trust.mjs"
 node --test "$ROOT/scripts/__tests__/build-trust.test.mjs"
 node --test "$ROOT/scripts/__tests__/disposable-postgres-url.test.mjs"

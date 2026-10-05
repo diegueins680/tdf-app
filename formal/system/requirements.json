@@ -2426,6 +2426,70 @@
         "No provider or notification side effects are covered by this model.",
         "DTO decoding validates shape; complete SQL-result identity/value correspondence remains a separate conformance obligation."
       ]
+    },
+    {
+      "id": "SYS-DEPENDENCY-001",
+      "title": "Known dependency security floors cannot regress silently",
+      "statement": "Root and exact pinned Mobile npm lockfiles must reject versions below reviewed security floors; a version-floor pass must not be represented as a complete advisory or runtime exposure clearance.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker",
+        "Release operator"
+      ],
+      "preconditions": [
+        "Use committed npm v3 lockfiles; initialize the exact Mobile gitlink for Mobile checks."
+      ],
+      "inputs": [
+        "formal/system/dependency-security.json",
+        "package-lock.json",
+        "tdf-mobile/package-lock.json"
+      ],
+      "state": {
+        "boundary": "formal/system/dependency-security.md"
+      },
+      "allowedTransitions": [
+        "Reviewed compatible dependency update followed by applicable client gates."
+      ],
+      "forbiddenTransitions": [
+        "Known floor downgrade",
+        "Unreviewed major or zero-major minor series",
+        "Claiming complete security from the production-only audit or version floors"
+      ],
+      "effects": [
+        "Reject invalid lock before build/test admission."
+      ],
+      "authorization": "Dependency repair does not authorize provider activation, native distribution or importing newer Mobile-main product flows.",
+      "privacy": "Evidence contains dependency metadata only; do not record registry credentials.",
+      "concurrency": "Read immutable candidate lockfiles; installer and verifier must not mutate the same files concurrently.",
+      "idempotency": "Local floor check is deterministic for a fixed policy and locks; remote advisory scan is time-dependent.",
+      "failure": "CI fails on a regressed known version or missing requested Mobile lock. Unresolved advisory exposure is separately recorded.",
+      "recovery": "Restore reviewed compatible versions and rerun affected checks; never force framework downgrades merely to silence audit.",
+      "observability": "Preserve exact lock hashes, scan command, exit result and advisory source.",
+      "source": "User audit sections21,22,24,25; primary upstream advisories linked in formal/system/dependency-audit-2026-10-05.json",
+      "contract": "formal/system/dependency-security.md",
+      "implementation": [
+        "scripts/check-dependency-security.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/quality-mobile.sh",
+        "package-lock.json",
+        "tdf-mobile/package-lock.json"
+      ],
+      "tests": [
+        "scripts/__tests__/dependency-security.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for scoped deterministic version rejection; partial dependency reachability assessment.",
+      "ambiguity": [
+        "No universal reachability or transitive supply-chain proof.",
+        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Version regression checker and negative controls implemented; full scans still have unresolved findings, and final client/release evidence is separate."
+      }
     }
   ]
 }

@@ -32,7 +32,7 @@ def is_specification_candidate(relative):
     if relative.startswith("formal/"):
         return path.suffix in (".md", ".tla", ".cfg", ".als") or relative in {
             "formal/system/requirements.json", "formal/system/authority-decisions.json",
-            "formal/system/research.json"}
+            "formal/system/research.json", "formal/system/dependency-security.json"}
     return path.name == "README.md" and path.parts[0] in {
         "tdf-hq", "tdf-hq-ui", "scripts", "functions", "streaming", "tidal-agent"}
 
