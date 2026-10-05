@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "2ebd1f974b8cef43aee8a8589c626643cd82e9c6",
+  "mobileRevision": "dc981fee203b95f3993afb5eebf6b070d4e72aa8",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -447,6 +447,7 @@
       "scripts/verify-invoice-receipt-api.mjs",
       "scripts/verify-invoice-receipts.py",
       "scripts/verify-payment-arithmetic.py",
+      "scripts/verify-readiness.py",
       "scripts/verify-request-failures.py",
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
@@ -1601,6 +1602,7 @@
       "tdf-hq/src/TDF/API/WhatsApp.hs",
       "tdf-hq/src/TDF/App/Boot.hs",
       "tdf-hq/src/TDF/App/FailureBoundary.hs",
+      "tdf-hq/src/TDF/App/Readiness.hs",
       "tdf-hq/src/TDF/App/StartupResponse.hs",
       "tdf-hq/src/TDF/Artists/Enrichment.hs",
       "tdf-hq/src/TDF/Artists/Promotion.hs",
@@ -1821,6 +1823,7 @@
       "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
       "tdf-hq/test/TDF/Profiles/ArtistSpec.hs",
       "tdf-hq/test/TDF/ProviderIdentitySpec.hs",
+      "tdf-hq/test/TDF/ReadinessSpec.hs",
       "tdf-hq/test/TDF/Server/EventRelationsSpec.hs",
       "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
       "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
@@ -3745,7 +3748,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "a992ea1ae7653b66cd89dcf8c48faaf112201ff8d7514cdd584858e69b23e87f",
+      "sha256": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4847,6 +4850,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d633e5d8beb4a8d8",
+      "path": "scripts/verify-readiness.py",
+      "sha256": "b60658cd6a530235192ccf9a9afa2d2efb464153e8ec68939b4bd1b8a99cb6c2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fa1f8b855944ecc5",
       "path": "scripts/verify-request-failures.py",
       "sha256": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
@@ -5467,7 +5476,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "6a71772e635cdf6f85ce4edb80da32277bcb53b6b8f1856fcb5d03955e1c8e35",
+      "sha256": "97e3c5c5fd2e5c7c86ce64d6ac82af0925efa6cb474654ff7d431c6e5544a4a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9253,7 +9262,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "ef7008b763c584db8be34ee7e490f3e42ccbfe4c55de28590fc7448fa42a2de6",
+      "sha256": "32343d99e0116465e017e880d682090dae17974f3bca808f817908ba897bda00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11455,7 +11464,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "3b1f027ffe718dd547fc2299f6aa8977b9db9915736d4210dc1df235cb1372bc",
+      "sha256": "b52a050b44bc032682a8be161b320bb1cea5aba710a641d1ab5e6996c8bcf5b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11732,6 +11741,12 @@
       "id": "SURFACE-4893f1464484dd6a",
       "path": "tdf-hq/src/TDF/App/FailureBoundary.hs",
       "sha256": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9b25f2b06da83696",
+      "path": "tdf-hq/src/TDF/App/Readiness.hs",
+      "sha256": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12403,7 +12418,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "98820dee37a796a4b605042bd59f7a9165f5aab2189c3d849e4b6842e3a1e651",
+      "sha256": "1850a0e39b286ecc91f5005d85d5e78e371b25a9e307d2a1bd272fc018ec82bc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12811,7 +12826,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "53cc7aa684197d9c3f339fec51a50a21e4c3ab20c062cd9c385a8511457fb0ab",
+      "sha256": "1e4cbcb3a01141bed9f05fa2a2d59fe47950a7dc62fce648b60bf99f29afb03f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12853,7 +12868,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "a495c1251270fead21ecff13a0e8287530169e83da293fb078825a1be10df2f4",
+      "sha256": "e014ccfcf245b9fcdeff3816fbc277cfcf08ca898054766bc3f85f4c7974ad9e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13055,6 +13070,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e54fcc9334870c9b",
+      "path": "tdf-hq/test/TDF/ReadinessSpec.hs",
+      "sha256": "10d021192d9a45ed9d91e04e51923f9a844c8013f7fcccab280c27070e8b799d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-705eb0208602ff31",
       "path": "tdf-hq/test/TDF/Server/EventRelationsSpec.hs",
       "sha256": "119e7fd65b79672d20702f882d28bbefe4f79fb5a0288ad9b2ef3d022f24a524",
@@ -13111,7 +13132,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
+      "sha256": "28f7a2b0815d452cad9ca9a2fc10a69969734fe610196fd502453ac3f439310d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14863,7 +14884,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "6a71772e635cdf6f85ce4edb80da32277bcb53b6b8f1856fcb5d03955e1c8e35",
+      "sha256": "97e3c5c5fd2e5c7c86ce64d6ac82af0925efa6cb474654ff7d431c6e5544a4a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21396,14 +21417,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "defc22b7e55cdc80394db8d8ce8e3ee8d5a36c680bb3f859b007614fc18a181d",
+      "sha256": "41e1a028bdd3da319ad58cb900304ebd7f7f4be8d18f59de09a01bfa45f76632",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "025d7522ce560a3c92062d06b1d237180d65c6e0d3e61c7c1641733dce01aa91",
+      "sha256": "9a1f76de3a6814fddd77e9238b9d4715f67a3d4f4cc6d570e207449f845cf553",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21605,6 +21626,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/readiness.md",
+      "sha256": "c415f9b6abe9711b504a76e5597792135c42c0027e876013088ddc51ef9ba2c0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/request-failure-boundary.md",
       "sha256": "4162fd62469608976edd1ddf661615154dfe81493be128632059513a6e4b3b86",
       "authority": "inferred",
@@ -21613,14 +21641,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2bfb5681da0d77c297bc2ca73d45c2c2681a16069fcb339fec4b59a256180303",
+      "sha256": "bf0ec0f54059046837b0dea1fa31354dba98f9c44cf9f6dceaa34125838ceff0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "4e66146f5cea584e078cda3734ea519d8a93598ea748df4f8f29c3f1939681eb",
+      "sha256": "638bc18a64b4da8c4c173966fd24c1d0e5f35413da1040ee6aa0c99b655e62da",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21914,7 +21942,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "ef7008b763c584db8be34ee7e490f3e42ccbfe4c55de28590fc7448fa42a2de6",
+      "sha256": "32343d99e0116465e017e880d682090dae17974f3bca808f817908ba897bda00",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
