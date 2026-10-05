@@ -8,8 +8,10 @@ module TDF.Commerce.ProviderAdapter.PayPalRefund
   , buildRefundQuery
   , parseRefundQuery
   , validateRefundQueryBinding
+  , parseExternalCaptureChange
   ) where
 
+import Control.Applicative ((<|>))
 import Control.Monad (unless)
 import Data.Aeson ((.:), (.:?), Value)
 import qualified Data.Aeson as A
@@ -117,3 +119,46 @@ parseMinor value
 invalidQuery, invalidEvidence :: AdapterError
 invalidQuery = AdapterError "Refund query configuration is unavailable."
 invalidEvidence = AdapterError "Refund query evidence does not match the original refund."
+
+-- Parse the official refund-resource shape without requiring capture-only
+-- payee fields or mistaking the refund ID for its original capture. These links
+-- are compared as evidence only; they are never fetched or followed.
+parseExternalCaptureChange
+  :: CheckoutEnvironment -> Text -> Value -> Either Text (Text, Int64, Text)
+parseExternalCaptureChange environment eventType =
+  either (const (Left "PayPal external capture change has invalid binding evidence")) Right
+    . parseEither parse
+  where
+    parse = A.withObject "external capture change" $ \resource -> do
+      identifier <- resource .: "id"
+      unless (validProviderIdentifier identifier) (fail "resource reference")
+      (amount, currency) <- resource .: "amount" >>= A.withObject "amount" (\money -> do
+        currency <- money .: "currency_code"
+        decimal <- money .: "value"
+        amount <- maybe (fail "amount") pure (parseMinor decimal)
+        pure (amount, currency))
+      capture <- if eventType == "PAYMENT.CAPTURE.REVERSED"
+        then pure identifier
+        else if eventType == "PAYMENT.CAPTURE.REFUNDED"
+          then do
+            status <- resource .: "status" :: Parser Text
+            unless (status == "COMPLETED") (fail "incomplete refund")
+            links <- resource .: "links" :: Parser [Value]
+            unless (length links <= 32) (fail "too many links")
+            parsed <- mapM (A.withObject "link" $ \link ->
+              (,,) <$> link .: "rel" <*> link .: "method" <*> link .: "href") links
+            href <- case [(method, url) | (rel, method, url) <- parsed, rel == ("up" :: Text)] of
+              [(method, url)] | method == ("GET" :: Text) -> pure url
+              _ -> fail "ambiguous capture link"
+            let suffix = case environment of
+                  CheckoutSandbox ->
+                    T.stripPrefix "https://api.sandbox.paypal.com/v2/payments/captures/" href
+                    <|> T.stripPrefix "https://api-m.sandbox.paypal.com/v2/payments/captures/" href
+                  CheckoutProduction ->
+                    T.stripPrefix "https://api.paypal.com/v2/payments/captures/" href
+                    <|> T.stripPrefix "https://api-m.paypal.com/v2/payments/captures/" href
+            value <- maybe (fail "capture link environment or host") pure suffix
+            unless (validProviderIdentifier value) (fail "capture reference")
+            pure value
+          else fail "unsupported external event"
+      pure (capture, amount, currency)

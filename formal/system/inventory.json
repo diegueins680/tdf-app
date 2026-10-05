@@ -11897,7 +11897,7 @@
     {
       "id": "SURFACE-bad06d52157a22f3",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
-      "sha256": "8786d1da2a51c725561b14cf68ffd6f44596858c1a3cfcd32384673bd702c9b3",
+      "sha256": "e953dc2ca0822cedcebf56da77bbe620de4a0d909d00eb85401f96f7c7e9aff0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11927,7 +11927,7 @@
     {
       "id": "SURFACE-e499402b9aad0cfc",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
-      "sha256": "0a73dc704ad356046e3d5db49cd3e64ec726d9684e0915658bb16e270f130f9b",
+      "sha256": "9a35b4280d60155852f2686889b53ddf7aa40a9b1e12e962a0e5bbe8c8d3e50d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12485,7 +12485,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "ba3d90073dae4f596bbf37d170aa3944355c8642e84cc6db3781d28af11d1041",
+      "sha256": "a2a4381f4833913e399bb34cae91db26ecb4d604983cf5839dc4f7fbe9ae30ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12497,7 +12497,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "622fa2515b1126e3ce7d529e4074163ff03a4bea90edef413772f58bc4bce486",
+      "sha256": "f0601a84a89789d4756982ab3f3cb0477a285cbf182f705f1c1ec9d037fba595",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12689,7 +12689,7 @@
     {
       "id": "SURFACE-2ac52b8d1688de2a",
       "path": "tdf-hq/src/TDF/Ticketing/Admission.hs",
-      "sha256": "3a2e44f10f39f35194479e31f642efe15830da0dbf371ddeabdf978a2e3dc2a5",
+      "sha256": "bc7c6d6dcd29b9d656e158aba4a713851684ba535897ba740c3936fcdeec04f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12839,7 +12839,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "036dc40af94c960ad92e303ce5398b487364f221800b1efbe3f103a2fddec723",
+      "sha256": "31b9b541e50dd343ef9719acf499b24faa0eb017d27dbe3a43613a4cfb6d3dec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13157,7 +13157,7 @@
     {
       "id": "SURFACE-0096fb04ca9db3fe",
       "path": "tdf-hq/test/TicketAdmissionMain.hs",
-      "sha256": "42ca67dad504ceaf6998ec067f3088f0d4cb4f06f8dc9162b8f96de60a8537d2",
+      "sha256": "75bd5515b7bb956f099f3a07798e4896e62f8f95218fe59108435af6dba23742",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13553,7 +13553,7 @@
     {
       "id": "SURFACE-2a3469a3736ce761",
       "path": "tdf-hq/test/integration/ticket_admission_fixture.sql",
-      "sha256": "84f7c239dcb51d2d4aca79b55249314071f318e912036a9b38165cc9cb51b8c7",
+      "sha256": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17211,6 +17211,13 @@
     {
       "path": "docs/events/patch-culture-vol-1/propuesta-condiciones.md",
       "sha256": "1dadff3dab423326520ce51df7da31bc9eaed61f5f07b8094124a7fd3284811d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/events/paypal-refund-admission.md",
+      "sha256": "abc5b65ce2508f03df99a2311a8502aa0377284200799927297326ab66f8a5b8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21536,7 +21543,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ab96f3e45c338688dbad7935cabebee9880091a788d9c8616bfc6c5227692b21",
+      "sha256": "3aa5d5d38d33b51c5e09286b95d7e3007553acc40a36a7a6ec0aa5c7e56999a1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

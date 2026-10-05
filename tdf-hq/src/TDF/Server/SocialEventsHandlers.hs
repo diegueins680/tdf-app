@@ -4628,6 +4628,7 @@ socialEventsServer user =
             Left Admission.AdmissionCancelled -> throwError err409{errBody = "Ticket is cancelled"}
             Left Admission.AdmissionRefunded -> throwError err409{errBody = "Ticket is refunded"}
             Left Admission.AdmissionAlreadyUsed -> throwError err409{errBody = "Ticket was already checked in"}
+            Left Admission.AdmissionPaymentReview -> throwError err409{errBody = "Ticket admission is suspended pending refund or reversal reconciliation"}
             Left Admission.AdmissionInvalidState -> throwError err409{errBody = "Ticket is not valid for admission"}
 
     -- Promo Codes

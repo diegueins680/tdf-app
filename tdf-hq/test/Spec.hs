@@ -1503,6 +1503,31 @@ main = hspec $ do
             first `shouldBe` replay
             first `shouldNotBe` other
 
+        it "binds real refund-shaped webhooks to their capture, preserving minimized evidence" $ do
+            let now = UTCTime (fromGregorian 2026 10 5) 0
+                resource href = A.object
+                  [ "id" .= ("REFUND-1" :: Text), "status" .= ("COMPLETED" :: Text)
+                  , "amount" .= A.object ["value" .= ("20.00" :: Text), "currency_code" .= ("USD" :: Text)]
+                  , "payer" .= A.object ["email_address" .= ("private@example.invalid" :: Text)]
+                  , "links" .= [A.object ["rel" .= ("up" :: Text), "method" .= ("GET" :: Text), "href" .= href]] ]
+                envelope href = ServiceStorefront.PaypalWebhookEnvelope
+                  "WH-REFUND-1" "PAYMENT.CAPTURE.REFUNDED" now (resource href)
+                validUrl = "https://api.sandbox.paypal.com/v2/payments/captures/CAPTURE-1" :: Text
+                parse = ServiceStorefront.parsePaypalExternalCaptureChange CheckoutStore.CheckoutSandbox
+            parse (envelope validUrl) `shouldBe` Right ("CAPTURE-1", 2000, "USD")
+            parse (envelope "https://api.paypal.com/v2/payments/captures/CAPTURE-1") `shouldSatisfy` isLeft
+            parse (envelope "https://api.sandbox.paypal.com.attacker.invalid/v2/payments/captures/CAPTURE-1") `shouldSatisfy` isLeft
+            parse (envelope (validUrl <> "?other=1")) `shouldSatisfy` isLeft
+            let raw = BL.toStrict $ A.encode $ A.object
+                  [ "id" .= ("WH-REFUND-1" :: Text), "event_type" .= ("PAYMENT.CAPTURE.REFUNDED" :: Text)
+                  , "create_time" .= ("2026-10-05T00:00:00Z" :: Text), "resource" .= resource validUrl ]
+            case ProviderEventStore.minimizeProviderEventPayload CheckoutStore.ProviderPayPal raw of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right retained -> do
+                BS.isInfixOf "private@example.invalid" retained `shouldBe` False
+                (ServiceStorefront.parsePaypalWebhookEnvelope (BL.fromStrict retained) >>= parse)
+                  `shouldBe` Right ("CAPTURE-1", 2000, "USD")
+
         it "parses only represented PayPal refund evidence" $ do
             let payload = A.object
                   [ "id" .= ("REFUND-1" :: Text)

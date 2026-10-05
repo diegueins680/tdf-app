@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
@@ -35,6 +36,7 @@ module TDF.Server.ServiceStorefront
   , BoundPaypalCapture(..)
   , parsePaypalWebhookEnvelope
   , parsePaypalWebhookCapture
+  , parsePaypalExternalCaptureChange
   , paypalWebhookResourceId
   , validatePaypalWebhookHeaders
   , validatePaypalWebhookCaptureBinding
@@ -994,31 +996,37 @@ processPaypalWebhookEventIO Env{envPool = pool} environment merchantRef envelope
           Right (outcome, _mConfirmation) -> pure outcome
 
     processExternalCaptureChange exceptionType =
-      case parsePaypalWebhookCapture envelope of
-        Left _ -> do
-          result <- tryAny $ flip runSqlPool pool $
-            Checkout.recordReconciliationException
-              Checkout.ProviderPayPal environment merchantRef exceptionType
-              ("provider-event:" <> pweEventId envelope)
-              (fromMaybe (pweEventId envelope) (paypalWebhookResourceId envelope))
-              0 Nothing "USD" now
-          pure $ case result of
-            Left _ -> PaypalEventRetry "Malformed PayPal refund or reversal event could not be recorded"
-            Right () -> PaypalEventProcessed Nothing Nothing Nothing
-        Right capture -> do
+      case parsePaypalExternalCaptureChange environment envelope of
+        Left message -> pure (PaypalEventPermanentFailure message Nothing Nothing Nothing)
+        Right (captureId, actualAmount, currency) -> do
           result <- tryAny $ flip runSqlPool pool $ do
-            mBound <- loadBoundPaypalCapture environment merchantRef (pwcCaptureId capture)
+            mBound <- loadBoundPaypalCapture environment merchantRef captureId
             case mBound of
               Nothing -> pure PaypalEventIgnored
-              Just bound -> do
-                let actualAmount = fromIntegral <$> either (const Nothing) Just
-                      (parseDatafastCents (pwcAmount capture))
-                Checkout.recordReconciliationException
-                  Checkout.ProviderPayPal environment merchantRef exceptionType
-                  (bpcDomainOrderId bound) (pwcCaptureId capture)
-                  (bpcExpectedAmount bound) actualAmount (bpcCurrency bound) now
-                pure (PaypalEventProcessed
-                  (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+              Just bound
+                | currency /= bpcCurrency bound || actualAmount > bpcExpectedAmount bound ->
+                    pure (PaypalEventPermanentFailure
+                      "PayPal external change does not match the bound capture"
+                      (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+                | otherwise -> do
+                    -- Serialize the admission fence with scanning. Do not turn an
+                    -- unallocated external refund into an invented ticket refund.
+                    when (bpcDomainType bound == "event_ticket_order") $ do
+                      lockedEvents <- (rawSql
+                        "SELECT event.id FROM social_event event JOIN event_ticket_order orders\
+                        \ ON orders.event_id=event.id WHERE orders.id::text=? FOR UPDATE OF event"
+                        [PersistText (bpcDomainOrderId bound)] :: SqlPersistT IO [Single Int64])
+                      lockedOrders <- (rawSql
+                        "SELECT id FROM event_ticket_order WHERE id::text=? FOR UPDATE"
+                        [PersistText (bpcDomainOrderId bound)] :: SqlPersistT IO [Single Int64])
+                      unless (length lockedEvents == 1 && length lockedOrders == 1) $
+                        fail "External ticket refund is missing its bound order"
+                    Checkout.recordReconciliationException
+                      Checkout.ProviderPayPal environment merchantRef exceptionType
+                      (bpcDomainOrderId bound) captureId
+                      (bpcExpectedAmount bound) (Just actualAmount) currency now
+                    pure (PaypalEventProcessed
+                      (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
           pure $ case result of
             Left _ -> PaypalEventRetry "PayPal refund or reversal event database processing failed"
             Right outcome -> outcome
@@ -2538,6 +2546,13 @@ parsePaypalWebhookCapture PaypalWebhookEnvelope{pweResource = Object resource} =
     , pwcPaypalOrderId = paypalOrderId
     }
 parsePaypalWebhookCapture _ = Left "PayPal webhook capture resource must be an object"
+
+-- Signature verification and merchant binding remain the caller's authority.
+parsePaypalExternalCaptureChange
+  :: Checkout.CheckoutEnvironment -> PaypalWebhookEnvelope
+  -> Either Text (Text, Int64, Text)
+parsePaypalExternalCaptureChange environment PaypalWebhookEnvelope{pweEventType, pweResource} =
+  RefundQuery.parseExternalCaptureChange environment pweEventType pweResource
 
 parsePaypalRefundOutcome :: Value -> Either Text PaypalRefundOutcome
 parsePaypalRefundOutcome (Object obj) = do

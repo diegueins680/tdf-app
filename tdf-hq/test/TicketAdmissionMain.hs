@@ -118,6 +118,22 @@ main = do
             deny scan AdmissionUnpaid
           runSqlPool (rawSql "SELECT count(*) FROM event_ticket_admission_audit" []) pool
             `shouldReturn` [Single (0 :: Int)]
+        it "quarantines a captured ticket after a bound external refund, but not another merchant" $ do
+          runSqlPool (do
+            rawExecute "INSERT INTO event_ticket_checkout_policy(id,event_id) VALUES ('11111111-1111-4111-a111-111111111111',1)" []
+            rawExecute "INSERT INTO event_ticket_checkout_runtime VALUES (1,'11111111-1111-4111-a111-111111111111',1,'paid','22222222-2222-4222-a222-222222222222')" []
+            rawExecute "INSERT INTO commerce_payment_attempt VALUES ('33333333-3333-4333-a333-333333333333','22222222-2222-4222-a222-222222222222')" []
+            rawExecute "INSERT INTO commerce_provider_binding VALUES ('33333333-3333-4333-a333-333333333333','paypal','sandbox','merchant','capture','capture')" []
+            rawExecute "INSERT INTO commerce_reconciliation_exception VALUES ('paypal','sandbox','merchant','capture','1','external_refund_detected','open')" []
+            ) pool
+          deny scan AdmissionPaymentReview
+          runSqlPool (rawSql "SELECT count(*) FROM event_ticket_admission_audit" []) pool
+            `shouldReturn` [Single (0 :: Int)]
+          runSqlPool (rawExecute "UPDATE commerce_reconciliation_exception SET exception_type='external_reversal_detected'" []) pool
+          deny scan AdmissionPaymentReview
+          runSqlPool (rawExecute "UPDATE commerce_reconciliation_exception SET merchant_account_ref='other'" []) pool
+          fmap status scan `shouldReturn` Right "checked_in"
+
         it "rolls back admission when durable audit fails" $ do
           runSqlPool (rawExecute "INSERT INTO event_ticket_admission_audit VALUES (1,1,1,'10',now())" []) pool
           result <- try scan
@@ -238,7 +254,7 @@ prepareTransfer pool = runSqlPool (do
 
 seed :: ConnectionPool -> IO ()
 seed pool = runSqlPool (do
-  rawExecute "TRUNCATE event_ticket_checkout_runtime,event_ticket_checkout_policy,ticket_transfer,event_ticket_admission_audit,event_ticket,event_ticket_order,event_ticket_tier,social_event RESTART IDENTITY CASCADE" []
+  rawExecute "TRUNCATE commerce_reconciliation_exception,commerce_provider_binding,commerce_payment_attempt,event_ticket_checkout_runtime,event_ticket_checkout_policy,ticket_transfer,event_ticket_admission_audit,event_ticket,event_ticket_order,event_ticket_tier,social_event RESTART IDENTITY CASCADE" []
   rawExecute "INSERT INTO social_event(id,organizer_party_id,title,start_time,created_at,updated_at) VALUES (1,'10','Admission fixture',now(),now(),now()),(2,NULL,'Unowned',now(),now(),now()),(3,'10','Other event',now(),now(),now())" []
   rawExecute "INSERT INTO event_ticket_tier(id,event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active,created_at,updated_at) VALUES (1,1,'GA','General',2000,'USD',20,1,true,now(),now())" []
   rawExecute "INSERT INTO event_ticket_order(id,event_id,tier_id,quantity,amount_cents,currency,status,purchased_at,created_at,updated_at) VALUES (1,1,1,1,2000,'USD','paid',now(),now(),now())" []

@@ -29,7 +29,7 @@ module TDF.Commerce.ProviderEventStore
   ) where
 
 import           Control.Applicative ((<|>))
-import           Control.Monad (unless)
+import           Control.Monad (unless, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Crypto.Hash (Digest, SHA256, hash)
 import           Data.Aeson (FromJSON, Value(..), eitherDecodeStrict', (.:), (.:?), (.=))
@@ -359,7 +359,23 @@ paypalEvidence = A.withObject "PayPal evidence" $ \envelope -> do
           supplementary <- optionalEvidenceObject fields "supplementary_data" $ \extra ->
             optionalEvidenceObject extra "related_ids" $ \related ->
               optionalEvidenceText related "order_id" 128
-          pure (Object (identifier <> status <> amount <> payee <> supplementary))
+          -- Refund resources identify their capture through an upstream link.
+          -- Keep only bounded binding evidence; discard payer/address/other links.
+          captureLinks <- if eventType == "PAYMENT.CAPTURE.REFUNDED"
+            then case KM.lookup "links" fields of
+              Just (Array values) -> do
+                let links = foldr (:) [] values
+                when (length links > 32) (fail "Too many PayPal refund links")
+                retained <- mapM (\link -> do
+                  rel <- optionalEvidenceText link "rel" 8
+                  method <- optionalEvidenceText link "method" 8
+                  href <- optionalEvidenceText link "href" 240
+                  pure (Object (rel <> method <> href)))
+                  [link | Object link <- links, KM.lookup "rel" link == Just (String "up")]
+                pure (KM.singleton "links" (A.toJSON retained))
+              _ -> pure KM.empty
+            else pure KM.empty
+          pure (Object (identifier <> status <> amount <> payee <> supplementary <> captureLinks))
         else pure (Object identifier)
     _ -> pure (Object KM.empty) -- Unsupported event resources are never interpreted.
   pure $ A.object

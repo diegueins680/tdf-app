@@ -4295,7 +4295,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4332,19 +4332,20 @@
         "two concurrent buyers exceed event/tier capacity",
         "Client submits or changes tax mode, price, fees or totals",
         "An old writer silently creates an additive order against an inclusive policy",
-        "Rollback deletes purchased pricing mode or historical policy evidence"
+        "Rollback deletes purchased pricing mode or historical policy evidence",
+        "Admit a stale paid ticket while its correctly bound provider refund/reversal remains open or assigned"
       ],
       "effects": [
         "Atomic ticket/audit or transfer/code update; rollback on failure; public buyer projections omit transferred credentials."
       ],
       "authorization": "Stored organizer for admission; transfer follows current-holder/organizer checks and authenticated opaque invitation capability, not email identity. Full staff delegation remains unspecified.",
       "privacy": "Opaque full-UUID credentials replace PII/fixed-HMAC QR. Transfer email is contact data, not delivery or verified identity.",
-      "concurrency": "Event/order/ticket/invitation lock order serializes conflicting operations within PostgreSQL; exact transaction wrappers remain required.",
+      "concurrency": "Event/order/ticket/invitation lock order serializes conflicting operations within PostgreSQL; exact transaction wrappers remain required. External-change processing locks the event and order before recording the admission-fencing reconciliation exception.",
       "idempotency": "Second scan/accept rejects; random replacement credential invalidates prior code. Does not provide payment-provider exactly-once behavior.",
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4364,7 +4365,10 @@
         "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql",
-        "tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql"
+        "tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -4375,7 +4379,8 @@
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/integration/ticket_inclusive_tax.sql"
+        "tdf-hq/test/integration/ticket_inclusive_tax.sql",
+        "tdf-hq/test/integration/ticket_admission_fixture.sql"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
