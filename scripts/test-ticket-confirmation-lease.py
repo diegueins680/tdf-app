@@ -24,6 +24,34 @@ def apply(path):
     subprocess.run(CMD + ['-f', str(ROOT / path)], env=ENV, check=True, stdout=subprocess.DEVNULL)
 assert sql('SELECT current_database()') == 'tdf_ticket_confirmation_worker_test'
 
+def fresh_claim(expected):
+    # Compare server-side anchors; client scheduling delays cannot fail a valid lease.
+    sql("DELETE FROM event_ticket_confirmation_delivery; SELECT event_ticket_queue_confirmation(1)")
+    result = sql("BEGIN; SELECT pg_sleep(1.2); CREATE TEMP TABLE claim_anchor AS SELECT clock_timestamp() AS at; "
+                 "SELECT event_ticket_claim_confirmation('" + str(uuid.uuid4()) + "'); "
+                 "SELECT lease_expires_at >= (SELECT at FROM claim_anchor)+interval '119.5 seconds' "
+                 "FROM event_ticket_confirmation_delivery WHERE order_id=1; COMMIT")
+    assert result.splitlines()[-1] == expected, result
+
+def skip_locked_recovery(expected):
+    sql("DELETE FROM event_ticket_confirmation_delivery; SELECT event_ticket_queue_confirmation(1)")
+    sql("SELECT event_ticket_claim_confirmation('" + str(uuid.uuid4()) + "'); UPDATE event_ticket_confirmation_delivery SET lease_expires_at=clock_timestamp()-interval '1 second'")
+    blocker = subprocess.Popen(CMD, env=ENV, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+    try:
+        blocker.stdin.write("BEGIN; SELECT order_id FROM event_ticket_confirmation_delivery WHERE order_id=1 FOR UPDATE;\n")
+        blocker.stdin.flush()
+        assert select.select([blocker.stdout], [], [], 5)[0]
+        assert blocker.stdout.readline().strip() == '1'
+        result = subprocess.run(CMD + ['-c', "SET lock_timeout='250ms'; SELECT event_ticket_claim_confirmation('" + str(uuid.uuid4()) + "') IS NULL"], env=ENV, text=True, capture_output=True, timeout=5)
+        if expected:
+            assert result.returncode == 0 and result.stdout.strip() == 't', result.stderr
+        else:
+            assert result.returncode != 0 and 'lock timeout' in result.stderr, result.stderr
+    finally:
+        if blocker.poll() is None:
+            blocker.stdin.write('ROLLBACK;\n'); blocker.stdin.close()
+            blocker.wait(timeout=5)
+
 def waited_completion(expected):
     lease = str(uuid.uuid4())
     sql("DELETE FROM event_ticket_confirmation_delivery; SELECT event_ticket_queue_confirmation(1)")
@@ -62,9 +90,18 @@ def waited_completion(expected):
 try:
     apply('tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql')
     waited_completion('t')
+    fresh_claim('f')
+    skip_locked_recovery(False)
     print('PASS negative control: transaction-stable clock admits expired waiting lease')
 finally:
     apply('tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql')
+    apply('tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql')
 apply('tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql')
 waited_completion('f')
 print('PASS real-clock lease completion rejects expiry during observed row-lock wait')
+
+apply('tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql')
+fresh_claim('t')
+print('PASS lease creation uses post-wait real time; historical transaction-clock mutation fails')
+skip_locked_recovery(True)
+print('PASS locked expired intent does not block recovery polling; historical mutation times out')
