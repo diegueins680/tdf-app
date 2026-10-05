@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { execFileSync, spawn } from 'node:child_process';
+import { setTimeout as delay } from 'node:timers/promises';
 
 /** Called only by the existing disposable, loopback API harness. No real deletion. */
 export async function verifyAccountDeletion({ request: rawRequest, requestStatus, admin, account, categoryId, severityId }) {
@@ -100,6 +102,63 @@ export async function verifyAccountDeletion({ request: rawRequest, requestStatus
     requestStatus(racePath, { token: admin.token, method: 'POST', json: { ...resolution, adrOutcome: 'rejected' } }),
   ]);
   assert.deepEqual(raced.sort(), [200, 409], 'Concurrent operators may append exactly one terminal outcome');
+
+  // Hold the existing row in an independent transaction, then observe the real
+  // resolution handler blocked on it. Intake must wait for that resolution's
+  // owner mutex rather than acknowledging its soon-to-be-terminal receipt.
+  const pending = await request(endpoint, { token: account.token, method: 'POST', body: form(23) });
+  const database = process.env.TDF_AUDIT_E2E_DATABASE ?? '';
+  assert.match(database, /^[a-z0-9_]+$/, 'Only the runner-created database is allowed');
+  assert.match(pending.adrRequestId, /^[0-9a-f-]{36}$/i);
+  const sql = statement => execFileSync('psql', ['-X', '-A', '-t', '-v', 'ON_ERROR_STOP=1', '-d', database, '-c', statement], { encoding: 'utf8', timeout: 10000 }).trim();
+  const gate = spawn('psql', ['-X', '-A', '-t', '-v', 'ON_ERROR_STOP=1', '-d', database], { stdio: ['pipe', 'pipe', 'pipe'] });
+  let output = '';
+  let errorOutput = '';
+  gate.stdout.on('data', data => { output += data; });
+  gate.stderr.on('data', data => { errorOutput += data; });
+  const closed = new Promise((resolve, reject) => {
+    gate.once('error', reject);
+    gate.once('close', code => code === 0 ? resolve() : reject(new Error(`Row gate exited ${code}: ${errorOutput}`)));
+  });
+  // Attach a rejection handler immediately; finally still awaits the original.
+  void closed.catch(() => {});
+  const until = async predicate => {
+    const deadline = Date.now() + 20000;
+    while (!predicate()) {
+      assert.ok(Date.now() < deadline, 'Timed out observing PostgreSQL lock barrier');
+      await delay(25);
+    }
+  };
+  let resolving;
+  let intake;
+  let intakeSettled = false;
+  try {
+    gate.stdin.write(`BEGIN; SELECT id FROM feedback WHERE id = '${pending.adrRequestId}' FOR UPDATE; SELECT 'ROW_LOCK_READY';\n`);
+    await until(() => output.includes('ROW_LOCK_READY'));
+    resolving = request(`/feedback/internal/account-deletion/${pending.adrRequestId}`, { token: admin.token, method: 'POST', json: { ...resolution, adrOutcome: 'rejected' } });
+    void resolving.catch(() => {});
+    await until(() => sql("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND query LIKE '%FROM feedback WHERE id =%FOR UPDATE%'") === '1');
+    intake = request(endpoint, { token: account.token, method: 'POST', body: form(24) });
+    void intake.then(() => { intakeSettled = true; }, () => { intakeSettled = true; });
+    await until(() => {
+      assert.equal(intakeSettled, false, 'Intake must not acknowledge the receipt while its resolution is blocked');
+      return sql("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND query LIKE '%pg_advisory_xact_lock%'") === '1';
+    });
+    gate.stdin.end('COMMIT;\n');
+    await closed;
+    assert.equal((await resolving).adaOutcome, 'rejected');
+    const reopened = await intake;
+    assert.notEqual(reopened.adrRequestId, pending.adrRequestId, 'Intake after resolution must create a new pending receipt');
+    const latest = await request(queue, { token: admin.token });
+    assert.equal(latest.find(row => row.lfdId === pending.adrRequestId).lfdDeletionHistory.length, 1);
+    assert.deepEqual(latest.find(row => row.lfdId === reopened.adrRequestId).lfdDeletionHistory, []);
+    assert.equal(latest.filter(row => row.lfdCreatedBy === account.partyId && row.lfdDeletionHistory.length === 0).length, 1);
+  } finally {
+    if (!gate.stdin.writableEnded) gate.stdin.end('ROLLBACK;\n');
+    await closed;
+    await Promise.allSettled([resolving, intake].filter(Boolean));
+  }
+  console.log('Account deletion resolution/intake PostgreSQL lock ordering passed.');
 
 
 }

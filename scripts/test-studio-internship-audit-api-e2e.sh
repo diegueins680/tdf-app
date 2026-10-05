@@ -152,6 +152,7 @@ start_backend false
 TDF_AUDIT_E2E_API_BASE="http://127.0.0.1:$TDF_AUDIT_PORT" \
 TDF_AUDIT_E2E_PASSWORD="$TDF_AUDIT_PASSWORD" \
 TDF_AUDIT_E2E_OTHER_INTERN_EMAIL="audit.other-intern@persona.test" \
+TDF_AUDIT_E2E_DATABASE="$TDF_AUDIT_DATABASE" \
 node "$TDF_AUDIT_ROOT/scripts/test-studio-internship-audit-api-e2e.mjs"
 
 # A role alone must not authorize privacy administration. Revoke only this

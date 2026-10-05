@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { SessionUser } from '../session/SessionContext';
 import type { SessionResponseDTO } from '../api/session';
 import i18n from '../i18n';
+import { ApiError } from '../api/client';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
 let session: SessionUser | null;
@@ -105,4 +106,20 @@ it('explains the available contact route in English before rollout', async () =>
   expect(screen.getByRole('link', { name: 'Request deletion by email' }).getAttribute('href')).toContain('mailto:info@tdfrecords.net');
   expect(screen.queryByRole('checkbox')).toBeNull();
   expect(snapshot).not.toHaveBeenCalled(); expect(request).not.toHaveBeenCalled();
+});
+
+it('returns an expired submission to sign-in without reloading or retrying stale identity', async () => {
+  request.mockRejectedValue(new ApiError('Session revoked', 401));
+  mount();
+  const button = await screen.findByRole<HTMLButtonElement>('button', { name: 'Solicitar eliminación de esta cuenta' });
+  fireEvent.click(screen.getByRole('checkbox'));
+  await waitFor(() => expect(button.disabled).toBe(false));
+  fireEvent.click(button);
+  const link = await screen.findByRole('link', { name: 'Iniciar sesión para continuar' });
+  expect(link.getAttribute('href')).toBe('/login?redirect=%2Fcuenta%2Feliminar');
+  expect(screen.queryByRole('checkbox')).toBeNull();
+  expect(screen.queryByRole('status')).toBeNull();
+  fireEvent.click(link);
+  expect(logout).toHaveBeenCalledTimes(1);
+  expect(request).toHaveBeenCalledTimes(1);
 });

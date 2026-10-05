@@ -81,7 +81,8 @@ test('Account deletion refuses an expired session before submission @critical', 
   const submit = page.getByRole('button', { name: 'Solicitar eliminación de esta cuenta', exact: true });
   await expect(submit).toBeEnabled(); state.session = null;
   await submit.click();
-  await expect(page.getByRole('alert')).toContainText('No pudimos confirmar el envío');
+  await expect(page.getByRole('link', { name: 'Iniciar sesión para continuar' })).toHaveAttribute('href', '/login?redirect=%2Fcuenta%2Feliminar');
+  await expect(page.getByRole('checkbox')).toHaveCount(0);
   expect(state.submissions).toHaveLength(0);
 });
 
@@ -92,7 +93,8 @@ test('Account deletion refuses authentication lost between session read and POST
   await page.getByRole('checkbox').check();
   state.rejectPost = true;
   await page.getByRole('button', { name: 'Solicitar eliminación de esta cuenta', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('No pudimos confirmar el envío');
+  await expect(page.getByRole('link', { name: 'Iniciar sesión para continuar' })).toHaveAttribute('href', '/login?redirect=%2Fcuenta%2Feliminar');
+  await expect(page.getByRole('checkbox')).toHaveCount(0);
   await expect(page.getByRole('status')).toHaveCount(0);
   expect(state.submissions).toHaveLength(0);
 });

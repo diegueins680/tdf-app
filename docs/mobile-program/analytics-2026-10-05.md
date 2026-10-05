@@ -107,7 +107,7 @@ that page to lead to `/cuenta/eliminar`: an authenticated, bilingual request for
 account without composing an email. The owner processes the request manually;
 submission is not completed erasure. See the [operator procedure and identity
 checks](account-deletion-operations.md). No actual deletion is claimed by QA. The strict backend endpoint and queue
-must be deployed before this new flow is considered operational. The web form and administrator queue stay off unless `VITE_ACCOUNT_DELETION_FORM_ENABLED` is exactly `true`; the disabled page retains the confirmed email contact. Enable only after qualifying the deployed backend, as described in the [rollout procedure](account-deletion-rollout.md).
+must be deployed before this new flow is considered operational. The web form and administrator queue have independent switches (`VITE_ACCOUNT_DELETION_FORM_ENABLED` and `VITE_ACCOUNT_DELETION_QUEUE_ENABLED`), each requiring exactly `true`; the disabled page retains the confirmed email contact. Enable only after qualifying the deployed backend, as described in the [rollout procedure](account-deletion-rollout.md).
 Authenticated App Store Connect readback confirms User ID, Device ID and Product
 Interaction are already declared for analytics linked to the user's identity.
 The native party selector also emits latency/error classifications: Performance

@@ -7,8 +7,9 @@ import es from '../i18n/locales/accountDeletion.es';
 import type { AccountDeletionActionDTO, LegacyFeedbackDTO } from '../api/types';
 
 let formEnabled = true;
-jest.unstable_mockModule('../config/accountDeletionRollout', () => ({ isAccountDeletionFormEnabled: () => formEnabled }));
-beforeEach(() => { formEnabled = true; });
+let queueEnabled = true;
+jest.unstable_mockModule('../config/accountDeletionRollout', () => ({ isAccountDeletionFormEnabled: () => formEnabled, isAccountDeletionQueueEnabled: () => queueEnabled }));
+beforeEach(() => { formEnabled = true; queueEnabled = true; });
 const resolve = jest.fn<(id: string, outcome: 'completed' | 'rejected', note: string) => Promise<AccountDeletionActionDTO>>();
 const list = jest.fn<(filters: unknown) => Promise<LegacyFeedbackDTO[]>>();
 jest.unstable_mockModule('../api/internalFeedback', () => ({ InternalFeedback: { listLegacy: list, resolveDeletion: resolve } }));
@@ -79,7 +80,17 @@ it('retains the authoritative terminal receipt when the subsequent queue refresh
 });
 
 it('does not query or expose the new admin workflow before rollout', async () => {
-  formEnabled = false; await show();
+  queueEnabled = false; await show();
   expect(screen.queryByRole('heading', { name: es.queueTitle })).toBeNull();
   expect(list).not.toHaveBeenCalled(); expect(resolve).not.toHaveBeenCalled();
+});
+
+it('retains existing requests and their authoritative owner when intake is disabled', async () => {
+  formEnabled = false; queueEnabled = true;
+  list.mockResolvedValue([record(42)]);
+  await show();
+  expect(await screen.findByText('Deletion 42')).toBeTruthy();
+  expect(screen.getByText(/Solicitud request-42 · Cuenta autenticada/).textContent).toContain('42');
+  expect(screen.getByRole('button', { name: es.markRejected })).toBeTruthy();
+  expect(list).toHaveBeenCalledWith({ accountDeletionOnly: true, offset: 0 });
 });

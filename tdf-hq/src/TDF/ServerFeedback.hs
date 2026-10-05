@@ -359,6 +359,10 @@ internalFeedbackServer user =
         throwError err400 { errBody = "Outcome must be completed or rejected" }
       note <- validateInternalText "note" 2000 adrNote
       result <- withPool $ withCurrentAuthSession user $ do
+        -- createdBy is immutable after intake. Acquire the same owner mutex as
+        -- intake BEFORE the row lock; the subsequent query re-reads the row.
+        candidate <- get feedbackKey
+        forM_ (candidate >>= feedbackCreatedBy) lockAccountDeletionOwner
         rows <- rawSql "SELECT ?? FROM feedback WHERE id = ? FOR UPDATE" [toPersistValue feedbackKey]
         case rows of
           [Entity _ feedback] | "account_deletion_request\n" `T.isPrefixOf` feedbackDescription feedback -> do
@@ -1774,17 +1778,14 @@ withPool action = asks envPool >>= liftIO . runSqlPool action
 
 -- Serialize intake by owner across distinct live sessions. A lost response is
 -- retried against the oldest unresolved receipt without resetting its deadline,
--- inserting another row or sending another notification. Resolution may overlap
--- this read; returning its existing receipt still denotes accepted intake only.
+-- inserting another row or sending another notification. Resolution shares
+-- this mutex, so an intake ordered after it observes the committed outcome.
 reuseActiveAccountDeletion
   :: M.PartyId
   -> SqlPersistT IO ME.FeedbackId
   -> SqlPersistT IO (ME.FeedbackId, Bool)
 reuseActiveAccountDeletion owner insertRequest = do
-  _ <- (rawSql
-    "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
-    [PersistText ("account-deletion-intake:" <> toPathPiece owner)]
-    :: SqlPersistT IO [Single Int64])
+  lockAccountDeletionOwner owner
   rows <- (rawSql
     "SELECT ?? FROM feedback WHERE created_by = ? AND left(description, 25) = ? AND NOT EXISTS (SELECT 1 FROM audit_log a WHERE a.entity = 'account_deletion_request' AND a.entity_id = feedback.id::text AND a.action IN ('completed', 'rejected')) ORDER BY created_at ASC, id ASC LIMIT 1"
     [toPersistValue owner, PersistText "account_deletion_request\n"]
@@ -1794,6 +1795,16 @@ reuseActiveAccountDeletion owner insertRequest = do
     [] -> do
       key <- insertRequest
       pure (key, True)
+
+-- All authenticated deletion writers take session -> owner -> feedback locks.
+-- Legacy anonymous records have no competing owner intake and retain row locking.
+lockAccountDeletionOwner :: M.PartyId -> SqlPersistT IO ()
+lockAccountDeletionOwner owner = do
+  _ <- (rawSql
+    "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+    [PersistText ("account-deletion-intake:" <> toPathPiece owner)]
+    :: SqlPersistT IO [Single Int64])
+  pure ()
 
 accountDeletionHistory :: ME.FeedbackId -> SqlPersistT IO [AccountDeletionActionDTO]
 accountDeletionHistory feedbackKey = do

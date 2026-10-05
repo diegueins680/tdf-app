@@ -1,3 +1,4 @@
+import { ApiError } from './client';
 import { submitFeedback } from './feedback';
 import { loadSessionSnapshot } from './session';
 
@@ -10,7 +11,7 @@ export async function requestAccountDeletion(input: {
 }): Promise<void> {
   const current = await loadSessionSnapshot();
   if (!current || !Number.isSafeInteger(input.partyId) || input.partyId <= 0 || current.partyId !== input.partyId) {
-    throw new Error('Account session changed; authenticate again');
+    throw new ApiError('Account session changed; authenticate again', 401);
   }
   const locale = input.locale.startsWith('en') ? 'en' : 'es';
   await submitFeedback({

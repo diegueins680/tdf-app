@@ -4,13 +4,14 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 import { isAccountDeletionFormEnabled } from '../config/accountDeletionRollout';
+import { ApiError } from '../api/client';
 import { Catalogs } from '../api/catalogs';
 import { requestAccountDeletion } from '../api/accountDeletion';
 import { loadSessionSnapshot } from '../api/session';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 
-function DeletionForm({ partyId, username }: { partyId: number; username: string }) {
+function DeletionForm({ partyId, username, onAuthenticationLost }: { partyId: number; username: string; onAuthenticationLost: () => void }) {
   const { t, i18n } = useTranslation();
   const [confirmed, setConfirmed] = useState(false);
   const sending = useRef(false);
@@ -27,6 +28,9 @@ function DeletionForm({ partyId, username }: { partyId: number; username: string
   const severityId = published('feedback-severities', ['p4', 'p3']);
   const mutation = useMutation({
     mutationFn: () => requestAccountDeletion({ partyId, categoryId: categoryId!, severityId: severityId!, locale: i18n.language }),
+    onError: error => {
+      if (error instanceof ApiError && error.status === 401) onAuthenticationLost();
+    },
     onSettled: () => { sending.current = false; },
   });
   if (mutation.isSuccess) return <Alert severity="success" role="status">{t('accountDeletion.received')}</Alert>;
@@ -48,6 +52,7 @@ export default function AccountDeletionPage() {
   const { t, i18n } = useTranslation();
   const { session, loading, logout } = useSession();
   const formEnabled = isAccountDeletionFormEnabled();
+  const [reauthenticationRequired, setReauthenticationRequired] = useState(false);
   const identity = useQuery({
     queryKey: ['account-deletion-session', session?.partyId],
     queryFn: loadSessionSnapshot,
@@ -60,7 +65,7 @@ export default function AccountDeletionPage() {
     const robots = document.createElement('meta'); robots.name = 'robots'; robots.content = 'noindex,nofollow'; document.head.appendChild(robots);
     return () => robots.remove();
   }, []);
-  const authenticated = !!session && !!identity.data && identity.data.partyId === session.partyId;
+  const authenticated = !reauthenticationRequired && !!session && !!identity.data && identity.data.partyId === session.partyId;
   return <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', '& .MuiButtonBase-root': { minHeight: 44 }, '& .Mui-focusVisible': { outline: '3px solid currentColor', outlineOffset: 3 } }}>
     <Stack direction="row" spacing={1} justifyContent="flex-end" aria-label={t('app.language')}>
       <Button aria-pressed={i18n.language.startsWith('es')} onClick={() => void i18n.changeLanguage('es')}>Español</Button>
@@ -74,7 +79,7 @@ export default function AccountDeletionPage() {
       <Typography>{t('accountDeletion.emailHelp')}</Typography>
       <Button component="a" href="mailto:info@tdfrecords.net?subject=TDF%20account%20deletion" variant="contained">{t('accountDeletion.emailRequest')}</Button>
     </Stack> : loading || (session && identity.isPending) ? <Typography role="status">{t('accountDeletion.loading')}</Typography> : authenticated
-      ? <DeletionForm key={identity.data!.partyId} partyId={identity.data!.partyId} username={identity.data!.username} />
+      ? <DeletionForm key={identity.data!.partyId} partyId={identity.data!.partyId} username={identity.data!.username} onAuthenticationLost={() => setReauthenticationRequired(true)} />
       : <Stack spacing={2}>
         {identity.isError && <Alert severity="error">{t('accountDeletion.unavailable')} <Button onClick={() => void identity.refetch()}>{t('accountDeletion.retry')}</Button></Alert>}
         <Typography>{t('accountDeletion.loginHelp')}</Typography>

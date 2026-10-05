@@ -28,3 +28,28 @@ test('Disabled deletion rollout retains accessible contact without intake reques
   await expect(page.getByRole('checkbox')).toHaveCount(0);
   expect(deletionRequests).toEqual([]);
 });
+
+// This build pauses intake while independently keeping operator support enabled.
+test('Pausing intake preserves the operator queue and recorded owner @critical', async ({ page, baseURL }) => {
+  const origin = new URL(baseURL).origin;
+  const deletionPosts = [];
+  await page.route('**/*', async route => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (!['fetch', 'xhr'].includes(request.resourceType())) return url.origin === origin ? route.continue() : route.abort();
+    if (request.method() === 'POST' && url.pathname.includes('account-deletion')) deletionPosts.push(url.pathname);
+    if (url.pathname.endsWith('/session')) return route.fulfill({ json: { username: 'synthetic@example.test', partyId: 424242, roles: ['Admin'], modules: ['internships'], featureFlags: [] } });
+    if (url.pathname.endsWith('/session/onboarding')) return route.fulfill({ json: { eligible: false } });
+    if (url.pathname.endsWith('/feedback/internal/legacy') && url.searchParams.get('accountDeletionOnly') === 'true') return route.fulfill({ json: [{
+      lfdId: 'existing-private-request', lfdTitle: 'Existing deletion request', lfdDescription: 'account_deletion_request\nSynthetic record only.',
+      lfdCreatedBy: 424242, lfdCreatedAt: '2026-10-05T12:00:00Z', lfdDeletionHistory: [],
+    }] });
+    return route.fulfill({ json: [] });
+  });
+  await page.goto('/feedback/interno');
+  await expect(page.getByRole('heading', { name: 'Solicitudes de eliminación de cuenta' })).toBeVisible();
+  await expect(page.getByText('Existing deletion request', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Solicitud existing-private-request · Cuenta autenticada registrada por el servidor: 424242/)).toBeVisible();
+  await expect(page.getByLabel('Resultado y verificación del procesamiento')).toBeVisible();
+  expect(deletionPosts).toEqual([]);
+});

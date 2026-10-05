@@ -114,6 +114,8 @@ run_tlc AccountDeletionOperator.tla AccountDeletionOperator.cfg account-deletion
 run_negative_tlc AccountDeletionOperatorRoleOnly.cfg deletion-operator-role-only 'Invariant OnlyAuthorizedPrivacyEffects is violated' AccountDeletionOperator.tla
 run_negative_tlc AccountDeletionOperatorModuleOnly.cfg deletion-operator-module-only 'Invariant OnlyAuthorizedPrivacyEffects is violated' AccountDeletionOperator.tla
 run_tlc AccountDeletionIntake.tla AccountDeletionIntake.cfg account-deletion-intake
+run_tlc AccountDeletionResolution.tla AccountDeletionResolution.cfg account-deletion-resolution
+run_negative_tlc AccountDeletionResolutionNoOwnerLock.cfg deletion-resolution-race 'Invariant ResolutionFirstGetsFreshReceipt is violated' AccountDeletionResolution.tla
 run_negative_tlc AccountDeletionIntakeNoOwnerLock.cfg deletion-intake-race 'Invariant OnePendingOwnerReceipt is violated' AccountDeletionIntake.tla
 run_negative_tlc AccountDeletionIntakeReplayNotification.cfg deletion-intake-replay 'Invariant OneNoticePerNewReceipt is violated' AccountDeletionIntake.tla
 run_negative_tlc AccountDeletionIntakeGeneralAudience.cfg deletion-intake-audience 'Invariant OnlyPrivacyAudience is violated' AccountDeletionIntake.tla

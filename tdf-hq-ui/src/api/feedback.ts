@@ -1,3 +1,4 @@
+import { ApiError } from './client';
 import { buildAuthorizationHeader } from './authHeader';
 import { resolveApiBase } from '../config/apiBase';
 import type { components } from './generated/types';
@@ -38,7 +39,7 @@ export async function submitFeedback(payload: FeedbackPayload, options?: { sessi
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || 'No se pudo enviar tu feedback.');
+    throw new ApiError(text || 'No se pudo enviar tu feedback.', res.status);
   }
   if (accountId !== undefined) {
     const receipt: unknown = await res.json();

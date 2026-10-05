@@ -4,13 +4,14 @@ import type { SessionResponseDTO } from './session';
 const snapshot = jest.fn<() => Promise<SessionResponseDTO | null>>();
 const submit = jest.fn<(...args: unknown[]) => Promise<void>>();
 jest.unstable_mockModule('./session', () => ({ loadSessionSnapshot: snapshot }));
+jest.unstable_mockModule('./authHeader', () => ({ buildAuthorizationHeader: () => undefined }));
 jest.unstable_mockModule('./feedback', () => ({ submitFeedback: submit }));
 const { requestAccountDeletion } = await import('./accountDeletion');
 const input = { partyId: 42, categoryId: 'category', severityId: 'severity', locale: 'es-EC' };
 beforeEach(() => { snapshot.mockReset(); submit.mockReset(); submit.mockResolvedValue(); });
 it.each([null, { partyId: 43, username: 'other@example.com' }])('refuses an expired or changed account before sending: %j', async current => {
   snapshot.mockResolvedValue(current as SessionResponseDTO | null);
-  await expect(requestAccountDeletion(input)).rejects.toThrow('authenticate again');
+  await expect(requestAccountDeletion(input)).rejects.toMatchObject({ status: 401, message: expect.stringContaining('authenticate again') });
   expect(submit).not.toHaveBeenCalled();
 });
 it('fails closed when live identity verification fails', async () => {

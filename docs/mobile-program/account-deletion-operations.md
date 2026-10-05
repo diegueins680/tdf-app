@@ -1,6 +1,6 @@
 # Account deletion: authenticated initiation and manual fulfilment
 
-The authenticated form and administrator queue are disabled by default until the backend and web rollout is qualified. The public page retains the verified email contact while disabled. See [account-deletion-rollout.md](account-deletion-rollout.md) for the build switch, acceptance and recovery order.
+The authenticated form and administrator queue use separate rollout controls, both disabled by default until their backend/web qualification. Pausing new intake leaves an enabled operator queue available for existing requests. The public page retains the verified email contact while disabled. See [account-deletion-rollout.md](account-deletion-rollout.md) for the build switch, acceptance and recovery order.
 
 
 The owner confirmed that `info@tdfrecords.net` handles account/data-deletion
@@ -23,7 +23,7 @@ request marker, requires a live matching account before insertion or notificatio
 `withCurrentAuthSession` to hold the existing token-row lock through insertion.
 A revocation that wins the lock prevents acceptance. The client
 validates the returned `adrCreatedBy` and `adrRequestId` before acknowledging
-receipt; an expired session or an old backend cannot produce a false success. No credentials,
+receipt; an expired session or an old backend cannot produce a false success. If preflight or submission reports lost authentication, the form is removed and offers sign-in with the deletion destination preserved; network errors remain retryable. No credentials,
 attachments, diagnostic logs or analytics events are added. A successful
 response means **request received**, never **account deleted**. Processing is
 manual with the already stated target of 30 days and a completion confirmation.
@@ -103,8 +103,11 @@ from different live sessions. A retry returns the oldest pending receipt without
 its original timestamp/content or sending another notification. Existing duplicate legacy
 records are retained for operator reconciliation, not deleted. After terminal resolution,
 a new request may create a new receipt; there is no permanent client-key idempotency
-promise across completed cases. Concurrent resolution can overlap receipt lookup; the
-returned receipt establishes intake only, never completed erasure.
+promise across completed cases. Resolution takes the same owner mutex before locking
+the feedback row. An intake ordered after resolution waits for its commit and creates a
+fresh pending receipt; intake ordered first can legitimately reuse the existing receipt.
+All writers acquire locks in session → owner → feedback order; the stored creator is
+immutable after insertion. Anonymous legacy records retain row-only resolution.
 
 New deletion notices go only to the owner-confirmed `info@tdfrecords.net` inbox. Ordinary
 feedback retains its separate audience. The server sends a notice only for a newly inserted
@@ -119,3 +122,14 @@ each must violate its named invariant. These finite abstractions are not a proof
 SMTP, session validation, crash recovery or whole-system refinement. The actual disposable
 HTTP harness separately races eight cookie/bearer submissions, checks receipt/time reuse,
 then verifies new requests after terminal resolution, pagination and concurrent resolution.
+
+`AccountDeletionResolution.tla` separately models one intake racing one resolution
+of an existing request. Resolution that acquires the owner mutex first must yield a
+fresh receipt to subsequent intake; removing that mutex produces the expected
+counterexample. This finite safety model assumes committed transactions and does
+not establish fairness, crash recovery or SQL refinement. The actual HTTP regression
+holds a feedback row in a separate PostgreSQL transaction, observes resolution
+waiting on that row and intake waiting on the owner advisory lock, then releases
+the barrier and checks one fresh pending receipt plus one immutable resolution.
+The previous binary must fail that same test. No timing-only sleep determines
+which request wins.

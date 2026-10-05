@@ -5917,7 +5917,7 @@
       ],
       "preconditions": [
         "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational.",
-        "VITE_ACCOUNT_DELETION_FORM_ENABLED must equal the literal string true to expose either the form or administrator queue; all other values keep them off.",
+        "VITE_ACCOUNT_DELETION_FORM_ENABLED and VITE_ACCOUNT_DELETION_QUEUE_ENABLED independently require the literal string true. Pause intake without hiding the enabled operator queue; qualify backend support before either activation.",
         "Operator reads and resolution require both an Admin/Manager/StudioManager role and the canonical internships module, including direct API calls."
       ],
       "inputs": [
@@ -5953,9 +5953,9 @@
       ],
       "authorization": "Cookie identity is reloaded before submission; server withCurrentAuthSession lock spans insertion. Required non-simple header and trusted Origin guard precede general CORS. Administrator capability and current session protect resolution.",
       "privacy": "No diagnostics, attachments or analytics on the deletion form. Identity and request content remain in authenticated queues/private evidence; no public tester/account list. Deletion notification audience is exclusively the confirmed info@tdfrecords.net privacy inbox, independent of ordinary feedback recipients.",
-      "concurrency": "Current-session lock serializes intake against revocation. PostgreSQL FOR UPDATE serializes terminal resolution; exactly one concurrent resolution succeeds and the loser returns409. Owner advisory lock spans pending receipt lookup/insertion; different owners have separate keys. Resolution overlapping lookup can return the existing receipt without asserting erasure.",
+      "concurrency": "Current-session lock serializes intake against revocation. PostgreSQL FOR UPDATE serializes terminal resolution; exactly one concurrent resolution succeeds and the loser returns409. Owner advisory lock spans pending receipt lookup/insertion; different owners have separate keys. Resolution acquires the same owner advisory lock before its feedback row lock; intake ordered after it waits for commit and receives a fresh pending receipt. Lock order is session, owner, feedback; createdBy is immutable after insertion.",
       "idempotency": "Owner-scoped transaction advisory lock serializes pending receipt lookup and insertion across sessions. Ambiguous retries reuse the oldest pending receipt and original timestamp/content without duplicate notification. After terminal resolution a new request is allowed; no permanent client-key deduplication is claimed. Existing legacy duplicates require operator reconciliation.",
-      "failure": "Reject absent/mismatched receipt; preserve cached terminal receipt if refresh fails. Failed validation performs no insertion/notification. Operator execution failure remains unfinished under PRIV-DELETE-001.",
+      "failure": "Reject absent/mismatched receipt; lost authentication returns to sign-in with the deletion destination, while network errors permit retry. Preserve cached terminal receipt if refresh fails. Failed validation performs no insertion/notification. Operator execution failure remains unfinished under PRIV-DELETE-001.",
       "recovery": "Reload authenticated receipt and private evidence; never infer erasure from a queue flag. Preserve earliest receipt/deadline in the existing operator ledger.",
       "observability": "Scoped unit/browser tests and unmodified FormData/HTTP tests with disposable PostgreSQL cover identity, CSRF, spoofing, pagination, audit and concurrent200/409. No real deletion or extra notification is used for QA.",
       "property": "OwnerMatches; ReservedMarkerCannotBypass; OneTerminalResolution; IntakeIsNotErasure",
@@ -6009,9 +6009,12 @@
         "formal/event-operations/AccountDeletionOperator.tla",
         "formal/event-operations/AccountDeletionOperator.cfg",
         "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg",
-        "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg"
+        "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg",
+        "formal/event-operations/AccountDeletionResolution.tla",
+        "formal/event-operations/AccountDeletionResolution.cfg",
+        "formal/event-operations/AccountDeletionResolutionNoOwnerLock.cfg"
       ],
-      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking with three named negative controls; no refinement, resolution, crashes or delivery proof. Actual Servant CORS tests include trailing-slash aliases. Actual Servant handler tests deny queue reads and both terminal outcomes for each administrator role without the internships module before any database access. AccountDeletionOperator bounds eight grant combinations and four private operations, with role-only and module-only counterexamples; concurrent grant revocation is outside this abstraction.",
+      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking with three named negative controls; no refinement, crashes or delivery proof. AccountDeletionResolution separately bounds one existing receipt, one intake and one resolution, with an omitted-resolution-lock counterexample; actual HTTP uses an observed PostgreSQL row/advisory barrier and the previous binary as a failing control. Actual Servant CORS tests include trailing-slash aliases. Actual Servant handler tests deny queue reads and both terminal outcomes for each administrator role without the internships module before any database access. AccountDeletionOperator bounds eight grant combinations and four private operations, with role-only and module-only counterexamples; concurrent grant revocation is outside this abstraction.",
       "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
       "status": "specified and implemented",
       "critical": true,
