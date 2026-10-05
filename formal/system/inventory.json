@@ -6964,7 +6964,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "69084d3e7868f742ad4a104494948628727ca2858e77aab7c71c42b240dc05cd",
+      "sha256": "c4d7de2ce0a5620368b1ab00c72a3d9924b7efc184349fe340535ef0846713ff",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
