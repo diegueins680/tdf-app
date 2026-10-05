@@ -3783,6 +3783,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/mobile-program/analytics-2026-10-05.md",
+      "sha256": "1ebaba36d09768b4f296eeb717057283af506abd861acb786a15021cfe8cf8d1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/music-directory/README.md",
       "sha256": "b86ffbd486213e3681dbaeec04725887d53b17a6304c17fc68e611eed321e06a",
       "authority": "inferred",
