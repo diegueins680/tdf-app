@@ -114,6 +114,16 @@ distribution evidence while retaining the same147ec8bc shipped gitlink. Those
 changes are preserved in this audit; distribution receipts do not establish
 application conformance.
 
+Root main subsequently advanced through PR#480 to
+`b06a4d3926e03a0b72a23732e454a33c72eb9705`, retaining shipped Mobile147ec8bc.
+The consolidated audit preserves its atomic ticket admission/transfer and QR
+changes. Its two additive SQL entries combine with the audit's171-entry manifest
+for173 entries, preserving each branch's relative order, original introduction
+commits and SQL bytes. EVT-TICKET-001 maps the newly shipped boundary. Current
+combined checks and migration rehearsal must be rerun; earlier171-entry receipts
+are historical. The compatible Mobile119e1e2 descends from the approved shipped
+lineage and includes the API, session-cache and remote-broadcast-failure repairs.
+
 The frontend observation at the fdac8e checkpoint identified that root SHA; it
 is historical observation, not a claim about the latest frontend deployment.
 Public `/version` and

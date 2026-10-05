@@ -875,6 +875,16 @@
       "id": "2026-10-05_ddex_validation_legacy_nullability",
       "path": "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
       "introducedBy": "58f095cf863fafed7dcb3232e2bb3f728ac6867b"
+    },
+    {
+      "id": "2026-10-05_ticket_admission_audit",
+      "path": "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
+      "introducedBy": "468410cbe345069295ab52c42becc9f1d9aa9629"
+    },
+    {
+      "id": "2026-10-05_ticket_transfer_deadline",
+      "path": "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
+      "introducedBy": "28b254a65c5d2bab5c039f777ac9d4493c296b3b"
     }
   ]
 }

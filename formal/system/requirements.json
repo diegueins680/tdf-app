@@ -4276,6 +4276,90 @@
         "classification": "PARTIAL",
         "reason": "Executable operational lifecycle exists; production intake, monitoring and actual deletion fulfillment remain open."
       }
+    },
+    {
+      "id": "EVT-TICKET-001",
+      "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection.",
+      "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md",
+      "domain": "EVT",
+      "actors": [
+        "Authenticated event organizer",
+        "Current ticket holder",
+        "Authenticated transfer capability holder",
+        "Public checkout buyer"
+      ],
+      "preconditions": [
+        "PostgreSQL and applicable admission/transfer migrations; each helper is invoked within one runSqlPool transaction."
+      ],
+      "inputs": [
+        "Authenticated actor",
+        "Event and ticket identifiers or opaque credential",
+        "Inventory quantity",
+        "Transfer invitation and current time"
+      ],
+      "state": {
+        "boundary": "Admission, inventory and transfer helpers plus routed callers",
+        "contract": "formal/ticket-admission/README.md"
+      },
+      "allowedTransitions": [
+        "paid issued unused -> checked_in with one audit",
+        "eligible pending transfer -> completed with fresh credential",
+        "valid capacity reservation -> one guarded sold-count update"
+      ],
+      "forbiddenTransitions": [
+        "Unowned-event scan claims organizer authority",
+        "second admission",
+        "stale old-code use after transfer",
+        "unpaid/refunded/disputed incompatible runtime admits",
+        "two concurrent buyers exceed event/tier capacity"
+      ],
+      "effects": [
+        "Atomic ticket/audit or transfer/code update; rollback on failure; public buyer projections omit transferred credentials."
+      ],
+      "authorization": "Stored organizer for admission; transfer follows current-holder/organizer checks and authenticated opaque invitation capability, not email identity. Full staff delegation remains unspecified.",
+      "privacy": "Opaque full-UUID credentials replace PII/fixed-HMAC QR. Transfer email is contact data, not delivery or verified identity.",
+      "concurrency": "Event/order/ticket/invitation lock order serializes conflicting operations within PostgreSQL; exact transaction wrappers remain required.",
+      "idempotency": "Second scan/accept rejects; random replacement credential invalidates prior code. Does not provide payment-provider exactly-once behavior.",
+      "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
+      "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss.",
+      "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md",
+      "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement",
+      "contract": "formal/ticket-admission/README.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Ticketing/Admission.hs",
+        "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+        "tdf-hq/src/TDF/Ticketing/Transfer.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
+        "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
+        "tdf-hq-ui/src/components/TicketCredentialQR.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TicketAdmissionMain.hs",
+        "scripts/test-ticket-admission.sh",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "e2e/web/ticket-credential.spec.mjs"
+      ],
+      "formalModels": [
+        "scripts/__tests__/ticket-admission-model.test.mjs"
+      ],
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution.",
+      "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Source inspected on new main; current combined execution still pending.",
+      "ambiguity": [
+        "Provider payment, real delivery, recipient age acknowledgment, exact event activation and offline/staff delegation remain separate gates."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Approved current-main implementation is incorporated with explicit traceability; exact consolidated tests and deployment remain outstanding."
+      }
     }
   ]
 }

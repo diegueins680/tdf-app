@@ -102,7 +102,7 @@ describe('TicketTransferDialog', () => {
       target: { value: 'invalid-email' },
     });
 
-    const invalidEmailTransferButton = screen.getByRole('button', { name: /Send Transfer/i });
+    const invalidEmailTransferButton = screen.getByRole('button', { name: /Create request/i });
     fireEvent.click(invalidEmailTransferButton);
 
     await waitFor(() => {
@@ -142,7 +142,7 @@ describe('TicketTransferDialog', () => {
       target: { value: 'Jane Smith' },
     });
 
-    const successfulTransferButton = screen.getByRole('button', { name: /Send Transfer/i });
+    const successfulTransferButton = screen.getByRole('button', { name: /Create request/i });
     fireEvent.click(successfulTransferButton);
 
     await waitFor(() => {
@@ -183,7 +183,7 @@ describe('TicketTransferDialog', () => {
       target: { value: 'Jane Smith' },
     });
 
-    const failingTransferButton = screen.getByRole('button', { name: /Send Transfer/i });
+    const failingTransferButton = screen.getByRole('button', { name: /Create request/i });
     fireEvent.click(failingTransferButton);
 
     await waitFor(() => {
@@ -245,7 +245,7 @@ describe('TicketTransferDialog', () => {
       target: { value: 'jane@example.com' },
     });
 
-    const missingFieldsTransferButton = screen.getByRole('button', { name: /Send Transfer/i });
+    const missingFieldsTransferButton = screen.getByRole('button', { name: /Create request/i });
     fireEvent.click(missingFieldsTransferButton);
 
     await waitFor(() => {

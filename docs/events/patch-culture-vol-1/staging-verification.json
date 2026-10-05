@@ -1,0 +1,21 @@
+{
+  "observedAt": "2026-10-05T05:14:27.776Z",
+  "scope": "Read-only metadata for the repository-defined official staging API; no secret values exported",
+  "stagingApi": "tdf-hq-studio-audit-staging",
+  "environment": "sandbox",
+  "apiHealthVerified": false,
+  "providerCredentialsPresent": {
+    "DATAFAST_ENTITY_ID": false,
+    "DATAFAST_BEARER_TOKEN": false,
+    "PAYPAL_CLIENT_ID": false,
+    "PAYPAL_CLIENT_SECRET": false,
+    "PAYPAL_WEBHOOK_ID": false,
+    "PLACETOPAY_LOGIN": false,
+    "PLACETOPAY_SECRET_KEY": false,
+    "PAYPHONE_TOKEN": false,
+    "PAYPHONE_STORE_ID": false
+  },
+  "commerceEventEncryptionKeyPresent": false,
+  "officialPaymentE2EVerified": false,
+  "note": "No credentials were present under the inspected provider secret names. This does not assert that no credentials exist in an external vault or another environment."
+}

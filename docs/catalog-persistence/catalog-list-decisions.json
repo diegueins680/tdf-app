@@ -15070,113 +15070,164 @@
       "reviewed": true
     },
     {
-      "id": "c6a62c7c7469e8974ff1",
+      "id": "0f3d73c6a3dc4bf18f22",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "The171-entry manifest preserves all170 preceding entries and their introduction SHAs, then appends only the additive DDEX legacy-nullability migration introduced at58f095cf. Legacy severity/layer become nullable while canonical reference guards remain enforced. The exact18a isolated production-snapshot rehearsal applied all12 pending entries twice and verified the171-entry schema without production writes. This is an immutable release protocol, not editable business catalog data.",
+      "justification": "Consolidated173-entry registry retains both branch histories: all166 common entries and exact introduction SHAs, five audit compatibility migrations and two newly shipped ticketing migrations. Preserve each branch relative order and immutable SQL bytes; fresh combined migration rehearsal and current applied-ledger reconciliation remain required.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "ddex-canonical-validation-2026-10-05",
+      "reviewBatch": "consolidated-ticketing-audit-2026-10-05",
       "reviewMethod": "source-review-2026-10-05",
       "previousDecision": {
-        "id": "7ec11ef7553c3fae0a80",
+        "id": "c6a62c7c7469e8974ff1",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "The170-entry manifest preserves all169 prior entries and applied SQL bytes, appending one additive booking calendar projection migration introduced at04925a10. It repairs legacy allocation drift under exclusion and rejects bound checkout evidence divergence. The current pending migration was reviewed before production application; exact candidate restoration remains required.",
+        "justification": "The171-entry manifest preserves all170 preceding entries and their introduction SHAs, then appends only the additive DDEX legacy-nullability migration introduced at58f095cf. Legacy severity/layer become nullable while canonical reference guards remain enforced. The exact18a isolated production-snapshot rehearsal applied all12 pending entries twice and verified the171-entry schema without production writes. This is an immutable release protocol, not editable business catalog data.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "booking-conformance-2026-10-05",
-        "previousDecisions": [
-          {
-            "id": "0e9db026aa88326fa7fd",
-            "classification": "genuine-technical-constant",
-            "disposition": "explicit-allowlist",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "The 169-entry consolidated manifest preserves all 166 current-main migrations and their introduction SHAs, then appends the three audit compatibility migrations unchanged. No historical SQL is modified. Both parent decisions remain provenance; migration ordering, ledger checksums and new constraint compatibility require execution against this candidate.",
-            "reviewed": true,
-            "evidence": {
-              "file": "scripts/production-migrations.json",
-              "line": 3
-            },
-            "reviewBatch": "consolidated-main-specification-conformance",
-            "previousDecision": {
-              "id": "057297148d42a39ced43",
+        "reviewBatch": "ddex-canonical-validation-2026-10-05",
+        "reviewMethod": "source-review-2026-10-05",
+        "previousDecision": {
+          "id": "7ec11ef7553c3fae0a80",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "The170-entry manifest preserves all169 prior entries and applied SQL bytes, appending one additive booking calendar projection migration introduced at04925a10. It repairs legacy allocation drift under exclusion and rejects bound checkout evidence divergence. The current pending migration was reviewed before production application; exact candidate restoration remains required.",
+          "reviewed": true,
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3
+          },
+          "reviewBatch": "booking-conformance-2026-10-05",
+          "previousDecisions": [
+            {
+              "id": "0e9db026aa88326fa7fd",
               "classification": "genuine-technical-constant",
               "disposition": "explicit-allowlist",
               "specializedModel": "technical_constant_allowlist",
               "priority": "P1-integrity",
               "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-              "justification": "Ordered, checksum-pinned 161-entry production migration protocol. All 160 prior entries and applied SQL remain unchanged. The additive credential-bound recovery expiry table follows them, with no validity backfill and explicit retention/deletion constraints. Introduction commit57315f2d4 contains its exact SQL; this is immutable release authority, not editable business data.",
+              "justification": "The 169-entry consolidated manifest preserves all 166 current-main migrations and their introduction SHAs, then appends the three audit compatibility migrations unchanged. No historical SQL is modified. Both parent decisions remain provenance; migration ordering, ledger checksums and new constraint compatibility require execution against this candidate.",
               "reviewed": true,
               "evidence": {
                 "file": "scripts/production-migrations.json",
                 "line": 3
               },
-              "reviewBatch": "recovery-expiry-2026-10-04",
+              "reviewBatch": "consolidated-main-specification-conformance",
               "previousDecision": {
-                "id": "dc6d60d733c6eb69ebbf",
+                "id": "057297148d42a39ced43",
                 "classification": "genuine-technical-constant",
                 "disposition": "explicit-allowlist",
                 "specializedModel": "technical_constant_allowlist",
                 "priority": "P1-integrity",
                 "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
+                "justification": "Ordered, checksum-pinned 161-entry production migration protocol. All 160 prior entries and applied SQL remain unchanged. The additive credential-bound recovery expiry table follows them, with no validity backfill and explicit retention/deletion constraints. Introduction commit57315f2d4 contains its exact SQL; this is immutable release authority, not editable business data.",
                 "reviewed": true,
                 "evidence": {
                   "file": "scripts/production-migrations.json",
                   "line": 3
                 },
-                "reviewBatch": "event-editorial-ownership-2026-10-03",
+                "reviewBatch": "recovery-expiry-2026-10-04",
                 "previousDecision": {
-                  "id": "7bf93825f1431a6d52d6",
-                  "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
-                  "reviewBatch": "universal-interactions-2026-09-28"
-                }
-              }
-            },
-            "previousDecisions": [
-              {
-                "id": "149ad89ec39ce2f22ae3",
-                "classification": "genuine-technical-constant",
-                "disposition": "explicit-allowlist",
-                "specializedModel": "technical_constant_allowlist",
-                "priority": "P1-integrity",
-                "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                "justification": "Ordered, checksum-pinned 163-entry production migration protocol. All161 previous entries and previously applied SQL remain unchanged. Two additive migrations enforce exact immutable checkout payable correspondence with a pre-enforcement snapshot fence, and preserve merchandise floor commission with numeric intermediates. Introductions c57fdab05 and f8494a20a contain the exact new SQL; div(numeric,numeric) preserves exact commission floor. This is reviewed release authority, not editable business data.",
-                "reviewed": true,
-                "evidence": {
-                  "file": "scripts/production-migrations.json",
-                  "line": 3
-                },
-                "reviewBatch": "checkout-amount-conformance-2026-10-04",
-                "previousDecision": {
-                  "id": "057297148d42a39ced43",
+                  "id": "dc6d60d733c6eb69ebbf",
                   "classification": "genuine-technical-constant",
                   "disposition": "explicit-allowlist",
                   "specializedModel": "technical_constant_allowlist",
                   "priority": "P1-integrity",
                   "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                  "justification": "Ordered, checksum-pinned 161-entry production migration protocol. All 160 prior entries and applied SQL remain unchanged. The additive credential-bound recovery expiry table follows them, with no validity backfill and explicit retention/deletion constraints. Introduction commit57315f2d4 contains its exact SQL; this is immutable release authority, not editable business data.",
+                  "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
                   "reviewed": true,
                   "evidence": {
                     "file": "scripts/production-migrations.json",
                     "line": 3
                   },
-                  "reviewBatch": "recovery-expiry-2026-10-04",
+                  "reviewBatch": "event-editorial-ownership-2026-10-03",
+                  "previousDecision": {
+                    "id": "7bf93825f1431a6d52d6",
+                    "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
+                    "reviewBatch": "universal-interactions-2026-09-28"
+                  }
+                }
+              },
+              "previousDecisions": [
+                {
+                  "id": "149ad89ec39ce2f22ae3",
+                  "classification": "genuine-technical-constant",
+                  "disposition": "explicit-allowlist",
+                  "specializedModel": "technical_constant_allowlist",
+                  "priority": "P1-integrity",
+                  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+                  "justification": "Ordered, checksum-pinned 163-entry production migration protocol. All161 previous entries and previously applied SQL remain unchanged. Two additive migrations enforce exact immutable checkout payable correspondence with a pre-enforcement snapshot fence, and preserve merchandise floor commission with numeric intermediates. Introductions c57fdab05 and f8494a20a contain the exact new SQL; div(numeric,numeric) preserves exact commission floor. This is reviewed release authority, not editable business data.",
+                  "reviewed": true,
+                  "evidence": {
+                    "file": "scripts/production-migrations.json",
+                    "line": 3
+                  },
+                  "reviewBatch": "checkout-amount-conformance-2026-10-04",
+                  "previousDecision": {
+                    "id": "057297148d42a39ced43",
+                    "classification": "genuine-technical-constant",
+                    "disposition": "explicit-allowlist",
+                    "specializedModel": "technical_constant_allowlist",
+                    "priority": "P1-integrity",
+                    "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+                    "justification": "Ordered, checksum-pinned 161-entry production migration protocol. All 160 prior entries and applied SQL remain unchanged. The additive credential-bound recovery expiry table follows them, with no validity backfill and explicit retention/deletion constraints. Introduction commit57315f2d4 contains its exact SQL; this is immutable release authority, not editable business data.",
+                    "reviewed": true,
+                    "evidence": {
+                      "file": "scripts/production-migrations.json",
+                      "line": 3
+                    },
+                    "reviewBatch": "recovery-expiry-2026-10-04",
+                    "previousDecision": {
+                      "id": "dc6d60d733c6eb69ebbf",
+                      "classification": "genuine-technical-constant",
+                      "disposition": "explicit-allowlist",
+                      "specializedModel": "technical_constant_allowlist",
+                      "priority": "P1-integrity",
+                      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+                      "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
+                      "reviewed": true,
+                      "evidence": {
+                        "file": "scripts/production-migrations.json",
+                        "line": 3
+                      },
+                      "reviewBatch": "event-editorial-ownership-2026-10-03",
+                      "previousDecision": {
+                        "id": "7bf93825f1431a6d52d6",
+                        "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
+                        "reviewBatch": "universal-interactions-2026-09-28"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "c6915506d0f7b802519d",
+                  "classification": "genuine-technical-constant",
+                  "disposition": "explicit-allowlist",
+                  "specializedModel": "technical_constant_allowlist",
+                  "priority": "P1-integrity",
+                  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+                  "justification": "The ordered production migration protocol preserves all 160 current-main entries with their original introduction SHAs and appends six payment migrations in source order. SQL checksums, deployment ancestry and release approval remain mandatory. This immutable registry is not administrator-selectable product data.",
+                  "reviewed": true,
+                  "evidence": {
+                    "file": "scripts/production-migrations.json",
+                    "line": 3
+                  },
+                  "reviewBatch": "event-editorial-ownership-2026-10-03",
                   "previousDecision": {
                     "id": "dc6d60d733c6eb69ebbf",
                     "classification": "genuine-technical-constant",
@@ -15198,47 +15249,77 @@
                     }
                   }
                 }
+              ],
+              "reviewMethod": "source-review-2026-10-04"
+            }
+          ],
+          "reviewMethod": "source-review-2026-10-04"
+        }
+      },
+      "mergedDecision": {
+        "id": "d8e73943d72078a492ae",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Ordered 168-entry production migration registry. All 167 prior entries and introduction SHAs are preserved. One additive nullable transfer deadline and immutable-after-approval guard extends the existing versioned checkout policy; rollback refuses to discard configured deadlines. Deployment ancestry and checksums remain required. This registry is release authority, not editable event catalog data.",
+        "reviewed": true,
+        "evidence": {
+          "file": "scripts/production-migrations.json",
+          "line": 3
+        },
+        "reviewBatch": "ticket-transfer-2026-10-05",
+        "previousDecision": {
+          "id": "c66b265a7ea297c37542",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Ordered 167-entry production migration registry. All previous entries and introduction SHAs remain byte-for-byte unchanged; one additive ticket admission audit table is appended. Deployment ancestry, checksums and evidence-preserving rollback remain required. This is release execution authority, not administrator-selectable event data.",
+          "reviewed": true,
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3
+          },
+          "reviewBatch": "ticket-admission-2026-10-05",
+          "previousDecision": {
+            "id": "c6915506d0f7b802519d",
+            "classification": "genuine-technical-constant",
+            "disposition": "explicit-allowlist",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "The ordered production migration protocol preserves all 160 current-main entries with their original introduction SHAs and appends six payment migrations in source order. SQL checksums, deployment ancestry and release approval remain mandatory. This immutable registry is not administrator-selectable product data.",
+            "reviewed": true,
+            "evidence": {
+              "file": "scripts/production-migrations.json",
+              "line": 3
+            },
+            "reviewBatch": "event-editorial-ownership-2026-10-03",
+            "previousDecision": {
+              "id": "dc6d60d733c6eb69ebbf",
+              "classification": "genuine-technical-constant",
+              "disposition": "explicit-allowlist",
+              "specializedModel": "technical_constant_allowlist",
+              "priority": "P1-integrity",
+              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+              "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
+              "reviewed": true,
+              "evidence": {
+                "file": "scripts/production-migrations.json",
+                "line": 3
               },
-              {
-                "id": "c6915506d0f7b802519d",
-                "classification": "genuine-technical-constant",
-                "disposition": "explicit-allowlist",
-                "specializedModel": "technical_constant_allowlist",
-                "priority": "P1-integrity",
-                "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                "justification": "The ordered production migration protocol preserves all 160 current-main entries with their original introduction SHAs and appends six payment migrations in source order. SQL checksums, deployment ancestry and release approval remain mandatory. This immutable registry is not administrator-selectable product data.",
-                "reviewed": true,
-                "evidence": {
-                  "file": "scripts/production-migrations.json",
-                  "line": 3
-                },
-                "reviewBatch": "event-editorial-ownership-2026-10-03",
-                "previousDecision": {
-                  "id": "dc6d60d733c6eb69ebbf",
-                  "classification": "genuine-technical-constant",
-                  "disposition": "explicit-allowlist",
-                  "specializedModel": "technical_constant_allowlist",
-                  "priority": "P1-integrity",
-                  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                  "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
-                  "reviewed": true,
-                  "evidence": {
-                    "file": "scripts/production-migrations.json",
-                    "line": 3
-                  },
-                  "reviewBatch": "event-editorial-ownership-2026-10-03",
-                  "previousDecision": {
-                    "id": "7bf93825f1431a6d52d6",
-                    "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
-                    "reviewBatch": "universal-interactions-2026-09-28"
-                  }
-                }
+              "reviewBatch": "event-editorial-ownership-2026-10-03",
+              "previousDecision": {
+                "id": "7bf93825f1431a6d52d6",
+                "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
+                "reviewBatch": "universal-interactions-2026-09-28"
               }
-            ],
-            "reviewMethod": "source-review-2026-10-04"
+            }
           }
-        ],
-        "reviewMethod": "source-review-2026-10-04"
+        }
       }
     },
     {
@@ -15372,6 +15453,89 @@
           }
         }
       ]
+    },
+    {
+      "id": "82181bc7a177bc6f96f4",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-retain",
+      "risk": "Changing navigation or UI constants could break rendering or user experience.",
+      "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
+      "reviewed": true
+    },
+    {
+      "id": "ec1a316784aa9992384a",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P0-cutover",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+      "reviewed": true
+    },
+    {
+      "id": "44c80a6dd2f154d0d59a",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant. The canonical tester landing adds one public discovery destination while retaining all 158 definitions from the merged payment main, with no authorization grants changed.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "mobile-program-current-main-2026-10-04",
+      "evidence": {
+        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "line": 55
+      },
+      "previousDecision": {
+        "id": "0eafdd9f0a8bbebf9a23",
+        "classification": "security-system-registry",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
+        "reviewed": true,
+        "reviewMethod": "deterministic-policy-v3",
+        "reviewBatch": "universal-interactions-2026-09-28",
+        "evidence": {
+          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+          "line": 55
+        },
+        "previousDecision": {
+          "id": "5147eb2751a01d8b4c73",
+          "classification": "security-system-registry",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P0-security",
+          "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+          "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+          "reviewed": true,
+          "reviewMethod": "deterministic-policy-v3",
+          "reviewBatch": "universal-interactions-2026-09-28",
+          "evidence": {
+            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+            "line": 55
+          }
+        }
+      }
+    },
+    {
+      "id": "e25768fc8a4cd5caae2e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing credential lookup semantics can weaken event-scoped authorization or admit the wrong ticket.",
+      "justification": "AdmissionLookup distinguishes the existing authenticated API lookup mechanisms (internal ticket ID or opaque ticket code). These are exhaustive protocol constructors used by the server, not administrator-selectable event, ticket tier or business catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Ticketing/Admission.hs",
+        "line": 24
+      },
+      "reviewBatch": "ticket-admission-2026-10-05"
     }
   ]
 }
