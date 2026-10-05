@@ -1987,6 +1987,11 @@ reorderHandler user catalogCode request = do
       (catalogTableSpec (M.catalogDefinitionEntityKind catalog))
     when (ctsFamily spec == ReadOnlyFamily) $
       liftIO $ throwIO err403 { errBody = "Controlled reference data cannot be reordered manually" }
+    members <- rawSql
+      ("SELECT id::text FROM " <> ctsTable spec <> " WHERE catalog_id=?::uuid")
+      [PersistText (persistKeyText catalogKey)] :: SqlPersistT IO [Single Text]
+    unless (sortOn id ids == sortOn id [itemId | Single itemId <- members]) $
+      liftIO $ throwIO err409 { errBody = "Reorder must contain every item in the catalog exactly once" }
     counts <- forM (zip [0 :: Int ..] ids) $ \(position, itemId) ->
       (rawSql
         ("UPDATE " <> ctsTable spec <> " SET sort_order=?, updated_at=now(), version=version+1 WHERE id=?::uuid AND catalog_id=?::uuid RETURNING 1")

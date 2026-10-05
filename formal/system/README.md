@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [catalog-reorder.md](catalog-reorder.md): atomic administrative reordering, revision conflicts and bounded negative controls.
+
 - [ddex-validation.md](ddex-validation.md): canonical validation, atomic failure, shipped Mobile reference compatibility and explicit unavailable responses.
 - [api-availability.json](api-availability.json): explicit local-only API deferrals; the compiled gate rejects unexpected mounting or missing undeferred declarations.
 - [requirements.json](requirements.json): stable normative obligations, contracts,

@@ -291,6 +291,16 @@
       "conflict": "Eleven empty responses were incorrectly documented204; nine DDEX operations still documented501 despite four implementedhandlers and five deliberately disabled503 paths. Shipped Mobile duplicated removed DTO fields. Canonical SQL issue guards conflict with core-era legacy NOT NULL; completion still wrote legacy result.",
       "authority": "formal/system/ddex-validation.md; formal/system/api-response-status.json",
       "resolution": "Preserve established200 empty-body acknowledgements and accepted client behavior. Document real JSON success schemas for four DDEX handlers; retain503 for five unavailable DDEX handlers plus legacyStripe. Fix actual validation SQL/transaction defects, canonical result reads and shipped Mobile adapters. Do not fabricate successful import/export availability or official profile validation."
+    },
+    {
+      "id": "AUTHORITY-028",
+      "sources": [
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/API/Catalog.hs"
+      ],
+      "conflict": "A reorder returns409 for an invalid later item but earlier per-item transactions already committed; revision and audit remain unchanged.",
+      "authority": "formal/system/catalog-reorder.md",
+      "resolution": "Repair transaction atomicity and locked revision admission. Apply the existing OpenAPI incomplete-set rejection as the working authority; product-owner clarification is pending because the old implementation accepted subsets. Require every current item exactly once."
     }
   ]
 }

@@ -364,6 +364,16 @@
       "applicability": "Existing WhatsApp empty-body webhook acknowledgement.",
       "decision": "adopted with boundary",
       "rationale": "Retain200; signed synthetic HTTP probes verify acknowledgement and unsigned rejection. This does not prove durable event processing or provider replay semantics."
+    },
+    {
+      "id": "RES-CATALOG-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "title": "PostgreSQL17 row locks and transaction lifetime",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Lock the coordinating row before testing the revision; keep dependent mutations in one transaction and account for deadlock aborts.",
+      "applicability": "Administrative catalog reordering and concurrent stale writes.",
+      "decision": "adopted with boundary",
+      "rationale": "A catalog row serializes competing reorders. Transaction rollback protects item/revision/audit consistency. Other catalog writers and global revocation require independent review; no serializability claim is inferred for them."
     }
   ]
 }

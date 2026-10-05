@@ -461,7 +461,11 @@ try:
     check('catalog foreign reorder member rejected with 409', request(catalog_path, reorder_payload([catalog_fixture['id'], foreign_id], before['revision']), method='POST')[0] == 409)
     check('catalog foreign-member rejection leaves target unchanged', catalog_state() == before)
     check('catalog foreign member is not updated', sql("SELECT sort_order || ':' || version FROM genre WHERE id='" + foreign_id + "'") == '900:1')
-    valid = reorder_payload([catalog_fixture['id']], before['revision'])
+    ordered_ids = list(reversed([row[0] for row in before['items']]))
+    check('catalog reorder fixture exercises multiple distinct items', len(ordered_ids) >= 2)
+    check('catalog incomplete reorder rejected with 409', request(catalog_path, reorder_payload(ordered_ids[:-1], before['revision']), method='POST')[0] == 409)
+    check('catalog incomplete reorder has no effect', catalog_state() == before)
+    valid = reorder_payload(ordered_ids, before['revision'])
     check('catalog fan cannot reorder', request(catalog_path, valid, token='fixture-fan', method='POST')[0] == 403)
     check('catalog unauthenticated reorder denied', request(catalog_path, valid, token=None, method='POST')[0] == 401)
     check('catalog authorization denial has no effect', catalog_state() == before)
@@ -469,20 +473,44 @@ try:
     check('catalog audit failure is not reported as success', request(catalog_path, valid, method='POST')[0] == 500)
     check('catalog audit failure rolls back item and revision', catalog_state() == before)
     sql('DROP TRIGGER fixture_reorder_audit_failure ON catalog_audit_event; DROP FUNCTION fixture_reorder_audit_failure()')
-    barrier = threading.Barrier(2)
-    def reorder_concurrently(index):
-        payload = reorder_payload([catalog_fixture['id']], before['revision'])
-        barrier.wait(timeout=10)
-        return request(catalog_path, payload, method='POST')[0]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        statuses = list(executor.map(reorder_concurrently, range(2)))
+    # Force both requests to reach PostgreSQL before releasing the catalog lock.
+    # A thread start barrier alone can accidentally exercise only serial requests.
+    with (OUTPUT / 'catalog-barrier.log').open('w') as log:
+        barrier = subprocess.Popen(['psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', NAME],
+            env=ENV, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log, text=True)
+        try:
+            barrier.stdin.write("BEGIN; SET LOCAL idle_in_transaction_session_timeout='20s'; SELECT id FROM catalog_definition WHERE id='" + catalog_fixture['key'] + "' FOR UPDATE; SELECT 'LOCKED';\n")
+            barrier.stdin.flush()
+            for _ in range(4):
+                if barrier.stdout.readline().strip() == 'LOCKED': break
+            else: raise RuntimeError('Catalog barrier did not acquire row lock')
+            def catalog_waiters(expected):
+                for _ in range(100):
+                    count = int(sql("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND state='active' AND wait_event_type='Lock' AND query ILIKE '%catalog_definition%' AND query ILIKE '%FOR UPDATE%'") or 0)
+                    if count >= expected: return
+                    time.sleep(.05)
+                raise RuntimeError('Catalog HTTP requests did not reach the coordinating row lock')
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                first_reorder = executor.submit(request, catalog_path, valid, method='POST')
+                catalog_waiters(1)
+                second_reorder = executor.submit(request, catalog_path, reorder_payload(ordered_ids, before['revision']), method='POST')
+                catalog_waiters(2)
+                check('catalog concurrent requests both observed blocked inside PostgreSQL', not first_reorder.done() and not second_reorder.done())
+                barrier.stdin.write('COMMIT;\n'); barrier.stdin.flush(); barrier.stdin.close()
+                barrier.wait(timeout=5)
+                responses = [first_reorder.result(), second_reorder.result()]
+                statuses = [response[0] for response in responses]
+        finally:
+            if barrier.poll() is None:
+                barrier.terminate(); barrier.wait(timeout=5)
     check('catalog concurrent identical expected revisions yield one commit and one conflict ' + str(statuses), sorted(statuses) == [200, 409])
+    check('catalog successful response is empty', next(body for status, body in responses if status == 200) == '')
     after = catalog_state()
     check('catalog successful reorder advances revision and audit exactly once', after['revision'] == before['revision'] + 1 and after['audit'] == before['audit'] + 1)
-    old_item = next(item for item in before['items'] if item[0] == catalog_fixture['id'])
-    new_item = next(item for item in after['items'] if item[0] == catalog_fixture['id'])
-    check('catalog successful reorder advances selected item once', new_item[1] == 0 and new_item[2] == old_item[2] + 1)
-    check('catalog unchanged members remain unchanged', [x for x in after['items'] if x[0] != catalog_fixture['id']] == [x for x in before['items'] if x[0] != catalog_fixture['id']])
+    for position, item_id in enumerate(ordered_ids):
+        old_item = next(item for item in before['items'] if item[0] == item_id)
+        new_item = next(item for item in after['items'] if item[0] == item_id)
+        check('catalog successful reorder has correct position and one version increment ' + str(position), new_item[1] == position and new_item[2] == old_item[2] + 1)
     check('catalog stale retry returns conflict', request(catalog_path, valid, method='POST')[0] == 409)
     check('catalog stale retry has no effect', catalog_state() == after)
 

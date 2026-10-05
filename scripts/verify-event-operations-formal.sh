@@ -92,6 +92,11 @@ run_negative_tlc() {
   fi
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc CatalogReorder.tla CatalogReorder.cfg catalog-reorder
+run_negative_tlc CatalogReorderPartialRollback.cfg catalog-reorder-partialrollback 'Invariant NoRejectedEffect is violated' CatalogReorder.tla
+run_negative_tlc CatalogReorderStaleRevision.cfg catalog-reorder-stalerevision 'Invariant NoStaleCommit is violated' CatalogReorder.tla
+run_negative_tlc CatalogReorderNoAuthorization.cfg catalog-reorder-noauthorization 'Invariant NoUnauthorizedCommit is violated' CatalogReorder.tla
+run_negative_tlc CatalogReorderNoAudit.cfg catalog-reorder-noaudit 'Invariant AtomicEvidence is violated' CatalogReorder.tla
 run_tlc StudioBookingProjection.tla StudioBookingProjection.cfg studiobookingprojection
 run_negative_tlc StudioBookingProjectionStale.cfg studiobookingprojection-stale 'Invariant ProjectionCurrent is violated' StudioBookingProjection.tla
 run_negative_tlc StudioBookingProjectionReactivation.cfg studiobookingprojection-reactivation 'Invariant ProjectionCurrent is violated' StudioBookingProjection.tla

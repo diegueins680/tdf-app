@@ -3652,7 +3652,7 @@
       "ambiguity": [
         "Official licensed XSD and recipient-profile validation, transactional import and immutable export are deliberately unavailable.",
         "Private storage full durability/deletion, provider delivery, concurrent registry reconfiguration and existing stranded-run reconciliation need separate verification.",
-        "Catalog reorder atomicity and legacy webhook raw-payload logging are separately discovered unresolved defects."
+        "Catalog reorder atomicity is tracked separately as REC-CATALOG-001; legacy webhook raw-payload logging remains an unresolved defect."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3663,6 +3663,84 @@
       "contract": "formal/system/ddex-validation.md",
       "verification": "Actual PostgreSQL/HTTP fixture, injected transaction failures, concurrent calls, unchanged canonical SQL guard rejections, Mobile adapter and component tests.",
       "evidence": "Private revision-scoped API/restore/Stack receipts; working reproductions are not final candidate passes."
+    },
+    {
+      "id": "REC-CATALOG-001",
+      "title": "Atomic catalog reorder with guarded revision",
+      "domain": "REC",
+      "statement": "An authorized catalog reorder shall commit selected item positions and versions, catalog revision and success audit together; rejected requests shall have no committed effects, and two reorder requests carrying the same expected revision shall not both commit.",
+      "actors": [
+        "Catalog administrator with persisted catalog.update capability"
+      ],
+      "preconditions": [
+        "Active catalog with supported writable adapter",
+        "Current authenticated ModuleCatalog user and persisted catalog.update capability"
+      ],
+      "inputs": [
+        "Nonempty unique orderedItemIds containing every current catalog item, including inactive items",
+        "expectedCatalogRevision",
+        "reason and correlationId"
+      ],
+      "state": {
+        "initial": "request received",
+        "transient": [
+          "authorized",
+          "transaction staged"
+        ],
+        "terminal": [
+          "committed",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Authorized request -> locked current revision -> staged selected items -> committed items/revision/audit",
+        "Invalid or stale request -> rejected with unchanged persistent state"
+      ],
+      "forbiddenTransitions": [
+        "Rejected request leaves an updated item prefix",
+        "Audit failure leaves item or catalog changes",
+        "Two requests with the same expected catalog revision both commit",
+        "Unauthorized caller changes catalog state"
+      ],
+      "effects": [
+        "Selected sort positions and item versions change once",
+        "Catalog revision increments once",
+        "One success audit commits in the same transaction",
+        "Every catalog item has one distinct contiguous position after accepted complete-list reorder."
+      ],
+      "authorization": "Existing bearer authentication, ModuleCatalog and persisted catalog.update; dynamic revocation during the transaction remains outside the verification scope.",
+      "privacy": "Existing administrative catalog visibility; synthetic fixtures only. Audit records retain actor and reason under current catalog retention policy, which still needs full reconciliation.",
+      "concurrency": "Catalog row lock followed by current revision comparison serializes reorder requests for that catalog. All item updates and audit use the same SQL transaction. Other catalog writers are not claimed to follow this protocol.",
+      "idempotency": "No request-key deduplication; correlationId is audit metadata. A replay carrying an accepted old revision returns409 without effect.",
+      "failure": "Invalid list400; absent catalog404; unauthorized401/403; controlled reference403; stale revision or foreign member409. SQL/audit failure rolls back and is not reported as success.",
+      "recovery": "Reload current catalog/revision after an ambiguous response or conflict. No blind replay with a newly inferred revision. No migration or historical audit rewrite.",
+      "observability": "Persisted audit and revision agree with committed item effects; HTTP regression receipts bind source and binary revisions.",
+      "source": "Catalog API and handler; isolated409 partial-commit reproduction; PostgreSQL transaction and locking semantics; AUTHORITY-028.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Catalog.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/CatalogReorder.tla"
+      ],
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "OpenAPI complete-set requirement is the working authority; product owner has been asked to resolve the subset implementation conflict.",
+        "Dynamic revocation, other catalog writers, mixed-operation deadlocks and transport ambiguity need wider verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped transaction repair, executable HTTP controls and bounded model require final candidate validation and deployed verification; broader catalog lifecycle remains uncovered."
+      },
+      "authority": "AUTHORITY-028; rejected mutations must not be accepted piecemeal.",
+      "property": "NoRejectedEffect, AtomicEvidence, NoStaleCommit, NoUnauthorizedCommit",
+      "contract": "formal/system/catalog-reorder.md",
+      "verification": "Real PostgreSQL HTTP denial/rollback/failure/concurrency checks and bounded TLC model with four named negative controls.",
+      "evidence": "Revision-specific receipts required; original empirical reproduction is evidence of the pre-fix bug only."
     }
   ],
   "sourceFingerprints": {
@@ -3670,6 +3748,7 @@
     ".github/workflows/ci.yml": "493144df8f912db92f01d6e9e37a11a714f1cf5a63644a40bd35f82fe6fa0d73",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
+    "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
     "formal/event-operations/ChatMutationBoundary.tla": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
     "formal/event-operations/ChatMutationEarlyCommit.cfg": "d46199cc0f1db6672aeacdacc0da24bab1fae1766063a5c0732adc5c4e7c710d",
@@ -3788,7 +3867,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "3bba0fbe9a4a40ce836248f2d29ce66ebff882f56e98758e0eba6a80fde2d1b5",
+    "scripts/test-booking-conformance.py": "daf405fe4c028085be132272476d7d46d181a230dbe96bdd6db5defffe57af01",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -3802,7 +3881,7 @@
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "118a573ddb801774ff25926416e17a06d5b050b2dfc6c1d92caab0a4b534beaf",
+    "scripts/verify-event-operations-formal.sh": "6a1abf57b00f231e4578f25031492dc838e011a16a188d56a3463a6bf4735fda",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
@@ -3867,6 +3946,7 @@
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Server.hs": "f4ff8ec05572f9c96009bd6e4bdfe808327192672ead560d7996f831164048d2",
+    "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
@@ -5423,6 +5503,10 @@
       {
         "requirement": "REC-DDEX-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "REC-CATALOG-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/StudioBookingScope.tla": [
@@ -5829,6 +5913,18 @@
       {
         "requirement": "REC-DDEX-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/Catalog.hs": [
+      {
+        "requirement": "REC-CATALOG-001",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/event-operations/CatalogReorder.tla": [
+      {
+        "requirement": "REC-CATALOG-001",
+        "relationship": "formalModels"
       }
     ]
   },
@@ -8544,7 +8640,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "3bba0fbe9a4a40ce836248f2d29ce66ebff882f56e98758e0eba6a80fde2d1b5",
+      "sha256": "daf405fe4c028085be132272476d7d46d181a230dbe96bdd6db5defffe57af01",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8573,6 +8669,10 @@
         },
         {
           "requirement": "REC-DDEX-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "REC-CATALOG-001",
           "relationship": "tests"
         }
       ]
@@ -9256,7 +9356,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "118a573ddb801774ff25926416e17a06d5b050b2dfc6c1d92caab0a4b534beaf",
+      "sha256": "6a1abf57b00f231e4578f25031492dc838e011a16a188d56a3463a6bf4735fda",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18295,9 +18395,14 @@
     {
       "id": "SURFACE-5936156bf9727c52",
       "path": "tdf-hq/src/TDF/Server/Catalog.hs",
-      "sha256": "e214346e82caa8e1d52c255e142591c481bd8d386544b0c4c819f1bd974b0eac",
+      "sha256": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-CATALOG-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5cbf72ef8bf21ded",
@@ -23830,7 +23935,6 @@
     "SURFACE-21573408c23f618c",
     "SURFACE-a6d0775d20903e98",
     "SURFACE-6076c182710c4ad6",
-    "SURFACE-5936156bf9727c52",
     "SURFACE-5cbf72ef8bf21ded",
     "SURFACE-2834bdf776fa3c23",
     "SURFACE-436c77cb88490332",
@@ -46606,7 +46710,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 50,
+    "PARTIAL": 51,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

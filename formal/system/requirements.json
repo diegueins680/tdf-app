@@ -3651,7 +3651,7 @@
       "ambiguity": [
         "Official licensed XSD and recipient-profile validation, transactional import and immutable export are deliberately unavailable.",
         "Private storage full durability/deletion, provider delivery, concurrent registry reconfiguration and existing stranded-run reconciliation need separate verification.",
-        "Catalog reorder atomicity and legacy webhook raw-payload logging are separately discovered unresolved defects."
+        "Catalog reorder atomicity is tracked separately as REC-CATALOG-001; legacy webhook raw-payload logging remains an unresolved defect."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3662,6 +3662,84 @@
       "contract": "formal/system/ddex-validation.md",
       "verification": "Actual PostgreSQL/HTTP fixture, injected transaction failures, concurrent calls, unchanged canonical SQL guard rejections, Mobile adapter and component tests.",
       "evidence": "Private revision-scoped API/restore/Stack receipts; working reproductions are not final candidate passes."
+    },
+    {
+      "id": "REC-CATALOG-001",
+      "title": "Atomic catalog reorder with guarded revision",
+      "domain": "REC",
+      "statement": "An authorized catalog reorder shall commit selected item positions and versions, catalog revision and success audit together; rejected requests shall have no committed effects, and two reorder requests carrying the same expected revision shall not both commit.",
+      "actors": [
+        "Catalog administrator with persisted catalog.update capability"
+      ],
+      "preconditions": [
+        "Active catalog with supported writable adapter",
+        "Current authenticated ModuleCatalog user and persisted catalog.update capability"
+      ],
+      "inputs": [
+        "Nonempty unique orderedItemIds containing every current catalog item, including inactive items",
+        "expectedCatalogRevision",
+        "reason and correlationId"
+      ],
+      "state": {
+        "initial": "request received",
+        "transient": [
+          "authorized",
+          "transaction staged"
+        ],
+        "terminal": [
+          "committed",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Authorized request -> locked current revision -> staged selected items -> committed items/revision/audit",
+        "Invalid or stale request -> rejected with unchanged persistent state"
+      ],
+      "forbiddenTransitions": [
+        "Rejected request leaves an updated item prefix",
+        "Audit failure leaves item or catalog changes",
+        "Two requests with the same expected catalog revision both commit",
+        "Unauthorized caller changes catalog state"
+      ],
+      "effects": [
+        "Selected sort positions and item versions change once",
+        "Catalog revision increments once",
+        "One success audit commits in the same transaction",
+        "Every catalog item has one distinct contiguous position after accepted complete-list reorder."
+      ],
+      "authorization": "Existing bearer authentication, ModuleCatalog and persisted catalog.update; dynamic revocation during the transaction remains outside the verification scope.",
+      "privacy": "Existing administrative catalog visibility; synthetic fixtures only. Audit records retain actor and reason under current catalog retention policy, which still needs full reconciliation.",
+      "concurrency": "Catalog row lock followed by current revision comparison serializes reorder requests for that catalog. All item updates and audit use the same SQL transaction. Other catalog writers are not claimed to follow this protocol.",
+      "idempotency": "No request-key deduplication; correlationId is audit metadata. A replay carrying an accepted old revision returns409 without effect.",
+      "failure": "Invalid list400; absent catalog404; unauthorized401/403; controlled reference403; stale revision or foreign member409. SQL/audit failure rolls back and is not reported as success.",
+      "recovery": "Reload current catalog/revision after an ambiguous response or conflict. No blind replay with a newly inferred revision. No migration or historical audit rewrite.",
+      "observability": "Persisted audit and revision agree with committed item effects; HTTP regression receipts bind source and binary revisions.",
+      "source": "Catalog API and handler; isolated409 partial-commit reproduction; PostgreSQL transaction and locking semantics; AUTHORITY-028.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Catalog.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/CatalogReorder.tla"
+      ],
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "OpenAPI complete-set requirement is the working authority; product owner has been asked to resolve the subset implementation conflict.",
+        "Dynamic revocation, other catalog writers, mixed-operation deadlocks and transport ambiguity need wider verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped transaction repair, executable HTTP controls and bounded model require final candidate validation and deployed verification; broader catalog lifecycle remains uncovered."
+      },
+      "authority": "AUTHORITY-028; rejected mutations must not be accepted piecemeal.",
+      "property": "NoRejectedEffect, AtomicEvidence, NoStaleCommit, NoUnauthorizedCommit",
+      "contract": "formal/system/catalog-reorder.md",
+      "verification": "Real PostgreSQL HTTP denial/rollback/failure/concurrency checks and bounded TLC model with four named negative controls.",
+      "evidence": "Revision-specific receipts required; original empirical reproduction is evidence of the pre-fix bug only."
     }
   ]
 }

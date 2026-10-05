@@ -4064,7 +4064,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "3bba0fbe9a4a40ce836248f2d29ce66ebff882f56e98758e0eba6a80fde2d1b5",
+      "sha256": "daf405fe4c028085be132272476d7d46d181a230dbe96bdd6db5defffe57af01",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4556,7 +4556,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "118a573ddb801774ff25926416e17a06d5b050b2dfc6c1d92caab0a4b534beaf",
+      "sha256": "6a1abf57b00f231e4578f25031492dc838e011a16a188d56a3463a6bf4735fda",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11912,7 +11912,7 @@
     {
       "id": "SURFACE-5936156bf9727c52",
       "path": "tdf-hq/src/TDF/Server/Catalog.hs",
-      "sha256": "e214346e82caa8e1d52c255e142591c481bd8d386544b0c4c819f1bd974b0eac",
+      "sha256": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18301,6 +18301,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/CatalogReorder.cfg",
+      "sha256": "c73710004e4ef24190de4d7812bd2c8aa7e300d34e55490899f5085d26973f9c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CatalogReorder.tla",
+      "sha256": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/CatalogReorderNoAudit.cfg",
+      "sha256": "483b2b4d028370b2ddc9fb3dbe925681a5c69b24304215977873feea8152cbbd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CatalogReorderNoAuthorization.cfg",
+      "sha256": "782c3d6b0d255671f3c133f5771fa0d3e157f45b6ba442846670d13ac4c8c502",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CatalogReorderPartialRollback.cfg",
+      "sha256": "08dc592485e9cc8e7804e8a97f97efa09aa56fae6b85accc4767ed54c8a6297a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/CatalogReorderStaleRevision.cfg",
+      "sha256": "dbbd9ace4b61b22c5c42903a6e6d780a3922f07ebb39cd53599740f75c72e952",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/ChatMutationBoundary.cfg",
       "sha256": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
       "authority": "inferred",
@@ -20402,14 +20444,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "c660e41f8eae424f7c5844ae25259fb09f9fbf527d25b83c0aff5534b046347b",
+      "sha256": "5cf712372cd55656b55665a2bbbe6c3d9840098b01cedfc4d35f71627eddff44",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "29266ea25f4ef85c7de8074e546fddec93b3ad06b0434a627f08347912c46dc6",
+      "sha256": "2b5f7b0bc12f77c6956cb597e3aa9c69264cea37fe7d3ec33926ba1febde8934",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20424,6 +20466,13 @@
     {
       "path": "formal/system/build-trust.md",
       "sha256": "a151c33756459b9de9133382fa93d32dec616abf063c5ac6401f6954c89aef4f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/catalog-reorder.md",
+      "sha256": "7985062539b843b5ceaeb78c604f7b81dfc8304c999ee6281aeec5a37451a10a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20542,14 +20591,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "df65b810aa6ca5bd92293e6c888b1f6fce456885c090916ae1574c52b1b649e4",
+      "sha256": "b98fff59da677845a3bff12fea30c5074cbd6c405c6c9eed02526c92674af69c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "8d66f9c9cd8f0562f0493c723137ab92ccbe2000ebf2f738345bcd78ecccabb6",
+      "sha256": "1392a71326fae356aa94fd3fab7dc2119d51f2a971a7054d65fe6f1c10a96f44",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27722,6 +27771,61 @@
         "INVARIANTS AtMostOneAutomaticExchange OnlyPersistedConnection CurrentSessionReceipt",
         "PROPERTY RequestSettles",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CatalogReorder.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS AtomicRollback = TRUE FreshRevision = TRUE RequireAuthorization = TRUE RequireAudit = TRUE",
+        "INVARIANTS TypeOK NoRejectedEffect NoStaleCommit NoUnauthorizedCommit AtomicEvidence"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CatalogReorderNoAudit.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS AtomicRollback = TRUE FreshRevision = TRUE RequireAuthorization = TRUE RequireAudit = FALSE",
+        "INVARIANTS AtomicEvidence"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CatalogReorderNoAuthorization.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS AtomicRollback = TRUE FreshRevision = TRUE RequireAuthorization = FALSE RequireAudit = TRUE",
+        "INVARIANTS NoUnauthorizedCommit"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CatalogReorderPartialRollback.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS AtomicRollback = FALSE FreshRevision = TRUE RequireAuthorization = TRUE RequireAudit = TRUE",
+        "INVARIANTS NoRejectedEffect"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/CatalogReorderStaleRevision.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS AtomicRollback = TRUE FreshRevision = FALSE RequireAuthorization = TRUE RequireAudit = TRUE",
+        "INVARIANTS NoStaleCommit"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
