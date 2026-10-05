@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "d46c83b045770eb6e691ef6cf2b652d6e4f7fd80",
+  "mobileRevision": "d306cacc3b485e95da08c662c48488425a33055b",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -3478,7 +3478,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "eb9de19cc5731d22746a5ca0df6560261031cc3bfbc1d54d3f6dee92ecbfa522",
+      "sha256": "b6fcaac5d3cd90020e2ddde083a00c24d52e274e439582c4f3c7048b6a8c7c7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4168,7 +4168,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "50d619ae4725aea589c3bd5f1edcadad9cc2597658268c0cf2e27e114776cee6",
+      "sha256": "98d340c3221582626d45459e89d2402fe032e00d5aee0333d3996e1089c4e681",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5308,7 +5308,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "1c379b1c3befce44ca94d3c585f199c45b622ce59db60a63fa99dc214dc2d051",
+      "sha256": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9088,7 +9088,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "282e4d9afec01177ae86348b800d278f102a428eb0021fc1196065aa7a52554b",
+      "sha256": "d55f01b1ce86614187fa542fba82699a83af283cdc30afb7e4f1213ceab55137",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12082,7 +12082,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "d9bab1f3910e2e3b84dd9880ffa75225cbea09a5316b584caad1c019093baac2",
+      "sha256": "5e08cf5679bc9705ff95964717f8cedebf3a7c455d4a2d1b1d6c1ff902dbcc33",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14554,7 +14554,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "1c379b1c3befce44ca94d3c585f199c45b622ce59db60a63fa99dc214dc2d051",
+      "sha256": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20927,7 +20927,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "61a5a8bd134b77ec899c2899c764a8bfdfa552903878c5faeb7ab4e27f408a84",
+      "sha256": "612ae788fdbb7f5842ee1883025e21dad9aa01393b41f803b8e22cb56d866d17",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21074,7 +21074,7 @@
     },
     {
       "path": "formal/system/operations-command-boundary.md",
-      "sha256": "fb9bd86683dd7a76ad043831f9551fc032f5a7775d7abfd768eabf75bf9040eb",
+      "sha256": "d61fbe34ffb50310ae609294e729903f5681c19939fb438d237d62759caedd91",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21102,7 +21102,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b3aa5762ec312a268a718d62ecc6fc2a7d172ca6e995416e2d6ec755df8f33fa",
+      "sha256": "8706dd5b58ed4f123d59851a659a58d255f4eb0718ba42502a38e23b8fcbec4e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21396,7 +21396,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "282e4d9afec01177ae86348b800d278f102a428eb0021fc1196065aa7a52554b",
+      "sha256": "d55f01b1ce86614187fa542fba82699a83af283cdc30afb7e4f1213ceab55137",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "d46c83b045770eb6e691ef6cf2b652d6e4f7fd80",
+  "mobileRevision": "d306cacc3b485e95da08c662c48488425a33055b",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -4572,6 +4572,65 @@
       },
       "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded safety models with required negative controls where mapped.",
       "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
+    },
+    {
+      "id": "OPS-METRICS-001",
+      "title": "Operations aggregate visibility",
+      "statement": "Operations metrics must aggregate only work items admitted by the same role/assignment/scope filter as the list; integration failure counts are branch-scoped and manager-only.",
+      "domain": "OPS",
+      "authority": "reconciled",
+      "source": "docs/operations-control-center/architecture.md sections authorization; synthetic HTTP metrics reproduction 2026-10-05",
+      "property": "Hidden payment amounts and unassigned specialist work do not contribute to specialist metrics.",
+      "contract": "formal/system/operations-command-boundary.md",
+      "critical": true,
+      "actors": [
+        "Current authenticated scoped operations reader"
+      ],
+      "preconditions": [
+        "Initialized canonical migrations and active organization/branch where applicable"
+      ],
+      "inputs": [
+        "Optional organization and branch UUID selectors"
+      ],
+      "state": {
+        "boundary": "formal/system/operations-command-boundary.md",
+        "property": "Aggregates use visible item projection"
+      },
+      "allowedTransitions": [
+        "Read-only projection of scoped work items"
+      ],
+      "forbiddenTransitions": [
+        "Hidden rows contributing financial totals or counts"
+      ],
+      "effects": [
+        "Read-only aggregate; no mutation"
+      ],
+      "authorization": "Existing Operations role admission and active organization/branch membership; same scopeFilterSql as list; failure counts restricted to managers in the selected branch.",
+      "privacy": "Never log arbitrary exception/SQL payload or disclose conflicting receipt.",
+      "concurrency": "PostgreSQL statement snapshot; current read request admission. No cross-query or linearizable multi-query snapshot guarantee.",
+      "idempotency": "Read-only; no receipt or effect.",
+      "failure": "Unavailable or invalid data must fail rather than fabricate authoritative totals.",
+      "recovery": "Reload authoritative state after conflict. No downstream provider/deletion execution inferred.",
+      "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Source reviewed; exact final runtime validation pending",
+      "ambiguity": [
+        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Confirmed synthetic prior-runtime disclosure; implementation repair awaits exact-candidate HTTP validation. Other read-policy discrepancies remain separate obligations."
+      },
+      "verification": "Actual HTTP synthetic Teacher/Engineer hidden-payment and assigned-booking controls, plus authorized Admin positive control. Not formally covered.",
+      "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
     }
   ],
   "sourceFingerprints": {
@@ -4688,7 +4747,7 @@
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
-    "scripts/lib/operations_conformance.py": "eb9de19cc5731d22746a5ca0df6560261031cc3bfbc1d54d3f6dee92ecbfa522",
+    "scripts/lib/operations_conformance.py": "b6fcaac5d3cd90020e2ddde083a00c24d52e274e439582c4f3c7048b6a8c7c7f",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "d7ae6bd22a1863de06d0925eca7d0a48fe8e27512a06700928b89b0d3066fbf6",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -4710,7 +4769,7 @@
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "50d619ae4725aea589c3bd5f1edcadad9cc2597658268c0cf2e27e114776cee6",
+    "scripts/test-booking-conformance.py": "98d340c3221582626d45459e89d2402fe032e00d5aee0333d3996e1089c4e681",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -4738,7 +4797,7 @@
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
-    "tdf-hq-ui/src/api/generated/types.ts": "1c379b1c3befce44ca94d3c585f199c45b622ce59db60a63fa99dc214dc2d051",
+    "tdf-hq-ui/src/api/generated/types.ts": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
@@ -4772,7 +4831,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "282e4d9afec01177ae86348b800d278f102a428eb0021fc1196065aa7a52554b",
+    "tdf-hq/docs/openapi/api.yaml": "d55f01b1ce86614187fa542fba82699a83af283cdc30afb7e4f1213ceab55137",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -4812,7 +4871,7 @@
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "d5245e42f9ab4ee1cf2926eb4f0343032a92cfaa6e9c720ed6527a97abb9ba69",
-    "tdf-hq/src/TDF/Operations/Server.hs": "d9bab1f3910e2e3b84dd9880ffa75225cbea09a5316b584caad1c019093baac2",
+    "tdf-hq/src/TDF/Operations/Server.hs": "5e08cf5679bc9705ff95964717f8cedebf3a7c455d4a2d1b1d6c1ff902dbcc33",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "1a72f95139a6a7f8d016599660c568eb0d1d99c9a5e32fd5936a52f7cc676019",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
@@ -4878,7 +4937,7 @@
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
-    "tdf-mobile/src/api/generated/types.ts": "1c379b1c3befce44ca94d3c585f199c45b622ce59db60a63fa99dc214dc2d051",
+    "tdf-mobile/src/api/generated/types.ts": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
     "tdf-mobile/src/lib/liveBroadcastPublishing.ts": "9b00774ddd70fd6f3425e6877cb52d9c6fa933f5c0af13f3af3327a5db042b98",
@@ -6475,6 +6534,10 @@
       {
         "requirement": "OPS-APPROVAL-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-METRICS-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/StudioBookingScope.tla": [
@@ -7253,6 +7316,10 @@
       {
         "requirement": "OPS-APPROVAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-METRICS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Operations/Model.hs": [
@@ -7288,6 +7355,10 @@
       },
       {
         "requirement": "OPS-APPROVAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-METRICS-001",
         "relationship": "tests"
       }
     ],
@@ -9180,7 +9251,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "eb9de19cc5731d22746a5ca0df6560261031cc3bfbc1d54d3f6dee92ecbfa522",
+      "sha256": "b6fcaac5d3cd90020e2ddde083a00c24d52e274e439582c4f3c7048b6a8c7c7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9189,6 +9260,10 @@
         },
         {
           "requirement": "OPS-APPROVAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-METRICS-001",
           "relationship": "tests"
         }
       ]
@@ -10159,7 +10234,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "50d619ae4725aea589c3bd5f1edcadad9cc2597658268c0cf2e27e114776cee6",
+      "sha256": "98d340c3221582626d45459e89d2402fe032e00d5aee0333d3996e1089c4e681",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10212,6 +10287,10 @@
         },
         {
           "requirement": "OPS-APPROVAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-METRICS-001",
           "relationship": "tests"
         }
       ]
@@ -11761,7 +11840,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "1c379b1c3befce44ca94d3c585f199c45b622ce59db60a63fa99dc214dc2d051",
+      "sha256": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16361,7 +16440,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "282e4d9afec01177ae86348b800d278f102a428eb0021fc1196065aa7a52554b",
+      "sha256": "d55f01b1ce86614187fa542fba82699a83af283cdc30afb7e4f1213ceab55137",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20122,7 +20201,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "d9bab1f3910e2e3b84dd9880ffa75225cbea09a5316b584caad1c019093baac2",
+      "sha256": "5e08cf5679bc9705ff95964717f8cedebf3a7c455d4a2d1b1d6c1ff902dbcc33",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20131,6 +20210,10 @@
         },
         {
           "requirement": "OPS-APPROVAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-METRICS-001",
           "relationship": "implementation"
         }
       ]
@@ -23472,7 +23555,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "1c379b1c3befce44ca94d3c585f199c45b622ce59db60a63fa99dc214dc2d051",
+      "sha256": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26564,7 +26647,8 @@
     "AUTH-WEBHOOK-001",
     "MEDIA-DRIVE-001",
     "MEDIA-STREAM-001",
-    "OPS-WORKER-001"
+    "OPS-WORKER-001",
+    "OPS-METRICS-001"
   ],
   "stateMachines": [
     {
@@ -27685,6 +27769,24 @@
     }
   ],
   "apiOperations": [
+    {
+      "id": "GET /operations/metrics",
+      "operationId": "operationsMetrics",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
     {
       "id": "PATCH /operations/work-items/{workItemId}/seen",
       "operationId": "operationsWorkItemSeen",
@@ -49108,7 +49210,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 62,
+    "PARTIAL": 63,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
