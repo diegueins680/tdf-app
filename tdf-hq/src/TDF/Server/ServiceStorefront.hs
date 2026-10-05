@@ -2842,7 +2842,7 @@ capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
   -- of weakening amount, merchant or internal-order verification. A failed
   -- read remains an unverified outcome; the stable capture idempotency key
   -- prevents a retry from creating another capture.
-  _ <- providerResponse manager Checkout.ProviderPayPal req
+  _ <- (providerResponse manager Checkout.ProviderPayPal req :: AppM Value)
   getPaypalOrderRemoteForService manager cid sec baseUrl ppOrderId
 
 getPaypalOrderRemoteForService
