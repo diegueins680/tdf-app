@@ -20,6 +20,27 @@ event is independent of the disabled PostHog automatic feature.
 The dashboard is private and has no public share token. All five saved queries
 execute successfully with HTTP200 and uncached results.
 
+## Production web receipt — 18:24 UTC
+
+The earlier disclosure changes reached reviewed main through PR468 alongside
+PR485's privacy protection. All five legal/support pages on both canonical and
+legacy domains returned HTTP200 and matched `c0a154cd4cbfcd3a5dc5167634be30b7691803cc`.
+Cloudflare production variables were saved and read back; retry deployment
+`c255006c-7aa2-45e6-a852-aaf96a3695dd` served the same current main. `/app` and the
+deployment preview serve matching assets; entry `index-BOFwi28I.js` has SHA256
+`9879bd7f1ba91e307fff83419306692b0ce0da7cb55d94903a5ff22c26add679`
+and embeds the intended EU public ingestion configuration.
+
+Normal Chrome navigation `/tdf` → invitation → `/app` → iOS → feedback opened
+→ TestFlight produced provider-confirmed production events:
+`mobile_promo_viewed`, `mobile_testing_interest_clicked`,
+`mobile_platform_selected`, `mobile_feedback_opened`, and
+`mobile_testing_join_clicked`, with campaign `mobile_activation_20261005`.
+The aggregate query found no email, name, password, feedback text, attachment,
+message or unexpected token in these QA events. PostHog's `token` property is
+its public project ingestion key. No feedback was submitted in this verification.
+Clicks do not prove enrollment or installation, and no native receipt is claimed.
+
 ## Configuration and verification
 
 | Surface | Public configuration | Release boundary |
@@ -57,9 +78,11 @@ Both signed artifacts completed successfully from `6ebe6c5`:
 
 Downloaded files match their signing receipts and contain the expected public
 project key and EU host. This is artifact verification, not store availability.
-Root pins `432b321`, the reviewed mobile main that additionally preserves the
-two ticket-contract fields already published in web main; those type-only fields
-are the only difference from the runtime source of the signed artifacts.
+The web pin additionally preserves generated ticket/deletion contracts and the
+shared discovery registry. These generated changes do not alter the exact
+source of the already signed artifacts. Mobile PR141 merged the authenticated
+receipt contract while preserving current mobile main; discovery synchronization
+is reviewed separately.
 
 ## Store disclosure audit and account deletion
 
@@ -73,11 +96,12 @@ A build finishing successfully does not resolve this release boundary.
 The owner confirmed that `info@tdfrecords.net` will handle account-deletion
 requests. All five public mobile legal/support pages now use that real inbox
 and the canonical `www.tdfrecords.net` URLs. Legacy Pages URLs remain served.
-The existing native About screen links to the deletion page, which now leads
-to `/cuenta/eliminar`: an authenticated, bilingual request for the entire
+The existing native About screen links to the deletion page. This PR changes
+that page to lead to `/cuenta/eliminar`: an authenticated, bilingual request for the entire
 account without composing an email. The owner processes the request manually;
 submission is not completed erasure. See the [operator procedure and identity
-checks](account-deletion-operations.md). No actual deletion is claimed by QA.
+checks](account-deletion-operations.md). No actual deletion is claimed by QA. The strict backend endpoint and queue
+must be deployed before this new flow is considered operational.
 Authenticated App Store Connect readback confirms User ID, Device ID and Product
 Interaction are already declared for analytics linked to the user's identity.
 The native party selector also emits latency/error classifications: Performance

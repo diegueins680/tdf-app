@@ -89,6 +89,66 @@
       "aliases": []
     },
     {
+      "id": "account.deletion",
+      "parentId": null,
+      "webRoute": "/cuenta/eliminar",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": {
+        "es": "Eliminar mi cuenta",
+        "en": "Delete my account"
+      },
+      "synonyms": {
+        "es": [
+          "eliminación de cuenta",
+          "borrar mis datos"
+        ],
+        "en": [
+          "account deletion",
+          "delete my data"
+        ]
+      },
+      "keywords": [
+        "account",
+        "privacy",
+        "deletion"
+      ],
+      "description": {
+        "es": "Solicitar la eliminación completa de la cuenta con confirmación de identidad y seguimiento del equipo.",
+        "en": "Request full account deletion with identity confirmation and team follow-up."
+      },
+      "navigationGroup": "help",
+      "icon": "privacy-tip",
+      "breadcrumb": [],
+      "requiredAuth": "authenticated",
+      "permissions": {
+        "discover": {},
+        "view": {},
+        "submit": {
+          "recordScope": "own"
+        }
+      },
+      "recordScope": "own",
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": {
+        "kind": "external-web",
+        "destination": "https://www.tdfrecords.net/cuenta/eliminar",
+        "documentedException": "Dedicated authenticated web initiation; no separate native erasure implementation."
+      },
+      "accessRequestEligible": false,
+      "apiScopes": [
+        {
+          "pathPrefix": "/feedback/account-deletion",
+          "methods": {
+            "POST": "submit"
+          }
+        }
+      ]
+    },
+    {
       "id": "community.discussion",
       "parentId": null,
       "webRoute": "/conversacion/:destinationKind/:destinationId",
@@ -2087,6 +2147,85 @@
       "globalMenu": true,
       "mobilePresentation": { "kind": "web-only", "destination": null, "documentedException": "Campaign automation is web only." },
       "apiScopes": [{ "pathPrefix": "/ads", "methods": { "GET": "view", "POST": "create", "PATCH": "edit" } }, { "pathPrefix": "/admin/communications", "methods": { "GET": "view", "POST": "publish", "PATCH": "edit" } }]
+    },
+    {
+      "id": "admin.video-sources",
+      "parentId": null,
+      "webRoute": "/configuracion/fuentes-videos",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": {
+        "es": "Fuentes de videos",
+        "en": "Video sources"
+      },
+      "synonyms": {
+        "es": [
+          "ingesta YouTube"
+        ],
+        "en": [
+          "YouTube ingestion"
+        ]
+      },
+      "keywords": [
+        "video",
+        "youtube",
+        "ingestion"
+      ],
+      "navigationGroup": "admin",
+      "icon": "source",
+      "breadcrumb": [],
+      "requiredRoles": [
+        "Admin"
+      ],
+      "requiredModules": [
+        "Admin"
+      ],
+      "permissions": {
+        "discover": {
+          "rolesAny": [
+            "Admin"
+          ],
+          "modulesAll": [
+            "Admin"
+          ],
+          "strictAdmin": true
+        },
+        "view": {
+          "rolesAny": [
+            "Admin"
+          ],
+          "modulesAll": [
+            "Admin"
+          ],
+          "strictAdmin": true
+        },
+        "administer": {
+          "rolesAny": [
+            "Admin"
+          ],
+          "modulesAll": [
+            "Admin"
+          ],
+          "strictAdmin": true
+        }
+      },
+      "globalMenu": true,
+      "accessRequestEligible": false,
+      "mobilePresentation": {
+        "kind": "security-concealed",
+        "destination": null,
+        "documentedException": "Provider administration is web only."
+      },
+      "apiScopes": [
+        {
+          "pathPrefix": "/admin/records-ingestion",
+          "methods": {
+            "GET": "view",
+            "POST": "administer",
+            "PUT": "administer"
+          }
+        }
+      ]
     },
     {
       "id": "admin.event-sources",
