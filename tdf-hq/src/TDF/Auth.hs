@@ -46,7 +46,6 @@ import           Data.Char
   , isSpace
   )
 import           Data.Maybe                 (maybeToList)
-import           Data.Int                   (Int64)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)

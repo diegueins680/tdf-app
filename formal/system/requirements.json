@@ -5420,7 +5420,8 @@
         "scripts/lib/invoice_receipt_conformance.py",
         "scripts/verify-event-operations-formal.sh",
         "scripts/verify-invoice-receipts.py",
-        "scripts/quality-backend.sh"
+        "scripts/quality-backend.sh",
+        "scripts/verify-invoice-receipt-api.mjs"
       ],
       "formalModels": [
         "formal/event-operations/InvoiceReceipt.tla"
@@ -5434,7 +5435,10 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Working pure properties and bounded positive/negative models pass; combined candidate HTTP, migration, complete gates and production verification pending."
-      }
+      },
+      "property": "UniqueInvoice and UniqueNumber and BoundReplay and AuthorizedCommit; exact Integer snapshot equality before issuance",
+      "verification": "Actual HTTP/PG races, source-mutated arithmetic properties, bounded TLA+ positive and named negative invariants; fresh candidate evidence required",
+      "evidence": "Exact-candidate backend, HTTP, formal and migration receipts; no production pass inferred"
     }
   ]
 }

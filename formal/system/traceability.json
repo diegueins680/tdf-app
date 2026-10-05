@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "e7cb33eb7409d000ddef0bdee989a8b1498f79e2",
+  "mobileRevision": "d5d47460d6e87bc29f4e772e9742420a1ffbdbbd",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -5331,6 +5331,114 @@
       "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
       "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
       "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke."
+    },
+    {
+      "id": "PAY-INVOICE-001",
+      "title": "Immutable invoice receipt issuance and replay",
+      "statement": "Issue at most one receipt per invoice with exact invoice currency and minor-unit totals, a unique annual number, current canonical invoicing authorization and atomic local effects.",
+      "domain": "PAY",
+      "authority": "approved audit safety invariant",
+      "source": "Observed count-based collision and currency-relabeling HTTP counterexamples; current createReceipt replay intent; user monetary/concurrency requirements; formal/system/invoice-receipts.md",
+      "contract": "formal/system/invoice-receipts.md",
+      "critical": true,
+      "actors": [
+        "Currently authenticated invoicing-module staff",
+        "Legacy writer during drained migration boundary"
+      ],
+      "preconditions": [
+        "Canonical session and active invoicing role/permission chain",
+        "Existing invoice and valid stored line/header snapshot",
+        "Registered additive migration applied before new writer"
+      ],
+      "inputs": [
+        "Invoice ID",
+        "Optional normalized buyer name, email, notes and same-currency override"
+      ],
+      "state": {
+        "states": [
+          "absent",
+          "issued"
+        ],
+        "initial": "absent",
+        "terminal": [
+          "issued"
+        ],
+        "transitions": [
+          {
+            "from": "absent",
+            "to": "issued",
+            "guard": "current invoicing authority and exact invoice snapshot",
+            "effect": "atomic receipt, lines and counter allocation"
+          },
+          {
+            "from": "issued",
+            "to": "issued",
+            "guard": "current invoicing authority and compatible explicit replay parameters",
+            "effect": "return existing snapshot without new effects"
+          }
+        ]
+      },
+      "allowedTransitions": [
+        "absent -> issued after locked current admission and snapshot validation",
+        "issued -> issued with the same ID on compatible replay"
+      ],
+      "forbiddenTransitions": [
+        "second receipt for same invoice",
+        "currency relabeling or inconsistent/overflowed totals",
+        "changed explicit replay parameters",
+        "revoked authority commit/replay",
+        "partial invoice/receipt/line/counter commit"
+      ],
+      "effects": [
+        "Immutable receipt and line snapshot",
+        "Unique annual display number",
+        "Optional combined invoice creation in same transaction"
+      ],
+      "authorization": "Current token, canonical UUID role assignments and active invoicing permission chain held through commit; UI visibility is not admission.",
+      "privacy": "Private buyer name/email/notes require invoicing capability; errors and diagnostics exclude arbitrary customer/SQL payloads.",
+      "concurrency": "PostgreSQL READ COMMITTED; shared admission locks then exclusive invoice lock and annual counter upsert. Existing invoice lines held shared. Deadlock/serialization conflicts reject409.",
+      "idempotency": "Invoice ID across currently authorized invoicing staff; omitted/null overrides retain snapshot, changed explicit buyer/email/nonblank notes409, mismatched currency422. Invoice creation has no request-key idempotency.",
+      "failure": "No local effect on rejection, crash before commit or line insertion failure; fixed HTTP errors after rollback; async cancellation propagates.",
+      "recovery": "Replay invoice ID after ambiguous acknowledgement with current authorization. Migration mismatch stops for reviewed reconciliation; recovery writers must retain counter semantics.",
+      "observability": "Exact source/binary hashes and synthetic HTTP/PG/model receipts; production migration ledger and safe smoke evidence remain required.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Invoice/Receipt.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/lib/production-release.mjs",
+        "scripts/production-migrations.json",
+        "tdf-hq-ui/src/api/invoices.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py",
+        "scripts/lib/invoice_receipt_conformance.py",
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/verify-invoice-receipts.py",
+        "scripts/quality-backend.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/InvoiceReceipt.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "high source-derived local contract; executable candidate and production evidence required",
+      "ambiguity": [
+        "Fiscal provider/session invoice atomicity outside this receipt boundary",
+        "Complete financial retention policy and deployed correspondence remain unverified"
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Working pure properties and bounded positive/negative models pass; combined candidate HTTP, migration, complete gates and production verification pending."
+      },
+      "property": "UniqueInvoice and UniqueNumber and BoundReplay and AuthorizedCommit; exact Integer snapshot equality before issuance",
+      "verification": "Actual HTTP/PG races, source-mutated arithmetic properties, bounded TLA+ positive and named negative invariants; fresh candidate evidence required",
+      "evidence": "Exact-candidate backend, HTTP, formal and migration receipts; no production pass inferred"
     }
   ],
   "sourceFingerprints": {
@@ -5352,6 +5460,7 @@
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+    "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
@@ -5454,17 +5563,18 @@
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
+    "scripts/lib/invoice_receipt_conformance.py": "32c635ef0bd45a17adcc573aaa835c49075a580cbbaad09a6abf2a592789c01a",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "d7ae6bd22a1863de06d0925eca7d0a48fe8e27512a06700928b89b0d3066fbf6",
+    "scripts/lib/production-release.mjs": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
-    "scripts/production-migrations.json": "29fd00031a331e63a117b1f99dd2a65e4953328c5e0ea02b4a592b9a7f657532",
+    "scripts/production-migrations.json": "6fb3d4f152c2217e638276654f1670f2d58a124ee0e4c95a747c2fc6a2093868",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
-    "scripts/quality-backend.sh": "c45d2bf141efa9ef71097dc2721d60c3c0f00a8f31e7b44fac940bb8def1b752",
+    "scripts/quality-backend.sh": "a992ea1ae7653b66cd89dcf8c48faaf112201ff8d7514cdd584858e69b23e87f",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "46c9e60cbb939885bc4368546224219f6742529fedba99d037da5af2865f1a2e",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
@@ -5473,11 +5583,11 @@
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
-    "scripts/specification-conformance.py": "27fc7959ad752d8d76c025cd2cbadc978dcad3cc763b26b4efb5f63cfb94343e",
+    "scripts/specification-conformance.py": "fa2afe2811f63cb9f90c92a43d04009bf97af3233f38a5155addacd21e5a99af",
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "982521d7e19285665d480aa2c4f4e037052aec2a1b6a45e01b171cc646aa8b33",
+    "scripts/test-booking-conformance.py": "f6aae4737e671b775daa62b95e290ff90f2d42d23d9fa7c69df90b51e6bcccfa",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -5497,8 +5607,9 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
-    "scripts/verify-event-operations-formal.sh": "9d0da623a08815e4c8e99bd2737083b01a8b7403e2eb32faa6fe54fcfe9c6f20",
+    "scripts/verify-event-operations-formal.sh": "d46397ad32d8de80da708b47c115a42d54119da229600dd845bb61bcc0bd2d0a",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
+    "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
@@ -5512,7 +5623,8 @@
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
-    "tdf-hq-ui/src/api/generated/types.ts": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+    "tdf-hq-ui/src/api/generated/types.ts": "6a71772e635cdf6f85ce4edb80da32277bcb53b6b8f1856fcb5d03955e1c8e35",
+    "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
@@ -5549,7 +5661,7 @@
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
     "tdf-hq/config/default.env.example": "5681d9b6ae87dd2bb3d6d3540675b10b39d0615de3380b45ef0f98a24a11f8f6",
-    "tdf-hq/docs/openapi/api.yaml": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+    "tdf-hq/docs/openapi/api.yaml": "ef7008b763c584db8be34ee7e490f3e42ccbfe4c55de28590fc7448fa42a2de6",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -5561,6 +5673,7 @@
     "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": "ff27157ab7ad9b9ba559d80ff40b88f11c8c0f6857bdce0aa0ff58966e8be98d",
     "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql": "5df84ed2bf411ee976d39907845970e0d9e4defedca25142d1c51cca59624f6e",
+    "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql": "94561ae8f242b294b2645e7d95478d727ef819f7fc02b64ae4c83e6962008e73",
     "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql": "e8d5332a38c0a71bc7ffadf328ced88bf55bddbd04eaaa7a6b8efabdebfee71d",
     "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql": "c2cd877a90fdf81447b2aba23141f8936f4e9e9bdb1133bd4e379dfe863c2a07",
     "tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql": "fac072a54395f98c8a32d1dd7e70a383d1b467acdd059c202bfb6805ce70de5d",
@@ -5583,7 +5696,7 @@
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "129faabf08605150ee2e8854be2d94e8da42eb3c42ee82c9aaabc8707a9af4d1",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
-    "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
+    "tdf-hq/src/TDF/Auth.hs": "db316edfeb4103745284948ca43222c2c37521a4a25cc7b040c46a4d707c53e7",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
@@ -5598,9 +5711,12 @@
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
+    "tdf-hq/src/TDF/DTO.hs": "c73b9e9232e3581b27826b1e8ed52af13eb9bd97bf49f41f6cf0ecabf6a3c7a0",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
+    "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
+    "tdf-hq/src/TDF/Models.hs": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
     "tdf-hq/src/TDF/Operations/Server.hs": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
@@ -5609,7 +5725,7 @@
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Routes/Courses.hs": "750e7304fa71dfccdce5132c24fbb077043087b5b0d8fe17e2ca6dcbb5384fcb",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "3557aa7feb725075e3cbc97f69fdd34f0de1b9b59f6545f91df80850b80f3914",
-    "tdf-hq/src/TDF/Server.hs": "4313691a6623bdc602b8cabb3838c1a6ba582773bd9e5fe436fd9a2ee4c1e674",
+    "tdf-hq/src/TDF/Server.hs": "98820dee37a796a4b605042bd59f7a9165f5aab2189c3d849e4b6842e3a1e651",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -5636,8 +5752,8 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "c2f2de27bae619934ebd0f05e680e15c4990f5101478ba08587786d94f9a240c",
-    "tdf-hq/test/Spec.hs": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
+    "tdf-hq/tdf-hq.cabal": "53cc7aa684197d9c3f339fec51a50a21e4c3ab20c062cd9c385a8511457fb0ab",
+    "tdf-hq/test/Spec.hs": "a495c1251270fead21ecff13a0e8287530169e83da293fb078825a1be10df2f4",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -5652,6 +5768,7 @@
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "69a224594a060d9268e72dd314452262c7bc0e1211c9114bb1d9be3e6bcf407d",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+    "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
@@ -5682,7 +5799,7 @@
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
-    "tdf-mobile/src/api/generated/types.ts": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+    "tdf-mobile/src/api/generated/types.ts": "6a71772e635cdf6f85ce4edb80da32277bcb53b6b8f1856fcb5d03955e1c8e35",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
     "tdf-mobile/src/lib/liveBroadcastPublishing.ts": "9b00774ddd70fd6f3425e6877cb52d9c6fa933f5c0af13f3af3327a5db042b98",
@@ -5777,6 +5894,10 @@
       {
         "requirement": "PRIV-DELETE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/event-operations-pluscal.test.mjs": [
@@ -5962,6 +6083,10 @@
       },
       {
         "requirement": "MEDIA-DRIVE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
         "relationship": "implementation"
       }
     ],
@@ -6279,6 +6404,10 @@
       {
         "requirement": "MEDIA-STREAM-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": [
@@ -6356,6 +6485,10 @@
       },
       {
         "requirement": "COURSE-SUBJECT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
         "relationship": "implementation"
       }
     ],
@@ -6441,6 +6574,10 @@
       {
         "requirement": "REC-DDEX-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/test-auth-recovery-migration.sh": [
@@ -6473,6 +6610,10 @@
       {
         "requirement": "MEDIA-DRIVE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/check-build-trust.mjs": [
@@ -6492,6 +6633,10 @@
       },
       {
         "requirement": "PRIV-ERROR-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
         "relationship": "tests"
       }
     ],
@@ -6592,6 +6737,10 @@
       },
       {
         "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
         "relationship": "implementation"
       }
     ],
@@ -6836,6 +6985,10 @@
       },
       {
         "requirement": "MEDIA-STREAM-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
         "relationship": "tests"
       }
     ],
@@ -7306,6 +7459,10 @@
       },
       {
         "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
         "relationship": "tests"
       }
     ],
@@ -8521,6 +8678,60 @@
       {
         "requirement": "EVT-PRESENTATION-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Invoice/Receipt.hs": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Models.hs": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/DTO.hs": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/invoices.ts": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/lib/invoice_receipt_conformance.py": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-invoice-receipts.py": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/InvoiceReceipt.tla": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "formalModels"
       }
     ]
   },
@@ -10413,6 +10624,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-51d8657e7eea8356",
+      "path": "scripts/lib/invoice_receipt_conformance.py",
+      "sha256": "32c635ef0bd45a17adcc573aaa835c49075a580cbbaad09a6abf2a592789c01a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-caffec31ff4f3a7f",
       "path": "scripts/lib/legacy-escrow-contract.mjs",
       "sha256": "2d416884584ae5ff3a7146431d84de63358b33ab438e61194d8998503c8a24f2",
@@ -10500,7 +10723,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "d7ae6bd22a1863de06d0925eca7d0a48fe8e27512a06700928b89b0d3066fbf6",
+      "sha256": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10517,6 +10740,10 @@
         },
         {
           "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "implementation"
         }
       ]
@@ -10695,7 +10922,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "29fd00031a331e63a117b1f99dd2a65e4953328c5e0ea02b4a592b9a7f657532",
+      "sha256": "6fb3d4f152c2217e638276654f1670f2d58a124ee0e4c95a747c2fc6a2093868",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10704,6 +10931,10 @@
         },
         {
           "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "implementation"
         }
       ]
@@ -10739,7 +10970,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "c45d2bf141efa9ef71097dc2721d60c3c0f00a8f31e7b44fac940bb8def1b752",
+      "sha256": "a992ea1ae7653b66cd89dcf8c48faaf112201ff8d7514cdd584858e69b23e87f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10748,6 +10979,10 @@
         },
         {
           "requirement": "PRIV-ERROR-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "tests"
         }
       ]
@@ -11325,7 +11560,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "27fc7959ad752d8d76c025cd2cbadc978dcad3cc763b26b4efb5f63cfb94343e",
+      "sha256": "fa2afe2811f63cb9f90c92a43d04009bf97af3233f38a5155addacd21e5a99af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11455,7 +11690,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "982521d7e19285665d480aa2c4f4e037052aec2a1b6a45e01b171cc646aa8b33",
+      "sha256": "f6aae4737e671b775daa62b95e290ff90f2d42d23d9fa7c69df90b51e6bcccfa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11524,6 +11759,10 @@
         },
         {
           "requirement": "OPS-AUX-WRITE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "tests"
         }
       ]
@@ -12280,7 +12519,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "9d0da623a08815e4c8e99bd2737083b01a8b7403e2eb32faa6fe54fcfe9c6f20",
+      "sha256": "d46397ad32d8de80da708b47c115a42d54119da229600dd845bb61bcc0bd2d0a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12318,6 +12557,10 @@
         {
           "requirement": "PRIV-DELETE-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -12339,6 +12582,18 @@
       "sha256": "a618bf924cda53bf9365502f58ec43ab7fb7a53bbf958b1164fc3ebf60ec656f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-02ec8e917a623acf",
+      "path": "scripts/verify-invoice-receipts.py",
+      "sha256": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0ae5496c9a8acae5",
@@ -13144,7 +13399,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "6a71772e635cdf6f85ce4edb80da32277bcb53b6b8f1856fcb5d03955e1c8e35",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13205,9 +13460,14 @@
     {
       "id": "SURFACE-8954d786b64d481b",
       "path": "tdf-hq-ui/src/api/invoices.ts",
-      "sha256": "410d0b3ace6846fcc36e887ea6c0645aa76daf52880288e54f612159f6e53cda",
+      "sha256": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c8fda1bc9a6aba7",
@@ -17753,7 +18013,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+      "sha256": "ef7008b763c584db8be34ee7e490f3e42ccbfe4c55de28590fc7448fa42a2de6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17766,6 +18026,10 @@
         },
         {
           "requirement": "MEDIA-STREAM-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "implementation"
         }
       ]
@@ -20252,6 +20516,18 @@
       ]
     },
     {
+      "id": "SURFACE-7ce4924964744511",
+      "path": "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql",
+      "sha256": "94561ae8f242b294b2645e7d95478d727ef819f7fc02b64ae4c83e6962008e73",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d4dd8fd05fd6c7a9",
       "path": "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
       "sha256": "e8d5332a38c0a71bc7ffadf328ced88bf55bddbd04eaaa7a6b8efabdebfee71d",
@@ -20867,7 +21143,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
+      "sha256": "db316edfeb4103745284948ca43222c2c37521a4a25cc7b040c46a4d707c53e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20884,6 +21160,10 @@
         },
         {
           "requirement": "COURSE-SUBJECT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "implementation"
         }
       ]
@@ -21425,7 +21705,12 @@
       "path": "tdf-hq/src/TDF/DTO.hs",
       "sha256": "c73b9e9232e3581b27826b1e8ed52af13eb9bd97bf49f41f6cf0ecabf6a3c7a0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a8df78704d34c42a",
@@ -21585,6 +21870,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-2ce1815ec8e2a582",
+      "path": "tdf-hq/src/TDF/Invoice/Receipt.hs",
+      "sha256": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-6c4cebdeba931f44",
       "path": "tdf-hq/src/TDF/Invoice/SRI.hs",
       "sha256": "a757e956d8fcee132cf93ec5716936b09500d74dc9ade36bb74178ca61e7142f",
@@ -21627,9 +21924,14 @@
     {
       "id": "SURFACE-a97719441b71656b",
       "path": "tdf-hq/src/TDF/Models.hs",
-      "sha256": "a8488da5fe5eeff588a705e8fef7c117c3f47f38747174c13910107be7fc7904",
+      "sha256": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9913c975520e953f",
@@ -21826,7 +22128,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "4313691a6623bdc602b8cabb3838c1a6ba582773bd9e5fe436fd9a2ee4c1e674",
+      "sha256": "98820dee37a796a4b605042bd59f7a9165f5aab2189c3d849e4b6842e3a1e651",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21863,6 +22165,10 @@
         },
         {
           "requirement": "MEDIA-DRIVE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "implementation"
         }
       ]
@@ -22517,7 +22823,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "c2f2de27bae619934ebd0f05e680e15c4990f5101478ba08587786d94f9a240c",
+      "sha256": "53cc7aa684197d9c3f339fec51a50a21e4c3ab20c062cd9c385a8511457fb0ab",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22526,6 +22832,10 @@
         },
         {
           "requirement": "MEDIA-DRIVE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "implementation"
         }
       ]
@@ -22575,7 +22885,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
+      "sha256": "a495c1251270fead21ecff13a0e8287530169e83da293fb078825a1be10df2f4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22592,6 +22902,10 @@
         },
         {
           "requirement": "MEDIA-STREAM-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "tests"
         }
       ]
@@ -22872,6 +23186,18 @@
       "requirements": [
         {
           "requirement": "PRIV-ERROR-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6c9350974563cb82",
+      "path": "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
+      "sha256": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-001",
           "relationship": "tests"
         }
       ]
@@ -25195,7 +25521,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "6a71772e635cdf6f85ce4edb80da32277bcb53b6b8f1856fcb5d03955e1c8e35",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26710,7 +27036,6 @@
     "SURFACE-7f274ed7ae3d4fde",
     "SURFACE-c1dbdb6b385cafc3",
     "SURFACE-4f584dc31d92ebd7",
-    "SURFACE-8954d786b64d481b",
     "SURFACE-7c8fda1bc9a6aba7",
     "SURFACE-123087b1a3efd70f",
     "SURFACE-cbf077a3da6bbf4a",
@@ -27728,7 +28053,6 @@
     "SURFACE-ab5118a7747bf8a1",
     "SURFACE-c1b9630037e6e01f",
     "SURFACE-93f4925a44a1a9b4",
-    "SURFACE-70ca6d20ed6232ae",
     "SURFACE-a8df78704d34c42a",
     "SURFACE-fdec05e03ccd2156",
     "SURFACE-1be6b33abdbda822",
@@ -27752,7 +28076,6 @@
     "SURFACE-dd73bca7a3d77f4e",
     "SURFACE-da7dbfc9ff1416c5",
     "SURFACE-b5b5aa3bc4cc0232",
-    "SURFACE-a97719441b71656b",
     "SURFACE-9913c975520e953f",
     "SURFACE-de59a337fc1e94a1",
     "SURFACE-2d796ef32d3ee01d",
@@ -29399,9 +29722,165 @@
         }
       },
       "correspondence": "requires per-transition implementation review"
+    },
+    {
+      "id": "PAY-INVOICE-001",
+      "source": "formal/system/requirements.json",
+      "sourceSha256": "a8a9b764068b8feea4db78389abf66c35e6f3b0f8f3c9915512861b4bd586329",
+      "definition": {
+        "states": [
+          "absent",
+          "issued"
+        ],
+        "initial": "absent",
+        "terminal": [
+          "issued"
+        ],
+        "transitions": [
+          {
+            "from": "absent",
+            "to": "issued",
+            "guard": "current invoicing authority and exact invoice snapshot",
+            "effect": "atomic receipt, lines and counter allocation"
+          },
+          {
+            "from": "issued",
+            "to": "issued",
+            "guard": "current invoicing authority and compatible explicit replay parameters",
+            "effect": "return existing snapshot without new effects"
+          }
+        ]
+      },
+      "correspondence": "Mapped requirement evidence required; enumeration alone is not conformance"
     }
   ],
   "apiOperations": [
+    {
+      "id": "GET /invoices",
+      "operationId": "listInvoices",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /invoices",
+      "operationId": "createInvoice",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /invoices/{invoiceId}",
+      "operationId": "getInvoiceById",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /receipts",
+      "operationId": "listReceipts",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /receipts",
+      "operationId": "createReceipt",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /receipts/{receiptId}",
+      "operationId": "getReceipt",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
     {
       "id": "GET /operations/work-items",
       "operationId": "operationsWorkItems",
@@ -51054,7 +51533,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 71,
+    "PARTIAL": 72,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -174,3 +174,10 @@ def verify_invoice_receipts(sql, request, check, env, database, output, actors):
                 if process.poll() is None: process.kill(); process.wait(timeout=5)
                 for pipe in [process.stdout, process.stderr]: pipe.close()
     check('gapped legacy numbering does not reuse row counts', receipt(new_invoice())[0] == 200)
+
+    samples = output / 'invoice-receipt-responses.json'
+    samples.write_text(json.dumps({'InvoiceDTO': json.loads(generated[1]), 'ReceiptDTO': first}))
+    contract_result = subprocess.run(['node', 'scripts/verify-invoice-receipt-api.mjs', str(samples)],
+        cwd=Path(__file__).resolve().parents[2], capture_output=True, text=True)
+    (output / 'invoice-receipt-openapi.log').write_text(contract_result.stdout + contract_result.stderr)
+    check('actual invoice and receipt responses conform to OpenAPI; omitted required fields fail', contract_result.returncode == 0)

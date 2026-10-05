@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "e7cb33eb7409d000ddef0bdee989a8b1498f79e2",
+  "mobileRevision": "d5d47460d6e87bc29f4e772e9742420a1ffbdbbd",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -226,6 +226,7 @@
       "scripts/lib/identity-inventory.sql",
       "scripts/lib/identity-reconciliation.mjs",
       "scripts/lib/instagram-token-lifecycle.mjs",
+      "scripts/lib/invoice_receipt_conformance.py",
       "scripts/lib/legacy-escrow-contract.mjs",
       "scripts/lib/logical-correctness-audit.mjs",
       "scripts/lib/migration-contract.mjs",
@@ -435,6 +436,7 @@
       "scripts/verify-event-operations-formal.sh",
       "scripts/verify-event-operations-pluscal.mjs",
       "scripts/verify-improvement-loop.mjs",
+      "scripts/verify-invoice-receipts.py",
       "scripts/verify-payment-arithmetic.py",
       "scripts/verify-request-failures.py",
       "scripts/verify-simulator-health.sh",
@@ -1522,6 +1524,7 @@
       "tdf-hq/sql/2026-10-04_merch_commission_exact.sql",
       "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
       "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
+      "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql",
       "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
       "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
       "tdf-hq/sql/2026-10-05_ticket_admission_audit_rollback.sql",
@@ -1676,6 +1679,7 @@
       "tdf-hq/src/TDF/Interactions/Notifications.hs",
       "tdf-hq/src/TDF/Interactions/Server.hs",
       "tdf-hq/src/TDF/Internationalization.hs",
+      "tdf-hq/src/TDF/Invoice/Receipt.hs",
       "tdf-hq/src/TDF/Invoice/SRI.hs",
       "tdf-hq/src/TDF/Leads/Model.hs",
       "tdf-hq/src/TDF/LogBuffer.hs",
@@ -1800,6 +1804,7 @@
       "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
       "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
       "tdf-hq/test/TDF/FailureBoundarySpec.hs",
+      "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
       "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
       "tdf-hq/test/TDF/Operations/ModelSpec.hs",
@@ -3504,6 +3509,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-51d8657e7eea8356",
+      "path": "scripts/lib/invoice_receipt_conformance.py",
+      "sha256": "32c635ef0bd45a17adcc573aaa835c49075a580cbbaad09a6abf2a592789c01a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-caffec31ff4f3a7f",
       "path": "scripts/lib/legacy-escrow-contract.mjs",
       "sha256": "2d416884584ae5ff3a7146431d84de63358b33ab438e61194d8998503c8a24f2",
@@ -3542,7 +3553,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "d7ae6bd22a1863de06d0925eca7d0a48fe8e27512a06700928b89b0d3066fbf6",
+      "sha256": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3674,7 +3685,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "29fd00031a331e63a117b1f99dd2a65e4953328c5e0ea02b4a592b9a7f657532",
+      "sha256": "6fb3d4f152c2217e638276654f1670f2d58a124ee0e4c95a747c2fc6a2093868",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3686,7 +3697,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "c45d2bf141efa9ef71097dc2721d60c3c0f00a8f31e7b44fac940bb8def1b752",
+      "sha256": "a992ea1ae7653b66cd89dcf8c48faaf112201ff8d7514cdd584858e69b23e87f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4136,7 +4147,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "27fc7959ad752d8d76c025cd2cbadc978dcad3cc763b26b4efb5f63cfb94343e",
+      "sha256": "fa2afe2811f63cb9f90c92a43d04009bf97af3233f38a5155addacd21e5a99af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4220,7 +4231,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "982521d7e19285665d480aa2c4f4e037052aec2a1b6a45e01b171cc646aa8b33",
+      "sha256": "f6aae4737e671b775daa62b95e290ff90f2d42d23d9fa7c69df90b51e6bcccfa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4742,7 +4753,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "9d0da623a08815e4c8e99bd2737083b01a8b7403e2eb32faa6fe54fcfe9c6f20",
+      "sha256": "d46397ad32d8de80da708b47c115a42d54119da229600dd845bb61bcc0bd2d0a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4755,6 +4766,12 @@
       "id": "SURFACE-7ade12b1e0a8aa7b",
       "path": "scripts/verify-improvement-loop.mjs",
       "sha256": "a618bf924cda53bf9365502f58ec43ab7fb7a53bbf958b1164fc3ebf60ec656f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-02ec8e917a623acf",
+      "path": "scripts/verify-invoice-receipts.py",
+      "sha256": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5384,7 +5401,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "6a71772e635cdf6f85ce4edb80da32277bcb53b6b8f1856fcb5d03955e1c8e35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5432,7 +5449,7 @@
     {
       "id": "SURFACE-8954d786b64d481b",
       "path": "tdf-hq-ui/src/api/invoices.ts",
-      "sha256": "410d0b3ace6846fcc36e887ea6c0645aa76daf52880288e54f612159f6e53cda",
+      "sha256": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9164,7 +9181,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+      "sha256": "ef7008b763c584db8be34ee7e490f3e42ccbfe4c55de28590fc7448fa42a2de6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11244,6 +11261,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7ce4924964744511",
+      "path": "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql",
+      "sha256": "94561ae8f242b294b2645e7d95478d727ef819f7fc02b64ae4c83e6962008e73",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d4dd8fd05fd6c7a9",
       "path": "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
       "sha256": "e8d5332a38c0a71bc7ffadf328ced88bf55bddbd04eaaa7a6b8efabdebfee71d",
@@ -11660,7 +11683,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
+      "sha256": "db316edfeb4103745284948ca43222c2c37521a4a25cc7b040c46a4d707c53e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12168,6 +12191,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2ce1815ec8e2a582",
+      "path": "tdf-hq/src/TDF/Invoice/Receipt.hs",
+      "sha256": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6c4cebdeba931f44",
       "path": "tdf-hq/src/TDF/Invoice/SRI.hs",
       "sha256": "a757e956d8fcee132cf93ec5716936b09500d74dc9ade36bb74178ca61e7142f",
@@ -12200,7 +12229,7 @@
     {
       "id": "SURFACE-a97719441b71656b",
       "path": "tdf-hq/src/TDF/Models.hs",
-      "sha256": "a8488da5fe5eeff588a705e8fef7c117c3f47f38747174c13910107be7fc7904",
+      "sha256": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12302,7 +12331,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "4313691a6623bdc602b8cabb3838c1a6ba582773bd9e5fe436fd9a2ee4c1e674",
+      "sha256": "98820dee37a796a4b605042bd59f7a9165f5aab2189c3d849e4b6842e3a1e651",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12710,7 +12739,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "c2f2de27bae619934ebd0f05e680e15c4990f5101478ba08587786d94f9a240c",
+      "sha256": "53cc7aa684197d9c3f339fec51a50a21e4c3ab20c062cd9c385a8511457fb0ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12752,7 +12781,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
+      "sha256": "a495c1251270fead21ecff13a0e8287530169e83da293fb078825a1be10df2f4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12909,6 +12938,12 @@
       "id": "SURFACE-d7524ac1e833fed0",
       "path": "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "sha256": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6c9350974563cb82",
+      "path": "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
+      "sha256": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14750,7 +14785,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "6a71772e635cdf6f85ce4edb80da32277bcb53b6b8f1856fcb5d03955e1c8e35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19330,6 +19365,48 @@
       "kind": "formal-model"
     },
     {
+      "path": "formal/event-operations/InvoiceReceipt.cfg",
+      "sha256": "0f23f3161a4e317ca1c73cb313dc3bacf61eda8326580a378db7a27d1d53aa9f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceReceipt.tla",
+      "sha256": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/InvoiceReceiptIgnoreAuthorization.cfg",
+      "sha256": "b049bff21c202adcc7e9238cb8bb5cf47b917669b13fa06247e78b8ead47be4f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceReceiptIgnoreInvoiceLock.cfg",
+      "sha256": "fc5a530879a20f7030b8af29fba92a74974fc3be33295f3ad62a647586997f37",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceReceiptIgnoreReplayBinding.cfg",
+      "sha256": "51b719439c3047f8a9d60181bf55bb318305763233bb08e471c14039a71ec4cf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceReceiptStaleCounter.cfg",
+      "sha256": "43f890ca9776657cc95d64e615628e531999039bd2d4eec964280665e7491e72",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/LiveIntakeAmbient.cfg",
       "sha256": "dac4bd9c0b73b17a37e3b6301058718d10a9bc42b344a57402fc939932dd2d22",
       "authority": "inferred",
@@ -21193,14 +21270,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "eae92cff15db050aecefdbc377a17282d53df6f27be1f94a02eca8dac798b4e1",
+      "sha256": "b0a6ab8cdf68d41eb86d38a86a73f784cb6887cde5197b2b1633f3c77092d3a0",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "c7400080eb126d2d6848842a5aa9a3d40e17b43d27b4ce077f23590b56cb68f3",
+      "sha256": "025d7522ce560a3c92062d06b1d237180d65c6e0d3e61c7c1641733dce01aa91",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21318,6 +21395,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/invoice-receipts.md",
+      "sha256": "66c745c48a97e69622774f135b694f52d8e8601429084394fc985ca5cda91a74",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-escrow.md",
       "sha256": "d5f18da10f1d568df9866184f79f6a70739f8ae5ee375f42777ed7a1ad0b22b0",
       "authority": "inferred",
@@ -21396,14 +21480,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6f98eb19ecd4d76e582137311d90fa40318a9cd288414a419cc113d14549f056",
+      "sha256": "a8a9b764068b8feea4db78389abf66c35e6f3b0f8f3c9915512861b4bd586329",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "26828686bbfd6589bef04cd59f46d20bece2e9725259536d2b449f52d6570dea",
+      "sha256": "749e7f1b958a3e541b19c8dd5644aa812ffb08fb37409aab885a59618402ed9a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21697,7 +21781,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+      "sha256": "ef7008b763c584db8be34ee7e490f3e42ccbfe4c55de28590fc7448fa42a2de6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -29544,6 +29628,81 @@
         "  NoInvitationPrivilegeEscalation",
         "  NoGrantAfterRevocationOrExpiry",
         "  OneDecisionPerCommand"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceReceipt.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  IgnoreInvoiceLock = FALSE",
+        "  StaleCounter = FALSE",
+        "  IgnoreReplayBinding = FALSE",
+        "  IgnoreAuthorization = FALSE",
+        "INVARIANTS UniqueInvoice UniqueNumber BoundReplay AuthorizedCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceReceiptIgnoreAuthorization.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  IgnoreInvoiceLock = FALSE",
+        "  StaleCounter = FALSE",
+        "  IgnoreReplayBinding = FALSE",
+        "  IgnoreAuthorization = TRUE",
+        "INVARIANTS UniqueInvoice UniqueNumber BoundReplay AuthorizedCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceReceiptIgnoreInvoiceLock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  IgnoreInvoiceLock = TRUE",
+        "  StaleCounter = FALSE",
+        "  IgnoreReplayBinding = FALSE",
+        "  IgnoreAuthorization = FALSE",
+        "INVARIANTS UniqueInvoice UniqueNumber BoundReplay AuthorizedCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceReceiptIgnoreReplayBinding.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  IgnoreInvoiceLock = FALSE",
+        "  StaleCounter = FALSE",
+        "  IgnoreReplayBinding = TRUE",
+        "  IgnoreAuthorization = FALSE",
+        "INVARIANTS UniqueInvoice UniqueNumber BoundReplay AuthorizedCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceReceiptStaleCounter.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  IgnoreInvoiceLock = FALSE",
+        "  StaleCounter = TRUE",
+        "  IgnoreReplayBinding = FALSE",
+        "  IgnoreAuthorization = FALSE",
+        "INVARIANTS UniqueInvoice UniqueNumber BoundReplay AuthorizedCommit",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
