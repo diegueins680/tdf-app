@@ -1,4 +1,22 @@
-# PayPal external refund admission fence
+# PayPal ticket payment evidence and external refund admission
+
+The official sandbox capture test returned `COMPLETED` but omitted the internal
+order binding at the purchase-unit location expected by TDF. A subsequent
+authenticated GET of the same PayPal order included `custom_id`, payee merchant,
+amount/currency and the capture. Capture now requests a representation and always
+reads that original provider order before canonical verification. Readback must
+match its original provider order ID; existing internal order, exact amount,
+currency and merchant checks remain unchanged. No missing field is defaulted to
+success, and retry retains the original capture idempotency key.
+
+This regression was found in the actual isolated TDF API: web created a held USD20
+order; the provider captured USD20; TDF returned 502 for missing binding and issued
+zero tickets. The captured sandbox funds were submitted for full refund as test
+cleanup. Signature-verified capture processing also entered retry in this combined
+runtime, so issuance and financial reconciliation still require a full rerun after
+the fixes. Do not treat provider capture as successful TDF fulfillment.
+
+## External refund admission fence
 
 A signed `PAYMENT.CAPTURE.REFUNDED` event represents a **refund** resource. Its
 `id` is not the original capture ID and its shape need not include capture-only

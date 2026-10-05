@@ -12485,7 +12485,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "a2a4381f4833913e399bb34cae91db26ecb4d604983cf5839dc4f7fbe9ae30ad",
+      "sha256": "d4dc496967728a6a6850d653f81a1e846b085aad3afa5e5c4dbb9d051cfc8347",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12839,7 +12839,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "31b9b541e50dd343ef9719acf499b24faa0eb017d27dbe3a43613a4cfb6d3dec",
+      "sha256": "8c4ed0d75f4b991bbef59e2a4b47f70a3fa111897923a136dc6015c33347bce5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17217,7 +17217,7 @@
     },
     {
       "path": "docs/events/paypal-refund-admission.md",
-      "sha256": "abc5b65ce2508f03df99a2311a8502aa0377284200799927297326ab66f8a5b8",
+      "sha256": "e13f698c20c61d3ff99cd286882432325ae0afcffbcaab5f1315f8262bdf289c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21543,7 +21543,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "50b847614e7ab12a46a3e1ab8e015b441b243cab6af0714aa40c91ba31de0797",
+      "sha256": "30cf30dbb6bf7c67d45163e2771c8ee3853a213f25802cac31c19b51d88c5ae2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -23,6 +23,7 @@ module TDF.Server.ServiceStorefront
   , validateServiceFulfillmentTransition
   , ServicePaypalCaptureOutcome(..)
   , parsePaypalCaptureOutcome
+  , parsePaypalBoundCaptureOutcome
   , validatePaypalSuccessfulCapture
   , loadPaypalEnvForService
   , createPaypalOrderRemoteForService
@@ -2833,10 +2834,16 @@ capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
             [ ("Content-Type", "application/json")
             , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
             , ("PayPal-Request-Id", TE.encodeUtf8 (paypalRequestId "capture" ppOrderId))
+            , ("Prefer", "return=representation")
             ]
         }
-  value <- providerResponse manager Checkout.ProviderPayPal req
-  either (throwError . providerValidationError) pure (parsePaypalCaptureOutcome value)
+  -- A successful capture response can omit purchase-unit custom_id/payee.
+  -- Read the original order from the authenticated provider endpoint instead
+  -- of weakening amount, merchant or internal-order verification. A failed
+  -- read remains an unverified outcome; the stable capture idempotency key
+  -- prevents a retry from creating another capture.
+  _ <- providerResponse manager Checkout.ProviderPayPal req
+  getPaypalOrderRemoteForService manager cid sec baseUrl ppOrderId
 
 getPaypalOrderRemoteForService
   :: Manager
@@ -2856,7 +2863,7 @@ getPaypalOrderRemoteForService manager cid sec baseUrl paypalOrderId = do
         }
   value <- providerResponse manager Checkout.ProviderPayPal req
   either (throwError . providerValidationError) pure
-    (parsePaypalCaptureOutcome value)
+    (parsePaypalBoundCaptureOutcome paypalOrderId value)
 
 issuePaypalRefundRemote
   :: Manager
@@ -2891,6 +2898,14 @@ issuePaypalRefundRemote manager cid sec baseUrl captureId refundRecord = do
         }
   value <- providerResponse manager Checkout.ProviderPayPal req
   either (throwError . providerValidationError) pure (parsePaypalRefundOutcome value)
+
+-- Bind a readback to the original provider order before its financial fields
+-- are compared with the immutable internal checkout.
+parsePaypalBoundCaptureOutcome :: Text -> Value -> Either Text ServicePaypalCaptureOutcome
+parsePaypalBoundCaptureOutcome expected value@(Object obj)
+  | KM.lookup "id" obj == Just (String expected) = parsePaypalCaptureOutcome value
+  | otherwise = Left "PayPal readback does not match the original provider order"
+parsePaypalBoundCaptureOutcome _ _ = Left "Invalid PayPal order readback"
 
 parsePaypalCaptureOutcome :: Value -> Either Text ServicePaypalCaptureOutcome
 parsePaypalCaptureOutcome (Object obj) =

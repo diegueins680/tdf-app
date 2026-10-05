@@ -1307,6 +1307,29 @@ main = hspec $ do
                 ServiceStorefront.spcoStatus outcome `shouldBe` "PENDING"
                 ServiceStorefront.spcoCaptureId outcome `shouldBe` Just "CAPTURE-1"
 
+        it "requires an exact provider-order readback before accepting captured ticket money" $ do
+            let snapshot ident = A.object
+                  [ "id" .= (ident :: Text), "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .= [A.object
+                      [ "custom_id" .= ("ticket-order" :: Text)
+                      , "payee" .= A.object ["merchant_id" .= ("MERCHANT" :: Text)]
+                      , "payments" .= A.object ["captures" .= [A.object
+                          [ "id" .= ("CAPTURE-1" :: Text), "status" .= ("COMPLETED" :: Text)
+                          , "amount" .= A.object ["value" .= ("20.00" :: Text), "currency_code" .= ("USD" :: Text)] ]]] ]]]
+                parse = ServiceStorefront.parsePaypalBoundCaptureOutcome "PAYPAL-ORDER"
+            parse (snapshot "OTHER-ORDER") `shouldSatisfy` isLeft
+            parse (A.object ["status" .= ("COMPLETED" :: Text)]) `shouldSatisfy` isLeft
+            case parse (snapshot "PAYPAL-ORDER") of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "COMPLETED"
+                ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2000 "USD" "MERCHANT" outcome
+                  `shouldBe` Right ()
+                ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2001 "USD" "MERCHANT" outcome
+                  `shouldSatisfy` isLeft
+                ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2000 "USD" "OTHER" outcome
+                  `shouldSatisfy` isLeft
+
         it "rejects ambiguous multi-capture PayPal responses" $ do
             let capture captureId = A.object
                   [ "id" .= (captureId :: Text)
