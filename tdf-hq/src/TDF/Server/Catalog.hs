@@ -11,6 +11,7 @@ module TDF.Server.Catalog
   ) where
 
 import Control.Applicative ((<|>))
+import Control.Exception (throwIO, try)
 import Control.Monad (forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
@@ -1969,22 +1970,35 @@ reorderHandler user catalogCode request = do
   when (null rawIds || length rawIds /= length (nub rawIds)) $
     throwError err400 { errBody = "orderedItemIds must be non-empty and unique" }
   ids <- mapM (validateUuidText "orderedItemIds") rawIds
-  Entity catalogKey catalog <- findCatalogDefinition False catalogCode
-  when (M.catalogDefinitionCacheRevision catalog /= croExpectedCatalogRevision request) $
-    throwError err409 { errBody = "Catalog revision changed; reload before reordering" }
-  spec <- maybe (throwError err422) pure (catalogTableSpec (M.catalogDefinitionEntityKind catalog))
-  when (ctsFamily spec == ReadOnlyFamily) $
-    throwError err403 { errBody = "Controlled reference data cannot be reordered manually" }
-  counts <- forM (zip [0 :: Int ..] ids) $ \(position, itemId) -> runDB
-    ( rawSql
+  Entity catalogKey _ <- findCatalogDefinition False catalogCode
+  pool <- asks envPool
+  -- A rejected item, stale revision or failed audit must roll back the whole
+  -- reorder. Check the revision after acquiring the lock, never on a snapshot
+  -- obtained by a separate runDB transaction.
+  outcome <- liftIO (try (runSqlPool (do
+    locked <- rawSql "SELECT ?? FROM catalog_definition WHERE id=? AND active=TRUE FOR UPDATE"
+      [toPersistValue catalogKey]
+    catalog <- case locked of
+      [Entity _ value] -> pure value
+      _ -> liftIO $ throwIO err404 { errBody = "Catalog not found" }
+    when (M.catalogDefinitionCacheRevision catalog /= croExpectedCatalogRevision request) $
+      liftIO $ throwIO err409 { errBody = "Catalog revision changed; reload before reordering" }
+    spec <- maybe (liftIO $ throwIO err422) pure
+      (catalogTableSpec (M.catalogDefinitionEntityKind catalog))
+    when (ctsFamily spec == ReadOnlyFamily) $
+      liftIO $ throwIO err403 { errBody = "Controlled reference data cannot be reordered manually" }
+    counts <- forM (zip [0 :: Int ..] ids) $ \(position, itemId) ->
+      (rawSql
         ("UPDATE " <> ctsTable spec <> " SET sort_order=?, updated_at=now(), version=version+1 WHERE id=?::uuid AND catalog_id=?::uuid RETURNING 1")
-        [PersistInt64 (fromIntegral position), PersistText itemId, PersistText (persistKeyText catalogKey)] :: SqlPersistT IO [Single Int]
-    )
-  unless (all ((== 1) . length) counts) $
-    throwError err409 { errBody = "One or more reorder items do not belong to the catalog" }
-  now <- liftIO getCurrentTime
-  runDB $ update catalogKey [M.CatalogDefinitionCacheRevision +=. 1, M.CatalogDefinitionUpdatedAt =. now]
-  writeAudit catalogKey UUID.nil Nothing "reordered" (Just user) Nothing Nothing "admin" (croCorrelationId request) (Just (croReason request)) "success" Nothing Nothing
+        [PersistInt64 (fromIntegral position), PersistText itemId, PersistText (persistKeyText catalogKey)] :: SqlPersistT IO [Single Int])
+    unless (all ((== 1) . length) counts) $
+      liftIO $ throwIO err409 { errBody = "One or more reorder items do not belong to the catalog" }
+    now <- liftIO getCurrentTime
+    update catalogKey [M.CatalogDefinitionCacheRevision +=. 1, M.CatalogDefinitionUpdatedAt =. now]
+    writeAuditDB catalogKey UUID.nil Nothing "reordered" (Just user) Nothing Nothing "admin"
+      (croCorrelationId request) (Just (croReason request)) "success" Nothing Nothing
+    ) pool) :: IO (Either ServerError ()))
+  either throwError pure outcome
   pure NoContent
 
 mergeHandler :: AuthedUser -> Text -> CatalogMergeRequest -> AppM CatalogRevisionDTO
@@ -2417,9 +2431,28 @@ writeAudit
   -> Maybe Aeson.Value
   -> Maybe Aeson.Value
   -> AppM ()
-writeAudit catalogKey entityUuid revisionKey operation actor reviewer approver sourcePlatform correlationId reason result previousValue newValue = do
+writeAudit catalogKey entityUuid revisionKey operation actor reviewer approver sourcePlatform correlationId reason result previousValue newValue =
+  runDB $ writeAuditDB catalogKey entityUuid revisionKey operation actor reviewer approver sourcePlatform
+    correlationId reason result previousValue newValue
+
+writeAuditDB
+  :: M.CatalogDefinitionId
+  -> UUID.UUID
+  -> Maybe M.CatalogRevisionId
+  -> Text
+  -> Maybe AuthedUser
+  -> Maybe AuthedUser
+  -> Maybe AuthedUser
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> Text
+  -> Maybe Aeson.Value
+  -> Maybe Aeson.Value
+  -> SqlPersistT IO ()
+writeAuditDB catalogKey entityUuid revisionKey operation actor reviewer approver sourcePlatform correlationId reason result previousValue newValue = do
   now <- liftIO getCurrentTime
-  runDB $ insert_ M.CatalogAuditEvent
+  insert_ M.CatalogAuditEvent
     { M.catalogAuditEventCatalogId = catalogKey
     , M.catalogAuditEventEntityId = entityUuid
     , M.catalogAuditEventRevisionId = revisionKey

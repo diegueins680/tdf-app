@@ -443,6 +443,49 @@ try:
     check('DDEX concurrent validators serialize with deliberate lifecycle results ' + str(statuses), 200 in statuses and set(statuses) <= {200, 409})
     check('DDEX creates exactly one completed run per accepted concurrent request', int(sql('SELECT count(*) FROM ddex_validation_run')) == before_runs + statuses.count(200) and sql('SELECT count(*) FROM ddex_validation_run WHERE finished_at IS NULL OR result_id IS NULL') == '0')
 
+    # REC-CATALOG-001: a rejected multi-row reorder has no committed prefix.
+    catalog_fixture = json.loads(sql("SELECT json_build_object('id',g.id,'catalog',c.code,'key',c.id) FROM genre g JOIN catalog_definition c ON c.id=g.catalog_id WHERE c.active ORDER BY g.id LIMIT 1"))
+    catalog_path = '/catalog/' + catalog_fixture['catalog'] + '/reorder'
+    def catalog_state():
+        return json.loads(sql("SELECT json_build_object('revision',c.cache_revision,'items',(SELECT json_agg(json_build_array(g.id,g.sort_order,g.version,g.updated_at) ORDER BY g.id) FROM genre g WHERE g.catalog_id=c.id),'audit',(SELECT count(*) FROM catalog_audit_event a WHERE a.catalog_id=c.id)) FROM catalog_definition c WHERE c.id='" + catalog_fixture['key'] + "'"))
+    def reorder_payload(ids, revision):
+        return {'orderedItemIds': ids, 'expectedCatalogRevision': revision,
+                'reason': 'Synthetic atomic reorder test', 'correlationId': str(uuid.uuid4())}
+    before = catalog_state()
+    payload = reorder_payload([catalog_fixture['id'], str(uuid.uuid4())], before['revision'])
+    check('catalog missing reorder member rejected with 409', request(catalog_path, payload, method='POST')[0] == 409)
+    check('catalog rejected reorder rolls back every row, revision and audit', catalog_state() == before)
+    foreign_id = str(uuid.uuid4())
+    foreign_catalog = sql("SELECT id FROM catalog_definition WHERE id <> '" + catalog_fixture['key'] + "' ORDER BY id LIMIT 1")
+    sql("INSERT INTO genre(id,catalog_id,code,name_es,active,sort_order,version,created_at,updated_at) VALUES ('" + foreign_id + "','" + foreign_catalog + "','fixture-foreign','Fixture foreign',true,900,1,now(),now())")
+    check('catalog foreign reorder member rejected with 409', request(catalog_path, reorder_payload([catalog_fixture['id'], foreign_id], before['revision']), method='POST')[0] == 409)
+    check('catalog foreign-member rejection leaves target unchanged', catalog_state() == before)
+    check('catalog foreign member is not updated', sql("SELECT sort_order || ':' || version FROM genre WHERE id='" + foreign_id + "'") == '900:1')
+    valid = reorder_payload([catalog_fixture['id']], before['revision'])
+    check('catalog fan cannot reorder', request(catalog_path, valid, token='fixture-fan', method='POST')[0] == 403)
+    check('catalog unauthenticated reorder denied', request(catalog_path, valid, token=None, method='POST')[0] == 401)
+    check('catalog authorization denial has no effect', catalog_state() == before)
+    sql("CREATE FUNCTION fixture_reorder_audit_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic reorder audit failure'; END $$; CREATE TRIGGER fixture_reorder_audit_failure AFTER INSERT ON catalog_audit_event FOR EACH ROW WHEN (NEW.operation='reordered') EXECUTE FUNCTION fixture_reorder_audit_failure()")
+    check('catalog audit failure is not reported as success', request(catalog_path, valid, method='POST')[0] == 500)
+    check('catalog audit failure rolls back item and revision', catalog_state() == before)
+    sql('DROP TRIGGER fixture_reorder_audit_failure ON catalog_audit_event; DROP FUNCTION fixture_reorder_audit_failure()')
+    barrier = threading.Barrier(2)
+    def reorder_concurrently(index):
+        payload = reorder_payload([catalog_fixture['id']], before['revision'])
+        barrier.wait(timeout=10)
+        return request(catalog_path, payload, method='POST')[0]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        statuses = list(executor.map(reorder_concurrently, range(2)))
+    check('catalog concurrent identical expected revisions yield one commit and one conflict ' + str(statuses), sorted(statuses) == [200, 409])
+    after = catalog_state()
+    check('catalog successful reorder advances revision and audit exactly once', after['revision'] == before['revision'] + 1 and after['audit'] == before['audit'] + 1)
+    old_item = next(item for item in before['items'] if item[0] == catalog_fixture['id'])
+    new_item = next(item for item in after['items'] if item[0] == catalog_fixture['id'])
+    check('catalog successful reorder advances selected item once', new_item[1] == 0 and new_item[2] == old_item[2] + 1)
+    check('catalog unchanged members remain unchanged', [x for x in after['items'] if x[0] != catalog_fixture['id']] == [x for x in before['items'] if x[0] != catalog_fixture['id']])
+    check('catalog stale retry returns conflict', request(catalog_path, valid, method='POST')[0] == 409)
+    check('catalog stale retry has no effect', catalog_state() == after)
+
     # Anonymous assistant retrieval must not treat the internal index as public.
     # No OPENAI_API_KEY is present; local embeddings and fallback reply are used.
     embedding = [0] * 1536
