@@ -3309,7 +3309,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5888,6 +5888,95 @@
       },
       "property": "No output is reported recovered without authenticated decryption and exact trusted content correspondence using immutable verified executable bytes.",
       "evidence": "Exact source receipts with temporary synthetic identities/data only; no production archive or key claim."
+    },
+    {
+      "id": "DEPLOY-JOURNAL-001",
+      "title": "Release intents survive process death and exclude uncertain retries",
+      "domain": "DEPLOY",
+      "statement": "Every coordinated release effect shall have durable ordered intent bound to one global release reservation, exact plan and targets before execution; an unresolved intent shall block automatic retry, phase advancement and a new release nonce.",
+      "authority": "User concurrency, recovery and deployment safety requirements",
+      "source": "formal/system/release-journal.md",
+      "contract": "formal/system/release-journal.md",
+      "critical": true,
+      "actors": [
+        "Authorized release operator",
+        "Future guarded coordinator"
+      ],
+      "preconditions": [
+        "One fixed private global control directory durably provisioned by coordinator",
+        "All cooperating operations use its permanent lock",
+        "Filesystem honors fsync",
+        "Coordinator independently validates effect-specific evidence"
+      ],
+      "inputs": [
+        "Canonical source/runtime/image/manifest/recipient plan",
+        "Release nonce",
+        "Ordered stage and exact-target hash",
+        "Context-bound protected observation hash"
+      ],
+      "state": {
+        "states": [
+          "uninitialized",
+          "ready",
+          "pending",
+          "sequence-complete",
+          "rejected"
+        ],
+        "initial": "uninitialized",
+        "terminal": [
+          "sequence-complete",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Initialize once -> ready",
+        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete"
+      ],
+      "forbiddenTransitions": [
+        "Effect before durable intent",
+        "Replay an unresolved intent or initialize another nonce",
+        "Skip, duplicate or reorder stages",
+        "Treat receipt hash as validation of external effect",
+        "Restore old database over possible new writes"
+      ],
+      "effects": [
+        "Private immutable records and permanent lock",
+        "Caller effect only after durable admission"
+      ],
+      "authorization": "Caller must authorize target and effect; the journal is not deployment authority or an external-effect verifier.",
+      "privacy": "Only digests, fixed phase names, sequence and nonce recorded; no raw secret, target document or exception output.",
+      "concurrency": "Nonblocking flock while live; one fixed global journal prevents new nonce bypass after parent death even if external child survives. Noncooperating privileged writers and alternate control directories are excluded.",
+      "idempotency": "No effect replay API; even terminal journal cannot be reinitialized. Future rotation/recovery requires separate admission.",
+      "failure": "Unresolved intent, invalid observation or publication leftover blocks progress. IO failure poisons current handle; fresh open syncs directory before reading a valid recorded prefix.",
+      "recovery": "Explicit operator recovery and terminal rotation remain unimplemented; retain records and preserve all possible writes from database restart intent onward.",
+      "observability": "Sequence, pending stage, plan/targets/observation hashes and conservative newWritesPossible; sequenceComplete does not certify external effects.",
+      "implementation": [
+        "ops/hetzner/release-journal.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "tests": [
+        "scripts/test-release-journal.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/ReleaseJournal.tla",
+        "formal/event-operations/ReleaseJournal.cfg",
+        "formal/event-operations/ReleaseJournalNoIntent.cfg",
+        "formal/event-operations/ReleaseJournalNewNonce.cfg",
+        "formal/event-operations/ReleaseJournalWrongObservation.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Real temporary filesystem, crash/child and fault-injection controls; no production coordinator claim.",
+      "ambiguity": [
+        "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open."
+      ],
+      "verification": "Actual process death, lock contention, fsync errors and invalid journal/observation controls.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Ordering library exists; integrated coordinator and production deployment/recovery are not implemented."
+      },
+      "property": "No controlled effect invocation precedes durable intent; no unresolved intent admits the next effect or another nonce.",
+      "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
     }
   ]
 }

@@ -168,6 +168,10 @@ new grants. Command/configuration overrides cannot satisfy this check by merely
 retaining an unused canonical volume mount. Privileged concurrent reconfiguration
 remains outside the sequential observation boundary.
 
+The [release intent journal](../../formal/system/release-journal.md) persists ordered
+intent and rejects uncertain retries in one fixed global control directory. It
+does not yet coordinate or verify production effects.
+
 The guarded routine Hetzner release executor remains an open implementation and
 verification obligation. Direct invocation of `scripts/production-release.mjs`
 is retired and rejects before any provider or database action. The former

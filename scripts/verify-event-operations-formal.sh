@@ -101,6 +101,10 @@ run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla
 run_negative_tlc ApplicationCanaryCleanup.cfg applicationcanarycleanup 'Invariant DatabaseOutlivesApp is violated' ApplicationCanary.tla
 run_negative_tlc ApplicationCanaryFalseGreen.cfg applicationcanaryfalsegreen 'Invariant VerifiedReceipt is violated' ApplicationCanary.tla
+run_tlc ReleaseJournal.tla ReleaseJournal.cfg releasejournal
+run_negative_tlc ReleaseJournalNoIntent.cfg releasejournalnointent 'Invariant DurableIntentBeforeEffect is violated' ReleaseJournal.tla
+run_negative_tlc ReleaseJournalNewNonce.cfg releasejournalnewnonce 'Invariant OneReservedRelease is violated' ReleaseJournal.tla
+run_negative_tlc ReleaseJournalWrongObservation.cfg releasejournalwrongobservation 'Invariant BoundCompletion is violated' ReleaseJournal.tla
 run_tlc LogicalBackup.tla LogicalBackup.cfg logicalbackup
 run_negative_tlc LogicalBackupLostParent.cfg logicalbackuplostparent 'Invariant OneInflightBackup is violated' LogicalBackup.tla
 run_negative_tlc LogicalBackupFailedWork.cfg logicalbackupfailedwork 'Invariant CompletedReceipt is violated' LogicalBackup.tla

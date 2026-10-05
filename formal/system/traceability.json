@@ -5889,6 +5889,95 @@
       },
       "property": "No output is reported recovered without authenticated decryption and exact trusted content correspondence using immutable verified executable bytes.",
       "evidence": "Exact source receipts with temporary synthetic identities/data only; no production archive or key claim."
+    },
+    {
+      "id": "DEPLOY-JOURNAL-001",
+      "title": "Release intents survive process death and exclude uncertain retries",
+      "domain": "DEPLOY",
+      "statement": "Every coordinated release effect shall have durable ordered intent bound to one global release reservation, exact plan and targets before execution; an unresolved intent shall block automatic retry, phase advancement and a new release nonce.",
+      "authority": "User concurrency, recovery and deployment safety requirements",
+      "source": "formal/system/release-journal.md",
+      "contract": "formal/system/release-journal.md",
+      "critical": true,
+      "actors": [
+        "Authorized release operator",
+        "Future guarded coordinator"
+      ],
+      "preconditions": [
+        "One fixed private global control directory durably provisioned by coordinator",
+        "All cooperating operations use its permanent lock",
+        "Filesystem honors fsync",
+        "Coordinator independently validates effect-specific evidence"
+      ],
+      "inputs": [
+        "Canonical source/runtime/image/manifest/recipient plan",
+        "Release nonce",
+        "Ordered stage and exact-target hash",
+        "Context-bound protected observation hash"
+      ],
+      "state": {
+        "states": [
+          "uninitialized",
+          "ready",
+          "pending",
+          "sequence-complete",
+          "rejected"
+        ],
+        "initial": "uninitialized",
+        "terminal": [
+          "sequence-complete",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Initialize once -> ready",
+        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete"
+      ],
+      "forbiddenTransitions": [
+        "Effect before durable intent",
+        "Replay an unresolved intent or initialize another nonce",
+        "Skip, duplicate or reorder stages",
+        "Treat receipt hash as validation of external effect",
+        "Restore old database over possible new writes"
+      ],
+      "effects": [
+        "Private immutable records and permanent lock",
+        "Caller effect only after durable admission"
+      ],
+      "authorization": "Caller must authorize target and effect; the journal is not deployment authority or an external-effect verifier.",
+      "privacy": "Only digests, fixed phase names, sequence and nonce recorded; no raw secret, target document or exception output.",
+      "concurrency": "Nonblocking flock while live; one fixed global journal prevents new nonce bypass after parent death even if external child survives. Noncooperating privileged writers and alternate control directories are excluded.",
+      "idempotency": "No effect replay API; even terminal journal cannot be reinitialized. Future rotation/recovery requires separate admission.",
+      "failure": "Unresolved intent, invalid observation or publication leftover blocks progress. IO failure poisons current handle; fresh open syncs directory before reading a valid recorded prefix.",
+      "recovery": "Explicit operator recovery and terminal rotation remain unimplemented; retain records and preserve all possible writes from database restart intent onward.",
+      "observability": "Sequence, pending stage, plan/targets/observation hashes and conservative newWritesPossible; sequenceComplete does not certify external effects.",
+      "implementation": [
+        "ops/hetzner/release-journal.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "tests": [
+        "scripts/test-release-journal.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/ReleaseJournal.tla",
+        "formal/event-operations/ReleaseJournal.cfg",
+        "formal/event-operations/ReleaseJournalNoIntent.cfg",
+        "formal/event-operations/ReleaseJournalNewNonce.cfg",
+        "formal/event-operations/ReleaseJournalWrongObservation.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Real temporary filesystem, crash/child and fault-injection controls; no production coordinator claim.",
+      "ambiguity": [
+        "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open."
+      ],
+      "verification": "Actual process death, lock contention, fsync errors and invalid journal/observation controls.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Ordering library exists; integrated coordinator and production deployment/recovery are not implemented."
+      },
+      "property": "No controlled effect invocation precedes durable intent; no unresolved intent admits the next effect or another nonce.",
+      "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
     }
   ],
   "sourceFingerprints": {
@@ -5937,6 +6026,11 @@
     "formal/event-operations/RefundRecoveryAccounting.cfg": "75e88634e2988c7bb6988d41278280bd1e8c4c25c5f487b087f53584183d0668",
     "formal/event-operations/RefundRecoveryAuthority.cfg": "4afa03d6529045f942c54f80eb7e15e579e8728b694cd304256a6ced4a7afdec",
     "formal/event-operations/RefundRecoveryExecution.cfg": "6882026c6f5cfb3f3e251df3ccc8d9eb6ccc95204440603e6e645668dcc29349",
+    "formal/event-operations/ReleaseJournal.cfg": "927cd0866fae6f02f74a1dab5334b6cfe311b89ce56d9d665ab610ed55d8ea3f",
+    "formal/event-operations/ReleaseJournal.tla": "410051abec97d69e67108e5fa38e134f876b6db2e3725bf6eafb58011bfc1f87",
+    "formal/event-operations/ReleaseJournalNewNonce.cfg": "b257d1d115ba36d72a5ff06cbfd5d44e5fb66056d5f17bcb902d3e66b2a771d1",
+    "formal/event-operations/ReleaseJournalNoIntent.cfg": "144b75a0e86827f26227eff588d81733cd0ad4fdb815b805954a07807b85646b",
+    "formal/event-operations/ReleaseJournalWrongObservation.cfg": "8c4354d72c48d62a3ba9c39eaf3abe5508ebc947d55b39f5aa5b57d65067c99f",
     "formal/event-operations/RestoreIsolation.cfg": "6f9c62a5027891b6bf9aad2bc2f6befb7ddfb2b20a4b12f2fe748d4a402ff0e2",
     "formal/event-operations/RestoreIsolation.tla": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
     "formal/event-operations/RestoreIsolationEarlyReceipt.cfg": "8bd39dcd11c09edee26cc41af1fe0b7814876aab7ccd99bea5608dbbc1e7d6fd",
@@ -5972,6 +6066,7 @@
     "ops/hetzner/recovery-files.py": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
     "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
+    "ops/hetzner/release-journal.py": "bc23f81802b6b4aa554b430c3ec9ee27161e6f8843d3ae9bc460b4d20f861634",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
@@ -6039,7 +6134,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "298d55d39c7fd8cdf832063119dabd5ae75614bd1c3e6d772c06175b163e583d",
+    "scripts/quality-repo.sh": "0c036cda5bb8f0be9c5856af79aae32a630fbbc96945e27d46aeb20bc8c90704",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -6066,6 +6161,7 @@
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
+    "scripts/test-release-journal.py": "498c638af45f323fa86f9b98819fda85768dc7d173d3ce969922b8beaa570e32",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
@@ -6076,7 +6172,7 @@
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
-    "scripts/verify-event-operations-formal.sh": "4269c0a915b01b4b4905c88f233ba699bd082fc8f2cb83439c8944a9891f4f40",
+    "scripts/verify-event-operations-formal.sh": "35ccadfcc900ec789bc8f0eeea18d1862c82c9c9714fcff757d022ac069db3e4",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -6380,6 +6476,10 @@
       {
         "requirement": "DEPLOY-CANARY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/event-operations-pluscal.test.mjs": [
@@ -7797,6 +7897,10 @@
       },
       {
         "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "tests"
       }
     ],
@@ -9443,6 +9547,48 @@
         "requirement": "DEPLOY-ENVELOPE-001",
         "relationship": "tests"
       }
+    ],
+    "ops/hetzner/release-journal.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-release-journal.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/ReleaseJournal.tla": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournal.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalNoIntent.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalNewNonce.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalWrongObservation.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -9982,6 +10128,18 @@
         },
         {
           "requirement": "DEPLOY-CANARY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d640099eda9235a7",
+      "path": "ops/hetzner/release-journal.py",
+      "sha256": "bc23f81802b6b4aa554b430c3ec9ee27161e6f8843d3ae9bc460b4d20f861634",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
         }
       ]
@@ -11868,7 +12026,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "298d55d39c7fd8cdf832063119dabd5ae75614bd1c3e6d772c06175b163e583d",
+      "sha256": "0c036cda5bb8f0be9c5856af79aae32a630fbbc96945e27d46aeb20bc8c90704",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11897,6 +12055,10 @@
         },
         {
           "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "tests"
         }
       ]
@@ -13214,6 +13376,18 @@
       ]
     },
     {
+      "id": "SURFACE-aa3bbdb52a0727dd",
+      "path": "scripts/test-release-journal.py",
+      "sha256": "498c638af45f323fa86f9b98819fda85768dc7d173d3ce969922b8beaa570e32",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-674ff0cbe7311bec",
       "path": "scripts/test-requirement-declarations.py",
       "sha256": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
@@ -13482,7 +13656,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "4269c0a915b01b4b4905c88f233ba699bd082fc8f2cb83439c8944a9891f4f40",
+      "sha256": "35ccadfcc900ec789bc8f0eeea18d1862c82c9c9714fcff757d022ac069db3e4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13532,6 +13706,10 @@
         {
           "requirement": "DEPLOY-CANARY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -30811,7 +30989,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c819f7f9c49e293b651131bf9eac015a961add0798d33f8464665dbd96715a7e",
+      "sourceSha256": "4582ca65056773ccca6cdf12ba40b574d8925e7921d28e98009e8d11d41f1a3d",
       "definition": {
         "states": [
           "absent",
@@ -52615,7 +52793,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 77,
+    "PARTIAL": 78,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

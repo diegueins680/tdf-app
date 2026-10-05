@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -586,6 +586,24 @@
       "decision": "adopted with fail-closed runtime support",
       "rationale": "Hold verified sealed bytes through child exec rather than checking a mutable pathname. Reject unsupported memfd execution; never change system policy to bypass a denial. No claim against compromised privileged code or policy sources.",
       "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-COLD-RECOVERY-001",
+      "source": "https://www.postgresql.org/docs/17/backup-file.html",
+      "title": "PostgreSQL17 filesystem backup",
+      "recommendation": "An ordinary filesystem backup requires server shutdown and complete cluster data including WAL; blocking clients alone is insufficient.",
+      "applicability": "Potential coordinated cold database/assets/uploads bundle on current single-host production",
+      "decision": "adopted for next coordinator design, not implemented",
+      "rationale": "Require independently verified clean shutdown and full admitted roots. Current logical rehearsal is not that bundle. External tablespaces/mounts/config and writer fencing must be admitted first."
+    },
+    {
+      "id": "RES-COLD-RECOVERY-002",
+      "source": "https://docs.docker.com/reference/cli/docker/container/stop/",
+      "title": "Docker container stop semantics",
+      "recommendation": "After its configured grace period, stop can send SIGKILL. A successful stop command alone does not prove clean database shutdown.",
+      "applicability": "Coordinated PostgreSQL container shutdown",
+      "decision": "adopted constraint for pending coordinator",
+      "rationale": "Use Docker lifecycle and verify exact stopped container plus PostgreSQL control state. Do not infer clean backup admission from process disappearance."
     }
   ]
 }
