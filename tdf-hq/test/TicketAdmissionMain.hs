@@ -14,7 +14,7 @@ import Data.Either (isLeft, isRight)
 import Data.List (nub)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (getCurrentTime, addUTCTime)
+import Data.Time (UTCTime(..), getCurrentTime, addUTCTime)
 import Database.Persist
 import Database.Persist.Postgresql (withPostgresqlPool)
 import Database.Persist.Sql
@@ -185,7 +185,9 @@ main = do
           runSqlPool (update (toSqlKey 1) [M.EventTicketCurrentHolderPartyId =. Just "40"]) pool
           accept "30" code >>= (`shouldSatisfy` isLeft)
         it "enforces the versioned public checkout transfer policy and exact cutoff" $ do
-          now <- getCurrentTime
+          observed <- getCurrentTime
+          let now = observed { utctDayTime = fromRational
+                (fromInteger (floor (utctDayTime observed)) + 1234567 / 10000000) }
           runSqlPool (do
             rawExecute "INSERT INTO event_ticket_checkout_policy(id,event_id,transfer_allowed,transfer_deadline) VALUES ('11111111-1111-4111-a111-111111111111',1,false,?)" [PersistUTCTime (addUTCTime 1800 now)]
             rawExecute "INSERT INTO event_ticket_checkout_runtime VALUES (1,'11111111-1111-4111-a111-111111111111',1,'paid')" []
@@ -194,8 +196,15 @@ main = do
           runSqlPool (rawExecute "UPDATE event_ticket_checkout_policy SET transfer_allowed=true" []) pool
           code <- invite >>= invitationCode
           runSqlPool (rawExecute "UPDATE event_ticket_checkout_policy SET transfer_deadline=?,approval_status='approved'" [PersistUTCTime now]) pool
+          -- PostgreSQL rounds the deliberately finer-than-microsecond fixture above.
+          -- Exercise the actual stored deadline, including both adjacent boundaries.
+          [Single cutoff] <- runSqlPool (rawSql
+            "SELECT transfer_deadline FROM event_ticket_checkout_policy WHERE id='11111111-1111-4111-a111-111111111111'" []) pool
           replacement <- newTicketCode
-          runSqlPool (Transfer.acceptTransfer "30" code replacement now) pool >>= (`shouldSatisfy` isLeft)
+          let acceptAt instant = runSqlPool (Transfer.acceptTransfer "30" code replacement instant) pool
+          acceptAt cutoff >>= (`shouldSatisfy` isLeft)
+          acceptAt (addUTCTime 0.000001 cutoff) >>= (`shouldSatisfy` isLeft)
+          acceptAt (addUTCTime (-0.000001) cutoff) >>= (`shouldSatisfy` isRight)
           result <- try $ runSqlPool (rawExecute "UPDATE event_ticket_checkout_policy SET transfer_deadline=NULL" []) pool
           (result :: Either SomeException ()) `shouldSatisfy` isLeft
         it "rejects a disputed public payment even if the legacy order still says paid" $ do
