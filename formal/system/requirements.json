@@ -5712,7 +5712,9 @@
         "scripts/test-hetzner-restore.py",
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/quality-repo.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-physical-application-docker.py",
+        ".github/workflows/build.yml"
       ],
       "formalModels": [
         "formal/event-operations/ApplicationCanary.tla"
@@ -6631,7 +6633,9 @@
         "scripts/test-physical-postgres-recovery.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/quality-repo.sh",
-        "scripts/test-isolated-application-canary.py"
+        "scripts/test-isolated-application-canary.py",
+        "scripts/test-physical-application-docker.py",
+        ".github/workflows/build.yml"
       ],
       "formalModels": [
         "formal/event-operations/RestoreIsolation.tla",

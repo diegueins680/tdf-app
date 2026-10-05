@@ -83,6 +83,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build and push
+        id: image-build
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -95,3 +96,21 @@ jobs:
             BUILD_TIME=${{ steps.image-metadata.outputs.build_time }}
           tags: |
             ${{ env.DOCKER_IMAGE_REPO }}:${{ env.DOCKER_IMAGE_TAG }}
+
+      - name: Verify cold recovery and isolated application together
+        timeout-minutes: 12
+        env:
+          TDF_CANARY_TEST_IMAGE: ${{ env.DOCKER_IMAGE_REPO }}@${{ steps.image-build.outputs.digest }}
+          TDF_CANARY_TEST_REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          tdf_physical_image='pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21'
+          docker pull "$tdf_physical_image"
+          docker pull "$TDF_CANARY_TEST_IMAGE"
+          sudo install -d -m 700 /opt/tdf/backups
+          sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" \
+            TDF_CANARY_TEST_IMAGE="$TDF_CANARY_TEST_IMAGE" \
+            TDF_CANARY_TEST_REVISION="$TDF_CANARY_TEST_REVISION" \
+            PYTHONDONTWRITEBYTECODE=1 \
+            timeout --signal=TERM --kill-after=15 660 \
+            python3 scripts/test-physical-application-docker.py

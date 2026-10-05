@@ -100,6 +100,22 @@ from that fixture before creating children. This handles hosted-runner ACL
 inheritance without changing the production metadata guard or normalizing any
 existing recovery data. Unknown attributes remain a failure.
 
+`scripts/test-physical-application-docker.py` composes this boundary with the real
+application canary. It initializes only new synthetic historical-schema fixtures,
+captures a clean cluster, restores a separate copy, applies the canonical migration
+batch twice and compares the full ledger. The application must match its supplied
+revision and packaged migration batch, become healthy, fail readiness during a
+real disposable-DB pause, and recover. A second real run injects application-cleanup
+failure and requires both containers and the durable reservation to remain before
+fixture-only, identity-checked cleanup. Build Image runs this after packaging the
+tested executable. Publishing an image alone is not a passing release gate.
+
+This combined test requires at least2GiB available memory and the canonical TDF
+application repository. The October5 production host has less than2GiB total RAM;
+its online application rehearsal cannot meet that admission. The guard remains
+unchanged. Synthetic CI coverage does not establish production-copy application
+recovery; a coordinated offline stage needs its own explicit capacity admission.
+
 The existing RestoreIsolation bounded model covers shared reservation/orphan
 ordering, with its documented bounds and mutations. It does **not** model cold
 PostgreSQL files, mount topology, copied-role semantics or byte equality. Those

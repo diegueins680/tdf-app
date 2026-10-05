@@ -5713,7 +5713,9 @@
         "scripts/test-hetzner-restore.py",
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/quality-repo.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-physical-application-docker.py",
+        ".github/workflows/build.yml"
       ],
       "formalModels": [
         "formal/event-operations/ApplicationCanary.tla"
@@ -6632,7 +6634,9 @@
         "scripts/test-physical-postgres-recovery.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/quality-repo.sh",
-        "scripts/test-isolated-application-canary.py"
+        "scripts/test-isolated-application-canary.py",
+        "scripts/test-physical-application-docker.py",
+        ".github/workflows/build.yml"
       ],
       "formalModels": [
         "formal/event-operations/RestoreIsolation.tla",
@@ -6654,6 +6658,7 @@
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
+    ".github/workflows/build.yml": "f4fbc1cfb0711e73ac352860ff938a14a0ee18a22a0f7bbcc313ce7d926101d2",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "aff98dc45d0ca8b6105d3b242217577ea642abafdaa81ddcd8e8a2f6c2b3f29a",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
@@ -6848,6 +6853,7 @@
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+    "scripts/test-physical-application-docker.py": "99631bd7fa1ed27a4635e5c624a443ef94b43bce9d2776e3e5f5e768c8be7cd9",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "167a37612cb6a1c04bc687fa67d8efeaa364bb03185830bfe520e30fa7d8b1cb",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
@@ -10322,6 +10328,26 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-physical-application-docker.py": [
+      {
+        "requirement": "DEPLOY-CANARY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "tests"
+      }
+    ],
+    ".github/workflows/build.yml": [
+      {
+        "requirement": "DEPLOY-CANARY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/ApplicationCanary.tla": [
       {
         "requirement": "DEPLOY-CANARY-001",
@@ -10887,9 +10913,18 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "0606a73a2d9ce7e753f91c20009d0273bf1ea192f40d735f7c0aff0b4d531962",
+      "sha256": "f4fbc1cfb0711e73ac352860ff938a14a0ee18a22a0f7bbcc313ce7d926101d2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-CANARY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-e322a9d58d6bbd4b",
@@ -14668,6 +14703,22 @@
       "requirements": [
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-92c4bb8e89807943",
+      "path": "scripts/test-physical-application-docker.py",
+      "sha256": "99631bd7fa1ed27a4635e5c624a443ef94b43bce9d2776e3e5f5e768c8be7cd9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-CANARY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
           "relationship": "tests"
         }
       ]
@@ -29649,7 +29700,6 @@
     }
   ],
   "unmappedSurfaces": [
-    "SURFACE-5c3fa597431eda03",
     "SURFACE-e322a9d58d6bbd4b",
     "SURFACE-87abe6b969342c3c",
     "SURFACE-ab96c3ab21cf19fc",
@@ -32691,7 +32741,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5ccbe0a2adaf5306509db8c03c54f00e6204e2d265b292ae74e877b2b6645e01",
+      "sourceSha256": "7ba185773ae913f86ddc67df88df093faf3afcffcd37529bf9838f372d801727",
       "definition": {
         "states": [
           "absent",

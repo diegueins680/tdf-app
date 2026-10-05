@@ -416,6 +416,7 @@
       "scripts/test-payment-arithmetic-verifier.py",
       "scripts/test-payment-audit-runtime.sh",
       "scripts/test-persistent-uploads-container.py",
+      "scripts/test-physical-application-docker.py",
       "scripts/test-physical-postgres-docker.py",
       "scripts/test-physical-postgres-recovery.py",
       "scripts/test-privacy-request-ledger.py",
@@ -2317,7 +2318,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "0606a73a2d9ce7e753f91c20009d0273bf1ea192f40d735f7c0aff0b4d531962",
+      "sha256": "f4fbc1cfb0711e73ac352860ff938a14a0ee18a22a0f7bbcc313ce7d926101d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4682,6 +4683,12 @@
       "id": "SURFACE-5ab561d49adf7c78",
       "path": "scripts/test-persistent-uploads-container.py",
       "sha256": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-92c4bb8e89807943",
+      "path": "scripts/test-physical-application-docker.py",
+      "sha256": "99631bd7fa1ed27a4635e5c624a443ef94b43bce9d2776e3e5f5e768c8be7cd9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21858,7 +21865,7 @@
     },
     {
       "path": "formal/system/physical-recovery.md",
-      "sha256": "ebc2cdb9ecd8cf95b4b12614be6811600a069326ea2583cb88d13cfb13735403",
+      "sha256": "92dcb64123eb7c448675d2ebdd0a8b1605d5354cb9c47d88bb1793c50516125b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21907,7 +21914,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5ccbe0a2adaf5306509db8c03c54f00e6204e2d265b292ae74e877b2b6645e01",
+      "sha256": "7ba185773ae913f86ddc67df88df093faf3afcffcd37529bf9838f372d801727",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
