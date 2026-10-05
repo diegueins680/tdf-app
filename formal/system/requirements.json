@@ -5605,13 +5605,15 @@
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/Spec.hs",
         "scripts/verify-readiness.py",
-        "scripts/quality-backend.sh"
+        "scripts/quality-backend.sh",
+        "scripts/lib/readiness_conformance.py",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
       "ambiguity": [],
-      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof.",
+      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."

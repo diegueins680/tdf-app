@@ -239,6 +239,7 @@
       "scripts/lib/operations_conformance.py",
       "scripts/lib/postgres-test-database.sh",
       "scripts/lib/production-release.mjs",
+      "scripts/lib/readiness_conformance.py",
       "scripts/lib/requirement_declarations.py",
       "scripts/lib/sri-invoice.mjs",
       "scripts/lib/studio-audit-safety.mjs",
@@ -3602,6 +3603,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f9884c5ddfa3d37d",
+      "path": "scripts/lib/readiness_conformance.py",
+      "sha256": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6f461a25225ca648",
       "path": "scripts/lib/requirement_declarations.py",
       "sha256": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -4282,7 +4289,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "f6aae4737e671b775daa62b95e290ff90f2d42d23d9fa7c69df90b51e6bcccfa",
+      "sha256": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21627,7 +21634,7 @@
     },
     {
       "path": "formal/system/readiness.md",
-      "sha256": "412601984c81617cf0371dda03e7345b6829fd333b560265d8c38cb9e2fb958b",
+      "sha256": "fd34f26c5e93981f72f61d8ee8af479e612bf6ce79123c37e19187d4d0a7d4ed",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21641,7 +21648,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "28e840e77825291e392cdb6e4990c5bff49185d3ad08830fef9c54a48883ef0e",
+      "sha256": "502091dd76ff23f912c44552756bbeeddb9e9b87153e5d84a8229962ed422c5c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

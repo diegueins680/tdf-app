@@ -1915,9 +1915,69 @@
           }
         ],
         "responseType": {
-          "args": [],
-          "module": "TDF.API",
-          "name": "HealthStatus"
+          "args": [
+            {
+              "args": [
+                {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "args": [],
+                          "module": "Servant.API.Modifiers",
+                          "name": "Optional"
+                        },
+                        {
+                          "args": [
+                            {
+                              "args": [],
+                              "module": "Servant.API.Modifiers",
+                              "name": "Strict"
+                            },
+                            {
+                              "args": [],
+                              "module": "GHC.Types",
+                              "name": "'[]"
+                            }
+                          ],
+                          "module": "GHC.Types",
+                          "name": "':"
+                        }
+                      ],
+                      "module": "GHC.Types",
+                      "name": "':"
+                    },
+                    {
+                      "args": [],
+                      "module": "GHC.TypeLits",
+                      "name": "\"Cache-Control\""
+                    },
+                    {
+                      "args": [],
+                      "module": "Data.Text.Internal",
+                      "name": "Text"
+                    }
+                  ],
+                  "module": "Servant.API.Header",
+                  "name": "Header'"
+                },
+                {
+                  "args": [],
+                  "module": "GHC.Types",
+                  "name": "'[]"
+                }
+              ],
+              "module": "GHC.Types",
+              "name": "':"
+            },
+            {
+              "args": [],
+              "module": "TDF.API",
+              "name": "HealthStatus"
+            }
+          ],
+          "module": "Servant.API.ResponseHeaders",
+          "name": "Headers"
         }
       },
       {

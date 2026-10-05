@@ -5606,13 +5606,15 @@
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/Spec.hs",
         "scripts/verify-readiness.py",
-        "scripts/quality-backend.sh"
+        "scripts/quality-backend.sh",
+        "scripts/lib/readiness_conformance.py",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
       "ambiguity": [],
-      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof.",
+      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."
@@ -5687,7 +5689,7 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "e42c7becdc4bfeb4966dc7eeed09952b56a9420f1f1937ec4975cedb0181f012",
+    "formal/system/compiled-api-surface.json": "9cc8f6e540d4b2815cc0526d56d6831d025bca01775e94e9b9c81acaa345ae71",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
@@ -5753,6 +5755,7 @@
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+    "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
@@ -5773,7 +5776,7 @@
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "f6aae4737e671b775daa62b95e290ff90f2d42d23d9fa7c69df90b51e6bcccfa",
+    "scripts/test-booking-conformance.py": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "978e7462dae93c4d71bbc15c6024b074de99ecbccd801013482f9213d7ed7d76",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
@@ -7721,6 +7724,10 @@
       {
         "requirement": "PAY-INVOICE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-READINESS-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/StudioBookingScope.tla": [
@@ -9052,6 +9059,12 @@
       }
     ],
     "scripts/verify-readiness.py": [
+      {
+        "requirement": "DEPLOY-READINESS-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/lib/readiness_conformance.py": [
       {
         "requirement": "DEPLOY-READINESS-001",
         "relationship": "tests"
@@ -11121,6 +11134,18 @@
       ]
     },
     {
+      "id": "SURFACE-f9884c5ddfa3d37d",
+      "path": "scripts/lib/readiness_conformance.py",
+      "sha256": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-READINESS-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-6f461a25225ca648",
       "path": "scripts/lib/requirement_declarations.py",
       "sha256": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -12082,7 +12107,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "f6aae4737e671b775daa62b95e290ff90f2d42d23d9fa7c69df90b51e6bcccfa",
+      "sha256": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12155,6 +12180,10 @@
         },
         {
           "requirement": "PAY-INVOICE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-READINESS-001",
           "relationship": "tests"
         }
       ]
@@ -30262,7 +30291,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28e840e77825291e392cdb6e4990c5bff49185d3ad08830fef9c54a48883ef0e",
+      "sourceSha256": "502091dd76ff23f912c44552756bbeeddb9e9b87153e5d84a8229962ed422c5c",
       "definition": {
         "states": [
           "absent",

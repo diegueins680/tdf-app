@@ -713,6 +713,9 @@ try:
     from operations_conformance import verify_operations
     verify_operations(sql, request, check, ENV, NAME, OUTPUT, actors)
 
+    from readiness_conformance import verify_readiness
+    verify_readiness(run, NAME, http_port, check)
+
     result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
 finally:
     if server is not None:

@@ -21,8 +21,11 @@ unavailable pool acquisition, real pool exhaustion and recovery, deadline expiry
 `scripts/verify-readiness.py` also requires three broken implementations to fail:
 removed query, removed deadline and swallowed cancellation. Handler tests traverse
 the real HTTP application with a failed pool and a real SQLite query. PostgreSQL
-connection failure/recovery and the final deployed handler require separate exact
-execution receipts. These finite tests are not a universal proof.
+connection failure/recovery is also checked through the actual HTTP application:
+the owned fixture database disallows connections, terminates only its sessions,
+requires fixed503 repeatedly, then reenables connections and requires200. The
+maintenance connection remains separate; shared PostgreSQL itself is not stopped.
+The final deployed handler still requires a separate exact execution receipt. These finite tests are not a universal proof.
 
 Readiness alone does not verify migrations, provider credentials, worker progress,
 release exclusion, backups or API conformance. The deployment lane must bind image
