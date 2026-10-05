@@ -3732,7 +3732,7 @@
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "367578f372789d845334a91d98e5360deece6a455c97f831944ca4d1ea7c53a5",
-    "scripts/__tests__/compiled-api-surface.test.mjs": "f73d37a71ce7d1af81ee4bd362be7df430cee1efde43cb9937ff9639f9f73271",
+    "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -3762,7 +3762,7 @@
     "scripts/deploy-stripe-ticketing.sh": "33fb7bde438832698cc382e83e1056f0196d1aa18c5753cfc64ba89ca65d5f95",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
-    "scripts/lib/compiled-api-surface.mjs": "66ddbd8931f80a000a6d63f32823e9406c0149ccacc839e4d9f48e6c64dfc660",
+    "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
@@ -6379,7 +6379,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "f73d37a71ce7d1af81ee4bd362be7df430cee1efde43cb9937ff9639f9f73271",
+      "sha256": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7443,7 +7443,7 @@
     {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
-      "sha256": "66ddbd8931f80a000a6d63f32823e9406c0149ccacc839e4d9f48e6c64dfc660",
+      "sha256": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

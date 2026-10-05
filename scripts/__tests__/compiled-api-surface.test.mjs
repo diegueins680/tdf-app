@@ -237,3 +237,17 @@ test('response-status admission rejects stale, broadened, missing and invented u
     assert.throws(() => verifyApiResponseStatus(value.surface, value.docs, value.policy));
   }
 });
+
+
+test('actual unavailable policy rejects wildcard and default success declarations', () => {
+  const read = name => JSON.parse(readFileSync(new URL(`../../formal/system/${name}.json`, import.meta.url), 'utf8'));
+  const surface = read('compiled-api-surface').surface;
+  const documented = read('traceability').apiOperations;
+  const policy = read('api-response-status');
+  assert.doesNotThrow(() => verifyApiResponseStatus(surface, documented, policy));
+  for (const status of ['2XX', 'default']) {
+    const changed = structuredClone(documented);
+    changed.find(row => row.id === 'POST /ddex/exports').responses.push(status);
+    assert.throws(() => verifyApiResponseStatus(surface, changed, policy), /Unavailable API status contract changed/);
+  }
+});

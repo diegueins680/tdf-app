@@ -26,7 +26,7 @@ checks do not substitute for native device acceptance.
 
 `api-response-status.json` admits only six explicitly unavailable handlers whose
 Servant return type has a nominal success status. It requires503 and rejects an
-invented2xx response, missing/replaced declaration, duplicate policy entry or any
+invented2xx response (including2XX ranges or default responses), missing/replaced declaration, duplicate policy entry or any
 other unresolved status mismatch. Both the always-selected local gate and the
 compiled inspector execute it. This proves declared status correspondence only;
 385 undocumented routes, DTO codec coverage and broad authorization remain open.

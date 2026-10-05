@@ -207,7 +207,7 @@ export function verifyApiResponseStatus(surface, documented, policy) {
     const difference = differences.get(row.id);
     if (!difference || difference.compiled !== row.compiledStatus
       || !difference.documented.includes(String(row.unavailableStatus))
-      || difference.documented.some(status => /^2[0-9]{2}$/.test(status)))
+      || difference.documented.some(status => /^(?:2[0-9]{2}|2XX|default)$/i.test(status)))
       throw new Error(`Unavailable API status contract changed: ${row.id}`);
   }
   const unexpected = [...differences.keys()].filter(id => !admitted.has(id));
