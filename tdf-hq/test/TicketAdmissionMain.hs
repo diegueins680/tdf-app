@@ -18,7 +18,8 @@ import Data.Time (UTCTime(..), getCurrentTime, addUTCTime)
 import Database.Persist
 import Database.Persist.Postgresql (withPostgresqlPool)
 import Database.Persist.Sql
-import System.Environment (getEnv)
+import System.Environment (getEnv, lookupEnv)
+import TDF.DisposableTicketDatabase (safeTicketDatabase)
 import Test.Hspec
 import qualified TDF.Models.SocialEventsModels as M
 import TDF.Ticketing.Admission
@@ -28,6 +29,10 @@ import qualified TDF.Ticketing.Transfer as Transfer
 main :: IO ()
 main = do
   dsn <- getEnv "TICKET_ADMISSION_TEST_DSN"
+  ci <- (== Just "true") <$> lookupEnv "CI"
+  overrides <- traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"]
+  unless (safeTicketDatabase ci overrides dsn) $
+    fail "Refusing non-local ticket fixture routing or libpq overrides"
   runNoLoggingT $ withPostgresqlPool (BS.pack dsn) 8 $ \pool -> liftIO $ do
     names <- runSqlPool (rawSql "SELECT current_database()" []) pool
     unless (names == [Single ("tdf_ticket_admission_test" :: Text)]) $

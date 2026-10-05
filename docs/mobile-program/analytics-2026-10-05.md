@@ -78,16 +78,17 @@ Both signed artifacts completed successfully from `6ebe6c5`:
 
 Downloaded files match their signing receipts and contain the expected public
 project key and EU host. This is artifact verification, not store availability.
-The web pin additionally preserves generated ticket/deletion contracts and the
-shared discovery registry. These generated changes do not alter the exact
-source of the already signed artifacts. Mobile PR141 merged the authenticated
-receipt contract while preserving current mobile main; discovery synchronization
-is reviewed separately in PR142 at `3a6a84ee741ae58a4b6431a8c33fc822a42ab093`.
-Its generated-only compatible ancestor is `e6c935e5d717c0e700fede2ec6803294ad232295`;
-The preceding discovery head passed 95 suites / 611 tests and Expo Doctor 17/17.
-The new audit/CSRF-header contract synchronization passes local typechecking;
-its hosted checks must qualify the updated head before merge.
-This qualification is separate from the signed-artifact source above.
+The web pin preserves generated ticket/deletion contracts and the shared discovery
+registry. Mobile PR142 passed independent review and its required Mobile Validate
+check, then merged as `c98a397e3895cf44008bab472773ade3985d6b2e` on 5 October
+at 21:15 UTC. Its source passed 95 suites / 611 tests and release checks; the
+preceding discovery head also passed Expo Doctor 17/17. After root PR478 merged
+as `5c2e0bb28f062481ceaa625833c356096a43083f`, this integration pins that reviewed
+mobile main. Regeneration matches its files exactly, including the two optional
+`taxIncluded` compatibility fields already present in the approved mobile contract.
+This changes neither ticket arithmetic nor payment activation. Both root main's
+strict administrator discovery test and the authenticated deletion test remain.
+These qualifications are separate from the signed-artifact source above.
 
 ## Store disclosure audit and account deletion
 

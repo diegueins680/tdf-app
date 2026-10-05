@@ -62,6 +62,15 @@ test('OpenAPI changes validate both generated clients', () => {
   });
 });
 
+test('Mobile pins and contract definition changes select generated API validation', () => {
+  for (const file of ['tdf-mobile', 'tdf-hq/src/TDF/API.hs',
+    'tdf-hq/src/TDF/API/Social.hs', 'tdf-hq/src/TDF/DTO.hs',
+    'tdf-hq/src/TDF/DTO/Social.hs', 'tdf-hq/docs/openapi/social-v2.yaml',
+    'scripts/check-generated-api.mjs', 'scripts/__tests__/generated-api-conformance.test.mjs']) {
+    assert.equal(classifyChangedFiles([file]).contracts, true, file);
+  }
+});
+
 test('every event operations HTTP runner selects backend validation', () => {
   for (const file of [
     'scripts/test-event-operations-http.sh',

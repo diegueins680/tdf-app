@@ -1,0 +1,11 @@
+
+> tdf-mobile@1.0.1 start
+> expo start --offline --port 18087
+
+Networking has been disabled
+Starting project at /private/tmp/tdf-spec-conformance-20261004/tdf-mobile
+Metro is running in CI mode, reloads are disabled. Remove CI=true to enable watch mode.
+Starting Metro Bundler
+Skipping dependency validation in offline mode
+Waiting on http://localhost:18087
+Logs for your project will appear below.

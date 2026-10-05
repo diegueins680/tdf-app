@@ -1,0 +1,107 @@
+Status: historical; retired by AUTHORITY-011
+# HISTORICAL ONLY — retired 2026-10-04 (AUTHORITY-011).
+# Active package authority: tdf-hq/tdf-hq.cabal via tdf-hq/stack.yaml.
+# Never copy this obsolete Hpack description into the active package directory.
+name: tdf-hq
+version: 1.0.0
+github: "diegueins680/tdf-app"
+license: MIT
+author: "TDF Records"
+maintainer: "dev@tdfrecords.com"
+
+dependencies:
+  - aeson
+  - base >= 4.7 && < 5
+  - base64-bytestring
+  - bcrypt
+  - bytestring
+  - conduit
+  - containers
+  - directory
+  - entropy
+  - file-embed
+  - filepath
+  - gitrev
+  - http-client
+  - http-client-tls
+  - http-media
+  - http-types
+  - http2
+  - JuicyPixels
+  - mime-mail
+  - monad-logger
+  - mtl
+  - network
+  - path-pieces
+  - persistent
+  - persistent-postgresql
+  - persistent-sqlite
+  - persistent-template
+  - postgresql-simple
+  - process
+  - random
+  - resource-pool
+  - resourcet
+  - safe-exceptions
+  - scientific
+  - servant
+  - servant-server
+  - servant-multipart
+  - smtp-mail
+  - template-haskell
+  - text
+  - time
+  - transformers
+  - unordered-containers
+  - uuid
+  - uuid-types
+  - vector
+  - wai
+  - wai-cors
+  - warp
+
+extra-source-files:
+  - sql/2025-11-16_leads_whatsapp.sql
+
+library:
+  source-dirs: src
+  ghc-options:
+    - -Wall
+    - -Wcompat
+    - -Wincomplete-uni-patterns
+    - -Wincomplete-record-updates
+    - -Wredundant-constraints
+    - -Wmissing-signatures
+    - -Wmissing-export-lists
+  exposed-modules:
+    - TDF.Models
+    - TDF.API
+    - TDF.DTO
+    - TDF.DB
+    - TDF.Server
+    - TDF.Config
+    - TDF.Catalog.Models
+    - TDF.Catalog.CountryReferenceSeed
+    - TDF.Catalog.Integrity
+    - TDF.Catalog.Security
+    - TDF.Catalog.Seed
+    - TDF.Cors
+    - TDF.FeatureRegistry
+    - TDF.ModelsExtra
+    - TDF.Seed
+    - TDF.Services.EventLogisticsRoutes
+    - TDF.SocialEventLifecycle
+
+executables:
+  tdf-hq:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - tdf-hq
+      - warp
+      - wai
+      - wai-cors

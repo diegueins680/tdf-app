@@ -19,6 +19,23 @@ describe('featureRegistry', () => {
     expect(evaluateFeatureAccess('account.deletion', { authenticated: true }, 'submit').state).toBe('allowed');
     expect(feature?.mobilePresentation.destination).toBe('https://www.tdfrecords.net/cuenta/eliminar');
   });
+
+  it('maps video-source administration to the strict backend administrator boundary', () => {
+    const feature = getFeatureByPath('/configuracion/fuentes-videos');
+    expect(feature?.id).toBe('admin.video-sources');
+    expect(feature?.mobilePresentation.kind).toBe('security-concealed');
+    for (const action of ['discover', 'view', 'administer'] as const) {
+      expect(evaluateFeatureAccess('admin.video-sources', {
+        authenticated: true, roles: ['Admin', 'Fan', 'Customer'], modules: ['Admin'],
+      }, action).state).toBe('allowed');
+      for (const roles of [['StudioManager'], ['Webmaster'], ['Admin', 'Teacher'], ['Fan']]) {
+        expect(evaluateFeatureAccess('admin.video-sources', {
+          authenticated: true, roles, modules: ['Admin'],
+        }, action).state).not.toBe('allowed');
+      }
+    }
+  });
+
   it('has unique stable IDs and complete bilingual discovery metadata', () => {
     const ids = featureRegistry.map(({ id }) => id);
     expect(new Set(ids).size).toBe(ids.length);

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "requirements": ["AUTH-BOOK-001", "BOOK-CALENDAR-001"],
+  "studioWideRoles": [
+    {"code": "admin", "constructor": "Admin"},
+    {"code": "manager", "constructor": "Manager"},
+    {"code": "studio-manager", "constructor": "StudioManager"},
+    {"code": "reception", "constructor": "Reception"}
+  ],
+  "module": "Scheduling",
+  "otherActorScope": ["stored customer Party", "stored assigned engineer Party"],
+  "checkoutProjection": {
+    "on_hold": {"booking": "Tentative", "allocation": "holding"},
+    "confirmed": {"booking": "Confirmed", "allocation": "reserved"},
+    "scheduled": {"booking": "Confirmed", "allocation": "reserved"},
+    "in_progress": {"booking": "InProgress", "allocation": "reserved"},
+    "balance_due": {"booking": "InProgress", "allocation": "reserved"},
+    "completed": {"booking": "Completed", "allocation": "completed"},
+    "reschedule_requested": {"booking": "Confirmed", "allocation": "reserved"},
+    "cancellation_requested": {"booking": "Confirmed", "allocation": "reserved"},
+    "cancelled": {"booking": "Cancelled", "allocation": "released"},
+    "no_show": {"booking": "NoShow", "allocation": "reserved"},
+    "overtime_review": {"booking": "InProgress", "allocation": "reserved"},
+    "disputed": {"booking": "InProgress", "allocation": "reserved"},
+    "expired": {"booking": "Cancelled", "allocation": "released"}
+  },
+  "runtimeTransitions": "Existing guarded service_booking_transition_allowed function remains authoritative; this table is its projection, not permission to transition.",
+  "legacyStatuses": ["Tentative", "Confirmed", "InProgress", "Completed", "Cancelled", "NoShow"],
+  "activeAllocations": ["holding", "reserved"],
+  "interval": "half-open [starts_at, ends_at)",
+  "genericCreateIdempotency": "No durable idempotency key; reconcile an ambiguous response before retrying."
+}

@@ -1,0 +1,10 @@
+# Unauthenticated response; CRLF and trailing whitespace normalized for Git.
+# Raw response-header SHA256: cd946a8a1bbd6eee7ed9458fd8944b4d7c8da904834b1d74396b89f9ca00fca0
+HTTP/2 200
+access-control-allow-credentials: true
+access-control-allow-origin: https://conformance.invalid
+alt-svc: h3=":443"; ma=2592000
+content-type: application/json;charset=utf-8
+date: Sun, 04 Oct 2026 15:30:59 GMT
+server: Warp/3.4.9
+via: 1.1 Caddy

@@ -22,6 +22,7 @@ import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           Data.UUID (UUID)
 import           GHC.Generics (Generic)
+import           Data.Typeable (TypeRep, Typeable, splitTyConApp, typeRep, tyConModule, tyConName)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
@@ -81,6 +82,20 @@ import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
 import           TDF.API.Reviews (ReviewsPublicAPI, ReviewsProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
 import           TDF.EventOperations.API (EventOperationsAPI)
+
+-- Compiler-derived API syntax, not a claim about handler authorization or JSON
+-- instance behavior. No custom parser of Haskell source or catch-all route rule.
+describeApiType :: Typeable api => Proxy api -> Value
+describeApiType = describeTypeRep . typeRep
+
+describeTypeRep :: TypeRep -> Value
+describeTypeRep representation =
+  let (constructor, arguments) = splitTyConApp representation
+  in object
+    [ "module" .= tyConModule constructor
+    , "name" .= tyConName constructor
+    , "args" .= map describeTypeRep arguments
+    ]
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -458,9 +473,6 @@ type ArtistPublicAPI =
   :<|> Capture "artistRef" Text :> "public" :> Get '[JSON] ArtistProfileDTO
   :<|> Capture "artistId" Int64 :> Get '[JSON] ArtistProfileDTO
 
-type RadioPublicAPI =
-       "radio" :> "presence" :> Capture "partyId" Int64 :> Get '[JSON] (Maybe RadioPresenceDTO)
-
 type FanSecureAPI =
        "me" :> "profile" :>
          ( Get '[JSON] FanProfileDTO
@@ -672,7 +684,6 @@ type API =
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
   :<|> "marketplace" :> MarketplaceAPI
-  :<|> RadioPublicAPI
   :<|> RoomsPublicAPI
   :<|> ServiceCatalogPublicAPI
   :<|> ServiceStorefrontPublicAPI

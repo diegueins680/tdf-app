@@ -75,7 +75,7 @@ the generated Drive URL.
 
 ## Operator commands
 
-Install Node 20+ and FFmpeg/FFprobe. Run from the repository root.
+Install the repository-supported Node22+ and FFmpeg/FFprobe. Run from the repository root.
 The manual CLI and scheduled workflow default to `https://api.tdfrecords.net`.
 For an isolated local/staging target, set `TDF_API_BASE` explicitly; `API_BASE`
 is the legacy fallback override. Do not target the retired Fly database.
@@ -165,7 +165,7 @@ Two complementary layers run daily in `America/Guayaquil`:
   auto-publish or ingest an image without explicit rights; a strict administrator
   can approve queued fields or launch an authorized image run.
 
-Current backend environment variables:
+Backend variables (inspect effective production values; do not enable by merging code):
 
 - `ARTIST_ENRICHMENT_ENABLED` (`false` disables backend discovery immediately)
 - `ARTIST_ENRICHMENT_AUTO_PUBLISH`
@@ -177,6 +177,8 @@ Disable the external job by disabling the `Daily artist enrichment` workflow.
 Rerun it with `workflow_dispatch`; default manual mode is dry-run. GitHub schedule
 activation requires this workflow to exist on the default branch.
 
+## Current deployment and recovery authority
+
 Cloudflare Pages must target `https://api.tdfrecords.net`. The UI deliberately
 ignores the retired `https://the-dream-factory.koyeb.app` value when that stale
 value is injected into a `*.tdf-app.pages.dev` build, while retaining other
@@ -184,9 +186,31 @@ explicit API overrides for local or alternate deployments. Remove the retired
 dashboard variable when Cloudflare account access is available; the repository
 fallback prevents it from breaking previews in the meantime.
 
-## Backup, rollout, and verification
+Production is the canonical Hetzner system described in
+[ops/hetzner/README.md](../ops/hetzner/README.md), with API
+`https://api.tdfrecords.net`. The previous Fly deployment, volume-snapshot and
+schema-rollback instructions in this runbook are retired. They must not redirect
+production, edit already-applied SQL or drop audit tables.
 
-Before a production migration or data write:
+Use the canonical read-only inspection and isolated restoration/migration
+rehearsal first. The guarded production executor and coordinated database/media
+recovery obligations remain open in that contract; a successful worker dry-run
+or a green unit test does not supply deployment eligibility. Provider secret
+values must never appear in captured commands or reports.
+
+Preserve accepted enrichment changes, provider/source evidence and checkpoints
+through recovery. Disabling discovery, external scheduling or publication is an
+operator action under the current release procedure. Retrying may resume completed
+items and replace the current attempt's error summary while retaining previous
+attempt errors; it does not authorize deleting failed-run evidence. No real
+provider requests or workflow dispatch are required for local conformance tests.
+
+A failed item causes backend status `failed`, a `run_failed` log, a retained
+report and a nonzero CLI exit, even when the early-stop threshold was not reached.
+The threshold controls when to stop processing additional items, not whether the
+run succeeded. A successful return requires the final backend update to have
+completed. Process termination may leave a running lease; stale-lease recovery
+and external-provider exactly-once effects are separate obligations.
 
 1. Record the exact current release, immutable image and Hetzner deployment.
 2. Follow the backup, restore, migration-ancestry and recovery gates in

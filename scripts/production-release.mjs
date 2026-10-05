@@ -8,6 +8,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { checkDisabledEscrowWrites } from './lib/legacy-escrow-contract.mjs';
+import { loadMigrationContract } from './lib/migration-contract.mjs';
 
 import {
   buildDatabaseSqlInvocation,
@@ -20,10 +21,8 @@ import {
   expandMigrationIncludes,
   normalizeFullSha,
   parseSecurityEmergencyReadinessOutput,
-  requireMigrationIntroductionAncestor,
   securityEmergencyReadinessBlocker,
   validateFlyConfig,
-  validateMigrationRelativePath,
   validateSafeName,
 } from './lib/production-release.mjs';
 
@@ -232,45 +231,7 @@ export async function resolveReleaseContext(options) {
   await run(['git', 'cat-file', '-e', `${sha}^{commit}`], { log: false });
   const manifestRelativePath = path.relative(rootDir, manifestPath);
   const manifest = JSON.parse(await readGitBlob(sha, manifestRelativePath));
-  if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.migrations)) {
-    throw new Error('Unsupported production migration manifest.');
-  }
-
-  const migrations = [];
-  const migrationIds = new Set();
-  const migrationPaths = new Set();
-  for (const entry of manifest.migrations) {
-    const id = validateSafeName(entry.id, 'Migration id');
-    const relativePath = validateMigrationRelativePath(entry.path);
-    if (migrationIds.has(id)) throw new Error(`Duplicate production migration id: ${id}`);
-    if (migrationPaths.has(relativePath)) throw new Error(`Duplicate production migration path: ${relativePath}`);
-    migrationIds.add(id);
-    migrationPaths.add(relativePath);
-    const introducedBy = normalizeFullSha(entry.introducedBy);
-    try {
-      await run(['git', 'merge-base', '--is-ancestor', introducedBy, sha], { log: false });
-    } catch (error) {
-      if (error.cause?.code === 1) {
-        requireMigrationIntroductionAncestor({ id, introducedBy }, sha, false);
-      }
-      throw error;
-    }
-    requireMigrationIntroductionAncestor({ id, introducedBy }, sha, true);
-    const content = await expandMigrationIncludes(
-      { path: relativePath, content: await readGitBlob(sha, relativePath) },
-      (includedPath) => readGitBlob(sha, includedPath),
-    );
-    migrations.push({
-      ...entry,
-      id,
-      path: relativePath,
-      content,
-      checksum: createHash('sha256').update(content).digest('hex'),
-    });
-  }
-  if (migrations.length === 0) {
-    throw new Error('The target commit has no registered production migrations.');
-  }
+  const { migrations } = await loadMigrationContract(sha, readGitBlob, gitIsAncestor);
 
   if (!await disabledEscrowWritesAt(sha)) {
     throw new Error('Release source must preserve the disabled legacy escrow write contract.');
@@ -729,8 +690,11 @@ export async function disabledEscrowWritesAt(sha, readBlob = readGitBlob) {
   }
 }
 
+// ID-SESSION-003: earlier binaries ignore bound recovery expiry metadata.
+const recoveryExpiryFloor = '57315f2d4b3aafac8ec7242c5913028f157dff8d';
 export function requiredIdentityCommit(context) {
   const ids = new Set(context.migrations.map(({ id }) => id));
+  if (ids.has('2026-10-04_auth_recovery_expiry')) return recoveryExpiryFloor;
   if (ids.has('2026-09-18_course_identity_requests')
       || ids.has('2026-09-18_trial_identity_requests')
       || ids.has('2026-09-18_ads_identity_requests')) return sourceRequestIdentityFloor;
@@ -1146,6 +1110,10 @@ async function main() {
   if (options.help) {
     console.log(usage());
     return;
+  }
+  if (options.mode !== 'plan') {
+    throw new Error('Fly production preflight/release is retired: the verified production target is Hetzner. '
+      + 'See ops/hetzner/README.md. This command performs no remote action.');
   }
   if (!options.sha) throw new Error(`--sha is required.\n\n${usage()}`);
   const context = await resolveReleaseContext(options);

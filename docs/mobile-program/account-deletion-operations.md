@@ -12,7 +12,9 @@ account. It sends the request to `/feedback/account-deletion?accountId=…` usin
 cookie, without a potentially stale bearer-token override. The non-simple
 `X-Requested-With: TDF-Account-Deletion` header is required and any browser Origin
 is checked against configured TDF origins even when general CORS is permissive.
-A cross-site multipart form with the session cookie is rejected. The POST itself
+A cross-site multipart form with the session cookie is rejected. The guard
+normalizes empty path segments so the trailing-slash URL accepted by Servant
+requires the same origin/header proof as the canonical endpoint. The POST itself
 normalizes browser multipart CRLF to a canonical newline before validating the
 request marker, requires a live matching account before insertion or notification, and reuses
 `withCurrentAuthSession` to hold the existing token-row lock through insertion.
@@ -39,14 +41,22 @@ the stored authenticated creator, including old records. It still accepts
    anonymous feedback: a body, email, title or claimed ID alone is **not**
    authority to delete an account. Reject mismatched requests for fulfilment;
    ask the account holder to use the authenticated flow again if needed.
-3. Verify the account contact against TDF's account records before sending any
+3. Open the case in the existing [privacy operations ledger](../../ops/privacy/README.md)
+   using the original `feedbackCreatedAt` as receipt time. Keep the mapping from
+   the opaque ledger case to the feedback ID/account and evidence in the private
+   proof store, not in analytics or the ledger's public metadata. Preserve the
+   earliest receipt and 30-day deadline; use the ledger's identity, full-scope,
+   effect-verification and delivered-notice stages before closing fulfilment.
+   The web queue is authenticated intake and a resolution receipt, not a second
+   erasure engine or a substitute for this evidence lifecycle.
+4. Verify the account contact against TDF's account records before sending any
    personal information. Handle legal/fiscal/security/dispute retention
    separately and explain the actual retained records to the account holder.
-4. Process the entire account and associated personal data, including
+5. Process the entire account and associated personal data, including
    user-generated content. Revocation/deactivation alone is not completion.
    Revoke sessions and linked service access as part of the existing owner-run
    deletion process. Do not delete shared financial records indiscriminately.
-5. Confirm completion through the verified account contact, and record the
+6. Confirm completion through the verified account contact, and record the
    processing result and verified-contact confirmation in the internal queue. The
    completed/rejected actions require a note and append the operator identity and
    timestamp to the existing audit table. Requests begin pending; concurrent or

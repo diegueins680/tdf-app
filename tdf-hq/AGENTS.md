@@ -23,11 +23,10 @@
 - Pattern for new endpoints: update `TDF.API` type, implement handlers in `TDF.Server`, DTOs in `TDF.DTO`, DB logic in `TDF.DB`/`TDF.Models`.
 
 ## Testing Guidelines
-- Run the existing Hspec/QuickCheck suite with `stack test`; tests live in `test/`.
-- Run relevant PostgreSQL integration and concurrency harnesses under `scripts/`;
-  pending external-runner cases in Hspec are not a PostgreSQL test pass.
-- Add focused invariant/regression coverage for changed behavior and use the
-  repository's existing formal verification infrastructure for high-risk changes.
+- The existing `test/` Hspec/QuickCheck suite runs with `stack test`. PostgreSQL, HTTP and concurrency runners under root `scripts/` cover additional boundaries; see `.github/workflows/ci.yml` for the complete backend lane.
+- Local invitation/event-relation runners can use an existing loopback PostgreSQL server with `TDF_TEST_NATIVE_POSTGRES=1` (optional `TDF_TEST_NATIVE_POSTGRES_USER` / `TDF_TEST_NATIVE_POSTGRES_PORT`). They create and remove only their own new `_test` databases; pre-existing names fail closed. Default local behavior still uses Docker, and CI uses its isolated service. Never inherit libpq routing overrides.
+- Prefer observable handler/database tests with isolated fixtures. Follow `FORMAL_VERIFICATION.md` for critical invariants and negative controls.
+- Pending external-runner cases in Hspec are not a PostgreSQL test pass.
 
 ## Commit & Pull Requests
 - Commits: short, imperative subjects (e.g., "Enable CORS"). Optional prefixes like `feat:`, `fix:`, `chore:` are welcome.
@@ -36,7 +35,7 @@
 
 ## Security & Configuration
 - Do not commit secrets; use env vars (`config/default.env` as a template).
-- CORS is permissive for dev; restrict `corsOrigins` in `app/Main.hs` for production.
+- Production CORS is fail-closed in `src/TDF/Cors.hs`; set an explicit origin allowlist and keep `ALLOW_ALL_ORIGINS=false`. See `formal/system/cors-boundary.md` at repository root.
 - Seeding endpoint is for development only; remove/guard before release.
 
 ## Submodules & Backups
@@ -55,6 +54,7 @@
   the current production deployment procedure. Do not modify shared Trader resources.
 - Inspect current rollout prerequisites and feature flags before deploying; a
   successful build does not establish production authentication or upload behavior.
+- The authoritative system index and verification boundaries are in `../formal/system/README.md`.
 
 ## Branding
 - The React shell renders SVG logos through `BrandLogo`. Swap SVG assets (`tdf-hq-ui/src/assets/tdf-*.svg`) rather than hardcoding text to maintain contrast in both themes.

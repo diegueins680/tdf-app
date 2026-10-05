@@ -8,6 +8,7 @@ module TDF.Directory.Policy
   , DirectoryCapability(..)
   , PublicProfession(..)
   , ProfileFieldUpdate(..)
+  , allowedClaimTransition
   , allowedProfileTransition
   , allowedClassifiedTransition
   , allowedApplicationTransition
@@ -76,6 +77,26 @@ newtype PublicProfession = PublicProfession Text
 
 data ProfileFieldUpdate a = PreserveProfileField | ReplaceProfileField a
   deriving (Eq, Ord, Show)
+
+-- ID-CLAIM-REVIEW-001: docs/music-directory/formal-model.yaml is the
+-- declared edge relation. HTTP conformance exhausts its Cartesian product.
+-- Same-state requests observe existing state; unknown states never replay.
+allowedClaimTransition :: Text -> Text -> Bool
+allowedClaimTransition fromStatus toStatus =
+  (fromStatus == toStatus && fromStatus `Set.member` states)
+    || (fromStatus, toStatus) `Set.member` transitions
+  where
+    states = Set.fromList
+      ["draft", "submitted", "under_review", "more_evidence_requested",
+       "approved", "rejected", "withdrawn"]
+    transitions = Set.fromList
+      [ ("draft", "submitted"), ("draft", "withdrawn")
+      , ("submitted", "under_review"), ("submitted", "withdrawn")
+      , ("under_review", "approved"), ("under_review", "rejected")
+      , ("under_review", "more_evidence_requested"), ("under_review", "withdrawn")
+      , ("more_evidence_requested", "submitted"), ("more_evidence_requested", "withdrawn")
+      , ("rejected", "submitted")
+      ]
 
 allowedClassifiedTransition :: ClassifiedStatus -> ClassifiedStatus -> Bool
 allowedClassifiedTransition fromStatus toStatus =

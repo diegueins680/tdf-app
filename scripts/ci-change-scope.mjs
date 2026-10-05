@@ -17,7 +17,14 @@ function isRootDependencyFile(file) {
 }
 
 function affectsContracts(file) {
-  return file === 'tdf-hq/docs/openapi/api.yaml'
+  return file === 'tdf-mobile'
+    || isPathOrChild(file, 'tdf-hq/docs/openapi')
+    || file === 'tdf-hq/src/TDF/API.hs'
+    || isPathOrChild(file, 'tdf-hq/src/TDF/API')
+    || file === 'tdf-hq/src/TDF/DTO.hs'
+    || isPathOrChild(file, 'tdf-hq/src/TDF/DTO')
+    || file === 'scripts/check-generated-api.mjs'
+    || file === 'scripts/__tests__/generated-api-conformance.test.mjs'
     || file === 'tdf-hq-ui/src/api/generated/types.ts'
     || file === 'tdf-mobile/src/api/generated/types.ts'
     || file === 'tdf-hq-ui/package.json'

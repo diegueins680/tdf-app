@@ -40,7 +40,7 @@ export default function DirectoryAdminPage() {
       <Stack spacing={3}>
         <Box>
           <Typography component="h1" variant="h3" fontWeight={900}>Confianza y moderación del directorio</Typography>
-          <Typography color="text.secondary" mt={1}>Las decisiones requieren el módulo Admin, quedan auditadas y nunca convierten una profesión pública en permiso interno.</Typography>
+          <Typography color="text.secondary" mt={1}>Las decisiones requieren el rol y el módulo Admin, quedan auditadas y nunca convierten una profesión pública en permiso interno.</Typography>
         </Box>
         <Alert severity="warning">No apruebes identidad, propiedad, créditos ni consentimiento sin revisar la evidencia y la política operativa vigente. La fusión de duplicados permanece fuera de esta acción genérica.</Alert>
         <Tabs value={queue} onChange={(_, value: unknown) => { if (value === 'claims' || value === 'verifications' || value === 'moderation') setQueue(value); }} aria-label="Colas administrativas del directorio">
@@ -95,6 +95,8 @@ function ReviewCard({ kind, record }: { kind: QueueKind; record: ReviewRecord })
   const id = stringValue(record['id']);
   const title = stringValue(record['profileName']) || `${stringValue(record['targetKind'], kind)} · ${stringValue(record['targetId'], id)}`;
   const status = stringValue(record['status'], 'pendiente');
+  const claimant = record['claimantPartyId'];
+  const claimantLabel = typeof claimant === 'number' || typeof claimant === 'string' ? String(claimant) : 'No disponible';
   const decide = useMutation({
     mutationFn: async (action: string) => {
       if (kind === 'claims') return Directory.setClaimStatus(id, action, notes);
@@ -105,7 +107,7 @@ function ReviewCard({ kind, record }: { kind: QueueKind; record: ReviewRecord })
     onSuccess: () => client.invalidateQueries({ queryKey: ['directory', 'admin', kind] }),
   });
   const actions: readonly (readonly [string, string])[] = kind === 'claims'
-    ? [['under_review', 'Tomar revisión'], ['approved', 'Aprobar'], ['rejected', 'Rechazar']]
+    ? claimActions(status)
     : kind === 'verifications'
       ? [['under_review', 'Tomar revisión'], ['verified', 'Verificar'], ['rejected', 'Rechazar']]
       : [['dismiss', 'Descartar'], ['warn', 'Advertir'], ['pause', 'Pausar'], ['remove', 'Retirar'], ['suspend', 'Suspender']];
@@ -121,6 +123,13 @@ function ReviewCard({ kind, record }: { kind: QueueKind; record: ReviewRecord })
           <Typography color="text.secondary">
             {kind === 'claims' ? `Tipo: ${stringValue(record['claimType'], 'reclamo')}` : kind === 'verifications' ? `Tipo: ${stringValue(record['verificationType'], 'verificación')}` : `Prioridad: ${stringValue(record['priority'], 'normal')}`}
           </Typography>
+          {kind === 'claims' && <Box>
+            <Typography>Solicitante (Party): {claimantLabel}</Typography>
+            <Typography component="h3" variant="subtitle2">Evidencia presentada</Typography>
+            <Box component="pre" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 320, overflow: 'auto' }}>
+              {JSON.stringify(record['evidence'] ?? [], null, 2)}
+            </Box>
+          </Box>}
           <TextField label="Notas de revisión" value={notes} onChange={(event) => setNotes(event.target.value)} multiline minRows={2} inputProps={{ minLength: 10, maxLength: 5000 }} />
           {decide.error && <Alert severity="error">{decide.error.message}</Alert>}
         </Stack>
@@ -130,4 +139,17 @@ function ReviewCard({ kind, record }: { kind: QueueKind; record: ReviewRecord })
       </CardActions>
     </Card>
   );
+}
+
+// ID-CLAIM-REVIEW-001: only offer actions legal for the last accepted state.
+// A concurrent change is still resolved by the authoritative backend (409).
+function claimActions(status: string): readonly (readonly [string, string])[] {
+  switch (status) {
+    case 'draft': return [['submitted', 'Enviar a revisión'], ['withdrawn', 'Retirar']];
+    case 'submitted': return [['under_review', 'Tomar revisión'], ['withdrawn', 'Retirar']];
+    case 'under_review': return [['approved', 'Aprobar'], ['rejected', 'Rechazar'], ['more_evidence_requested', 'Solicitar evidencia'], ['withdrawn', 'Retirar']];
+    case 'more_evidence_requested': return [['submitted', 'Enviar a revisión'], ['withdrawn', 'Retirar']];
+    case 'rejected': return [['submitted', 'Enviar a revisión']];
+    default: return [];
+  }
 }
