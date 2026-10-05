@@ -69,6 +69,7 @@ test('Dismissed mobile promotion stays dismissed @critical',async({page,baseURL}
 test('Admitted Android testers can reach Play without submitting another form @critical', async ({ page, baseURL }) => {
   const closed = { ...config, android: { ...config.ios, status: 'closed_testing', admission: 'approval_required', url: 'https://play.google.com/apps/testing/com.tdf.records' } };
   const submissions = await fixture(page, baseURL, closed);
+  await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/app');
   await page.getByRole('button', { name: 'Android', exact: true }).click();
   const admitted = page.getByRole('link', { name: 'Ya tengo acceso: abrir Google Play' });

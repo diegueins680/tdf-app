@@ -40,7 +40,7 @@ export default function MobileAppPage() {
     <Typography variant="h5" component="p">{t('app.invite')}</Typography>
     <Typography>{t('app.intro')}</Typography>
     {beta && <Typography>{t('app.beta')}</Typography>}
-    <ToggleButtonGroup exclusive value={platform} aria-label={t('app.choose')} onChange={(_, value: MobilePlatform | null) => {
+    <ToggleButtonGroup sx={{ '& .MuiToggleButton-root': { color: 'text.primary' } }} exclusive value={platform} aria-label={t('app.choose')} onChange={(_, value: MobilePlatform | null) => {
       if (value) { setPlatform(value); setForm(null); track('mobile_platform_selected', { platform: value }); }
     }}>
       <ToggleButton value="android">{t('app.android')}</ToggleButton>
