@@ -113,6 +113,7 @@ import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import qualified TDF.CorsSpec as CorsSpec
+import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
 import TDF.Cors
     ( corsPolicy,
       deriveCorsOriginFromAppBase,
@@ -849,6 +850,7 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    FailureBoundarySpec.spec
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec

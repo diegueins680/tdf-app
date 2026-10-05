@@ -429,6 +429,17 @@
       "conflict": "The shipped lease contract requires current unexpired authority, but transaction-stable time accepts completion after expiry during a lock wait. New fixture entrypoints also admit remote databases with the expected name.",
       "authority": "formal/ticket-admission/confirmation-delivery.md",
       "resolution": "Preserve historical SQL and append a lock-before-real-clock completion correction, verified by actual PostgreSQL negative control; require pre-connection destination and override guards on every direct fixture entrypoint."
+    },
+    {
+      "id": "AUTHORITY-041",
+      "sources": [
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs"
+      ],
+      "conflict": "The request fallback renders arbitrary exceptions, catches cancellation and can call the response callback twice; authentication activity also renders arbitrary persistence errors into admin diagnostics. Warp fallback invents wildcard CORS outside configured policy.",
+      "authority": "formal/system/request-failure-boundary.md",
+      "resolution": "Use a cancellation-preserving fixed-diagnostic boundary, track response start, propagate after callback admission, and leave error-origin grants to request-aware CORS. Radio raw exception strings are discarded today, not a proven public disclosure, but cancellation and fixed internal failure values follow the same boundary."
     }
   ]
 }

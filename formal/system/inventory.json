@@ -432,6 +432,7 @@
       "scripts/verify-event-operations-pluscal.mjs",
       "scripts/verify-improvement-loop.mjs",
       "scripts/verify-payment-arithmetic.py",
+      "scripts/verify-request-failures.py",
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
       "scripts/wrap-catalog-canonical-schema.mjs"
@@ -1582,6 +1583,7 @@
       "tdf-hq/src/TDF/API/Types.hs",
       "tdf-hq/src/TDF/API/WhatsApp.hs",
       "tdf-hq/src/TDF/App/Boot.hs",
+      "tdf-hq/src/TDF/App/FailureBoundary.hs",
       "tdf-hq/src/TDF/App/StartupResponse.hs",
       "tdf-hq/src/TDF/Artists/Enrichment.hs",
       "tdf-hq/src/TDF/Artists/Promotion.hs",
@@ -1793,6 +1795,7 @@
       "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
       "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
       "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
+      "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
       "tdf-hq/test/TDF/Operations/ModelSpec.hs",
@@ -3655,7 +3658,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
+      "sha256": "c45d2bf141efa9ef71097dc2721d60c3c0f00a8f31e7b44fac940bb8def1b752",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4730,6 +4733,12 @@
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
       "sha256": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fa1f8b855944ecc5",
+      "path": "scripts/verify-request-failures.py",
+      "sha256": "f1616c9e94ea9de834fb69b08cf0213c7b6c134e0756d87922d5d72f4ab6ebba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11593,7 +11602,13 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "22ce86fa5329425e5239fcf100dbe34e6f20e02ba722a8db09ebe0389f1aad1d",
+      "sha256": "b2acd01e02b9ad7187316e8179207ac5b0fa4881c37b08fc5569ea4e9b299a38",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4893f1464484dd6a",
+      "path": "tdf-hq/src/TDF/App/FailureBoundary.hs",
+      "sha256": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12385,7 +12400,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
+      "sha256": "4b53165a764b1d6dd083f193ad1f0d752b42d10ef48bcab2ac9337fb791288e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12445,7 +12460,7 @@
     {
       "id": "SURFACE-5a72b47f8b63ff19",
       "path": "tdf-hq/src/TDF/ServerRadio.hs",
-      "sha256": "26aab8d39dba5eb065a6acfc37f3f3b4c277e5d3bb80b4ce9645912b970d96bb",
+      "sha256": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12667,7 +12682,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "83130e83f967345b7de337d808879fb7210ab95e1e5cadcbaea743c6a71390f1",
+      "sha256": "c2f2de27bae619934ebd0f05e680e15c4990f5101478ba08587786d94f9a240c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12709,7 +12724,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "3678e5005a2fd52dcbab8ee279824b7827a97805bb2f0912eaa4247cd4da0883",
+      "sha256": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12860,6 +12875,12 @@
       "id": "SURFACE-b7c5b68652826d3d",
       "path": "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
       "sha256": "b8ae8271535758e9e40efcd106b9abfd9b3775ed9f55f51a9022039bce8e169a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d7524ac1e833fed0",
+      "path": "tdf-hq/test/TDF/FailureBoundarySpec.hs",
+      "sha256": "b5d4532c15a065dc1bdaabc4a2af00e4297fff660ee38dadd0d818910bf43faa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21144,7 +21165,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "9d375957077b10e711f3dface8485d9e5d48f882a26012cea60364c812d97681",
+      "sha256": "ab8eee78c899073dad98f363f8b287d3e851e61d3b8bef1df8891318eeb91ecc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21332,8 +21353,15 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/request-failure-boundary.md",
+      "sha256": "439cb707171dc7d811d0b83cc8a9840c086a126305e1b3cdd351f6bcca3db981",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/requirements.json",
-      "sha256": "c5781556130dd1b3484a2c7b4deb99bce8d04deba451f7bac205615998ef0dca",
+      "sha256": "df48291a55493fcecb0a98752da0001f37d21b338407395b996a207281c1442e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

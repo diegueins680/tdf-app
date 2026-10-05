@@ -8,7 +8,7 @@ module TDF.App.Boot
   ) where
 
 import Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar, threadDelay)
-import Control.Exception (SomeException, displayException, handle, throwIO, try)
+import Control.Exception (SomeException, throwIO, try)
 import Control.Monad (forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS
@@ -31,13 +31,11 @@ import Database.Persist.Sql (
     toSqlKey,
   )
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
-import Network.HTTP.Types (status200, status500)
+import Network.HTTP.Types (status200)
 import Network.Wai (
     Application,
     Middleware,
-    mapResponseHeaders,
     pathInfo,
-    responseHeaders,
     responseLBS,
   )
 import qualified Network.Wai.Handler.Warp as Warp
@@ -95,6 +93,7 @@ import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
 import TDF.App.StartupResponse (startupApp)
+import TDF.App.FailureBoundary (requestExceptionBoundary, reportUnhandledException, internalErrorResponse)
 import TDF.Trials.Models (migrateTrials)
 
 runBootServer :: IO ()
@@ -109,34 +108,19 @@ runBootServer = do
   appCors <- corsPolicy
 
   let
-    addCorsToExceptionResponse ex =
-      let base = Warp.defaultOnExceptionResponse ex
-          hs = responseHeaders base
-          extra =
-            [ ("Access-Control-Allow-Origin", "*")
-            , ("Vary", "Origin")
-            ]
-          merged = extra ++ filter (\(k, _) -> k /= "Access-Control-Allow-Origin" && k /= "Vary") hs
-       in mapResponseHeaders (const merged) base
+    errorLogger = hPutStrLn stderr . T.unpack
     warpSettings =
       Warp.setPort (appPort cfg) $
         Warp.setHost "0.0.0.0" $
-          Warp.setOnExceptionResponse addCorsToExceptionResponse Warp.defaultSettings
-    addCorsFallback :: Middleware
-    addCorsFallback next req send =
-      handle
-            ( \(ex :: SomeException) -> do
-                hPutStrLn stderr ("Unhandled exception: " <> displayException ex)
-                send (responseLBS status500 [("Content-Type", "text/plain; charset=utf-8")] "Internal server error")
-            )
-            $ next req send
+          Warp.setOnException (\_ -> reportUnhandledException errorLogger) $
+            Warp.setOnExceptionResponse (const internalErrorResponse) Warp.defaultSettings
     rootOk :: Middleware
     rootOk next req send =
       if null (pathInfo req)
         then send (responseLBS status200 [("Content-Type", "text/plain")] "ok")
         else next req send
     wrapApp :: Application -> Application
-    wrapApp = appCors . addCorsFallback . rootOk
+    wrapApp = appCors . requestExceptionBoundary errorLogger . rootOk
   appRef <- newIORef (wrapApp startupApp)
 
   let setupApp = do

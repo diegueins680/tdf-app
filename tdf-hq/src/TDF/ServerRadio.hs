@@ -25,7 +25,7 @@ module TDF.ServerRadio
   ) where
 
 import           Control.Applicative    ((<|>))
-import           Control.Exception      (SomeException, try, displayException)
+import           TDF.App.FailureBoundary (fixedFailure)
 import           Control.Monad          (forM, forM_, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
@@ -966,9 +966,9 @@ radioServer user =
       manager <- pure sharedTlsManager
       fetchedResults <- liftIO $
         forM cleanedSources $ \src -> do
-          res <- try (fetchSource manager src)
+          res <- fixedFailure "source_fetch_failed" (fetchSource manager src)
           pure $ case res of
-            Left (ex :: SomeException) -> Left (src, T.pack (displayException ex))
+            Left failure               -> Left (src, failure)
             Right items                -> Right (src, items)
       let successes = [ (src, items) | Right (src, items) <- fetchedResults ]
           failedSources = [ src | Left (src, _) <- fetchedResults ]
@@ -1346,7 +1346,7 @@ radioServer user =
 
     fetchStreamMetadata :: Manager -> Text -> IO (Either Text StreamMetadata)
     fetchStreamMetadata manager url = do
-      result <- try $ do
+      result <- fixedFailure "radio_fetch_failed" $ do
         req0 <- parseRequest (T.unpack url)
         let req = req0
               { requestHeaders = ("Icy-MetaData","1") : ("User-Agent","tdf-radio-metadata/1.0") : requestHeaders req0
@@ -1354,8 +1354,7 @@ radioServer user =
               }
         httpLbs req manager
       pure $ case result of
-        Left (ex :: SomeException) ->
-          Left (T.pack (displayException ex))
+        Left failure -> Left failure
         Right resp ->
           let hdrs = responseHeaders resp
               lookupTxt nameKey = fmap (TE.decodeUtf8With lenientDecode) (lookupHeader nameKey hdrs)
@@ -1366,7 +1365,7 @@ radioServer user =
 
     fetchNowPlaying :: Manager -> Text -> IO (Either Text (Maybe Text))
     fetchNowPlaying manager url = do
-      result <- try $ do
+      result <- fixedFailure "radio_fetch_failed" $ do
         req0 <- parseRequest (T.unpack url)
         let req = req0
               { requestHeaders = ("Icy-MetaData","1") : ("User-Agent","tdf-radio-now-playing/1.0") : requestHeaders req0
@@ -1377,7 +1376,7 @@ radioServer user =
             Nothing -> pure Nothing
             Just metaInt -> readIcyStreamTitle (responseBody resp) metaInt 2
       pure $ case result of
-        Left (ex :: SomeException) -> Left (T.pack (displayException ex))
+        Left failure -> Left failure
         Right title -> Right title
 
     parseIcyMetaInt :: [(CI.CI BS.ByteString, BS.ByteString)] -> Maybe Int

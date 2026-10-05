@@ -5081,6 +5081,92 @@
         "Default-disabled production worker has no verified sender/inbox receipt in this audit."
       ],
       "evidence": "Actual synthetic PostgreSQL concurrent workers, loopback SMTP, observed lock-wait expiry positive/negative controls and bounded NotificationLease results; consolidated candidate rerun and production verification pending."
+    },
+    {
+      "id": "PRIV-ERROR-001",
+      "title": "Private failure details and cancellation stay outside response diagnostics",
+      "domain": "PRIV",
+      "statement": "Unexpected request, activity and Radio-fetch failures must not render exception payloads; cancellation must propagate and an HTTP response must not be started twice. CORS grants remain with the configured request-aware middleware.",
+      "authority": "AUTHORITY-041; explicit privacy, failure and concurrency requirements of the consolidated audit",
+      "source": "formal/system/request-failure-boundary.md",
+      "contract": "formal/system/request-failure-boundary.md",
+      "actors": [
+        "HTTP caller",
+        "Authenticated actor",
+        "Provider fetch worker",
+        "Restricted diagnostics reader"
+      ],
+      "preconditions": [
+        "Unexpected failure at one of the named boundaries; no inference about all system logs."
+      ],
+      "inputs": [
+        "Request/callback state",
+        "Synchronous exception or cancellation",
+        "Diagnostic sink outcome"
+      ],
+      "state": {
+        "response": [
+          "not_started",
+          "started"
+        ],
+        "error": [
+          "synchronous",
+          "asynchronous"
+        ],
+        "diagnostic": [
+          "fixed_identifier",
+          "sink_failed"
+        ]
+      },
+      "allowedTransitions": [
+        "not_started + synchronous error -> fixed diagnostic + one fixed500",
+        "started + failure -> propagate to Warp without another response callback",
+        "asynchronous exception -> propagate cancellation",
+        "best-effort activity sync failure -> fixed warning",
+        "provider fetch sync failure -> fixed internal code"
+      ],
+      "forbiddenTransitions": [
+        "Render exception/request details into diagnostic output",
+        "Retry response callback after it began",
+        "Turn cancellation into business failure or normal response",
+        "Grant wildcard origin in request-independent error fallback"
+      ],
+      "effects": [
+        "One controlled response before streaming or propagation afterward",
+        "Fixed non-PII diagnostic identifiers"
+      ],
+      "authorization": "Error handling does not grant access or retry a protected operation. Existing endpoint authorization and mandatory consent transactions remain authoritative.",
+      "privacy": "Do not render SQL parameters, actor identifiers, bearer credentials, private URLs or arbitrary exception payloads at these diagnostic boundaries.",
+      "concurrency": "Atomic response-start marker prevents repeated callbacks; safe-exceptions preserves classified cancellation. No socket/streaming liveness proof.",
+      "idempotency": "No automatic mutation retry or second response on failure.",
+      "failure": "Fixed500 before response start; propagate after start or cancellation. Synchronous logging failure does not replace the response.",
+      "recovery": "Caller follows the operation-specific retry contract; operators investigate fixed identifiers without emitting private payloads.",
+      "observability": "Fixed HTTP/activity/provider failure classes; actual tests and source fingerprints retained.",
+      "implementation": [
+        "tdf-hq/src/TDF/App/FailureBoundary.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/FailureBoundarySpec.hs",
+        "scripts/verify-request-failures.py",
+        "scripts/quality-backend.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and finite runtime controls; final combined validation pending",
+      "ambiguity": [
+        "Blocking diagnostic sinks, socket-streaming behavior and unrelated logging/provider boundaries are not covered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped runtime repair and source mutations do not establish whole-server or deployed conformance."
+      },
+      "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission.",
+      "verification": "Actual Haskell/WAI tests with synthetic exceptions and source-mutation negative controls.",
+      "evidence": "Revision-bound verify-request-failures output and full backend suite; current combined execution pending."
     }
   ]
 }
