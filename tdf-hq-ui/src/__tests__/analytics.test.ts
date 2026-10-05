@@ -285,6 +285,19 @@ describe('analytics/posthog (web)', () => {
       .not.toContain('private-token');
   });
 
+  test('preserves question-mark campaign labels while masking relative URL properties', () => {
+    const properties = sanitizeAnalyticsProperties({
+      attribution_campaign: 'fall?sale',
+      $initial_utm_campaign: 'fall?sale',
+      $current_url: 'https://tdf.test/eventos/141?utm_campaign=fall%3Fsale',
+      nested: { returnUrl: 'receipt?lookupToken=PRIVATE-RELATIVE-TOKEN' },
+    });
+    expect(properties.attribution_campaign).toBe('fall?sale');
+    expect(properties.$initial_utm_campaign).toBe('fall?sale');
+    expect(new URL(properties.$current_url).searchParams.get('utm_campaign')).toBe('fall?sale');
+    expect(JSON.stringify(properties)).not.toContain('PRIVATE-RELATIVE-TOKEN');
+  });
+
   test('logs PostHog failures through the app logger', () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const resilientAnalyticsClient = getAnalyticsClient();
