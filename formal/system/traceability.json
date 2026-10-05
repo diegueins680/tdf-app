@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "d5d47460d6e87bc29f4e772e9742420a1ffbdbbd",
+  "mobileRevision": "88adcf55d706bfdcf3cd7e3a2fe20ac8d915febb",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -5421,7 +5421,8 @@
         "scripts/lib/invoice_receipt_conformance.py",
         "scripts/verify-event-operations-formal.sh",
         "scripts/verify-invoice-receipts.py",
-        "scripts/quality-backend.sh"
+        "scripts/quality-backend.sh",
+        "scripts/verify-invoice-receipt-api.mjs"
       ],
       "formalModels": [
         "formal/event-operations/InvoiceReceipt.tla"
@@ -5445,7 +5446,7 @@
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/ci.yml": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
-    "docs/catalog-persistence/catalog-list-decisions.json": "8059a86ff58532643c8dcd866e6b62242583a48d9b577d3f96902c9ef2875812",
+    "docs/catalog-persistence/catalog-list-decisions.json": "b2b9caf40d76eaacec5e1a0dc98cf683683b7416e2523873ad872cc303885d52",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
@@ -5563,7 +5564,7 @@
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
-    "scripts/lib/invoice_receipt_conformance.py": "32c635ef0bd45a17adcc573aaa835c49075a580cbbaad09a6abf2a592789c01a",
+    "scripts/lib/invoice_receipt_conformance.py": "382ef805a312d34b5ce33e9f321e5b3bba7d35b44d83b24cfb934a5a68a97bc1",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
@@ -5609,6 +5610,7 @@
     "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
     "scripts/verify-event-operations-formal.sh": "d46397ad32d8de80da708b47c115a42d54119da229600dd845bb61bcc0bd2d0a",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
+    "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
@@ -5696,7 +5698,7 @@
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "129faabf08605150ee2e8854be2d94e8da42eb3c42ee82c9aaabc8707a9af4d1",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
-    "tdf-hq/src/TDF/Auth.hs": "db316edfeb4103745284948ca43222c2c37521a4a25cc7b040c46a4d707c53e7",
+    "tdf-hq/src/TDF/Auth.hs": "f3865228ef047b25298fbf94860c972fed5f6b572247bca21adcaa5d0ce5c652",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
@@ -5785,7 +5787,7 @@
     "tdf-mobile/.github/workflows/datadog-synthetics.yml": "09ce9584ea2fd8fbce95bf0d720be7594457e809f0b46dbcd2e0feb788564d98",
     "tdf-mobile/.github/workflows/mobile-validate.yml": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
     "tdf-mobile/__tests__/AuthProvider.test.tsx": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
-    "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
+    "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "0062663cef59cc75ff32d326ef90b9550669a433f8bb8ffd1af4e0a52e6734ed",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
     "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
     "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx": "4cbc66b4cbefc8022e1b5ca2f356d78173ce96ef227a7bccad9b0ad1a17bf78d",
@@ -8728,6 +8730,12 @@
         "relationship": "tests"
       }
     ],
+    "scripts/verify-invoice-receipt-api.mjs": [
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/InvoiceReceipt.tla": [
       {
         "requirement": "PAY-INVOICE-001",
@@ -10626,7 +10634,7 @@
     {
       "id": "SURFACE-51d8657e7eea8356",
       "path": "scripts/lib/invoice_receipt_conformance.py",
-      "sha256": "32c635ef0bd45a17adcc573aaa835c49075a580cbbaad09a6abf2a592789c01a",
+      "sha256": "382ef805a312d34b5ce33e9f321e5b3bba7d35b44d83b24cfb934a5a68a97bc1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12582,6 +12590,18 @@
       "sha256": "a618bf924cda53bf9365502f58ec43ab7fb7a53bbf958b1164fc3ebf60ec656f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-c62b0ba550ffb3e8",
+      "path": "scripts/verify-invoice-receipt-api.mjs",
+      "sha256": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INVOICE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-02ec8e917a623acf",
@@ -21143,7 +21163,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "db316edfeb4103745284948ca43222c2c37521a4a25cc7b040c46a4d707c53e7",
+      "sha256": "f3865228ef047b25298fbf94860c972fed5f6b572247bca21adcaa5d0ce5c652",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24093,7 +24113,7 @@
     {
       "id": "SURFACE-c85da5949c19b4d4",
       "path": "tdf-mobile/__tests__/AuthQueryProviders.test.tsx",
-      "sha256": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
+      "sha256": "0062663cef59cc75ff32d326ef90b9550669a433f8bb8ffd1af4e0a52e6734ed",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29726,7 +29746,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a8a9b764068b8feea4db78389abf66c35e6f3b0f8f3c9915512861b4bd586329",
+      "sourceSha256": "8d8b00291a89060fa1abe6623971b60c524f82814e9341f66e207db987005d02",
       "definition": {
         "states": [
           "absent",

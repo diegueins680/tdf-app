@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "d5d47460d6e87bc29f4e772e9742420a1ffbdbbd",
+  "mobileRevision": "88adcf55d706bfdcf3cd7e3a2fe20ac8d915febb",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -436,6 +436,7 @@
       "scripts/verify-event-operations-formal.sh",
       "scripts/verify-event-operations-pluscal.mjs",
       "scripts/verify-improvement-loop.mjs",
+      "scripts/verify-invoice-receipt-api.mjs",
       "scripts/verify-invoice-receipts.py",
       "scripts/verify-payment-arithmetic.py",
       "scripts/verify-request-failures.py",
@@ -3511,7 +3512,7 @@
     {
       "id": "SURFACE-51d8657e7eea8356",
       "path": "scripts/lib/invoice_receipt_conformance.py",
-      "sha256": "32c635ef0bd45a17adcc573aaa835c49075a580cbbaad09a6abf2a592789c01a",
+      "sha256": "382ef805a312d34b5ce33e9f321e5b3bba7d35b44d83b24cfb934a5a68a97bc1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4766,6 +4767,12 @@
       "id": "SURFACE-7ade12b1e0a8aa7b",
       "path": "scripts/verify-improvement-loop.mjs",
       "sha256": "a618bf924cda53bf9365502f58ec43ab7fb7a53bbf958b1164fc3ebf60ec656f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c62b0ba550ffb3e8",
+      "path": "scripts/verify-invoice-receipt-api.mjs",
+      "sha256": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11683,7 +11690,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "db316edfeb4103745284948ca43222c2c37521a4a25cc7b040c46a4d707c53e7",
+      "sha256": "f3865228ef047b25298fbf94860c972fed5f6b572247bca21adcaa5d0ce5c652",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13621,7 +13628,7 @@
     {
       "id": "SURFACE-c85da5949c19b4d4",
       "path": "tdf-mobile/__tests__/AuthQueryProviders.test.tsx",
-      "sha256": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
+      "sha256": "0062663cef59cc75ff32d326ef90b9550669a433f8bb8ffd1af4e0a52e6734ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21480,7 +21487,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a8a9b764068b8feea4db78389abf66c35e6f3b0f8f3c9915512861b4bd586329",
+      "sha256": "8d8b00291a89060fa1abe6623971b60c524f82814e9341f66e207db987005d02",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
