@@ -910,6 +910,11 @@
       "id": "2026-10-05_ticket_confirmation_lease_index",
       "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
       "introducedBy": "73fae64015f3058d40f7c237010f7ea975290e7f"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_lease_clock",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql",
+      "introducedBy": "7e1ea290626cce735b642f33b79bcedd631e0327"
     }
   ]
 }

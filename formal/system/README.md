@@ -279,3 +279,5 @@ the compatible Mobile merge also retains reviewed shipped release `925952571c`.
 The combined manifest contains the175 parent entries unchanged, plus the scoped
 Operations projection compatibility migration. Current combined rehearsal is
 required; the previous173-entry receipt is historical evidence only.
+
+The consolidated confirmation audit also includes shipped main `cae7a54f3c9a712837e71186b0a6bf564c13180d` and its default-disabled notification worker (`NOTIF-TICKET-001`). Its historical SQL remains immutable; an additive migration repairs lease completion after lock waits. `SYS-CI-001` maps inherited pinned Mobile CI selection and conditional synthetic evidence. These source additions require fresh combined validation and production migration rehearsal.

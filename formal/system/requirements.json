@@ -4963,7 +4963,8 @@
         "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
-      "ambiguity": []
+      "ambiguity": [],
+      "evidence": "Pinned workflow regression tests plus revision-bound hosted Mobile workflow/step results; unconfigured provider steps are not executed synthetic evidence."
     },
     {
       "authority": "Current shipped source reconciled under the requested consolidated audit",
@@ -5077,7 +5078,8 @@
       "ambiguity": [
         "External SMTP cannot retract a receipt after concurrent ownership change; delivery snapshot may be stale and admission must enforce current credentials.",
         "Default-disabled production worker has no verified sender/inbox receipt in this audit."
-      ]
+      ],
+      "evidence": "Actual synthetic PostgreSQL concurrent workers, loopback SMTP, observed lock-wait expiry positive/negative controls and bounded NotificationLease results; consolidated candidate rerun and production verification pending."
     }
   ]
 }

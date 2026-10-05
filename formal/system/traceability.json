@@ -4891,13 +4891,203 @@
         "Downstream failure replay execution and actual push delivery are not established.",
         "Note success replay, cross-owner token rotation and deletion remain separate obligations; not formally covered."
       ]
+    },
+    {
+      "authority": "Current shipped source reconciled under the requested consolidated audit",
+      "contract": "formal/system/mobile-ci-boundary.md",
+      "critical": true,
+      "source": "formal/system/mobile-ci-boundary.md",
+      "status": "specified and implemented",
+      "confidence": "Source-derived boundary; no universal proof or production completion claim",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Current consolidated validation and deployed correspondence remain outstanding."
+      },
+      "observability": "Record SHA, workflow/run/attempt and whether the provider step actually ran.",
+      "recovery": "Repair configuration/source and run a fresh attempt; preserve failed evidence.",
+      "verification": "Parsed pinned workflow assertions and real hosted run evidence; provider service is external.",
+      "id": "SYS-CI-001",
+      "title": "Shipped Mobile validation and conditional external synthetic evidence",
+      "domain": "SYS",
+      "statement": "Main and shipped release branches must run Mobile validation; configured synthetic checks must fail on critical provider errors or missing tests. Missing credentials and fork exclusions must be explicit and do not count as executed synthetic evidence.",
+      "actors": [
+        "Repository contributors",
+        "GitHub Actions",
+        "Configured synthetic provider"
+      ],
+      "preconditions": [
+        "Exact Mobile gitlink exists; workflow event is within main or shipped release scope."
+      ],
+      "inputs": [
+        "Git revision",
+        "Pull request or push event",
+        "Repository secret availability"
+      ],
+      "state": {
+        "validation": [
+          "queued",
+          "running",
+          "passed",
+          "failed",
+          "cancelled"
+        ],
+        "synthetics": [
+          "excluded_fork",
+          "unconfigured",
+          "running",
+          "passed",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Triggered validation runs release checks, tests, artifact guards and Expo doctor.",
+        "Configured provider execution fails closed on missing tests or critical errors."
+      ],
+      "forbiddenTransitions": [
+        "Represent missing credentials or excluded forks as an executed provider test.",
+        "Suppress a configured provider failure."
+      ],
+      "effects": [
+        "Revision-bound CI results and explicit skip logs"
+      ],
+      "authorization": "Fork workflows do not receive provider secrets; repository credentials remain in CI secret context.",
+      "privacy": "Never log credential values; do not place private fixture data in artifacts.",
+      "concurrency": "Superseded runs may be cancelled; cancellation is not passing evidence.",
+      "idempotency": "Reruns are separate attempts with retained original result.",
+      "failure": "Failed validation blocks its quality gate. Unconfigured optional provider execution remains unverified.",
+      "property": "Validation selected for main and release; configured provider failures cannot be green.",
+      "implementation": [
+        "tdf-mobile/.github/workflows/mobile-validate.yml",
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml"
+      ],
+      "tests": [
+        "scripts/__tests__/ci-pipeline.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [],
+      "evidence": "Pinned workflow regression tests plus revision-bound hosted Mobile workflow/step results; unconfigured provider steps are not executed synthetic evidence."
+    },
+    {
+      "authority": "Current shipped source reconciled under the requested consolidated audit",
+      "contract": "formal/ticket-admission/confirmation-delivery.md",
+      "critical": true,
+      "source": "formal/ticket-admission/confirmation-delivery.md",
+      "status": "specified and implemented",
+      "confidence": "Source-derived boundary; no universal proof or production completion claim",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Current consolidated validation and deployed correspondence remain outstanding."
+      },
+      "observability": "Restricted counts by state, due age, expired leases, attempts and fixed last_error_code; no credentials in logs.",
+      "recovery": "Expired leases can be reclaimed; guarded rollback rejects any queue history. Operator repair requires retaining original intent.",
+      "verification": "PostgreSQL transition tests, eight concurrent actual Haskell consumers, synthetic loopback SMTP failure/retry, header tests; no external inbox or real-money evidence.",
+      "id": "NOTIF-TICKET-001",
+      "title": "Durable ticket purchase confirmation with fenced delivery attempts",
+      "domain": "NOTIF",
+      "statement": "Canonical paid ticket issuance must atomically enqueue at most one retained confirmation intent per order. Opt-in workers claim with bounded leases, resolve currently eligible buyer-held credentials, bound SMTP work, fence acknowledgements and retain exhausted failures. SMTP acceptance is not inbox delivery and duplicate email after ambiguous acceptance remains possible.",
+      "actors": [
+        "Public ticket buyer",
+        "Payment finalizer",
+        "Opt-in SMTP worker",
+        "Restricted operations staff"
+      ],
+      "preconditions": [
+        "Canonical paid and issued order",
+        "Reviewed migrations applied",
+        "Worker explicitly enabled with configured SMTP"
+      ],
+      "inputs": [
+        "Canonical order ID",
+        "Fresh random lease UUID",
+        "Current canonical ticket ownership",
+        "SMTP outcome"
+      ],
+      "state": {
+        "initial": "pending",
+        "states": [
+          "pending",
+          "processing",
+          "accepted",
+          "cancelled",
+          "dead_letter"
+        ],
+        "terminal": [
+          "accepted",
+          "cancelled",
+          "dead_letter"
+        ],
+        "attemptBound": 8,
+        "leaseSeconds": 120,
+        "sendTimeoutSeconds": 30
+      },
+      "allowedTransitions": [
+        "Absent -> pending within canonical issuance transaction",
+        "Due pending -> processing with exclusive claim and fresh lease",
+        "Current unexpired processing -> accepted on SMTP acknowledgement",
+        "Current unexpired processing -> cancelled when no eligible tickets remain",
+        "Failed processing -> pending with exponential backoff or dead_letter at eight attempts",
+        "Expired processing -> pending or dead_letter at attempt bound"
+      ],
+      "forbiddenTransitions": [
+        "Queue for an unpaid/unissued order",
+        "Foreign or expired lease acknowledges a delivery",
+        "SMTP call inside issuance transaction",
+        "Migration backfills old purchases",
+        "Rollback discards retained queue history"
+      ],
+      "effects": [
+        "One deduplicated intent per order",
+        "Potential duplicate SMTP submission after ambiguous crash, without new charge or ticket"
+      ],
+      "authorization": "Internal worker and database authority only; no public queue administration route. Delivery eligibility derives from current paid order and buyer-retained tickets.",
+      "privacy": "Queue stores operational metadata and order reference only. Resolve PII and ticket codes at processing time, keep them out of error logs; concurrent revocation versus external send requires review.",
+      "concurrency": "SKIP LOCKED claim and lease-fenced completion; SMTP and database cannot atomically commit.",
+      "idempotency": "Order primary key deduplicates enqueue; lease fences acknowledgement; external SMTP is at-least-once under retry, bounded by attempt budget.",
+      "failure": "Sanitized failure codes; retry/backoff to eight attempts then retained dead letter. Missing config leaves queue intact.",
+      "property": "Unique intent, canonical issuance authority, current lease completion, bounded attempts, no implicit production enablement.",
+      "implementation": [
+        "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/Email.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql",
+        "tdf-hq/config/default.env.example",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql"
+      ],
+      "tests": [
+        "scripts/test-ticket-confirmation.sh",
+        "scripts/test-ticket-confirmation-smtp.py",
+        "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
+        "tdf-hq/test/TicketConfirmationMain.hs",
+        "tdf-hq/test/TicketConfirmationSmtpMain.hs",
+        "tdf-hq/test/integration/ticket_confirmation_delivery.sql",
+        "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql",
+        "scripts/test-public-ticket-checkout-runtime-migration.sh",
+        "scripts/test-ticket-confirmation-lease.py",
+        "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
+        "tdf-hq/test/TicketDatabaseRoutingMain.hs",
+        "scripts/__tests__/disposable-postgres-url.test.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/NotificationLease.tla"
+      ],
+      "ambiguity": [
+        "External SMTP cannot retract a receipt after concurrent ownership change; delivery snapshot may be stale and admission must enforce current credentials.",
+        "Default-disabled production worker has no verified sender/inbox receipt in this audit."
+      ],
+      "evidence": "Actual synthetic PostgreSQL concurrent workers, loopback SMTP, observed lock-wait expiry positive/negative controls and bounded NotificationLease results; consolidated candidate rerun and production verification pending."
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
-    ".github/workflows/ci.yml": "41b77e0a2e317f9818922047ef993b8fff279dc111c1132ecd2d31bdbc644651",
+    ".github/workflows/ci.yml": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
-    "docs/catalog-persistence/catalog-list-decisions.json": "32116e70d14cafedcff21e54fdcf9740d78df1764c0bfd4edcf29639c1d6f956",
+    "docs/catalog-persistence/catalog-list-decisions.json": "536c415a2cbcc10b51a18eedb37f3e3f5bc93f4e6589b4b34bd89d84f9111e06",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
@@ -4912,6 +5102,7 @@
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+    "formal/event-operations/NotificationLease.tla": "65f550acabba6bc780bdaa60b6f7678e2e7e0fc4b18a7ce2cdd17b704c1f22bb",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
     "formal/event-operations/OperationsManualReceipt.tla": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
@@ -4969,10 +5160,10 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
-    "scripts/__tests__/ci-pipeline.test.mjs": "367578f372789d845334a91d98e5360deece6a455c97f831944ca4d1ea7c53a5",
+    "scripts/__tests__/ci-pipeline.test.mjs": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
-    "scripts/__tests__/disposable-postgres-url.test.mjs": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
+    "scripts/__tests__/disposable-postgres-url.test.mjs": "8e577a4e15ef1dcb01333a2def3d342e5b07164b3139e15c72dbe41e235348c1",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
@@ -5015,7 +5206,7 @@
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
-    "scripts/production-migrations.json": "a87b108f50b6b59e28c46eef987cb4534f37af0cc735b56440f8e282440c2e27",
+    "scripts/production-migrations.json": "99ce2cf434d8aa6bd5de22a4e44840cb484de0936d1aa221aff187754ba571f7",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-backend.sh": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
@@ -5040,14 +5231,17 @@
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
-    "scripts/test-public-ticket-checkout-runtime-migration.sh": "7fdc39a6de69890c0ba3e45d248210324459303fb158e9965bc242c76f440170",
+    "scripts/test-public-ticket-checkout-runtime-migration.sh": "9355dd4f0db3c8ec7e39ee6881d3cae31677e9817b767b23546d19fdbf2b4cf3",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
     "scripts/test-ticket-admission.sh": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
+    "scripts/test-ticket-confirmation-lease.py": "d554fe1054ca6f9295d0485ae202e61b5d1d11b413c30bf2ae385b1394e95f74",
+    "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
+    "scripts/test-ticket-confirmation.sh": "1eb8a54b3d5539f0bae3325ea28227520df0509d847be27eeb7ba8b716e56422",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "3eaae93784afcc6bed1af5017e373f1748ce675d08e25c68f822c5f0d2f755b3",
+    "scripts/verify-event-operations-formal.sh": "58d19136ec078438ccc1c58421c834bd6268084dff4bcb9a03e305a473d99eeb",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
@@ -5094,6 +5288,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
+    "tdf-hq/config/default.env.example": "5681d9b6ae87dd2bb3d6d3540675b10b39d0615de3380b45ef0f98a24a11f8f6",
     "tdf-hq/docs/openapi/api.yaml": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
@@ -5108,6 +5303,11 @@
     "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql": "5df84ed2bf411ee976d39907845970e0d9e4defedca25142d1c51cca59624f6e",
     "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql": "e8d5332a38c0a71bc7ffadf328ced88bf55bddbd04eaaa7a6b8efabdebfee71d",
     "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql": "c2cd877a90fdf81447b2aba23141f8936f4e9e9bdb1133bd4e379dfe863c2a07",
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql": "05083c4ea8e7298934d73f7a2e87a59c4a52bf0380f2708530a6d7fb0be3966e",
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql": "539ae60b7d087a14acf5a2784793a4fb8a36a18e5d593466cf7bfebb2865d8eb",
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql": "c1e87b257b140f41fc8b0a98d06a37c0eede77b11f7b95c923818995decedea1",
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql": "b69d2455d90ef275943d386b052515a5c4e4ae501cb047bf793c42af666808f1",
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql": "74e0b82277d6f87ce839ffee9ba75a935d3f150bdb5843e6420b3ca2c9ece5c1",
     "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql": "0d3a8a75abbf07f9dfa0f6744daa6137f2611e10822e66ef8afe9fa666386342",
     "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql": "339e5714c731c5619938653a916c1f89bcda88aa629e4b081fe9cf8823219a48",
     "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql": "866c5c2381ebe7a416b2ab45f0451feac119d60e1e90a099016257425c8d7d7f",
@@ -5120,6 +5320,7 @@
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
+    "tdf-hq/src/TDF/App/Boot.hs": "22ce86fa5329425e5239fcf100dbe34e6f20e02ba722a8db09ebe0389f1aad1d",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
@@ -5136,6 +5337,7 @@
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
+    "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
@@ -5149,12 +5351,13 @@
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "dbd05677233c45449db5ccdfbb45b0cdddc1bae34b4d989c81cb176fa563ca71",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "d0381a0680f1a697f7e3d556c1c2620dd24bdbefbc3f5139b9759881b13318b9",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "8b2ba1d0b7f0c680a9dab9572232360f5d80490e1c6380bf8cf50849a3444777",
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "ba3d90073dae4f596bbf37d170aa3944355c8642e84cc6db3781d28af11d1041",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "622fa2515b1126e3ce7d529e4074163ff03a4bea90edef413772f58bc4bce486",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
     "tdf-hq/src/TDF/ServerExtra.hs": "8a730148e0a55bb0c1afdc1d0c6d5604d92a5e322e4f7a3e09d8740e1d410796",
@@ -5164,14 +5367,15 @@
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "3a2e44f10f39f35194479e31f642efe15830da0dbf371ddeabdf978a2e3dc2a5",
+    "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
     "tdf-hq/src/TDF/Ticketing/Transfer.hs": "1a97ef0a0fea72f14df03fec59336faf3eac4eccb89a665e32cb1605722dfbe4",
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "b70d22b1cd7e61d6b2b0015069c734e687dddb157c481feb8333c503f42cdd80",
-    "tdf-hq/test/Spec.hs": "69d64d4a2816d0fcb54530da0595767bbcc819afc901a5977fe2f5405a4b9d27",
+    "tdf-hq/tdf-hq.cabal": "83130e83f967345b7de337d808879fb7210ab95e1e5cadcbaea743c6a71390f1",
+    "tdf-hq/test/Spec.hs": "3678e5005a2fd52dcbab8ee279824b7827a97805bb2f0912eaa4247cd4da0883",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -5183,16 +5387,23 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
-    "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "2628a95fd9d158d26ec981c0f3195391d47d9a2a9725a4e43ea20332a4237091",
+    "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "69a224594a060d9268e72dd314452262c7bc0e1211c9114bb1d9be3e6bcf407d",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
+    "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "42ca67dad504ceaf6998ec067f3088f0d4cb4f06f8dc9162b8f96de60a8537d2",
-    "tdf-hq/test/TicketDatabaseRoutingMain.hs": "2f389f2ddab6718c96414d96aa86a02d07d20f0303657a385f71443a95b22001",
+    "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
+    "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
+    "tdf-hq/test/TicketDatabaseRoutingMain.hs": "8297d23c35763c3f99dfb3e4c74898e85cb99321b3b0cebcc263452b8b4dedec",
+    "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
+    "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
     "tdf-hq/test/integration/ticket_order_quantity_limit.sql": "3b0644e828f65673d57532ecb8d27a26df155c3a0d9399337be5a58af5aa7548",
+    "tdf-mobile/.github/workflows/datadog-synthetics.yml": "09ce9584ea2fd8fbce95bf0d720be7594457e809f0b46dbcd2e0feb788564d98",
+    "tdf-mobile/.github/workflows/mobile-validate.yml": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
     "tdf-mobile/__tests__/AuthProvider.test.tsx": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
     "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
@@ -5636,6 +5847,10 @@
       },
       {
         "requirement": "MKT-REPUTATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-CI-001",
         "relationship": "tests"
       }
     ],
@@ -7007,6 +7222,10 @@
       {
         "requirement": "SYS-VERIFY-004",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/test/TicketAdmissionMain.hs": [
@@ -7023,6 +7242,10 @@
       {
         "requirement": "SYS-VERIFY-004",
         "relationship": "tests"
+      },
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/merch-runtime-safety.test.mjs": [
@@ -7034,6 +7257,10 @@
     "tdf-hq/test/TicketDatabaseRoutingMain.hs": [
       {
         "requirement": "SYS-VERIFY-004",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "NOTIF-TICKET-001",
         "relationship": "tests"
       }
     ],
@@ -7441,6 +7668,10 @@
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": [
@@ -7543,6 +7774,10 @@
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql": [
@@ -7624,6 +7859,10 @@
     "scripts/test-public-ticket-checkout-runtime-migration.sh": [
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "NOTIF-TICKET-001",
         "relationship": "tests"
       }
     ],
@@ -7792,6 +8031,132 @@
         "requirement": "AUTH-OPS-READ-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-mobile/.github/workflows/mobile-validate.yml": [
+      {
+        "requirement": "SYS-CI-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/.github/workflows/datadog-synthetics.yml": [
+      {
+        "requirement": "SYS-CI-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Ticketing/Confirmation.hs": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/App/Boot.hs": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Email.hs": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/config/default.env.example": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-ticket-confirmation.sh": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-ticket-confirmation-smtp.py": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/TicketConfirmationSpec.hs": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TicketConfirmationMain.hs": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TicketConfirmationSmtpMain.hs": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/integration/ticket_confirmation_delivery.sql": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-ticket-confirmation-lease.py": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/NotificationLease.tla": [
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -7838,7 +8203,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "41b77e0a2e317f9818922047ef993b8fff279dc111c1132ecd2d31bdbc644651",
+      "sha256": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8353,7 +8718,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "367578f372789d845334a91d98e5360deece6a455c97f831944ca4d1ea7c53a5",
+      "sha256": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8370,6 +8735,10 @@
         },
         {
           "requirement": "MKT-REPUTATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-CI-001",
           "relationship": "tests"
         }
       ]
@@ -8412,11 +8781,15 @@
     {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
-      "sha256": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
+      "sha256": "8e577a4e15ef1dcb01333a2def3d342e5b07164b3139e15c72dbe41e235348c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-VERIFY-004",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "NOTIF-TICKET-001",
           "relationship": "tests"
         }
       ]
@@ -9899,7 +10272,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a87b108f50b6b59e28c46eef987cb4534f37af0cc735b56440f8e282440c2e27",
+      "sha256": "99ce2cf434d8aa6bd5de22a4e44840cb484de0936d1aa221aff187754ba571f7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11196,11 +11569,15 @@
     {
       "id": "SURFACE-73f84c14f54480df",
       "path": "scripts/test-public-ticket-checkout-runtime-migration.sh",
-      "sha256": "7fdc39a6de69890c0ba3e45d248210324459303fb158e9965bc242c76f440170",
+      "sha256": "9355dd4f0db3c8ec7e39ee6881d3cae31677e9817b767b23546d19fdbf2b4cf3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "NOTIF-TICKET-001",
           "relationship": "tests"
         }
       ]
@@ -11340,6 +11717,42 @@
       ]
     },
     {
+      "id": "SURFACE-f5260c2b48379b27",
+      "path": "scripts/test-ticket-confirmation-lease.py",
+      "sha256": "d554fe1054ca6f9295d0485ae202e61b5d1d11b413c30bf2ae385b1394e95f74",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-21b299f32d0ac3d4",
+      "path": "scripts/test-ticket-confirmation-smtp.py",
+      "sha256": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1a3dda71702f835f",
+      "path": "scripts/test-ticket-confirmation.sh",
+      "sha256": "1eb8a54b3d5539f0bae3325ea28227520df0509d847be27eeb7ba8b716e56422",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-75ed4534ce225e0f",
       "path": "scripts/test-trial-identity.sh",
       "sha256": "f8b36b41a30b527d6d1f22d8817cd6486e996c24179e16bf02469152bdc82ee6",
@@ -11440,7 +11853,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "3eaae93784afcc6bed1af5017e373f1748ce675d08e25c68f822c5f0d2f755b3",
+      "sha256": "58d19136ec078438ccc1c58421c834bd6268084dff4bcb9a03e305a473d99eeb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19412,6 +19825,66 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ab6b5c7c3db3e4c3",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
+      "sha256": "05083c4ea8e7298934d73f7a2e87a59c4a52bf0380f2708530a6d7fb0be3966e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e04c14f78e16cd69",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql",
+      "sha256": "539ae60b7d087a14acf5a2784793a4fb8a36a18e5d593466cf7bfebb2865d8eb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-912c52ab41755f0a",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql",
+      "sha256": "c1e87b257b140f41fc8b0a98d06a37c0eede77b11f7b95c923818995decedea1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-68bcbf29fe0dc36b",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
+      "sha256": "b69d2455d90ef275943d386b052515a5c4e4ae501cb047bf793c42af666808f1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f706917cf71c0fdd",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql",
+      "sha256": "74e0b82277d6f87ce839ffee9ba75a935d3f150bdb5843e6420b3ca2c9ece5c1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-ed48d78fa40594c9",
       "path": "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
       "sha256": "0d3a8a75abbf07f9dfa0f6744daa6137f2611e10822e66ef8afe9fa666386342",
@@ -19871,9 +20344,14 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "b46e508dc9063332bde265d889a88306585ba3c921ca087345391eff73f17d50",
+      "sha256": "22ce86fa5329425e5239fcf100dbe34e6f20e02ba722a8db09ebe0389f1aad1d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fd3727258ca900ae",
@@ -20516,9 +20994,14 @@
     {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
-      "sha256": "b5f11661e5ccb30f8f507e249088fc5341897392074b7d8097a2fa5afa8bf4d7",
+      "sha256": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-185047159b48a7cf",
@@ -20965,11 +21448,15 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "dbd05677233c45449db5ccdfbb45b0cdddc1bae34b4d989c81cb176fa563ca71",
+      "sha256": "d0381a0680f1a697f7e3d556c1c2620dd24bdbefbc3f5139b9759881b13318b9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NOTIF-TICKET-001",
           "relationship": "implementation"
         }
       ]
@@ -21046,9 +21533,14 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "741db65e144f41fc990934d94408df2b66ff9e7cad40b5260cdfb4759e13635c",
+      "sha256": "ba3d90073dae4f596bbf37d170aa3944355c8642e84cc6db3781d28af11d1041",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e4ab6ea991643db1",
@@ -21060,7 +21552,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "8b2ba1d0b7f0c680a9dab9572232360f5d80490e1c6380bf8cf50849a3444777",
+      "sha256": "622fa2515b1126e3ce7d529e4074163ff03a4bea90edef413772f58bc4bce486",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21069,6 +21561,10 @@
         },
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NOTIF-TICKET-001",
           "relationship": "implementation"
         }
       ]
@@ -21367,6 +21863,18 @@
       ]
     },
     {
+      "id": "SURFACE-489d36d3cc472098",
+      "path": "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+      "sha256": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b48f5e82f84a1379",
       "path": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
       "sha256": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
@@ -21511,7 +22019,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b70d22b1cd7e61d6b2b0015069c734e687dddb157c481feb8333c503f42cdd80",
+      "sha256": "83130e83f967345b7de337d808879fb7210ab95e1e5cadcbaea743c6a71390f1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21569,7 +22077,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "69d64d4a2816d0fcb54530da0595767bbcc819afc901a5977fe2f5405a4b9d27",
+      "sha256": "3678e5005a2fd52dcbab8ee279824b7827a97805bb2f0912eaa4247cd4da0883",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21798,12 +22306,16 @@
     {
       "id": "SURFACE-2109051a71e906d5",
       "path": "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
-      "sha256": "2628a95fd9d158d26ec981c0f3195391d47d9a2a9725a4e43ea20332a4237091",
+      "sha256": "69a224594a060d9268e72dd314452262c7bc0e1211c9114bb1d9be3e6bcf407d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-VERIFY-004",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -22050,6 +22562,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ae8c576d860734fa",
+      "path": "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
+      "sha256": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-6a608596a0a41e90",
       "path": "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "sha256": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
@@ -22087,13 +22611,41 @@
       ]
     },
     {
+      "id": "SURFACE-97c725b084887497",
+      "path": "tdf-hq/test/TicketConfirmationMain.hs",
+      "sha256": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2dabd63957e89a9c",
+      "path": "tdf-hq/test/TicketConfirmationSmtpMain.hs",
+      "sha256": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-9fc1887171a6bcfc",
       "path": "tdf-hq/test/TicketDatabaseRoutingMain.hs",
-      "sha256": "2f389f2ddab6718c96414d96aa86a02d07d20f0303657a385f71443a95b22001",
+      "sha256": "8297d23c35763c3f99dfb3e4c74898e85cb99321b3b0cebcc263452b8b4dedec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-VERIFY-004",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "NOTIF-TICKET-001",
           "relationship": "tests"
         }
       ]
@@ -22540,6 +23092,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-4ef57ef7a6773dd8",
+      "path": "tdf-hq/test/integration/ticket_confirmation_delivery.sql",
+      "sha256": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c42c54b3727ace66",
+      "path": "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql",
+      "sha256": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-797e095cf9630adf",
       "path": "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
       "sha256": "3b0644e828f65673d57532ecb8d27a26df155c3a0d9399337be5a58af5aa7548",
@@ -22598,7 +23174,12 @@
       "path": "tdf-mobile/.github/workflows/datadog-synthetics.yml",
       "sha256": "09ce9584ea2fd8fbce95bf0d720be7594457e809f0b46dbcd2e0feb788564d98",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-CI-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d84c1fc5d701e2cc",
@@ -22633,7 +23214,12 @@
       "path": "tdf-mobile/.github/workflows/mobile-validate.yml",
       "sha256": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-CI-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-dfdc76c7f5afe8f6",
@@ -26586,7 +27172,6 @@
     "SURFACE-224511e286675674",
     "SURFACE-c9bd1bcf315011ee",
     "SURFACE-fe906347e07abbb3",
-    "SURFACE-b36aba9e72486f8c",
     "SURFACE-fd3727258ca900ae",
     "SURFACE-97b434e9aaa0711b",
     "SURFACE-2d41912c8db6a2cf",
@@ -26645,7 +27230,6 @@
     "SURFACE-3ff9ad29b119eeb6",
     "SURFACE-d8b4f1e2ff66bf87",
     "SURFACE-5a5861ba5432460f",
-    "SURFACE-d333d9e42e7c8cfc",
     "SURFACE-185047159b48a7cf",
     "SURFACE-f6ca65c5d4df5331",
     "SURFACE-95c5350853ebb8e9",
@@ -26679,7 +27263,6 @@
     "SURFACE-576775b1139a1557",
     "SURFACE-2c8ed40114d9013d",
     "SURFACE-c446ba475dccb0e6",
-    "SURFACE-f26997e896f3fcbc",
     "SURFACE-e4ab6ea991643db1",
     "SURFACE-cb2c54ef31474aee",
     "SURFACE-5cfb0ad2589bfb68",
@@ -26821,12 +27404,10 @@
     "SURFACE-a9181c3d1f2e9fa0",
     "SURFACE-5a64e0ed1f9e7c79",
     "SURFACE-cbc4762024e82de2",
-    "SURFACE-9000b422122afb98",
     "SURFACE-d84c1fc5d701e2cc",
     "SURFACE-8b8075b14e77947f",
     "SURFACE-4d083e586c68746a",
     "SURFACE-d7fd396a0e21292f",
-    "SURFACE-dc7f9bd65923411b",
     "SURFACE-dfdc76c7f5afe8f6",
     "SURFACE-57fb42409e4fe3c1",
     "SURFACE-c2d3a0548b7f007b",
@@ -27191,7 +27772,8 @@
     "OPS-WORKER-001",
     "OPS-METRICS-001",
     "AUTH-OPS-READ-001",
-    "OPS-AUX-WRITE-001"
+    "OPS-AUX-WRITE-001",
+    "SYS-CI-001"
   ],
   "stateMachines": [
     {
@@ -49964,7 +50546,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 66,
+    "PARTIAL": 68,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
