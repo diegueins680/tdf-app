@@ -74,6 +74,7 @@ import           TDF.API.Feedback
 import           TDF.Auth                   ( AuthedUser(..)
                                             , extractTokenFromHeaders
                                             , loadAuthedUser
+                                            , withCurrentAuthSession
                                             )
 import           TDF.DB                     (Env(..))
 import qualified TDF.Models                  as M
@@ -136,8 +137,7 @@ feedbackServer authorizationHeader cookieHeader =
           when (isJust fpAttachment)
             (throwError err400 { errBody = "Account deletion requests do not accept attachments" })
       attachmentPath <- traverse validateAndStoreAttachment fpAttachment
-      feedbackKey <- liftIO $ runSqlPool
-        (insert Feedback
+      let insertRequest = insert Feedback
           { feedbackTitle        = title
           , feedbackDescription  = body
           , feedbackCategory     = Nothing
@@ -149,8 +149,11 @@ feedbackServer authorizationHeader cookieHeader =
           , feedbackConsent      = fpConsent
           , feedbackCreatedBy    = auPartyId <$> creator
           , feedbackCreatedAt    = now
-          })
-        envPool
+          }
+      accepted <- liftIO $ runSqlPool (case expectedAccount of
+        Nothing -> Just <$> insertRequest
+        Just _ -> maybe (pure Nothing) (\owner -> withCurrentAuthSession owner insertRequest) creator) envPool
+      feedbackKey <- maybe (throwError err401) pure accepted
 
       liftIO $ notify emailSvc title body (Just categoryLabel) (Just severityLabel) contactEmail attachmentPath
 

@@ -3799,7 +3799,7 @@
     },
     {
       "path": "docs/mobile-program/account-deletion-operations.md",
-      "sha256": "51ee16776817e0d116988f6851036d4c81be276fb0b4025ffba2dab58c173b26",
+      "sha256": "680f0d7e37d675dd19bf964724ac4ce6d162e07d4ad2bba55824804f051040fd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
