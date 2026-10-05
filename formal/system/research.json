@@ -384,6 +384,16 @@
       "applicability": "Facebook/Instagram private inbound message receipts.",
       "decision": "adopted with boundary",
       "rationale": "Fixed channel plus event count provides ingestion evidence without customer payloads. This does not establish global log privacy or erase historical exposure."
+    },
+    {
+      "id": "RES-AUTH-HMAC-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc2104.html",
+      "title": "RFC2104: HMAC keyed-hashing for message authentication",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Message authentication depends on a shared secret key and authenticated message bytes.",
+      "applicability": "Existing Meta HMAC-SHA256 verifier and unavailable-key admission.",
+      "decision": "adopted with boundary",
+      "rationale": "Keep the existing SHA256 library and constant-time digest comparison; reject absent/blank keys before ingestion. Property tests exercise exact-byte binding, not cryptographic security. Historical hash examples in RFC2104 are not adopted. Meta getting-started documentation returned429 during this review, so current provider header semantics are grounded in the implemented protocol and existing tests rather than a claimed fresh document read."
     }
   ]
 }
