@@ -6,7 +6,20 @@ TDF_AUDIT_DATABASE=${TDF_AUDIT_E2E_DATABASE:-tdf_studio_intern_audit_api_e2e}
 TDF_AUDIT_PORT=${TDF_AUDIT_E2E_PORT:-18089}
 TDF_AUDIT_BACKEND_EXE=${TDF_AUDIT_E2E_BACKEND_EXE:-}
 TDF_AUDIT_PASSWORD=${TDF_AUDIT_E2E_PASSWORD:-}
-TDF_AUDIT_RUNTIME_DIR=$(mktemp -d /private/tmp/tdf-studio-audit-api-e2e.XXXXXX)
+TDF_AUDIT_TEMP_BASE=${TMPDIR:-/tmp}
+TDF_AUDIT_TEMP_BASE=${TDF_AUDIT_TEMP_BASE%/}
+TDF_AUDIT_RUNTIME_DIR=$(mktemp -d "$TDF_AUDIT_TEMP_BASE/tdf-studio-audit-api-e2e.XXXXXX")
+PGHOST=${PGHOST:-127.0.0.1}
+PGPORT=${PGPORT:-5432}
+PGUSER=${PGUSER:-$(id -un)}
+PGPASSWORD=${PGPASSWORD:-unused-local-test-value}
+export PGHOST PGPORT PGUSER PGPASSWORD
+case "$PGHOST" in
+  127.0.0.1|localhost) ;;
+  postgres) test "${GITHUB_ACTIONS:-}" = true || { echo 'The postgres service is CI-only' >&2; exit 1; } ;;
+  *) echo 'Only loopback PostgreSQL or the isolated CI service is allowed' >&2; exit 1 ;;
+esac
+case "$PGPORT" in ''|*[!0-9]*) echo 'Invalid PostgreSQL port' >&2; exit 1 ;; esac
 TDF_AUDIT_LOG="$TDF_AUDIT_RUNTIME_DIR/backend.log"
 TDF_AUDIT_BACKEND_PID=""
 TDF_AUDIT_DATABASE_CREATED=0
@@ -20,7 +33,7 @@ cleanup() {
     dropdb --if-exists "$TDF_AUDIT_DATABASE" >/dev/null 2>&1 || true
   fi
   case "$TDF_AUDIT_RUNTIME_DIR" in
-    /private/tmp/tdf-studio-audit-api-e2e.*) rm -rf -- "$TDF_AUDIT_RUNTIME_DIR" ;;
+    "$TDF_AUDIT_TEMP_BASE"/tdf-studio-audit-api-e2e.*) rm -rf -- "$TDF_AUDIT_RUNTIME_DIR" ;;
   esac
 }
 trap cleanup EXIT INT TERM
@@ -52,11 +65,12 @@ createdb "$TDF_AUDIT_DATABASE"
 TDF_AUDIT_DATABASE_CREATED=1
 
 start_backend() {
+  env -i PATH="$PATH" HOME="$HOME" LANG="${LANG:-C.UTF-8}" \
   APP_ENV=test \
-  DB_HOST=127.0.0.1 \
-  DB_PORT=5432 \
-  DB_USER="$(id -un)" \
-  DB_PASS=unused-local-test-value \
+  DB_HOST="$PGHOST" \
+  DB_PORT="$PGPORT" \
+  DB_USER="$PGUSER" \
+  DB_PASS="$PGPASSWORD" \
   DB_NAME="$TDF_AUDIT_DATABASE" \
   APP_PORT="$TDF_AUDIT_PORT" \
   RESET_DB=false \

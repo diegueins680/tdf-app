@@ -259,6 +259,17 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Verify authenticated account deletion and auditable resolution
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_AUDIT_E2E_BACKEND_EXE: ${{ env.BACKEND_BINARY_OUT }}
+          TDF_AUDIT_E2E_DATABASE: tdf_account_deletion_test
+        run: |
+          export TDF_AUDIT_E2E_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+          sh scripts/test-studio-internship-audit-api-e2e.sh
+
       - name: Verify artist self-service transactions and migration
         env:
           PGHOST: postgres
