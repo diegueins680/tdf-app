@@ -528,7 +528,7 @@ export default function LabelAssetsPage() {
     ...(statusFilterLabel ? [`Estado: ${statusFilterLabel}`] : []),
   ];
   const filtersActiveCount = activeFilterLabels.length;
-  const showFilteredEmptyState = !assetsQuery.isLoading && filteredAssets.length === 0 && filtersActiveCount > 0;
+  const showFilteredEmptyState = !assetsQuery.isError && !assetsQuery.isLoading && filteredAssets.length === 0 && filtersActiveCount > 0;
   const filterSummaryLabels = showFilteredEmptyState ? [] : activeFilterLabels;
   const filteredEmptyStateMessage =
     activeFilterLabels.length > 0
@@ -554,7 +554,7 @@ export default function LabelAssetsPage() {
       ? 'Todos los assets visibles están sin sala asignada.'
       : `Mostrando una sola ubicación: ${onlyLocation}.`;
   }, [filteredAssets, roomMap]);
-  const showFilterSummary = !showFilteredEmptyState && !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
+  const showFilterSummary = !assetsQuery.isError && !showFilteredEmptyState && !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
   const showCategoryColumn = !showSingleCategorySummary && !sharedVisibleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
   const showLocationColumn = !sharedVisibleLocationSummary;

@@ -298,6 +298,36 @@ describe('LabelAssetsPage', () => {
     }
   });
 
+  it('does not claim a filtered inventory is empty when a pending search request fails', async () => {
+    let rejectRequest!: (reason: Error) => void;
+    listAssetsMock.mockReturnValueOnce(new Promise((_resolve, reject) => { rejectRequest = reject; }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Sintetizador');
+      await act(async () => {
+        rejectRequest(new Error('Request failed after filter input'));
+        await flushPromises();
+      });
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No se pudo cargar el inventario.');
+        expect(container.textContent).not.toContain('No hay assets con los filtros actuales');
+        expect(container.textContent).not.toContain('Todavía no hay assets.');
+        expect(container.textContent).not.toContain('Mostrando 0 de 0 assets');
+        expect(getInputByLabel(container, 'Buscar assets').value).toBe('Sintetizador');
+      });
+      listAssetsMock.mockResolvedValue([buildAsset()]);
+      await clickElement(getButtonByText(container, 'Actualizar'));
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Sintetizador Uno');
+        expect(container.textContent).not.toContain('No se pudo cargar el inventario.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('does not present a partial inventory when a later page fails', async () => {
     listAssetsMock
       .mockResolvedValueOnce({ items: [buildAsset()], page: 1, pageSize: 100, total: 2 })

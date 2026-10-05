@@ -9,3 +9,7 @@ The reviewed ticket confirmation contract remains formal/ticket-admission/confir
 ## Event presentation requirement identity
 
 `EVT-PRESENTATION-001` is the canonical combined event/transaction metadata requirement. It incorporates the earlier `EVT-PUBLIC-001` scope from ce4222633, preserving its implementation paths, regression tests and privacy obligations. The requirement register records that predecessor; source ancestry retains the complete original declaration. This identifier reconciliation adds no runtime guarantee.
+
+## Inventory failure presentation
+
+`MEDIA-INVENTORY-001` distinguishes a successfully empty result from a failed load. A search entered during the initial request does not convert a later failure into an empty filtered inventory or a zero-result count. The component regression controls that pending-request transition and verifies retry with the filter preserved. This is a UI state guarantee; it adds no transactional snapshot or upload-idempotency claim.
