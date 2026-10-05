@@ -3298,7 +3298,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -3885,6 +3885,81 @@
       "contract": "formal/system/meta-webhook-admission.md",
       "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures.",
       "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
+    },
+    {
+      "id": "MEDIA-DRIVE-001",
+      "title": "Bind Drive upload retries to actor and exact request",
+      "statement": "An existing Drive idempotency entry may be reused only when its stored versioned fingerprint matches the authenticated Party and effective filename, MIME, destination and file bytes; missing or conflicting binding rejects before provider mutation.",
+      "authority": "implementation safety repair under authorized conformance audit",
+      "domain": "MEDIA",
+      "actors": [
+        "Authorized operations actor",
+        "Persisted artist admitted by validateDriveAccess",
+        "Artist-enrichment worker using its current TDF principal"
+      ],
+      "preconditions": [
+        "Current backend authentication and validateDriveAccess pass; normalized multipart input is valid; Google credentials resolve."
+      ],
+      "inputs": [
+        "Optional normalized 64-hex idempotency key",
+        "Effective name, MIME, folder and bounded nonempty file",
+        "Authenticated PartyId derived by server"
+      ],
+      "state": {
+        "boundary": "Provider appProperties for visible key/folder entries",
+        "states": [
+          "absent",
+          "bound matching",
+          "bound conflicting",
+          "legacy unbound",
+          "duplicate provider entries"
+        ]
+      },
+      "allowedTransitions": [
+        "absent -> create with key and fingerprint -> attempt public-reader permission",
+        "bound matching -> reuse file -> retry permission"
+      ],
+      "forbiddenTransitions": [
+        "conflicting or legacy unbound -> upload or permission mutation",
+        "cross-actor key reuse -> silent file adoption"
+      ],
+      "effects": [
+        "Matching replay returns existing file reference; best-effort public permission remains separately reported."
+      ],
+      "authorization": "Existing backend role guard remains mandatory on each HTTP attempt; key possession is not ownership. PartyId is not accepted from the request.",
+      "privacy": "Fingerprint stores only a digest of actor and normalized metadata plus content digest; no token is stored in appProperties. Existing adapter attempts public-reader access; this is not a private-file endpoint.",
+      "concurrency": "Provider lookup and create are separate requests; simultaneous absence and ambiguous outcomes can duplicate objects. No exactly-once guarantee or cross-device serialization is established.",
+      "idempotency": "Key/folder lookup in credential-visible Drive scope; exact request fingerprint required. Same actor/request reuses; conflicts or missing binding409; duplicate matches fail closed502.",
+      "failure": "Conflicts409 before create/permission; provider failures502; missing configuration503. Successful file create can precede a failed permission operation.",
+      "recovery": "Preserve legacy and conflicting objects. Reconcile their provenance explicitly or choose a new intentional upload; never silently attach actor ownership. No production provider mutation during verification.",
+      "observability": "Retain exact test revision, synthetic wire trace, command and result; never log credentials or uploaded user content.",
+      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031",
+      "property": "reuse implies stored fingerprint equals current actor-and-request fingerprint; conflict implies no subsequent provider mutation",
+      "contract": "formal/system/drive-replay.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API/Drive.hs",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh.",
+      "evidence": "tdf-hq/test/TDF/DriveReplaySpec.hs; current execution evidence pending",
+      "status": "specified and implemented",
+      "historicalStatus": "implementation-repair-awaiting-current-execution",
+      "tests": [
+        "tdf-hq/test/TDF/DriveReplaySpec.hs",
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [],
+      "confidence": "source-reviewed request binding; execution and deployment still pending",
+      "ambiguity": [
+        "Current production usage/legacy entry count unobserved.",
+        "Concurrent creation, provider visibility lag, external metadata/content changes and post-admission session revocation are not covered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and deterministic transport checks require exact compiled execution; concurrency and deployed correspondence remain open."
+      },
+      "critical": true
     }
   ]
 }

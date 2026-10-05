@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "7b262727df040006f2c6b3c98508c2400c5f53d6",
+  "mobileRevision": "eac261c515cf763a368afde6b0641a2939a8df12",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -3886,6 +3886,81 @@
       "contract": "formal/system/meta-webhook-admission.md",
       "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures.",
       "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
+    },
+    {
+      "id": "MEDIA-DRIVE-001",
+      "title": "Bind Drive upload retries to actor and exact request",
+      "statement": "An existing Drive idempotency entry may be reused only when its stored versioned fingerprint matches the authenticated Party and effective filename, MIME, destination and file bytes; missing or conflicting binding rejects before provider mutation.",
+      "authority": "implementation safety repair under authorized conformance audit",
+      "domain": "MEDIA",
+      "actors": [
+        "Authorized operations actor",
+        "Persisted artist admitted by validateDriveAccess",
+        "Artist-enrichment worker using its current TDF principal"
+      ],
+      "preconditions": [
+        "Current backend authentication and validateDriveAccess pass; normalized multipart input is valid; Google credentials resolve."
+      ],
+      "inputs": [
+        "Optional normalized 64-hex idempotency key",
+        "Effective name, MIME, folder and bounded nonempty file",
+        "Authenticated PartyId derived by server"
+      ],
+      "state": {
+        "boundary": "Provider appProperties for visible key/folder entries",
+        "states": [
+          "absent",
+          "bound matching",
+          "bound conflicting",
+          "legacy unbound",
+          "duplicate provider entries"
+        ]
+      },
+      "allowedTransitions": [
+        "absent -> create with key and fingerprint -> attempt public-reader permission",
+        "bound matching -> reuse file -> retry permission"
+      ],
+      "forbiddenTransitions": [
+        "conflicting or legacy unbound -> upload or permission mutation",
+        "cross-actor key reuse -> silent file adoption"
+      ],
+      "effects": [
+        "Matching replay returns existing file reference; best-effort public permission remains separately reported."
+      ],
+      "authorization": "Existing backend role guard remains mandatory on each HTTP attempt; key possession is not ownership. PartyId is not accepted from the request.",
+      "privacy": "Fingerprint stores only a digest of actor and normalized metadata plus content digest; no token is stored in appProperties. Existing adapter attempts public-reader access; this is not a private-file endpoint.",
+      "concurrency": "Provider lookup and create are separate requests; simultaneous absence and ambiguous outcomes can duplicate objects. No exactly-once guarantee or cross-device serialization is established.",
+      "idempotency": "Key/folder lookup in credential-visible Drive scope; exact request fingerprint required. Same actor/request reuses; conflicts or missing binding409; duplicate matches fail closed502.",
+      "failure": "Conflicts409 before create/permission; provider failures502; missing configuration503. Successful file create can precede a failed permission operation.",
+      "recovery": "Preserve legacy and conflicting objects. Reconcile their provenance explicitly or choose a new intentional upload; never silently attach actor ownership. No production provider mutation during verification.",
+      "observability": "Retain exact test revision, synthetic wire trace, command and result; never log credentials or uploaded user content.",
+      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031",
+      "property": "reuse implies stored fingerprint equals current actor-and-request fingerprint; conflict implies no subsequent provider mutation",
+      "contract": "formal/system/drive-replay.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API/Drive.hs",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh.",
+      "evidence": "tdf-hq/test/TDF/DriveReplaySpec.hs; current execution evidence pending",
+      "status": "specified and implemented",
+      "historicalStatus": "implementation-repair-awaiting-current-execution",
+      "tests": [
+        "tdf-hq/test/TDF/DriveReplaySpec.hs",
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [],
+      "confidence": "source-reviewed request binding; execution and deployment still pending",
+      "ambiguity": [
+        "Current production usage/legacy entry count unobserved.",
+        "Concurrent creation, provider visibility lag, external metadata/content changes and post-admission session revocation are not covered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and deterministic transport checks require exact compiled execution; concurrency and deployed correspondence remain open."
+      },
+      "critical": true
     }
   ],
   "sourceFingerprints": {
@@ -4031,7 +4106,7 @@
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
-    "tdf-hq-ui/src/api/generated/types.ts": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
+    "tdf-hq-ui/src/api/generated/types.ts": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
@@ -4056,7 +4131,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "86601fcbd245d8e7c2a466ab1e39633fe49575d6276b78f5ab036de6841db84d",
+    "tdf-hq/docs/openapi/api.yaml": "d37f04e9584343fe885cdc4453963e475cb93177e35acc6ba24712b4f6dae1da",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -4070,6 +4145,7 @@
     "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql": "5df84ed2bf411ee976d39907845970e0d9e4defedca25142d1c51cca59624f6e",
     "tdf-hq/src/TDF/API.hs": "3b1f027ffe718dd547fc2299f6aa8977b9db9915736d4210dc1df235cb1372bc",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
+    "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
     "tdf-hq/src/TDF/API/Instagram.hs": "d31bf02a6a69cab1c0122699eb890fcc32e4809234b41246f3185bec76c8c1ef",
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
@@ -4093,7 +4169,7 @@
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Routes/Courses.hs": "750e7304fa71dfccdce5132c24fbb077043087b5b0d8fe17e2ca6dcbb5384fcb",
-    "tdf-hq/src/TDF/Server.hs": "f4ff8ec05572f9c96009bd6e4bdfe808327192672ead560d7996f831164048d2",
+    "tdf-hq/src/TDF/Server.hs": "4313691a6623bdc602b8cabb3838c1a6ba582773bd9e5fe436fd9a2ee4c1e674",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -4113,8 +4189,8 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
-    "tdf-hq/test/Spec.hs": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
+    "tdf-hq/tdf-hq.cabal": "c727ade00f072b8dfd5598ed203f89e66341bfaf7952213df2d183f0ae1f2725",
+    "tdf-hq/test/Spec.hs": "9e35bfb269b54fcc35708706dab4da407241eae5ec3ad56801015597d2413baf",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -4125,6 +4201,7 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
+    "tdf-hq/test/TDF/DriveReplaySpec.hs": "4c768199c6d8673630988be6906f9bde7a8ec221370b49bf5a11dfe34b01949f",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
@@ -4138,7 +4215,7 @@
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
-    "tdf-mobile/src/api/generated/types.ts": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
+    "tdf-mobile/src/api/generated/types.ts": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff"
   },
   "reverseTraceability": {
@@ -4403,6 +4480,10 @@
       },
       {
         "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-DRIVE-001",
         "relationship": "implementation"
       }
     ],
@@ -4886,6 +4967,10 @@
       {
         "requirement": "SYS-BUILD-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/check-build-trust.mjs": [
@@ -5237,6 +5322,10 @@
       },
       {
         "requirement": "SYS-API-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-DRIVE-001",
         "relationship": "tests"
       }
     ],
@@ -6126,6 +6215,18 @@
       {
         "requirement": "AUTH-WEBHOOK-001",
         "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/API/Drive.hs": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/DriveReplaySpec.hs": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "tests"
       }
     ]
   },
@@ -10273,7 +10374,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
+      "sha256": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14793,7 +14894,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "86601fcbd245d8e7c2a466ab1e39633fe49575d6276b78f5ab036de6841db84d",
+      "sha256": "d37f04e9584343fe885cdc4453963e475cb93177e35acc6ba24712b4f6dae1da",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17405,7 +17506,12 @@
       "path": "tdf-hq/src/TDF/API/Drive.hs",
       "sha256": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-DRIVE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-531b5849276ce165",
@@ -18591,7 +18697,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "f4ff8ec05572f9c96009bd6e4bdfe808327192672ead560d7996f831164048d2",
+      "sha256": "4313691a6623bdc602b8cabb3838c1a6ba582773bd9e5fe436fd9a2ee4c1e674",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18624,6 +18730,10 @@
         },
         {
           "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-DRIVE-001",
           "relationship": "implementation"
         }
       ]
@@ -19191,11 +19301,15 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
+      "sha256": "c727ade00f072b8dfd5598ed203f89e66341bfaf7952213df2d183f0ae1f2725",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-BUILD-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-DRIVE-001",
           "relationship": "implementation"
         }
       ]
@@ -19245,7 +19359,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
+      "sha256": "9e35bfb269b54fcc35708706dab4da407241eae5ec3ad56801015597d2413baf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19254,6 +19368,10 @@
         },
         {
           "requirement": "SYS-API-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-DRIVE-001",
           "relationship": "tests"
         }
       ]
@@ -19457,6 +19575,18 @@
       "sha256": "a745e19b13935fcd7ca3cf51f30810f7353e91a1ff33688b7c153d6a89813887",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-93ad4526d09f9815",
+      "path": "tdf-hq/test/TDF/DriveReplaySpec.hs",
+      "sha256": "4c768199c6d8673630988be6906f9bde7a8ec221370b49bf5a11dfe34b01949f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-DRIVE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-57276774edbf18b9",
@@ -21649,7 +21779,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
+      "sha256": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24057,7 +24187,6 @@
     "SURFACE-7e2c68ec2035c554",
     "SURFACE-a4902497bb9c1b53",
     "SURFACE-9f19f644ef35d148",
-    "SURFACE-bb66af5ab40dbff1",
     "SURFACE-531b5849276ce165",
     "SURFACE-cb535c211328ca30",
     "SURFACE-afc4cb3bc501dafc",
@@ -24708,7 +24837,8 @@
     "MKT-REPUTATION-001",
     "REC-DDEX-001",
     "PRIV-WEBHOOK-001",
-    "AUTH-WEBHOOK-001"
+    "AUTH-WEBHOOK-001",
+    "MEDIA-DRIVE-001"
   ],
   "stateMachines": [
     {
@@ -25829,6 +25959,26 @@
     }
   ],
   "apiOperations": [
+    {
+      "id": "POST /drive/upload",
+      "operationId": "uploadDriveFile",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "409",
+        "502",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
     {
       "id": "GET /trials/v1/subjects",
       "operationId": "listPublicTrialSubjects",
@@ -47011,7 +47161,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 53,
+    "PARTIAL": 54,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

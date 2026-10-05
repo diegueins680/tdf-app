@@ -321,6 +321,16 @@
       "conflict": "A development-motivated comment and test permit absent optional secret configuration to bypass authentication in every environment.",
       "authority": "formal/system/meta-webhook-admission.md",
       "resolution": "Absent or blank secret makes all four POST aliases unavailable503. Configured signature checks remain401 on invalid proof. Explicit synthetic keys replace implicit development bypass; no production key values or changes."
+    },
+    {
+      "id": "AUTHORITY-031",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "scripts/artist-enrichment.mjs"
+      ],
+      "conflict": "Existing Drive key/folder lookup silently returns a prior file for different bytes, name, MIME or actor and then attempts public sharing.",
+      "authority": "formal/system/drive-replay.md",
+      "resolution": "Treat conflicting success as a request-integrity bug. Bind newly created entries to actor and request; preserve legacy objects but reject their implicit adoption. Retain worker key format and explicit provider-concurrency exclusions."
     }
   ]
 }

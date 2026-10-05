@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -394,6 +394,20 @@
       "applicability": "Existing Meta HMAC-SHA256 verifier and unavailable-key admission.",
       "decision": "adopted with boundary",
       "rationale": "Keep the existing SHA256 library and constant-time digest comparison; reject absent/blank keys before ingestion. Property tests exercise exact-byte binding, not cryptographic security. Historical hash examples in RFC2104 are not adopted. Meta getting-started documentation returned429 during this review, so current provider header semantics are grounded in the implemented protocol and existing tests rather than a claimed fresh document read."
+    },
+    {
+      "source": "https://developers.google.com/workspace/drive/api/guides/properties",
+      "recommendation": "Use appProperties for application-specific file metadata; respect property size/count and OAuth access boundaries.",
+      "applicability": "Store 64-hex request digest alongside existing retry key; each key/value pair fits the documented124-byte bound.",
+      "decision": "adopted with boundary",
+      "rationale": "Provider metadata transports request binding, but it is mutable and is not a durable atomic idempotency ledger or signature."
+    },
+    {
+      "source": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+      "recommendation": "Associate a client retry identifier with request parameters and reject different intent under one identifier.",
+      "applicability": "Drive helper previously returned stale content on a conflicting retry.",
+      "decision": "adopted narrowly",
+      "rationale": "Fingerprint authenticated actor and normalized request before reuse. Do not claim provider creation is exactly once: lookup/create is separate and crash recovery needs a durable coordination design."
     }
   ]
 }

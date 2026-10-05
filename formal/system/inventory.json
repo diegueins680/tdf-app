@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "7b262727df040006f2c6b3c98508c2400c5f53d6",
+  "mobileRevision": "eac261c515cf763a368afde6b0641a2939a8df12",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -1734,6 +1734,7 @@
       "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
       "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
       "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+      "tdf-hq/test/TDF/DriveReplaySpec.hs",
       "tdf-hq/test/TDF/EmailHeadersSpec.hs",
       "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs",
       "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
@@ -5114,7 +5115,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
+      "sha256": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8864,7 +8865,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "86601fcbd245d8e7c2a466ab1e39633fe49575d6276b78f5ab036de6841db84d",
+      "sha256": "d37f04e9584343fe885cdc4453963e475cb93177e35acc6ba24712b4f6dae1da",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11906,7 +11907,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "f4ff8ec05572f9c96009bd6e4bdfe808327192672ead560d7996f831164048d2",
+      "sha256": "4313691a6623bdc602b8cabb3838c1a6ba582773bd9e5fe436fd9a2ee4c1e674",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12290,7 +12291,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
+      "sha256": "c727ade00f072b8dfd5598ed203f89e66341bfaf7952213df2d183f0ae1f2725",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12332,7 +12333,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
+      "sha256": "9e35bfb269b54fcc35708706dab4da407241eae5ec3ad56801015597d2413baf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12441,6 +12442,12 @@
       "id": "SURFACE-e284c62e82e2c450",
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
       "sha256": "a745e19b13935fcd7ca3cf51f30810f7353e91a1ff33688b7c153d6a89813887",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-93ad4526d09f9815",
+      "path": "tdf-hq/test/TDF/DriveReplaySpec.hs",
+      "sha256": "4c768199c6d8673630988be6906f9bde7a8ec221370b49bf5a11dfe34b01949f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14252,7 +14259,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
+      "sha256": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20444,14 +20451,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "6e27c3c950fd0d67271abecf4ca6526011a5b455a530ba6ec10cc22a2a5f34d5",
+      "sha256": "b6c41e008b9b6e9a06e83f6fd2be6a853522c305ef5f1bab1dfcc26f4341465e",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "3a975787685e6c362ea0fa6b6c8212a17f47c67a1b30e8cdb6bb1165bfae17c9",
+      "sha256": "dc5a3be2f83423577e35f68e72a84fbf863a7b31899105bbb5226c3c781918ae",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20522,6 +20529,13 @@
     {
       "path": "formal/system/dependency-security.md",
       "sha256": "cb5ae6a52cb03b4a4a5da244ef11b8fe1c69186e2641ddb3690aa8f8b15ac7ea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/drive-replay.md",
+      "sha256": "2d6194a8c331d81e5d1499aeb980cf6e0a5f2457d35e0f8f7d84a8d7f5e6729b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20598,14 +20612,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f5fd6fbaaee3fda4e0065470ce123c720833e98b0f06b3fa837f535770fc2486",
+      "sha256": "6db0e8d4ed1cfa2c4601f83aec675bc9af0181ebef6877a6d4f9ec51efce1284",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "3f2c865865212eaa80ffbd9e43f69cd1b5d0b2c776619e08dd41f8aec5638330",
+      "sha256": "3fbe5c9cf3c6436700fbef2c08ade8ff5080f3c73f25743e37e9f5a5e6384374",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20773,7 +20787,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "86601fcbd245d8e7c2a466ab1e39633fe49575d6276b78f5ab036de6841db84d",
+      "sha256": "d37f04e9584343fe885cdc4453963e475cb93177e35acc6ba24712b4f6dae1da",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

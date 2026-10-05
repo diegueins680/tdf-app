@@ -9,6 +9,59 @@ servers:
     description: Development server
 
 paths:
+  /drive/upload:
+    post:
+      tags: [Media]
+      operationId: uploadDriveFile
+      summary: Upload a file through the authorized Google Drive adapter
+      description: >-
+        Requires a coherent authenticated operations or persisted artist role admitted by
+        validateDriveAccess. Uses the supplied Google OAuth access token, or configured
+        service credentials and default folder. Files must be nonempty and at most 50 MiB.
+        An optional idempotency key is bound to the authenticated Party, effective filename,
+        MIME, destination folder and exact bytes. A conflicting or legacy unbound entry
+        returns 409 before upload or permission changes. Identical replay reuses the file
+        and retries best-effort public-reader permission. A null duPublicUrl does not
+        attest public access. Provider lookup/create is not atomic; concurrent creation
+        and ambiguous provider outcomes do not have an exactly-once guarantee.
+      parameters:
+        - name: X-Goog-Access-Token
+          in: header
+          required: false
+          schema: { type: string, maxLength: 4096 }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                folderId: { type: string }
+                name: { type: string }
+                accessToken: { type: string, maxLength: 4096 }
+                idempotencyKey: { type: string, pattern: '^\s*[0-9a-fA-F]{64}\s*$' }
+      responses:
+        '200':
+          description: Provider file reference; sharing is separately indicated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [duFileId, duWebViewLink, duWebContentLink, duPublicUrl]
+                properties:
+                  duFileId: { type: string }
+                  duWebViewLink: { type: string, nullable: true }
+                  duWebContentLink: { type: string, nullable: true }
+                  duPublicUrl: { type: string, nullable: true }
+        '400': { description: Invalid multipart input, size, name, MIME, folder or credentials }
+        '401': { description: Missing or invalid TDF session, or revoked Google refresh grant }
+        '403': { description: Authenticated actor lacks Drive access }
+        '409': { description: Retry key conflicts with the actor or request, or legacy entry lacks binding }
+        '502': { description: Provider request or response failed }
+        '503': { description: Provider credentials are not configured }
   /trials/v1/subjects:
     get:
       tags: [Trials]

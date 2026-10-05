@@ -3120,12 +3120,13 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
   accessToken <- resolveDriveAccessToken manager providedToken
   dtoOrErr <-
     liftIO
-      (try (uploadToDrive manager accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey) ::
+      (try (uploadToDrive manager (auPartyId user) accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey) ::
         IO (Either SomeException DriveUploadDTO))
   case dtoOrErr of
     Right dto -> pure dto
-    Left err ->
-      throwError err502
+    Left err -> case fromException err of
+      Just replayError -> throwError (replayError :: ServerError)
+      Nothing -> throwError err502
         { errBody = BL8.pack (formatDriveUploadException (T.pack (displayException err))) }
   where
     resolveDriveAccessToken :: Manager -> Maybe Text -> AppM Text
@@ -20892,13 +20893,14 @@ data DriveApiResp = DriveApiResp
   , darWebViewLink    :: Maybe Text
   , darWebContentLink :: Maybe Text
   , darResourceKey    :: Maybe Text
+  , darRequestFingerprint :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON DriveApiResp where
   parseJSON = withObject "DriveApiResp" $ \o -> do
     rejectUnexpectedDriveResponseKeys
       "Drive upload response"
-      ["id", "webViewLink", "webContentLink", "resourceKey"]
+      ["id", "webViewLink", "webContentLink", "resourceKey", "appProperties"]
       o
     darId <- (o .: "id") >>= parseDriveApiFileId
     darWebViewLink <-
@@ -20917,6 +20919,10 @@ instance FromJSON DriveApiResp where
           "must be a Google Drive download https link for the uploaded file"
     darResourceKey <-
       (o .:? "resourceKey") >>= traverse (parseDriveApiResourceKey "resourceKey")
+    properties <- o .:? "appProperties"
+    darRequestFingerprint <- case properties of
+      Nothing -> pure Nothing
+      Just value -> withObject "Drive appProperties" (.:? "tdfRequestFingerprint") value
     validateDriveResponseResourceKeyConsistency
       darWebViewLink
       darWebContentLink
@@ -21022,8 +21028,18 @@ rejectUnexpectedDriveResponseKeys responseLabel allowedKeys o =
   where
     allowedKeySet = Set.fromList (map AKey.fromText allowedKeys)
 
+-- Actor and exact request binding; a caller key is not ownership evidence.
+-- Provider lookup/create is not atomic, so this is not an exactly-once guarantee.
+driveUploadFingerprint :: PartyId -> Text -> Text -> Maybe Text -> BL.ByteString -> Text
+driveUploadFingerprint actor name mime folder bytes =
+  digest $ BL.toStrict $ encode
+    ((1 :: Int), fromSqlKey actor, name, mime, folder, digest (BL.toStrict bytes))
+  where
+    digest value = T.pack (show (hash value :: Digest SHA256))
+
 uploadToDrive
   :: Manager
+  -> PartyId         -- ^ Current authenticated principal, never caller-supplied ownership
   -> Text            -- ^ Google access token (user or service)
   -> FileData Tmp    -- ^ Uploaded file from client
   -> Text            -- ^ Normalized file MIME type
@@ -21031,19 +21047,21 @@ uploadToDrive
   -> Maybe Text      -- ^ Optional folder id
   -> Maybe Text      -- ^ Optional deterministic idempotency key
   -> IO DriveUploadDTO
-uploadToDrive manager accessToken file mimeTypeTxt mName mFolder mIdempotencyKey = do
+uploadToDrive manager actor accessToken file mimeTypeTxt mName mFolder mIdempotencyKey = do
+  fileBytes <- BL.readFile (fdPayload file)
   uuid <- nextRandom
   let boundary = "tdf-boundary-" <> T.replace "-" "" (toText uuid)
       dashBoundary = "--" <> boundary
       fileName = fromMaybe (fdFileName file) mName
       mimeTypeBS = TE.encodeUtf8 mimeTypeTxt
+      fingerprint = driveUploadFingerprint actor fileName mimeTypeTxt mFolder fileBytes
       meta = object $
         [ "name" .= fileName
         , "mimeType" .= mimeTypeTxt
         ] <> maybe [] (\f -> ["parents" .= [f]]) mFolder
-          <> maybe [] (\key -> ["appProperties" .= object ["tdfIdempotencyKey" .= key]]) mIdempotencyKey
+          <> maybe [] (\key -> ["appProperties" .= object
+              ["tdfIdempotencyKey" .= key, "tdfRequestFingerprint" .= fingerprint]]) mIdempotencyKey
 
-  fileBytes <- BL.readFile (fdPayload file)
   let metaPart = BL.intercalate "\r\n"
         [ BL.fromStrict (TE.encodeUtf8 dashBoundary)
         , "Content-Type: application/json; charset=UTF-8"
@@ -21075,7 +21093,10 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder mIdempotencyKey
     Nothing -> pure Nothing
     Just key -> findDriveUploadByIdempotencyKey manager accessToken key mFolder
   driveResp <- case existing of
-    Just found -> pure found
+    Just found -> do
+      unless (darRequestFingerprint found == Just fingerprint) $
+        throwIO err409 { errBody = "Drive idempotency key is bound to a different or legacy unverified request" }
+      pure found
     Nothing -> do
       resp <- httpLbs req manager
       let uploadStatus = statusCode (responseStatus resp)
@@ -21143,7 +21164,7 @@ findDriveUploadByIdempotencyKey manager accessToken key mFolder = do
       scopedQuery = maybe baseQuery (\folder -> baseQuery <> " and '" <> folder <> "' in parents") mFolder
       query = renderQuery True
         [ ("q", Just (TE.encodeUtf8 scopedQuery))
-        , ("fields", Just "files(id,webViewLink,webContentLink,resourceKey)")
+        , ("fields", Just "files(id,webViewLink,webContentLink,resourceKey,appProperties)")
         , ("pageSize", Just "2")
         ]
   req0 <- parseRequest ("https://www.googleapis.com/drive/v3/files" <> BS8.unpack query)

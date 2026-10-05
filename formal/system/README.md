@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [drive-replay.md](drive-replay.md): actor/request-bound Drive retry admission and provider concurrency exclusions.
+
 - [meta-webhook-admission.md](meta-webhook-admission.md): fail-closed key configuration and exact-body authentication for all supported aliases.
 
 - [webhook-log-privacy.md](webhook-log-privacy.md): private provider payload exclusion from operational receipt logs.

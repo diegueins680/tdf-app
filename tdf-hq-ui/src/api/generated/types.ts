@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/drive/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a file through the authorized Google Drive adapter
+         * @description Requires a coherent authenticated operations or persisted artist role admitted by validateDriveAccess. Uses the supplied Google OAuth access token, or configured service credentials and default folder. Files must be nonempty and at most 50 MiB. An optional idempotency key is bound to the authenticated Party, effective filename, MIME, destination folder and exact bytes. A conflicting or legacy unbound entry returns 409 before upload or permission changes. Identical replay reuses the file and retries best-effort public-reader permission. A null duPublicUrl does not attest public access. Provider lookup/create is not atomic; concurrent creation and ambiguous provider outcomes do not have an exactly-once guarantee.
+         */
+        post: operations["uploadDriveFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/trials/v1/subjects": {
         parameters: {
             query?: never;
@@ -15173,6 +15193,86 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    uploadDriveFile: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Goog-Access-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    folderId?: string;
+                    name?: string;
+                    accessToken?: string;
+                    idempotencyKey?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Provider file reference; sharing is separately indicated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        duFileId: string;
+                        duWebViewLink: string | null;
+                        duWebContentLink: string | null;
+                        duPublicUrl: string | null;
+                    };
+                };
+            };
+            /** @description Invalid multipart input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated actor lacks Drive access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry key conflicts with the actor or request */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider request or response failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider credentials are not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listPublicTrialSubjects: {
         parameters: {
             query?: never;
