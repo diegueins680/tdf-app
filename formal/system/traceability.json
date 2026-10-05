@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "58abc5a543ed89b692e3e7bd569bf6db766dd0ac",
+  "mobileRevision": "655ffae872eb2eae9eb5b758b6a57a3b3ce12691",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -3030,7 +3030,8 @@
       ],
       "effects": [
         "Revision-scoped compiled syntax, route metadata and unresolved correspondence gaps are retained.",
-        "CI rejects compiler declaration drift against the committed snapshot, while retaining known OpenAPI gaps as unresolved obligations."
+        "CI rejects compiler declaration drift against the committed snapshot, while retaining known OpenAPI gaps as unresolved obligations.",
+        "Unreconciled response status drift fails CI; six explicit unavailable handlers retain503 rather than fabricated success."
       ],
       "authorization": "Description is a local executable mode; it performs no request and grants no backend capability. Auth combinators are syntax evidence, not a complete capability matrix.",
       "privacy": "No runtime credentials, database rows, tokens or provider responses are needed or inherited by the inspector.",
@@ -3048,19 +3049,21 @@
         "scripts/lib/compiled-api-surface.mjs",
         "formal/system/compiled-api-surface.json",
         "tdf-hq/src/TDF/Meta.hs",
-        "formal/system/api-availability.json"
+        "formal/system/api-availability.json",
+        "formal/system/api-response-status.json"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "scripts/__tests__/compiled-api-surface.test.mjs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [],
       "critical": true,
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Compiled5d9a917ed exports843 typed operations, two Raw mounts,385 undocumented operations,25 explicitly deferred documented operations and21 declared success-status differences. Competing typed route identities are now zero; codec, status and broad semantic reconciliation remain incomplete.",
+        "Compiled5d9a917ed exports843 typed operations, two Raw mounts,385 undocumented operations and25 explicitly deferred declarations. AUTHORITY-027 reconciles21 status differences into15 documented successes and6 deliberate503 handlers. Current compiled/runtime evidence must verify this correction; broad codec and semantic reconciliation remains incomplete.",
         "Raw routing, handler security, middleware, DTO codecs and errors remain separate conformance boundaries."
       ],
       "conformance": {
@@ -3554,6 +3557,112 @@
       "property": "Every documented unmounted typed operation is explicitly deferred; no deferred operation is mounted.",
       "verification": "Compiled surface gate, controlled mounting/omission/stale-policy mutations and requirement/provenance checks.",
       "evidence": "Exact-source compiled availability receipt and Node/Python gate logs."
+    },
+    {
+      "id": "REC-DDEX-001",
+      "title": "Canonical DDEX validation and shipped Mobile compatibility",
+      "domain": "REC",
+      "statement": "DDEX shall preserve private document bytes and canonical reference authority; synchronous validation either commits one complete run with its issues and document state or leaves no validation effect. Web and shipped Mobile shall consume canonical workflow/version references. Structural validation shall never imply official XSD or recipient-profile approval.",
+      "actors": [
+        "Authorized catalog reader",
+        "Authorized catalog importer",
+        "Mobile catalog user"
+      ],
+      "preconditions": [
+        "Current bearer identity and persisted catalog.read/import/export capability as appropriate",
+        "Active canonical references and explicitly configured private document storage"
+      ],
+      "inputs": [
+        "Private XML bytes, content hash and canonical document ID",
+        "Current workflow state and canonical reference IDs",
+        "Partner standard-version selections from current governed references"
+      ],
+      "state": {
+        "initial": "received",
+        "validationEligible": [
+          "received",
+          "quarantined",
+          "invalid",
+          "queued",
+          "validating"
+        ],
+        "validationTerminal": [
+          "invalid",
+          "mapping_required"
+        ],
+        "disabled": [
+          "import planning",
+          "import resolution",
+          "import commit",
+          "export",
+          "export download"
+        ]
+      },
+      "allowedTransitions": [
+        "Received, quarantined or invalid document -> queued -> validating -> invalid or mapping_required within one SQL transaction.",
+        "Queued/validating document -> completed structural run and matching document state atomically.",
+        "Read canonical document, raw base64 envelope, validation report and supported ERN4.3.2 preview with required capability."
+      ],
+      "forbiddenTransitions": [
+        "Issue uses legacy severity/layer constructors or missing/inactive canonical references.",
+        "Completed run uses legacy result constructor.",
+        "A rejected synchronous validation leaves a running row, issues or a document transition.",
+        "Structural completion is presented as official profile validity.",
+        "Mobile sends removed partnerAllowedVersions or uses version strings as relationship IDs.",
+        "Disabled import/export handler returns successful acceptance."
+      ],
+      "effects": [
+        "Private source storage and canonical metadata references.",
+        "Completed structural validation run, issues and document state commit together.",
+        "Response timestamps come from the stored run."
+      ],
+      "authorization": "Bearer identity plus ModuleCatalog and active persisted catalog.read/import/export permission predicates. Frontend capability discovery is not backend admission; global concurrent role revocation is not proven by these checks.",
+      "privacy": "Raw XML stays in explicitly configured private storage; authorized raw download is a JSON base64 envelope. Tests use synthetic fixture XML and no external provider.",
+      "concurrency": "Validation locks and reloads the document before checking current lifecycle eligibility; immutable hash/private URI/standard binding must match loaded source. Concurrent invalid revalidation may be legal; a noneligible fresh state returns409. Concurrent registry reconfiguration is not formally covered.",
+      "idempotency": "Upload deduplicates by source SHA with existing unique constraint. Validation creates a new run per accepted request; no request-key replay contract is claimed. Partner creation idempotency is not established.",
+      "failure": "Reject unauthorized/read-invalid inputs; deliberately unavailable capabilities return503. Validation SQL failure rolls back the whole synchronous operation. Ineligible current workflow returns409.",
+      "recovery": "Retain private source and historical evidence; retry only from allowed lifecycle states. Additive migration171 relaxes obsolete legacy NOT NULL fields while canonical integrity triggers remain enforced. No automated repair/deletion of preexisting stranded runs. Forward recovery retains accepted canonical references; restoring legacy NOT NULL is not a supported rollback.",
+      "observability": "Revision-scoped HTTP results, canonical timestamps/result codes, negative SQL controls and failure-injection rollback evidence. Official profile warning remains visible.",
+      "source": "Current DDEX API/DTOs, canonical catalog SQL guards, actual isolated HTTP reproduction of legacy NOT NULL failure, independent review and shipped Mobile consumer inspection.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/DDEX.hs",
+        "tdf-hq/src/TDF/DDEX/DB.hs",
+        "tdf-hq/src/TDF/API/DDEX.hs",
+        "tdf-hq/src/TDF/DDEX/Models.hs",
+        "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "tdf-mobile/src/api/ddex.ts",
+        "tdf-mobile/app/ddex/index.tsx",
+        "tdf-mobile/app/ddex/document/[id].tsx",
+        "tdf-mobile/app/ddex/partners.tsx"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py",
+        "tdf-mobile/__tests__/ddexApi.test.ts",
+        "tdf-mobile/__tests__/DdexPartners.test.tsx",
+        "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
+        "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
+        "tdf-mobile/__tests__/DdexInbox.test.tsx"
+      ],
+      "formalModels": [],
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Official licensed XSD and recipient-profile validation, transactional import and immutable export are deliberately unavailable.",
+        "Private storage full durability/deletion, provider delivery, concurrent registry reconfiguration and existing stranded-run reconciliation need separate verification.",
+        "Catalog reorder atomicity and legacy webhook raw-payload logging are separately discovered unresolved defects."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Concrete compatibility and atomicity repairs require final candidate runtime, migration, native Mobile and release evidence; no formal DDEX model/refinement proof."
+      },
+      "authority": "AUTHORITY-027 and canonical catalog integrity rules; implementation failures are repaired rather than promoted to policy.",
+      "property": "Canonical references and private source binding survive validation; rejected validation cannot partially commit; Mobile sends current canonical IDs.",
+      "contract": "formal/system/ddex-validation.md",
+      "verification": "Actual PostgreSQL/HTTP fixture, injected transaction failures, concurrent calls, unchanged canonical SQL guard rejections, Mobile adapter and component tests.",
+      "evidence": "Private revision-scoped API/restore/Stack receipts; working reproductions are not final candidate passes."
     }
   ],
   "sourceFingerprints": {
@@ -3609,6 +3718,7 @@
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
+    "formal/system/api-response-status.json": "a38b84f690e790cdff67a19c51efa29f1855d39619a3b25c58464ee559d84483",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "e42c7becdc4bfeb4966dc7eeed09952b56a9420f1f1937ec4975cedb0181f012",
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
@@ -3622,7 +3732,7 @@
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "367578f372789d845334a91d98e5360deece6a455c97f831944ca4d1ea7c53a5",
-    "scripts/__tests__/compiled-api-surface.test.mjs": "2888bc377a0f3bf18d097385b8eaa39b011762f1792682a3d0b202c6e5c90d74",
+    "scripts/__tests__/compiled-api-surface.test.mjs": "f73d37a71ce7d1af81ee4bd362be7df430cee1efde43cb9937ff9639f9f73271",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -3643,27 +3753,27 @@
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "4d9f8f5d55a1e2383f44590933f5ea2929bee12107750773892ee770f167099b",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
-    "scripts/check-api-availability.mjs": "b7be654b761f992d1e21b6e772dc50ba606291573dc55eb57e969c3bab2f2f50",
+    "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/deploy-stripe-ticketing.sh": "33fb7bde438832698cc382e83e1056f0196d1aa18c5753cfc64ba89ca65d5f95",
-    "scripts/inspect-compiled-api.mjs": "ff34782c6de3c831b68f2a4b80aaaf2130b12f7615a957f7ac7a8b7191591305",
+    "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
-    "scripts/lib/compiled-api-surface.mjs": "f2f8fb3e46b5d6d6fba6936bc8cf9f23dd373a04fc61cb264488b89c91302b76",
+    "scripts/lib/compiled-api-surface.mjs": "66ddbd8931f80a000a6d63f32823e9406c0149ccacc839e4d9f48e6c64dfc660",
     "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "d083e1f7d457610a08e63d4e6b482befc87fd386690cafa538d23ad913118beb",
+    "scripts/lib/production-release.mjs": "d7ae6bd22a1863de06d0925eca7d0a48fe8e27512a06700928b89b0d3066fbf6",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
-    "scripts/production-migrations.json": "78c020063a9657ca07d6021373d3d77b08f89aa9705f0860fcd4a7121d296fd5",
+    "scripts/production-migrations.json": "0fcdffeb47b73c7cad3be0c72de7586b6ebdf1ce29015dd6c7e84d4af8b4a718",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-backend.sh": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
@@ -3674,11 +3784,11 @@
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
-    "scripts/specification-conformance.py": "3c4ce005ac4e217b636e2671897218c81790f4e04ab14f6a415900faacc0259e",
+    "scripts/specification-conformance.py": "27fc7959ad752d8d76c025cd2cbadc978dcad3cc763b26b4efb5f63cfb94343e",
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "11e73a7ff90cfa5788bf6eb977d6e065b0944a15195073a2dbaf05944f855a5c",
+    "scripts/test-booking-conformance.py": "3bba0fbe9a4a40ce836248f2d29ce66ebff882f56e98758e0eba6a80fde2d1b5",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -3688,7 +3798,7 @@
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
-    "scripts/test-specification-conformance.py": "1e015b978a90fffecf5eaef1b6ce6e4baee3d85c1460d9a2bc2f8acebcdcfb7f",
+    "scripts/test-specification-conformance.py": "b7da3648e4d776ba472ca337f974c7ace5a0aa9980c584a48cbefee8d750174b",
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
@@ -3697,7 +3807,7 @@
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
-    "tdf-hq-ui/src/api/generated/types.ts": "2905ff1fe2a51ff500e14fca51d14c75dd706608c6c76c0393ea152c2fa89e4e",
+    "tdf-hq-ui/src/api/generated/types.ts": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
@@ -3722,7 +3832,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "84af6e9b2f544c10cfd1a541c17396af2646b36dae6c06bc5da3e6e10e26a18d",
+    "tdf-hq/docs/openapi/api.yaml": "a3f2bac66dd740b8186eaae7b27192777dc420927f1cfd67febabccc8a1fe411",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -3733,7 +3843,9 @@
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
     "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": "ff27157ab7ad9b9ba559d80ff40b88f11c8c0f6857bdce0aa0ff58966e8be98d",
+    "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql": "5df84ed2bf411ee976d39907845970e0d9e4defedca25142d1c51cca59624f6e",
     "tdf-hq/src/TDF/API.hs": "3b1f027ffe718dd547fc2299f6aa8977b9db9915736d4210dc1df235cb1372bc",
+    "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
@@ -3749,10 +3861,13 @@
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
+    "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
+    "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Server.hs": "f4ff8ec05572f9c96009bd6e4bdfe808327192672ead560d7996f831164048d2",
+    "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
@@ -3779,13 +3894,22 @@
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
     "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
+    "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
+    "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
+    "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
+    "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
+    "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
+    "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
+    "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
+    "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
-    "tdf-mobile/src/api/generated/types.ts": "2905ff1fe2a51ff500e14fca51d14c75dd706608c6c76c0393ea152c2fa89e4e",
+    "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
+    "tdf-mobile/src/api/generated/types.ts": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff"
   },
   "reverseTraceability": {
@@ -4489,6 +4613,10 @@
       {
         "requirement": "ID-SESSION-003",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/test-auth-recovery-migration.sh": [
@@ -4628,6 +4756,10 @@
       },
       {
         "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "REC-DDEX-001",
         "relationship": "implementation"
       }
     ],
@@ -5277,11 +5409,19 @@
         "relationship": "tests"
       },
       {
+        "requirement": "SYS-API-003",
+        "relationship": "tests"
+      },
+      {
         "requirement": "AUTH-RADIO-001",
         "relationship": "tests"
       },
       {
         "requirement": "COURSE-SUBJECT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "REC-DDEX-001",
         "relationship": "tests"
       }
     ],
@@ -5414,6 +5554,12 @@
       },
       {
         "requirement": "MKT-REPUTATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/api-response-status.json": [
+      {
+        "requirement": "SYS-API-003",
         "relationship": "implementation"
       }
     ],
@@ -5599,6 +5745,90 @@
       {
         "requirement": "MKT-REPUTATION-001",
         "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/DDEX.hs": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/DDEX/DB.hs": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/API/DDEX.hs": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/DDEX/Models.hs": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/ddex.ts": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/ddex/index.tsx": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/ddex/document/[id].tsx": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/ddex/partners.tsx": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/__tests__/ddexApi.test.ts": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/DdexPartners.test.tsx": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/DdexInbox.test.tsx": [
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "tests"
       }
     ]
   },
@@ -6149,7 +6379,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "2888bc377a0f3bf18d097385b8eaa39b011762f1792682a3d0b202c6e5c90d74",
+      "sha256": "f73d37a71ce7d1af81ee4bd362be7df430cee1efde43cb9937ff9639f9f73271",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6831,7 +7061,7 @@
     {
       "id": "SURFACE-4bf839700e64b995",
       "path": "scripts/check-api-availability.mjs",
-      "sha256": "b7be654b761f992d1e21b6e772dc50ba606291573dc55eb57e969c3bab2f2f50",
+      "sha256": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7087,7 +7317,7 @@
     {
       "id": "SURFACE-0c3b107b729b7e74",
       "path": "scripts/inspect-compiled-api.mjs",
-      "sha256": "ff34782c6de3c831b68f2a4b80aaaf2130b12f7615a957f7ac7a8b7191591305",
+      "sha256": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7213,7 +7443,7 @@
     {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
-      "sha256": "f2f8fb3e46b5d6d6fba6936bc8cf9f23dd373a04fc61cb264488b89c91302b76",
+      "sha256": "66ddbd8931f80a000a6d63f32823e9406c0149ccacc839e4d9f48e6c64dfc660",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7386,7 +7616,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "d083e1f7d457610a08e63d4e6b482befc87fd386690cafa538d23ad913118beb",
+      "sha256": "d7ae6bd22a1863de06d0925eca7d0a48fe8e27512a06700928b89b0d3066fbf6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7399,6 +7629,10 @@
         },
         {
           "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "REC-DDEX-001",
           "relationship": "implementation"
         }
       ]
@@ -7558,11 +7792,15 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "78c020063a9657ca07d6021373d3d77b08f89aa9705f0860fcd4a7121d296fd5",
+      "sha256": "0fcdffeb47b73c7cad3be0c72de7586b6ebdf1ce29015dd6c7e84d4af8b4a718",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "ID-SESSION-003",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "REC-DDEX-001",
           "relationship": "implementation"
         }
       ]
@@ -8176,7 +8414,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "3c4ce005ac4e217b636e2671897218c81790f4e04ab14f6a415900faacc0259e",
+      "sha256": "27fc7959ad752d8d76c025cd2cbadc978dcad3cc763b26b4efb5f63cfb94343e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8306,7 +8544,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "11e73a7ff90cfa5788bf6eb977d6e065b0944a15195073a2dbaf05944f855a5c",
+      "sha256": "3bba0fbe9a4a40ce836248f2d29ce66ebff882f56e98758e0eba6a80fde2d1b5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8322,11 +8560,19 @@
           "relationship": "tests"
         },
         {
+          "requirement": "SYS-API-003",
+          "relationship": "tests"
+        },
+        {
           "requirement": "AUTH-RADIO-001",
           "relationship": "tests"
         },
         {
           "requirement": "COURSE-SUBJECT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "REC-DDEX-001",
           "relationship": "tests"
         }
       ]
@@ -8852,7 +9098,7 @@
     {
       "id": "SURFACE-21c4ed4ad1e7c32f",
       "path": "scripts/test-specification-conformance.py",
-      "sha256": "1e015b978a90fffecf5eaef1b6ce6e4baee3d85c1460d9a2bc2f8acebcdcfb7f",
+      "sha256": "b7da3648e4d776ba472ca337f974c7ace5a0aa9980c584a48cbefee8d750174b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9718,7 +9964,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "2905ff1fe2a51ff500e14fca51d14c75dd706608c6c76c0393ea152c2fa89e4e",
+      "sha256": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14238,7 +14484,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "84af6e9b2f544c10cfd1a541c17396af2646b36dae6c06bc5da3e6e10e26a18d",
+      "sha256": "a3f2bac66dd740b8186eaae7b27192777dc420927f1cfd67febabccc8a1fe411",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16717,6 +16963,18 @@
       ]
     },
     {
+      "id": "SURFACE-662e09e3b893bd42",
+      "path": "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
+      "sha256": "5df84ed2bf411ee976d39907845970e0d9e4defedca25142d1c51cca59624f6e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -16815,7 +17073,12 @@
       "path": "tdf-hq/src/TDF/API/DDEX.hs",
       "sha256": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9f19f644ef35d148",
@@ -17554,9 +17817,14 @@
     {
       "id": "SURFACE-c76205938e7a6b6e",
       "path": "tdf-hq/src/TDF/DDEX/DB.hs",
-      "sha256": "1e913bc27fa7c00c6749372b60250bb9dc3be5649701e05bb42c75d37260514b",
+      "sha256": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-99343fbe22db2301",
@@ -17612,7 +17880,12 @@
       "path": "tdf-hq/src/TDF/DDEX/Models.hs",
       "sha256": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4ea2779d33f495e3",
@@ -18043,9 +18316,14 @@
     {
       "id": "SURFACE-988d54f382594f88",
       "path": "tdf-hq/src/TDF/Server/DDEX.hs",
-      "sha256": "37a06132d3dd247b318170d8666e746ab09bb1e95e43af0149c5b9bb2e1067cd",
+      "sha256": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0383785953b45d34",
@@ -18800,14 +19078,24 @@
       "path": "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
       "sha256": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-02db8d4e4f1fb1ff",
       "path": "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
       "sha256": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-e284c62e82e2c450",
@@ -19623,6 +19911,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ad726460ab1d2ced",
+      "path": "tdf-mobile/__tests__/DdexInbox.test.tsx",
+      "sha256": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ac7ad9c83fc93b9b",
+      "path": "tdf-mobile/__tests__/DdexPartners.test.tsx",
+      "sha256": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b008aa9647a19740",
       "path": "tdf-mobile/__tests__/DeepLinks.test.ts",
       "sha256": "e6f0b1b0c7fbe545a609b030b23e816c46159e6e37c0cfa8f3f3862e0372feba",
@@ -19866,6 +20178,18 @@
       "sha256": "5f5489bd2fe98a8ea6e15e27dd7f4d8bda5e874fba7de6199663d4f621368ddc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-8f51435859fd8c6d",
+      "path": "tdf-mobile/__tests__/ddexApi.test.ts",
+      "sha256": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-6dbf00e189d654d9",
@@ -20325,23 +20649,38 @@
     {
       "id": "SURFACE-eea8ac438b1965ee",
       "path": "tdf-mobile/app/ddex/document/[id].tsx",
-      "sha256": "8f97e55f4182c40465635057f451ef0cf283faac97d02dfefbe4bf9fe6417330",
+      "sha256": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9016477447a7e53a",
       "path": "tdf-mobile/app/ddex/index.tsx",
-      "sha256": "ab676659fc3fbf5a3199be61086cf4103f6648f8324e1511e56780409597d80c",
+      "sha256": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-560114febaf88dba",
       "path": "tdf-mobile/app/ddex/partners.tsx",
-      "sha256": "0b7939ae278ac130f8afa26ce4d94ef542c8febba68d9b23eac95ad47018feb6",
+      "sha256": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0024681b2b063dec",
@@ -20909,9 +21248,14 @@
     {
       "id": "SURFACE-66630e029d61289a",
       "path": "tdf-mobile/src/api/ddex.ts",
-      "sha256": "2483951a0ccf5227dfa3de7149878586316ebbe8cece0abb530a8335e49f4d4b",
+      "sha256": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-DDEX-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4084f20f60cc3c6d",
@@ -20951,7 +21295,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "2905ff1fe2a51ff500e14fca51d14c75dd706608c6c76c0393ea152c2fa89e4e",
+      "sha256": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23358,7 +23702,6 @@
     "SURFACE-6424d10f986745d0",
     "SURFACE-7e2c68ec2035c554",
     "SURFACE-a4902497bb9c1b53",
-    "SURFACE-683194622d5a1036",
     "SURFACE-9f19f644ef35d148",
     "SURFACE-bb66af5ab40dbff1",
     "SURFACE-531b5849276ce165",
@@ -23433,7 +23776,6 @@
     "SURFACE-7774c01ac1644990",
     "SURFACE-980d517db26f5cab",
     "SURFACE-b9f1acd9b5c4a2a3",
-    "SURFACE-c76205938e7a6b6e",
     "SURFACE-99343fbe22db2301",
     "SURFACE-f1fcc2bf4c6a6cf7",
     "SURFACE-abd0e751d48a20e2",
@@ -23441,7 +23783,6 @@
     "SURFACE-99173a00d78eecce",
     "SURFACE-25cb2d9568cc725f",
     "SURFACE-07f5552f754270f6",
-    "SURFACE-a63f5c406843e04a",
     "SURFACE-4ea2779d33f495e3",
     "SURFACE-dd178955fccbf2ac",
     "SURFACE-0713e985f492e211",
@@ -23492,7 +23833,6 @@
     "SURFACE-5936156bf9727c52",
     "SURFACE-5cbf72ef8bf21ded",
     "SURFACE-2834bdf776fa3c23",
-    "SURFACE-988d54f382594f88",
     "SURFACE-436c77cb88490332",
     "SURFACE-06aae7ecd0fab607",
     "SURFACE-7385d5c53761b485",
@@ -23549,8 +23889,6 @@
     "SURFACE-65f05df89af717ae",
     "SURFACE-2c3fc05077df1f30",
     "SURFACE-d181bc4924c66a49",
-    "SURFACE-f95dd5bf2d71650c",
-    "SURFACE-02db8d4e4f1fb1ff",
     "SURFACE-e284c62e82e2c450",
     "SURFACE-57276774edbf18b9",
     "SURFACE-2b52b5009371c78c",
@@ -23758,9 +24096,6 @@
     "SURFACE-e4ff09f3a09b3948",
     "SURFACE-b4a9130f77eda2d4",
     "SURFACE-ad037ff9be7a164f",
-    "SURFACE-eea8ac438b1965ee",
-    "SURFACE-9016477447a7e53a",
-    "SURFACE-560114febaf88dba",
     "SURFACE-0024681b2b063dec",
     "SURFACE-9f8cace47a1e130d",
     "SURFACE-73a1b649f6438e52",
@@ -23838,7 +24173,6 @@
     "SURFACE-5bea0425bb03c75c",
     "SURFACE-c2392e7f7f8aefc5",
     "SURFACE-e0edb1f5f845910d",
-    "SURFACE-66630e029d61289a",
     "SURFACE-4084f20f60cc3c6d",
     "SURFACE-1fa13f838eba721d",
     "SURFACE-5cc50673dc611e52",
@@ -24022,7 +24356,8 @@
     "SYS-VERIFY-004",
     "AUTH-RADIO-001",
     "COURSE-SUBJECT-001",
-    "MKT-REPUTATION-001"
+    "MKT-REPUTATION-001",
+    "REC-DDEX-001"
   ],
   "stateMachines": [
     {
@@ -26596,7 +26931,7 @@
       "source": "tdf-hq/docs/openapi/api.yaml",
       "security": [],
       "responses": [
-        "204"
+        "200"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -26659,7 +26994,7 @@
       "source": "tdf-hq/docs/openapi/api.yaml",
       "security": [],
       "responses": [
-        "204"
+        "200"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -27108,7 +27443,7 @@
         }
       ],
       "responses": [
-        "204"
+        "200"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -27416,7 +27751,7 @@
         }
       ],
       "responses": [
-        "204",
+        "200",
         "409"
       ],
       "conformance": "not-established-by-client-generation"
@@ -27829,7 +28164,7 @@
         }
       ],
       "responses": [
-        "204",
+        "200",
         "409"
       ],
       "conformance": "not-established-by-client-generation"
@@ -28343,7 +28678,7 @@
         }
       ],
       "responses": [
-        "204"
+        "200"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -28372,7 +28707,7 @@
         }
       ],
       "responses": [
-        "204",
+        "200",
         "400",
         "401",
         "403",
@@ -28386,7 +28721,7 @@
       "source": "tdf-hq/docs/openapi/api.yaml",
       "security": [],
       "responses": [
-        "204",
+        "200",
         "400"
       ],
       "conformance": "not-established-by-client-generation"
@@ -28827,7 +29162,8 @@
         }
       ],
       "responses": [
-        "501",
+        "200",
+        "503",
         "403"
       ],
       "conformance": "not-established-by-client-generation"
@@ -28857,7 +29193,8 @@
         }
       ],
       "responses": [
-        "501",
+        "200",
+        "503",
         "403"
       ],
       "conformance": "not-established-by-client-generation"
@@ -28872,9 +29209,11 @@
         }
       ],
       "responses": [
-        "501",
+        "200",
+        "503",
         "403",
-        "404"
+        "404",
+        "409"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -28904,7 +29243,8 @@
         }
       ],
       "responses": [
-        "501",
+        "200",
+        "503",
         "403"
       ],
       "conformance": "not-established-by-client-generation"
@@ -28919,7 +29259,7 @@
         }
       ],
       "responses": [
-        "501",
+        "503",
         "403",
         "404"
       ],
@@ -28935,7 +29275,7 @@
         }
       ],
       "responses": [
-        "501",
+        "503",
         "400",
         "403"
       ],
@@ -28951,7 +29291,7 @@
         }
       ],
       "responses": [
-        "501",
+        "503",
         "403"
       ],
       "conformance": "not-established-by-client-generation"
@@ -28966,7 +29306,7 @@
         }
       ],
       "responses": [
-        "501",
+        "503",
         "400",
         "403",
         "422"
@@ -28983,7 +29323,7 @@
         }
       ],
       "responses": [
-        "501",
+        "503",
         "403"
       ],
       "conformance": "not-established-by-client-generation"
@@ -31048,7 +31388,7 @@
         }
       ],
       "responses": [
-        "204",
+        "200",
         "401"
       ],
       "conformance": "not-established-by-client-generation"
@@ -31703,7 +32043,7 @@
         }
       ],
       "responses": [
-        "204"
+        "200"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -31717,7 +32057,7 @@
         }
       ],
       "responses": [
-        "204"
+        "200"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -32508,6 +32848,72 @@
         "sources": [
           "docs/merch-reputation.md",
           "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      }
+    ]
+  },
+  "apiResponseStatus": {
+    "schemaVersion": 1,
+    "authority": "AUTHORITY-027; SYS-API-003. Deliberately unavailable handlers do not advertise reachable success.",
+    "unavailableOperations": [
+      {
+        "id": "POST /ddex/documents/{}/import-plans",
+        "requirement": "SYS-API-003",
+        "compiledStatus": 200,
+        "unavailableStatus": 503,
+        "reason": "DDEX import/export requires verified runtime prerequisites.",
+        "sources": [
+          "tdf-hq/src/TDF/Server/DDEX.hs"
+        ]
+      },
+      {
+        "id": "PATCH /ddex/import-plans/{}",
+        "requirement": "SYS-API-003",
+        "compiledStatus": 200,
+        "unavailableStatus": 503,
+        "reason": "DDEX import/export requires verified runtime prerequisites.",
+        "sources": [
+          "tdf-hq/src/TDF/Server/DDEX.hs"
+        ]
+      },
+      {
+        "id": "POST /ddex/import-plans/{}/commit",
+        "requirement": "SYS-API-003",
+        "compiledStatus": 200,
+        "unavailableStatus": 503,
+        "reason": "DDEX import/export requires verified runtime prerequisites.",
+        "sources": [
+          "tdf-hq/src/TDF/Server/DDEX.hs"
+        ]
+      },
+      {
+        "id": "POST /ddex/exports",
+        "requirement": "SYS-API-003",
+        "compiledStatus": 200,
+        "unavailableStatus": 503,
+        "reason": "DDEX import/export requires verified runtime prerequisites.",
+        "sources": [
+          "tdf-hq/src/TDF/Server/DDEX.hs"
+        ]
+      },
+      {
+        "id": "GET /ddex/exports/{}/download",
+        "requirement": "SYS-API-003",
+        "compiledStatus": 200,
+        "unavailableStatus": 503,
+        "reason": "DDEX import/export requires verified runtime prerequisites.",
+        "sources": [
+          "tdf-hq/src/TDF/Server/DDEX.hs"
+        ]
+      },
+      {
+        "id": "POST /marketplace/cart/{}/stripe/payment-intent",
+        "requirement": "SYS-API-003",
+        "compiledStatus": 200,
+        "unavailableStatus": 503,
+        "reason": "Legacy Stripe checkout is disabled pending canonical verified-payment integration.",
+        "sources": [
+          "tdf-hq/src/TDF/Server.hs"
         ]
       }
     ]
@@ -46200,7 +46606,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 49,
+    "PARTIAL": 50,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
