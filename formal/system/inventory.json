@@ -14,6 +14,7 @@
       ".github/workflows/event-operations-formal.yml",
       ".github/workflows/event-raci-browser.yml",
       ".github/workflows/interaction-verification.yml",
+      ".github/workflows/merge-admission.yml",
       ".github/workflows/refresh-instagram-token.yml",
       ".github/workflows/social-verification.yml",
       ".github/workflows/ticketing-event-preflight.yml"
@@ -244,6 +245,7 @@
       "scripts/lib/ux-quality-audit.mjs",
       "scripts/lib/verification-evidence.mjs",
       "scripts/mail-deliverability-monitor.py",
+      "scripts/merge-admission.py",
       "scripts/meta-app-review-packet.mjs",
       "scripts/mobile-publishing-admin-audit.sh",
       "scripts/mobile-workspace-ready.mjs",
@@ -391,6 +393,7 @@
       "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
       "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
       "scripts/test-merch-reputation-migration.sh",
+      "scripts/test-merge-admission.py",
       "scripts/test-music-directory-contract.mjs",
       "scripts/test-music-directory-migration.sh",
       "scripts/test-new-specification-surfaces.py",
@@ -2337,6 +2340,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-305964459d20ce97",
+      "path": ".github/workflows/merge-admission.yml",
+      "sha256": "6beba81c6fa22404456282db21cf1937748f03b6013ce86fe378d0e57a56988b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f9eb7b8efd30e406",
       "path": ".github/workflows/refresh-instagram-token.yml",
       "sha256": "6dfd35d545c957f47541cbbd94e544ee77d2e14412f3a2a767fe80ad4e6d207a",
@@ -3621,6 +3630,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-40555a0730cda366",
+      "path": "scripts/merge-admission.py",
+      "sha256": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8b09001cab518c05",
       "path": "scripts/meta-app-review-packet.mjs",
       "sha256": "143d2e2acfb529c241e47a417ef41c74200118033692daf56fee30e0659ea2c3",
@@ -3743,7 +3758,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "165f0857cb4cb05868b433ee2abe803408cbe4b440b142d50a7e9632e8dcc904",
+      "sha256": "1892fe509356b4a4b3623d880bf082486120b41529ba95aeb2a5e5733cebc783",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4500,6 +4515,12 @@
       "id": "SURFACE-0d819d7ab7b8cf76",
       "path": "scripts/test-merch-reputation-migration.sh",
       "sha256": "4b45674a6b61098606c514d8decd637e7194662f4e79b13bf830651d0fb4181d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-56631cee05d8221c",
+      "path": "scripts/test-merge-admission.py",
+      "sha256": "748d95f42aef1d03e4f07968a60bb20b4199eed1e79bd472d554474096cc8374",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17559,6 +17580,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/main-integration-admission.md",
+      "sha256": "676e0a7dcd10c6331d721079d8bd7d935b32b21adb09e2bbc4f1e2b50233712c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/merch-reputation-acceptance.md",
       "sha256": "e556619c89bf60a0191742b2361b2f1f5d9c25afde5fa3746e9bef07d83b07fc",
       "authority": "inferred",
@@ -21473,7 +21501,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a72c480e02a867192fa3f08c1ec34ae4bfe4e9cef11f6a1afe2da7a8bd1f96f1",
+      "sha256": "8a174b87c8c1c38e279e6b168579b7cfc032779e6c6b98cae3598359757853cb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

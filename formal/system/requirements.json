@@ -5820,6 +5820,84 @@
       "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission.",
       "verification": "Actual Haskell/WAI tests with synthetic exceptions and source-mutation negative controls.",
       "evidence": "Revision-bound verify-request-failures output and full backend suite; current combined execution pending."
+    },
+    {
+      "id": "OPS-INTEGRATION-001",
+      "title": "Parallel development with serialized protected-main admission",
+      "domain": "OPS",
+      "statement": "At most one distinct ready PR head receives main-integration-admission from the serialized metadata controller after other observed heads are revoked and the queue/head/base snapshot is rechecked. Admission never replaces independent review, strict-base checks or quality gates.",
+      "property": "Metadata scheduling cannot waive protected-main review/check requirements; an incomplete observation or failed revocation cannot grant a new slot.",
+      "authority": "User instruction that parallel repository work must continue; existing protected-main policy remains authoritative for atomic merge eligibility.",
+      "source": "docs/main-integration-admission.md",
+      "contract": "docs/main-integration-admission.md",
+      "actors": [
+        "Parallel contributors",
+        "Independent reviewer",
+        "Serialized metadata controller",
+        "GitHub protected-branch enforcement"
+      ],
+      "preconditions": [
+        "Single admission writer: bootstrap controller before installation, then the main-only workflow concurrency group.",
+        "Strict up-to-date base, required checks, independent review, stale-review dismissal and administrator enforcement remain enabled."
+      ],
+      "inputs": [
+        "Paginated open-main PR metadata",
+        "Current main and head SHAs",
+        "Latest admission statuses"
+      ],
+      "state": {
+        "queue": [
+          "observed",
+          "revoking",
+          "revalidated",
+          "admitted",
+          "withheld"
+        ]
+      },
+      "allowedTransitions": [
+        "Observed complete metadata -> revoke other slots -> identical fresh snapshot -> grant oldest non-draft unambiguous head",
+        "Changed metadata or failed write -> withhold new admission",
+        "Merged or draft candidate -> next eligible candidate on fresh reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "Execute PR source in pull_request_target",
+        "Emit a quality/approval result from scheduling metadata",
+        "Grant another slot after a failed revocation",
+        "Grant both PRs sharing an ambiguous commit status identity"
+      ],
+      "effects": [
+        "Only the dedicated commit scheduling status changes; no reviews, source refs, deployment or branch policy are modified by the controller."
+      ],
+      "authorization": "Existing GitHub review/quality protection determines actual merge authority. The controller has metadata read/status write only.",
+      "privacy": "Read PR identity/state only; no PR body, customer data or credentials are emitted.",
+      "concurrency": "GitHub Actions serializes the controller; sequential API calls are not an atomic snapshot. Strict branch protection guards the final main update after observation. Bootstrap must hand off to the main workflow before any competing local writer runs.",
+      "idempotency": "Do not repost an unchanged context/state/description; missed or coalesced events are reconciled from fresh metadata.",
+      "failure": "API errors, partial status inventory, failed revocation or changing observations fail closed; source work/CI can continue while merges wait.",
+      "recovery": "Repair/rerun the trusted main workflow, or revalidate the single bootstrap controller before installation. Do not remove quality/review checks to recover throughput.",
+      "observability": "Dry-run queue plan, dedicated commit status, GitHub workflow run and recorded before/after branch protection.",
+      "implementation": [
+        "scripts/merge-admission.py",
+        ".github/workflows/merge-admission.yml",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/test-merge-admission.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Finite metadata-controller fault tests; final safety depends on the documented GitHub protection and single-controller assumptions.",
+      "ambiguity": [
+        "GitHub event scheduling has no five-minute availability guarantee.",
+        "Repository administrators can intentionally alter statuses/settings; this is not an adversarial administrator boundary.",
+        "Duplicate PR heads need consolidation because statuses identify commits, not PRs."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local race/failure controls and metadata dry run pass; bootstrap and hosted controller operation require separate recorded verification."
+      },
+      "verification": "Actual controller tests inject changed head/base/queue/draft/closure, revocation failure and duplicate heads; protected-main enforcement is re-observed during bootstrap.",
+      "evidence": "Current-head unit and hosted repository gates plus source-bound metadata/protection receipts; no universal concurrency proof."
     }
   ]
 }
