@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [recovery-files.md](recovery-files.md): private content/metadata replay and remaining coordinated bundle obligations.
+
 - [isolated-canary.md](isolated-canary.md): candidate startup/identity/failure-recovery on a disconnected disposable restore, with explicit deployment exclusions.
 
 - [readiness.md](readiness.md): fresh database probe, fixed unavailable responses and cancellation/deadline controls.

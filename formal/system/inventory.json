@@ -68,6 +68,7 @@
       "ops/hetzner/inspect-runtime.py",
       "ops/hetzner/isolated-application-canary.py",
       "ops/hetzner/migrate-owned-urls.sql",
+      "ops/hetzner/recovery-files.py",
       "ops/hetzner/rehearse-postgres-restore.py",
       "ops/privacy/request-workflow.json"
     ],
@@ -416,6 +417,7 @@
       "scripts/test-public-ticket-checkout-runtime-migration.sh",
       "scripts/test-records-ingestion-runtime.sh",
       "scripts/test-records-youtube-catalog-migration.sh",
+      "scripts/test-recovery-files.py",
       "scripts/test-requirement-declarations.py",
       "scripts/test-service-booking-checkout-runtime-migration.sh",
       "scripts/test-service-storefront-checkout-runtime-migration.sh",
@@ -2615,6 +2617,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c1e1cc1e8132267a",
+      "path": "ops/hetzner/recovery-files.py",
+      "sha256": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
       "sha256": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
@@ -3781,7 +3789,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "9bdae3c8c78460ef950c4f2f9913ffea1505eeebaddba8d7b74ddde768991f25",
+      "sha256": "526a6474f258c00026760efd7663a894eb3b7c1bfd8b27ccd3d7e51ef4963255",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4664,6 +4672,12 @@
       "id": "SURFACE-28c67c7120c30700",
       "path": "scripts/test-records-youtube-catalog-migration.sh",
       "sha256": "58c82bb399ac31f59ed80624f39fa07b0bc6e1541655b3ccedd74fdafb67b21c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-74baba1704e4a65f",
+      "path": "scripts/test-recovery-files.py",
+      "sha256": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21473,7 +21487,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "f19eb15bbab1d2686aeb1ee643b72c873c10c500219c1339a6835ba8a1439bc7",
+      "sha256": "0daf27bf21f18b0aaa678f51f885dff74141b2326115cac34afaaf3ed9a5e886",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -21696,6 +21710,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/recovery-files.md",
+      "sha256": "f5793eb1b059f7f2d4a7754fca1e2e60dd8d75822470fec9f423e950d5040d0b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/request-failure-boundary.md",
       "sha256": "4162fd62469608976edd1ddf661615154dfe81493be128632059513a6e4b3b86",
       "authority": "inferred",
@@ -21704,14 +21725,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "210d251f182845ad0e4142c513b7b5d4100abd8be451dd103a58a869b974b44d",
+      "sha256": "74c486b6b2c7d5a1c16d95ae44eaf9942f628f31ba2bf72a6727781ba0579693",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "6838fbe491da2c51d2eaed2a2b69eccec1cce342c73ed82371a1e16d109b5b94",
+      "sha256": "78b9ac447b9e4d1b0f6f88eadc5f626f283f904325d08e7d4fd825f6f7631ff2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21774,7 +21795,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "cd3cce4dcf4226b0f6f0f1f43f128bf05783c6ecac2eb22e8c9c41052cb08071",
+      "sha256": "8f424b0f742244f21be7844bc678dfc2ae04d172799f16c206b2bee3b4549790",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

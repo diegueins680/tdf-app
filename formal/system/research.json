@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -552,6 +552,17 @@
       "applicability": "Candidate application and disposable restored PostgreSQL on canonical host",
       "decision": "adopted",
       "rationale": "Share only the fully admitted network-none restore namespace, pin probe namespace handles, supply no production credentials and keep source mounts absent. No inference of full release readiness or protection from a compromised privileged host.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECOVERY-FILES-001",
+      "source": "https://docs.python.org/3/library/tarfile.html#extraction-filters",
+      "supportingSource": "https://www.postgresql.org/docs/17/backup-file.html",
+      "title": "Archive containment and coordinated snapshot limitations",
+      "recommendation": "Reject dangerous archive semantics and verify the entire restored tree; separately coordinate database and filesystem backup state.",
+      "applicability": "Private assets/uploads/configuration recovery in the single-host release boundary",
+      "decision": "adopted within file primitive; release coordination pending",
+      "rationale": "Use explicit descriptor-relative exclusive file creation and exact metadata/content checks; do not rely on general tar extraction defaults or infer coordination from independently created archives.",
       "verifiedAt": "2026-10-05"
     }
   ]

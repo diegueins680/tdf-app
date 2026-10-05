@@ -5716,6 +5716,89 @@
       },
       "property": "An app with production connectivity cannot be admitted; application lifetime remains inside its database/reservation lifetime; completion requires verified observations.",
       "evidence": "Exact revision command receipts and separate actual isolated-run output; simulated contracts are not Docker integration evidence."
+    },
+    {
+      "id": "DEPLOY-FILES-001",
+      "title": "Private bounded file recovery preserves admitted content and metadata",
+      "domain": "DEPLOY",
+      "statement": "Recovery file capture and replay shall reject escaping, linked, unsupported or changed content and return success only for the exact admitted file-tree contents and metadata in a new private target.",
+      "authority": "User storage, ownership, privacy and coordinated recovery requirements",
+      "source": "formal/system/recovery-files.md; ops/hetzner/README.md",
+      "contract": "formal/system/recovery-files.md",
+      "critical": true,
+      "actors": [
+        "Authorized recovery operator",
+        "Future coordinated release executor"
+      ],
+      "preconditions": [
+        "Caller establishes writer fence and admits all storage roots/nested mounts",
+        "Private owned archive and destination parents",
+        "Trusted manifest bound to separately verified bundle evidence"
+      ],
+      "inputs": [
+        "Absolute source directory",
+        "New archive path",
+        "Trusted private manifest",
+        "New restore path"
+      ],
+      "state": {
+        "states": [
+          "unverified",
+          "capturing",
+          "captured",
+          "replaying",
+          "verified",
+          "failed"
+        ],
+        "initial": "unverified",
+        "terminal": [
+          "verified",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit paths -> capture contents/metadata -> recheck -> return private manifest",
+        "Validate manifest/archive -> create new private target -> replay exact members -> apply metadata -> rehash -> verified"
+      ],
+      "forbiddenTransitions": [
+        "Follow symlink components or restore outside new target",
+        "Overwrite existing archives or target contents",
+        "Accept links, special files, unsupported metadata or missing/extra/duplicate members",
+        "Return success after changed source, incorrect bytes or metadata",
+        "Infer database coordination or off-host recovery from file replay"
+      ],
+      "effects": [
+        "Private exclusive archive",
+        "Private manifest including relative paths",
+        "New file tree with verified bytes, ownership, permissions and modification times"
+      ],
+      "authorization": "Operator-local library; no implicit production execution, remote transfer or deployment. Caller must establish release-level target and writer admission.",
+      "privacy": "Archive, manifest paths and diagnostics remain private. Public evidence contains only aggregate counts/hashes. No credential or customer content logging.",
+      "concurrency": "Caller-held writer fence required. Descriptor-relative no-follow opens, before/after inode checks and second full scan detect sampled mutation; do not prove atomic snapshots or resistance to same-UID/privileged concurrent replacement.",
+      "idempotency": "Exclusive creation rejects retries using an existing archive or restore destination; independent attempts require new paths.",
+      "failure": "Raise without success; retain private partial output for diagnosis. Unsupported metadata fails instead of silently degrading restored semantics.",
+      "recovery": "Inspect failed output under ownership boundary; independently retry into new paths. Never overwrite production or infer successful restore from archive existence.",
+      "observability": "Return private exact manifest and aggregate file-tree-restored result with coordinatedDatabase=false and offHost=false. Caller supplies durable authenticated bundle receipt.",
+      "implementation": [
+        "ops/hetzner/recovery-files.py"
+      ],
+      "tests": [
+        "scripts/test-recovery-files.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Actual synthetic filesystem/archive controls; production bundle integration remains outstanding.",
+      "ambiguity": [
+        "Full writer fence, nested mount inventory, encrypted off-host bundle and secret/database recovery remain separate implementation obligations."
+      ],
+      "verification": "Adversarial real filesystem/archive tests on macOS and Linux; no formal filesystem or concurrency proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "File primitive exists; coordinated production bundle, off-host restoration and deployment integration remain unimplemented."
+      },
+      "property": "Successful replay requires complete exact manifest correspondence in a fresh contained target; missing or invalid evidence cannot report success.",
+      "evidence": "Revision/source-qualified synthetic test receipts; no production file capture or restoration claimed."
     }
   ],
   "sourceFingerprints": {
@@ -5795,6 +5878,7 @@
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/isolated-application-canary.py": "6c3e861e6f177da093f39eb84366872e42c46f248a73bc196e7e29a800d5f36f",
+    "ops/hetzner/recovery-files.py": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
     "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
@@ -5862,7 +5946,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "9bdae3c8c78460ef950c4f2f9913ffea1505eeebaddba8d7b74ddde768991f25",
+    "scripts/quality-repo.sh": "526a6474f258c00026760efd7663a894eb3b7c1bfd8b27ccd3d7e51ef4963255",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -5886,6 +5970,7 @@
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "ea9812c229d7c71aa7d866034e54eb25a225af9220440d5703daba14cbf6014b",
+    "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
@@ -7606,6 +7691,10 @@
       {
         "requirement": "DEPLOY-CANARY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-FILES-001",
+        "relationship": "tests"
       }
     ],
     "scripts/quality-mobile.sh": [
@@ -9209,6 +9298,18 @@
         "requirement": "DEPLOY-CANARY-001",
         "relationship": "formalModels"
       }
+    ],
+    "ops/hetzner/recovery-files.py": [
+      {
+        "requirement": "DEPLOY-FILES-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-recovery-files.py": [
+      {
+        "requirement": "DEPLOY-FILES-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -9695,6 +9796,18 @@
       "sha256": "e32a6610db6a6432b2fb5d404a0b9251cd343165d2c43872effb9a204854bad0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-c1e1cc1e8132267a",
+      "path": "ops/hetzner/recovery-files.py",
+      "sha256": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-FILES-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-60310758bd18e31e",
@@ -11582,7 +11695,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "9bdae3c8c78460ef950c4f2f9913ffea1505eeebaddba8d7b74ddde768991f25",
+      "sha256": "526a6474f258c00026760efd7663a894eb3b7c1bfd8b27ccd3d7e51ef4963255",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11603,6 +11716,10 @@
         },
         {
           "requirement": "DEPLOY-CANARY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-FILES-001",
           "relationship": "tests"
         }
       ]
@@ -12882,6 +12999,18 @@
       "sha256": "58c82bb399ac31f59ed80624f39fa07b0bc6e1541655b3ccedd74fdafb67b21c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-74baba1704e4a65f",
+      "path": "scripts/test-recovery-files.py",
+      "sha256": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-674ff0cbe7311bec",
@@ -29357,7 +29486,8 @@
     "PRIV-ERROR-001",
     "PRIV-ANALYTICS-001",
     "EVT-PRESENTATION-001",
-    "DEPLOY-READINESS-001"
+    "DEPLOY-READINESS-001",
+    "DEPLOY-FILES-001"
   ],
   "stateMachines": [
     {
@@ -30479,7 +30609,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "210d251f182845ad0e4142c513b7b5d4100abd8be451dd103a58a869b974b44d",
+      "sourceSha256": "74c486b6b2c7d5a1c16d95ae44eaf9942f628f31ba2bf72a6727781ba0579693",
       "definition": {
         "states": [
           "absent",
@@ -52283,7 +52413,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 75,
+    "PARTIAL": 76,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -148,6 +148,10 @@ and cannot satisfy these obligations.
 
 ## Routine release status
 
+The [private file recovery primitive](../../formal/system/recovery-files.md) checks
+file content and metadata in new isolated targets. It is a library for the pending
+coordinated bundle, not a production backup or deployment command.
+
 The [scheduled logical archive contract](../../formal/system/logical-backup.md)
 defines the daily timer's narrower guarantee. Install the shell entrypoint and
 both Python companions together after review; never treat an online dump or

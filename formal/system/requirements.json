@@ -3309,7 +3309,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5715,6 +5715,89 @@
       },
       "property": "An app with production connectivity cannot be admitted; application lifetime remains inside its database/reservation lifetime; completion requires verified observations.",
       "evidence": "Exact revision command receipts and separate actual isolated-run output; simulated contracts are not Docker integration evidence."
+    },
+    {
+      "id": "DEPLOY-FILES-001",
+      "title": "Private bounded file recovery preserves admitted content and metadata",
+      "domain": "DEPLOY",
+      "statement": "Recovery file capture and replay shall reject escaping, linked, unsupported or changed content and return success only for the exact admitted file-tree contents and metadata in a new private target.",
+      "authority": "User storage, ownership, privacy and coordinated recovery requirements",
+      "source": "formal/system/recovery-files.md; ops/hetzner/README.md",
+      "contract": "formal/system/recovery-files.md",
+      "critical": true,
+      "actors": [
+        "Authorized recovery operator",
+        "Future coordinated release executor"
+      ],
+      "preconditions": [
+        "Caller establishes writer fence and admits all storage roots/nested mounts",
+        "Private owned archive and destination parents",
+        "Trusted manifest bound to separately verified bundle evidence"
+      ],
+      "inputs": [
+        "Absolute source directory",
+        "New archive path",
+        "Trusted private manifest",
+        "New restore path"
+      ],
+      "state": {
+        "states": [
+          "unverified",
+          "capturing",
+          "captured",
+          "replaying",
+          "verified",
+          "failed"
+        ],
+        "initial": "unverified",
+        "terminal": [
+          "verified",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit paths -> capture contents/metadata -> recheck -> return private manifest",
+        "Validate manifest/archive -> create new private target -> replay exact members -> apply metadata -> rehash -> verified"
+      ],
+      "forbiddenTransitions": [
+        "Follow symlink components or restore outside new target",
+        "Overwrite existing archives or target contents",
+        "Accept links, special files, unsupported metadata or missing/extra/duplicate members",
+        "Return success after changed source, incorrect bytes or metadata",
+        "Infer database coordination or off-host recovery from file replay"
+      ],
+      "effects": [
+        "Private exclusive archive",
+        "Private manifest including relative paths",
+        "New file tree with verified bytes, ownership, permissions and modification times"
+      ],
+      "authorization": "Operator-local library; no implicit production execution, remote transfer or deployment. Caller must establish release-level target and writer admission.",
+      "privacy": "Archive, manifest paths and diagnostics remain private. Public evidence contains only aggregate counts/hashes. No credential or customer content logging.",
+      "concurrency": "Caller-held writer fence required. Descriptor-relative no-follow opens, before/after inode checks and second full scan detect sampled mutation; do not prove atomic snapshots or resistance to same-UID/privileged concurrent replacement.",
+      "idempotency": "Exclusive creation rejects retries using an existing archive or restore destination; independent attempts require new paths.",
+      "failure": "Raise without success; retain private partial output for diagnosis. Unsupported metadata fails instead of silently degrading restored semantics.",
+      "recovery": "Inspect failed output under ownership boundary; independently retry into new paths. Never overwrite production or infer successful restore from archive existence.",
+      "observability": "Return private exact manifest and aggregate file-tree-restored result with coordinatedDatabase=false and offHost=false. Caller supplies durable authenticated bundle receipt.",
+      "implementation": [
+        "ops/hetzner/recovery-files.py"
+      ],
+      "tests": [
+        "scripts/test-recovery-files.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Actual synthetic filesystem/archive controls; production bundle integration remains outstanding.",
+      "ambiguity": [
+        "Full writer fence, nested mount inventory, encrypted off-host bundle and secret/database recovery remain separate implementation obligations."
+      ],
+      "verification": "Adversarial real filesystem/archive tests on macOS and Linux; no formal filesystem or concurrency proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "File primitive exists; coordinated production bundle, off-host restoration and deployment integration remain unimplemented."
+      },
+      "property": "Successful replay requires complete exact manifest correspondence in a fresh contained target; missing or invalid evidence cannot report success.",
+      "evidence": "Revision/source-qualified synthetic test receipts; no production file capture or restoration claimed."
     }
   ]
 }
