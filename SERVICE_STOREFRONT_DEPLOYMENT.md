@@ -1,5 +1,14 @@
 # TDF Service Storefront - Deployment Checklist
 
+> Current hosting (2026-09-28): the live API is `https://api.tdfrecords.net`.
+> Use [the current guarded deployment/recovery procedure](ops/hetzner/README.md)
+> for runtime secrets, releases, backups and logs. Former Fly deployment steps
+> below are historical and must not be executed against the retired app/database.
+> Preserve existing provider webhook IDs/signing secrets when changing callback
+> URLs; inspect existing endpoints before creating a replacement. Existing
+> provider/environment restrictions and payment-validation gates still apply.
+
+
 ## Pre-Deployment
 
 ### Database
@@ -46,8 +55,8 @@
   ```
 
 ### Webhooks
-- [ ] PayPal webhook endpoint configured: `https://tdf-hq.fly.dev/services/storefront/paypal/webhook`
-- [ ] Stripe webhook verified (existing): `https://tdf-hq.fly.dev/social-events/stripe/webhook`
+- [ ] PayPal webhook endpoint configured: `https://api.tdfrecords.net/services/storefront/paypal/webhook`
+- [ ] Stripe webhook verified (existing): `https://api.tdfrecords.net/social-events/stripe/webhook`
 - [ ] Keep Datafast callbacks and refunds disabled until an authenticated merchant contract is verified
 
 ### Feature Flags
@@ -82,10 +91,10 @@ wrangler pages deploy dist --project-name=tdf-app
 ### 4. Smoke Tests
 ```bash
 # Check backend health
-curl https://tdf-hq.fly.dev/health
+curl https://api.tdfrecords.net/health
 
 # Check the public package endpoint; this is not payment evidence
-curl https://tdf-hq.fly.dev/services/storefront
+curl https://api.tdfrecords.net/services/storefront
 
 # Check frontend
 curl -I https://tdf-app.pages.dev/mezcla-mastering

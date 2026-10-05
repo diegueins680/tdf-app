@@ -14,7 +14,7 @@ if [[ -z "${ADMIN_TOKEN:-}" ]]; then
   exit 1
 fi
 
-BASE_URL="${BASE_URL:-https://tdf-hq.fly.dev}"
+BASE_URL="${BASE_URL:-https://api.tdfrecords.net}"
 
 ARTISTS=(
   "Federico Molinari"

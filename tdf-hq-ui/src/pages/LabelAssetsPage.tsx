@@ -181,8 +181,17 @@ export default function LabelAssetsPage() {
   );
   const canManageCategories = modules.has('admin');
   const assetsQuery = useQuery({
-    queryKey: ['assets'],
-    queryFn: () => Inventory.list({ pageSize: 200 }).then(normalizeAssets),
+    queryKey: ['assets', 'all'],
+    queryFn: async () => {
+      const assets: AssetDTO[] = [];
+      for (let page = 1; ; page += 1) {
+        const response = await Inventory.list({ page, pageSize: 100 });
+        const items = normalizeAssets(response);
+        assets.push(...items);
+        if (Array.isArray(response) || !('total' in response)
+            || assets.length >= response.total || items.length === 0) return assets;
+      }
+    },
   });
   const roomsQuery = useQuery({
     queryKey: ['rooms'],

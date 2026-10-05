@@ -75,9 +75,10 @@ const readRuntimeEnvCommand = [
 
 function usage() {
   return `Usage:
-  npm run release:backend:plan -- --sha <full-sha>
-  npm run release:backend:preflight -- --sha <full-sha>
-  npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
+  Retired Fly CLI: remote execution is disabled.
+  Prepare artifacts only:
+  npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY
+  Follow ops/hetzner/README.md for production rollout.
 
 Options:
   --app <name>       Fly API app (default: tdf-hq)
@@ -1194,8 +1195,8 @@ async function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  main().catch((error) => {
-    console.error(error.message);
-    process.exit(1);
-  });
+  // Keep the reviewed source/artifact helpers importable by the portable lane,
+  // but never let an old command reach the fenced Fly database after cutover.
+  console.error('The Fly release CLI is retired. Follow ops/hetzner/README.md for the current production procedure. Prepare reviewed artifacts with npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY. Preparation does not deploy or authorize database changes.');
+  process.exitCode = 1;
 }
