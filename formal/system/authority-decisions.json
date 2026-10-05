@@ -452,6 +452,17 @@
       "conflict": "Consolidated main182fe6a introduces reviewed analytics credential containment and retires transactional Offer metadata, while the audit register predates those changes.",
       "authority": "Approved main PR487 and explicit privacy/truthful-state audit requirements",
       "resolution": "Preserve main by normal merge and map PRIV-ANALYTICS-001/EVT-PRESENTATION-001 to current source/tests. Historical analytics and metadata observations are not combined-head or provider conformance evidence."
+    },
+    {
+      "id": "AUTHORITY-043",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "formal/system/invoice-receipts.md"
+      ],
+      "conflict": "Current receipt code relabels currency without conversion and uses count-based concurrent numbering; receipt replay intent is unbound and missing from canonical OpenAPI.",
+      "authority": "User monetary/concurrency invariants and immutable invoice financial evidence",
+      "resolution": "Fix transactional implementation and additive constraints; preserve invoice money, bind explicit replay parameters and current authority; document actual mounted API. Do not redefine reproduced bugs as product intent."
     }
   ]
 }

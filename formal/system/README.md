@@ -295,3 +295,5 @@ substituted for a shipped root gitlink.
 Main7b801dedb97f034355d4ddfe8f69762a0632a021 (PR485) subsequently merged
 the scheme-like campaign-label correction. It is retained by normal merge;
 PRIV-ANALYTICS-001 keeps the same serializer boundary and mapped regression suite.
+
+Invoice receipt authority and bounded verification scope: [invoice-receipts.md](invoice-receipts.md) (`PAY-INVOICE-001`). The additive migration rejects incompatible historical receipts; no automatic financial-evidence rewrite is permitted.

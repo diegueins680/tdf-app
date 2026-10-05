@@ -3305,7 +3305,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5330,6 +5330,111 @@
       "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
       "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
       "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke."
+    },
+    {
+      "id": "PAY-INVOICE-001",
+      "title": "Immutable invoice receipt issuance and replay",
+      "statement": "Issue at most one receipt per invoice with exact invoice currency and minor-unit totals, a unique annual number, current canonical invoicing authorization and atomic local effects.",
+      "domain": "PAY",
+      "authority": "approved audit safety invariant",
+      "source": "Observed count-based collision and currency-relabeling HTTP counterexamples; current createReceipt replay intent; user monetary/concurrency requirements; formal/system/invoice-receipts.md",
+      "contract": "formal/system/invoice-receipts.md",
+      "critical": true,
+      "actors": [
+        "Currently authenticated invoicing-module staff",
+        "Legacy writer during drained migration boundary"
+      ],
+      "preconditions": [
+        "Canonical session and active invoicing role/permission chain",
+        "Existing invoice and valid stored line/header snapshot",
+        "Registered additive migration applied before new writer"
+      ],
+      "inputs": [
+        "Invoice ID",
+        "Optional normalized buyer name, email, notes and same-currency override"
+      ],
+      "state": {
+        "states": [
+          "absent",
+          "issued"
+        ],
+        "initial": "absent",
+        "terminal": [
+          "issued"
+        ],
+        "transitions": [
+          {
+            "from": "absent",
+            "to": "issued",
+            "guard": "current invoicing authority and exact invoice snapshot",
+            "effect": "atomic receipt, lines and counter allocation"
+          },
+          {
+            "from": "issued",
+            "to": "issued",
+            "guard": "current invoicing authority and compatible explicit replay parameters",
+            "effect": "return existing snapshot without new effects"
+          }
+        ]
+      },
+      "allowedTransitions": [
+        "absent -> issued after locked current admission and snapshot validation",
+        "issued -> issued with the same ID on compatible replay"
+      ],
+      "forbiddenTransitions": [
+        "second receipt for same invoice",
+        "currency relabeling or inconsistent/overflowed totals",
+        "changed explicit replay parameters",
+        "revoked authority commit/replay",
+        "partial invoice/receipt/line/counter commit"
+      ],
+      "effects": [
+        "Immutable receipt and line snapshot",
+        "Unique annual display number",
+        "Optional combined invoice creation in same transaction"
+      ],
+      "authorization": "Current token, canonical UUID role assignments and active invoicing permission chain held through commit; UI visibility is not admission.",
+      "privacy": "Private buyer name/email/notes require invoicing capability; errors and diagnostics exclude arbitrary customer/SQL payloads.",
+      "concurrency": "PostgreSQL READ COMMITTED; shared admission locks then exclusive invoice lock and annual counter upsert. Existing invoice lines held shared. Deadlock/serialization conflicts reject409.",
+      "idempotency": "Invoice ID across currently authorized invoicing staff; omitted/null overrides retain snapshot, changed explicit buyer/email/nonblank notes409, mismatched currency422. Invoice creation has no request-key idempotency.",
+      "failure": "No local effect on rejection, crash before commit or line insertion failure; fixed HTTP errors after rollback; async cancellation propagates.",
+      "recovery": "Replay invoice ID after ambiguous acknowledgement with current authorization. Migration mismatch stops for reviewed reconciliation; recovery writers must retain counter semantics.",
+      "observability": "Exact source/binary hashes and synthetic HTTP/PG/model receipts; production migration ledger and safe smoke evidence remain required.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Invoice/Receipt.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/lib/production-release.mjs",
+        "scripts/production-migrations.json",
+        "tdf-hq-ui/src/api/invoices.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py",
+        "scripts/lib/invoice_receipt_conformance.py",
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/verify-invoice-receipts.py",
+        "scripts/quality-backend.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/InvoiceReceipt.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "high source-derived local contract; executable candidate and production evidence required",
+      "ambiguity": [
+        "Fiscal provider/session invoice atomicity outside this receipt boundary",
+        "Complete financial retention policy and deployed correspondence remain unverified"
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Working pure properties and bounded positive/negative models pass; combined candidate HTTP, migration, complete gates and production verification pending."
+      }
     }
   ]
 }

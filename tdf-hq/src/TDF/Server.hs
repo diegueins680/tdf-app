@@ -21,7 +21,8 @@ import qualified TDF.Interactions.Legacy as InteractionLegacy
 import qualified TDF.Interactions.Server as InteractionsServer
 import qualified TDF.Interactions.Notifications as InteractionNotifications
 import           Control.Applicative ((<|>))
-import           Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
+import           Control.Exception (Exception, SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
+import qualified Control.Exception.Safe as Safe
 import           Control.Concurrent (forkIO)
 import           Control.Monad (foldM, forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.Except (catchError)
@@ -137,6 +138,7 @@ import qualified TDF.CampaignAutomation as CampaignAutomation
 import qualified TDF.Operations.Server as OperationsServer
 import qualified TDF.EventOperations.Server as EventOperationsServer
 import qualified TDF.Invoice.SRI as Sri
+import           TDF.Invoice.Receipt (validateReceiptSnapshot)
 import           TDF.Models
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
@@ -163,6 +165,7 @@ import           TDF.Auth
   , modulesForRoles
   , validateModuleAccess
   , withCurrentAuthSession
+  , withCurrentModuleAccess
   )
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
@@ -13438,7 +13441,7 @@ createInvoice user CreateInvoiceReq{..} = do
     validatePreparedCents
       "Invoice total"
       (sum (map (toInteger . plTotal) preparedLines))
-  Env pool cfg <- ask
+  Env _ cfg <- ask
   currency <-
     maybe
       (either throwError pure (validateCurrencyCode (Just (defaultCurrency cfg))))
@@ -13446,13 +13449,10 @@ createInvoice user CreateInvoiceReq{..} = do
       explicitCurrency
   unless (currency `elem` supportedCurrencies cfg) $
     throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
-  customerKey <- do
-    resolved <- liftIO $ flip runSqlPool pool $ resolveInvoiceCustomerId ciCustomerId
-    either throwError pure resolved
   now <- liftIO getCurrentTime
   let day      = utctDay now
       notes    = normalizeOptionalText ciNotes
-      invoiceRecord = Invoice
+      invoiceRecord customerKey = Invoice
         { invoiceCustomerId    = customerKey
         , invoiceIssueDate     = day
         , invoiceDueDate       = day
@@ -13466,9 +13466,11 @@ createInvoice user CreateInvoiceReq{..} = do
         , invoiceNotes         = notes
         , invoiceCreatedAt     = now
         }
-  (invoiceEnt, lineEntities, maybeReceiptKey) <- liftIO $ flip runSqlPool pool $ do
-    iid <- insert invoiceRecord
-    let invEntity = Entity iid invoiceRecord
+  (invoiceEnt, lineEntities, maybeReceiptKey) <- runInvoiceTransaction user $ do
+    customerKey <- resolveInvoiceCustomerId ciCustomerId >>= either rejectInvoiceTransaction pure
+    let record = invoiceRecord customerKey
+    iid <- insert record
+    let invEntity = Entity iid record
     invoiceLines <- forM preparedLines $ \pl -> do
       let line = invoiceLineFromPrepared iid pl
       lid <- insert line
@@ -13513,34 +13515,60 @@ createReceipt user CreateReceiptReq{..} = do
   currencyOverride <- either throwError pure (validateReceiptCurrency crCurrency)
   buyerNameOverride <- either throwError pure (validateReceiptBuyerName crBuyerName)
   buyerEmailOverride <- either throwError pure (validateReceiptBuyerEmail crBuyerEmail)
-  Env pool _ <- ask
   now <- liftIO getCurrentTime
   let iid = toSqlKey invoiceIdValid :: Key Invoice
-  result <- liftIO $ flip runSqlPool pool $ do
-    mInvoice <- getEntity iid
-    case mInvoice of
-      Nothing      -> pure (Left "invoice-not-found")
-      Just invEnt -> do
-        existing <- selectFirst [ReceiptInvoiceId ==. iid] []
-        case existing of
-          Just receiptEnt -> do
-            receiptLines <- selectList [ReceiptLineReceiptId ==. entityKey receiptEnt] [Asc ReceiptLineId]
-            pure (Right (receiptToDTO receiptEnt receiptLines))
-          Nothing -> do
-            invoiceLines <- selectList [InvoiceLineInvoiceId ==. iid] [Asc InvoiceLineId]
-            if null invoiceLines
-              then pure (Left "invoice-empty")
-              else do
-                (receiptEnt, receiptLines) <-
-                  issueReceipt now buyerNameOverride buyerEmailOverride
-                               (normalizeOptionalText crNotes) currencyOverride
-                               invEnt invoiceLines
-                pure (Right (receiptToDTO receiptEnt receiptLines))
+      notesOverride = normalizeOptionalText crNotes
+  runInvoiceTransaction user $ do
+    -- This row is the idempotency domain. Same-invoice replays serialize here;
+    -- different invoices share only the short annual number allocation lock.
+    invoices <- rawSql "SELECT ?? FROM invoice WHERE id=? FOR UPDATE" [toPersistValue iid]
+    invEnt <- case invoices of
+      [entity] -> pure entity
+      _ -> rejectInvoiceTransaction err404 { errBody = "Invoice not found" }
+    let inv = entityVal invEnt
+    when (maybe False (/= invoiceCurrency inv) currencyOverride) $
+      rejectInvoiceTransaction err422 { errBody = "Receipt currency must match invoice currency" }
+    existing <- getBy (UniqueReceiptInvoice iid)
+    case existing of
+      Just receiptEnt@(Entity rid rec) -> do
+        unless (maybe True (== M.receiptBuyerName rec) buyerNameOverride
+             && maybe True (\value -> Just value == M.receiptBuyerEmail rec) buyerEmailOverride
+             && maybe True (\value -> Just value == M.receiptNotes rec) notesOverride) $
+          rejectInvoiceTransaction err409 { errBody = "Receipt replay parameters differ from issued evidence" }
+        receiptLines <- selectList [ReceiptLineReceiptId ==. rid] [Asc ReceiptLineId]
+        pure (receiptToDTO receiptEnt receiptLines)
+      Nothing -> do
+        invoiceLines <- rawSql
+          "SELECT ?? FROM invoice_line WHERE invoice_id=? ORDER BY id FOR SHARE"
+          [toPersistValue iid]
+        (receiptEnt, receiptLines) <- issueReceipt now buyerNameOverride buyerEmailOverride
+          notesOverride currencyOverride invEnt invoiceLines
+        pure (receiptToDTO receiptEnt receiptLines)
+
+-- Throw inside runSqlPool so every rejected write rolls back before conversion
+-- to an HTTP error. Unexpected and asynchronous failures retain their semantics.
+newtype InvoiceTransactionRejected = InvoiceTransactionRejected ServerError deriving Show
+instance Exception InvoiceTransactionRejected
+
+rejectInvoiceTransaction :: ServerError -> SqlPersistT IO a
+rejectInvoiceTransaction = liftIO . throwIO . InvoiceTransactionRejected
+
+runInvoiceTransaction :: AuthedUser -> SqlPersistT IO a -> AppM a
+runInvoiceTransaction user action = do
+  Env pool _ <- ask
+  result <- liftIO $ Safe.tryAny $ flip runSqlPool pool $ do
+    admitted <- withCurrentModuleAccess ModuleInvoicing user action
+    either rejectInvoiceTransaction pure admitted
   case result of
-    Left "invoice-not-found" -> throwError err404 { errBody = BL.fromStrict (TE.encodeUtf8 "Invoice not found") }
-    Left "invoice-empty"     -> throwBadRequest "Invoice has no line items to receipt"
-    Left otherMsg             -> throwBadRequest otherMsg
-    Right dto                 -> pure dto
+    Right value -> pure value
+    Left failure -> case fromException failure of
+      Just (InvoiceTransactionRejected rejected) -> throwError rejected
+      Nothing -> case fromException failure of
+        Just sqlError
+          | sqlState sqlError `elem` ["23505", "23503", "23514", "22003", "40001", "40P01"] ->
+              throwError err409 { errBody = "Invoice receipt conflicts with stored evidence; reload before retrying" }
+          | otherwise -> liftIO (throwIO (sqlError :: SqlError))
+        Nothing -> liftIO (throwIO failure)
 
 getReceipt :: AuthedUser -> Int64 -> AppM ReceiptDTO
 getReceipt user ridParam = do
@@ -13875,18 +13903,17 @@ issueReceipt now mBuyerName mBuyerEmail mNotes mCurrency (Entity iid inv) lineEn
       defaultEmail = party >>= partyPrimaryEmail
       buyerName    = fromMaybe defaultName mBuyerName
       buyerEmail   = mBuyerEmail <|> defaultEmail
-      currency     = maybe (invoiceCurrency inv) (normalizeCurrency . Just) mCurrency
+      currency     = invoiceCurrency inv
       notes        = mNotes <|> invoiceNotes inv
-      calcTotals (Entity _ line) =
-        let lineSubtotal = invoiceLineQuantity line * invoiceLineUnitCents line
-            lineTotal    = invoiceLineTotalCents line
-        in (lineSubtotal, lineTotal - lineSubtotal, lineTotal)
-      subtotals = [ s | ent <- lineEntities, let (s, _, _) = calcTotals ent ]
-      taxPieces = [ t | ent <- lineEntities, let (_, t, _) = calcTotals ent ]
-      totals    = [ tot | ent <- lineEntities, let (_, _, tot) = calcTotals ent ]
-      subtotal  = sum subtotals
-      taxTotal  = sum taxPieces
-      total     = sum totals
+  when (maybe False (/= currency) mCurrency) $
+    rejectInvoiceTransaction err422 { errBody = "Receipt currency must match invoice currency" }
+  (subtotal, taxTotal, total) <- either
+    (\message -> rejectInvoiceTransaction err422 { errBody = BL.fromStrict (TE.encodeUtf8 message) })
+    pure $ validateReceiptSnapshot
+      (invoiceSubtotalCents inv, invoiceTaxCents inv, invoiceTotalCents inv)
+      [ (invoiceLineQuantity line, invoiceLineUnitCents line,
+         invoiceLineTaxBps line, invoiceLineTotalCents line)
+      | Entity _ line <- lineEntities ]
   number <- generateReceiptNumber (utctDay now)
   let receiptRecord = Receipt
         { receiptInvoiceId    = iid
@@ -13920,11 +13947,12 @@ issueReceipt now mBuyerName mBuyerEmail mNotes mCurrency (Entity iid inv) lineEn
 generateReceiptNumber :: Day -> SqlPersistT IO Text
 generateReceiptNumber day = do
   let (year, _, _) = toGregorian day
-      start = fromGregorian year 1 1
-      next  = fromGregorian (year + 1) 1 1
-  countForYear <- count [ReceiptIssueDate >=. start, ReceiptIssueDate <. next]
-  let sequenceNumber = countForYear + 1
-  pure (T.pack (printf "R-%04d-%04d" year sequenceNumber))
+  allocated <- rawSql
+    "INSERT INTO receipt_number_counter(receipt_year,last_number) VALUES (?,1) ON CONFLICT (receipt_year) DO UPDATE SET last_number=receipt_number_counter.last_number+1 RETURNING last_number"
+    [PersistInt64 (fromInteger year)] :: SqlPersistT IO [Single Int64]
+  case allocated of
+    [Single sequenceNumber] -> pure (T.pack (printf "R-%04d-%04d" year sequenceNumber))
+    _ -> rejectInvoiceTransaction err409 { errBody = "Receipt number allocation failed" }
 
 throwBadRequest :: Text -> AppM a
 throwBadRequest msg = throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }

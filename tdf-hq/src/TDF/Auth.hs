@@ -23,6 +23,7 @@ module TDF.Auth
   , revokeInteractiveSessions
   , isAuthenticatableApiTokenLabel
   , withCurrentAuthSession
+  , withCurrentModuleAccess
   , lookupUsernameFromToken
   , resolveUsernameFromLabel
   , extractToken
@@ -45,6 +46,7 @@ import           Data.Char
   , isSpace
   )
 import           Data.Maybe                 (maybeToList)
+import           Data.Int                   (Int64)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
@@ -148,6 +150,40 @@ withCurrentAuthSession user action = case auSessionWitness user of
             , (hash (TE.encodeUtf8 (apiTokenToken tok)) :: Digest SHA256)
                 `constEq` fingerprint -> Just <$> action
           _ -> pure Nothing
+
+-- Hold the actual session, role assignments and module permission chain through
+-- the caller's transaction. A later inserted assignment cannot broaden this
+-- admission: the permission query is restricted to the locked assignment IDs.
+withCurrentModuleAccess
+  :: ModuleAccess -> AuthedUser -> SqlPersistT IO a
+  -> SqlPersistT IO (Either ServerError a)
+withCurrentModuleAccess required original action = do
+  admitted <- withCurrentAuthSession original $ do
+    assigned <- rawSql
+      "SELECT assignment.id::text,role.code,role.active FROM party_security_role assignment JOIN security_role role ON role.id=assignment.role_id WHERE assignment.party_id=? AND assignment.active ORDER BY assignment.id,role.id FOR SHARE OF assignment,role"
+      [toPersistValue (auPartyId original)]
+      :: SqlPersistT IO [(Single Text, Single Text, Single Bool)]
+    let roles = traverse (\(_, Single code, Single active) ->
+          if active then roleFromRegistryCode code else Nothing) assigned
+        assignmentIds = [toPersistValue key | (Single key, _, _) <- assigned]
+    case roles of
+      Nothing -> pure (Left err401)
+      Just [] -> pure (Left err403)
+      Just currentRoles -> do
+        moduleRows <- rawSql
+          ("SELECT m.code FROM party_security_role psr JOIN security_role r ON r.id=psr.role_id JOIN role_permission rp ON rp.role_id=r.id JOIN security_permission p ON p.id=rp.permission_id JOIN security_action a ON a.id=p.action_id JOIN security_module m ON m.id=p.module_id WHERE psr.id IN ("
+           <> T.intercalate "," (map (const "?::uuid") assignmentIds)
+           <> ") AND psr.active AND r.active AND rp.active AND p.active AND a.active AND m.active AND p.resource_scope='module' AND a.code='access' ORDER BY psr.id,r.id,rp.id,p.id,a.id,m.id FOR SHARE OF psr,r,rp,p,a,m")
+          assignmentIds :: SqlPersistT IO [Single Text]
+        case traverse (\(Single code) -> moduleFromRegistryCode code) moduleRows of
+          Nothing -> pure (Left err401)
+          Just modules -> case validateModuleAccess required original
+            { auRoles = Set.toAscList (Set.fromList currentRoles)
+            , auModules = Set.fromList modules
+            } of
+              Left rejected -> pure (Left rejected)
+              Right () -> Right <$> action
+  pure $ maybe (Left err401) id admitted
 
 -- | Create the Servant auth context using the database environment.
 authContext :: Env -> Context '[AuthHandler Request AuthedUser]

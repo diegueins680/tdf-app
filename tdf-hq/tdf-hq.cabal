@@ -125,6 +125,7 @@ executable tdf-hq-exe
     TDF.Email
     TDF.Email.Headers
     TDF.Handlers.InputList
+    TDF.Invoice.Receipt
     TDF.Invoice.SRI
     TDF.Internationalization
     TDF.LogBuffer
@@ -313,6 +314,7 @@ test-suite tdf-hq-test
     TDF.Commerce.PaymentArithmeticSpec
     TDF.EmailHeadersSpec
     TDF.CorsSpec
+    TDF.Invoice.ReceiptSpec
     TDF.FailureBoundarySpec
     TDF.TicketConfirmationSpec
     Paths_tdf_hq
@@ -430,6 +432,7 @@ test-suite tdf-hq-test
     TDF.Email.Headers
     TDF.Email.Service
     TDF.Handlers.InputList
+    TDF.Invoice.Receipt
     TDF.Invoice.SRI
     TDF.Internationalization
     TDF.Leads.Model

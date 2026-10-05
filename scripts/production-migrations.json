@@ -920,6 +920,11 @@
       "id": "2026-10-05_ticket_confirmation_claim_clock",
       "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql",
       "introducedBy": "56b55a5703e943958d5d5f00f19bfb15afae80e1"
+    },
+    {
+      "id": "2026-10-05_invoice_receipt_snapshot",
+      "path": "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql",
+      "introducedBy": "be2d6b1fdff96a7a33e5967da56a1d51f39f15bf"
     }
   ]
 }

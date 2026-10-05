@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -500,6 +500,17 @@
       "applicability": "Boot request fallback and Warp diagnostic logger",
       "decision": "adopted",
       "rationale": "Retain stock safe protocol responses without wildcard CORS; replace raw diagnostic rendering with a fixed identifier. Exact installed version checked with Stack ghc-pkg.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECEIPT-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "supportingSource": "https://www.postgresql.org/docs/17/sql-insert.html",
+      "title": "PostgreSQL17 transaction-held locks and atomic upsert",
+      "recommendation": "Hold conflicting locks through transaction commit; use atomic counter update rather than a separate count/read-derived number.",
+      "applicability": "Invoice receipt issuance, permission revocation and migration counter admission",
+      "decision": "adopted",
+      "rationale": "Serialize per-invoice replay and annual allocation locally; negative HTTP/database controls verify selected implementation boundaries. No distributed exactly-once or provider-side claim.",
       "verifiedAt": "2026-10-05"
     }
   ]
