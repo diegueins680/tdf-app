@@ -1,5 +1,11 @@
 -- Preserve issued evidence. Incompatible legacy rows stop this migration;
 -- never rewrite currency, amounts or duplicate receipts to make it pass.
+-- Block legacy writers before sampling issued numbers; production also drains
+-- old writers before applying this compatibility migration. Parent first matches
+-- application issuance order and protects the monetary snapshot during admission.
+LOCK TABLE invoice IN SHARE ROW EXCLUSIVE MODE;
+LOCK TABLE receipt IN SHARE ROW EXCLUSIVE MODE;
+
 CREATE TABLE IF NOT EXISTS receipt_number_counter (
     receipt_year integer PRIMARY KEY CHECK (receipt_year BETWEEN 1 AND 9999),
     last_number bigint NOT NULL CHECK (last_number >= 0)
