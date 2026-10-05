@@ -164,6 +164,17 @@
       "conflict": "Consolidated main fdac8e765 adds provider payment behavior and a Mobile gitlink that competes with the explicit shipped-lineage decision. Prior audit evidence describes the pre-consolidation tree.",
       "authority": "formal/system/README.md",
       "resolution": "Integrate current root main and retain all six added payment migrations with historical introduction SHAs; append the three audit migrations. Keep Mobile descended from ede1f2a and regenerate compatible API and feature metadata only. Preserve prior receipts as historical evidence and rerun candidate checks; do not infer native payment parity or enable providers."
+    },
+    {
+      "id": "AUTHORITY-017",
+      "sources": [
+        "ops/hetzner/README.md",
+        "docs/archive/hetzner-restore-rehearsal-2026-09-28.md",
+        "scripts/production-release.mjs"
+      ],
+      "conflict": "Historical cutover instructions still describe keeping production on Fly, while live identity and database are on Hetzner and the routine release command still executes Fly.",
+      "authority": "ops/hetzner/README.md",
+      "resolution": "Archive the original cutover plan as historical evidence. Reject Fly preflight/release execution before remote operations; preserve source-only planning and shared validators. Add a repository-owned read-only Hetzner collector with fixed target, secret-safe output and negative controls. A complete guarded Hetzner release executor remains an explicit open obligation."
     }
   ]
 }

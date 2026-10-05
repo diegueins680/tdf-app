@@ -202,13 +202,11 @@ tdf-hq/sql/2026-07-30_event_city_subscriptions.sql
 tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql
 ```
 
-Use the guarded backend release lane:
-
-```bash
-npm run release:backend:plan -- --sha <full-sha>
-npm run release:backend:preflight -- --sha <full-sha>
-npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
-```
+Use the current [Hetzner operational contract](../ops/hetzner/README.md).
+Its routine guarded release executor remains an open obligation. Historical Fly
+preflight/release commands are retired and reject before remote action. Verify
+the complete current migration manifest rather than treating the three domain
+migrations above as a complete deployment batch.
 
 After rollout, verify `/health`, `/version`, the exact release SHA, and
 `[Cron][EventDiscovery]` logs before enabling the master switch.

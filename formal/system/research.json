@@ -164,6 +164,33 @@
       "applicability": "Nonnegative merchandise commission floor calculation at Int64 boundaries",
       "decision": "adopted",
       "rationale": "Actual counterexample: trunc(maxInt64::numeric*5000/10000) rounds to4611686018427387904, whereas the exact floor is4611686018427387903. div preserves the required quotient without a rounded intermediate."
+    },
+    {
+      "id": "RES-DEPLOY-001",
+      "source": "https://docs.docker.com/reference/cli/docker/compose/config/",
+      "title": "Docker Compose effective configuration",
+      "recommendation": "Compare the fully resolved applied model; explicit files, interpolation and env-file resolution affect the runtime model.",
+      "applicability": "Installed Hetzner Compose configuration and future release planning",
+      "decision": "adopted",
+      "rationale": "Container labels/image/network/volume and allowlisted effective environment are inspected; future release must compare resolved configuration privately, since full rendering may expose secrets. Reading the repository YAML alone is insufficient."
+    },
+    {
+      "id": "RES-DEPLOY-002",
+      "source": "https://www.postgresql.org/docs/17/app-pgdump.html",
+      "title": "PostgreSQL17 consistent logical backup",
+      "recommendation": "pg_dump produces a consistent database backup while other users continue accessing it; cluster-global objects require separate handling.",
+      "applicability": "Hetzner database and asset recovery",
+      "decision": "adopted",
+      "rationale": "A consistent database dump does not establish a coordinated snapshot with mutable asset files or roles. The release contract requires writer quiescence, asset preservation and actual restore verification."
+    },
+    {
+      "id": "RES-DEPLOY-003",
+      "source": "https://www.postgresql.org/docs/17/app-pgrestore.html",
+      "title": "PostgreSQL17 archive restoration",
+      "recommendation": "Restore a custom archive using pg_restore with explicit error handling; listing its table of contents is a distinct operation.",
+      "applicability": "Current backup-postgres.sh only lists the archive before marking backup complete",
+      "decision": "adopted",
+      "rationale": "Keep the existing archive-integrity step but do not treat it as a tested restore. A future release must restore into an isolated target and verify schema/data before rollout."
     }
   ]
 }

@@ -57,6 +57,7 @@
       "ops/hetzner/cloud-init.yaml",
       "ops/hetzner/compose.production.yaml",
       "ops/hetzner/compose.restore.yaml",
+      "ops/hetzner/inspect-runtime.py",
       "ops/hetzner/migrate-owned-urls.sql"
     ],
     "package-lock.json": [
@@ -99,6 +100,7 @@
       "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
       "scripts/__tests__/formal-methods-audit.test.mjs",
       "scripts/__tests__/generated-api-conformance.test.mjs",
+      "scripts/__tests__/hetzner-inspection.test.mjs",
       "scripts/__tests__/identity-http-runtime.mjs",
       "scripts/__tests__/identity-reconciliation.test.mjs",
       "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -172,6 +174,7 @@
       "scripts/get-admin-token.sh",
       "scripts/get-instagram-token.mjs",
       "scripts/identity-reconciliation.mjs",
+      "scripts/inspect-hetzner-production.mjs",
       "scripts/inspect-payment-staging.mjs",
       "scripts/instagram-lifecycle-artifact.mjs",
       "scripts/instagram-openclaw-cdp.mjs",
@@ -337,6 +340,7 @@
       "scripts/test-event-task-revision-migration.sh",
       "scripts/test-event-task-revisioned-read-migration.sh",
       "scripts/test-feature-migrations.sh",
+      "scripts/test-hetzner-inspection.py",
       "scripts/test-identity-reconciliation.sh",
       "scripts/test-invitation-update-concurrency.sh",
       "scripts/test-live-intake-identity.sh",
@@ -2399,6 +2403,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-9b36cc4cd4e2a67a",
+      "path": "ops/hetzner/inspect-runtime.py",
+      "sha256": "118f357cf68b0e559c8f26a1440016290d59847aad72c075a96f073365cfe1a9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b85ac3ceaf40e5fb",
       "path": "ops/hetzner/migrate-owned-urls.sql",
       "sha256": "e32a6610db6a6432b2fb5d404a0b9251cd343165d2c43872effb9a204854bad0",
@@ -2615,6 +2625,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-30ba86b00dd5f4d7",
+      "path": "scripts/__tests__/hetzner-inspection.test.mjs",
+      "sha256": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
       "sha256": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
@@ -2767,7 +2783,7 @@
     {
       "id": "SURFACE-ba099638d09bac1d",
       "path": "scripts/__tests__/verification-evidence.test.mjs",
-      "sha256": "62e23312cd0f60dd3ec08597ca45071071f116bd10d15303c8b9bab55668fb84",
+      "sha256": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2965,7 +2981,7 @@
     {
       "id": "SURFACE-45b3849f78ceb2dd",
       "path": "scripts/deploy-stripe-ticketing.sh",
-      "sha256": "0312c0740315734fd5b3a1d803761cbfd7b31ddfcbe4a8fe200852dec1241bae",
+      "sha256": "33fb7bde438832698cc382e83e1056f0196d1aa18c5753cfc64ba89ca65d5f95",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3050,6 +3066,12 @@
       "id": "SURFACE-61ce5bdd849d0317",
       "path": "scripts/identity-reconciliation.mjs",
       "sha256": "de08f261b6ac2cc4e96b288e6c43276a1ad1f8ca08ff77454ae8cfbf2100d155",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f9faf7061e36724c",
+      "path": "scripts/inspect-hetzner-production.mjs",
+      "sha256": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3247,7 +3269,7 @@
     {
       "id": "SURFACE-51ff2aecc0e6e208",
       "path": "scripts/lib/verification-evidence.mjs",
-      "sha256": "57a76761fbe10452d1c664c3a0ff6b0fe291a1267dd7e9007b1f09fa1657f525",
+      "sha256": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3331,7 +3353,7 @@
     {
       "id": "SURFACE-566be2960a2d6029",
       "path": "scripts/production-release.mjs",
-      "sha256": "f79231d797d83c953f1bf15d64e93d962e9b3bc72efe192c4243af6ccfe051ad",
+      "sha256": "8911573e1f885002c02a0242cf8c9cdbfeea4e3c5ccba72e6528f372705a70c9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3355,7 +3377,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "b57eed49a82155f9df7a49c155b5e2f8e555e67426d0d5602ab8f48a8d0dd13f",
+      "sha256": "9d502a85fcfa07cceb18dde209ac128404268ba687a95ebddde50eba1253e274",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4040,6 +4062,12 @@
       "id": "SURFACE-ec70a1725f0a44fe",
       "path": "scripts/test-feature-migrations.sh",
       "sha256": "b26598f05f4b69568e4f2d27167212cc644b045bdf8657348d0e8c961b04189f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-305b8be869b1a5ec",
+      "path": "scripts/test-hetzner-inspection.py",
+      "sha256": "ce8fc3662986c506304f826ec287ca4fdedae5cf78e2db6dfb7292b10a379a0c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14774,7 +14802,7 @@
   "artifacts": [
     {
       "path": "AI_WORKFLOW.md",
-      "sha256": "fffce07bc6eb5be9e72bf9472d409307f0fa768d7227b6dba56c96b229df4dc8",
+      "sha256": "3d317430f467a68fdc8541205ce5da725e754113793f5ba88c4aa9c8337fbc76",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -15047,7 +15075,7 @@
     },
     {
       "path": "docs/Event_Discovery_Cron.md",
-      "sha256": "b7790a5027207efd6409ebd8efb207d8f8747e606b2cb855c3fafb6321cc3ef3",
+      "sha256": "e0c829fa968a2d9507c45b99e68afeab28c2f53891852364708457f29ef42830",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -15358,6 +15386,13 @@
       "sha256": "737550ae8285538b4ab9f435c497961a7986a9b82656142c053bc45c9d6bc249",
       "authority": "historical",
       "authorityBasis": "Status: historical; retired by AUTHORITY-011",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/archive/hetzner-restore-rehearsal-2026-09-28.md",
+      "sha256": "3f9d20737135b14821e2c5ec2c951808f6ad02ac17b496d5e28fc42e14c8a4e3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -19786,7 +19821,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "a783e60fa04bc500a084f3e1d8551bba3e6f354f770cbf9ae5633283ea6c8eb8",
+      "sha256": "6b88a491689ff1e5092095d8539b2c833272ce230751c9ea5a7c6d8001a8f1fc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19856,21 +19891,21 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "37e8f4527cafbb617599381e490eadccc7f128f7e866c2f9d293d471d2208cd3",
+      "sha256": "ff9dee572adfb822511a2eeba62d2a523a5d12e4b79075713844e79917fc4d6a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "1fd24911374bc1c40d04c00880ab89e05f443fdf129a8a45f0aefc2d70078131",
+      "sha256": "c908e0550ed79e56694f6ada2b1ef3da3fdda0a374bb0a68e7c699b40cbeacb0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "ff23d6c29622594e5f96c0bfdb023b99aced0c913bdafe46b7362b96996dc5fc",
+      "sha256": "aa05e20fcb50009cdf691354eea442f0aba7621eb1e47b46af93988136847a2f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

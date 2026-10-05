@@ -74,10 +74,10 @@ const readRuntimeEnvCommand = [
 ].join('');
 
 function usage() {
-  return `Usage:
+  return `Historical Fly source-only planning (production execution retired):
   npm run release:backend:plan -- --sha <full-sha>
-  npm run release:backend:preflight -- --sha <full-sha>
-  npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
+
+Current production inspection and open Hetzner release obligations: ops/hetzner/README.md
 
 Options:
   --app <name>       Fly API app (default: tdf-hq)
@@ -1148,6 +1148,10 @@ async function main() {
   if (options.help) {
     console.log(usage());
     return;
+  }
+  if (options.mode !== 'plan') {
+    throw new Error('Fly production preflight/release is retired: the verified production target is Hetzner. '
+      + 'See ops/hetzner/README.md. This command performs no remote action.');
   }
   if (!options.sha) throw new Error(`--sha is required.\n\n${usage()}`);
   const context = await resolveReleaseContext(options);

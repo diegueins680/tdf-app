@@ -2068,6 +2068,137 @@
         "classification": "PARTIAL",
         "reason": "Imported implementation and bounded models are mapped; full combined-candidate and deployment evidence remains open."
       }
+    },
+    {
+      "authority": "inferred",
+      "source": "ops/hetzner/README.md; formal/system/authority-decisions.json",
+      "contract": "ops/hetzner/README.md",
+      "domain": "DEPLOY",
+      "actors": [
+        "Release operator",
+        "Read-only production inspection role"
+      ],
+      "preconditions": [
+        "Production was independently observed on Hetzner; GitHub exact-head review and release gates remain required."
+      ],
+      "inputs": [
+        "Fixed production identity and source-controlled inspection program"
+      ],
+      "state": {
+        "initial": "unverified runtime",
+        "terminal": [
+          "observation retained without readiness claim",
+          "rejected before remote mutation"
+        ]
+      },
+      "allowedTransitions": [
+        "Observe the fixed target through pinned SSH identity and read-only database transactions."
+      ],
+      "forbiddenTransitions": [
+        "Never infer release readiness from a successful observation.",
+        "Never execute the retired Fly production lane."
+      ],
+      "effects": [
+        "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
+      ],
+      "authorization": "Explicit audit/read authorization permits observation, not bypassing deployment review; dedicated SSH identity and existing inventory SQL role are required.",
+      "privacy": "Never print raw container configuration, credentials, command stderr or provider/customer payloads.",
+      "concurrency": "Observations are sequential, not an atomic fleet snapshot; fresh verification is required within a future guarded release.",
+      "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
+      "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
+      "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
+      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations.",
+      "formalModels": [],
+      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established.",
+      "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
+      "status": "specified and implemented",
+      "confidence": "High within read-only target/disclosure guard scope; routine guarded release remains unimplemented.",
+      "ambiguity": [
+        "Absent environment variables need effective-default analysis.",
+        "Container image/public version observations require artifact metadata correspondence before release."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Inspection and obsolete-lane guards are implemented; canonical guarded Hetzner deployment/recovery and full production verification remain open."
+      },
+      "id": "DEPLOY-OBSERVE-001",
+      "title": "Inspectable canonical production identity",
+      "statement": "Runtime observation must target the verified Hetzner project and private database, emit only allowlisted facts, preserve secrets and production data, and keep unknown defaults explicit.",
+      "property": "Wrong Compose project/directory/image/volume/network or database role/version is rejected; secrets and raw failures are excluded from receipts.",
+      "implementation": [
+        "ops/hetzner/inspect-runtime.py",
+        "scripts/inspect-hetzner-production.mjs"
+      ],
+      "tests": [
+        "scripts/test-hetzner-inspection.py",
+        "scripts/__tests__/hetzner-inspection.test.mjs"
+      ],
+      "critical": false
+    },
+    {
+      "authority": "inferred",
+      "source": "ops/hetzner/README.md; formal/system/authority-decisions.json",
+      "contract": "ops/hetzner/README.md",
+      "domain": "DEPLOY",
+      "actors": [
+        "Release operator",
+        "Read-only production inspection role"
+      ],
+      "preconditions": [
+        "Production was independently observed on Hetzner; GitHub exact-head review and release gates remain required."
+      ],
+      "inputs": [
+        "Fixed production identity and source-controlled inspection program"
+      ],
+      "state": {
+        "initial": "unverified runtime",
+        "terminal": [
+          "observation retained without readiness claim",
+          "rejected before remote mutation"
+        ]
+      },
+      "allowedTransitions": [
+        "Observe the fixed target through pinned SSH identity and read-only database transactions."
+      ],
+      "forbiddenTransitions": [
+        "Never infer release readiness from a successful observation.",
+        "Never execute the retired Fly production lane."
+      ],
+      "effects": [
+        "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
+      ],
+      "authorization": "Explicit audit/read authorization permits observation, not bypassing deployment review; dedicated SSH identity and existing inventory SQL role are required.",
+      "privacy": "Never print raw container configuration, credentials, command stderr or provider/customer payloads.",
+      "concurrency": "Observations are sequential, not an atomic fleet snapshot; fresh verification is required within a future guarded release.",
+      "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
+      "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
+      "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
+      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations.",
+      "formalModels": [],
+      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established.",
+      "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
+      "status": "specified and implemented",
+      "confidence": "High within read-only target/disclosure guard scope; routine guarded release remains unimplemented.",
+      "ambiguity": [
+        "Absent environment variables need effective-default analysis.",
+        "Container image/public version observations require artifact metadata correspondence before release."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Inspection and obsolete-lane guards are implemented; canonical guarded Hetzner deployment/recovery and full production verification remain open."
+      },
+      "id": "DEPLOY-TARGET-001",
+      "title": "Retired providers cannot receive a production release",
+      "statement": "The former Fly preflight/release entrypoint must reject before any remote tool because current production is Hetzner; source-only historical planning does not establish deployment eligibility.",
+      "property": "Retired Fly commands invoke no git, docker, ssh or flyctl operation before rejecting.",
+      "implementation": [
+        "scripts/production-release.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/hetzner-inspection.test.mjs",
+        "scripts/__tests__/production-release.test.mjs"
+      ],
+      "critical": true
     }
   ]
 }

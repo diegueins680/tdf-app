@@ -8,7 +8,7 @@ export function sourceManifest(root) {
   // Include untracked implementation work locally; CI uses a clean checkout.
   const paths = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
     { cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }).split('\0').filter(Boolean);
-  const selected = paths.filter(p => /^(formal\/|scripts\/|tdf-hq\/|tdf-hq-ui\/|\.github\/)/.test(p)
+  const selected = paths.filter(p => /^(formal\/|scripts\/|tdf-hq\/|tdf-hq-ui\/|ops\/|\.github\/)/.test(p)
     || /^docs\/.*\.(md|yaml|json)$/.test(p)
     || /^(package(-lock)?\.json|specs\.yaml|fly[^/]*\.toml|\.gitmodules|FORMAL_VERIFICATION\.md)$/.test(p));
   const files = {};
