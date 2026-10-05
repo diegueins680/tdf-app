@@ -80,7 +80,9 @@ loadConfirmation Env{envPool,envConfig} orderId = runSqlPool (do
       tier <- get (M.eventTicketOrderTierId row)
       tickets <- selectList [M.EventTicketOrderRefId ==. key] [Asc M.EventTicketId]
       dates <- rawSql
-        "SELECT to_char(start_time AT TIME ZONE COALESCE(timezone,'UTC'),'YYYY-MM-DD HH24:MI') || ' (' || COALESCE(timezone,'UTC') || ')' FROM social_event WHERE id=?"
+        ("SELECT to_char(e.start_time AT TIME ZONE COALESCE(tz.name,'UTC'),'YYYY-MM-DD HH24:MI')"
+          <> " || ' (' || COALESCE(tz.name,'UTC') || ')' FROM social_event e"
+          <> " LEFT JOIN pg_timezone_names tz ON tz.name=e.timezone WHERE e.id=?")
         [toPersistValue (M.eventTicketOrderEventId row)] :: SqlPersistT IO [Single Text]
       let codes = [M.eventTicketCode ticket | Entity _ ticket <- tickets,
             M.eventTicketStatus ticket == "issued", M.eventTicketCheckedInAt ticket == Nothing,

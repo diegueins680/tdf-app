@@ -30,6 +30,7 @@ main = do
         queue = void $ runSqlPool (rawSql "SELECT event_ticket_queue_confirmation(1) IS NULL" [] :: SqlPersistT IO [Single Bool]) pool
         reset = do
           sql "DELETE FROM event_ticket_confirmation_delivery"
+          sql "UPDATE social_event SET timezone='America/Guayaquil' WHERE id=1"
           sql "UPDATE event_ticket_order SET status='paid' WHERE id=1"
           sql "UPDATE event_ticket SET status='issued',checked_in_at=NULL,current_holder_party_id=NULL WHERE order_ref_id=1"
         state = runSqlPool (rawSql "SELECT state FROM event_ticket_confirmation_delivery WHERE order_id=1" [] :: SqlPersistT IO [Single Text]) pool
@@ -47,6 +48,14 @@ main = do
         state `shouldReturn` [Single "accepted"]
         queue
         processConfirmationWith env send `shouldReturn` False
+      it "delivers with an explicit UTC fallback when event timezone metadata is invalid" $ do
+        sql "UPDATE social_event SET timezone='Mars/Olympus' WHERE id=1"
+        queue
+        sent <- newMVar ([] :: [Confirmation])
+        processConfirmationWith env (\receipt -> modifyMVar_ sent (pure . (receipt:))) `shouldReturn` True
+        messages <- readMVar sent
+        map confirmationDate messages `shouldBe` ["2026-10-24 19:00 (UTC)"]
+        state `shouldReturn` [Single "accepted"]
       it "retains a failed send for retry without storing exception PII" $ do
         queue
         processConfirmationWith env (const (ioError (userError "private@example.invalid token=SECRET"))) `shouldReturn` True

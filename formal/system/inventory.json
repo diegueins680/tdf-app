@@ -1524,6 +1524,8 @@
       "tdf-hq/sql/2026-10-05_ticket_admission_audit_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql",
+      "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
+      "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
       "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
@@ -6829,7 +6831,7 @@
     },
     {
       "path": "formal/ticket-admission/confirmation-delivery.md",
-      "sha256": "3905233c7684e49fd00041c2bed6c312cdd266ba5005d0ded1bba6c0fea2ffa7",
+      "sha256": "dbe4cd7b36545ba34fb979c0d854e4622068671329c333fd0b5dab429847d963",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
