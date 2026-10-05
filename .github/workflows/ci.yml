@@ -140,6 +140,10 @@ jobs:
       - name: Run repository checks
         run: npm run quality:repo
 
+      - name: Verify private upload persistence across container replacement
+        timeout-minutes: 8
+        run: python3 scripts/test-persistent-uploads-container.py
+
   ui-quality:
     needs: changes
     if: needs.changes.outputs.ui == 'true'

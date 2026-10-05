@@ -71,6 +71,14 @@ def summarize_container(service, container):
         result['volume'] = VOLUME
     if service == 'api':
         require(set(networks) == {PROJECT + '_database', PROJECT + '_outbound'})
+        upload_mounts = [mount for mount in container['Mounts'] if mount['Destination'] == '/app/uploads']
+        result['privateUploads'] = {
+            'target': '/app/uploads',
+            'canonicalWritableBind': len(upload_mounts) == 1
+                and upload_mounts[0].get('Type') == 'bind'
+                and upload_mounts[0].get('Source') == DIRECTORY + '/uploads'
+                and upload_mounts[0].get('RW') is True,
+        }
         env = {}
         for entry in container['Config']['Env']:
             key, sep, value = entry.partition('=')

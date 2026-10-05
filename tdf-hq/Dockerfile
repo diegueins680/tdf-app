@@ -125,6 +125,7 @@ COPY --from=builder /app/BUILD_TIME /app/BUILD_TIME
 COPY --from=builder /app/assets /app/assets
 COPY --from=migration-bundle /production-migrations.sql /app/production-migrations.sql
 COPY tdf-hq/production-entrypoint.sh /app/production-entrypoint.sh
+COPY tdf-hq/persistent-uploads.sh /app/persistent-uploads.sh
 
 # Render provides PORT; map it to the app's APP_PORT
 ENV APP_PORT=8080

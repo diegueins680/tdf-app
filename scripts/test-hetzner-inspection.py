@@ -62,6 +62,19 @@ class Boundaries(unittest.TestCase):
                 value=container();mutation(value)
                 with self.assertRaises(ValueError):module.summarize_container('api', value)
 
+    def test_private_upload_mount_is_observed_not_assumed_from_a_directory(self):
+        value = container()
+        self.assertFalse(module.summarize_container('api', value)['privateUploads']['canonicalWritableBind'])
+        mount = {'Destination': '/app/uploads', 'Type': 'bind',
+                 'Source': module.DIRECTORY + '/uploads', 'RW': True}
+        value['Mounts'].append(mount)
+        self.assertTrue(module.summarize_container('api', value)['privateUploads']['canonicalWritableBind'])
+        for change in [{'Source': '/private/' + SECRET}, {'RW': False}, {'Type': 'tmpfs'}]:
+            probe = copy.deepcopy(value); probe['Mounts'][-1].update(change)
+            result = module.summarize_container('api', probe)
+            self.assertFalse(result['privateUploads']['canonicalWritableBind'])
+            self.assertNotIn(SECRET, json.dumps(result))
+
     def test_database_container_is_private_and_has_expected_volume(self):
         self.assertEqual(module.summarize_container('db',container('db'))['volume'],module.VOLUME)
         for mutation in [

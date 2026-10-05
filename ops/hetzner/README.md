@@ -124,8 +124,20 @@ coordinated with assets or cluster-global role/schema changes; the rehearsal loc
 only excludes other rehearsals. No provider action, application canary, production
 restore or deployment occurs. Counts do not establish bytewise logical equality.
 Keep provider flags disabled and production writes intact. A release still needs
-writer drainage, a coordinated database/assets backup, tested secret/off-host
+writer drainage, a coordinated database/assets/private-uploads backup, tested secret/off-host
 recovery, migration rehearsal and compatible application recovery.
+
+## Private upload storage
+
+The [private upload contract](../../formal/system/private-upload-persistence.md)
+requires a pre-provisioned, private host `uploads` directory bound to `/app/uploads`.
+The production entrypoint refuses missing, unwritable or known ephemeral storage.
+Before replacing the old API, drain writers and preserve any files still in its
+writable layer; an earlier empty observation is not permission to discard new
+files. Verify image-user ownership and coordinated database/assets/uploads restore.
+The inspector reports the canonical bind separately from release eligibility.
+The historical shared-database `canary` service is not an isolated release canary
+and cannot satisfy these obligations.
 
 ## Routine release status
 
@@ -140,7 +152,7 @@ release plan.
 Before an eligible rollout, the canonical executor must bind reviewed source,
 immutable target/recovery images, the exact migration manifest, actual Compose
 configuration and current flags; acquire a release lock; drain existing writers;
-back up database and assets; verify an actual isolated restore; apply and verify
+back up database, public assets and private uploads; verify an actual isolated restore; apply and verify
 reviewed migrations; exercise a restricted canary; then verify the live version,
 configuration, database and safe smoke behavior. An archive listing alone does
 not establish restoration. Existing CORS permissiveness requires coordinated

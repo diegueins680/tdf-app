@@ -2880,6 +2880,94 @@
       "contract": "formal/system/bookings.md",
       "verification": "Anonymous HTTP on a fresh synthetic PostgreSQL database with private, poisoned, updated and deleted index fixtures.",
       "evidence": "Preserved old-backend anonymous disclosure reproduction and exact-candidate booking-conformance HTTP artifact; repaired execution remains pending."
+    },
+    {
+      "id": "MEDIA-PERSIST-001",
+      "title": "Private attachments survive API container replacement",
+      "statement": "Production application startup must reject missing, unwritable or known ephemeral private-upload storage; a guarded replacement must preserve existing feedback attachments and live-session riders in a private persistent bind before replacing the old container.",
+      "domain": "MEDIA",
+      "actors": [
+        "Feedback submitter",
+        "Live-session applicant",
+        "Release operator"
+      ],
+      "preconditions": [
+        "Production runtime; application startup rather than migration-only precheck."
+      ],
+      "inputs": [
+        "Kernel mount table",
+        "Private upload directory",
+        "Reviewed image identity",
+        "Legacy file inventory under the writer fence"
+      ],
+      "state": {
+        "initial": "configured",
+        "states": [
+          "configured",
+          "storage-checked",
+          "application-started",
+          "rejected",
+          "prechecked",
+          "exited"
+        ]
+      },
+      "allowedTransitions": [
+        "Configured production with an eligible mount reaches storage-checked then application-started.",
+        "Migration-only precheck exits without starting the application.",
+        "Invalid storage rejects startup before SQL, asset copying or application execution."
+      ],
+      "forbiddenTransitions": [
+        "Start production application with missing, read-only, tmpfs or container-layer upload storage.",
+        "Replace an old container before preserving any legacy uploads.",
+        "Expose the private upload bind as public assets."
+      ],
+      "effects": [
+        "Private uploads use a dedicated host bind at /app/uploads.",
+        "Existing relative database paths retain their meaning."
+      ],
+      "authorization": "Only the release operator provisions and replaces storage; a mount does not grant attachment read access.",
+      "privacy": "Private bind is distinct from public assets. File contents and names stay out of runtime inspection receipts.",
+      "concurrency": "Release migration requires a verified writer fence. Startup checks assume an operator does not subsequently replace or unmount storage.",
+      "idempotency": "Repeated valid startup checks are read-only. Preservation must reject conflicting existing file contents rather than overwrite them.",
+      "failure": "Production startup exits78 before accepting uploads if its mount guard fails. Filesystem failures after startup remain application errors, not durability evidence.",
+      "recovery": "Preserve old-container files before replacement; verify coordinated database/assets/uploads backup and isolated restore. After writes resume, recover forward preserving accepted data.",
+      "observability": "Runtime inspection reports canonicalWritableBind without file metadata; CI exercises actual entrypoint rejection and synthetic file survival across container replacement.",
+      "source": "Read-only production container/mount observation 2026-10-05 plus ServerFeedback and ServerLiveSessions file writes; Docker primary storage documentation.",
+      "implementation": [
+        "tdf-hq/production-entrypoint.sh",
+        "tdf-hq/persistent-uploads.sh",
+        "tdf-hq/Dockerfile",
+        "tdf-hq/Dockerfile.runtime",
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/ServerLiveSessions.hs",
+        "ops/hetzner/compose.production.yaml",
+        "ops/hetzner/inspect-runtime.py",
+        "scripts/lib/hetzner-preparation.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/persistent-uploads.test.mjs",
+        "scripts/__tests__/production-entrypoint.test.mjs",
+        "scripts/test-persistent-uploads-container.py",
+        "scripts/test-hetzner-inspection.py",
+        "scripts/__tests__/hetzner-preparation.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "critical": true,
+      "ambiguity": [
+        "Full upload lifecycle, DB/file atomicity, retries, retention, quotas and deletion require separate reconciliation.",
+        "Production storage rollout and coordinated backup/restore remain unimplemented and unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Startup/mount repair and executable controls exist; container integration, final-candidate evidence and production rollout/recovery remain required. No formal durability proof."
+      },
+      "authority": "Private content preservation requirement, production source behavior and formal/system/private-upload-persistence.md",
+      "property": "Production starts only after private upload storage admission, and replacement preserves accepted legacy files.",
+      "contract": "formal/system/private-upload-persistence.md",
+      "verification": "Actual shell negative controls, digest-pinned synthetic Linux container replacement, redacted production mount inspection and guarded coordinated recovery verification.",
+      "evidence": "Exact-revision CI logs and private runtime receipts; current production observation is nonconforming, not repaired by source edits."
     }
   ]
 }

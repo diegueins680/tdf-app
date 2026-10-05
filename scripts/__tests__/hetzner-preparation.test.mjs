@@ -111,6 +111,18 @@ test('preparation records current drift and required CORS repair without enablin
     revenueFlags: [{ flag: 'checkout.synthetic', enabled: false }], providerAccounts: [] });
   assert.ok(plan.remainingGates.some(x => x.includes('actual isolated restore')));
   assert.ok(plan.remainingGates.some(x => x.includes('all old writers')));
+  assert.equal(plan.observedPrivateUploads, null, 'Missing observation remains unknown');
+});
+
+test('preparation preserves missing and present upload mounts without granting deployment', async () => {
+  for (const canonicalWritableBind of [false, true]) {
+    const args = await input();
+    args.receipt.snapshot.containers.api.privateUploads = { target: '/app/uploads', canonicalWritableBind };
+    const plan = prepareHetznerRelease(args);
+    assert.deepEqual(plan.observedPrivateUploads, { target: '/app/uploads', canonicalWritableBind });
+    assert.equal(plan.executionAllowed, false);
+    assert.ok(plan.remainingGates.some(gate => gate.includes('Preserve and verify legacy /app/uploads')));
+  }
 });
 
 test('preparation negative controls reject stale/provenance/target/identity/destructive flag changes', async () => {

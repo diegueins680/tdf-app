@@ -30,6 +30,7 @@ COPY tdf-hq/.release/tdf-hq-exe /app/tdf-hq-exe
 COPY tdf-hq/docs /app/docs
 COPY tdf-hq/assets /app/assets
 COPY tdf-hq/production-entrypoint.sh /app/production-entrypoint.sh
+COPY tdf-hq/persistent-uploads.sh /app/persistent-uploads.sh
 COPY --from=migration-bundle /production-migrations.sql /app/production-migrations.sql
 
 RUN chmod 0755 /app/tdf-hq-exe /app/production-entrypoint.sh && \

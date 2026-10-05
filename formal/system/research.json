@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -304,6 +304,16 @@
       "applicability": "Studio booking repair",
       "decision": "adopted",
       "rationale": "Actual synthetic HTTP reproduced foreign access, stale calendar projection and unsafe read/replace. Retain existing PostgreSQL calendar architecture and product-approved role scope."
+    },
+    {
+      "id": "RES-MEDIA-001",
+      "source": "https://docs.docker.com/engine/storage/bind-mounts/",
+      "title": "Docker bind mount persistence and obscured legacy files",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Persist runtime files outside the container writable layer; preserve existing contents before mounting over their destination.",
+      "applicability": "Feedback attachments and live-session riders on the current Hetzner deployment",
+      "decision": "adopted",
+      "rationale": "Dedicated private host bind preserves current relative paths without moving private uploads into public assets. Startup guard and container controls are necessary; coordinated backup and host-loss recovery remain separate obligations."
     }
   ]
 }

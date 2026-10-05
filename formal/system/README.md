@@ -22,6 +22,7 @@ Historical green results are not current-candidate evidence.
 - [cors-boundary.md](cors-boundary.md): credentialed production browser origins,
   startup guards, runtime mutation controls and coordinated configuration rollout.
 - [dependency-security.md](dependency-security.md): known-version regression floors, scan evidence and unresolved runtime/build-tool exposure.
+- [private-upload-persistence.md](private-upload-persistence.md): private attachment mount admission, legacy-file preservation and remaining coordinated recovery obligations.
 - [messaging.md](messaging.md): current-session/consent authority, rejected mutation rollback, bounded model and delivery/idempotency exclusions.
 - Domain contracts retain their existing source locations. This index references
   them instead of maintaining another handwritten copy of their transitions.

@@ -122,6 +122,7 @@
       "scripts/__tests__/onboarding-real-browser.mjs",
       "scripts/__tests__/payment-query-report-contract.test.mjs",
       "scripts/__tests__/payment-staging-inspection.test.mjs",
+      "scripts/__tests__/persistent-uploads.test.mjs",
       "scripts/__tests__/persona-test-program.test.mjs",
       "scripts/__tests__/production-entrypoint.test.mjs",
       "scripts/__tests__/production-release.test.mjs",
@@ -373,6 +374,7 @@
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "scripts/test-payment-arithmetic-verifier.py",
       "scripts/test-payment-audit-runtime.sh",
+      "scripts/test-persistent-uploads-container.py",
       "scripts/test-provider-event-operations-migration.sh",
       "scripts/test-provider-execution-runtime-migration.sh",
       "scripts/test-provider-identity.sh",
@@ -1138,6 +1140,7 @@
       "tdf-hq/docs/openapi/trials-identity.yaml",
       "tdf-hq/docs/openapi/user-roles.yaml",
       "tdf-hq/migrations/0001_create_social_events.sql",
+      "tdf-hq/persistent-uploads.sh",
       "tdf-hq/production-entrypoint.sh",
       "tdf-hq/schemas/_tdf_common.schema.json",
       "tdf-hq/schemas/anexo_cronograma.schema.json",
@@ -2215,7 +2218,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "5eb478b94a578de93cbf8fcf70bdeba1cbed2526aeac8244a1eea393efeb0021",
+      "sha256": "4e8e990fbd6c83fa8d561f56d92de2192bac531d364b2f7ae201a16c61becade",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2437,7 +2440,7 @@
     {
       "id": "SURFACE-93a9612c9f1fea9b",
       "path": "ops/hetzner/compose.production.yaml",
-      "sha256": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
+      "sha256": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2449,7 +2452,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "6c439dbc8b1e17b96399990cb12d49d4d3f64757a161cffdd3224103082cf2e3",
+      "sha256": "87607ff9f1682c901da2ce7c7beeba0237f268ea486a4171ebb295a1d6b93b1f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2701,7 +2704,7 @@
     {
       "id": "SURFACE-b1dae8bd0d7ae4ca",
       "path": "scripts/__tests__/hetzner-preparation.test.mjs",
-      "sha256": "e1b3d4e0b8eb8dca78b04a513dd9b27be539464179f1875f81a99d1bb758e66f",
+      "sha256": "81d159cda722dca67e91f484ff4856332ef48f5630861d21c56a0db20e9f3d66",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2795,6 +2798,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-9f80dbca9b5074c0",
+      "path": "scripts/__tests__/persistent-uploads.test.mjs",
+      "sha256": "0dc864d08b90d8731f0ddcb056dad5c7990c5e07dab80084396e87f62ee76df6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-57edc37515705dee",
       "path": "scripts/__tests__/persona-test-program.test.mjs",
       "sha256": "7f5842c21cd414c9aa541d41b71a01c3dc9347bf4ffee3c12eda88d8839f3128",
@@ -2803,7 +2812,7 @@
     {
       "id": "SURFACE-bd35aa30f70923f7",
       "path": "scripts/__tests__/production-entrypoint.test.mjs",
-      "sha256": "47db2609f27310dc3265e420f740cd844098df0fb2b99280667c759d5f66dd2c",
+      "sha256": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3295,7 +3304,7 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
+      "sha256": "b3c9f1da219779c1d1d62190569108077112af6695d95bd9ecc3c5da92cf0e5c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3499,7 +3508,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "c0326c60ccd34d3f9dde263cabb5889f76e025d59857a691b17fc2ba77aa794b",
+      "sha256": "29f89bd3ea19fcb1d5edd95943fd9f29a2d3fcec2cb1e612f159b28442ad8346",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4201,7 +4210,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "bd6d20cea85b0e1c3c29a342bf78e512345b8f224c4d880563d3634ac18c923c",
+      "sha256": "65bfd55b856baf7ded66010a5fc809bb762384078fd36f1b28eade998b263bab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4298,6 +4307,12 @@
       "id": "SURFACE-c135b76cb25cf121",
       "path": "scripts/test-payment-audit-runtime.sh",
       "sha256": "38e12fa06837ea1a216560df21362d25afcd461e1940517dc97f2a94fbf997d2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5ab561d49adf7c78",
+      "path": "scripts/test-persistent-uploads-container.py",
+      "sha256": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8689,13 +8704,13 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "d5afe1363da6c68cba251ab928fe10ad4c47aafea2924c27402e50c9d323fb1a",
+      "sha256": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-355fc91289eee809",
       "path": "tdf-hq/Dockerfile.runtime",
-      "sha256": "cc561dc926a491699de7b34ad3d01e1dd0e13d53cdc5dc87484aeb7e303129b8",
+      "sha256": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8855,9 +8870,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-08c4e7dc52635968",
+      "path": "tdf-hq/persistent-uploads.sh",
+      "sha256": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5b0f4c12394c077d",
       "path": "tdf-hq/production-entrypoint.sh",
-      "sha256": "73fd920d6c80820f2c51752aee2130ca4a7df167c4059df816cbfce96dbcd5cc",
+      "sha256": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20234,7 +20255,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "14901848ce0d80548728e6e0903e9fd67ac4f1e4cc5db3839ec71ebe65d022cc",
+      "sha256": "8bc417761f5816c21173569265470d3959a649fdfb357fe0400c9e15d75d2823",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -20338,15 +20359,22 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/private-upload-persistence.md",
+      "sha256": "e03474bf3029a4b23e1ecc0b9818483fb693331ca2df667e7f0fe58ba82e7896",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/requirements.json",
-      "sha256": "bfe4da57dfd3df2bd43dabd981c26562b7a96bf4db85c4f0e4ff2944de769c06",
+      "sha256": "46f57e18930083d3e886979de22342da8aa79c531a625132708c0812e605a84f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "d5c117062806bbf593a48acd8dfd194090650c0c9dc5a6164ff770619516c4e1",
+      "sha256": "ab5ece45010ca5f07e0ecd6cab84bb4dd44e3112e78c080695c0f3ead01d9b63",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20360,7 +20388,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "9dc2e45200aae863435ca164e8948e002587352be938ed905eeab0a4c5f56f04",
+      "sha256": "bcd33da8dcc83a41ce55145c20a8ff046f2b674027548385254bcc3b68818185",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20374,7 +20402,7 @@
     },
     {
       "path": "ops/hetzner/compose.production.yaml",
-      "sha256": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
+      "sha256": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
