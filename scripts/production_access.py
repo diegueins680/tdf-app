@@ -53,6 +53,24 @@ def main(mode):
         or any(mount.get('Destination', '').startswith('/var/lib/postgresql/data/')
                for mount in db.get('Mounts', []))):
         raise RuntimeError('Database is not using the authoritative production volume')
+    db_settings = {}
+    for entry in db['Config']['Env']:
+        key, separator, value = entry.partition('=')
+        if not separator or key in db_settings:
+            raise RuntimeError('Invalid database configuration')
+        db_settings[key] = value
+    if db_settings.get('PGDATA') != '/var/lib/postgresql/data':
+        raise RuntimeError('Database directory is not canonical')
+    # The restricted inventory role cannot inspect data_directory. This fixed
+    # boolean query uses existing local administration without granting it any
+    # new capability or allowing caller-provided SQL under that role.
+    storage = capture(['docker', 'exec', '-i', 'tdf-production-db-1', 'env', '-i',
+        'PATH=/usr/local/bin:/usr/bin:/bin', 'PGOPTIONS=-c default_transaction_read_only=on',
+        'PGCONNECT_TIMEOUT=10', 'psql', '-X', '-h', '/var/run/postgresql', '-p', '5432',
+        '-v', 'ON_ERROR_STOP=1', '-qAt', '-U', 'postgres', '-d', 'tdf_hq', '-c',
+        "SELECT current_database()='tdf_hq' AND current_user='postgres' AND inet_server_addr() IS NULL AND current_setting('port')='5432' AND current_setting('transaction_read_only')='on' AND current_setting('data_directory')='/var/lib/postgresql/data';"])
+    if storage.strip() != 't':
+        raise RuntimeError('Effective database storage is not canonical')
     env = dict(entry.split('=', 1) for entry in api['Config']['Env'])
     dbnet = db['NetworkSettings']['Networks'].get('tdf-production_database', {})
     apinet = api['NetworkSettings']['Networks'].get('tdf-production_database', {})

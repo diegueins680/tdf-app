@@ -2122,7 +2122,8 @@
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
         "Never execute the retired Fly production lane.",
-        "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket."
+        "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket.",
+        "Accept shadowing database child mounts, noncanonical PGDATA or differing effective server data_directory."
       ],
       "effects": [
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
@@ -5442,6 +5443,94 @@
       "property": "UniqueInvoice and UniqueNumber and BoundReplay and AuthorizedCommit; exact Integer snapshot equality before issuance",
       "verification": "Actual HTTP/PG races, source-mutated arithmetic properties, bounded TLA+ positive and named negative invariants; fresh candidate evidence required",
       "evidence": "Exact-candidate backend, HTTP, formal and migration receipts; no production pass inferred"
+    },
+    {
+      "id": "DEPLOY-BACKUP-001",
+      "title": "Scheduled private logical archive completion",
+      "statement": "The daily logical backup must admit the canonical local database, serialize runs, preserve private complete archives and globals, and report success only after verified source and durable completion evidence.",
+      "domain": "DEPLOY",
+      "authority": "User recovery, worker and privacy requirements; verified installed timer",
+      "source": "ops/hetzner/tdf-postgres-backup.timer; verified installed script hash; formal/system/logical-backup.md",
+      "contract": "formal/system/logical-backup.md",
+      "critical": true,
+      "actors": [
+        "Scheduled root-owned systemd service",
+        "Authorized release operator"
+      ],
+      "preconditions": [
+        "Private owned backup directory",
+        "Canonical immutable database container and effective data directory",
+        "Exclusive backup lock"
+      ],
+      "inputs": [
+        "Fixed local database and reviewed program; no caller-selected SQL or target"
+      ],
+      "state": {
+        "states": [
+          "idle",
+          "locked",
+          "source-admitted",
+          "database-archived",
+          "globals-archived",
+          "archive-listed",
+          "source-rechecked",
+          "receipt-durable",
+          "failed"
+        ],
+        "initial": "idle",
+        "terminal": [
+          "receipt-durable",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "idle -> locked -> source-admitted -> database-archived -> globals-archived -> archive-listed -> source-rechecked -> receipt-durable",
+        "Any incomplete step -> failed"
+      ],
+      "forbiddenTransitions": [
+        "Completion after failed dump, globals, archive listing or changed source",
+        "Untrusted Docker/libpq routing",
+        "Overwrite or deletion of prior archives",
+        "Claim of restore or off-host recoverability from archive creation",
+        "Retry after parent death with an unresolved dump request",
+        "Attribute completion to source bytes changed during execution"
+      ],
+      "effects": [
+        "Private mode0600 logical archive and globals in mode0700 unique directory",
+        "Exclusive durable completion receipt with source/tool hashes, sizes and timestamps"
+      ],
+      "authorization": "Existing local root scheduler; fixed read-only postgres storage assertion and dump commands, no new inventory-role grants.",
+      "privacy": "Database and globals may contain private records/password hashes; no content or raw errors leave protected local files.",
+      "concurrency": "Permanent nonblocking lock plus durable pending reservation serialize scheduler admission across parent death; failed/uncertain work blocks retry until operator resolution. Source observations are sequential, not a privileged-operator/release-writer fence.",
+      "idempotency": "Successful retries create a fresh UUID run without overwrite. Failed or uncertain requests retain the pending marker and block new work until resolved.",
+      "failure": "Exit nonzero, retain partial archives and stage-only failure receipt when possible; missing completion or any failure marker rejects admission.",
+      "recovery": "Establish no old dump request remains in flight, preserve failed evidence, then clear the matching pending reservation before independent retry. Actual restore/off-host/coordinated recovery remain separate.",
+      "observability": "Recorded source/tool hashes, archive hashes/sizes/times and explicit false restored/offHost/coordinatedAssets fields; timer exit and installed hashes must be observed at delivery.",
+      "implementation": [
+        "ops/hetzner/backup-postgres.sh",
+        "ops/hetzner/backup-postgres.py",
+        "ops/hetzner/inspect-runtime.py",
+        "ops/hetzner/tdf-postgres-backup.service",
+        "ops/hetzner/tdf-postgres-backup.timer"
+      ],
+      "tests": [
+        "scripts/test-hetzner-backup.py",
+        "scripts/test-hetzner-inspection.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Source-derived contract and controlled failure tests; production installation unverified.",
+      "ambiguity": [
+        "Off-host retention destination and coordinated release recovery remain unresolved."
+      ],
+      "verification": "Implementation fault-injection and target controls; not a universal proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "New scheduler implementation and controls await exact-head review, installed-run validation and independent recovery evidence."
+      },
+      "property": "Every successful archive receipt follows source admission, both nonempty dumps, readable archive metadata, unchanged source and durable private evidence; failures cannot imply restoration.",
+      "evidence": "Exact revision test logs, installed hashes, scheduled execution and independent restore receipts with their separate scopes."
     }
   ]
 }

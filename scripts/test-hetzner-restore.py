@@ -174,6 +174,24 @@ class RestoreBoundaryTests(unittest.TestCase):
 
 
 class RestoreOrchestrationTests(unittest.TestCase):
+    def test_actual_collector_storage_rejection_precedes_snapshot_and_dump(self):
+        spec = importlib.util.spec_from_file_location('storage_fixture', ROOT/'scripts/test-hetzner-inspection.py')
+        fixtures = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixtures)
+        for mutation in ['child', 'effective']:
+            db = fixtures.container('db')
+            if mutation=='child':
+                db['Mounts'].append({'Destination':'/var/lib/postgresql/data/base','Type':'volume','Name':'foreign'})
+            replies = ['a'*64, json.dumps([fixtures.container('api')]), 'a'*64, json.dumps([db]),
+                       'a'*64, json.dumps([fixtures.container('edge')]), 'f']
+            with patch.object(fixtures.module, 'capture', side_effect=replies), \
+                 patch.object(restore.os.path, 'lexists', return_value=False), \
+                 patch.object(restore, 'execute', return_value=''), \
+                 patch.object(restore, 'HeldSnapshot') as held, \
+                 patch.object(restore, 'IsolatedRestore') as target, \
+                 patch.object(restore, 'bounded_archive') as dump, self.assertRaises(ValueError):
+                restore.rehearse_locked(fixtures.module)
+            held.assert_not_called(); target.assert_not_called(); dump.assert_not_called()
+
     def test_uncertain_creation_blocks_even_with_no_visible_container(self):
         runtime = MagicMock()
         with tempfile.TemporaryDirectory() as temporary:

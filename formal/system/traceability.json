@@ -2123,7 +2123,8 @@
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
         "Never execute the retired Fly production lane.",
-        "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket."
+        "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket.",
+        "Accept shadowing database child mounts, noncanonical PGDATA or differing effective server data_directory."
       ],
       "effects": [
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
@@ -5443,6 +5444,94 @@
       "property": "UniqueInvoice and UniqueNumber and BoundReplay and AuthorizedCommit; exact Integer snapshot equality before issuance",
       "verification": "Actual HTTP/PG races, source-mutated arithmetic properties, bounded TLA+ positive and named negative invariants; fresh candidate evidence required",
       "evidence": "Exact-candidate backend, HTTP, formal and migration receipts; no production pass inferred"
+    },
+    {
+      "id": "DEPLOY-BACKUP-001",
+      "title": "Scheduled private logical archive completion",
+      "statement": "The daily logical backup must admit the canonical local database, serialize runs, preserve private complete archives and globals, and report success only after verified source and durable completion evidence.",
+      "domain": "DEPLOY",
+      "authority": "User recovery, worker and privacy requirements; verified installed timer",
+      "source": "ops/hetzner/tdf-postgres-backup.timer; verified installed script hash; formal/system/logical-backup.md",
+      "contract": "formal/system/logical-backup.md",
+      "critical": true,
+      "actors": [
+        "Scheduled root-owned systemd service",
+        "Authorized release operator"
+      ],
+      "preconditions": [
+        "Private owned backup directory",
+        "Canonical immutable database container and effective data directory",
+        "Exclusive backup lock"
+      ],
+      "inputs": [
+        "Fixed local database and reviewed program; no caller-selected SQL or target"
+      ],
+      "state": {
+        "states": [
+          "idle",
+          "locked",
+          "source-admitted",
+          "database-archived",
+          "globals-archived",
+          "archive-listed",
+          "source-rechecked",
+          "receipt-durable",
+          "failed"
+        ],
+        "initial": "idle",
+        "terminal": [
+          "receipt-durable",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "idle -> locked -> source-admitted -> database-archived -> globals-archived -> archive-listed -> source-rechecked -> receipt-durable",
+        "Any incomplete step -> failed"
+      ],
+      "forbiddenTransitions": [
+        "Completion after failed dump, globals, archive listing or changed source",
+        "Untrusted Docker/libpq routing",
+        "Overwrite or deletion of prior archives",
+        "Claim of restore or off-host recoverability from archive creation",
+        "Retry after parent death with an unresolved dump request",
+        "Attribute completion to source bytes changed during execution"
+      ],
+      "effects": [
+        "Private mode0600 logical archive and globals in mode0700 unique directory",
+        "Exclusive durable completion receipt with source/tool hashes, sizes and timestamps"
+      ],
+      "authorization": "Existing local root scheduler; fixed read-only postgres storage assertion and dump commands, no new inventory-role grants.",
+      "privacy": "Database and globals may contain private records/password hashes; no content or raw errors leave protected local files.",
+      "concurrency": "Permanent nonblocking lock plus durable pending reservation serialize scheduler admission across parent death; failed/uncertain work blocks retry until operator resolution. Source observations are sequential, not a privileged-operator/release-writer fence.",
+      "idempotency": "Successful retries create a fresh UUID run without overwrite. Failed or uncertain requests retain the pending marker and block new work until resolved.",
+      "failure": "Exit nonzero, retain partial archives and stage-only failure receipt when possible; missing completion or any failure marker rejects admission.",
+      "recovery": "Establish no old dump request remains in flight, preserve failed evidence, then clear the matching pending reservation before independent retry. Actual restore/off-host/coordinated recovery remain separate.",
+      "observability": "Recorded source/tool hashes, archive hashes/sizes/times and explicit false restored/offHost/coordinatedAssets fields; timer exit and installed hashes must be observed at delivery.",
+      "implementation": [
+        "ops/hetzner/backup-postgres.sh",
+        "ops/hetzner/backup-postgres.py",
+        "ops/hetzner/inspect-runtime.py",
+        "ops/hetzner/tdf-postgres-backup.service",
+        "ops/hetzner/tdf-postgres-backup.timer"
+      ],
+      "tests": [
+        "scripts/test-hetzner-backup.py",
+        "scripts/test-hetzner-inspection.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Source-derived contract and controlled failure tests; production installation unverified.",
+      "ambiguity": [
+        "Off-host retention destination and coordinated release recovery remain unresolved."
+      ],
+      "verification": "Implementation fault-injection and target controls; not a universal proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "New scheduler implementation and controls await exact-head review, installed-run validation and independent recovery evidence."
+      },
+      "property": "Every successful archive receipt follows source admission, both nonempty dumps, readable archive metadata, unchanged source and durable private evidence; failures cannot imply restoration.",
+      "evidence": "Exact revision test logs, installed hashes, scheduled execution and independent restore receipts with their separate scopes."
     }
   ],
   "sourceFingerprints": {
@@ -5515,9 +5604,13 @@
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
     "functions/eventos/[eventId]/orden/[orderId].js": "4590c38182a6223fe6b8c62f6b329a0aaca66b377a13b6085e5e32dee4cc0de4",
+    "ops/hetzner/backup-postgres.py": "f54d3bc769fcad8ddb047c6fb30b4bcf69193c81fc1e50c23f1102c253518117",
+    "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
-    "ops/hetzner/inspect-runtime.py": "bb868383fb81310589acf5ccb4fc760c7958a530b6324c2f7f3b3bbbe9450292",
+    "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/rehearse-postgres-restore.py": "4794f49c34ed9042fc58450020ea844dc1dae57852c6a2607c4f8d5d23a0176e",
+    "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
+    "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
     "package.json": "f3f77a10e1b8aa74e555d9db534dc2c35b404bded3732abefe1cfc21c83d98ac",
@@ -5578,10 +5671,10 @@
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/production-migrations.json": "6fb3d4f152c2217e638276654f1670f2d58a124ee0e4c95a747c2fc6a2093868",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
-    "scripts/production_access.py": "2659adcab35caea6b67f99f258dbf6886828f3fa10511dbf9f262a5d3ac6c52e",
+    "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a992ea1ae7653b66cd89dcf8c48faaf112201ff8d7514cdd584858e69b23e87f",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "165f0857cb4cb05868b433ee2abe803408cbe4b440b142d50a7e9632e8dcc904",
+    "scripts/quality-repo.sh": "3cc845e9e6bf8b5ec13bc22be0010ae79e3dd1fd1fd25005bddef17d317a340d",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -5594,8 +5687,9 @@
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-booking-conformance.py": "f6aae4737e671b775daa62b95e290ff90f2d42d23d9fa7c69df90b51e6bcccfa",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
-    "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
-    "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
+    "scripts/test-hetzner-backup.py": "978e7462dae93c4d71bbc15c6024b074de99ecbccd801013482f9213d7ed7d76",
+    "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
+    "scripts/test-hetzner-restore.py": "25496b629c15b61896ae762bc107f2c74c271e0fed6609ef05ae07a688f76d81",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
@@ -5610,7 +5704,7 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
-    "scripts/test_production_access.py": "c925c4dfd27b34a4a73fe52d0edf676753537731e44cbba999882b97f3d6e27f",
+    "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
     "scripts/verify-event-operations-formal.sh": "d46397ad32d8de80da708b47c115a42d54119da229600dd845bb61bcc0bd2d0a",
@@ -7041,6 +7135,10 @@
       {
         "requirement": "MEDIA-PERSIST-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/inspect-hetzner-production.mjs": [
@@ -7066,6 +7164,10 @@
       },
       {
         "requirement": "MEDIA-PERSIST-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-BACKUP-001",
         "relationship": "tests"
       }
     ],
@@ -7259,6 +7361,10 @@
       {
         "requirement": "PRIV-DELETE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "tests"
       }
     ],
     "scripts/quality-mobile.sh": [
@@ -8758,6 +8864,36 @@
         "requirement": "PAY-INVOICE-001",
         "relationship": "formalModels"
       }
+    ],
+    "ops/hetzner/backup-postgres.sh": [
+      {
+        "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "ops/hetzner/backup-postgres.py": [
+      {
+        "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "ops/hetzner/tdf-postgres-backup.service": [
+      {
+        "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "ops/hetzner/tdf-postgres-backup.timer": [
+      {
+        "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-hetzner-backup.py": [
+      {
+        "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -9142,11 +9278,28 @@
       ]
     },
     {
+      "id": "SURFACE-832bd4423fbaa666",
+      "path": "ops/hetzner/backup-postgres.py",
+      "sha256": "f54d3bc769fcad8ddb047c6fb30b4bcf69193c81fc1e50c23f1102c253518117",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-8edebd7f210fcaba",
       "path": "ops/hetzner/backup-postgres.sh",
-      "sha256": "38ec88cb2576a5233c6e8cbd40921e73d83cca7dca23991c76797e75dd1042b2",
+      "sha256": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-cec43d1d88b9cc40",
@@ -9188,7 +9341,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "bb868383fb81310589acf5ccb4fc760c7958a530b6324c2f7f3b3bbbe9450292",
+      "sha256": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9201,6 +9354,10 @@
         },
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-BACKUP-001",
           "relationship": "implementation"
         }
       ]
@@ -11023,7 +11180,7 @@
     {
       "id": "SURFACE-9e0e512cb2b2396c",
       "path": "scripts/production_access.py",
-      "sha256": "2659adcab35caea6b67f99f258dbf6886828f3fa10511dbf9f262a5d3ac6c52e",
+      "sha256": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11074,7 +11231,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "165f0857cb4cb05868b433ee2abe803408cbe4b440b142d50a7e9632e8dcc904",
+      "sha256": "3cc845e9e6bf8b5ec13bc22be0010ae79e3dd1fd1fd25005bddef17d317a340d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11088,6 +11245,10 @@
         {
           "requirement": "PRIV-DELETE-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -12052,9 +12213,21 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-b8d7df5c0ea7535d",
+      "path": "scripts/test-hetzner-backup.py",
+      "sha256": "978e7462dae93c4d71bbc15c6024b074de99ecbccd801013482f9213d7ed7d76",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
+      "sha256": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12068,13 +12241,17 @@
         {
           "requirement": "MEDIA-PERSIST-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
-      "sha256": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
+      "sha256": "25496b629c15b61896ae762bc107f2c74c271e0fed6609ef05ae07a688f76d81",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12535,7 +12712,7 @@
     {
       "id": "SURFACE-3f433a02bd9aa5ff",
       "path": "scripts/test_production_access.py",
-      "sha256": "c925c4dfd27b34a4a73fe52d0edf676753537731e44cbba999882b97f3d6e27f",
+      "sha256": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26775,7 +26952,6 @@
     "SURFACE-0d1b6286746163ff",
     "SURFACE-cca59b046cc76ace",
     "SURFACE-8780cd8d489d13bd",
-    "SURFACE-8edebd7f210fcaba",
     "SURFACE-cec43d1d88b9cc40",
     "SURFACE-f4743034f585d310",
     "SURFACE-c9ca596d51c940f8",
@@ -28721,7 +28897,8 @@
     "SYS-CI-001",
     "PRIV-ERROR-001",
     "PRIV-ANALYTICS-001",
-    "EVT-PRESENTATION-001"
+    "EVT-PRESENTATION-001",
+    "DEPLOY-BACKUP-001"
   ],
   "stateMachines": [
     {
@@ -29843,7 +30020,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9e7043aaa289ed88a7d959686c45cad175bc94ce36ea052f45df6637ecba4756",
+      "sourceSha256": "3c102da994fbbf3bf28a1ac0ddb645af56b4f4cd05393956312688df78163b0e",
       "definition": {
         "states": [
           "absent",
@@ -51650,7 +51827,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 72,
+    "PARTIAL": 73,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

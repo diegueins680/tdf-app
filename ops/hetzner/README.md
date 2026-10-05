@@ -149,6 +149,19 @@ and cannot satisfy these obligations.
 
 ## Routine release status
 
+The [scheduled logical archive contract](../../formal/system/logical-backup.md)
+defines the daily timer's narrower guarantee. Install the shell entrypoint and
+both Python companions together after review; never treat an online dump or
+archive listing as coordinated database/assets recovery. Existing installed
+versions require fresh hash and scheduled-run verification after delivery.
+
+Storage observation now rejects shadowing child mounts and noncanonical PGDATA.
+A fixed boolean read-only query under the existing local postgres role additionally
+checks the server's effective data_directory; the inventory reader receives no
+new grants. Command/configuration overrides cannot satisfy this check by merely
+retaining an unused canonical volume mount. Privileged concurrent reconfiguration
+remains outside the sequential observation boundary.
+
 The guarded routine Hetzner release executor remains an open implementation and
 verification obligation. Direct invocation of `scripts/production-release.mjs`
 is retired and rejects before any provider or database action. The former

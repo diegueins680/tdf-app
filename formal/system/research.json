@@ -523,6 +523,15 @@
       "decision": "adopted",
       "rationale": "Use the local Docker Unix socket, a minimal child environment, and a cleared container environment with explicit PostgreSQL socket/port. Assert SQL connection identity before both catalog coverage and inventory queries. This protects observation routing; it is not an atomic fleet snapshot or protection from a compromised host.",
       "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-BACKUP-001",
+      "source": "https://www.postgresql.org/docs/17/app-pgdump.html",
+      "title": "PostgreSQL17 logical backup and restore boundaries",
+      "recommendation": "pg_dump uses a consistent database snapshot; pg_dumpall captures globals separately; archive listing is not restoration.",
+      "applicability": "Verified active TDF daily logical backup timer",
+      "decision": "adopted",
+      "rationale": "Capture protected globals, pin actual storage and record archive-only success. Require separate restore and coordinated assets/off-host evidence; do not infer disaster recovery from exit0."
     }
   ]
 }
