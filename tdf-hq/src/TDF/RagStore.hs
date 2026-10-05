@@ -38,8 +38,8 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (UTCTime, addUTCTime, diffUTCTime, getCurrentTime)
 import           Data.Time.Format       (defaultTimeLocale, formatTime)
-import           Database.Persist       (Entity(..), SelectOpt(..), selectList, entityKey, entityVal, (==.), (!=.), (<-.), (>=.), (<=.))
-import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, transactionSave, transactionUndo)
+import           Database.Persist       (Entity(..), Key, SelectOpt(..), getEntity, selectList, entityKey, entityVal, (==.), (!=.), (<-.), (>=.), (<=.))
+import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, toSqlKey, rawExecute, rawSql, runSqlPool, transactionSave, transactionUndo)
 import           GHC.Generics           (Generic)
 import           Network.HTTP.Client    (Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus, RequestBody(..))
 import           Network.HTTP.Types.Status (statusCode)
