@@ -2200,6 +2200,76 @@
         "scripts/__tests__/production-release.test.mjs"
       ],
       "critical": true
+    },
+    {
+      "authority": "inferred",
+      "source": "ops/hetzner/README.md; formal/system/authority-decisions.json",
+      "contract": "ops/hetzner/README.md",
+      "domain": "DEPLOY",
+      "actors": [
+        "Release operator",
+        "CI conformance verifier"
+      ],
+      "preconditions": [
+        "Clean source checkout with full Git ancestry; a clean-source production observation begun within the last fifteen minutes."
+      ],
+      "inputs": [
+        "Committed production manifest and recursively included SQL at one revision",
+        "Recent runtime receipt and matching collector hashes"
+      ],
+      "state": {
+        "initial": "unverified candidate and observed ledger",
+        "terminal": [
+          "rejected",
+          "prepared-not-authorized"
+        ]
+      },
+      "allowedTransitions": [
+        "Resolve immutable source and introduction ancestry; reconcile the applied ledger; retain pending migrations and open release gates."
+      ],
+      "forbiddenTransitions": [
+        "Do not rewrite applied history, accept unknown or duplicate entries, ignore a hole in the ledger, or substitute raw-file hashes for expanded SQL checksums.",
+        "Do not treat an unsigned local observation or successful preparation as review, backup, image, restore or deployment evidence."
+      ],
+      "effects": [
+        "Write one private local preparation receipt; invoke no remote or production-mutating command."
+      ],
+      "authorization": "Preparation is local inspection. Deployment requires independent exact-head review, merge, post-merge gates and a guarded executor.",
+      "privacy": "Plans contain migration hashes and allowlisted identities, never SQL data, credentials or raw child-process diagnostics.",
+      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
+      "idempotency": "Repeated preparation is observational; exclusive output creation prevents receipt overwrite.",
+      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action.",
+      "recovery": "Preserve prior receipts and applied migration history. Correct source/input under review; never alter applied SQL to make the comparison pass.",
+      "observability": "Record source revision, raw manifest hash, expanded migration checksums, applied source/checksum, input receipt hash, preparation source hash, timestamps, pending count and outstanding release gates.",
+      "formalModels": [],
+      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags. No model-to-whole-system proof.",
+      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt.",
+      "status": "specified and implemented",
+      "confidence": "High for tested source/ledger comparison boundary; live migration application and guarded recovery remain open.",
+      "ambiguity": [
+        "Runtime receipt trust is local and unsigned; a deployment executor must acquire fresh observations itself.",
+        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local source/ledger correspondence is executable; canonical deployment execution, backup/restore, effective configuration comparison and deployed verification remain open."
+      },
+      "id": "DEPLOY-MIGRATION-001",
+      "title": "Immutable production migration correspondence before release",
+      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution.",
+      "property": "Every applied ledger entry occurs once in the manifest and matches its expanded checksum or an explicitly registered compatible checksum; every introduction commit is a candidate ancestor.",
+      "implementation": [
+        "scripts/lib/migration-contract.mjs",
+        "scripts/lib/hetzner-preparation.mjs",
+        "scripts/prepare-hetzner-release.mjs",
+        "scripts/production-release.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/hetzner-preparation.test.mjs",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/provider-rollback.test.mjs"
+      ],
+      "critical": true
     }
   ],
   "sourceFingerprints": {
@@ -2236,6 +2306,7 @@
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/hetzner-inspection.test.mjs": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
+    "scripts/__tests__/hetzner-preparation.test.mjs": "82ca21046c09be1de20785e36ac7b007766dfe8223b07f38ff11634d7f3cdc80",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
@@ -2247,10 +2318,13 @@
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+    "scripts/lib/hetzner-preparation.mjs": "20d2759f58a8e45e6c636d999f614773fbaa897101d2c35d7ae67876854b351b",
+    "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/production-release.mjs": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+    "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/production-migrations.json": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
-    "scripts/production-release.mjs": "8911573e1f885002c02a0242cf8c9cdbfeea4e3c5ccba72e6528f372705a70c9",
+    "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
     "scripts/specification-inventory.py": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
@@ -2341,6 +2415,10 @@
       {
         "requirement": "DEPLOY-TARGET-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/provider-rollback.test.mjs": [
@@ -2350,6 +2428,10 @@
       },
       {
         "requirement": "ID-SESSION-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
         "relationship": "tests"
       }
     ],
@@ -3251,6 +3333,34 @@
       {
         "requirement": "DEPLOY-TARGET-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/lib/migration-contract.mjs": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/hetzner-preparation.mjs": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/prepare-hetzner-release.mjs": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/hetzner-preparation.test.mjs": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "tests"
       }
     ]
   },
@@ -3912,6 +4022,18 @@
       ]
     },
     {
+      "id": "SURFACE-b1dae8bd0d7ae4ca",
+      "path": "scripts/__tests__/hetzner-preparation.test.mjs",
+      "sha256": "82ca21046c09be1de20785e36ac7b007766dfe8223b07f38ff11634d7f3cdc80",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
       "sha256": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
@@ -4075,6 +4197,10 @@
         {
           "requirement": "DEPLOY-TARGET-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -4090,6 +4216,10 @@
         },
         {
           "requirement": "ID-SESSION-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "tests"
         }
       ]
@@ -4661,6 +4791,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-5ee17ccf3d926503",
+      "path": "scripts/lib/hetzner-preparation.mjs",
+      "sha256": "20d2759f58a8e45e6c636d999f614773fbaa897101d2c35d7ae67876854b351b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-a38198fb9ee3c45e",
       "path": "scripts/lib/identity-inventory.sql",
       "sha256": "dbb6edde462e45ee94df7339f6f321a4b73bb00c8b96ec89bbaf5b71d33fb876",
@@ -4694,6 +4836,18 @@
       "sha256": "2fe5c61495d55a2b8934b3444dee4848be4517bc52d2ffdddf6570ee2e37b620",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-13fd70b5db26c94e",
+      "path": "scripts/lib/migration-contract.mjs",
+      "sha256": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0fae219dd0862347",
@@ -4829,6 +4983,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-1bcf4ba116082f91",
+      "path": "scripts/prepare-hetzner-release.mjs",
+      "sha256": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-1ef043656b0c0dd7",
       "path": "scripts/prepare-portable-restore.mjs",
       "sha256": "e0e7cfad0b09971d8b9a92a5018ea4d8d0a82d010a190f084d086e8f7f0c3db3",
@@ -4864,7 +5030,7 @@
     {
       "id": "SURFACE-566be2960a2d6029",
       "path": "scripts/production-release.mjs",
-      "sha256": "8911573e1f885002c02a0242cf8c9cdbfeea4e3c5ccba72e6528f372705a70c9",
+      "sha256": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -4881,6 +5047,10 @@
         },
         {
           "requirement": "DEPLOY-TARGET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "implementation"
         }
       ]
@@ -4909,7 +5079,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "9d502a85fcfa07cceb18dde209ac128404268ba687a95ebddde50eba1253e274",
+      "sha256": "d246bbf51fa86a19cfa4cf0809520656165e26e096ffdfa7d09e9b7bc9b595e1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -20754,7 +20924,8 @@
     "PAY-CHECKOUT-001",
     "PAY-CHECKOUT-002",
     "PAY-CHECKOUT-003",
-    "DEPLOY-TARGET-001"
+    "DEPLOY-TARGET-001",
+    "DEPLOY-MIGRATION-001"
   ],
   "stateMachines": [
     {
@@ -42632,7 +42803,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 32,
+    "PARTIAL": 33,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

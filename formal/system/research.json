@@ -191,6 +191,24 @@
       "applicability": "Current backup-postgres.sh only lists the archive before marking backup complete",
       "decision": "adopted",
       "rationale": "Keep the existing archive-integrity step but do not treat it as a tested restore. A future release must restore into an isolated target and verify schema/data before rollout."
+    },
+    {
+      "id": "RES-DEPLOY-004",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "title": "PostgreSQL advisory lock lifetime",
+      "recommendation": "Session advisory locks end with the holding session; transaction locks end with the transaction.",
+      "applicability": "Guarded release coordination across multi-step backup, migration and rollout",
+      "decision": "adopted as executor constraint",
+      "rationale": "A lock acquired by a short-lived psql command does not protect later release commands. The future executor must retain a lock owner throughout the operation and fail closed on ownership loss."
+    },
+    {
+      "id": "RES-DEPLOY-005",
+      "source": "https://docs.docker.com/reference/cli/docker/container/stop/",
+      "title": "Docker stop signals and timeout",
+      "recommendation": "Stopping sends a configured signal then forcibly terminates after its grace period.",
+      "applicability": "Identity recovery migration and old-handler drainage",
+      "decision": "adopted as executor constraint",
+      "rationale": "A stop request alone does not prove drained writers. Verify termination and database sessions, distinguish a forced termination from graceful completion, and preserve ambiguous external-effect evidence."
     }
   ]
 }

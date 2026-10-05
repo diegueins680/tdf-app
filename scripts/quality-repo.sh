@@ -19,6 +19,7 @@ node --test "$ROOT/scripts/__tests__/disposable-postgres-url.test.mjs"
 node --test "$ROOT/scripts/__tests__/merch-runtime-safety.test.mjs"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-hetzner-inspection.py"
 node --test "$ROOT/scripts/__tests__/hetzner-inspection.test.mjs"
+node --test "$ROOT/scripts/__tests__/hetzner-preparation.test.mjs"
 run_npm run generate:studio-internship-audit --prefix "$ROOT"
 git -C "$ROOT" diff --exit-code -- \
   docs/internships/studio-audit/generated-summary.json \

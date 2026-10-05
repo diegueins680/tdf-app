@@ -29,6 +29,26 @@ changed sources invalidate the observation rather than receiving a passing recei
 Observations are sequential, not an atomic fleet snapshot. Missing flags retain
 unknown effective defaults. A successful observation is **not release readiness**.
 
+## Source and migration preparation
+
+After a clean commit, use a runtime receipt from the same collector implementation,
+begun within the last fifteen minutes:
+
+```sh
+node scripts/prepare-hetzner-release.mjs --runtime /absolute/private/recent-runtime.json --output /absolute/private/new-plan.json
+```
+
+This local command reads immutable Git blobs, including SQL includes, checks each
+migration introduction's ancestry and compares the observed ledger against the
+exact manifest. Unknown/duplicate entries and unapproved checksum differences
+reject preparation. Pending entries retain manifest order, including holes in the
+observed ledger. Historical compatible checksums remain explicit in the manifest.
+The plan records current flags, the required coordinated CORS configuration repair,
+and outstanding release gates. It always reports `executionAllowed: false`.
+It does not invoke SSH, Docker, a database, or a deployment service. Receipts are
+local evidence, not signed attestations or approval; an executor must re-observe
+runtime state under its release lock.
+
 ## Routine release status
 
 The guarded routine Hetzner release executor remains an open implementation and

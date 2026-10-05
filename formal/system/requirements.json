@@ -2199,6 +2199,76 @@
         "scripts/__tests__/production-release.test.mjs"
       ],
       "critical": true
+    },
+    {
+      "authority": "inferred",
+      "source": "ops/hetzner/README.md; formal/system/authority-decisions.json",
+      "contract": "ops/hetzner/README.md",
+      "domain": "DEPLOY",
+      "actors": [
+        "Release operator",
+        "CI conformance verifier"
+      ],
+      "preconditions": [
+        "Clean source checkout with full Git ancestry; a clean-source production observation begun within the last fifteen minutes."
+      ],
+      "inputs": [
+        "Committed production manifest and recursively included SQL at one revision",
+        "Recent runtime receipt and matching collector hashes"
+      ],
+      "state": {
+        "initial": "unverified candidate and observed ledger",
+        "terminal": [
+          "rejected",
+          "prepared-not-authorized"
+        ]
+      },
+      "allowedTransitions": [
+        "Resolve immutable source and introduction ancestry; reconcile the applied ledger; retain pending migrations and open release gates."
+      ],
+      "forbiddenTransitions": [
+        "Do not rewrite applied history, accept unknown or duplicate entries, ignore a hole in the ledger, or substitute raw-file hashes for expanded SQL checksums.",
+        "Do not treat an unsigned local observation or successful preparation as review, backup, image, restore or deployment evidence."
+      ],
+      "effects": [
+        "Write one private local preparation receipt; invoke no remote or production-mutating command."
+      ],
+      "authorization": "Preparation is local inspection. Deployment requires independent exact-head review, merge, post-merge gates and a guarded executor.",
+      "privacy": "Plans contain migration hashes and allowlisted identities, never SQL data, credentials or raw child-process diagnostics.",
+      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
+      "idempotency": "Repeated preparation is observational; exclusive output creation prevents receipt overwrite.",
+      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action.",
+      "recovery": "Preserve prior receipts and applied migration history. Correct source/input under review; never alter applied SQL to make the comparison pass.",
+      "observability": "Record source revision, raw manifest hash, expanded migration checksums, applied source/checksum, input receipt hash, preparation source hash, timestamps, pending count and outstanding release gates.",
+      "formalModels": [],
+      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags. No model-to-whole-system proof.",
+      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt.",
+      "status": "specified and implemented",
+      "confidence": "High for tested source/ledger comparison boundary; live migration application and guarded recovery remain open.",
+      "ambiguity": [
+        "Runtime receipt trust is local and unsigned; a deployment executor must acquire fresh observations itself.",
+        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local source/ledger correspondence is executable; canonical deployment execution, backup/restore, effective configuration comparison and deployed verification remain open."
+      },
+      "id": "DEPLOY-MIGRATION-001",
+      "title": "Immutable production migration correspondence before release",
+      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution.",
+      "property": "Every applied ledger entry occurs once in the manifest and matches its expanded checksum or an explicitly registered compatible checksum; every introduction commit is a candidate ancestor.",
+      "implementation": [
+        "scripts/lib/migration-contract.mjs",
+        "scripts/lib/hetzner-preparation.mjs",
+        "scripts/prepare-hetzner-release.mjs",
+        "scripts/production-release.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/hetzner-preparation.test.mjs",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/provider-rollback.test.mjs"
+      ],
+      "critical": true
     }
   ]
 }
