@@ -4544,7 +4544,7 @@
     {
       "id": "SURFACE-21c4ed4ad1e7c32f",
       "path": "scripts/test-specification-conformance.py",
-      "sha256": "b7da3648e4d776ba472ca337f974c7ace5a0aa9980c584a48cbefee8d750174b",
+      "sha256": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
       "semanticConformance": "not-established-by-discovery"
     },
     {

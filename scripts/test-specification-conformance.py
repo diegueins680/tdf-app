@@ -94,15 +94,21 @@ class ConformanceControls(unittest.TestCase):
 
     def test_unavailable_api_status_requires_ownership_and_guarded_status(self):
         policy = copy.deepcopy(self.generated['apiResponseStatus'])
-        self.assertEqual(len(policy['unavailableOperations']), 6)
+        self.assertEqual({row['id'] for row in policy['unavailableOperations']}, {
+            'POST /ddex/documents/{}/import-plans', 'PATCH /ddex/import-plans/{}',
+            'POST /ddex/import-plans/{}/commit', 'POST /ddex/exports',
+            'GET /ddex/exports/{}/download', 'POST /marketplace/cart/{}/stripe/payment-intent',
+            'POST /radio/transmissions', 'POST /social-events/events/{}/live-broadcasts',
+        })
         requirements = json.loads((conformance.ROOT/'formal/system/requirements.json').read_text())['requirements']
         conformance.validate_response_status(policy, requirements)
-        for field, value in [('requirement', 'NONEXISTENT-001'), ('sources', ['not-a-source']),
-                             ('compiledStatus', True), ('unavailableStatus', 200), ('reason', '')]:
-            invalid = copy.deepcopy(policy)
-            invalid['unavailableOperations'][0][field] = value
-            with self.assertRaises(ValueError):
-                conformance.validate_response_status(invalid, requirements)
+        for index, operation in enumerate(policy['unavailableOperations']):
+            for field, value in [('requirement', 'NONEXISTENT-001'), ('sources', ['not-a-source']),
+                                 ('compiledStatus', True), ('unavailableStatus', 200), ('reason', '')]:
+                invalid = copy.deepcopy(policy)
+                invalid['unavailableOperations'][index][field] = value
+                with self.subTest(operation=operation['id'], field=field), self.assertRaises(ValueError):
+                    conformance.validate_response_status(invalid, requirements)
 
     def test_deferred_api_requires_real_requirement_and_provenance(self):
         policy = copy.deepcopy(self.generated['apiAvailability'])
