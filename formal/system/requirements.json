@@ -6606,7 +6606,8 @@
         "Initialize missing or incompatible data",
         "Start crashed or wrong-cluster files",
         "Use copied production auto-conf or provider/network access",
-        "Clear reservation after uncertain cleanup"
+        "Clear reservation after uncertain cleanup",
+        "Remove the database or release its reservation while a registered dependent application has uncertain cleanup."
       ],
       "effects": [
         "Clone-only configuration replacement and PostgreSQL writes",
@@ -6623,12 +6624,14 @@
       "implementation": [
         "ops/hetzner/physical-postgres-recovery.py",
         "ops/hetzner/recovery-files.py",
-        "ops/hetzner/rehearse-postgres-restore.py"
+        "ops/hetzner/rehearse-postgres-restore.py",
+        "ops/hetzner/isolated-application-canary.py"
       ],
       "tests": [
         "scripts/test-physical-postgres-recovery.py",
         "scripts/test-physical-postgres-docker.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-isolated-application-canary.py"
       ],
       "formalModels": [
         "formal/event-operations/RestoreIsolation.tla",

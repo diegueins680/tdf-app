@@ -6,7 +6,9 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+from contextlib import contextmanager
+from types import SimpleNamespace
 
 spec = importlib.util.spec_from_file_location('physical', Path(__file__).resolve().parent.parent/
                                             'ops/hetzner/physical-postgres-recovery.py')
@@ -154,6 +156,93 @@ class PhysicalRecoveryTests(unittest.TestCase):
         with patch.object(physical.restore, 'execute') as execute, self.assertRaises(ValueError):
             self.clone.start()
         execute.assert_not_called()
+
+    @contextmanager
+    def reservation(self):
+        # Real permanent lock and pending marker; only Linux host inventory and
+        # resource readings are synthetic on developer hosts.
+        original_read = physical.Path.read_text
+        def read(path, *args, **kwargs):
+            return 'MemAvailable: 2097152 kB\n' if str(path) == '/proc/meminfo' else original_read(path, *args, **kwargs)
+        with patch.object(physical.restore, 'execute', return_value=''), \
+             patch.object(physical.Path, 'read_text', new=read), \
+             patch.object(physical.os, 'statvfs', return_value=SimpleNamespace(f_bavail=4*1024**3, f_frsize=1)):
+            with self.clone.reserved(): yield
+
+    def application(self, cleanup=None):
+        app = SimpleNamespace(database=self.clone, nonce=self.clone.nonce,
+              directory=self.clone.directory, target=None, creation_attempted=False, paused=False)
+        app.cleanup = Mock(side_effect=cleanup)
+        return app
+
+    def test_application_dependency_is_registered_before_creation_and_removed_first(self):
+        order=[]; app=self.application(lambda: order.append('application'))
+        def database_cleanup():
+            order.append('database'); self.clone.target=None
+        with patch.object(self.clone, 'cleanup', side_effect=database_cleanup):
+            with self.reservation():
+                self.clone.target='3'*64
+                with self.clone.with_application(app):
+                    self.clone.require_application_owner(app)
+                    self.assertTrue((self.root/physical.restore.PENDING_NAME).exists())
+            self.assertEqual(order,['application','database'])
+        self.assertFalse((self.root/physical.restore.PENDING_NAME).exists())
+        self.assertIsNone(self.clone.active_application)
+        self.assertIsNone(self.clone.reservation_pid)
+
+    def test_failed_application_cleanup_preserves_database_and_durable_marker(self):
+        app=self.application(lambda: (_ for _ in ()).throw(ValueError('Synthetic uncertain removal')))
+        with patch.object(self.clone,'cleanup') as database_cleanup:
+            with self.assertRaises(ValueError):
+                with self.reservation():
+                    self.clone.target='3'*64
+                    with self.clone.with_application(app): pass
+            database_cleanup.assert_not_called()
+        self.assertEqual(self.clone.target,'3'*64)
+        self.assertIs(self.clone.active_application,app)
+        self.assertTrue((self.root/physical.restore.PENDING_NAME).exists())
+        self.assertIsNone(self.clone.reservation_pid)
+        with self.assertRaises(ValueError):
+            with self.reservation(): pass
+
+    def test_cleanup_return_without_removed_application_does_not_release_database(self):
+        app=self.application()
+        with patch.object(self.clone,'cleanup') as database_cleanup:
+            with self.assertRaises(ValueError):
+                with self.reservation():
+                    self.clone.target='3'*64
+                    with self.clone.with_application(app):
+                        app.creation_attempted=True
+            database_cleanup.assert_not_called()
+        self.assertTrue((self.root/physical.restore.PENDING_NAME).exists())
+
+    def test_application_failure_still_cleans_up_in_dependency_order(self):
+        app=self.application()
+        def database_cleanup(): self.clone.target=None
+        with patch.object(self.clone,'cleanup',side_effect=database_cleanup):
+            with self.assertRaisesRegex(RuntimeError,'Synthetic application failure'):
+                with self.reservation():
+                    self.clone.target='3'*64
+                    with self.clone.with_application(app):
+                        raise RuntimeError('Synthetic application failure')
+        app.cleanup.assert_called_once()
+        self.assertFalse((self.root/physical.restore.PENDING_NAME).exists())
+
+    def test_foreign_unregistered_and_already_started_application_rejected(self):
+        app=self.application()
+        with self.assertRaises(ValueError): self.clone.require_application_owner(app)
+        with self.reservation():
+            self.clone.target='3'*64
+            with self.assertRaises(ValueError): self.clone.require_application_owner(app)
+            for key, value in [('nonce','b'*32), ('database',object()), ('target','4'*64),
+                               ('creation_attempted',True), ('paused',True),
+                               ('directory',self.root/'foreign')]:
+                original=getattr(app,key);setattr(app,key,value)
+                with self.subTest(key=key),self.assertRaises(ValueError):
+                    with self.clone.with_application(app): pass
+                setattr(app,key,original)
+            self.clone.target=None  # no Docker creation occurred in this fixture
+        app.cleanup.assert_not_called()
 
     def test_command_has_no_initdb_or_original_configuration(self):
         self.prepared(); command = self.clone.create_command()

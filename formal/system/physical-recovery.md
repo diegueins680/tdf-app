@@ -37,6 +37,16 @@ container can be removed; a lost create response is resolved by its nonce name
 and full identity/isolation checks. No production-volume removal or broad pruning
 is offered. Restarting a process does not clear uncertainty.
 
+A coordinator can enter the one physical reservation before writer fencing and
+call prepare/start only after restoring the captured bytes. It must not acquire
+the same restore lock again. A dependent canary must use
+`with clone.with_application(application): ...` before any creation. The canary
+checks that registration before Docker access. Cleanup removes the application
+first; a failed/uncertain removal or a still-paused/created application preserves
+the database and durable reservation. The guard becomes inactive when its lock
+scope exits, even after failure. The release journal separately tracks capture,
+encryption and transport uncertainty; Docker cleanup cannot clear that history.
+
 The database uses a disk-backed **copy**, not the logical rehearsal's256MiB tmpfs.
 It has no external network or ports, a read-only root, UID/GID999, all capabilities
 dropped,384MiB memory/no additional swap, half a CPU,64 processes and16MiB tmpfs

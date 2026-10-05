@@ -90,6 +90,9 @@ class Canary:
         return data
 
     def prepare(self):
+        owner_guard = getattr(self.database, 'require_application_owner', None)
+        if owner_guard is not None:
+            owner_guard(self)  # physical copies require registered cleanup order
         self.inspect_database()
         require(self.execute(['ps','--all','--quiet','--filter','label='+LABEL]).strip() == '')
         rows=json.loads(self.execute(['image','inspect', self.image]))

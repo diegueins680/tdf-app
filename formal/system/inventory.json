@@ -2629,7 +2629,7 @@
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
-      "sha256": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
+      "sha256": "2b1c265f135606ebd3b62d749a2c1a3d49254e68f62c2e409ecc42e6c5317e66",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2641,7 +2641,7 @@
     {
       "id": "SURFACE-f291d88fdd7054a3",
       "path": "ops/hetzner/physical-postgres-recovery.py",
-      "sha256": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
+      "sha256": "4e2823ae73bcf4e6b8f689b4b73903e01262d9033baff72bc0931f05f23b2e09",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4585,7 +4585,7 @@
     {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
-      "sha256": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
+      "sha256": "822ffc03abd82e4d0b980d1aa0ce8fee49f15a9f9228b0ac65c93590d29f502e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4693,7 +4693,7 @@
     {
       "id": "SURFACE-698c1d3e01b14388",
       "path": "scripts/test-physical-postgres-recovery.py",
-      "sha256": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
+      "sha256": "167a37612cb6a1c04bc687fa67d8efeaa364bb03185830bfe520e30fa7d8b1cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21858,7 +21858,7 @@
     },
     {
       "path": "formal/system/physical-recovery.md",
-      "sha256": "064331b8df457322ed1a16f1196179436ac7aca41d8b1897915f4f64ba1e891f",
+      "sha256": "ebc2cdb9ecd8cf95b4b12614be6811600a069326ea2583cb88d13cfb13735403",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21907,14 +21907,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bd143abd915560dcb161868185f7fb5448ed8ec4fc965bd4a850ae089ea4770a",
+      "sha256": "5ccbe0a2adaf5306509db8c03c54f00e6204e2d265b292ae74e877b2b6645e01",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "57206d913abfb8c3415817dce8e3b1ecd5a368609166a4d0afc1068572d0c44c",
+      "sha256": "71166069886ded38ad0d13f728a01727adc38650813d724e61333f50d3754052",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

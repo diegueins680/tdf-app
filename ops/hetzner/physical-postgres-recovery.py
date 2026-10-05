@@ -135,6 +135,35 @@ class PhysicalClone(restore.IsolatedRestore):
         self.evidence = None
         self.start_attempted = False
         self.reservation_pid = None
+        self.active_application = None
+
+    def require_application_owner(self, application):
+        require(self.reservation_pid == os.getpid()
+                and self.active_application is application
+                and application.database is self and application.nonce == self.nonce
+                and application.directory == self.directory)
+
+    @contextmanager
+    def with_application(self, application):
+        """Register dependency before Docker creation; remove it before the DB.
+
+        An uncertain cleanup deliberately leaves active_application set. The
+        enclosing reservation must then preserve its database and durable marker.
+        """
+        require(self.reservation_pid == os.getpid() and self.target is not None
+                and self.active_application is None)
+        require(application.database is self and application.nonce == self.nonce
+                and application.directory == self.directory and application.target is None
+                and not application.creation_attempted and not application.paused)
+        self.active_application = application
+        try:
+            yield application
+        finally:
+            self.require_application_owner(application)
+            application.cleanup()
+            require(application.target is None and not application.creation_attempted
+                    and not application.paused)
+            self.active_application = None
 
     def prepare(self, manifest):
         """Verify every copied byte first; record clone-only configuration changes."""
@@ -263,7 +292,8 @@ class PhysicalClone(restore.IsolatedRestore):
     @contextmanager
     def reserved(self):
         """Serialize with logical restores and retain uncertain daemon work."""
-        require(self.reservation_pid is None and not self.creation_attempted)
+        require(self.reservation_pid is None and not self.creation_attempted
+                and self.active_application is None)
         with files.directory(str(HOST_ROOT), private=True), restore.rehearsal_lock(HOST_ROOT):
             require(not os.path.lexists(HOST_ROOT/restore.PENDING_NAME))
             for label in (restore.LABEL, 'net.tdf.application-canary'):
@@ -280,6 +310,9 @@ class PhysicalClone(restore.IsolatedRestore):
             finally:
                 require(self.reservation_pid == os.getpid())
                 self.reservation_pid = None
+                # Do not destroy a dependent application's DB or release its
+                # reservation after an uncertain application cleanup.
+                require(self.active_application is None)
                 self.cleanup()
                 require(self.target is None and not self.creation_attempted)
                 restore.release_creation(HOST_ROOT, self.nonce, self.image)

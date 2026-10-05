@@ -6607,7 +6607,8 @@
         "Initialize missing or incompatible data",
         "Start crashed or wrong-cluster files",
         "Use copied production auto-conf or provider/network access",
-        "Clear reservation after uncertain cleanup"
+        "Clear reservation after uncertain cleanup",
+        "Remove the database or release its reservation while a registered dependent application has uncertain cleanup."
       ],
       "effects": [
         "Clone-only configuration replacement and PostgreSQL writes",
@@ -6624,12 +6625,14 @@
       "implementation": [
         "ops/hetzner/physical-postgres-recovery.py",
         "ops/hetzner/recovery-files.py",
-        "ops/hetzner/rehearse-postgres-restore.py"
+        "ops/hetzner/rehearse-postgres-restore.py",
+        "ops/hetzner/isolated-application-canary.py"
       ],
       "tests": [
         "scripts/test-physical-postgres-recovery.py",
         "scripts/test-physical-postgres-docker.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-isolated-application-canary.py"
       ],
       "formalModels": [
         "formal/event-operations/RestoreIsolation.tla",
@@ -6735,8 +6738,8 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
-    "ops/hetzner/isolated-application-canary.py": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
-    "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
+    "ops/hetzner/isolated-application-canary.py": "2b1c265f135606ebd3b62d749a2c1a3d49254e68f62c2e409ecc42e6c5317e66",
+    "ops/hetzner/physical-postgres-recovery.py": "4e2823ae73bcf4e6b8f689b4b73903e01262d9033baff72bc0931f05f23b2e09",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
     "ops/hetzner/recovery-files.py": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
@@ -6839,14 +6842,14 @@
     "scripts/test-hetzner-backup.py": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
-    "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
+    "scripts/test-isolated-application-canary.py": "822ffc03abd82e4d0b980d1aa0ce8fee49f15a9f9228b0ac65c93590d29f502e",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
-    "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
+    "scripts/test-physical-postgres-recovery.py": "167a37612cb6a1c04bc687fa67d8efeaa364bb03185830bfe520e30fa7d8b1cb",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "ea9812c229d7c71aa7d866034e54eb25a225af9220440d5703daba14cbf6014b",
@@ -10303,11 +10306,19 @@
       {
         "requirement": "DEPLOY-CANARY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/test-isolated-application-canary.py": [
       {
         "requirement": "DEPLOY-CANARY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
         "relationship": "tests"
       }
     ],
@@ -11355,11 +11366,15 @@
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
-      "sha256": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
+      "sha256": "2b1c265f135606ebd3b62d749a2c1a3d49254e68f62c2e409ecc42e6c5317e66",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-CANARY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
           "relationship": "implementation"
         }
       ]
@@ -11374,7 +11389,7 @@
     {
       "id": "SURFACE-f291d88fdd7054a3",
       "path": "ops/hetzner/physical-postgres-recovery.py",
-      "sha256": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
+      "sha256": "4e2823ae73bcf4e6b8f689b4b73903e01262d9033baff72bc0931f05f23b2e09",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14503,11 +14518,15 @@
     {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
-      "sha256": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
+      "sha256": "822ffc03abd82e4d0b980d1aa0ce8fee49f15a9f9228b0ac65c93590d29f502e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-CANARY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
           "relationship": "tests"
         }
       ]
@@ -14668,7 +14687,7 @@
     {
       "id": "SURFACE-698c1d3e01b14388",
       "path": "scripts/test-physical-postgres-recovery.py",
-      "sha256": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
+      "sha256": "167a37612cb6a1c04bc687fa67d8efeaa364bb03185830bfe520e30fa7d8b1cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32672,7 +32691,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bd143abd915560dcb161868185f7fb5448ed8ec4fc965bd4a850ae089ea4770a",
+      "sourceSha256": "5ccbe0a2adaf5306509db8c03c54f00e6204e2d265b292ae74e877b2b6645e01",
       "definition": {
         "states": [
           "absent",

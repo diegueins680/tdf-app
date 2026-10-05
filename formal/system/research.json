@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -614,6 +614,16 @@
       "applicability": "Reject wrong or unclean recovered cluster before startup",
       "decision": "adopted",
       "rationale": "Compare exact trusted system identifier and shut-down state; this complements copied bytes and does not establish source writer fencing.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECOVERY-DURABILITY-001",
+      "source": "https://man7.org/linux/man-pages/man2/fsync.2.html",
+      "title": "Linux file and directory synchronization",
+      "recommendation": "Synchronize file data and the containing directory separately; treat synchronization errors as failures. Calls can block until storage reports completion.",
+      "applicability": "Durable ciphertext retention, retrieval and release-journal files",
+      "decision": "adopted within trusted filesystem assumptions",
+      "rationale": "File fsync alone does not establish directory-entry persistence. Reopen/hash validates readable retained bytes; an outer supervisor must bound potentially stalled filesystem calls. No claim of power-loss testing or dishonest-storage tolerance.",
       "verifiedAt": "2026-10-05"
     }
   ]

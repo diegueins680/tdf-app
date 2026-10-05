@@ -93,6 +93,13 @@ class CanaryTests(unittest.TestCase):
         for key in ['GIT_SHA','SOURCE_COMMIT','PAYPAL_CLIENT_SECRET','SMTP_PASSWORD','DATABASE_URL']:
             self.assertNotIn(key,canary.ENVIRONMENT)
 
+    def test_physical_database_requires_dependency_registration_before_docker(self):
+        subject=make()
+        subject.database.require_application_owner=lambda app: (_ for _ in ()).throw(ValueError('Unregistered application'))
+        with patch.object(subject,'execute') as execute,patch.object(subject,'inspect_database') as inspect:
+            with self.assertRaisesRegex(ValueError,'Unregistered application'):subject.prepare()
+        execute.assert_not_called();inspect.assert_not_called()
+
     def test_database_network_must_still_be_disconnected(self):
         subject=make();data={'NetworkSettings':{'Networks':{'none':{}}},'State':{'Running':True,'Pid':123}}
         with patch.object(subject,'execute',return_value=json.dumps([data])):subject.inspect_database()
