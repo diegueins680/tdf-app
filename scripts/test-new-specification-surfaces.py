@@ -23,13 +23,13 @@ class Admission(unittest.TestCase):
     def test_admits_canonical_root_and_mobile_mappings(self):
         for path in ['scripts/new-runner.mjs', 'tdf-mobile/src/new-client.ts']:
             path, body, trace, requirements = self.fixture(path)
-            self.assertEqual(module.validate_new_paths([path], trace, requirements, lambda _: body), [path])
+            self.assertEqual(module.validate_changed_paths([path], trace, requirements, lambda _: body), [path])
 
     def test_new_file_cannot_hide_by_omission_from_generated_inventory(self):
         path, body, trace, requirements = self.fixture()
         trace['surfaces'] = []
         with self.assertRaisesRegex(ValueError, 'no requirement'):
-            module.validate_new_paths([path], trace, requirements, lambda _: body)
+            module.validate_changed_paths([path], trace, requirements, lambda _: body)
 
     def test_rejects_orphan_stale_and_forged_mapping_controls(self):
         for mutation in [
@@ -41,12 +41,12 @@ class Admission(unittest.TestCase):
             path, body, trace, requirements = self.fixture()
             mutation(trace)
             with self.assertRaises(ValueError):
-                module.validate_new_paths([path], trace, requirements, lambda _: body)
+                module.validate_changed_paths([path], trace, requirements, lambda _: body)
 
     def test_existing_unmapped_debt_is_not_reclassified_or_newly_admitted(self):
         path, body, trace, requirements = self.fixture()
         before = copy.deepcopy(trace)
-        self.assertEqual(module.validate_new_paths([], trace, requirements, lambda _: body), [])
+        self.assertEqual(module.validate_changed_paths([], trace, requirements, lambda _: body), [])
         self.assertEqual(trace, before)
 
     def test_revision_arguments_cannot_be_options_or_mutable_refs(self):
@@ -103,7 +103,7 @@ class GitAdmission(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'no requirement mapping: scripts/renamed.py'):
             module.check(self.root, self.base, head)
         head = self.candidate(['scripts/renamed.py'])
-        self.assertEqual(module.check(self.root, self.base, head)['newMappedSurfaces'], ['scripts/renamed.py'])
+        self.assertEqual(module.check(self.root, self.base, head)['mappedChangedSurfaces'], ['scripts/renamed.py'])
 
     def test_actual_gitlink_delta_and_wrong_mobile_checkout(self):
         self.write(self.mobile, 'src/new.ts', 'new mobile source')
@@ -112,16 +112,33 @@ class GitAdmission(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'no requirement mapping: tdf-mobile/src/new.ts'):
             module.check(self.root, self.base, head)
         head = self.candidate(['tdf-mobile/src/new.ts'])
-        self.assertEqual(module.check(self.root, self.base, head)['newMappedSurfaces'], ['tdf-mobile/src/new.ts'])
+        self.assertEqual(module.check(self.root, self.base, head)['mappedChangedSurfaces'], ['tdf-mobile/src/new.ts'])
         module.git(self.mobile, 'checkout', '-q', self.mobile_base)
         with self.assertRaisesRegex(ValueError, 'checkout differs'):
             module.check(self.root, self.base, head)
+
+    def test_existing_unmapped_root_edit_requires_a_mapping(self):
+        self.write(self.root, 'scripts/old.py', 'modified existing root source')
+        head = self.candidate([])
+        with self.assertRaisesRegex(ValueError, 'no requirement mapping: scripts/old.py'):
+            module.check(self.root, self.base, head)
+        head = self.candidate(['scripts/old.py'])
+        self.assertEqual(module.check(self.root, self.base, head)['mappedChangedSurfaces'], ['scripts/old.py'])
+
+    def test_existing_unmapped_mobile_edit_requires_a_mapping(self):
+        self.write(self.mobile, 'src/old.ts', 'modified existing mobile source')
+        self.commit(self.mobile)
+        head = self.candidate([])
+        with self.assertRaisesRegex(ValueError, 'no requirement mapping: tdf-mobile/src/old.ts'):
+            module.check(self.root, self.base, head)
+        head = self.candidate(['tdf-mobile/src/old.ts'])
+        self.assertEqual(module.check(self.root, self.base, head)['mappedChangedSurfaces'], ['tdf-mobile/src/old.ts'])
 
     def test_working_file_cannot_replace_immutable_source_evidence(self):
         self.write(self.root, 'scripts/new.py', 'committed source')
         head = self.candidate(['scripts/new.py'])
         self.write(self.root, 'scripts/new.py', 'different working source')
-        self.assertEqual(module.check(self.root, self.base, head)['newMappedSurfaces'], ['scripts/new.py'])
+        self.assertEqual(module.check(self.root, self.base, head)['mappedChangedSurfaces'], ['scripts/new.py'])
 
     def test_new_symlink_cannot_be_admitted_as_source(self):
         (self.root/'scripts/link.py').symlink_to('old.py')

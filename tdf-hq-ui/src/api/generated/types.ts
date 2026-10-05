@@ -15141,7 +15141,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing */
+            /** @description Missing, invalid or inactive bearer session */
             401: {
                 headers: {
                     [name: string]: unknown;

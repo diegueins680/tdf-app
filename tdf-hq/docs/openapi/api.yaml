@@ -44,7 +44,7 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/TrialSubject' }
         '400': { description: Invalid includeInactive query }
-        '401': { description: Missing, invalid or inactive bearer session }
+        '401': { description: 'Missing, invalid or inactive bearer session' }
         '403': { description: Actor lacks school access }
   /commerce/payment-capabilities:
     get:

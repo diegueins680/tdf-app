@@ -724,7 +724,9 @@
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/check-generated-api.mjs",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "tests": [
         "scripts/__tests__/generated-api-conformance.test.mjs"
@@ -1115,7 +1117,8 @@
       "tests": [
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-        "scripts/__tests__/identity-http-runtime.mjs"
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "tdf-hq-ui/src/utils/__tests__/roles.test.ts"
       ],
       "id": "ID-ARTIST-CLAIM-001",
       "title": "Public signup cannot assume an existing artist identity",
@@ -1166,7 +1169,9 @@
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/utils/roles.ts",
-        "tdf-hq/docs/openapi/api.yaml"
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts"
       ]
     },
     {
@@ -1535,7 +1540,8 @@
       "implementation": [
         "tdf-hq/stack.yaml",
         "tdf-hq/tdf-hq.cabal",
-        "scripts/check-build-trust.mjs"
+        "scripts/check-build-trust.mjs",
+        "scripts/quality-backend.sh"
       ],
       "tests": [
         "scripts/__tests__/build-trust.test.mjs"
@@ -1745,7 +1751,8 @@
         "scripts/lib/production-release.mjs"
       ],
       "tests": [
-        "scripts/__tests__/checkout-amount-postgres.mjs"
+        "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/test-marketplace-contact-identity.sh"
       ],
       "formalModels": [],
       "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls.",
@@ -2207,7 +2214,8 @@
       "statement": "The former Fly preflight/release entrypoint must reject before any remote tool because current production is Hetzner; source-only historical planning does not establish deployment eligibility.",
       "property": "Retired Fly commands invoke no git, docker, ssh or flyctl operation before rejecting.",
       "implementation": [
-        "scripts/production-release.mjs"
+        "scripts/production-release.mjs",
+        "scripts/deploy-stripe-ticketing.sh"
       ],
       "tests": [
         "scripts/__tests__/hetzner-inspection.test.mjs",
@@ -2489,7 +2497,9 @@
         "scripts/quality-repo.sh",
         "scripts/quality-mobile.sh",
         "package-lock.json",
-        "tdf-mobile/package-lock.json"
+        "tdf-mobile/package-lock.json",
+        "package.json",
+        "tdf-mobile/package.json"
       ],
       "tests": [
         "scripts/__tests__/dependency-security.test.mjs"
@@ -2667,7 +2677,8 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
         "formal/system/booking-policy.json",
-        "tdf-hq/src/TDF/RagStore.hs"
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq-ui/src/api/bookings.ts"
       ],
       "tests": [
         "scripts/test-booking-conformance.py",
@@ -3110,11 +3121,13 @@
         "scripts/test-artist-merch-runtime.sh",
         "scripts/test-provider-retry-runtime.sh",
         "scripts/test-auth-recovery-migration.sh",
-        "scripts/test-credential-lifecycle.sh"
+        "scripts/test-credential-lifecycle.sh",
+        "scripts/lib/postgres-test-database.sh"
       ],
       "tests": [
         "scripts/__tests__/disposable-postgres-url.test.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "verification": "URL property cases and actual runner SQL-sentinel controls; not proof of database ownership or all-runner isolation.",
