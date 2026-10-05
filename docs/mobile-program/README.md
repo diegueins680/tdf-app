@@ -97,3 +97,9 @@ La invitación contextual, el consentimiento independiente, las opciones de desc
 El repositorio principal incorporó pagos PR #414 en `fdac8e76523befee1603f49f6c7cf7d00762931b` mientras se revisaba este trabajo. Se integró esa base conservando la carga diferida de rutas y la invitación posterior a signup. Mobile [PR #130](https://github.com/diegueins680/TDF-mobile/pull/130) regenera los dos archivos compartidos contra esta API nueva, incluyendo ahora las declaraciones de pagos y las 159 entradas del catálogo. No se modifica código de checkout en esa sincronización. Typecheck y 27 pruebas de registro/checkout pasan; CI mobile también pasa.
 
 La web corregida sobre esta base pasa 37 pruebas focalizadas y el build: 318.464 bytes gzip iniciales. La matriz previa completa pasó 20/20; se repite sobre esta base con una aserción adicional de selección de archivo mediante Enter. Los formularios de la beta antigua se orientan a `/app`, sin prometer que el binario TestFlight 19 incluya el nuevo formulario nativo.
+
+### Pin final y QA del candidato
+
+Mobile #130 integrado con aprobación independiente en `2b31ed16f6f2daa0c25da4091d8aa372a0014fce`, fijado por el parent. La matriz final sobre main actualizado terminó **20/20** en Chromium desktop/phone/tablet, Firefox y WebKit, con axe, reflow, dismiss persistente y selección de adjunto mediante Enter. Las cinco regresiones de procedencia de catálogos también pasan; no se eliminaron pruebas ni se relajaron límites.
+
+El pin tiene el mismo árbol que el candidato `ce6cc51` validado por Mobile Validate [37248275111](https://github.com/diegueins680/TDF-mobile/actions/runs/37248275111). El código fuente nativo nuevo aún necesita un artefacto firmado y distribución autorizada: los builds públicos/beta existentes no contienen estos cambios.
