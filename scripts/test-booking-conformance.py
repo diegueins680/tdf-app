@@ -1,0 +1,273 @@
+#!/usr/bin/env python3
+"""Real HTTP/PostgreSQL booking scope, projection and concurrency checks.
+
+Creates and drops only its own nonce database on an explicitly selected loopback
+PostgreSQL test server. Source fixtures and fake actors never contact providers.
+"""
+import concurrent.futures
+from datetime import datetime, timedelta, timezone
+import getpass
+import hashlib
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import threading
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import uuid
+
+ROOT = Path(__file__).resolve().parent.parent
+HOST = os.environ.get('TDF_BOOKING_TEST_PG_HOST', '127.0.0.1')
+assert HOST == '127.0.0.1' or (HOST == 'postgres' and os.environ.get('CI') == 'true')
+PORT = int(os.environ['TDF_BOOKING_TEST_PG_PORT'])
+assert 0 < PORT < 65536
+ROLE = os.environ.get('TDF_BOOKING_TEST_PG_ROLE', getpass.getuser())
+PASSWORD = os.environ.get('TDF_BOOKING_TEST_PG_PASSWORD', '')
+BINARY = Path(os.environ['TDF_BOOKING_TEST_SERVER_BIN']).resolve(strict=True)
+OUTPUT = Path(os.environ['TDF_BOOKING_TEST_OUTPUT']).resolve()
+OUTPUT.mkdir(mode=0o700)  # Never overwrite an earlier result.
+NAME = 'tdf_booking_conformance_' + uuid.uuid4().hex[:12] + '_test'
+ENV = {'PATH': os.environ['PATH'], 'PGHOST': HOST, 'PGPORT': str(PORT),
+       'PGUSER': ROLE, 'PGPASSWORD': PASSWORD, 'PGCONNECT_TIMEOUT': '5',
+       'PGOPTIONS': '-c statement_timeout=20000 -c lock_timeout=15000'}
+URL = 'postgresql://' + urllib.parse.quote(ROLE, safe='') + ':' + urllib.parse.quote(PASSWORD, safe='') + '@' + HOST + ':' + str(PORT) + '/' + NAME
+owned = False
+server = None
+checks = []
+dirty = bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip())
+revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+
+
+def run(args, **kwargs):
+    result = subprocess.run(args, env=ENV, **kwargs)
+    if result.returncode:
+        raise RuntimeError('Fixture command failed: ' + Path(args[0]).name)
+    return result
+
+
+def sql(query):
+    return run(['psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', NAME, '-c', query],
+               capture_output=True, text=True).stdout.strip()
+
+
+def check(name, condition):
+    if not condition:
+        raise AssertionError(name)
+    checks.append(name)
+    print('PASS ' + name, flush=True)
+
+
+def request(path, payload=None, token='fixture-admin', method=None, idempotency=None):
+    body = None if payload is None else json.dumps(payload).encode()
+    req = urllib.request.Request('http://127.0.0.1:' + str(http_port) + path, data=body,
+        method=method or ('GET' if body is None else 'PUT'),
+        headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', **({'Idempotency-Key': idempotency} if idempotency else {})})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            return response.status, response.read().decode()
+    except urllib.error.HTTPError as error:
+        return error.code, error.read().decode()
+
+
+def actor(role, identity=None):
+    identity = identity or role
+    key = sql("INSERT INTO party(display_name,is_org,created_at) VALUES ('Fixture " + identity + "',false,now()) RETURNING id")
+    sql("INSERT INTO party_security_role(party_id,role_id,approval_mode,active) SELECT " + key + ",id,'bootstrap',true FROM security_role WHERE code='" + role + "'")
+    sql("INSERT INTO api_token(token,party_id,label,active) VALUES ('fixture-" + identity + "'," + key + ",'Synthetic booking conformance',true)")
+    return key
+
+
+def booking(owner, title, start, end, engineer=None, status='Confirmed'):
+    key = sql("INSERT INTO booking(title,party_id,engineer_party_id,starts_at,ends_at,status,notes,created_at) VALUES ('" + title + "'," + owner + "," + (engineer or 'NULL') + ",'2035-01-01 " + start + "+00','2035-01-01 " + end + "+00','" + status + "','PRIVATE_SYNTHETIC_NOTE',now()) RETURNING id")
+    sql("INSERT INTO booking_resource(booking_id,resource_id,role) VALUES (" + key + "," + resource + ",'primary')")
+    return key
+
+
+try:
+    run(['createdb', NAME], capture_output=True, text=True)
+    owned = True
+    with (OUTPUT / 'schema.log').open('w') as log:
+        for file in ['scripts/__tests__/fixtures/production-schema-20260814.sql',
+                     'scripts/__tests__/fixtures/catalog-production-source-fixture.sql']:
+            run(['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-d', NAME, '-f', str(ROOT / file)], stdout=log, stderr=log)
+    with (OUTPUT / 'migrations.sql').open('w') as output:
+        subprocess.run(['node', 'scripts/render-production-migration-batch.mjs'], cwd=ROOT,
+            env={**ENV, 'SOURCE_COMMIT': revision}, stdout=output, check=True)
+    with (OUTPUT / 'migrations.log').open('w') as log:
+        for _ in range(2):
+            run(['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-d', NAME, '-f', str(OUTPUT / 'migrations.sql')], stdout=log, stderr=log)
+    check('canonical migration batch applies twice', sql('SELECT count(*) FROM tdf_schema_migration') == str(len(json.loads((ROOT / 'scripts/production-migrations.json').read_text())['migrations'])))
+    roles = sql('SELECT code FROM security_role WHERE active ORDER BY code').splitlines()
+    assert all(all(c.islower() or c == '-' for c in role) for role in roles)
+    actors = {role: actor(role) for role in roles}
+    owner = actor('artist', 'owner')
+    resource = sql("INSERT INTO resource(name,slug,resource_type,capacity,active) VALUES ('Fixture room','booking-conformance-room','Room',1,true) RETURNING id")
+    first = booking(owner, 'First', '10:00', '11:00')
+    second = booking(owner, 'Second', '12:00', '13:00')
+    with socket.socket() as sock:
+        sock.bind(('127.0.0.1', 0)); http_port = sock.getsockname()[1]
+    assets = OUTPUT / 'assets'; assets.mkdir()
+    with (OUTPUT / 'backend.log').open('w') as log:
+        server = subprocess.Popen([str(BINARY)], cwd=OUTPUT, stdout=log, stderr=log,
+            env={'PATH': ENV['PATH'], 'APP_ENV': 'test', 'DATABASE_URL': URL,
+                 'APP_PORT': str(http_port), 'RESET_DB': 'false', 'RUN_MIGRATIONS': 'false',
+                 'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false', 'SEED_DB': 'false',
+                 'HQ_ASSETS_DIR': str(assets), 'DEFAULT_LOCALE': 'es',
+                 'EVENT_DISCOVERY_ENABLED': 'false', 'ARTIST_ENRICHMENT_ENABLED': 'false',
+                 'EVENT_LOGISTICS_RECHECK_ENABLED': 'false', 'REPUTATION_AGGREGATION_WORKER_ENABLED': 'false'})
+    for _ in range(120):
+        if server.poll() is not None: raise RuntimeError('Fixture backend exited')
+        try:
+            status, body = request('/health')
+            if status == 200 and json.loads(body).get('db') == 'ok': break
+        except urllib.error.URLError: pass
+        time.sleep(.25)
+    else: raise RuntimeError('Fixture backend did not become ready')
+
+    policy = json.loads((ROOT / 'formal/system/booking-policy.json').read_text())
+    staff = {role['code'] for role in policy['studioWideRoles']}
+    check('all specified staff roles are canonical', staff <= set(roles))
+    for state, projection in policy['checkoutProjection'].items():
+        check('runtime booking projection ' + state, sql("SELECT service_booking_projected_booking_status('" + state + "')") == projection['booking'])
+    for role in roles:
+        status, body = request('/bookings?bookingId=' + first, token='fixture-' + role)
+        if role in staff:
+            check(role + ' permitted detail read', status == 200 and 'PRIVATE_SYNTHETIC_NOTE' in body)
+        else:
+            check(role + ' cannot read foreign detail', status in (200, 401, 403) and 'PRIVATE_SYNTHETIC_NOTE' not in body)
+            status, body = request('/bookings', token='fixture-' + role)
+            check(role + ' cannot read foreign unfiltered calendar', status in (200, 401, 403) and 'PRIVATE_SYNTHETIC_NOTE' not in body)
+            status, _ = request('/bookings/' + first, {'ubNotes': 'UNAUTHORIZED'}, token='fixture-' + role)
+            check(role + ' cannot mutate foreign booking', status in (401, 403, 404))
+    status, body = request('/bookings?bookingId=' + first, token='fixture-owner')
+    check('customer owner can read own booking', status == 200 and 'PRIVATE_SYNTHETIC_NOTE' in body)
+    check('denied role mutations have no side effects', sql('SELECT notes FROM booking WHERE id=' + first) == 'PRIVATE_SYNTHETIC_NOTE')
+    sql('UPDATE booking SET engineer_party_id=' + actors['engineer'] + ' WHERE id=' + first)
+    status, body = request('/bookings?bookingId=' + first, token='fixture-engineer')
+    check('explicitly assigned engineer can read', status == 200 and 'PRIVATE_SYNTHETIC_NOTE' in body)
+    status, _ = request('/bookings/' + first, {'ubNotes': 'ASSIGNED'}, token='fixture-engineer')
+    check('explicitly assigned engineer can update', status == 200 and sql('SELECT notes FROM booking WHERE id=' + first) == 'ASSIGNED')
+    status, _ = request('/bookings/' + second, {'ubEngineerPartyId': int(actors['student'])}, token='fixture-student')
+    check('request cannot confer assignment authority', status == 404 and sql('SELECT engineer_party_id IS NULL FROM booking WHERE id=' + second) == 't')
+
+    status, _ = request('/bookings/' + second, {'ubStartsAt': '2035-01-01T10:30:00Z', 'ubEndsAt': '2035-01-01T11:30:00Z'})
+    check('overlapping move conflicts at HTTP boundary', status == 409)
+    check('conflicting edit rolls back both records', sql("SELECT b.starts_at=a.starts_at AND b.ends_at=a.ends_at AND b.starts_at='2035-01-01 12:00+00' FROM booking b JOIN service_booking_resource_allocation a ON a.booking_id=b.id WHERE b.id=" + second) == 't')
+    check('cancellation succeeds', request('/bookings/' + first, {'ubStatus': 'Cancelled'})[0] == 200)
+    check('cancellation releases resource', sql('SELECT allocation_status FROM service_booking_resource_allocation WHERE booking_id=' + first) == 'released')
+    check('reactivation succeeds', request('/bookings/' + first, {'ubStatus': 'Confirmed'})[0] == 200)
+    check('reactivation reacquires resource', sql('SELECT allocation_status FROM service_booking_resource_allocation WHERE booking_id=' + first) == 'reserved')
+    third = booking(owner, 'Third', '14:00', '15:00')
+    gate = threading.Barrier(2)
+    def compete(key):
+        gate.wait(timeout=10)
+        return request('/bookings/' + key, {'ubStartsAt': '2035-01-01T16:00:00Z', 'ubEndsAt': '2035-01-01T17:00:00Z'})[0]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(compete, [second, third]))
+    check('concurrent resource moves have one winner', sorted(results) == [200, 409])
+    check('every tested projection matches its booking', sql("SELECT count(*) FROM booking b JOIN service_booking_resource_allocation a ON a.booking_id=b.id WHERE b.id IN (" + ','.join([first, second, third]) + ") AND (b.starts_at<>a.starts_at OR b.ends_at<>a.ends_at)") == '0')
+    # Hold the row while both HTTP operations queue. The handler must read the
+    # booking only after acquiring its lock, or a notes-only write resurrects it.
+    fourth = booking(owner, 'Concurrent cancellation', '18:00', '19:00')
+    with (OUTPUT / 'barrier.log').open('w') as log:
+        barrier = subprocess.Popen(['psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', NAME],
+            env=ENV, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log, text=True)
+        try:
+            barrier.stdin.write("BEGIN; SET LOCAL idle_in_transaction_session_timeout='20s'; SELECT id FROM booking WHERE id=" + fourth + " FOR UPDATE; SELECT 'LOCKED';\n")
+            barrier.stdin.flush()
+            for _ in range(4):
+                if barrier.stdout.readline().strip() == 'LOCKED': break
+            else: raise RuntimeError('Barrier did not acquire row lock')
+            def waiters(expected):
+                for _ in range(100):
+                    count = int(sql("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND state='active' AND wait_event_type='Lock' AND query ILIKE '%booking%'") or 0)
+                    if count >= expected: return
+                    time.sleep(.05)
+                raise RuntimeError('HTTP requests did not reach the row lock')
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                cancel = executor.submit(request, '/bookings/' + fourth, {'ubStatus': 'Cancelled'})
+                waiters(1)
+                edit = executor.submit(request, '/bookings/' + fourth, {'ubNotes': 'CONCURRENT_NOTES'})
+                waiters(2)
+                barrier.stdin.write('COMMIT;\n'); barrier.stdin.flush(); barrier.stdin.close()
+                barrier.wait(timeout=5)
+                check('concurrent cancellation and notes both accepted', cancel.result()[0] == 200 and edit.result()[0] == 200)
+            check('notes-only write cannot resurrect cancellation', sql('SELECT b.status,b.notes,a.allocation_status FROM booking b JOIN service_booking_resource_allocation a ON a.booking_id=b.id WHERE b.id=' + fourth) == 'Cancelled|CONCURRENT_NOTES|released')
+        finally:
+            if barrier.poll() is None:
+                barrier.terminate(); barrier.wait(timeout=5)
+
+    sql("UPDATE api_token SET active=false WHERE token='fixture-owner'")
+    check('revoked session cannot retry mutation', request('/bookings/' + first, {'ubNotes': 'REVOKED'}, token='fixture-owner')[0] == 401)
+    check('revoked retry leaves note unchanged', sql('SELECT notes FROM booking WHERE id=' + first) == 'ASSIGNED')
+    offering = sql("SELECT o.id FROM service_offering o JOIN workflow_state w ON w.id=o.workflow_state_id WHERE o.active AND o.deprecated_at IS NULL AND NOT o.requires_engineer AND w.code='published' ORDER BY o.code LIMIT 1")
+    check('fixture published offering exists', bool(offering))
+    create = {'cbTitle': 'Owned create', 'cbStartsAt': '2035-01-02T10:00:00Z',
+              'cbEndsAt': '2035-01-02T11:00:00Z', 'cbStatus': 'Confirmed',
+              'cbServiceOfferingId': offering, 'cbResourceIds': ['booking-conformance-room']}
+    status, body = request('/bookings', {**create, 'cbPartyId': int(owner)}, 'fixture-artist', 'POST')
+    check('non-staff cannot create for foreign customer', status == 403)
+    status, body = request('/bookings', create, 'fixture-artist', 'POST')
+    check('non-staff omitted customer becomes self', status == 200 and str(json.loads(body)['partyId']) == actors['artist'])
+    for payload in ({}, {'ubNotes': None}, {'ubResourceIds': []}, {'ubPartyId': int(owner)}):
+        check('invalid update rejected ' + json.dumps(payload), request('/bookings/' + first, payload)[0] == 400)
+
+    # A synthetic checkout creates no payment attempt and calls no provider.
+    sql("WITH legacy AS (INSERT INTO service_catalog(name,kind,pricing_model,default_rate_cents,active) VALUES ('Synthetic checkout','Recording','Hourly',2000,true) RETURNING id) UPDATE service_offering SET legacy_service_catalog_id=(SELECT id FROM legacy) WHERE id='" + offering + "'")
+    sql("UPDATE service_booking_commerce_policy SET active=false WHERE service_offering_id='" + offering + "'")
+    sql("INSERT INTO service_booking_commerce_policy(service_offering_id,policy_version,currency,rate_minor,rate_unit_minutes,tax_bps,deposit_bps,hold_minutes,min_duration_minutes,max_duration_minutes,duration_step_minutes,terms_version,terms_summary,approval_status,active,approved_at,approved_by) VALUES ('" + offering + "','booking-conformance','USD',2000,60,0,5000,15,60,120,60,'booking-conformance','Synthetic test','approved',true,now(),'isolated-test')")
+    checkout_start = (datetime.now(timezone.utc) + timedelta(days=30)).replace(hour=10, minute=0, second=0, microsecond=0)
+    payload = {'pbcFullName': 'Synthetic checkout', 'pbcEmail': 'booking-conformance@persona.test',
+               'pbcServiceOfferingId': offering, 'pbcStartsAt': checkout_start.isoformat(),
+               'pbcDurationMinutes': 60, 'pbcResourceIds': ['booking-conformance-room'], 'pbcTermsAccepted': True}
+    status, body = request('/bookings/public/checkout', payload, method='POST', idempotency='booking-conformance-checkout-0001')
+    check('synthetic checkout accepted without provider', status == 200)
+    bound = sql("SELECT booking_id FROM service_booking_checkout_runtime WHERE create_idempotency_key='booking-conformance-checkout-0001'")
+    check('bound checkout exists', bool(bound))
+    check('generic edit cannot change checkout snapshot', request('/bookings/' + bound, {'ubStartsAt': (checkout_start + timedelta(minutes=15)).isoformat()})[0] == 409)
+    check('generic edit cannot cancel checkout lifecycle', request('/bookings/' + bound, {'ubStatus': 'Cancelled'})[0] == 409)
+    check('metadata edit preserves bound checkout', request('/bookings/' + bound, {'ubNotes': 'BOUND_NOTE'})[0] == 200)
+    migration = (ROOT / 'tdf-hq/sql/2026-10-05_booking_calendar_projection.sql').read_text()
+    # Each mutation is isolated by an explicit transaction and connection close;
+    # failure must be the named reconciliation guard, not SQL/tool failure.
+    for label, mutation in {
+        'released': "UPDATE service_booking_resource_allocation SET allocation_status='released' WHERE booking_id=" + bound,
+        'missing': 'DELETE FROM service_booking_resource_allocation WHERE booking_id=' + bound,
+        'stale window': "UPDATE service_booking_resource_allocation SET starts_at=starts_at+interval '1 minute' WHERE booking_id=" + bound,
+    }.items():
+        probe = subprocess.run(['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-d', NAME], env=ENV,
+            input='BEGIN;\n' + mutation + ';\n' + migration.replace('BEGIN;\n', '', 1).rsplit('COMMIT;', 1)[0] + '\nROLLBACK;\n', capture_output=True, text=True)
+        (OUTPUT / ('migration-control-' + label.replace(' ', '-') + '.log')).write_text(probe.stdout + probe.stderr)
+        check('migration rejects bound allocation ' + label, probe.returncode != 0 and 'Existing checkout allocation divergence requires reconciliation' in probe.stderr)
+    check('migration control mutations rolled back', sql('SELECT allocation_status FROM service_booking_resource_allocation WHERE booking_id=' + bound) == 'holding')
+    sql("UPDATE service_booking_checkout_runtime SET fulfillment_status='expired' WHERE booking_id=" + bound)
+    check('runtime expiry projects booking and resource atomically', sql('SELECT b.status,a.allocation_status FROM booking b JOIN service_booking_resource_allocation a ON a.booking_id=b.id WHERE b.id=' + bound) == 'Cancelled|released')
+    check('checkout verification performed no payment attempt', sql('SELECT count(*) FROM commerce_payment_attempt') == '0')
+    schema_sql = subprocess.check_output(['node', '--input-type=module', '-e',
+        "import {buildSchemaVerificationSql} from './scripts/lib/production-release.mjs'; process.stdout.write(buildSchemaVerificationSql());"], cwd=ROOT, env=ENV, text=True)
+    run(['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-d', NAME], input=schema_sql, capture_output=True, text=True)
+    check('complete schema verifier accepts candidate', True)
+    for label, definition in {
+        'when-false': 'AFTER UPDATE OF starts_at, ends_at, status, service_offering_id ON booking FOR EACH ROW WHEN (false) EXECUTE FUNCTION service_booking_sync_legacy_booking_allocation()',
+        'wrong-function': 'AFTER UPDATE OF starts_at, ends_at, status, service_offering_id ON booking FOR EACH ROW EXECUTE FUNCTION booking_control_noop()',
+        'before-event': 'BEFORE UPDATE OF starts_at, ends_at, status, service_offering_id ON booking FOR EACH ROW EXECUTE FUNCTION service_booking_sync_legacy_booking_allocation()',
+    }.items():
+        probe = subprocess.run(['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-d', NAME], env=ENV,
+            input="BEGIN; CREATE FUNCTION booking_control_noop() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$; DROP TRIGGER trg_service_booking_sync_legacy_allocation ON booking; CREATE TRIGGER trg_service_booking_sync_legacy_allocation " + definition + ';\n' + schema_sql + '\nROLLBACK;', capture_output=True, text=True)
+        (OUTPUT / ('schema-control-' + label + '.log')).write_text(probe.stdout + probe.stderr)
+        check('schema rejects ineffective booking trigger ' + label, probe.returncode != 0 and 'Booking calendar update and checkout correspondence contract is missing' in probe.stderr)
+    result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
+finally:
+    if server is not None:
+        server.terminate()
+        try: server.wait(timeout=10)
+        except subprocess.TimeoutExpired: server.kill(); server.wait(timeout=5)
+    if owned:
+        run(['dropdb', NAME], capture_output=True, text=True)
+
+result['ownedDatabaseDropped'] = True
+(OUTPUT / 'result.json').write_text(json.dumps(result, indent=2) + '\n')

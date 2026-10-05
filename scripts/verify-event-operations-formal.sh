@@ -92,6 +92,14 @@ run_negative_tlc() {
   fi
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc StudioBookingProjection.tla StudioBookingProjection.cfg studiobookingprojection
+run_negative_tlc StudioBookingProjectionStale.cfg studiobookingprojection-stale 'Invariant ProjectionCurrent is violated' StudioBookingProjection.tla
+run_negative_tlc StudioBookingProjectionReactivation.cfg studiobookingprojection-reactivation 'Invariant ProjectionCurrent is violated' StudioBookingProjection.tla
+run_negative_tlc StudioBookingProjectionOverlap.cfg studiobookingprojection-overlap 'Invariant NoActiveOverlap is violated' StudioBookingProjection.tla
+run_tlc StudioBookingScope.tla StudioBookingScope.cfg studiobookingscope
+run_negative_tlc StudioBookingScopeModuleOnly.cfg studiobookingscope-moduleonly 'Invariant NoForeignAccess is violated' StudioBookingScope.tla
+run_negative_tlc StudioBookingScopeRequestedAssignment.cfg studiobookingscope-requestedassignment 'Invariant NoForeignAccess is violated' StudioBookingScope.tla
+run_negative_tlc StudioBookingScopeRevokedWrite.cfg studiobookingscope-revokedwrite 'Invariant NoRevokedCommit is violated' StudioBookingScope.tla
 run_tlc RestoreIsolation.tla RestoreIsolation.cfg restore-isolation
 run_negative_tlc RestoreIsolationNoLock.cfg restore-nolock 'Invariant ExclusiveOwners is violated' RestoreIsolation.tla
 run_negative_tlc RestoreIsolationOrphanRetry.cfg restore-orphanretry 'Invariant AtMostOneIsolate is violated' RestoreIsolation.tla

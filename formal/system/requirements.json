@@ -2596,6 +2596,147 @@
         "scripts/verify-event-operations-formal.sh"
       ],
       "critical": true
+    },
+    {
+      "authority": "approved",
+      "source": "Product-owner booking scope decision 2026-10-04; docs/adr/0109-service-booking-deposits-and-shared-calendar.md; formal/system/bookings.md",
+      "contract": "formal/system/bookings.md",
+      "domain": "AUTH",
+      "actors": [
+        "Authenticated customer",
+        "Assigned engineer",
+        "Admin",
+        "Manager",
+        "StudioManager",
+        "Reception"
+      ],
+      "preconditions": [
+        "Current session and Scheduling module admission"
+      ],
+      "inputs": [
+        "Booking request contract in tdf-hq/docs/openapi/api.yaml"
+      ],
+      "state": {
+        "boundary": "formal/system/bookings.md"
+      },
+      "allowedTransitions": [
+        "Scoped accepted mutation with current calendar and checkout correspondence"
+      ],
+      "forbiddenTransitions": [
+        "Foreign object disclosure/mutation",
+        "Overlapping active exclusive allocations",
+        "Independent checkout snapshot/lifecycle edit"
+      ],
+      "effects": [
+        "Booking and allocation effects commit together"
+      ],
+      "authorization": "Four-role studio scope or stored customer/engineer assignment; current-session mutation fence",
+      "privacy": "Private notes require object authority",
+      "concurrency": "Row lock before read/replace; PostgreSQL exclusion; no role-change linearizability claim",
+      "idempotency": "Generic create has no durable key; setting fields is not exactly-once side effects",
+      "failure": "401 revoked; 403 foreign create; 404 foreign update; 409 SQL conflict; 400 invalid request",
+      "recovery": "Reread after conflict; migration abort requires reconciliation; preserve fixed handlers",
+      "observability": "HTTP result, exact source and binary receipt; no private production payloads",
+      "formalModels": [
+        "formal/event-operations/StudioBookingScope.tla"
+      ],
+      "verification": "Two bounded models, six named negative controls and actual PostgreSQL/HTTP conformance checks",
+      "evidence": "Exact candidate test and formal receipts required",
+      "status": "specified and implemented",
+      "confidence": "Bounded model plus actual HTTP checks required at final candidate",
+      "ambiguity": [
+        "Concurrent role revocation and resource relation deletion/update not formally covered",
+        "Current production still runs prior revision"
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and models implemented; fresh final-candidate runtime, deployed and broader lifecycle evidence remain required."
+      },
+      "id": "AUTH-BOOK-001",
+      "title": "Booking object authority",
+      "statement": "Authenticated studio booking access requires Scheduling admission and either Admin, Manager, StudioManager or Reception, or the stored customer/assigned engineer identity. A supplied assignment does not confer authority.",
+      "property": "Authenticated studio booking access requires Scheduling admission and either Admin, Manager, StudioManager or Reception, or the stored customer/assigned engineer identity. A supplied assignment does not confer authority.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+        "formal/system/booking-policy.json",
+        "tdf-hq/src/TDF/RagStore.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "critical": true
+    },
+    {
+      "authority": "approved",
+      "source": "Product-owner booking scope decision 2026-10-04; docs/adr/0109-service-booking-deposits-and-shared-calendar.md; formal/system/bookings.md",
+      "contract": "formal/system/bookings.md",
+      "domain": "BOOK",
+      "actors": [
+        "Authenticated customer",
+        "Assigned engineer",
+        "Admin",
+        "Manager",
+        "StudioManager",
+        "Reception"
+      ],
+      "preconditions": [
+        "Current session and Scheduling module admission"
+      ],
+      "inputs": [
+        "Booking request contract in tdf-hq/docs/openapi/api.yaml"
+      ],
+      "state": {
+        "boundary": "formal/system/bookings.md"
+      },
+      "allowedTransitions": [
+        "Scoped accepted mutation with current calendar and checkout correspondence"
+      ],
+      "forbiddenTransitions": [
+        "Foreign object disclosure/mutation",
+        "Overlapping active exclusive allocations",
+        "Independent checkout snapshot/lifecycle edit"
+      ],
+      "effects": [
+        "Booking and allocation effects commit together"
+      ],
+      "authorization": "Four-role studio scope or stored customer/engineer assignment; current-session mutation fence",
+      "privacy": "Private notes require object authority",
+      "concurrency": "Row lock before read/replace; PostgreSQL exclusion; no role-change linearizability claim",
+      "idempotency": "Generic create has no durable key; setting fields is not exactly-once side effects",
+      "failure": "401 revoked; 403 foreign create; 404 foreign update; 409 SQL conflict; 400 invalid request",
+      "recovery": "Reread after conflict; migration abort requires reconciliation; preserve fixed handlers",
+      "observability": "HTTP result, exact source and binary receipt; no private production payloads",
+      "formalModels": [
+        "formal/event-operations/StudioBookingProjection.tla"
+      ],
+      "verification": "Two bounded models, six named negative controls and actual PostgreSQL/HTTP conformance checks",
+      "evidence": "Exact candidate test and formal receipts required",
+      "status": "specified and implemented",
+      "confidence": "Bounded model plus actual HTTP checks required at final candidate",
+      "ambiguity": [
+        "Concurrent role revocation and resource relation deletion/update not formally covered",
+        "Current production still runs prior revision"
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and models implemented; fresh final-candidate runtime, deployed and broader lifecycle evidence remain required."
+      },
+      "id": "BOOK-CALENDAR-001",
+      "title": "Atomic booking resource projection",
+      "statement": "Accepted booking edits preserve the exclusion-backed resource calendar atomically; a notes-only concurrent edit cannot resurrect cancellation and generic edits cannot bypass checkout snapshot or lifecycle authority.",
+      "property": "Accepted booking edits preserve the exclusion-backed resource calendar atomically; a notes-only concurrent edit cannot resurrect cancellation and generic edits cannot bypass checkout snapshot or lifecycle authority.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+        "formal/system/booking-policy.json"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "critical": true
     }
   ]
 }

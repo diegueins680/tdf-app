@@ -2121,6 +2121,7 @@ BEGIN
       ('service_booking_checkout_runtime', 'trg_service_booking_validate_runtime'),
       ('service_booking_checkout_runtime', 'trg_service_booking_validate_transition'),
       ('service_booking_checkout_runtime', 'trg_service_booking_record_transition'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_sync_domain_booking_status'),
       ('booking_resource', 'trg_service_booking_allocate_resource'),
       ('booking', 'trg_service_booking_sync_legacy_allocation'),
       ('commerce_checkout_session', 'trg_service_booking_require_verified_payment'),
@@ -2133,6 +2134,37 @@ BEGIN
     WHERE actual.oid IS NULL
   ) THEN
     RAISE EXCEPTION 'Service booking invariant triggers are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    WHERE t.tgrelid = 'public.booking'::regclass
+      AND t.tgname = 'trg_service_booking_sync_legacy_allocation' AND t.tgenabled = 'O'
+      AND t.tgfoid = to_regprocedure('public.service_booking_sync_legacy_booking_allocation()')
+      AND t.tgtype = 17 AND t.tgqual IS NULL AND NOT t.tgisinternal
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND ARRAY['starts_at','ends_at','status','service_offering_id']::text[] <@ ARRAY(
+        SELECT a.attname::text FROM pg_attribute a
+        WHERE a.attrelid = t.tgrelid AND a.attnum = ANY(t.tgattr))
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc WHERE oid = to_regprocedure('public.service_booking_sync_legacy_booking_allocation()')
+      AND strpos(prosrc, 'booking_checkout_snapshot_correspondence') > 0
+      AND strpos(prosrc, 'booking_checkout_lifecycle_correspondence') > 0
+      AND strpos(prosrc, 'starts_at = EXCLUDED.starts_at') > 0
+      AND strpos(prosrc, 'ends_at = EXCLUDED.ends_at') > 0
+      AND strpos(prosrc, 'allocation_status = EXCLUDED.allocation_status') > 0
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    WHERE t.tgrelid = 'public.service_booking_checkout_runtime'::regclass
+      AND t.tgname = 'trg_service_booking_sync_domain_booking_status' AND t.tgenabled = 'O'
+      AND t.tgfoid = to_regprocedure('public.service_booking_sync_domain_booking_status()')
+      AND t.tgtype = 17 AND t.tgqual IS NULL AND NOT t.tgisinternal
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND ARRAY['fulfillment_status']::text[] <@ ARRAY(
+        SELECT a.attname::text FROM pg_attribute a
+        WHERE a.attrelid = t.tgrelid AND a.attnum = ANY(t.tgattr))
+  ) OR to_regprocedure('public.service_booking_projected_booking_status(text)') IS NULL THEN
+    RAISE EXCEPTION 'Booking calendar update and checkout correspondence contract is missing';
   END IF;
 
   IF NOT EXISTS (

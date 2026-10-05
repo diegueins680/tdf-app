@@ -324,6 +324,7 @@
       "scripts/test-artist-self-service.sh",
       "scripts/test-auth-recovery-migration.sh",
       "scripts/test-automatic-migrations-production-schema.sh",
+      "scripts/test-booking-conformance.py",
       "scripts/test-canonical-payment-lifecycle-migration.sh",
       "scripts/test-catalog-production-cutover.sh",
       "scripts/test-checkout-event-refund-runtime-migration.sh",
@@ -1459,6 +1460,7 @@
       "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
       "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
       "tdf-hq/sql/2026-10-04_merch_commission_exact.sql",
+      "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2193,7 +2195,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "973900ec5b05196fd223818aa834641088b5758164a6225563001d7c95c11378",
+      "sha256": "d11e060bfb0debe3f1a3ddea8fabd5442a5ebcc72d1a98f148a883a32091f125",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3321,7 +3323,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
+      "sha256": "18746fb479dcc705517fbf69b1a5153178a676b23c94e0c160fc080f89eaa35f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3441,7 +3443,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
+      "sha256": "78c020063a9657ca07d6021373d3d77b08f89aa9705f0860fcd4a7121d296fd5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3985,6 +3987,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c86f69c773ab4140",
+      "path": "scripts/test-booking-conformance.py",
+      "sha256": "72ea870ed34761e7668a2a0897a45430bd2aadb7ec90b0dfb6b07c8645313eba",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d6c33dc1652ba8f2",
       "path": "scripts/test-canonical-payment-lifecycle-migration.sh",
       "sha256": "1067352d6f5c53dfba368a08409c1543e4e23bff26661c125f68f32be1d999d1",
@@ -4461,7 +4469,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "c5240a877fd83dd769b2d8e59ac6cc9406b45b0093e8b9c19d99aa6cac264da6",
+      "sha256": "d265e074a29f24cfadecc982f24a07301a218c8436320be73473b7674ba71b63",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4767,7 +4775,7 @@
     {
       "id": "SURFACE-5a383ebf9d6c9038",
       "path": "tdf-hq-ui/src/api/bookings.ts",
-      "sha256": "1479e6fa87025c548757e6bb2100b9a907b97c38f49fdbf1a4b2df904679ce60",
+      "sha256": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5013,7 +5021,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "beb99fbb047fe600e2c922702d52c9c9519c039c39981f4a6b4bc64724b07b14",
+      "sha256": "bd0ba5be85e50082608d2046c6d4d88e5f691ad836156761c3f2f0d7a09f2908",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8697,7 +8705,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "6de5124eee0d2a5fb489a652777c8f13cee45a251049e0446d9f301f2301cb97",
+      "sha256": "22fabcb83e3beb9144c4c93cc5d2d6351bdc1c9814b2391237fddc6e40c56e16",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10759,6 +10767,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f1b535ed677c46fd",
+      "path": "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+      "sha256": "ff27157ab7ad9b9ba559d80ff40b88f11c8c0f6857bdce0aa0ff58966e8be98d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -11721,7 +11735,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "2080bf46ca557c501a55e6e8d7cdf1858c540e876f8b4af1388eddbc35aef7aa",
+      "sha256": "3367d43eb66d5302d9bd1d727a10f5f68bdb2ea124f3943c4e65026505fb7190",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14031,7 +14045,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "beb99fbb047fe600e2c922702d52c9c9519c039c39981f4a6b4bc64724b07b14",
+      "sha256": "bd0ba5be85e50082608d2046c6d4d88e5f691ad836156761c3f2f0d7a09f2908",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19253,6 +19267,76 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/StudioBookingProjection.cfg",
+      "sha256": "2187640378692c888ac61e9931a94bdcaaf427c74e2f1320dda18e5062de29c3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StudioBookingProjection.tla",
+      "sha256": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/StudioBookingProjectionOverlap.cfg",
+      "sha256": "9b817e2ae5cd71ba5abe0fb0fb91ea352103a45fc113ccaed1f71064f8cbed51",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StudioBookingProjectionReactivation.cfg",
+      "sha256": "114fdc184805e8640a26953a5ac580e8825dc06c117d713e7c0262bcd2d41199",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StudioBookingProjectionStale.cfg",
+      "sha256": "671635a752655449bbee1a328feebf0f0b35f2f6db71035bdff75b4cbc4f94d8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StudioBookingScope.cfg",
+      "sha256": "c21d7078fadbb40825ec587cc3b9866f01a341160d6e3df7d7ab147a92efeb91",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StudioBookingScope.tla",
+      "sha256": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/StudioBookingScopeModuleOnly.cfg",
+      "sha256": "7645f5eb33c5b7f05e55316bc891ce49c9beaa444870052d5b9755ee17bd7804",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StudioBookingScopeRequestedAssignment.cfg",
+      "sha256": "3f6f49cd23dc4ac663aca88fb81ca37af2b45e988ac0f0e85f8c9af6174a8f36",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StudioBookingScopeRevokedWrite.cfg",
+      "sha256": "c180e2855c73a40819ceb4c73e11248e75fd1e0667f1b47c9aa2fa548d31c579",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/TaskCommit.cfg",
       "sha256": "afddcd28e28c8bd54d4b5bb575959dafb0b28ad6788bf81bea6853b0145230eb",
       "authority": "inferred",
@@ -20003,14 +20087,21 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "bdc33fb8b92e564fb108dae9b8996687c5161f234197177313ca60fbb7d53a6f",
+      "sha256": "2e39ff9728604219856a92e4253e0f658c75206207d2eaac4cd1f76c5c822b47",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "7e9bbe7a7df0a705159d05b06f4ebae8d97ac3999522ffc9a8d138d2e5b861c7",
+      "sha256": "99d68bd7d3dd41780a3d980c15679dc82ecf84c0cb834de4ce08179a0a9a7326",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/bookings.md",
+      "sha256": "ecda59f17abb665d8cc02e878ad4d6af46744bcb40ff6fea6c0b4f8bf146949e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20101,14 +20192,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "de63585ce1ea49ae72aee942a23f7dd82d0d66814a2811ff6b9de2e6b84f11d3",
+      "sha256": "3752cef37c4439501bca328159db19b990520d5f14679769accc574c0379a1a5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "f83100cda125b79f20c32680d07088d0b791751dce39c06e94574b249b7421f5",
+      "sha256": "d5c117062806bbf593a48acd8dfd194090650c0c9dc5a6164ff770619516c4e1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20255,7 +20346,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "6de5124eee0d2a5fb489a652777c8f13cee45a251049e0446d9f301f2301cb97",
+      "sha256": "22fabcb83e3beb9144c4c93cc5d2d6351bdc1c9814b2391237fddc6e40c56e16",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -29202,6 +29293,94 @@
         "SPECIFICATION Spec",
         "INVARIANTS LogFieldsAllowlisted",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StudioBookingProjection.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS UpdateProjection = TRUE ReactivateProjection = TRUE EnforceExclusion = TRUE",
+        "INVARIANTS TypeOK ProjectionCurrent NoActiveOverlap"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StudioBookingProjectionOverlap.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS UpdateProjection = TRUE ReactivateProjection = TRUE EnforceExclusion = FALSE",
+        "INVARIANTS TypeOK ProjectionCurrent NoActiveOverlap"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StudioBookingProjectionReactivation.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS UpdateProjection = TRUE ReactivateProjection = FALSE EnforceExclusion = TRUE",
+        "INVARIANTS TypeOK ProjectionCurrent NoActiveOverlap"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StudioBookingProjectionStale.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS UpdateProjection = FALSE ReactivateProjection = TRUE EnforceExclusion = TRUE",
+        "INVARIANTS TypeOK ProjectionCurrent NoActiveOverlap"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StudioBookingScope.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS StaffRoleRequired = TRUE StoredAssignment = TRUE RevalidateSession = TRUE",
+        "INVARIANTS TypeOK NoForeignAccess NoRevokedCommit"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StudioBookingScopeModuleOnly.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS StaffRoleRequired = FALSE StoredAssignment = TRUE RevalidateSession = TRUE",
+        "INVARIANTS TypeOK NoForeignAccess NoRevokedCommit"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StudioBookingScopeRequestedAssignment.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS StaffRoleRequired = TRUE StoredAssignment = FALSE RevalidateSession = TRUE",
+        "INVARIANTS TypeOK NoForeignAccess NoRevokedCommit"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StudioBookingScopeRevokedWrite.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS StaffRoleRequired = TRUE StoredAssignment = TRUE RevalidateSession = FALSE",
+        "INVARIANTS TypeOK NoForeignAccess NoRevokedCommit"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

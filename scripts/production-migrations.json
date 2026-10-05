@@ -865,6 +865,11 @@
       "id": "2026-10-04_merch_commission_exact",
       "path": "tdf-hq/sql/2026-10-04_merch_commission_exact.sql",
       "introducedBy": "f8494a20a11e5b9df7b0a948cddbdfeac4930519"
+    },
+    {
+      "id": "2026-10-05_booking_calendar_projection",
+      "path": "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+      "introducedBy": "04925a10d769499192b3a1bc289d11c39a91fc05"
     }
   ]
 }

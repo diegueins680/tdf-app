@@ -6426,6 +6426,87 @@ paths:
         '403': { description: Strict Admin role required }
         '404': { description: Provider event not found }
         '409': { description: Event is not currently dead-lettered }
+  /bookings:
+    get:
+      tags: [Bookings]
+      operationId: listBookings
+      summary: List bookings within the caller's object scope
+      description: >-
+        Scheduling access is required. Admin, Manager, StudioManager and Reception
+        can view the studio calendar; other actors see only bookings where their
+        party is the customer or assigned engineer. Query filters never widen this
+        scope. A foreign or missing bookingId returns an empty list. Only the
+        studio-wide unfiltered calendar includes synthetic course sessions.
+      parameters:
+        - { name: bookingId, in: query, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: partyId, in: query, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: engineerPartyId, in: query, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '200':
+          description: Scoped bookings; party and engineer filters combine by union within object scope
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Booking' } }
+        '400': { description: Invalid positive identifier filter }
+        '401': { description: Current authentication required }
+        '403': { description: Scheduling module access required }
+    post:
+      tags: [Bookings]
+      operationId: createBooking
+      summary: Create an authenticated studio booking
+      description: >-
+        Scheduling access is required. Studio-wide roles may choose a customer;
+        other actors may create only for themselves, with an omitted/null partyId
+        resolving to their authenticated party. Resource conflicts roll back the
+        transaction. This compatibility operation does not establish payment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BookingCreate' }
+      responses:
+        '200':
+          description: Persisted booking
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Booking' }
+        '400': { description: Invalid or unknown input field }
+        '401': { description: Current authentication required }
+        '403': { description: Scheduling access or customer scope denied }
+        '409': { description: Resource conflict or stale concurrent operation; no mutation committed }
+        '422': { description: Invalid referenced party, offering or resource }
+  /bookings/{bookingId}:
+    parameters:
+      - { name: bookingId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+    put:
+      tags: [Bookings]
+      operationId: updateBooking
+      summary: Update an owned, assigned or staff-accessible booking
+      description: >-
+        Scheduling access and persisted object scope are checked before mutation;
+        a requested engineer assignment cannot grant access. Updates serialize on
+        the booking row and project interval/status changes atomically into the
+        exclusion-backed calendar. Checkout-bound intervals/offering and lifecycle
+        cannot diverge from their authoritative runtime. Omitted/null fields retain
+        existing values; a blank notes string clears notes. At least one field must
+        be non-null. Resources and customer ownership cannot be reassigned here.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BookingUpdate' }
+      responses:
+        '200':
+          description: Authoritatively accepted booking
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Booking' }
+        '400': { description: Invalid, empty, all-null or unknown input field }
+        '401': { description: Current authentication required }
+        '403': { description: Scheduling module access required }
+        '404': { description: Booking absent or outside the caller's object scope }
+        '409': { description: Calendar, checkout lifecycle or concurrent transaction conflict; no mutation committed }
+        '422': { description: Invalid referenced party or offering }
   /bookings/public/availability:
     get:
       tags: [Public bookings]
@@ -9664,6 +9745,41 @@ components:
         customerName: { type: string, nullable: true }
         partyDisplayName: { type: string, nullable: true }
         resources: { type: array, items: { $ref: '#/components/schemas/BookingResource' } }
+        courseSlug: { type: string, nullable: true }
+        coursePrice: { type: number, format: double, nullable: true }
+        courseCurrency: { type: string, nullable: true }
+        courseCapacity: { type: integer, nullable: true }
+        courseRemaining: { type: integer, nullable: true }
+        courseLocation: { type: string, nullable: true }
+    BookingCreate:
+      type: object
+      additionalProperties: false
+      required: [cbTitle, cbStartsAt, cbEndsAt, cbStatus, cbServiceOfferingId]
+      properties:
+        cbTitle: { type: string, minLength: 1, maxLength: 160 }
+        cbStartsAt: { type: string, format: date-time }
+        cbEndsAt: { type: string, format: date-time }
+        cbStatus: { type: string, description: "One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted" }
+        cbNotes: { type: string, nullable: true, maxLength: 1000 }
+        cbPartyId: { type: integer, format: int64, nullable: true, minimum: 1 }
+        cbEngineerPartyId: { type: integer, format: int64, nullable: true, minimum: 1 }
+        cbEngineerName: { type: string, nullable: true }
+        cbServiceOfferingId: { type: string, format: uuid }
+        cbResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string, maxLength: 160 } }
+    BookingUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: At least one supported field must be non-null; null alone is not an update.
+      properties:
+        ubTitle: { nullable: true, type: string, minLength: 1, maxLength: 160 }
+        ubStartsAt: { nullable: true, type: string, format: date-time }
+        ubEndsAt: { nullable: true, type: string, format: date-time }
+        ubStatus: { nullable: true, type: string, description: "One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted" }
+        ubNotes: { type: string, nullable: true, maxLength: 1000 }
+        ubEngineerPartyId: { type: integer, format: int64, nullable: true, minimum: 1 }
+        ubEngineerName: { type: string, nullable: true }
+        ubServiceOfferingId: { nullable: true, type: string, format: uuid }
     PublicBookingCreate:
       type: object
       required: [pbFullName, pbEmail, pbServiceOfferingId, pbStartsAt]
@@ -9674,7 +9790,7 @@ components:
         pbServiceOfferingId: { type: string, format: uuid }
         pbStartsAt: { type: string, format: date-time }
         pbDurationMinutes: { type: integer, minimum: 30, maximum: 840 }
-        pbNotes: { type: string, nullable: true, maxLength: 5000 }
+        pbNotes: { type: string, nullable: true, maxLength: 1000 }
         pbEngineerPartyId: { type: integer, format: int64, nullable: true }
         pbEngineerName: { type: string, nullable: true }
         pbResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string } }
@@ -9688,7 +9804,7 @@ components:
         pbcServiceOfferingId: { type: string, format: uuid }
         pbcStartsAt: { type: string, format: date-time }
         pbcDurationMinutes: { type: integer, minimum: 30, maximum: 840 }
-        pbcNotes: { type: string, nullable: true, maxLength: 5000 }
+        pbcNotes: { type: string, nullable: true, maxLength: 1000 }
         pbcEngineerPartyId: { type: integer, format: int64, nullable: true }
         pbcEngineerName: { type: string, nullable: true }
         pbcResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string } }

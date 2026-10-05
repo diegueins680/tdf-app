@@ -9363,8 +9363,8 @@ partyRelated user pidI = do
   now <- liftIO getCurrentTime
 
   (asCustomer, asEngineer) <- runDB $ do
-    customerRows <- selectList [BookingPartyId ==. Just partyKey] [Desc BookingStartsAt, LimitTo 50]
-    engineerRows <- selectList [BookingEngineerPartyId ==. Just partyKey] [Desc BookingStartsAt, LimitTo 50]
+    customerRows <- selectList (bookingScopeFilters user ++ [BookingPartyId ==. Just partyKey]) [Desc BookingStartsAt, LimitTo 50]
+    engineerRows <- selectList (bookingScopeFilters user ++ [BookingEngineerPartyId ==. Just partyKey]) [Desc BookingStartsAt, LimitTo 50]
     pure (customerRows, engineerRows)
 
   (studentSessions, teacherSessions, subjectMap, partyNameMap, bookingMap) <- runDB $ do
@@ -9389,7 +9389,7 @@ partyRelated user pidI = do
 
     bookings <- if null bookingIds
       then pure []
-      else selectList [BookingId <-. bookingIds] []
+      else selectList (bookingScopeFilters user ++ [BookingId <-. bookingIds]) []
     let bookingsById = Map.fromList [ (entityKey e, entityVal e) | e <- bookings ]
 
     pure (studentRows, teacherRows, subjectsById, partyNamesById, bookingsById)
@@ -10054,6 +10054,40 @@ insertServiceBookingManualReviewAudit context provider reviewerId attemptId evid
     , PersistText evidenceId
     ]
 
+-- Scheduling module admission is not object authority. Product decision2026-10-05:
+-- only these four roles may inspect/operate the complete studio calendar.
+hasStudioBookingAccess :: AuthedUser -> Bool
+hasStudioBookingAccess user = any (`elem` auRoles user) [Admin, Manager, StudioManager, Reception]
+
+canAccessBooking :: AuthedUser -> Booking -> Bool
+canAccessBooking user booking = hasStudioBookingAccess user
+  || bookingPartyId booking == Just (auPartyId user)
+  || bookingEngineerPartyId booking == Just (auPartyId user)
+
+bookingScopeFilters :: AuthedUser -> [Filter Booking]
+bookingScopeFilters user
+  | hasStudioBookingAccess user = []
+  | otherwise = [BookingPartyId ==. Just (auPartyId user)]
+      ||. [BookingEngineerPartyId ==. Just (auPartyId user)]
+
+-- Keep current-session validation and every mutation in the same transaction.
+-- Constraint/retry failures are conflicts; raw SQL diagnostics stay private.
+runBookingTransaction :: AuthedUser -> SqlPersistT IO (Either ServerError a) -> AppM a
+runBookingTransaction user action = do
+  Env pool _ <- ask
+  outcome <- liftIO $ try $ flip runSqlPool pool $ do
+    checked <- withCurrentAuthSession user action
+    let result = fromMaybe (Left err401) checked
+    case result of
+      Left _ -> transactionUndo >> pure result
+      Right _ -> pure result
+  case outcome of
+    Left sqlError
+      | sqlState sqlError `elem` ["23P01", "23514", "40001", "40P01"] ->
+          throwError err409 { errBody = "Booking conflicts with the resource calendar or checkout lifecycle" }
+      | otherwise -> liftIO (throwIO (sqlError :: SqlError))
+    Right result -> either throwError pure result
+
 listBookings :: AuthedUser -> Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> AppM [BookingDTO]
 listBookings user mBookingId mPartyId mEngineerPartyId = do
   requireModule user ModuleScheduling
@@ -10069,24 +10103,25 @@ listBookings user mBookingId mPartyId mEngineerPartyId = do
           mBooking <- getEntity bookingKey
           case mBooking of
             Nothing -> pure []
-            Just ent -> buildBookingDTOs [ent]
+            Just ent | canAccessBooking user (entityVal ent) -> buildBookingDTOs [ent]
+                     | otherwise -> pure []
         _ -> do
           let loadByParty pid = do
                 let pidKey = toSqlKey pid :: Key Party
-                selectList [BookingPartyId ==. Just pidKey] [Desc BookingStartsAt, LimitTo 500]
+                selectList (bookingScopeFilters user ++ [BookingPartyId ==. Just pidKey]) [Desc BookingStartsAt, LimitTo 500]
               loadByEngineer pid = do
                 let pidKey = toSqlKey pid :: Key Party
-                selectList [BookingEngineerPartyId ==. Just pidKey] [Desc BookingStartsAt, LimitTo 500]
+                selectList (bookingScopeFilters user ++ [BookingEngineerPartyId ==. Just pidKey]) [Desc BookingStartsAt, LimitTo 500]
           case (partyIdFilter, engineerPartyIdFilter) of
             (Nothing, Nothing) -> do
-              bookings <- selectList [] [Desc BookingId]
+              bookings <- selectList (bookingScopeFilters user) [Desc BookingId]
               buildBookingDTOs bookings
             _ -> do
               byParty <- maybe (pure []) loadByParty partyIdFilter
               byEngineer <- maybe (pure []) loadByEngineer engineerPartyIdFilter
               let merged = dedupeByKey (byParty ++ byEngineer)
               buildBookingDTOs merged
-    if isJust bookingIdFilter || isJust partyIdFilter || isJust engineerPartyIdFilter
+    if not (hasStudioBookingAccess user) || isJust bookingIdFilter || isJust partyIdFilter || isJust engineerPartyIdFilter
       then pure dbBookings
       else do
         courseSessions <- flip runSqlPool pool courseCalendarBookings
@@ -11700,7 +11735,6 @@ createPublicTentativeBookingTransaction
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
 createBooking user req = do
   requireModule user ModuleScheduling
-  Env pool _ <- ask
   now <- liftIO getCurrentTime
 
   titleClean <- either throwError pure (validateRequiredBookingTitle (cbTitle req))
@@ -11715,11 +11749,13 @@ createBooking user req = do
   partyIdClean <-
     either throwError pure $
       validateOptionalPositiveIdField "partyId" (cbPartyId req)
-  mParty <-
-    liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "partyId" partyIdClean))
+  unless (hasStudioBookingAccess user || maybe True (== fromSqlKey (auPartyId user)) partyIdClean) $
+    throwError err403 { errBody = "Booking creation requires the customer owner or studio staff" }
+  let effectivePartyId = if hasStudioBookingAccess user then partyIdClean else Just (fromSqlKey (auPartyId user))
+  mParty <- runDB (resolveOptionalBookingPartyReference "partyId" effectivePartyId)
       >>= either throwError pure
   mEngineerParty <-
-    liftIO (flip runSqlPool pool (resolveOptionalBookingEngineerReference engineerIdClean))
+    runDB (resolveOptionalBookingEngineerReference engineerIdClean)
       >>= either throwError pure
   let engineerNameClean = normalizeOptionalInput (cbEngineerName req)
       partyKey         = entityKey <$> mParty
@@ -11747,12 +11783,12 @@ createBooking user req = do
         , bookingStartsAt       = cbStartsAt req
         , bookingEndsAt         = cbEndsAt req
         , bookingStatus         = status'
-        , bookingCreatedBy      = Nothing
+        , bookingCreatedBy      = Just (auPartyId user)
         , bookingNotes          = notesClean
         , bookingCreatedAt      = now
         }
 
-  dtoResult <- liftIO $ flip runSqlPool pool $ do
+  dto <- runBookingTransaction user $ do
     bookingId <- insert bookingRecord
     let uniqueResources = nub resourceKeys
     forM_ (zip [0 :: Int ..] uniqueResources) $ \(idx, key) ->
@@ -11764,7 +11800,6 @@ createBooking user req = do
     created <- getJustEntity bookingId
     dtos <- buildBookingDTOs [created]
     pure (requirePersistedBookingDTO dtos)
-  dto <- either throwError pure dtoResult
   notifyEngineerIfNeeded dto
   pure dto
 
@@ -11773,7 +11808,6 @@ updateBooking user bookingIdI req = do
   requireModule user ModuleScheduling
   bookingIdValid <- either throwError pure (validatePositiveIdField "bookingId" bookingIdI)
   either throwError pure (validateUpdateBookingRequestHasChanges req)
-  Env pool _ <- ask
   now <- liftIO getCurrentTime
   titleUpdate <- either throwError pure (validateOptionalBookingTitleUpdate (ubTitle req))
   notesUpdate <- either throwError pure (validateBookingNotes (ubNotes req))
@@ -11783,10 +11817,15 @@ updateBooking user bookingIdI req = do
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (ubEngineerPartyId req)
   let bookingId = toSqlKey bookingIdValid :: Key Booking
-  result <- liftIO $ flip runSqlPool pool $ do
+  runBookingTransaction user $ do
+    -- Serialize read/replace so concurrent edits cannot overwrite unrelated fields
+    -- from an older record. The database projection enforces resource exclusion.
+    _ <- (rawSql "SELECT id FROM booking WHERE id = ? FOR UPDATE"
+      [toPersistValue bookingId] :: SqlPersistT IO [Single Int64])
     mBooking <- getEntity bookingId
     case mBooking of
       Nothing -> pure (Left err404)
+      Just (Entity _ current) | not (canAccessBooking user current) -> pure (Left err404)
       Just (Entity _ current) -> do
         existingServiceOffering <-
           case bookingServiceOfferingId current >>= serviceOfferingKeyFromUUID of
@@ -11841,7 +11880,6 @@ updateBooking user bookingIdI req = do
                         replace bookingId updated
                         dtos <- buildBookingDTOs [Entity bookingId updated]
                         pure (maybe (Left err500) Right (listToMaybe dtos))
-  either throwError pure result
 
 resolveOptionalBookingPartyReference
   :: Text
@@ -13183,17 +13221,17 @@ unavailableDefaultResourcesError serviceLabel names =
 
 isResourceAvailableDB :: Key Resource -> UTCTime -> UTCTime -> SqlPersistT IO Bool
 isResourceAvailableDB resourceKey start end = do
-  bookingResources <- selectList [BookingResourceResourceId ==. resourceKey] []
-  let bookingIds = map (bookingResourceBookingId . entityVal) bookingResources
-  if null bookingIds
-    then pure True
-    else do
-      bookings <- selectList [BookingId <-. bookingIds] []
-      let activeBookings = filter (\(Entity _ b) -> bookingStatus b `notElem` [Cancelled, NoShow]) bookings
-      pure $ all (noOverlap . entityVal) activeBookings
-  where
-    noOverlap booking =
-      bookingEndsAt booking <= start || bookingStartsAt booking >= end
+  -- The exclusion-backed allocation is the authority, including paid runtime
+  -- holds and released/completed history. Booking status alone is insufficient.
+  rows <- (rawSql
+    "SELECT EXISTS (SELECT 1 FROM service_booking_resource_allocation\
+    \ WHERE resource_id = ? AND allocation_status IN ('holding','reserved')\
+    \ AND tstzrange(starts_at, ends_at, '[)') && tstzrange(?, ?, '[)'))"
+    [toPersistValue resourceKey, PersistUTCTime start, PersistUTCTime end]
+    :: SqlPersistT IO [Single Bool])
+  pure $ case rows of
+    [Single occupied] -> not occupied
+    _ -> False
 
 -- Packages
 packageServer :: AuthedUser -> ServerT PackageAPI AppM

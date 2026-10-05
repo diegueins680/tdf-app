@@ -125,6 +125,27 @@ DO $$ BEGIN
     RAISE EXCEPTION 'Existing booking checkout snapshot or lifecycle divergence requires reconciliation'
       USING ERRCODE = '23514';
   END IF;
+  IF EXISTS (
+    SELECT 1 FROM service_booking_checkout_runtime r
+    JOIN booking_resource relation ON relation.booking_id = r.booking_id
+    LEFT JOIN service_booking_resource_allocation a
+      ON a.booking_id = r.booking_id AND a.resource_id = relation.resource_id
+    WHERE a.booking_id IS NULL OR a.starts_at IS DISTINCT FROM r.starts_at
+      OR a.ends_at IS DISTINCT FROM r.ends_at
+      OR a.allocation_status IS DISTINCT FROM CASE
+        WHEN r.fulfillment_status IN ('cancelled','expired') THEN 'released'
+        WHEN r.fulfillment_status = 'completed' THEN 'completed'
+        WHEN r.fulfillment_status = 'on_hold' THEN 'holding' ELSE 'reserved' END
+      OR a.hold_expires_at IS DISTINCT FROM r.hold_expires_at
+  ) OR EXISTS (
+    SELECT 1 FROM service_booking_resource_allocation a
+    JOIN service_booking_checkout_runtime r ON r.booking_id = a.booking_id
+    WHERE NOT EXISTS (SELECT 1 FROM booking_resource relation
+      WHERE relation.booking_id = a.booking_id AND relation.resource_id = a.resource_id)
+  ) THEN
+    RAISE EXCEPTION 'Existing checkout allocation divergence requires reconciliation'
+      USING ERRCODE = '23514';
+  END IF;
 END $$;
 INSERT INTO service_booking_resource_allocation
   (booking_id, resource_id, starts_at, ends_at, allocation_status, hold_expires_at)

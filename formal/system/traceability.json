@@ -2597,10 +2597,148 @@
         "scripts/verify-event-operations-formal.sh"
       ],
       "critical": true
+    },
+    {
+      "authority": "approved",
+      "source": "Product-owner booking scope decision 2026-10-04; docs/adr/; formal/system/bookings.md",
+      "contract": "formal/system/bookings.md",
+      "domain": "AUTH",
+      "actors": [
+        "Authenticated customer",
+        "Assigned engineer",
+        "Admin",
+        "Manager",
+        "StudioManager",
+        "Reception"
+      ],
+      "preconditions": [
+        "Current session and Scheduling module admission"
+      ],
+      "inputs": [
+        "Booking request contract in tdf-hq/docs/openapi/api.yaml"
+      ],
+      "state": {
+        "boundary": "formal/system/bookings.md"
+      },
+      "allowedTransitions": [
+        "Scoped accepted mutation with current calendar and checkout correspondence"
+      ],
+      "forbiddenTransitions": [
+        "Foreign object disclosure/mutation",
+        "Overlapping active exclusive allocations",
+        "Independent checkout snapshot/lifecycle edit"
+      ],
+      "effects": [
+        "Booking and allocation effects commit together"
+      ],
+      "authorization": "Four-role studio scope or stored customer/engineer assignment; current-session mutation fence",
+      "privacy": "Private notes require object authority",
+      "concurrency": "Row lock before read/replace; PostgreSQL exclusion; no role-change linearizability claim",
+      "idempotency": "Generic create has no durable key; setting fields is not exactly-once side effects",
+      "failure": "401 revoked; 403 foreign create; 404 foreign update; 409 SQL conflict; 400 invalid request",
+      "recovery": "Reread after conflict; migration abort requires reconciliation; preserve fixed handlers",
+      "observability": "HTTP result, exact source and binary receipt; no private production payloads",
+      "formalModels": [
+        "formal/event-operations/StudioBookingScope.tla"
+      ],
+      "verification": "Two bounded models, six named negative controls and actual PostgreSQL/HTTP conformance checks",
+      "evidence": "Exact candidate test and formal receipts required",
+      "status": "specified and implemented",
+      "confidence": "Bounded model plus actual HTTP checks required at final candidate",
+      "ambiguity": [
+        "Concurrent role revocation and resource relation deletion/update not formally covered",
+        "Current production still runs prior revision"
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and models implemented; fresh final-candidate runtime, deployed and broader lifecycle evidence remain required."
+      },
+      "id": "AUTH-BOOK-001",
+      "title": "Booking object authority",
+      "statement": "Authenticated studio booking access requires Scheduling admission and either Admin, Manager, StudioManager or Reception, or the stored customer/assigned engineer identity. A supplied assignment does not confer authority.",
+      "property": "Authenticated studio booking access requires Scheduling admission and either Admin, Manager, StudioManager or Reception, or the stored customer/assigned engineer identity. A supplied assignment does not confer authority.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "critical": true
+    },
+    {
+      "authority": "approved",
+      "source": "Product-owner booking scope decision 2026-10-04; docs/adr/; formal/system/bookings.md",
+      "contract": "formal/system/bookings.md",
+      "domain": "BOOK",
+      "actors": [
+        "Authenticated customer",
+        "Assigned engineer",
+        "Admin",
+        "Manager",
+        "StudioManager",
+        "Reception"
+      ],
+      "preconditions": [
+        "Current session and Scheduling module admission"
+      ],
+      "inputs": [
+        "Booking request contract in tdf-hq/docs/openapi/api.yaml"
+      ],
+      "state": {
+        "boundary": "formal/system/bookings.md"
+      },
+      "allowedTransitions": [
+        "Scoped accepted mutation with current calendar and checkout correspondence"
+      ],
+      "forbiddenTransitions": [
+        "Foreign object disclosure/mutation",
+        "Overlapping active exclusive allocations",
+        "Independent checkout snapshot/lifecycle edit"
+      ],
+      "effects": [
+        "Booking and allocation effects commit together"
+      ],
+      "authorization": "Four-role studio scope or stored customer/engineer assignment; current-session mutation fence",
+      "privacy": "Private notes require object authority",
+      "concurrency": "Row lock before read/replace; PostgreSQL exclusion; no role-change linearizability claim",
+      "idempotency": "Generic create has no durable key; setting fields is not exactly-once side effects",
+      "failure": "401 revoked; 403 foreign create; 404 foreign update; 409 SQL conflict; 400 invalid request",
+      "recovery": "Reread after conflict; migration abort requires reconciliation; preserve fixed handlers",
+      "observability": "HTTP result, exact source and binary receipt; no private production payloads",
+      "formalModels": [
+        "formal/event-operations/StudioBookingProjection.tla"
+      ],
+      "verification": "Two bounded models, six named negative controls and actual PostgreSQL/HTTP conformance checks",
+      "evidence": "Exact candidate test and formal receipts required",
+      "status": "specified and implemented",
+      "confidence": "Bounded model plus actual HTTP checks required at final candidate",
+      "ambiguity": [
+        "Concurrent role revocation and resource relation deletion/update not formally covered",
+        "Current production still runs prior revision"
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and models implemented; fresh final-candidate runtime, deployed and broader lifecycle evidence remain required."
+      },
+      "id": "BOOK-CALENDAR-001",
+      "title": "Atomic booking resource projection",
+      "statement": "Accepted booking edits preserve the exclusion-backed resource calendar atomically; a notes-only concurrent edit cannot resurrect cancellation and generic edits cannot bypass checkout snapshot or lifecycle authority.",
+      "property": "Accepted booking edits preserve the exclusion-backed resource calendar atomically; a notes-only concurrent edit cannot resurrect cancellation and generic edits cannot bypass checkout snapshot or lifecycle authority.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "critical": true
     }
   ],
   "sourceFingerprints": {
-    ".github/workflows/ci.yml": "973900ec5b05196fd223818aa834641088b5758164a6225563001d7c95c11378",
+    ".github/workflows/ci.yml": "d11e060bfb0debe3f1a3ddea8fabd5442a5ebcc72d1a98f148a883a32091f125",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
@@ -2634,6 +2772,8 @@
     "formal/event-operations/RestoreIsolationOrphanRetry.cfg": "4e0b0c9f842bdf6d7ecdbe2c8f68ac3898446ec632c1cb15dd76383e26b87168",
     "formal/event-operations/RestoreIsolationSourceTarget.cfg": "2855814fc67299069d73cf6430c98a2ed486c3ffd265676e315d3843fa90e1c5",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
+    "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
+    "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -2670,11 +2810,11 @@
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
-    "scripts/lib/production-release.mjs": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
+    "scripts/lib/production-release.mjs": "18746fb479dcc705517fbf69b1a5153178a676b23c94e0c160fc080f89eaa35f",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
-    "scripts/production-migrations.json": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
+    "scripts/production-migrations.json": "78c020063a9657ca07d6021373d3d77b08f89aa9705f0860fcd4a7121d296fd5",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "c0326c60ccd34d3f9dde263cabb5889f76e025d59857a691b17fc2ba77aa794b",
@@ -2688,6 +2828,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
+    "scripts/test-booking-conformance.py": "72ea870ed34761e7668a2a0897a45430bd2aadb7ec90b0dfb6b07c8645313eba",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "bd6d20cea85b0e1c3c29a342bf78e512345b8f224c4d880563d3634ac18c923c",
     "scripts/test-hetzner-restore.py": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
@@ -2698,7 +2839,7 @@
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "c5240a877fd83dd769b2d8e59ac6cc9406b45b0093e8b9c19d99aa6cac264da6",
+    "scripts/verify-event-operations-formal.sh": "d265e074a29f24cfadecc982f24a07301a218c8436320be73473b7674ba71b63",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
@@ -2717,7 +2858,7 @@
     "tdf-hq/Dockerfile": "d5afe1363da6c68cba251ab928fe10ad4c47aafea2924c27402e50c9d323fb1a",
     "tdf-hq/Dockerfile.runtime": "cc561dc926a491699de7b34ad3d01e1dd0e13d53cdc5dc87484aeb7e303129b8",
     "tdf-hq/assets/feature-registry.json": "937ec3786fdef97afc5ac11dd93380baa707de14448872a923e07875ca65ee81",
-    "tdf-hq/docs/openapi/api.yaml": "6de5124eee0d2a5fb489a652777c8f13cee45a251049e0446d9f301f2301cb97",
+    "tdf-hq/docs/openapi/api.yaml": "22fabcb83e3beb9144c4c93cc5d2d6351bdc1c9814b2391237fddc6e40c56e16",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
     "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql": "8f86bc3c25209d6f56987dd3f84123e2be4fd78e3a9ee9876075ca1077a1864c",
@@ -2725,6 +2866,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
     "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
+    "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": "ff27157ab7ad9b9ba559d80ff40b88f11c8c0f6857bdce0aa0ff58966e8be98d",
     "tdf-hq/src/TDF/API.hs": "7f54aa410bfc4a1e9f5430d3bea6e8a9ac2f5f8269793a90733b42c3d1018d56",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
@@ -2738,7 +2880,7 @@
     "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
-    "tdf-hq/src/TDF/Server.hs": "2080bf46ca557c501a55e6e8d7cdf1858c540e876f8b4af1388eddbc35aef7aa",
+    "tdf-hq/src/TDF/Server.hs": "3367d43eb66d5302d9bd1d727a10f5f68bdb2ea124f3943c4e65026505fb7190",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
@@ -2836,6 +2978,14 @@
       },
       {
         "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-BOOK-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "BOOK-CALENDAR-001",
         "relationship": "tests"
       }
     ],
@@ -2998,6 +3148,14 @@
       },
       {
         "requirement": "PAY-CHECKOUT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-BOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-CALENDAR-001",
         "relationship": "implementation"
       }
     ],
@@ -4002,6 +4160,38 @@
         "requirement": "DEPLOY-RESTORE-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": [
+      {
+        "requirement": "AUTH-BOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-CALENDAR-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-booking-conformance.py": [
+      {
+        "requirement": "AUTH-BOOK-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "BOOK-CALENDAR-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/StudioBookingScope.tla": [
+      {
+        "requirement": "AUTH-BOOK-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/StudioBookingProjection.tla": [
+      {
+        "requirement": "BOOK-CALENDAR-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -4043,7 +4233,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "973900ec5b05196fd223818aa834641088b5758164a6225563001d7c95c11378",
+      "sha256": "d11e060bfb0debe3f1a3ddea8fabd5442a5ebcc72d1a98f148a883a32091f125",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5615,7 +5805,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
+      "sha256": "18746fb479dcc705517fbf69b1a5153178a676b23c94e0c160fc080f89eaa35f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5787,7 +5977,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
+      "sha256": "78c020063a9657ca07d6021373d3d77b08f89aa9705f0860fcd4a7121d296fd5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6516,6 +6706,22 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-c86f69c773ab4140",
+      "path": "scripts/test-booking-conformance.py",
+      "sha256": "72ea870ed34761e7668a2a0897a45430bd2aadb7ec90b0dfb6b07c8645313eba",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-BOOK-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "BOOK-CALENDAR-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d6c33dc1652ba8f2",
       "path": "scripts/test-canonical-payment-lifecycle-migration.sh",
       "sha256": "1067352d6f5c53dfba368a08409c1543e4e23bff26661c125f68f32be1d999d1",
@@ -7145,7 +7351,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "c5240a877fd83dd769b2d8e59ac6cc9406b45b0093e8b9c19d99aa6cac264da6",
+      "sha256": "d265e074a29f24cfadecc982f24a07301a218c8436320be73473b7674ba71b63",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7170,6 +7376,14 @@
         },
         {
           "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-BOOK-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "BOOK-CALENDAR-001",
           "relationship": "tests"
         }
       ]
@@ -7546,7 +7760,7 @@
     {
       "id": "SURFACE-5a383ebf9d6c9038",
       "path": "tdf-hq-ui/src/api/bookings.ts",
-      "sha256": "1479e6fa87025c548757e6bb2100b9a907b97c38f49fdbf1a4b2df904679ce60",
+      "sha256": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -7833,7 +8047,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "beb99fbb047fe600e2c922702d52c9c9519c039c39981f4a6b4bc64724b07b14",
+      "sha256": "bd0ba5be85e50082608d2046c6d4d88e5f691ad836156761c3f2f0d7a09f2908",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -12218,7 +12432,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "6de5124eee0d2a5fb489a652777c8f13cee45a251049e0446d9f301f2301cb97",
+      "sha256": "22fabcb83e3beb9144c4c93cc5d2d6351bdc1c9814b2391237fddc6e40c56e16",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14664,6 +14878,22 @@
       ]
     },
     {
+      "id": "SURFACE-f1b535ed677c46fd",
+      "path": "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+      "sha256": "ff27157ab7ad9b9ba559d80ff40b88f11c8c0f6857bdce0aa0ff58966e8be98d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-BOOK-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-CALENDAR-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -15875,7 +16105,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "2080bf46ca557c501a55e6e8d7cdf1858c540e876f8b4af1388eddbc35aef7aa",
+      "sha256": "3367d43eb66d5302d9bd1d727a10f5f68bdb2ea124f3943c4e65026505fb7190",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15888,6 +16118,14 @@
         },
         {
           "requirement": "PAY-CHECKOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-BOOK-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-CALENDAR-001",
           "relationship": "implementation"
         }
       ]
@@ -18750,7 +18988,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "beb99fbb047fe600e2c922702d52c9c9519c039c39981f4a6b4bc64724b07b14",
+      "sha256": "bd0ba5be85e50082608d2046c6d4d88e5f691ad836156761c3f2f0d7a09f2908",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -27697,6 +27935,62 @@
         "403",
         "404",
         "409"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /bookings",
+      "operationId": "listBookings",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /bookings",
+      "operationId": "createBooking",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "409",
+        "422"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "PUT /bookings/{bookingId}",
+      "operationId": "updateBooking",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -43679,7 +43973,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 37,
+    "PARTIAL": 39,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

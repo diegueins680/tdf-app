@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -274,6 +274,36 @@
       "applicability": "Crash orphan admission guard",
       "decision": "adopted",
       "rationale": "Reject any labelled residue under the lock before new work; do not use label presence as deletion authority."
+    },
+    {
+      "id": "RES-BOOK-LOCK",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "title": "PostgreSQL row locks",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Lock before reading a record to be replaced; handle deadlock/serialization rollback explicitly.",
+      "applicability": "Studio booking repair",
+      "decision": "adopted",
+      "rationale": "Actual synthetic HTTP reproduced foreign access, stale calendar projection and unsafe read/replace. Retain existing PostgreSQL calendar architecture and product-approved role scope."
+    },
+    {
+      "id": "RES-BOOK-EXCLUDE",
+      "source": "https://www.postgresql.org/docs/17/rangetypes.html",
+      "title": "PostgreSQL range exclusion",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Enforce interval overlap exclusion in the database rather than relying on a preflight availability query.",
+      "applicability": "Studio booking repair",
+      "decision": "adopted",
+      "rationale": "Actual synthetic HTTP reproduced foreign access, stale calendar projection and unsafe read/replace. Retain existing PostgreSQL calendar architecture and product-approved role scope."
+    },
+    {
+      "id": "RES-BOOK-SCOPE",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+      "title": "OWASP authorization",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Validate object-level permission on the server for every sensitive operation.",
+      "applicability": "Studio booking repair",
+      "decision": "adopted",
+      "rationale": "Actual synthetic HTTP reproduced foreign access, stale calendar projection and unsafe read/replace. Retain existing PostgreSQL calendar architecture and product-approved role scope."
     }
   ]
 }

@@ -186,6 +186,17 @@
       "conflict": "The chat adapter reports rejection after its database transaction has already committed. A real malformed-result regression retained a message and changed thread timestamp despite an HTTP error.",
       "authority": "formal/system/messaging.md",
       "resolution": "Keep session, SQL effects and response validation in one transaction; roll back rejected envelopes. Preserve existing non-idempotent transport-loss semantics and never-governed legacy compatibility. Add runtime negative controls and a bounded sequential model; do not redefine committed error outcomes as intended behavior."
+    },
+    {
+      "id": "AUTHORITY-019",
+      "sources": [
+        "formal/system/bookings.md",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "conflict": "Broad Scheduling module access allowed private foreign bookings despite own-booking persona intent; legacy edits bypassed the authoritative exclusion calendar and checkout snapshot.",
+      "authority": "Product owner explicitly selected four studio-wide roles on 2026-10-04; formal/system/bookings.md",
+      "resolution": "Require backend object scope; preserve four-role staff operations and own/assigned access, row-lock edits, repair allocation projection additively and reject checkout evidence drift. Document three previously missing authenticated API operations and regenerate both shipped clients."
     }
   ]
 }

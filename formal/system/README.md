@@ -181,3 +181,5 @@ controls. Revalidate after source edits. Never admit timeout, incomplete executi
 stale fingerprints or handwritten PASS assertions. Bounded safety/liveness applies
 only under each model's stated bounds, fairness, assumptions and exclusions.
 Whole-system refinement remains open.
+
+Studio booking scope, resource projection, bounded models and remaining exclusions: [bookings.md](bookings.md).

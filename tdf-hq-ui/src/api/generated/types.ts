@@ -5230,6 +5230,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List bookings within the caller's object scope
+         * @description Scheduling access is required. Admin, Manager, StudioManager and Reception can view the studio calendar; other actors see only bookings where their party is the customer or assigned engineer. Query filters never widen this scope. A foreign or missing bookingId returns an empty list. Only the studio-wide unfiltered calendar includes synthetic course sessions.
+         */
+        get: operations["listBookings"];
+        put?: never;
+        /**
+         * Create an authenticated studio booking
+         * @description Scheduling access is required. Studio-wide roles may choose a customer; other actors may create only for themselves, with an omitted/null partyId resolving to their authenticated party. Resource conflicts roll back the transaction. This compatibility operation does not establish payment.
+         */
+        post: operations["createBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{bookingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update an owned, assigned or staff-accessible booking
+         * @description Scheduling access and persisted object scope are checked before mutation; a requested engineer assignment cannot grant access. Updates serialize on the booking row and project interval/status changes atomically into the exclusion-backed calendar. Checkout-bound intervals/offering and lifecycle cannot diverge from their authoritative runtime. Omitted/null fields retain existing values; a blank notes string clears notes. At least one field must be non-null. Resources and customer ownership cannot be reassigned here.
+         */
+        put: operations["updateBooking"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/bookings/public/availability": {
         parameters: {
             query?: never;
@@ -9538,6 +9584,47 @@ export interface components {
             customerName?: string | null;
             partyDisplayName?: string | null;
             resources: components["schemas"]["BookingResource"][];
+            courseSlug?: string | null;
+            /** Format: double */
+            coursePrice?: number | null;
+            courseCurrency?: string | null;
+            courseCapacity?: number | null;
+            courseRemaining?: number | null;
+            courseLocation?: string | null;
+        };
+        BookingCreate: {
+            cbTitle: string;
+            /** Format: date-time */
+            cbStartsAt: string;
+            /** Format: date-time */
+            cbEndsAt: string;
+            /** @description One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted */
+            cbStatus: string;
+            cbNotes?: string | null;
+            /** Format: int64 */
+            cbPartyId?: number | null;
+            /** Format: int64 */
+            cbEngineerPartyId?: number | null;
+            cbEngineerName?: string | null;
+            /** Format: uuid */
+            cbServiceOfferingId: string;
+            cbResourceIds?: string[] | null;
+        };
+        /** @description At least one supported field must be non-null; null alone is not an update. */
+        BookingUpdate: {
+            ubTitle?: string | null;
+            /** Format: date-time */
+            ubStartsAt?: string | null;
+            /** Format: date-time */
+            ubEndsAt?: string | null;
+            /** @description One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted */
+            ubStatus?: string | null;
+            ubNotes?: string | null;
+            /** Format: int64 */
+            ubEngineerPartyId?: number | null;
+            ubEngineerName?: string | null;
+            /** Format: uuid */
+            ubServiceOfferingId?: string | null;
         };
         PublicBookingCreate: {
             pbFullName: string;
@@ -26743,6 +26830,178 @@ export interface operations {
             };
             /** @description Event is not currently dead-lettered */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listBookings: {
+        parameters: {
+            query?: {
+                bookingId?: number;
+                partyId?: number;
+                engineerPartyId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scoped bookings; party and engineer filters combine by union within object scope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"][];
+                };
+            };
+            /** @description Invalid positive identifier filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingCreate"];
+            };
+        };
+        responses: {
+            /** @description Persisted booking */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description Invalid or unknown input field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling access or customer scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource conflict or stale concurrent operation; no mutation committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced party */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Authoritatively accepted booking */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description Invalid */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking absent or outside the caller's object scope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Calendar */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced party or offering */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

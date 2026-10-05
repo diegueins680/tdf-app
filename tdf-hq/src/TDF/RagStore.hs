@@ -750,9 +750,17 @@ selectRagChunks cfg embedding =
       then pure []
       else do
         rows <- rawSql
-          "SELECT content FROM rag_chunk ORDER BY embedding <=> ?::vector LIMIT ?"
-          [PersistText vector, PersistInt64 limitVal] :: SqlPersistT IO [Single Text]
-        pure [val | Single val <- rows]
+          -- Current callers produce customer-facing replies. Internal chunks
+          -- have no object authority here. Use the index only to rank public
+          -- course IDs; render current public fields, never cached raw content.
+          "SELECT c.id FROM rag_chunk chunk JOIN course c ON c.slug = chunk.source_id\
+          \ WHERE chunk.source = 'course'\
+          \ ORDER BY embedding <=> ?::vector LIMIT ?"
+          [PersistText vector, PersistInt64 limitVal] :: SqlPersistT IO [Single Int64]
+        docs <- forM rows $ \(Single courseId) -> do
+          course <- getEntity (toSqlKey courseId :: Key Trials.Course)
+          pure (rdContent . courseToDoc <$> course)
+        pure (catMaybes docs)
 
 embedTexts :: AppConfig -> [Text] -> IO (Either Text [[Double]])
 embedTexts cfg inputs
